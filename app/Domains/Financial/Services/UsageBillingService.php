@@ -7,7 +7,7 @@ use Carbon\Carbon;
 
 /**
  * Usage Billing Service
- * 
+ *
  * Focused service responsible only for usage-based billing calculations.
  * Demonstrates Single Responsibility Principle from composition pattern.
  */
@@ -24,7 +24,7 @@ class UsageBillingService
 
         $includedUnits = $product->usage_included ?? 0;
         $unitPrice = $product->usage_rate ?? $product->base_price;
-        
+
         $calculation = $this->performUsageCalculation($product->base_price, $usage, $includedUnits, $unitPrice);
 
         return array_merge($calculation, [
@@ -34,7 +34,7 @@ class UsageBillingService
             'included_units' => $includedUnits,
             'unit_price' => $unitPrice,
             'unit_type' => $product->unit_type ?? 'units',
-            'billing_model' => 'usage_based'
+            'billing_model' => 'usage_based',
         ]);
     }
 
@@ -48,18 +48,20 @@ class UsageBillingService
         $tierBreakdown = [];
 
         foreach ($tiers as $tier) {
-            if ($remainingUsage <= 0) break;
+            if ($remainingUsage <= 0) {
+                break;
+            }
 
             $tierUsage = min($remainingUsage, $tier['limit'] - $tier['start']);
             $tierAmount = $tierUsage * $tier['rate'];
-            
+
             $tierBreakdown[] = [
                 'tier' => $tier['name'],
                 'usage' => $tierUsage,
                 'rate' => $tier['rate'],
                 'amount' => $tierAmount,
                 'start' => $tier['start'],
-                'limit' => $tier['limit']
+                'limit' => $tier['limit'],
             ];
 
             $totalAmount += $tierAmount;
@@ -70,7 +72,7 @@ class UsageBillingService
             'total_amount' => round($totalAmount, 2),
             'total_usage' => $usage,
             'tier_breakdown' => $tierBreakdown,
-            'billing_model' => 'tiered_usage'
+            'billing_model' => 'tiered_usage',
         ];
     }
 
@@ -89,7 +91,7 @@ class UsageBillingService
             'overage_amount' => round($overageAmount, 2),
             'included_limit' => $includedLimit,
             'total_usage' => $usage,
-            'within_limit' => $usage <= $includedLimit
+            'within_limit' => $usage <= $includedLimit,
         ];
     }
 
@@ -99,9 +101,9 @@ class UsageBillingService
     public function calculateWithMinimumCommitment(Product $product, float $usage, float $minimumCommitment): array
     {
         $usageCalculation = $this->calculateUsageBilling(
-            $product, 
-            $usage, 
-            now()->startOfMonth(), 
+            $product,
+            $usage,
+            now()->startOfMonth(),
             now()->endOfMonth()
         );
 
@@ -115,7 +117,7 @@ class UsageBillingService
             'usage_amount' => $usageAmount,
             'final_amount' => $finalAmount,
             'minimum_fee_applied' => $minimumFeeApplied,
-            'commitment_shortfall' => $minimumFeeApplied ? ($minimumAmount - $usageAmount) : 0
+            'commitment_shortfall' => $minimumFeeApplied ? ($minimumAmount - $usageAmount) : 0,
         ]);
     }
 
@@ -128,20 +130,20 @@ class UsageBillingService
             'total_usage_amount' => 0,
             'total_base_amount' => 0,
             'total_overage_amount' => 0,
-            'products' => []
+            'products' => [],
         ];
 
         foreach ($products as $product) {
             $usage = $usageData[$product->id] ?? 0;
-            
+
             if ($product->billing_model === 'usage_based') {
                 $calculation = $this->calculateUsageBilling($product, $usage, $periodStart, $periodEnd);
-                
+
                 $summary['products'][] = array_merge($calculation, [
                     'product_id' => $product->id,
-                    'product_name' => $product->name
+                    'product_name' => $product->name,
                 ]);
-                
+
                 $summary['total_usage_amount'] += $calculation['total_amount'];
                 $summary['total_base_amount'] += $calculation['base_amount'];
                 $summary['total_overage_amount'] += $calculation['overage_amount'];
@@ -170,7 +172,7 @@ class UsageBillingService
             'base_amount' => $baseAmount,
             'overage_amount' => $overageAmount,
             'overage_units' => $overageUnits,
-            'total_amount' => round($totalAmount, 2)
+            'total_amount' => round($totalAmount, 2),
         ];
     }
 
@@ -195,7 +197,7 @@ class UsageBillingService
 
         return [
             'valid' => empty($errors),
-            'errors' => $errors
+            'errors' => $errors,
         ];
     }
 }

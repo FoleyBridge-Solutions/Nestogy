@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum('pricing_model', ['fixed', 'per_user', 'hybrid'])->default('per_user')->after('price_per_user_monthly');
             $table->integer('minimum_users')->default(1)->after('pricing_model');
             $table->decimal('base_price', 10, 2)->default(0)->after('minimum_users'); // For hybrid model
-            
+
             // Add index for efficient querying
             $table->index(['pricing_model', 'is_active']);
         });
@@ -34,7 +34,7 @@ return new class extends Migration
                 'price_per_user_monthly',
                 'pricing_model',
                 'minimum_users',
-                'base_price'
+                'base_price',
             ]);
         });
     }

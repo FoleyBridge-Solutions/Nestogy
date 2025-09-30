@@ -25,11 +25,11 @@ class TexasTaxDataUpdated extends Notification implements ShouldQueue
     public function via(object $notifiable): array
     {
         $channels = ['mail'];
-        
+
         if (config('texas-tax.automation.slack_webhook')) {
             $channels[] = 'slack';
         }
-        
+
         return $channels;
     }
 
@@ -45,14 +45,14 @@ class TexasTaxDataUpdated extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject("✅ Texas Tax Data Updated - {$quarter}")
-            ->greeting("Texas Comptroller Tax Data Updated")
+            ->greeting('Texas Comptroller Tax Data Updated')
             ->line("The official Texas tax jurisdiction data has been successfully updated for **{$quarter}**.")
-            ->line("**Update Summary:**")
+            ->line('**Update Summary:**')
             ->line("• Tax jurisdiction rates imported: **{$taxRatesCount}**")
             ->line("• Counties with address data: **{$addressCounties}**")
-            ->line("• Data source: **Texas Comptroller (Official & FREE)**")
+            ->line('• Data source: **Texas Comptroller (Official & FREE)**')
             ->line("• Monthly savings vs. paid services: **\${$savings}**")
-            ->line("This ensures your MSP has the most current official tax rates for accurate billing.")
+            ->line('This ensures your MSP has the most current official tax rates for accurate billing.')
             ->action('View Tax Configuration', url('/admin/settings/taxes'))
             ->line('The system will automatically use this data for all new quotes and invoices.')
             ->line('💰 **Cost Savings**: Using official government data instead of expensive third-party services saves your MSP hundreds of dollars monthly while providing the most accurate, legally compliant tax calculations.');
@@ -72,14 +72,14 @@ class TexasTaxDataUpdated extends Notification implements ShouldQueue
             ->content("🏛️ Texas Tax Data Updated - {$quarter}")
             ->attachment(function ($attachment) use ($taxRatesCount, $quarter, $savings) {
                 $attachment->title('Official Texas Comptroller Data Import Complete')
-                          ->fields([
-                              'Quarter' => $quarter,
-                              'Tax Rates Imported' => number_format($taxRatesCount),
-                              'Data Source' => 'Texas Comptroller (FREE)',
-                              'Monthly Savings' => '$' . number_format($savings),
-                              'Status' => '✅ Active & Current'
-                          ])
-                          ->color('good');
+                    ->fields([
+                        'Quarter' => $quarter,
+                        'Tax Rates Imported' => number_format($taxRatesCount),
+                        'Data Source' => 'Texas Comptroller (FREE)',
+                        'Monthly Savings' => '$'.number_format($savings),
+                        'Status' => '✅ Active & Current',
+                    ])
+                    ->color('good');
             });
     }
 
@@ -90,7 +90,7 @@ class TexasTaxDataUpdated extends Notification implements ShouldQueue
     {
         $alternatives = config('texas-tax.cost_tracking.alternative_costs', []);
         $averageCost = count($alternatives) > 0 ? array_sum($alternatives) / count($alternatives) : 800;
-        
+
         return (int) $averageCost;
     }
 }

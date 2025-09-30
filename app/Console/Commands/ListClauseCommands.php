@@ -35,22 +35,22 @@ class ListClauseCommands extends Command
             [
                 'command' => 'nestogy:manage-clauses list',
                 'description' => 'List all clauses for a company',
-                'example' => 'php artisan nestogy:manage-clauses list --company-id=1 --category=sla'
+                'example' => 'php artisan nestogy:manage-clauses list --company-id=1 --category=sla',
             ],
             [
                 'command' => 'nestogy:manage-clauses validate',
                 'description' => 'Validate template clause dependencies and completeness',
-                'example' => 'php artisan nestogy:manage-clauses validate --template="Recurring Support Services Agreement"'
+                'example' => 'php artisan nestogy:manage-clauses validate --template="Recurring Support Services Agreement"',
             ],
             [
                 'command' => 'nestogy:manage-clauses create',
                 'description' => 'Create a new contract clause',
-                'example' => 'php artisan nestogy:manage-clauses create --company-id=1'
+                'example' => 'php artisan nestogy:manage-clauses create --company-id=1',
             ],
             [
                 'command' => 'nestogy:parse-template-clauses',
                 'description' => 'Parse existing template into modular clauses',
-                'example' => 'php artisan nestogy:parse-template-clauses "Recurring Support Services Agreement"'
+                'example' => 'php artisan nestogy:parse-template-clauses "Recurring Support Services Agreement"',
             ],
         ];
 

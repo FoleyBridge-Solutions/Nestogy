@@ -3,22 +3,20 @@
 namespace App\Domains\Security\Services;
 
 use App\Models\Client;
-use App\Models\ClientPortalSession;
 use App\Models\ClientPortalAccess;
+use App\Models\ClientPortalSession;
 use App\Models\PortalNotification;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Portal Authentication Service
- * 
+ *
  * Comprehensive authentication service for client portal with advanced security features:
  * - Multi-factor authentication (SMS, Email, Authenticator apps)
  * - Password policies and complexity validation
@@ -62,35 +60,40 @@ class PortalAuthService
     {
         try {
             $client = Client::where('email', $email)->first();
-            
-            if (!$client) {
+
+            if (! $client) {
                 $this->logSecurityEvent('login_failed', null, $request, 'Invalid email');
+
                 return $this->failResponse('Invalid credentials');
             }
 
             // Check if portal access is enabled
             $portalAccess = $this->getPortalAccess($client);
-            if (!$portalAccess || !$portalAccess->isEnabled()) {
+            if (! $portalAccess || ! $portalAccess->isEnabled()) {
                 $this->logSecurityEvent('access_denied', $client->id, $request, 'Portal access disabled');
+
                 return $this->failResponse('Portal access is disabled for your account');
             }
 
             // Check account lockout
             if ($portalAccess->isLocked()) {
                 $this->logSecurityEvent('login_blocked', $client->id, $request, 'Account locked');
+
                 return $this->failResponse('Account is temporarily locked due to multiple failed attempts');
             }
 
             // Verify password
-            if (!$this->verifyPassword($client, $password)) {
+            if (! $this->verifyPassword($client, $password)) {
                 $portalAccess->incrementFailedAttempts();
                 $this->logSecurityEvent('login_failed', $client->id, $request, 'Invalid password');
+
                 return $this->failResponse('Invalid credentials');
             }
 
             // Check password expiry
             if ($portalAccess->isPasswordExpired()) {
                 $this->logSecurityEvent('password_expired', $client->id, $request);
+
                 return $this->failResponse('Your password has expired. Please reset your password.', 'PASSWORD_EXPIRED');
             }
 
@@ -99,14 +102,16 @@ class PortalAuthService
             $requiresTwoFactor = $this->shouldRequireTwoFactor($portalAccess, $riskScore);
 
             // Check geolocation restrictions
-            if (!$this->isLocationAllowed($portalAccess, $request)) {
+            if (! $this->isLocationAllowed($portalAccess, $request)) {
                 $this->logSecurityEvent('geo_blocked', $client->id, $request, 'Geographic restriction');
+
                 return $this->failResponse('Access from your location is not permitted');
             }
 
             // Check time-based restrictions
-            if (!$portalAccess->isTimeAllowed()) {
+            if (! $portalAccess->isTimeAllowed()) {
                 $this->logSecurityEvent('time_restricted', $client->id, $request, 'Outside allowed hours');
+
                 return $this->failResponse('Access is not permitted at this time');
             }
 
@@ -133,7 +138,7 @@ class PortalAuthService
             $this->logSecurityEvent('login_success', $client->id, $request, 'Authentication successful', [
                 'session_id' => $session->id,
                 'risk_score' => $riskScore,
-                'requires_2fa' => $requiresTwoFactor
+                'requires_2fa' => $requiresTwoFactor,
             ]);
 
             return $response;
@@ -142,7 +147,7 @@ class PortalAuthService
             Log::error('Authentication error', [
                 'email' => $email,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return $this->failResponse('Authentication service temporarily unavailable');
@@ -155,7 +160,7 @@ class PortalAuthService
     public function verifyTwoFactor(ClientPortalSession $session, string $method, string $code): array
     {
         try {
-            if (!$session->isActive()) {
+            if (! $session->isActive()) {
                 return $this->failResponse('Invalid or expired session');
             }
 
@@ -186,8 +191,9 @@ class PortalAuthService
                     $errorMessage = 'Unsupported two-factor method';
             }
 
-            if (!$isValid) {
+            if (! $isValid) {
                 $this->logSecurityEvent('2fa_failed', $client->id, request(), "Invalid 2FA code: {$method}");
+
                 return $this->failResponse($errorMessage);
             }
 
@@ -195,7 +201,7 @@ class PortalAuthService
             $session->markTwoFactorVerified($method);
 
             $this->logSecurityEvent('2fa_success', $client->id, request(), "2FA verified: {$method}", [
-                'session_id' => $session->id
+                'session_id' => $session->id,
             ]);
 
             return $this->successResponse('Two-factor authentication successful');
@@ -204,7 +210,7 @@ class PortalAuthService
             Log::error('Two-factor verification error', [
                 'session_id' => $session->id,
                 'method' => $method,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Verification service temporarily unavailable');
@@ -222,7 +228,7 @@ class PortalAuthService
 
             switch ($method) {
                 case ClientPortalSession::TWO_FACTOR_SMS:
-                    if (!$client->phone) {
+                    if (! $client->phone) {
                         return $this->failResponse('Phone number not available');
                     }
                     $result = $this->sendSMSCode($client, $code);
@@ -238,6 +244,7 @@ class PortalAuthService
 
             if ($result) {
                 $this->logSecurityEvent('2fa_sent', $client->id, request(), "2FA code sent: {$method}");
+
                 return $this->successResponse("Verification code sent via {$method}");
             }
 
@@ -247,7 +254,7 @@ class PortalAuthService
             Log::error('Two-factor code sending error', [
                 'session_id' => $session->id,
                 'method' => $method,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to send verification code');
@@ -261,7 +268,7 @@ class PortalAuthService
     {
         try {
             $this->logSecurityEvent('logout', $session->client_id, request(), 'User logout', [
-                'session_id' => $session->id
+                'session_id' => $session->id,
             ]);
 
             $session->revoke('User logout');
@@ -271,7 +278,7 @@ class PortalAuthService
         } catch (Exception $e) {
             Log::error('Logout error', [
                 'session_id' => $session->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Logout failed');
@@ -284,12 +291,12 @@ class PortalAuthService
     public function refreshSession(ClientPortalSession $session): array
     {
         try {
-            if (!$session->refresh()) {
+            if (! $session->refresh()) {
                 return $this->failResponse('Unable to refresh session');
             }
 
             $this->logSecurityEvent('session_refreshed', $session->client_id, request(), 'Session refreshed', [
-                'session_id' => $session->id
+                'session_id' => $session->id,
             ]);
 
             return [
@@ -301,7 +308,7 @@ class PortalAuthService
         } catch (Exception $e) {
             Log::error('Session refresh error', [
                 'session_id' => $session->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Session refresh failed');
@@ -315,14 +322,14 @@ class PortalAuthService
     {
         try {
             $client = Client::where('email', $email)->first();
-            
-            if (!$client) {
+
+            if (! $client) {
                 // Don't reveal if email exists for security
                 return $this->successResponse('If the email address exists, a reset link has been sent');
             }
 
             $portalAccess = $this->getPortalAccess($client);
-            if (!$portalAccess || !$portalAccess->isEnabled()) {
+            if (! $portalAccess || ! $portalAccess->isEnabled()) {
                 return $this->successResponse('If the email address exists, a reset link has been sent');
             }
 
@@ -347,7 +354,7 @@ class PortalAuthService
         } catch (Exception $e) {
             Log::error('Password reset initiation error', [
                 'email' => $email,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Password reset service temporarily unavailable');
@@ -361,19 +368,19 @@ class PortalAuthService
     {
         try {
             $resetData = Cache::get("password_reset:{$token}");
-            
-            if (!$resetData) {
+
+            if (! $resetData) {
                 return $this->failResponse('Invalid or expired reset token');
             }
 
             $client = Client::find($resetData['client_id']);
-            if (!$client) {
+            if (! $client) {
                 return $this->failResponse('Invalid reset token');
             }
 
             // Validate new password
             $validation = $this->validatePassword($newPassword);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->failResponse($validation['message']);
             }
 
@@ -399,7 +406,7 @@ class PortalAuthService
             $this->logSecurityEvent('password_reset_completed', $client->id, request(), 'Password reset completed');
 
             // Create notification
-            $this->createNotification($client, 'password_changed', 'Password Changed', 
+            $this->createNotification($client, 'password_changed', 'Password Changed',
                 'Your password has been successfully changed.');
 
             return $this->successResponse('Password has been successfully reset');
@@ -407,7 +414,7 @@ class PortalAuthService
         } catch (Exception $e) {
             Log::error('Password reset completion error', [
                 'token' => $token,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Password reset failed');
@@ -423,13 +430,13 @@ class PortalAuthService
             $client = $session->client;
 
             // Verify current password
-            if (!$this->verifyPassword($client, $currentPassword)) {
+            if (! $this->verifyPassword($client, $currentPassword)) {
                 return $this->failResponse('Current password is incorrect');
             }
 
             // Validate new password
             $validation = $this->validatePassword($newPassword);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->failResponse($validation['message']);
             }
 
@@ -448,7 +455,7 @@ class PortalAuthService
             $this->logSecurityEvent('password_changed', $client->id, request(), 'Password changed by user');
 
             // Create notification
-            $this->createNotification($client, 'password_changed', 'Password Changed', 
+            $this->createNotification($client, 'password_changed', 'Password Changed',
                 'Your password has been successfully changed.');
 
             return $this->successResponse('Password has been successfully changed');
@@ -456,7 +463,7 @@ class PortalAuthService
         } catch (Exception $e) {
             Log::error('Password change error', [
                 'session_id' => $session->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Password change failed');
@@ -499,14 +506,14 @@ class PortalAuthService
                 ->where('id', $sessionId)
                 ->first();
 
-            if (!$session) {
+            if (! $session) {
                 return $this->failResponse('Session not found');
             }
 
             $session->revoke('Revoked by user');
 
             $this->logSecurityEvent('session_revoked', $client->id, request(), 'Session revoked by user', [
-                'revoked_session_id' => $sessionId
+                'revoked_session_id' => $sessionId,
             ]);
 
             return $this->successResponse('Session has been revoked');
@@ -515,7 +522,7 @@ class PortalAuthService
             Log::error('Session revocation error', [
                 'client_id' => $client->id,
                 'session_id' => $sessionId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Session revocation failed');
@@ -537,18 +544,18 @@ class PortalAuthService
                     'revoked_at' => Carbon::now(),
                 ]);
 
-            $this->logSecurityEvent('all_sessions_revoked', $currentSession->client_id, request(), 
+            $this->logSecurityEvent('all_sessions_revoked', $currentSession->client_id, request(),
                 'All other sessions revoked by user', [
-                'current_session_id' => $currentSession->id,
-                'revoked_count' => $revoked
-            ]);
+                    'current_session_id' => $currentSession->id,
+                    'revoked_count' => $revoked,
+                ]);
 
             return $this->successResponse("Successfully logged out of {$revoked} other devices");
 
         } catch (Exception $e) {
             Log::error('All sessions revocation error', [
                 'session_id' => $currentSession->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Failed to revoke other sessions');
@@ -576,19 +583,19 @@ class PortalAuthService
             $errors[] = "Password must be at least {$this->config['password_min_length']} characters long";
         }
 
-        if ($this->config['password_require_uppercase'] && !preg_match('/[A-Z]/', $password)) {
+        if ($this->config['password_require_uppercase'] && ! preg_match('/[A-Z]/', $password)) {
             $errors[] = 'Password must contain at least one uppercase letter';
         }
 
-        if ($this->config['password_require_lowercase'] && !preg_match('/[a-z]/', $password)) {
+        if ($this->config['password_require_lowercase'] && ! preg_match('/[a-z]/', $password)) {
             $errors[] = 'Password must contain at least one lowercase letter';
         }
 
-        if ($this->config['password_require_numbers'] && !preg_match('/\d/', $password)) {
+        if ($this->config['password_require_numbers'] && ! preg_match('/\d/', $password)) {
             $errors[] = 'Password must contain at least one number';
         }
 
-        if ($this->config['password_require_symbols'] && !preg_match('/[^A-Za-z0-9]/', $password)) {
+        if ($this->config['password_require_symbols'] && ! preg_match('/[^A-Za-z0-9]/', $password)) {
             $errors[] = 'Password must contain at least one special character';
         }
 
@@ -606,7 +613,7 @@ class PortalAuthService
 
     private function performRiskAssessment(Client $client, Request $request, ClientPortalAccess $portalAccess): int
     {
-        if (!$this->config['risk_assessment_enabled']) {
+        if (! $this->config['risk_assessment_enabled']) {
             return 0;
         }
 
@@ -643,7 +650,7 @@ class PortalAuthService
 
     private function shouldRequireTwoFactor(ClientPortalAccess $portalAccess, int $riskScore): bool
     {
-        if (!$this->config['two_factor_enabled']) {
+        if (! $this->config['two_factor_enabled']) {
             return false;
         }
 
@@ -658,12 +665,12 @@ class PortalAuthService
 
     private function isLocationAllowed(ClientPortalAccess $portalAccess, Request $request): bool
     {
-        if (!$this->config['geo_blocking_enabled']) {
+        if (! $this->config['geo_blocking_enabled']) {
             return true;
         }
 
         $location = $this->getLocationFromIP($request->ip());
-        if (!$location) {
+        if (! $location) {
             return true; // Allow if we can't determine location
         }
 
@@ -700,10 +707,10 @@ class PortalAuthService
     private function extractDeviceInfo(Request $request): array
     {
         $userAgent = $request->userAgent() ?? '';
-        
+
         // Basic user agent parsing (consider using a proper library like jenssegers/agent)
         $isMobile = preg_match('/Mobile|Android|iPhone|iPad/', $userAgent);
-        
+
         return [
             'device_name' => $this->parseDeviceName($userAgent),
             'device_type' => $isMobile ? 'mobile' : 'desktop',
@@ -717,13 +724,13 @@ class PortalAuthService
 
     private function generateDeviceId(Request $request): string
     {
-        return hash('sha256', $request->ip() . $request->userAgent() . date('Y-m-d'));
+        return hash('sha256', $request->ip().$request->userAgent().date('Y-m-d'));
     }
 
     private function isTrustedDevice(Client $client, Request $request): bool
     {
         $deviceId = $this->generateDeviceId($request);
-        
+
         return ClientPortalSession::where('client_id', $client->id)
             ->where('device_id', $deviceId)
             ->where('is_trusted_device', true)
@@ -733,8 +740,8 @@ class PortalAuthService
     private function isUnknownDevice(Client $client, Request $request): bool
     {
         $deviceId = $this->generateDeviceId($request);
-        
-        return !ClientPortalSession::where('client_id', $client->id)
+
+        return ! ClientPortalSession::where('client_id', $client->id)
             ->where('device_id', $deviceId)
             ->exists();
     }
@@ -749,20 +756,20 @@ class PortalAuthService
     private function getAvailableTwoFactorMethods(ClientPortalAccess $portalAccess): array
     {
         $methods = [];
-        
+
         if ($portalAccess->client->phone) {
             $methods[] = ClientPortalSession::TWO_FACTOR_SMS;
         }
-        
+
         if ($portalAccess->client->email) {
             $methods[] = ClientPortalSession::TWO_FACTOR_EMAIL;
         }
-        
+
         // Add authenticator if configured
         if ($this->hasAuthenticatorSetup($portalAccess->client)) {
             $methods[] = ClientPortalSession::TWO_FACTOR_AUTHENTICATOR;
         }
-        
+
         return $methods;
     }
 
@@ -775,12 +782,13 @@ class PortalAuthService
     {
         $cacheKey = "sms_code:{$client->id}";
         $storedCode = Cache::get($cacheKey);
-        
+
         if ($storedCode && $storedCode === $code) {
             Cache::forget($cacheKey);
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -788,12 +796,13 @@ class PortalAuthService
     {
         $cacheKey = "email_code:{$client->id}";
         $storedCode = Cache::get($cacheKey);
-        
+
         if ($storedCode && $storedCode === $code) {
             Cache::forget($cacheKey);
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -807,11 +816,11 @@ class PortalAuthService
     {
         // Store code with expiration
         Cache::put("sms_code:{$client->id}", $code, 300); // 5 minutes
-        
+
         // Implement SMS sending (using services like Twilio)
         // For now, just log it
         Log::info("SMS 2FA code for client {$client->id}: {$code}");
-        
+
         return true;
     }
 
@@ -819,14 +828,16 @@ class PortalAuthService
     {
         // Store code with expiration
         Cache::put("email_code:{$client->id}", $code, 300); // 5 minutes
-        
+
         // Send email with code
         try {
             // Implement email sending
             Log::info("Email 2FA code for client {$client->id}: {$code}");
+
             return true;
         } catch (Exception $e) {
             Log::error('Failed to send 2FA email', ['error' => $e->getMessage()]);
+
             return false;
         }
     }
@@ -841,6 +852,7 @@ class PortalAuthService
     {
         // Implement password reset email sending
         Log::info("Password reset token for client {$client->id}: {$token}");
+
         return true;
     }
 
@@ -859,8 +871,8 @@ class PortalAuthService
         ]);
     }
 
-    private function logSecurityEvent(string $eventType, ?int $clientId, Request $request, 
-                                    string $description = '', array $metadata = []): void
+    private function logSecurityEvent(string $eventType, ?int $clientId, Request $request,
+        string $description = '', array $metadata = []): void
     {
         // Create audit log entry using your audit logging system
         Log::info('Portal Security Event', [
@@ -904,7 +916,7 @@ class PortalAuthService
         if (preg_match('/Macintosh/', $userAgent)) {
             return 'Mac';
         }
-        
+
         return 'Unknown Device';
     }
 
@@ -916,13 +928,13 @@ class PortalAuthService
         if (preg_match('/Firefox/', $userAgent)) {
             return 'Firefox';
         }
-        if (preg_match('/Safari/', $userAgent) && !preg_match('/Chrome/', $userAgent)) {
+        if (preg_match('/Safari/', $userAgent) && ! preg_match('/Chrome/', $userAgent)) {
             return 'Safari';
         }
         if (preg_match('/Edge/', $userAgent)) {
             return 'Edge';
         }
-        
+
         return 'Unknown Browser';
     }
 
@@ -937,7 +949,7 @@ class PortalAuthService
         if (preg_match('/Version\/([0-9.]+).*Safari/', $userAgent, $matches)) {
             return $matches[1];
         }
-        
+
         return 'Unknown';
     }
 
@@ -958,7 +970,7 @@ class PortalAuthService
         if (preg_match('/Linux/', $userAgent)) {
             return 'Linux';
         }
-        
+
         return 'Unknown OS';
     }
 
@@ -976,7 +988,7 @@ class PortalAuthService
         if (preg_match('/Android ([0-9.]+)/', $userAgent, $matches)) {
             return $matches[1];
         }
-        
+
         return 'Unknown';
     }
 
@@ -988,7 +1000,7 @@ class PortalAuthService
         ], $data);
     }
 
-    private function failResponse(string $message, string $errorCode = null): array
+    private function failResponse(string $message, ?string $errorCode = null): array
     {
         $response = [
             'success' => false,

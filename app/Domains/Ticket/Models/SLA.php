@@ -2,21 +2,20 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToCompany;
 use App\Models\Client;
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * SLA Model for Domain-Driven Design
- * 
+ *
  * Represents Service Level Agreements with comprehensive terms including
  * response times, resolution times, business hours, escalation policies,
  * and performance targets.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $name
@@ -54,7 +53,7 @@ use Carbon\Carbon;
  */
 class SLA extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'slas';
 
@@ -125,15 +124,20 @@ class SLA extends Model
      * Priority levels
      */
     const PRIORITY_CRITICAL = 'critical';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_MEDIUM = 'medium';
+
     const PRIORITY_LOW = 'low';
 
     /**
      * Coverage types
      */
     const COVERAGE_24_7 = '24/7';
+
     const COVERAGE_BUSINESS_HOURS = 'business_hours';
+
     const COVERAGE_CUSTOM = 'custom';
 
     /**
@@ -166,12 +170,12 @@ class SLA extends Model
     public function scopeEffectiveOn($query, $date = null)
     {
         $date = $date ?: now()->toDateString();
-        
+
         return $query->where('effective_from', '<=', $date)
-                    ->where(function ($q) use ($date) {
-                        $q->whereNull('effective_to')
-                          ->orWhere('effective_to', '>=', $date);
-                    });
+            ->where(function ($q) use ($date) {
+                $q->whereNull('effective_to')
+                    ->orWhere('effective_to', '>=', $date);
+            });
     }
 
     /**
@@ -179,7 +183,8 @@ class SLA extends Model
      */
     public function getResponseTimeMinutes(string $priority): int
     {
-        $field = strtolower($priority) . '_response_minutes';
+        $field = strtolower($priority).'_response_minutes';
+
         return $this->$field ?? $this->low_response_minutes;
     }
 
@@ -188,7 +193,8 @@ class SLA extends Model
      */
     public function getResolutionTimeMinutes(string $priority): int
     {
-        $field = strtolower($priority) . '_resolution_minutes';
+        $field = strtolower($priority).'_resolution_minutes';
+
         return $this->$field ?? $this->low_resolution_minutes;
     }
 
@@ -198,11 +204,11 @@ class SLA extends Model
     public function calculateResponseDeadline(Carbon $createdAt, string $priority): Carbon
     {
         $responseMinutes = $this->getResponseTimeMinutes($priority);
-        
+
         if ($this->coverage_type === self::COVERAGE_24_7) {
             return $createdAt->addMinutes($responseMinutes);
         }
-        
+
         return $this->addBusinessMinutes($createdAt, $responseMinutes);
     }
 
@@ -212,11 +218,11 @@ class SLA extends Model
     public function calculateResolutionDeadline(Carbon $createdAt, string $priority): Carbon
     {
         $resolutionMinutes = $this->getResolutionTimeMinutes($priority);
-        
+
         if ($this->coverage_type === self::COVERAGE_24_7) {
             return $createdAt->addMinutes($resolutionMinutes);
         }
-        
+
         return $this->addBusinessMinutes($createdAt, $resolutionMinutes);
     }
 
@@ -229,19 +235,20 @@ class SLA extends Model
         $businessStartTime = Carbon::createFromTimeString($this->business_hours_start);
         $businessEndTime = Carbon::createFromTimeString($this->business_hours_end);
         $minutesPerDay = $businessStartTime->diffInMinutes($businessEndTime);
-        
+
         while ($minutes > 0) {
             // Skip to next business day if current time is outside business hours
-            if (!$this->isBusinessTime($current)) {
+            if (! $this->isBusinessTime($current)) {
                 $current = $this->getNextBusinessTime($current);
+
                 continue;
             }
-            
+
             // Calculate minutes remaining in current business day
             $endOfBusinessDay = $current->copy()
                 ->setTime($businessEndTime->hour, $businessEndTime->minute);
             $minutesRemainingInDay = $current->diffInMinutes($endOfBusinessDay);
-            
+
             if ($minutes <= $minutesRemainingInDay) {
                 // Can complete within current business day
                 $current->addMinutes($minutes);
@@ -252,7 +259,7 @@ class SLA extends Model
                 $current = $this->getNextBusinessTime($endOfBusinessDay);
             }
         }
-        
+
         return $current;
     }
 
@@ -262,18 +269,18 @@ class SLA extends Model
     public function isBusinessTime(Carbon $time): bool
     {
         $time = $time->copy()->setTimezone($this->timezone);
-        
+
         // Check if it's a business day
         $dayOfWeek = strtolower($time->format('l'));
-        if (!in_array($dayOfWeek, $this->business_days)) {
+        if (! in_array($dayOfWeek, $this->business_days)) {
             return false;
         }
-        
+
         // Check if it's within business hours
         $businessStart = Carbon::createFromTimeString($this->business_hours_start, $this->timezone);
         $businessEnd = Carbon::createFromTimeString($this->business_hours_end, $this->timezone);
         $currentTime = Carbon::createFromTimeString($time->format('H:i:s'), $this->timezone);
-        
+
         return $currentTime->between($businessStart, $businessEnd);
     }
 
@@ -284,15 +291,15 @@ class SLA extends Model
     {
         $next = $time->copy()->setTimezone($this->timezone);
         $businessStart = Carbon::createFromTimeString($this->business_hours_start);
-        
+
         // Start from next day
         $next->addDay()->setTime($businessStart->hour, $businessStart->minute);
-        
+
         // Find next business day
-        while (!$this->isBusinessDay($next)) {
+        while (! $this->isBusinessDay($next)) {
             $next->addDay();
         }
-        
+
         return $next;
     }
 
@@ -302,23 +309,26 @@ class SLA extends Model
     protected function isBusinessDay(Carbon $date): bool
     {
         $dayOfWeek = strtolower($date->format('l'));
+
         return in_array($dayOfWeek, $this->business_days);
     }
 
     /**
      * Check if SLA is breached for given timestamps
      */
-    public function isBreached(Carbon $createdAt, string $priority, string $type = 'response', Carbon $resolvedAt = null): bool
+    public function isBreached(Carbon $createdAt, string $priority, string $type = 'response', ?Carbon $resolvedAt = null): bool
     {
         if ($type === 'response') {
             $deadline = $this->calculateResponseDeadline($createdAt, $priority);
+
             return now()->gt($deadline);
         } elseif ($type === 'resolution') {
             $deadline = $this->calculateResolutionDeadline($createdAt, $priority);
             $checkTime = $resolvedAt ?: now();
+
             return $checkTime->gt($deadline);
         }
-        
+
         return false;
     }
 
@@ -332,10 +342,10 @@ class SLA extends Model
             $totalMinutes = $createdAt->diffInMinutes($deadline);
             $elapsedMinutes = $createdAt->diffInMinutes(now());
             $percentageElapsed = ($elapsedMinutes / $totalMinutes) * 100;
-            
+
             return $percentageElapsed >= $this->breach_warning_percentage;
         }
-        
+
         return false;
     }
 

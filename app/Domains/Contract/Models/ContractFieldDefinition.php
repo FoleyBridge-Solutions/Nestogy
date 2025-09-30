@@ -9,13 +9,13 @@ use Illuminate\Support\Str;
 
 /**
  * ContractFieldDefinition Model
- * 
+ *
  * Defines custom fields for contracts, replacing hardcoded form fields.
  * Each company can define their own field types and configurations.
  */
 class ContractFieldDefinition extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'contract_field_definitions';
 
@@ -54,21 +54,37 @@ class ContractFieldDefinition extends Model
      * Field type constants
      */
     const TYPE_TEXT = 'text';
+
     const TYPE_TEXTAREA = 'textarea';
+
     const TYPE_NUMBER = 'number';
+
     const TYPE_EMAIL = 'email';
+
     const TYPE_DATE = 'date';
+
     const TYPE_DATETIME = 'datetime';
+
     const TYPE_SELECT = 'select';
+
     const TYPE_MULTISELECT = 'multiselect';
+
     const TYPE_CHECKBOX = 'checkbox';
+
     const TYPE_RADIO = 'radio';
+
     const TYPE_FILE = 'file';
+
     const TYPE_CLIENT_SELECTOR = 'client_selector';
+
     const TYPE_ASSET_SELECTOR = 'asset_selector';
+
     const TYPE_USER_SELECTOR = 'user_selector';
+
     const TYPE_CURRENCY = 'currency';
+
     const TYPE_PERCENTAGE = 'percentage';
+
     const TYPE_JSON = 'json';
 
     /**
@@ -101,7 +117,7 @@ class ContractFieldDefinition extends Model
     public function getValidationRules(): array
     {
         $rules = $this->validation_rules ?? [];
-        
+
         if ($this->is_required) {
             $rules[] = 'required';
         }

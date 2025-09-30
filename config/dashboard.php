@@ -21,13 +21,13 @@ return [
     */
     'lazy_loading' => [
         'enabled' => env('DASHBOARD_LAZY_LOADING', true),
-        
+
         // Widgets that should always load immediately (never lazy)
         'immediate' => [
             'alert-panel',  // Critical alerts should always be visible
             'kpi-grid',     // Key metrics above the fold
         ],
-        
+
         // Widgets that load when visible in viewport
         'viewport' => [
             'revenue-chart',
@@ -42,7 +42,7 @@ return [
             'payment-tracking',
             'collection-metrics',
         ],
-        
+
         // Widgets that load after page is ready
         'deferred' => [
             'activity-feed',
@@ -65,10 +65,10 @@ return [
     */
     'cache' => [
         'enabled' => env('DASHBOARD_CACHE_ENABLED', true),
-        
+
         // Default cache duration in seconds
         'ttl' => env('DASHBOARD_CACHE_TTL', 300), // 5 minutes
-        
+
         // Widget-specific cache durations
         'widget_ttl' => [
             'kpi-grid' => 300,        // 5 minutes
@@ -104,7 +104,7 @@ return [
     'refresh' => [
         'auto_refresh' => env('DASHBOARD_AUTO_REFRESH', true),
         'interval' => env('DASHBOARD_REFRESH_INTERVAL', 30), // seconds
-        
+
         // Widgets that should auto-refresh
         'widgets' => [
             'alert-panel' => 15,      // Refresh every 15 seconds

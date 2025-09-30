@@ -3,15 +3,14 @@
 namespace App\Domains\Client\Controllers\Api\Portal;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Invoice;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Portal Invoice Controller
- * 
+ *
  * Handles invoice-related functionality including:
  * - Invoice listing and search
  * - Invoice details and line items
@@ -28,12 +27,12 @@ class InvoiceController extends PortalApiController
     {
         try {
             $client = $this->requireAuthentication();
-            
+
             $this->applyRateLimit('invoices', 120, 60);
             $this->logActivity('invoices_view');
 
             $filters = $this->getFilterParams($request, [
-                'status', 'start_date', 'end_date', 'search'
+                'status', 'start_date', 'end_date', 'search',
             ]);
 
             $query = $client->invoices()->with(['items', 'payments']);
@@ -54,7 +53,7 @@ class InvoiceController extends PortalApiController
             if (isset($filters['search'])) {
                 $query->where(function ($q) use ($filters) {
                     $q->where('number', 'like', "%{$filters['search']}%")
-                      ->orWhere('description', 'like', "%{$filters['search']}%");
+                        ->orWhere('description', 'like', "%{$filters['search']}%");
                 });
             }
 
@@ -112,7 +111,7 @@ class InvoiceController extends PortalApiController
     {
         try {
             $client = $this->requireAuthentication();
-            
+
             $this->applyRateLimit('invoice_details', 180, 60);
             $this->logActivity('invoice_view', ['invoice_id' => $invoiceId]);
 
@@ -121,7 +120,7 @@ class InvoiceController extends PortalApiController
                 ->where('id', $invoiceId)
                 ->first();
 
-            if (!$invoice) {
+            if (! $invoice) {
                 return $this->errorResponse('Invoice not found', 404);
             }
 
@@ -196,20 +195,20 @@ class InvoiceController extends PortalApiController
     {
         try {
             $client = $this->requireAuthentication();
-            
+
             $this->applyRateLimit('invoice_summary', 60, 60);
             $this->logActivity('invoice_summary_view');
 
             $now = now();
             $startOfYear = $now->copy()->startOfYear();
             $startOfMonth = $now->copy()->startOfMonth();
-            
+
             $summary = [
                 'current_balance' => $client->getBalance(),
                 'total_outstanding' => $client->getOutstandingBalance(),
                 'overdue_amount' => $client->getOverdueAmount(),
                 'overdue_count' => $client->invoices()->overdue()->count(),
-                
+
                 'this_year' => [
                     'total_invoiced' => $client->invoices()
                         ->where('date', '>=', $startOfYear)
@@ -219,7 +218,7 @@ class InvoiceController extends PortalApiController
                         ->where('date', '>=', $startOfYear)
                         ->count(),
                 ],
-                
+
                 'this_month' => [
                     'total_invoiced' => $client->invoices()
                         ->where('date', '>=', $startOfMonth)
@@ -229,7 +228,7 @@ class InvoiceController extends PortalApiController
                         ->where('date', '>=', $startOfMonth)
                         ->count(),
                 ],
-                
+
                 'recent_invoices' => $client->invoices()
                     ->latest('date')
                     ->take(5)
@@ -244,7 +243,7 @@ class InvoiceController extends PortalApiController
                             'status' => $invoice->status,
                         ];
                     }),
-                    
+
                 'upcoming_due' => $client->invoices()
                     ->where('status', '!=', 'paid')
                     ->where('due_date', '>', $now)
@@ -278,7 +277,7 @@ class InvoiceController extends PortalApiController
     {
         try {
             $client = $this->requireAuthentication();
-            
+
             $this->applyRateLimit('invoice_pdf', 30, 60);
             $this->logActivity('invoice_pdf_download', ['invoice_id' => $invoiceId]);
 
@@ -286,14 +285,14 @@ class InvoiceController extends PortalApiController
                 ->where('id', $invoiceId)
                 ->first();
 
-            if (!$invoice) {
+            if (! $invoice) {
                 return $this->errorResponse('Invoice not found', 404);
             }
 
             // In a real implementation, you would generate or retrieve the PDF
             // For now, return the URL where the PDF can be accessed
             $pdfUrl = route('portal.invoices.pdf', $invoice->id);
-            
+
             return $this->successResponse('Invoice PDF available for download', [
                 'invoice_id' => $invoice->id,
                 'invoice_number' => $invoice->number,
@@ -313,7 +312,7 @@ class InvoiceController extends PortalApiController
     {
         try {
             $client = $this->requireAuthentication();
-            
+
             $this->applyRateLimit('payment_options', 60, 60);
             $this->logActivity('payment_options_view', ['invoice_id' => $invoiceId]);
 
@@ -321,11 +320,11 @@ class InvoiceController extends PortalApiController
                 ->where('id', $invoiceId)
                 ->first();
 
-            if (!$invoice) {
+            if (! $invoice) {
                 return $this->errorResponse('Invoice not found', 404);
             }
 
-            if (!$invoice->canBePaid()) {
+            if (! $invoice->canBePaid()) {
                 return $this->errorResponse('Invoice cannot be paid', 400);
             }
 
@@ -344,7 +343,7 @@ class InvoiceController extends PortalApiController
                 });
 
             $balance = $invoice->getBalance();
-            
+
             $paymentOptions = [
                 'invoice' => [
                     'id' => $invoice->id,
@@ -386,7 +385,7 @@ class InvoiceController extends PortalApiController
         try {
             $client = $this->requireAuthentication();
             $this->requirePermission('view_analytics');
-            
+
             $this->applyRateLimit('invoice_statistics', 30, 60);
             $this->logActivity('invoice_statistics_view');
 
@@ -437,11 +436,11 @@ class InvoiceController extends PortalApiController
         // This is a simplified version - in a real implementation you'd create more detailed trends
         $months = [];
         $current = $startDate->copy()->startOfMonth();
-        
+
         while ($current->lte($endDate)) {
             $monthStart = $current->copy();
             $monthEnd = $current->copy()->endOfMonth();
-            
+
             $months[] = [
                 'month' => $monthStart->format('Y-m'),
                 'invoiced' => $client->invoices()
@@ -449,10 +448,10 @@ class InvoiceController extends PortalApiController
                     ->sum('amount'),
                 'paid' => $client->getTotalPaidInRange($monthStart, $monthEnd),
             ];
-            
+
             $current->addMonth();
         }
-        
+
         return $months;
     }
 }

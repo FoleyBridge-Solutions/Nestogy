@@ -2,19 +2,18 @@
 
 namespace App\Jobs;
 
-use App\Models\Recurring;
 use App\Domains\Product\Services\VoIPUsageService;
+use App\Models\Recurring;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * ProcessVoIPUsageData Job
- * 
+ *
  * Handles processing of VoIP usage data for usage-based and tiered billing.
  */
 class ProcessVoIPUsageData implements ShouldQueue
@@ -22,11 +21,15 @@ class ProcessVoIPUsageData implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 600; // 10 minutes for large datasets
+
     public $tries = 3;
+
     public $maxExceptions = 2;
 
     protected $recurringId;
+
     protected $usageData;
+
     protected $processingOptions;
 
     /**
@@ -40,7 +43,7 @@ class ProcessVoIPUsageData implements ShouldQueue
             'validate_data' => true,
             'calculate_costs' => true,
             'update_recurring' => true,
-            'generate_reports' => false
+            'generate_reports' => false,
         ], $processingOptions);
 
         $this->onQueue('usage-processing');
@@ -57,7 +60,7 @@ class ProcessVoIPUsageData implements ShouldQueue
             Log::info('Starting VoIP usage data processing', [
                 'recurring_id' => $this->recurringId,
                 'client_id' => $recurring->client_id,
-                'data_records_count' => count($this->usageData['records'] ?? [])
+                'data_records_count' => count($this->usageData['records'] ?? []),
             ]);
 
             // Process usage data
@@ -80,14 +83,14 @@ class ProcessVoIPUsageData implements ShouldQueue
                 'recurring_id' => $this->recurringId,
                 'processed_count' => $results['processed_count'],
                 'total_usage' => $results['total_usage'],
-                'total_cost' => $results['total_cost']
+                'total_cost' => $results['total_cost'],
             ]);
 
         } catch (\Exception $e) {
             Log::error('VoIP usage data processing failed', [
                 'recurring_id' => $this->recurringId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw $e;
@@ -103,7 +106,7 @@ class ProcessVoIPUsageData implements ShouldQueue
             'recurring_id' => $this->recurringId,
             'data_records_count' => count($this->usageData['records'] ?? []),
             'error' => $exception->getMessage(),
-            'attempts' => $this->attempts()
+            'attempts' => $this->attempts(),
         ]);
     }
 
@@ -121,7 +124,7 @@ class ProcessVoIPUsageData implements ShouldQueue
             'total_usage' => $results['total_usage'],
             'total_cost' => $results['total_cost'],
             'last_processed_at' => now()->toISOString(),
-            'processing_errors' => count($results['errors'] ?? [])
+            'processing_errors' => count($results['errors'] ?? []),
         ];
 
         // Keep only last 12 months of metrics
@@ -160,14 +163,14 @@ class ProcessVoIPUsageData implements ShouldQueue
             // Alert if usage exceeds 80% of allowance
             if ($allowance > 0 && $currentUsage >= ($allowance * 0.8)) {
                 $percentage = round(($currentUsage / $allowance) * 100, 1);
-                
+
                 $alerts[] = [
                     'type' => 'overage_warning',
                     'service_type' => $serviceType,
                     'current_usage' => $currentUsage,
                     'allowance' => $allowance,
                     'usage_percentage' => $percentage,
-                    'severity' => $percentage >= 100 ? 'critical' : 'warning'
+                    'severity' => $percentage >= 100 ? 'critical' : 'warning',
                 ];
             }
         }
@@ -180,12 +183,12 @@ class ProcessVoIPUsageData implements ShouldQueue
                 'current_usage' => $results['total_usage'],
                 'average_usage' => $averageUsage,
                 'spike_multiplier' => round($results['total_usage'] / $averageUsage, 1),
-                'severity' => 'warning'
+                'severity' => 'warning',
             ];
         }
 
         // Dispatch alert notifications if any alerts found
-        if (!empty($alerts)) {
+        if (! empty($alerts)) {
             $this->dispatchUsageAlerts($recurring, $alerts);
         }
     }
@@ -203,6 +206,7 @@ class ProcessVoIPUsageData implements ShouldQueue
         }
 
         $totalUsage = array_sum(array_column($usageMetrics, 'total_usage'));
+
         return $totalUsage / count($usageMetrics);
     }
 
@@ -214,13 +218,13 @@ class ProcessVoIPUsageData implements ShouldQueue
         foreach ($alerts as $alert) {
             // NotifyUsageAlert::dispatch($recurring->id, $alert)
             //     ->onQueue('notifications');
-            
+
             Log::warning('VoIP usage alert triggered', [
                 'recurring_id' => $recurring->id,
                 'client_id' => $recurring->client_id,
                 'alert_type' => $alert['type'],
                 'severity' => $alert['severity'],
-                'details' => $alert
+                'details' => $alert,
             ]);
         }
     }
@@ -233,7 +237,7 @@ class ProcessVoIPUsageData implements ShouldQueue
         return [
             'usage-processing',
             'voip-usage',
-            'recurring:' . $this->recurringId
+            'recurring:'.$this->recurringId,
         ];
     }
 }

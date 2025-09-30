@@ -2,13 +2,13 @@
 
 namespace App\Domains\Ticket\Services;
 
-use App\Domains\Ticket\Models\Ticket;
-use App\Domains\Ticket\Models\TicketTimeEntry;
-use App\Models\User;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Product\Services\RateConfigurationService;
+use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Ticket\Models\TicketTimeEntry;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * TimeTrackingService - Comprehensive time tracking for MSP billing
- * 
+ *
  * Handles automated time tracking, billable hours management, approval workflows,
  * and integration with invoice generation. Critical for accurate MSP billing.
  */
@@ -26,18 +26,26 @@ class TimeTrackingService
      * Billing rate tiers (use constants from RateConfigurationService)
      */
     const RATE_STANDARD = RateConfigurationService::RATE_STANDARD;
+
     const RATE_AFTER_HOURS = RateConfigurationService::RATE_AFTER_HOURS;
+
     const RATE_EMERGENCY = RateConfigurationService::RATE_EMERGENCY;
+
     const RATE_WEEKEND = RateConfigurationService::RATE_WEEKEND;
+
     const RATE_HOLIDAY = RateConfigurationService::RATE_HOLIDAY;
 
     /**
      * Time entry statuses
      */
     const STATUS_DRAFT = 'draft';
+
     const STATUS_SUBMITTED = 'submitted';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_INVOICED = 'invoiced';
+
     const STATUS_REJECTED = 'rejected';
 
     /**
@@ -55,11 +63,6 @@ class TimeTrackingService
 
     /**
      * Start time tracking for a ticket
-     *
-     * @param Ticket $ticket
-     * @param User $technician
-     * @param array $options
-     * @return TicketTimeEntry
      */
     public function startTracking(Ticket $ticket, User $technician, array $options = []): TicketTimeEntry
     {
@@ -69,7 +72,7 @@ class TimeTrackingService
             throw new \Exception('You already have an active timer for this ticket. Please stop it first.');
         }
 
-        $entry = new TicketTimeEntry();
+        $entry = new TicketTimeEntry;
         $entry->ticket_id = $ticket->id;
         $entry->company_id = $ticket->company_id;
         $entry->user_id = $technician->id;
@@ -80,7 +83,7 @@ class TimeTrackingService
         $entry->rate_type = $this->determineRateType($entry->started_at);
         $entry->hourly_rate = $this->getHourlyRate($ticket, $entry->rate_type);
         $entry->work_type = $options['work_type'] ?? 'general_support';
-        $entry->description = $options['description'] ?? 'Time tracking for ticket #' . $ticket->number;
+        $entry->description = $options['description'] ?? 'Time tracking for ticket #'.$ticket->number;
         $entry->metadata = [
             'auto_started' => $options['auto_start'] ?? false,
             'location' => $options['location'] ?? 'remote',
@@ -100,10 +103,6 @@ class TimeTrackingService
 
     /**
      * Stop time tracking
-     * 
-     * @param TicketTimeEntry $entry
-     * @param array $options
-     * @return TicketTimeEntry
      */
     public function stopTracking(TicketTimeEntry $entry, array $options = []): TicketTimeEntry
     {
@@ -115,31 +114,31 @@ class TimeTrackingService
 
         try {
             $entry->ended_at = $options['end_time'] ?? now();
-            
+
             // Calculate duration
             $duration = $this->calculateDuration($entry->started_at, $entry->ended_at);
             $entry->hours_worked = $duration['hours'];
             $entry->minutes_worked = round($duration['minutes']); // Ensure integer value
-            
+
             // Apply rounding rules
             $entry->hours_billed = $this->applyBillingRules($duration, $entry);
-            
+
             // Calculate amount
             $entry->amount = $entry->billable ? ($entry->hours_billed * $entry->hourly_rate) : 0;
-            
+
             // Update description if provided
             if (isset($options['description'])) {
                 $entry->description = $options['description'];
             }
-            
+
             // Update work performed if provided
             if (isset($options['work_performed'])) {
                 $entry->work_performed = $options['work_performed'];
             }
-            
+
             // Set status based on approval requirements
             $entry->status = $this->requiresApproval($entry) ? self::STATUS_SUBMITTED : self::STATUS_APPROVED;
-            
+
             $entry->save();
 
             // Update ticket totals
@@ -168,10 +167,6 @@ class TimeTrackingService
 
     /**
      * Pause time tracking
-     * 
-     * @param TicketTimeEntry $entry
-     * @param string $reason
-     * @return TicketTimeEntry
      */
     public function pauseTracking(TicketTimeEntry $entry, ?string $reason = null): TicketTimeEntry
     {
@@ -180,8 +175,8 @@ class TimeTrackingService
         }
 
         $metadata = $entry->metadata ?? [];
-        
-        if (!isset($metadata['pauses'])) {
+
+        if (! isset($metadata['pauses'])) {
             $metadata['pauses'] = [];
         }
 
@@ -204,30 +199,27 @@ class TimeTrackingService
 
     /**
      * Resume time tracking
-     * 
-     * @param TicketTimeEntry $entry
-     * @return TicketTimeEntry
      */
     public function resumeTracking(TicketTimeEntry $entry): TicketTimeEntry
     {
         $metadata = $entry->metadata ?? [];
-        
-        if (!($metadata['is_paused'] ?? false)) {
+
+        if (! ($metadata['is_paused'] ?? false)) {
             throw new \Exception('Time entry is not paused.');
         }
 
         $lastPause = end($metadata['pauses']);
         $pauseDuration = now()->diffInMinutes($lastPause['paused_at']);
-        
+
         // Adjust start time to account for pause
         $entry->started_at = $entry->started_at->addMinutes($pauseDuration);
-        
+
         // Update pause record
         $metadata['pauses'][count($metadata['pauses']) - 1]['resumed_at'] = now()->toDateTimeString();
         $metadata['pauses'][count($metadata['pauses']) - 1]['duration_minutes'] = $pauseDuration;
         $metadata['is_paused'] = false;
         $metadata['total_pause_minutes'] = ($metadata['total_pause_minutes'] ?? 0) + $pauseDuration;
-        
+
         $entry->metadata = $metadata;
         $entry->save();
 
@@ -241,10 +233,8 @@ class TimeTrackingService
 
     /**
      * Submit time entries for approval
-     * 
-     * @param Collection|array $entries
-     * @param User $submitter
-     * @return array
+     *
+     * @param  Collection|array  $entries
      */
     public function submitForApproval($entries, User $submitter): array
     {
@@ -262,6 +252,7 @@ class TimeTrackingService
                         'entry_id' => $entry->id,
                         'error' => 'Entry is not in draft status',
                     ];
+
                     continue;
                 }
 
@@ -290,11 +281,8 @@ class TimeTrackingService
 
     /**
      * Approve time entries
-     * 
-     * @param Collection|array $entries
-     * @param User $approver
-     * @param string|null $notes
-     * @return array
+     *
+     * @param  Collection|array  $entries
      */
     public function approveEntries($entries, User $approver, ?string $notes = null): array
     {
@@ -314,6 +302,7 @@ class TimeTrackingService
                         'entry_id' => $entry->id,
                         'error' => 'Entry is not pending approval',
                     ];
+
                     continue;
                 }
 
@@ -343,10 +332,6 @@ class TimeTrackingService
 
     /**
      * Generate invoice items from approved time entries
-     * 
-     * @param Invoice $invoice
-     * @param Collection $entries
-     * @return array
      */
     public function generateInvoiceItems(Invoice $invoice, Collection $entries): array
     {
@@ -355,7 +340,7 @@ class TimeTrackingService
 
         // Group entries by work type and rate
         $grouped = $entries->groupBy(function ($entry) {
-            return $entry->work_type . '_' . $entry->hourly_rate;
+            return $entry->work_type.'_'.$entry->hourly_rate;
         });
 
         foreach ($grouped as $key => $group) {
@@ -410,9 +395,6 @@ class TimeTrackingService
 
     /**
      * Get active timer for technician
-     *
-     * @param User $technician
-     * @return TicketTimeEntry|null
      */
     public function getActiveTimer(User $technician): ?TicketTimeEntry
     {
@@ -426,10 +408,6 @@ class TimeTrackingService
 
     /**
      * Get active timer for technician on a specific ticket
-     *
-     * @param User $technician
-     * @param Ticket $ticket
-     * @return TicketTimeEntry|null
      */
     public function getActiveTimerForTicket(User $technician, Ticket $ticket): ?TicketTimeEntry
     {
@@ -441,11 +419,10 @@ class TimeTrackingService
             ->whereNull('ended_at')
             ->first();
     }
-    
+
     /**
      * Get all active timers for technician
-     * 
-     * @param User $technician
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getAllActiveTimers(User $technician)
@@ -459,12 +436,9 @@ class TimeTrackingService
             ->orderBy('started_at', 'desc')
             ->get();
     }
-    
+
     /**
      * Get count of active timers for technician
-     * 
-     * @param User $technician
-     * @return int
      */
     public function getActiveTimerCount(User $technician): int
     {
@@ -475,18 +449,15 @@ class TimeTrackingService
             ->whereNull('ended_at')
             ->count();
     }
-    
+
     /**
      * Stop all active timers for technician
-     * 
-     * @param User $technician
-     * @return array
      */
     public function stopAllActiveTimers(User $technician): array
     {
         $timers = $this->getAllActiveTimers($technician);
         $results = [];
-        
+
         foreach ($timers as $timer) {
             try {
                 $result = $this->stopTracking($timer);
@@ -495,29 +466,23 @@ class TimeTrackingService
                     'ticket_id' => $timer->ticket_id,
                     'hours_worked' => $result->hours_worked,
                     'amount' => $result->amount,
-                    'status' => 'stopped'
+                    'status' => 'stopped',
                 ];
             } catch (\Exception $e) {
                 $results[] = [
                     'timer_id' => $timer->id,
                     'ticket_id' => $timer->ticket_id,
                     'status' => 'error',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
-        
+
         return $results;
     }
 
     /**
      * Get time entry summary for period
-     * 
-     * @param int $companyId
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @param array $filters
-     * @return array
      */
     public function getTimeSummary(int $companyId, Carbon $startDate, Carbon $endDate, array $filters = []): array
     {
@@ -570,10 +535,6 @@ class TimeTrackingService
 
     /**
      * Determine if time entry is billable
-     * 
-     * @param Ticket $ticket
-     * @param array $options
-     * @return bool
      */
     protected function determineBillability(Ticket $ticket, array $options = []): bool
     {
@@ -585,30 +546,25 @@ class TimeTrackingService
         // Use rate service for billability determination
         $startTime = $options['start_time'] ?? now();
         $endTime = $options['end_time'] ?? now();
-        
+
         return $this->rateService->isTimeBillable($ticket, $startTime, $endTime);
     }
 
     /**
      * Determine rate type based on time
-     * 
-     * @param Carbon $time
-     * @return string
      */
     public function determineRateType(Carbon $time, bool $isEmergency = false): string
     {
         return $this->rateService->determineRateType($time, $isEmergency);
     }
-    
+
     /**
      * Get current rate information
-     * 
-     * @return array
      */
     public function getCurrentRateInfo(): array
     {
         $rateType = $this->determineRateType(now());
-        
+
         return [
             'rate_type' => $rateType,
             'multiplier' => $this->getRateMultiplier($rateType),
@@ -619,10 +575,6 @@ class TimeTrackingService
 
     /**
      * Get hourly rate for ticket
-     * 
-     * @param Ticket $ticket
-     * @param string $rateType
-     * @return float
      */
     protected function getHourlyRate(Ticket $ticket, string $rateType): float
     {
@@ -631,16 +583,12 @@ class TimeTrackingService
 
     /**
      * Calculate duration between times
-     * 
-     * @param Carbon $start
-     * @param Carbon $end
-     * @return array
      */
     protected function calculateDuration(Carbon $start, Carbon $end): array
     {
         $totalMinutes = $start->diffInMinutes($end);
         $hours = floor($totalMinutes / 60);
-        $minutes = (int)($totalMinutes % 60);
+        $minutes = (int) ($totalMinutes % 60);
 
         return [
             'hours' => $hours + ($minutes / 60),
@@ -651,15 +599,11 @@ class TimeTrackingService
 
     /**
      * Apply billing rules for rounding
-     * 
-     * @param array $duration
-     * @param TicketTimeEntry $entry
-     * @return float
      */
     protected function applyBillingRules(array $duration, TicketTimeEntry $entry): float
     {
         $hours = $duration['hours'];
-        
+
         // Get rounding rules from config or contract
         $roundingRule = 'quarter'; // Can be: none, quarter, half, hour
         $minimumBilling = 0.25; // Minimum billable time
@@ -673,13 +617,13 @@ class TimeTrackingService
         switch ($roundingRule) {
             case 'quarter':
                 return ceil($hours * 4) / 4;
-                
+
             case 'half':
                 return ceil($hours * 2) / 2;
-                
+
             case 'hour':
                 return ceil($hours);
-                
+
             default:
                 return round($hours, 2);
         }
@@ -687,9 +631,6 @@ class TimeTrackingService
 
     /**
      * Check if approval is required
-     * 
-     * @param TicketTimeEntry $entry
-     * @return bool
      */
     protected function requiresApproval(TicketTimeEntry $entry): bool
     {
@@ -711,16 +652,13 @@ class TimeTrackingService
 
     /**
      * Update ticket totals
-     * 
-     * @param Ticket $ticket
-     * @return void
      */
     protected function updateTicketTotals(Ticket $ticket): void
     {
         // TODO: Add time tracking summary columns to tickets table if needed
         // For now, we'll skip updating ticket totals since the columns don't exist
         // in the current schema. Time totals can be calculated on-demand from time entries.
-        
+
         // $totals = TicketTimeEntry::where('ticket_id', $ticket->id)
         //     ->selectRaw('
         //         SUM(hours_worked) as total_hours_worked,
@@ -737,17 +675,12 @@ class TimeTrackingService
 
     /**
      * Get contract hours used
-     * 
-     * @param Contract $contract
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @return float
      */
     protected function getContractHoursUsed(Contract $contract, Carbon $startDate, Carbon $endDate): float
     {
         return TicketTimeEntry::whereHas('ticket', function ($q) use ($contract) {
-                $q->where('client_id', $contract->client_id);
-            })
+            $q->where('client_id', $contract->client_id);
+        })
             ->whereBetween('started_at', [$startDate, $endDate])
             ->where('billable', false) // Non-billable means using contract hours
             ->sum('hours_worked');
@@ -755,30 +688,23 @@ class TimeTrackingService
 
     /**
      * Check if date is a holiday
-     * 
-     * @param Carbon $date
-     * @return bool
      */
     protected function isHoliday(Carbon $date): bool
     {
         // This would check against configured holidays
         $holidays = config('nestogy.time_tracking.holidays', []);
-        
+
         return in_array($date->format('Y-m-d'), $holidays);
     }
 
     /**
      * Generate item description for invoice
-     * 
-     * @param Collection $entries
-     * @param string $workType
-     * @return string
      */
     protected function generateItemDescription(Collection $entries, string $workType): string
     {
         $startDate = $entries->min('started_at');
         $endDate = $entries->max('ended_at');
-        
+
         $workTypeLabels = [
             'general_support' => 'General Support',
             'troubleshooting' => 'Troubleshooting',
@@ -789,7 +715,7 @@ class TimeTrackingService
         ];
 
         $label = $workTypeLabels[$workType] ?? 'Support Services';
-        
+
         return sprintf(
             '%s - %s to %s (%d entries)',
             $label,
@@ -801,11 +727,6 @@ class TimeTrackingService
 
     /**
      * Calculate utilization rate
-     * 
-     * @param Collection $entries
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @return float
      */
     protected function calculateUtilizationRate(Collection $entries, Carbon $startDate, Carbon $endDate): float
     {
@@ -814,40 +735,34 @@ class TimeTrackingService
         }, $endDate);
 
         $availableHours = $workDays * 8; // 8 hours per day
-        
+
         if ($availableHours == 0) {
             return 0;
         }
 
         $billableHours = $entries->where('billable', true)->sum('hours_worked');
-        
+
         return round(($billableHours / $availableHours) * 100, 2);
     }
 
     /**
      * Calculate realization rate
-     * 
-     * @param Collection $entries
-     * @return float
      */
     protected function calculateRealizationRate(Collection $entries): float
     {
         $workedHours = $entries->sum('hours_worked');
-        
+
         if ($workedHours == 0) {
             return 0;
         }
 
         $billedHours = $entries->sum('hours_billed');
-        
+
         return round(($billedHours / $workedHours) * 100, 2);
     }
 
     /**
      * Group entries by status
-     * 
-     * @param Collection $entries
-     * @return array
      */
     protected function groupByStatus(Collection $entries): array
     {
@@ -862,14 +777,12 @@ class TimeTrackingService
 
     /**
      * Group entries by technician
-     * 
-     * @param Collection $entries
-     * @return array
      */
     protected function groupByTechnician(Collection $entries): array
     {
         return $entries->groupBy('user_id')->map(function ($group) {
             $user = $group->first()->user;
+
             return [
                 'name' => $user->name ?? 'Unknown',
                 'entries' => $group->count(),
@@ -883,9 +796,6 @@ class TimeTrackingService
 
     /**
      * Group entries by client
-     * 
-     * @param Collection $entries
-     * @return array
      */
     protected function groupByClient(Collection $entries): array
     {
@@ -893,6 +803,7 @@ class TimeTrackingService
             return $entry->ticket->client_id ?? 0;
         })->map(function ($group) {
             $client = $group->first()->ticket->client ?? null;
+
             return [
                 'name' => $client->name ?? 'Internal',
                 'entries' => $group->count(),
@@ -904,9 +815,6 @@ class TimeTrackingService
 
     /**
      * Group entries by work type
-     * 
-     * @param Collection $entries
-     * @return array
      */
     protected function groupByWorkType(Collection $entries): array
     {
@@ -925,16 +833,12 @@ class TimeTrackingService
 
     /**
      * Get smart rate type based on current time and context
-     * 
-     * @param Carbon|null $time
-     * @param array $context
-     * @return array
      */
     public function getSmartRateInfo(?Carbon $time = null, array $context = []): array
     {
         $time = $time ?? now();
         $rateType = $this->determineRateType($time);
-        
+
         $info = [
             'rate_type' => $rateType,
             'is_premium' => in_array($rateType, [self::RATE_AFTER_HOURS, self::RATE_EMERGENCY, self::RATE_WEEKEND, self::RATE_HOLIDAY]),
@@ -954,18 +858,13 @@ class TimeTrackingService
 
     /**
      * Start smart tracking with auto-suggestions
-     * 
-     * @param Ticket $ticket
-     * @param User $technician
-     * @param array $options
-     * @return array
      */
     public function startSmartTracking(Ticket $ticket, User $technician, array $options = []): array
     {
         // Get work type suggestions
-        $classificationService = new WorkTypeClassificationService();
+        $classificationService = new WorkTypeClassificationService;
         $suggestions = $classificationService->getWorkTypeSuggestions($ticket);
-        
+
         // Get smart rate info
         $rateInfo = $this->getSmartRateInfo(now(), [
             'priority' => $ticket->priority,
@@ -1008,17 +907,11 @@ class TimeTrackingService
 
     /**
      * Create time entry from template
-     * 
-     * @param int $templateId
-     * @param Ticket $ticket
-     * @param User $technician
-     * @param array $overrides
-     * @return TicketTimeEntry
      */
     public function createFromTemplate(int $templateId, Ticket $ticket, User $technician, array $overrides = []): TicketTimeEntry
     {
         $template = \App\Domains\Ticket\Models\TimeEntryTemplate::findOrFail($templateId);
-        
+
         // Verify template belongs to the same company
         if ($template->company_id !== $ticket->company_id) {
             throw new \Exception('Template does not belong to this company.');
@@ -1033,11 +926,11 @@ class TimeTrackingService
 
         // Merge with overrides
         $data = array_merge($defaultData, $overrides);
-        
+
         // Determine rate and amount
         $rateType = $this->determineRateType(now());
         $hourlyRate = $this->getHourlyRate($ticket, $rateType);
-        
+
         $entry = TicketTimeEntry::create([
             'ticket_id' => $ticket->id,
             'user_id' => $technician->id,
@@ -1073,9 +966,6 @@ class TimeTrackingService
 
     /**
      * Validate time entry for smart checks
-     * 
-     * @param array $data
-     * @return array
      */
     public function validateTimeEntry(array $data): array
     {
@@ -1085,15 +975,15 @@ class TimeTrackingService
         // Check for reasonable hours
         if (isset($data['hours_worked'])) {
             $hours = (float) $data['hours_worked'];
-            
+
             if ($hours > 12) {
                 $warnings[] = 'Entry exceeds 12 hours - please verify this is correct';
             }
-            
+
             if ($hours < 0.1) {
                 $warnings[] = 'Very short time entry (less than 6 minutes) - consider minimum billing rules';
             }
-            
+
             if ($hours > 24) {
                 $errors[] = 'Time entry cannot exceed 24 hours';
             }
@@ -1121,10 +1011,6 @@ class TimeTrackingService
 
     /**
      * Get live billing dashboard data for technician
-     * 
-     * @param User $technician
-     * @param Carbon $date
-     * @return array
      */
     public function getBillingDashboard(User $technician, ?Carbon $date = null): array
     {
@@ -1136,14 +1022,14 @@ class TimeTrackingService
 
         // Get active timer
         $activeTimer = $this->getActiveTimer($technician);
-        
+
         // Calculate live active timer amounts
         $activeTimerData = null;
         if ($activeTimer) {
             $elapsedMinutes = $activeTimer->getElapsedTime();
             $elapsedHours = $elapsedMinutes / 60;
             $liveAmount = $activeTimer->billable ? $elapsedHours * $activeTimer->hourly_rate : 0;
-            
+
             $activeTimerData = [
                 'id' => $activeTimer->id,
                 'ticket_id' => $activeTimer->ticket_id,
@@ -1168,7 +1054,7 @@ class TimeTrackingService
         $weekEntries = TicketTimeEntry::where('user_id', $technician->id)
             ->whereBetween('work_date', [$startOfWeek, $endOfWeek])
             ->get();
-            
+
         $monthEntries = TicketTimeEntry::where('user_id', $technician->id)
             ->whereBetween('work_date', [$startOfMonth, $endOfMonth])
             ->get();
@@ -1176,7 +1062,7 @@ class TimeTrackingService
         // Calculate live totals (including active timer)
         $todayBillableHours = $todayEntries->where('billable', true)->sum('hours_worked');
         $todayRevenue = $todayEntries->sum('amount');
-        
+
         // Add active timer to today's totals if it exists
         if ($activeTimer && $activeTimer->billable) {
             $todayBillableHours += $elapsedHours;
@@ -1205,7 +1091,7 @@ class TimeTrackingService
                 'revenue' => round($monthEntries->sum('amount'), 2),
                 'entries_count' => $monthEntries->count(),
                 'days_worked' => $monthEntries->pluck('work_date')->unique()->count(),
-                'avg_daily_hours' => $monthEntries->pluck('work_date')->unique()->count() > 0 ? 
+                'avg_daily_hours' => $monthEntries->pluck('work_date')->unique()->count() > 0 ?
                     round($monthEntries->where('billable', true)->sum('hours_worked') / $monthEntries->pluck('work_date')->unique()->count(), 2) : 0,
             ],
             'rate_info' => $this->getSmartRateInfo(),
@@ -1219,11 +1105,6 @@ class TimeTrackingService
 
     /**
      * Calculate utilization rate for a period
-     * 
-     * @param Collection $entries
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @return float
      */
     protected function calculateUtilization(Collection $entries, Carbon $startDate, Carbon $endDate): float
     {
@@ -1243,13 +1124,10 @@ class TimeTrackingService
 
     /**
      * Get rate multiplier compared to standard rate
-     * 
-     * @param string $rateType
-     * @return float
      */
     public function getRateMultiplier(string $rateType): float
     {
-        return match($rateType) {
+        return match ($rateType) {
             self::RATE_STANDARD => 1.0,
             self::RATE_AFTER_HOURS => 1.5,
             self::RATE_WEEKEND => 1.5,
@@ -1261,13 +1139,10 @@ class TimeTrackingService
 
     /**
      * Get human-readable rate description
-     * 
-     * @param string $rateType
-     * @return string
      */
     public function getRateDescription(string $rateType): string
     {
-        return match($rateType) {
+        return match ($rateType) {
             self::RATE_STANDARD => 'Standard business hours rate',
             self::RATE_AFTER_HOURS => 'After hours rate (6 PM - 8 AM)',
             self::RATE_WEEKEND => 'Weekend rate',
@@ -1279,13 +1154,10 @@ class TimeTrackingService
 
     /**
      * Get visual indicator for rate type
-     * 
-     * @param string $rateType
-     * @return array
      */
     public function getRateVisualIndicator(string $rateType): array
     {
-        return match($rateType) {
+        return match ($rateType) {
             self::RATE_STANDARD => ['color' => 'green', 'icon' => 'clock', 'badge' => 'Standard'],
             self::RATE_AFTER_HOURS => ['color' => 'orange', 'icon' => 'moon', 'badge' => 'After Hours'],
             self::RATE_WEEKEND => ['color' => 'blue', 'icon' => 'calendar', 'badge' => 'Weekend'],
@@ -1297,20 +1169,16 @@ class TimeTrackingService
 
     /**
      * Calculate efficiency score for a technician
-     * 
-     * @param User $technician
-     * @param Carbon $date
-     * @return float
      */
     protected function calculateEfficiencyScore(User $technician, Carbon $date): float
     {
         $startOfWeek = $date->copy()->startOfWeek();
         $endOfWeek = $date->copy()->endOfWeek();
-        
+
         $entries = TicketTimeEntry::where('user_id', $technician->id)
             ->whereBetween('work_date', [$startOfWeek, $endOfWeek])
             ->get();
-            
+
         if ($entries->isEmpty()) {
             return 0.0;
         }
@@ -1320,20 +1188,20 @@ class TimeTrackingService
         $billableHours = $entries->where('billable', true)->sum('hours_worked');
         $avgHoursPerEntry = $totalHours / $entries->count();
         $billableRatio = $totalHours > 0 ? ($billableHours / $totalHours) : 0;
-        
+
         // Efficiency score factors:
         // 1. Billable ratio (40% weight)
-        // 2. Consistent daily hours (30% weight) 
+        // 2. Consistent daily hours (30% weight)
         // 3. Entry quality - not too many tiny entries (30% weight)
-        
+
         $billableScore = $billableRatio * 40;
-        
+
         // Consistency score - penalize huge variations in daily hours
         $dailyHours = $entries->groupBy('work_date')->map(function ($dayEntries) {
             return $dayEntries->sum('hours_worked');
         });
         $avgDaily = $dailyHours->avg();
-        
+
         // Calculate standard deviation manually since Laravel Collections don't have std()
         if ($avgDaily > 0 && $dailyHours->count() > 1) {
             $variance = $dailyHours->map(function ($hours) use ($avgDaily) {
@@ -1345,10 +1213,10 @@ class TimeTrackingService
             $consistency = 0;
         }
         $consistencyScore = max(0, $consistency) * 30;
-        
+
         // Quality score - prefer fewer, longer entries over many tiny ones
         $qualityScore = min($avgHoursPerEntry * 15, 30); // Cap at 30
-        
+
         return round($billableScore + $consistencyScore + $qualityScore, 1);
     }
 }

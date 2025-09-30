@@ -7,22 +7,23 @@ use Exception;
 
 /**
  * Nominatim API Client
- * 
+ *
  * Free geocoding service using OpenStreetMap data.
  * Provides forward and reverse geocoding worldwide with no API key required.
- * 
+ *
  * API Documentation: https://nominatim.org/release-docs/develop/api/
  * Usage Policy: https://operations.osmfoundation.org/policies/nominatim/
  */
 class NominatimApiClient extends BaseApiClient
 {
     protected string $baseUrl = 'https://nominatim.openstreetmap.org';
+
     protected string $userAgent;
 
     public function __construct(int $companyId, array $config = [])
     {
         parent::__construct($companyId, TaxApiQueryCache::PROVIDER_NOMINATIM, $config);
-        
+
         // Nominatim requires a User-Agent header
         $this->userAgent = $config['user_agent'] ?? 'Nestogy-Tax-Engine/1.0 (contact@nestogy.com)';
     }
@@ -58,9 +59,9 @@ class NominatimApiClient extends BaseApiClient
 
     /**
      * Geocode an address to coordinates
-     * 
-     * @param string $address Address to geocode
-     * @param array $options Additional search options
+     *
+     * @param  string  $address  Address to geocode
+     * @param  array  $options  Additional search options
      * @return array Geocoding results with coordinates and administrative areas
      */
     public function geocode(string $address, array $options = []): array
@@ -74,24 +75,24 @@ class NominatimApiClient extends BaseApiClient
         ], $options);
 
         // Remove null values
-        $parameters = array_filter($parameters, fn($value) => $value !== null);
-        
+        $parameters = array_filter($parameters, fn ($value) => $value !== null);
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_GEOCODING,
             $parameters,
             function () use ($parameters) {
                 // Enforce rate limit by sleeping if needed
                 $this->enforceRateLimit();
-                
+
                 $response = $this->createHttpClient()
                     ->get("{$this->baseUrl}/search", $parameters);
 
-                if (!$response->successful()) {
-                    throw new Exception("Nominatim geocoding failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('Nominatim geocoding failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 if (empty($data)) {
                     return [
                         'found' => false,
@@ -107,7 +108,7 @@ class NominatimApiClient extends BaseApiClient
                 }
 
                 return [
-                    'found' => !empty($results),
+                    'found' => ! empty($results),
                     'query' => $parameters['q'],
                     'results' => $results,
                     'total_found' => count($data),
@@ -120,10 +121,10 @@ class NominatimApiClient extends BaseApiClient
 
     /**
      * Reverse geocode coordinates to address
-     * 
-     * @param float $latitude Latitude
-     * @param float $longitude Longitude
-     * @param array $options Additional options
+     *
+     * @param  float  $latitude  Latitude
+     * @param  float  $longitude  Longitude
+     * @param  array  $options  Additional options
      * @return array Reverse geocoding result with address components
      */
     public function reverseGeocode(float $latitude, float $longitude, array $options = []): array
@@ -135,23 +136,23 @@ class NominatimApiClient extends BaseApiClient
             'addressdetails' => 1,
             'zoom' => $options['zoom'] ?? 18, // Address level detail
         ], $options);
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_REVERSE_GEOCODING,
             $parameters,
             function () use ($parameters, $latitude, $longitude) {
                 // Enforce rate limit by sleeping if needed
                 $this->enforceRateLimit();
-                
+
                 $response = $this->createHttpClient()
                     ->get("{$this->baseUrl}/reverse", $parameters);
 
-                if (!$response->successful()) {
-                    throw new Exception("Nominatim reverse geocoding failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('Nominatim reverse geocoding failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 if (empty($data) || isset($data['error'])) {
                     return [
                         'found' => false,
@@ -181,7 +182,7 @@ class NominatimApiClient extends BaseApiClient
     private function formatGeocodingResult(array $result): array
     {
         $address = $result['address'] ?? [];
-        
+
         return [
             'display_name' => $result['display_name'] ?? '',
             'latitude' => (float) ($result['lat'] ?? 0),
@@ -224,15 +225,15 @@ class NominatimApiClient extends BaseApiClient
 
     /**
      * Find tax jurisdictions for an address
-     * 
-     * @param string $address Address to find jurisdictions for
+     *
+     * @param  string  $address  Address to find jurisdictions for
      * @return array Tax jurisdictions that may apply
      */
     public function findTaxJurisdictions(string $address): array
     {
         $geocoded = $this->geocode($address);
-        
-        if (!$geocoded['found'] || empty($geocoded['results'])) {
+
+        if (! $geocoded['found'] || empty($geocoded['results'])) {
             return [
                 'found' => false,
                 'address' => $address,
@@ -242,12 +243,12 @@ class NominatimApiClient extends BaseApiClient
 
         $result = $geocoded['results'][0];
         $addressComponents = $result['address'];
-        
+
         // Build potential tax jurisdictions
         $jurisdictions = [];
-        
+
         // Federal level
-        if (!empty($addressComponents['country_code'])) {
+        if (! empty($addressComponents['country_code'])) {
             $jurisdictions[] = [
                 'type' => 'federal',
                 'name' => $addressComponents['country'],
@@ -255,9 +256,9 @@ class NominatimApiClient extends BaseApiClient
                 'level' => 1,
             ];
         }
-        
+
         // State level
-        if (!empty($addressComponents['state'])) {
+        if (! empty($addressComponents['state'])) {
             $jurisdictions[] = [
                 'type' => 'state',
                 'name' => $addressComponents['state'],
@@ -265,9 +266,9 @@ class NominatimApiClient extends BaseApiClient
                 'level' => 2,
             ];
         }
-        
+
         // County level
-        if (!empty($addressComponents['county'])) {
+        if (! empty($addressComponents['county'])) {
             $jurisdictions[] = [
                 'type' => 'county',
                 'name' => $addressComponents['county'],
@@ -275,9 +276,9 @@ class NominatimApiClient extends BaseApiClient
                 'level' => 3,
             ];
         }
-        
+
         // City/Municipality level
-        if (!empty($addressComponents['city'])) {
+        if (! empty($addressComponents['city'])) {
             $jurisdictions[] = [
                 'type' => 'city',
                 'name' => $addressComponents['city'],
@@ -302,24 +303,24 @@ class NominatimApiClient extends BaseApiClient
     /**
      * Get coordinates for multiple addresses (batch geocoding)
      * Note: This respects rate limits by adding delays
-     * 
-     * @param array $addresses Array of addresses to geocode
+     *
+     * @param  array  $addresses  Array of addresses to geocode
      * @return array Batch geocoding results
      */
     public function batchGeocode(array $addresses): array
     {
         $results = [];
-        
+
         foreach ($addresses as $index => $address) {
             try {
                 $result = $this->geocode($address);
                 $results[$index] = $result;
-                
+
                 // Add delay between requests to respect rate limits
                 if ($index < count($addresses) - 1) {
                     sleep(1); // Wait 1 second between requests
                 }
-                
+
             } catch (Exception $e) {
                 $results[$index] = [
                     'found' => false,
@@ -329,11 +330,11 @@ class NominatimApiClient extends BaseApiClient
                 ];
             }
         }
-        
+
         return [
             'total_addresses' => count($addresses),
-            'successful' => count(array_filter($results, fn($r) => $r['found'])),
-            'failed' => count(array_filter($results, fn($r) => !$r['found'])),
+            'successful' => count(array_filter($results, fn ($r) => $r['found'])),
+            'failed' => count(array_filter($results, fn ($r) => ! $r['found'])),
             'results' => $results,
         ];
     }
@@ -352,7 +353,7 @@ class NominatimApiClient extends BaseApiClient
 
         if ($lastRequest) {
             $timeSinceLastRequest = now()->diffInSeconds($lastRequest->api_called_at);
-            
+
             if ($timeSinceLastRequest < 1) {
                 $sleepTime = 1 - $timeSinceLastRequest + 0.1; // Add small buffer
                 usleep($sleepTime * 1000000); // Convert to microseconds
@@ -362,10 +363,10 @@ class NominatimApiClient extends BaseApiClient
 
     /**
      * Search for places by name and type
-     * 
-     * @param string $placeName Name of the place
-     * @param string $placeType Type of place (city, county, state, etc.)
-     * @param string|null $countryCode Limit search to specific country
+     *
+     * @param  string  $placeName  Name of the place
+     * @param  string  $placeType  Type of place (city, county, state, etc.)
+     * @param  string|null  $countryCode  Limit search to specific country
      * @return array Search results
      */
     public function searchPlaces(string $placeName, string $placeType, ?string $countryCode = null): array
@@ -382,30 +383,30 @@ class NominatimApiClient extends BaseApiClient
         if ($countryCode) {
             $parameters['countrycodes'] = strtolower($countryCode);
         }
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_GEOCODING,
             $parameters,
             function () use ($parameters, $placeType, $countryCode) {
                 // Enforce rate limit by sleeping if needed
                 $this->enforceRateLimit();
-                
+
                 $response = $this->createHttpClient()
                     ->get("{$this->baseUrl}/search", $parameters);
 
-                if (!$response->successful()) {
-                    throw new Exception("Nominatim place search failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('Nominatim place search failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 $results = [];
                 foreach ($data as $result) {
                     $results[] = $this->formatGeocodingResult($result);
                 }
 
                 return [
-                    'found' => !empty($results),
+                    'found' => ! empty($results),
                     'query' => $parameters['q'],
                     'place_type' => $placeType,
                     'country_code' => $countryCode,

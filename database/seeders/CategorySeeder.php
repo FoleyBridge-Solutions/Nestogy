@@ -74,7 +74,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
                 'archived_at' => null,
             ],
-            
+
             // Income Categories
             [
                 'id' => 6,
@@ -124,7 +124,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
                 'archived_at' => null,
             ],
-            
+
             // Ticket Categories
             [
                 'id' => 10,
@@ -186,7 +186,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
                 'archived_at' => null,
             ],
-            
+
             // Quote Categories
             [
                 'id' => 15,
@@ -248,7 +248,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
                 'archived_at' => null,
             ],
-            
+
             // Product Categories
             [
                 'id' => 20,
@@ -310,7 +310,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
                 'archived_at' => null,
             ],
-            
+
             // Invoice Categories
             [
                 'id' => 25,
@@ -360,7 +360,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
                 'archived_at' => null,
             ],
-            
+
             // Recurring Categories
             [
                 'id' => 29,
@@ -398,7 +398,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
                 'archived_at' => null,
             ],
-            
+
             // Asset Categories
             [
                 'id' => 32,

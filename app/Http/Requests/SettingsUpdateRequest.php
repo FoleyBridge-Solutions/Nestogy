@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Domains\Core\Services\SettingsService;
+use Illuminate\Foundation\Http\FormRequest;
 
 class SettingsUpdateRequest extends FormRequest
 {
@@ -24,8 +24,8 @@ class SettingsUpdateRequest extends FormRequest
         return [
             'company_name' => 'required|string|max:255',
             'timezone' => 'required|string|timezone',
-            'date_format' => 'required|string|in:' . implode(',', array_keys(SettingsService::getDateFormats())),
-            'currency' => 'required|string|size:3|in:' . implode(',', array_keys(SettingsService::getCurrencies())),
+            'date_format' => 'required|string|in:'.implode(',', array_keys(SettingsService::getDateFormats())),
+            'currency' => 'required|string|size:3|in:'.implode(',', array_keys(SettingsService::getCurrencies())),
         ];
     }
 

@@ -93,7 +93,7 @@ return [
                 '257', // Brazoria County
                 '215', // Hidalgo County
                 '061', // Cameron County
-            ]
+            ],
         ],
     ],
 

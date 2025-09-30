@@ -104,7 +104,7 @@ class CommunicationLog extends Model
     public function scopeNeedingFollowUp($query)
     {
         return $query->where('follow_up_required', true)
-                    ->where('follow_up_date', '<=', now());
+            ->where('follow_up_date', '<=', now());
     }
 
     /**
@@ -131,7 +131,7 @@ class CommunicationLog extends Model
         if ($this->contact) {
             return $this->contact->name;
         }
-        
+
         return $this->contact_name ?: 'N/A';
     }
 

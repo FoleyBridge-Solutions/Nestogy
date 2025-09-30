@@ -2,12 +2,12 @@
 
 namespace App\Domains\Product\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\ProductBundle;
-use App\Models\Product;
 use App\Domains\Product\Requests\StoreBundleRequest;
 use App\Domains\Product\Requests\UpdateBundleRequest;
 use App\Domains\Product\Services\BundleService;
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\ProductBundle;
 use Illuminate\Http\Request;
 
 class BundleController extends Controller
@@ -28,7 +28,7 @@ class BundleController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 

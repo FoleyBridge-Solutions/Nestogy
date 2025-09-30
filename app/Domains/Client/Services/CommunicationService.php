@@ -3,20 +3,20 @@
 namespace App\Domains\Client\Services;
 
 use App\Models\Client;
-use App\Models\DunningAction;
 use App\Models\CollectionNote;
+use App\Models\DunningAction;
 use Carbon\Carbon;
+use Illuminate\Mail\Mailable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Mail\Mailable;
 
 /**
  * Communication Service
- * 
+ *
  * Handles automated multi-channel communications for dunning management
  * including emails, SMS, phone calls, and portal notifications with
  * template management, personalization, and compliance tracking.
@@ -28,11 +28,13 @@ class CommunicationService
         'sms' => 2,
         'portal_notification' => 3,
         'phone_call' => 4,
-        'letter' => 5
+        'letter' => 5,
     ];
 
     protected array $templates = [];
+
     protected string $cachePrefix = 'communication:';
+
     protected int $cacheTtl = 3600;
 
     /**
@@ -48,18 +50,19 @@ class CommunicationService
             'sent' => [],
             'failed' => [],
             'skipped' => [],
-            'total_channels' => 0
+            'total_channels' => 0,
         ];
 
         // Get client communication preferences
         $preferences = $this->getClientCommunicationPreferences($client);
-        
+
         // Check TCPA compliance
-        if (!$this->checkTcpaCompliance($client, $options['channels'] ?? [])) {
+        if (! $this->checkTcpaCompliance($client, $options['channels'] ?? [])) {
             Log::warning('Communication blocked by TCPA compliance', [
                 'client_id' => $client->id,
-                'message_type' => $messageType
+                'message_type' => $messageType,
             ]);
+
             return $results;
         }
 
@@ -70,10 +73,10 @@ class CommunicationService
         foreach ($channels as $channel) {
             try {
                 $sent = $this->sendToChannel($client, $channel, $messageType, $templateData, $options);
-                
+
                 if ($sent) {
                     $results['sent'][] = $channel;
-                    
+
                     // Record successful communication
                     $this->recordCommunication($client, $channel, $messageType, 'sent', $templateData);
                 } else {
@@ -85,7 +88,7 @@ class CommunicationService
                     'client_id' => $client->id,
                     'channel' => $channel,
                     'message_type' => $messageType,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -98,8 +101,8 @@ class CommunicationService
      */
     protected function getClientCommunicationPreferences(Client $client): array
     {
-        $cacheKey = $this->cachePrefix . "preferences:{$client->id}";
-        
+        $cacheKey = $this->cachePrefix."preferences:{$client->id}";
+
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($client) {
             // Get from client record or use defaults
             return [
@@ -107,27 +110,27 @@ class CommunicationService
                     'enabled' => true,
                     'address' => $client->email,
                     'opt_out' => false,
-                    'bounce_count' => 0
+                    'bounce_count' => 0,
                 ],
                 'sms' => [
-                    'enabled' => !empty($client->phone),
+                    'enabled' => ! empty($client->phone),
                     'number' => $client->phone,
                     'opt_out' => false,
-                    'consent_given' => $client->sms_consent ?? false
+                    'consent_given' => $client->sms_consent ?? false,
                 ],
                 'phone_call' => [
-                    'enabled' => !empty($client->phone),
+                    'enabled' => ! empty($client->phone),
                     'number' => $client->phone,
                     'do_not_call' => $client->do_not_call ?? false,
-                    'best_time' => $client->preferred_call_time ?? 'business_hours'
+                    'best_time' => $client->preferred_call_time ?? 'business_hours',
                 ],
                 'portal_notification' => [
-                    'enabled' => true
+                    'enabled' => true,
                 ],
                 'letter' => [
-                    'enabled' => !empty($client->mailing_address),
-                    'address' => $client->mailing_address
-                ]
+                    'enabled' => ! empty($client->mailing_address),
+                    'address' => $client->mailing_address,
+                ],
             ];
         });
     }
@@ -140,11 +143,11 @@ class CommunicationService
         foreach ($channels as $channel) {
             switch ($channel) {
                 case 'sms':
-                    if (!$client->sms_consent || $client->sms_opt_out) {
+                    if (! $client->sms_consent || $client->sms_opt_out) {
                         return false;
                     }
                     break;
-                    
+
                 case 'phone_call':
                     if ($client->do_not_call) {
                         return false;
@@ -163,14 +166,14 @@ class CommunicationService
     protected function checkCommunicationFrequencyLimits(Client $client): bool
     {
         $today = Carbon::today();
-        
+
         // Get today's communications
         $todayCount = DunningAction::where('client_id', $client->id)
             ->whereDate('created_at', $today)
             ->whereIn('action_type', [
                 DunningAction::ACTION_EMAIL,
                 DunningAction::ACTION_SMS,
-                DunningAction::ACTION_PHONE_CALL
+                DunningAction::ACTION_PHONE_CALL,
             ])
             ->count();
 
@@ -197,24 +200,24 @@ class CommunicationService
      * Determine optimal communication channels based on preferences and effectiveness.
      */
     protected function determineOptimalChannels(
-        Client $client, 
-        array $preferences, 
+        Client $client,
+        array $preferences,
         array $options = []
     ): array {
-        if (!empty($options['channels'])) {
+        if (! empty($options['channels'])) {
             return array_intersect($options['channels'], array_keys($preferences));
         }
 
         $channels = [];
-        
+
         // Always prefer email if available
-        if ($preferences['email']['enabled'] && !$preferences['email']['opt_out']) {
+        if ($preferences['email']['enabled'] && ! $preferences['email']['opt_out']) {
             $channels[] = 'email';
         }
 
         // Add SMS for urgent communications
-        if ($preferences['sms']['enabled'] && $preferences['sms']['consent_given'] && 
-            !empty($options['urgent'])) {
+        if ($preferences['sms']['enabled'] && $preferences['sms']['consent_given'] &&
+            ! empty($options['urgent'])) {
             $channels[] = 'sms';
         }
 
@@ -277,7 +280,7 @@ class CommunicationService
             Log::info('Email sent successfully', [
                 'client_id' => $client->id,
                 'message_type' => $messageType,
-                'to' => $client->email
+                'to' => $client->email,
             ]);
 
             return true;
@@ -286,8 +289,9 @@ class CommunicationService
             Log::error('Email sending failed', [
                 'client_id' => $client->id,
                 'message_type' => $messageType,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -309,26 +313,27 @@ class CommunicationService
             $response = Http::post('https://api.smsservice.com/send', [
                 'to' => $client->phone,
                 'message' => $personalizedContent['body'],
-                'from' => config('dunning.sms_sender_id', 'NESTOGY')
+                'from' => config('dunning.sms_sender_id', 'NESTOGY'),
             ]);
 
             if ($response->successful()) {
                 Log::info('SMS sent successfully', [
                     'client_id' => $client->id,
                     'message_type' => $messageType,
-                    'to' => $client->phone
+                    'to' => $client->phone,
                 ]);
+
                 return true;
             }
 
-            throw new \Exception('SMS API returned error: ' . $response->body());
-
+            throw new \Exception('SMS API returned error: '.$response->body());
         } catch (\Exception $e) {
             Log::error('SMS sending failed', [
                 'client_id' => $client->id,
                 'message_type' => $messageType,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -351,26 +356,27 @@ class CommunicationService
                 'to' => $client->phone,
                 'message' => $personalizedContent['body'],
                 'voice' => 'female',
-                'callback_url' => route('dunning.call.callback')
+                'callback_url' => route('dunning.call.callback'),
             ]);
 
             if ($response->successful()) {
                 Log::info('Phone call initiated successfully', [
                     'client_id' => $client->id,
                     'message_type' => $messageType,
-                    'to' => $client->phone
+                    'to' => $client->phone,
                 ]);
+
                 return true;
             }
 
-            throw new \Exception('Voice API returned error: ' . $response->body());
-
+            throw new \Exception('Voice API returned error: '.$response->body());
         } catch (\Exception $e) {
             Log::error('Phone call failed', [
                 'client_id' => $client->id,
                 'message_type' => $messageType,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -397,12 +403,12 @@ class CommunicationService
                 'priority' => $options['priority'] ?? 'normal',
                 'read' => false,
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ]);
 
             Log::info('Portal notification sent successfully', [
                 'client_id' => $client->id,
-                'message_type' => $messageType
+                'message_type' => $messageType,
             ]);
 
             return true;
@@ -411,8 +417,9 @@ class CommunicationService
             Log::error('Portal notification failed', [
                 'client_id' => $client->id,
                 'message_type' => $messageType,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -439,12 +446,12 @@ class CommunicationService
                 'message_type' => $messageType,
                 'status' => 'queued',
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ]);
 
             Log::info('Letter queued successfully', [
                 'client_id' => $client->id,
-                'message_type' => $messageType
+                'message_type' => $messageType,
             ]);
 
             return true;
@@ -453,8 +460,9 @@ class CommunicationService
             Log::error('Letter queueing failed', [
                 'client_id' => $client->id,
                 'message_type' => $messageType,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -468,23 +476,23 @@ class CommunicationService
             'initial_reminder' => [
                 'subject' => 'Payment Reminder - Account #{account_number}',
                 'body' => $this->getEmailTemplateBody('initial_reminder'),
-                'attachments' => []
+                'attachments' => [],
             ],
             'final_notice' => [
                 'subject' => 'FINAL NOTICE - Account #{account_number}',
                 'body' => $this->getEmailTemplateBody('final_notice'),
-                'attachments' => ['statement.pdf']
+                'attachments' => ['statement.pdf'],
             ],
             'service_suspension_warning' => [
                 'subject' => 'Service Suspension Warning - Account #{account_number}',
                 'body' => $this->getEmailTemplateBody('suspension_warning'),
-                'attachments' => []
+                'attachments' => [],
             ],
             'payment_plan_offer' => [
                 'subject' => 'Payment Plan Available - Account #{account_number}',
                 'body' => $this->getEmailTemplateBody('payment_plan_offer'),
-                'attachments' => []
-            ]
+                'attachments' => [],
+            ],
         ];
 
         return $templates[$messageType] ?? throw new \InvalidArgumentException("Unknown email template: {$messageType}");
@@ -497,14 +505,14 @@ class CommunicationService
     {
         $templates = [
             'payment_reminder' => [
-                'body' => "NESTOGY: Your account #{account_number} has a balance of {\$past_due_amount}. Please pay by {due_date} to avoid service interruption. Pay online: {payment_link}"
+                'body' => 'NESTOGY: Your account #{account_number} has a balance of {$past_due_amount}. Please pay by {due_date} to avoid service interruption. Pay online: {payment_link}',
             ],
             'service_suspended' => [
-                'body' => "NESTOGY: Your service has been suspended due to non-payment. Balance: {\$past_due_amount}. Pay now: {payment_link}"
+                'body' => 'NESTOGY: Your service has been suspended due to non-payment. Balance: {$past_due_amount}. Pay now: {payment_link}',
             ],
             'payment_received' => [
-                'body' => "NESTOGY: Thank you for your payment of {\$payment_amount}. Your services will be restored within 24 hours."
-            ]
+                'body' => 'NESTOGY: Thank you for your payment of {$payment_amount}. Your services will be restored within 24 hours.',
+            ],
         ];
 
         return $templates[$messageType] ?? throw new \InvalidArgumentException("Unknown SMS template: {$messageType}");
@@ -517,11 +525,11 @@ class CommunicationService
     {
         $templates = [
             'payment_reminder' => [
-                'body' => "Hello {client_name}. This is an automated call from Nestogy regarding your account #{account_number}. Your account has a past due balance of {\$past_due_amount}. Please call us at 1-800-NESTOGY to make a payment or set up a payment plan. Thank you."
+                'body' => 'Hello {client_name}. This is an automated call from Nestogy regarding your account #{account_number}. Your account has a past due balance of {$past_due_amount}. Please call us at 1-800-NESTOGY to make a payment or set up a payment plan. Thank you.',
             ],
             'final_notice' => [
-                'body' => "This is a final notice call from Nestogy for {client_name}. Your account #{account_number} has a past due balance of {\$past_due_amount}. Service suspension is imminent. Please call us immediately at 1-800-NESTOGY to avoid interruption."
-            ]
+                'body' => 'This is a final notice call from Nestogy for {client_name}. Your account #{account_number} has a past due balance of {$past_due_amount}. Service suspension is imminent. Please call us immediately at 1-800-NESTOGY to avoid interruption.',
+            ],
         ];
 
         return $templates[$messageType] ?? throw new \InvalidArgumentException("Unknown phone template: {$messageType}");
@@ -535,12 +543,12 @@ class CommunicationService
         $templates = [
             'payment_reminder' => [
                 'subject' => 'Payment Due',
-                'body' => "Your account has a past due balance of {\$past_due_amount}. Please make a payment to avoid service interruption."
+                'body' => 'Your account has a past due balance of {$past_due_amount}. Please make a payment to avoid service interruption.',
             ],
             'service_suspended' => [
                 'subject' => 'Service Suspended',
-                'body' => "Your service has been suspended due to non-payment. Please make a payment of {\$past_due_amount} to restore service."
-            ]
+                'body' => 'Your service has been suspended due to non-payment. Please make a payment of {$past_due_amount} to restore service.',
+            ],
         ];
 
         return $templates[$messageType] ?? throw new \InvalidArgumentException("Unknown portal template: {$messageType}");
@@ -553,11 +561,11 @@ class CommunicationService
     {
         $templates = [
             'final_demand' => [
-                'body' => $this->getLetterTemplateBody('final_demand')
+                'body' => $this->getLetterTemplateBody('final_demand'),
             ],
             'legal_notice' => [
-                'body' => $this->getLetterTemplateBody('legal_notice')
-            ]
+                'body' => $this->getLetterTemplateBody('legal_notice'),
+            ],
         ];
 
         return $templates[$messageType] ?? throw new \InvalidArgumentException("Unknown letter template: {$messageType}");
@@ -569,10 +577,10 @@ class CommunicationService
     protected function getEmailTemplateBody(string $templateType): string
     {
         $templates = [
-            'initial_reminder' => "
+            'initial_reminder' => '
 Dear {client_name},
 
-This is a friendly reminder that your account #{account_number} has a past due balance of {\$past_due_amount}.
+This is a friendly reminder that your account #{account_number} has a past due balance of {$past_due_amount}.
 
 Payment was due on {due_date}. To avoid service interruption, please make your payment as soon as possible.
 
@@ -583,13 +591,13 @@ Thank you for your prompt attention to this matter.
 
 Best regards,
 Nestogy Billing Department
-            ",
-            'final_notice' => "
+            ',
+            'final_notice' => '
 Dear {client_name},
 
 FINAL NOTICE - IMMEDIATE ACTION REQUIRED
 
-Your account #{account_number} has a seriously past due balance of {\$past_due_amount}.
+Your account #{account_number} has a seriously past due balance of {$past_due_amount}.
 
 If payment is not received within 5 business days, your service will be suspended and additional fees may apply.
 
@@ -600,14 +608,14 @@ We want to help. Contact us to discuss payment arrangements.
 
 Sincerely,
 Nestogy Collections Department
-            ",
-            'suspension_warning' => "
+            ',
+            'suspension_warning' => '
 Dear {client_name},
 
 Your VoIP service will be suspended in 48 hours due to non-payment.
 
 Account: #{account_number}
-Balance: {\$past_due_amount}
+Balance: {$past_due_amount}
 
 To prevent suspension:
 1. Pay online: {payment_link}
@@ -619,7 +627,7 @@ Emergency 911 service will remain active, but all other features will be disable
 Urgent - Act now to avoid service interruption.
 
 Nestogy Collections Team
-            "
+            ',
         ];
 
         return $templates[$templateType] ?? '';
@@ -631,14 +639,14 @@ Nestogy Collections Team
     protected function getLetterTemplateBody(string $templateType): string
     {
         $templates = [
-            'final_demand' => "
+            'final_demand' => '
 FINAL DEMAND FOR PAYMENT
 
 {client_name}
 {client_address}
 
 Account: #{account_number}
-Amount Due: {\$past_due_amount}
+Amount Due: {$past_due_amount}
 Due Date: {due_date}
 
 This is formal demand for payment of the above amount. If payment is not received within 10 days from the date of this letter, we may:
@@ -651,7 +659,7 @@ This is formal demand for payment of the above amount. If payment is not receive
 Pay now to avoid these consequences.
 
 NESTOGY COLLECTIONS DEPARTMENT
-            "
+            ',
         ];
 
         return $templates[$templateType] ?? '';
@@ -663,14 +671,14 @@ NESTOGY COLLECTIONS DEPARTMENT
     protected function personalizeContent(array $template, Client $client, array $templateData): array
     {
         $personalizedTemplate = $template;
-        
+
         // Merge client data with template data
         $data = array_merge([
             'client_name' => $client->name,
             'account_number' => $client->account_number,
             'client_address' => $client->mailing_address,
             'payment_link' => $this->generatePaymentLink($client),
-            'due_date' => Carbon::now()->addDays(10)->format('M j, Y')
+            'due_date' => Carbon::now()->addDays(10)->format('M j, Y'),
         ], $templateData);
 
         // Replace placeholders in subject and body
@@ -678,7 +686,7 @@ NESTOGY COLLECTIONS DEPARTMENT
             if (is_string($content)) {
                 foreach ($data as $placeholder => $value) {
                     $personalizedTemplate[$key] = str_replace(
-                        '{' . $placeholder . '}',
+                        '{'.$placeholder.'}',
                         $value,
                         $personalizedTemplate[$key]
                     );
@@ -696,7 +704,7 @@ NESTOGY COLLECTIONS DEPARTMENT
     {
         $token = encrypt([
             'client_id' => $client->id,
-            'expires' => Carbon::now()->addDays(30)->timestamp
+            'expires' => Carbon::now()->addDays(30)->timestamp,
         ]);
 
         return url("/pay/{$token}");
@@ -729,10 +737,10 @@ NESTOGY COLLECTIONS DEPARTMENT
             'template_data' => $templateData,
             'channel_data' => [
                 'channel' => $channel,
-                'recipient' => $this->getRecipientInfo($client, $channel)
+                'recipient' => $this->getRecipientInfo($client, $channel),
             ],
             'executed_at' => Carbon::now(),
-            'created_by' => auth()->id() ?? 1
+            'created_by' => auth()->id() ?? 1,
         ]);
     }
 
@@ -744,7 +752,7 @@ NESTOGY COLLECTIONS DEPARTMENT
         return match ($channel) {
             'email' => $client->email,
             'sms', 'phone_call' => $client->phone,
-            'portal_notification' => 'Portal User ID: ' . $client->id,
+            'portal_notification' => 'Portal User ID: '.$client->id,
             'letter' => $client->mailing_address,
             default => $client->email
         };
@@ -761,8 +769,9 @@ NESTOGY COLLECTIONS DEPARTMENT
                 ->where('action_type', $this->getActionTypeFromChannel($channel))
                 ->first();
 
-            if (!$action) {
+            if (! $action) {
                 Log::warning('No matching dunning action found for response', $responseData);
+
                 return;
             }
 
@@ -770,7 +779,7 @@ NESTOGY COLLECTIONS DEPARTMENT
             $action->update([
                 'responded_at' => Carbon::now(),
                 'response_data' => $responseData,
-                'response_type' => $responseData['type'] ?? 'unknown'
+                'response_type' => $responseData['type'] ?? 'unknown',
             ]);
 
             // Create collection note if significant response
@@ -779,24 +788,24 @@ NESTOGY COLLECTIONS DEPARTMENT
                     'client_id' => $action->client_id,
                     'dunning_action_id' => $action->id,
                     'note_type' => CollectionNote::TYPE_CLIENT_RESPONSE,
-                    'content' => "Client responded via {$channel}: " . ($responseData['message'] ?? ''),
+                    'content' => "Client responded via {$channel}: ".($responseData['message'] ?? ''),
                     'outcome' => $this->mapResponseToOutcome($responseData['type'] ?? ''),
                     'requires_attention' => true,
-                    'created_by' => 1
+                    'created_by' => 1,
                 ]);
             }
 
             Log::info('Communication response processed', [
                 'action_id' => $action->id,
                 'channel' => $channel,
-                'response_type' => $responseData['type'] ?? 'unknown'
+                'response_type' => $responseData['type'] ?? 'unknown',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to process communication response', [
                 'channel' => $channel,
                 'response_data' => $responseData,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -835,7 +844,7 @@ NESTOGY COLLECTIONS DEPARTMENT
      */
     public function clearClientCache(Client $client): void
     {
-        $cacheKey = $this->cachePrefix . "preferences:{$client->id}";
+        $cacheKey = $this->cachePrefix."preferences:{$client->id}";
         Cache::forget($cacheKey);
     }
 }
@@ -846,8 +855,11 @@ NESTOGY COLLECTIONS DEPARTMENT
 class DunningEmailMailable extends Mailable
 {
     protected Client $client;
+
     protected string $emailSubject;
+
     protected string $emailBody;
+
     protected array $emailAttachments;
 
     public function __construct(Client $client, string $subject, string $body, array $attachments = [])
@@ -864,7 +876,7 @@ class DunningEmailMailable extends Mailable
             ->view('emails.dunning.template')
             ->with([
                 'client' => $this->client,
-                'body' => $this->emailBody
+                'body' => $this->emailBody,
             ]);
 
         // Add attachments

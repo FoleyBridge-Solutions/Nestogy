@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * ComplianceRequirement Model
- * 
+ *
  * Tracks compliance requirements for contracts including legal,
  * regulatory, and business requirements with status monitoring.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $contract_id
@@ -63,31 +63,48 @@ class ComplianceRequirement extends Model
 
     // Status constants
     const STATUS_PENDING = 'pending';
+
     const STATUS_COMPLIANT = 'compliant';
+
     const STATUS_NON_COMPLIANT = 'non_compliant';
+
     const STATUS_UNDER_REVIEW = 'under_review';
+
     const STATUS_EXEMPT = 'exempt';
 
     // Category constants
     const CATEGORY_LEGAL = 'legal';
+
     const CATEGORY_REGULATORY = 'regulatory';
+
     const CATEGORY_BUSINESS = 'business';
+
     const CATEGORY_TECHNICAL = 'technical';
+
     const CATEGORY_FINANCIAL = 'financial';
+
     const CATEGORY_DATA_PROTECTION = 'data_protection';
 
     // Priority constants
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_MEDIUM = 'medium';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_CRITICAL = 'critical';
 
     // Requirement type constants
     const TYPE_GDPR_COMPLIANCE = 'gdpr_compliance';
+
     const TYPE_SOX_COMPLIANCE = 'sox_compliance';
+
     const TYPE_DATA_RETENTION = 'data_retention';
+
     const TYPE_SIGNATURE_VALIDATION = 'signature_validation';
+
     const TYPE_DOCUMENT_ARCHIVAL = 'document_archival';
+
     const TYPE_AUDIT_TRAIL = 'audit_trail';
 
     /**
@@ -144,13 +161,13 @@ class ComplianceRequirement extends Model
     public function scopeOverdue($query)
     {
         return $query->where('due_date', '<', now())
-                    ->whereNotIn('status', [self::STATUS_COMPLIANT, self::STATUS_EXEMPT]);
+            ->whereNotIn('status', [self::STATUS_COMPLIANT, self::STATUS_EXEMPT]);
     }
 
     public function scopeDueSoon($query, int $days = 30)
     {
         return $query->whereBetween('due_date', [now(), now()->addDays($days)])
-                    ->whereNotIn('status', [self::STATUS_COMPLIANT, self::STATUS_EXEMPT]);
+            ->whereNotIn('status', [self::STATUS_COMPLIANT, self::STATUS_EXEMPT]);
     }
 
     public function scopeHighPriority($query)
@@ -163,7 +180,7 @@ class ComplianceRequirement extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'Pending',
             self::STATUS_COMPLIANT => 'Compliant',
             self::STATUS_NON_COMPLIANT => 'Non-Compliant',
@@ -175,7 +192,7 @@ class ComplianceRequirement extends Model
 
     public function getCategoryLabelAttribute(): string
     {
-        return match($this->category) {
+        return match ($this->category) {
             self::CATEGORY_LEGAL => 'Legal',
             self::CATEGORY_REGULATORY => 'Regulatory',
             self::CATEGORY_BUSINESS => 'Business',
@@ -188,7 +205,7 @@ class ComplianceRequirement extends Model
 
     public function getPriorityLabelAttribute(): string
     {
-        return match($this->priority) {
+        return match ($this->priority) {
             self::PRIORITY_LOW => 'Low',
             self::PRIORITY_MEDIUM => 'Medium',
             self::PRIORITY_HIGH => 'High',
@@ -199,14 +216,14 @@ class ComplianceRequirement extends Model
 
     public function getIsOverdueAttribute(): bool
     {
-        return $this->due_date && 
-               $this->due_date->isPast() && 
-               !in_array($this->status, [self::STATUS_COMPLIANT, self::STATUS_EXEMPT]);
+        return $this->due_date &&
+               $this->due_date->isPast() &&
+               ! in_array($this->status, [self::STATUS_COMPLIANT, self::STATUS_EXEMPT]);
     }
 
     public function getDaysUntilDueAttribute(): ?int
     {
-        if (!$this->due_date) {
+        if (! $this->due_date) {
             return null;
         }
 
@@ -216,7 +233,7 @@ class ComplianceRequirement extends Model
     public function getRiskLevelAttribute(): string
     {
         if ($this->status === self::STATUS_NON_COMPLIANT) {
-            return match($this->priority) {
+            return match ($this->priority) {
                 self::PRIORITY_CRITICAL => 'critical',
                 self::PRIORITY_HIGH => 'high',
                 default => 'medium'
@@ -243,7 +260,7 @@ class ComplianceRequirement extends Model
      */
     public function needsAttention(): bool
     {
-        return $this->status === self::STATUS_NON_COMPLIANT || 
+        return $this->status === self::STATUS_NON_COMPLIANT ||
                $this->is_overdue ||
                ($this->days_until_due !== null && $this->days_until_due <= 7);
     }
@@ -254,12 +271,12 @@ class ComplianceRequirement extends Model
     public function getCompliancePercentage(): float
     {
         $latestCheck = $this->latestCheck;
-        
-        if (!$latestCheck) {
+
+        if (! $latestCheck) {
             return 0;
         }
 
-        return match($latestCheck->status) {
+        return match ($latestCheck->status) {
             'compliant' => 100,
             'partial_compliant' => $latestCheck->compliance_score ?? 50,
             'non_compliant' => 0,
@@ -270,7 +287,7 @@ class ComplianceRequirement extends Model
     /**
      * Mark as compliant
      */
-    public function markCompliant(string $notes = null): bool
+    public function markCompliant(?string $notes = null): bool
     {
         $this->update([
             'status' => self::STATUS_COMPLIANT,
@@ -349,11 +366,11 @@ class ComplianceRequirement extends Model
         parent::boot();
 
         static::creating(function ($requirement) {
-            if (!$requirement->company_id && auth()->user()) {
+            if (! $requirement->company_id && auth()->user()) {
                 $requirement->company_id = auth()->user()->company_id;
             }
-            
-            if (!$requirement->created_by && auth()->user()) {
+
+            if (! $requirement->created_by && auth()->user()) {
                 $requirement->created_by = auth()->id();
             }
         });

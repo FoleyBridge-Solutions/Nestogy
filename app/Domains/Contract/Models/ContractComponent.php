@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * ContractComponent Model
- * 
+ *
  * Represents reusable contract components that can be assembled into contracts
  */
 class ContractComponent extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -45,13 +45,18 @@ class ContractComponent extends Model
 
     // Component categories
     const CATEGORY_SERVICE = 'service';
+
     const CATEGORY_BILLING = 'billing';
+
     const CATEGORY_SLA = 'sla';
+
     const CATEGORY_LEGAL = 'legal';
 
     // Component statuses
     const STATUS_ACTIVE = 'active';
+
     const STATUS_INACTIVE = 'inactive';
+
     const STATUS_DEPRECATED = 'deprecated';
 
     /**
@@ -106,7 +111,7 @@ class ContractComponent extends Model
     public function isCompatibleWith(ContractComponent $other): bool
     {
         $dependencies = $this->dependencies ?? [];
-        
+
         // Check if this component is incompatible with the other
         $incompatible = $dependencies['incompatible'] ?? [];
         if (in_array($other->component_type, $incompatible)) {
@@ -119,32 +124,34 @@ class ContractComponent extends Model
     public function getRequiredComponents(): array
     {
         $dependencies = $this->dependencies ?? [];
+
         return $dependencies['required'] ?? [];
     }
 
     public function calculatePrice(array $variables = []): float
     {
         $pricingModel = $this->pricing_model ?? [];
-        
-        if (!isset($pricingModel['type'])) {
+
+        if (! isset($pricingModel['type'])) {
             return 0.0;
         }
 
         switch ($pricingModel['type']) {
             case 'fixed':
                 return (float) ($pricingModel['amount'] ?? 0);
-                
+
             case 'per_unit':
                 $units = $variables['units'] ?? 1;
                 $rate = (float) ($pricingModel['rate'] ?? 0);
+
                 return $units * $rate;
-                
+
             case 'tiered':
                 return $this->calculateTieredPrice($pricingModel, $variables);
-                
+
             case 'formula':
                 return $this->calculateFormulaPrice($pricingModel, $variables);
-                
+
             default:
                 return 0.0;
         }
@@ -154,13 +161,13 @@ class ContractComponent extends Model
     {
         $quantity = $variables['quantity'] ?? 1;
         $tiers = $pricingModel['tiers'] ?? [];
-        
+
         foreach ($tiers as $tier) {
             if ($quantity <= ($tier['max'] ?? PHP_INT_MAX)) {
                 return (float) ($tier['rate'] ?? 0) * $quantity;
             }
         }
-        
+
         return 0.0;
     }
 
@@ -169,7 +176,7 @@ class ContractComponent extends Model
         // Simple formula evaluation - could be enhanced with a proper expression parser
         $formula = $pricingModel['formula'] ?? '';
         $baseRate = (float) ($pricingModel['base_rate'] ?? 0);
-        
+
         // For now, just return base rate - could implement more complex formulas later
         return $baseRate;
     }
@@ -189,18 +196,18 @@ class ContractComponent extends Model
                 'configuration' => [
                     'monitoring_level' => ['basic', 'advanced', 'premium'],
                     'response_time' => '5_minutes',
-                    'escalation_matrix' => true
+                    'escalation_matrix' => true,
                 ],
                 'pricing_model' => [
                     'type' => 'per_unit',
                     'rate' => 15.00,
-                    'unit' => 'device'
+                    'unit' => 'device',
                 ],
                 'template_content' => 'Provider will monitor {{monitoring_level}} parameters on all assigned devices with {{response_time}} response time.',
                 'variables' => [
                     ['name' => 'monitoring_level', 'type' => 'select', 'required' => true],
-                    ['name' => 'response_time', 'type' => 'select', 'required' => true]
-                ]
+                    ['name' => 'response_time', 'type' => 'select', 'required' => true],
+                ],
             ],
             [
                 'name' => 'Backup Services',
@@ -210,21 +217,21 @@ class ContractComponent extends Model
                 'configuration' => [
                     'backup_frequency' => ['daily', 'weekly'],
                     'retention_period' => '30_days',
-                    'disaster_recovery' => true
+                    'disaster_recovery' => true,
                 ],
                 'pricing_model' => [
                     'type' => 'tiered',
                     'tiers' => [
                         ['max' => 10, 'rate' => 20.00],
                         ['max' => 50, 'rate' => 15.00],
-                        ['max' => null, 'rate' => 10.00]
-                    ]
+                        ['max' => null, 'rate' => 10.00],
+                    ],
                 ],
                 'template_content' => 'Provider will perform {{backup_frequency}} backups with {{retention_period}} retention.',
                 'variables' => [
                     ['name' => 'backup_frequency', 'type' => 'select', 'required' => true],
-                    ['name' => 'retention_period', 'type' => 'select', 'required' => true]
-                ]
+                    ['name' => 'retention_period', 'type' => 'select', 'required' => true],
+                ],
             ],
             [
                 'name' => 'Help Desk Support',
@@ -234,19 +241,19 @@ class ContractComponent extends Model
                 'configuration' => [
                     'support_hours' => ['business_hours', '24x7'],
                     'support_method' => ['phone', 'email', 'chat', 'portal'],
-                    'sla_response' => '1_hour'
+                    'sla_response' => '1_hour',
                 ],
                 'pricing_model' => [
                     'type' => 'per_unit',
                     'rate' => 8.00,
-                    'unit' => 'user'
+                    'unit' => 'user',
                 ],
                 'template_content' => 'Provider will provide {{support_hours}} help desk support via {{support_method}} with {{sla_response}} response time.',
                 'variables' => [
                     ['name' => 'support_hours', 'type' => 'select', 'required' => true],
                     ['name' => 'support_method', 'type' => 'multiselect', 'required' => true],
-                    ['name' => 'sla_response', 'type' => 'select', 'required' => true]
-                ]
+                    ['name' => 'sla_response', 'type' => 'select', 'required' => true],
+                ],
             ],
 
             // SLA Components
@@ -258,14 +265,14 @@ class ContractComponent extends Model
                 'configuration' => [
                     'uptime_guarantee' => '99.5%',
                     'response_time' => '4_hours',
-                    'resolution_time' => '24_hours'
+                    'resolution_time' => '24_hours',
                 ],
                 'template_content' => 'Provider guarantees {{uptime_guarantee}} uptime with {{response_time}} response and {{resolution_time}} resolution times.',
                 'variables' => [
                     ['name' => 'uptime_guarantee', 'type' => 'select', 'required' => true],
                     ['name' => 'response_time', 'type' => 'select', 'required' => true],
-                    ['name' => 'resolution_time', 'type' => 'select', 'required' => true]
-                ]
+                    ['name' => 'resolution_time', 'type' => 'select', 'required' => true],
+                ],
             ],
 
             // Legal Components
@@ -276,13 +283,13 @@ class ContractComponent extends Model
                 'component_type' => 'termination_clause',
                 'configuration' => [
                     'notice_period' => '30_days',
-                    'early_termination_fee' => false
+                    'early_termination_fee' => false,
                 ],
                 'template_content' => 'Either party may terminate this agreement with {{notice_period}} written notice.',
                 'variables' => [
-                    ['name' => 'notice_period', 'type' => 'select', 'required' => true]
-                ]
-            ]
+                    ['name' => 'notice_period', 'type' => 'select', 'required' => true],
+                ],
+            ],
         ];
     }
 }

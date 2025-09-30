@@ -29,7 +29,7 @@ class UpdateServiceRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:100',
-                Rule::unique('products', 'sku')->ignore($serviceId)
+                Rule::unique('products', 'sku')->ignore($serviceId),
             ],
             'category_id' => 'required|exists:categories,id',
             'base_price' => 'required|numeric|min:0',
@@ -38,21 +38,21 @@ class UpdateServiceRequest extends FormRequest
             'tax_id' => 'nullable|exists:taxes,id',
             'tax_inclusive' => 'boolean',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
-            
+
             // Service-specific fields
             'unit_type' => 'required|in:hours,units,days,weeks,months,years,fixed,subscription',
             'billing_model' => 'required|in:one_time,subscription,usage_based,hybrid',
             'billing_cycle' => 'required|in:one_time,hourly,daily,weekly,monthly,quarterly,semi_annually,annually',
             'billing_interval' => 'required|integer|min:1|max:12',
-            
+
             // Pricing fields from unified form
             'pricing_model' => 'required|in:fixed,tiered,volume,usage,value,custom',
-            
-            // Tax fields from unified form  
+
+            // Tax fields from unified form
             'is_taxable' => 'boolean',
             'allow_discounts' => 'boolean',
             'requires_approval' => 'boolean',
-            
+
             // Optional service fields
             'track_inventory' => 'boolean',
             'current_stock' => 'nullable|integer|min:0',
@@ -63,7 +63,7 @@ class UpdateServiceRequest extends FormRequest
             'is_featured' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
             'short_description' => 'nullable|string|max:500',
-            
+
             // Legacy/compatibility fields
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',

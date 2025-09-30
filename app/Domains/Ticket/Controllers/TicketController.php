@@ -2,6 +2,7 @@
 
 namespace App\Domains\Ticket\Controllers;
 
+use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketComment;
 use App\Domains\Ticket\Models\TicketWatcher;
@@ -10,10 +11,9 @@ use App\Domains\Ticket\Services\ResolutionService;
 use App\Domains\Ticket\Services\TimeTrackingService;
 use App\Domains\Ticket\Services\WorkTypeClassificationService;
 use App\Http\Controllers\Controller;
-use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
-use App\Traits\FiltersClientsByAssignment;
 use App\Models\Client;
 use App\Models\User;
+use App\Traits\FiltersClientsByAssignment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -31,7 +31,7 @@ use Illuminate\Validation\Rule;
  */
 class TicketController extends Controller
 {
-    use UsesSelectedClient, FiltersClientsByAssignment;
+    use FiltersClientsByAssignment, UsesSelectedClient;
 
     /**
      * Display a listing of tickets
@@ -40,10 +40,10 @@ class TicketController extends Controller
     {
         // Start with base query
         $query = Ticket::query();
-        
+
         // Apply client-based filtering for technicians
         $query = $this->applyClientFilter($query, 'client_id');
-        
+
         // Also ensure company scope
         $query->where('company_id', auth()->user()->company_id);
 
@@ -408,7 +408,7 @@ class TicketController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to add comment: ' . $e->getMessage());
+                ->with('error', 'Failed to add comment: '.$e->getMessage());
         }
     }
 
@@ -437,7 +437,7 @@ class TicketController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to resolve ticket: ' . $e->getMessage());
+                ->with('error', 'Failed to resolve ticket: '.$e->getMessage());
         }
     }
 
@@ -464,7 +464,7 @@ class TicketController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to reopen ticket: ' . $e->getMessage());
+                ->with('error', 'Failed to reopen ticket: '.$e->getMessage());
         }
     }
 
@@ -1835,7 +1835,7 @@ class TicketController extends Controller
 
         return response()->json(['tickets' => $tickets]);
     }
-    
+
     /**
      * Display active timers
      */
@@ -1845,24 +1845,24 @@ class TicketController extends Controller
         $query = \App\Domains\Ticket\Models\TicketTimeEntry::runningTimers()
             ->with(['ticket', 'user', 'ticket.client'])
             ->where('company_id', $user->company_id);
-        
+
         // If not admin, only show user's own timers
-        if (!$user->hasRole('admin') && !$user->hasPermission('tickets.view-all-timers')) {
+        if (! $user->hasRole('admin') && ! $user->hasPermission('tickets.view-all-timers')) {
             $query->where('user_id', $user->id);
         }
-        
+
         $activeTimers = $query->orderBy('started_at', 'desc')->paginate(20);
-        
+
         // Get timer statistics
         $statistics = [
             'total_active' => $activeTimers->total(),
             'total_time_today' => $this->getTodayTimeStatistics($user),
             'users_with_timers' => $activeTimers->pluck('user_id')->unique()->count(),
         ];
-        
+
         return view('tickets.active-timers', compact('activeTimers', 'statistics'));
     }
-    
+
     /**
      * Display SLA violations
      */
@@ -1871,10 +1871,10 @@ class TicketController extends Controller
         // Redirect to tickets index with SLA violation filter
         return redirect()->route('tickets.index', [
             'filter' => 'sla_violation',
-            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold'],
         ]);
     }
-    
+
     /**
      * Display SLA warning tickets
      */
@@ -1883,10 +1883,10 @@ class TicketController extends Controller
         // Redirect to tickets index with SLA warning filter
         return redirect()->route('tickets.index', [
             'filter' => 'sla_warning',
-            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold'],
         ]);
     }
-    
+
     /**
      * Display unassigned tickets
      */
@@ -1895,10 +1895,10 @@ class TicketController extends Controller
         // Redirect to tickets index with unassigned filter
         return redirect()->route('tickets.index', [
             'filter' => 'unassigned',
-            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold'],
         ]);
     }
-    
+
     /**
      * Display tickets due today
      */
@@ -1907,10 +1907,10 @@ class TicketController extends Controller
         // Redirect to tickets index with due today filter
         return redirect()->route('tickets.index', [
             'filter' => 'due_today',
-            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold'],
         ]);
     }
-    
+
     /**
      * Display team queue
      */
@@ -1919,10 +1919,10 @@ class TicketController extends Controller
         // Redirect to tickets index with team filter
         return redirect()->route('tickets.index', [
             'filter' => 'team',
-            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold'],
         ]);
     }
-    
+
     /**
      * Display tickets waiting for customer
      */
@@ -1930,10 +1930,10 @@ class TicketController extends Controller
     {
         // Redirect to tickets index with waiting customer status
         return redirect()->route('tickets.index', [
-            'selectedStatuses' => ['waiting_customer']
+            'selectedStatuses' => ['waiting_customer'],
         ]);
     }
-    
+
     /**
      * Display watched tickets
      */
@@ -1941,10 +1941,10 @@ class TicketController extends Controller
     {
         // Redirect to tickets index with watched filter
         return redirect()->route('tickets.index', [
-            'filter' => 'watched'
+            'filter' => 'watched',
         ]);
     }
-    
+
     /**
      * Display escalated tickets
      */
@@ -1953,10 +1953,10 @@ class TicketController extends Controller
         // Redirect to tickets index with escalated filter
         return redirect()->route('tickets.index', [
             'filter' => 'escalated',
-            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold']
+            'selectedStatuses' => ['open', 'in_progress', 'waiting', 'on_hold'],
         ]);
     }
-    
+
     /**
      * Display merged tickets
      */
@@ -1964,10 +1964,10 @@ class TicketController extends Controller
     {
         // Redirect to tickets index with merged filter
         return redirect()->route('tickets.index', [
-            'filter' => 'merged'
+            'filter' => 'merged',
         ]);
     }
-    
+
     /**
      * Display archived tickets
      */
@@ -1975,14 +1975,10 @@ class TicketController extends Controller
     {
         // Redirect to tickets index with archived filter
         return redirect()->route('tickets.index', [
-            'filter' => 'archived'
+            'filter' => 'archived',
         ]);
     }
-    
 
-    
-
-    
     /**
      * Display time and billing view
      */
@@ -1990,39 +1986,39 @@ class TicketController extends Controller
     {
         $user = auth()->user();
         $timeEntries = \App\Domains\Ticket\Models\TicketTimeEntry::where('company_id', $user->company_id);
-        
-        if (!$user->hasRole('admin')) {
+
+        if (! $user->hasRole('admin')) {
             $timeEntries->where('user_id', $user->id);
         }
-        
+
         $timeEntries = $timeEntries->with(['ticket', 'user', 'ticket.client'])
             ->orderBy('work_date', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-        
+
         $statistics = [
             'total_hours' => $timeEntries->sum('hours_worked'),
             'billable_hours' => $timeEntries->where('billable', true)->sum('hours_worked'),
             'total_amount' => $timeEntries->sum('amount'),
         ];
-        
+
         return view('tickets.time-billing', compact('timeEntries', 'statistics'));
     }
-    
+
     /**
      * Display analytics dashboard
      */
     public function analytics(Request $request)
     {
         $company_id = auth()->user()->company_id;
-        
+
         // Get various analytics metrics
         $metrics = [
             'total_tickets' => Ticket::where('company_id', $company_id)->count(),
             'open_tickets' => Ticket::where('company_id', $company_id)->whereIn('status', ['open', 'in_progress'])->count(),
             'avg_resolution_time' => Ticket::where('company_id', $company_id)
                 ->whereNotNull('resolved_at')
-                ->selectRaw("AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600) as avg_hours")
+                ->selectRaw('AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600) as avg_hours')
                 ->value('avg_hours'),
             'tickets_by_priority' => Ticket::where('company_id', $company_id)
                 ->selectRaw('priority, COUNT(*) as count')
@@ -2033,10 +2029,10 @@ class TicketController extends Controller
                 ->groupBy('status')
                 ->pluck('count', 'status'),
         ];
-        
+
         return view('tickets.analytics', compact('metrics'));
     }
-    
+
     /**
      * Display knowledge base integration
      */
@@ -2045,10 +2041,10 @@ class TicketController extends Controller
         // This would integrate with knowledge base module
         $articles = [];
         $categories = [];
-        
+
         return view('tickets.knowledge-base', compact('articles', 'categories'));
     }
-    
+
     /**
      * Display automation rules
      */
@@ -2058,10 +2054,10 @@ class TicketController extends Controller
             ->with(['creator'])
             ->orderBy('name')
             ->paginate(20);
-        
+
         return view('tickets.automation-rules', compact('workflows'));
     }
-    
+
     /**
      * Get today's time statistics (helper method)
      */
@@ -2069,15 +2065,15 @@ class TicketController extends Controller
     {
         $query = \App\Domains\Ticket\Models\TicketTimeEntry::where('company_id', $user->company_id)
             ->where('work_date', today());
-            
-        if (!$user->hasRole('admin') && !$user->hasPermission('tickets.view-all-timers')) {
+
+        if (! $user->hasRole('admin') && ! $user->hasPermission('tickets.view-all-timers')) {
             $query->where('user_id', $user->id);
         }
-        
+
         return [
             'total_hours' => $query->sum('hours_worked'),
             'billable_hours' => $query->billable()->sum('hours_worked'),
-            'entries_count' => $query->count()
+            'entries_count' => $query->count(),
         ];
     }
 }

@@ -4,8 +4,6 @@ namespace App\Domains\Lead\Services;
 
 use App\Domains\Lead\Models\Lead;
 use App\Domains\Lead\Models\LeadActivity;
-use App\Models\Client;
-use Carbon\Carbon;
 
 class LeadScoringService
 {
@@ -20,7 +18,7 @@ class LeadScoringService
         $urgencyScore = $this->calculateUrgencyScore($lead);
 
         $totalScore = $demographicScore + $behavioralScore + $fitScore + $urgencyScore;
-        
+
         // Cap the total score at 100
         $totalScore = min($totalScore, 100);
 
@@ -64,7 +62,7 @@ class LeadScoringService
             'technology',
             'insurance',
             'real_estate',
-            'professional_services'
+            'professional_services',
         ];
 
         if ($lead->industry && in_array(strtolower($lead->industry), $highValueIndustries)) {
@@ -84,10 +82,18 @@ class LeadScoringService
 
         // Contact completeness (10 points max)
         $completenessScore = 0;
-        if ($lead->phone) $completenessScore += 2;
-        if ($lead->company_name) $completenessScore += 3;
-        if ($lead->title) $completenessScore += 2;
-        if ($lead->website) $completenessScore += 3;
+        if ($lead->phone) {
+            $completenessScore += 2;
+        }
+        if ($lead->company_name) {
+            $completenessScore += 3;
+        }
+        if ($lead->title) {
+            $completenessScore += 2;
+        }
+        if ($lead->website) {
+            $completenessScore += 3;
+        }
 
         $score += $completenessScore;
 
@@ -164,7 +170,7 @@ class LeadScoringService
             'vmware',
             'citrix',
             'remote_desktop',
-            'vpn'
+            'vpn',
         ];
 
         foreach ($highFitTech as $tech) {
@@ -184,7 +190,7 @@ class LeadScoringService
             'backup_failure',
             'compliance_issues',
             'it_costs',
-            'staff_turnover'
+            'staff_turnover',
         ];
 
         foreach ($mspPainPoints as $pain) {
@@ -207,7 +213,7 @@ class LeadScoringService
         // Title-based scoring
         $decisionMakerTitles = [
             'ceo', 'cto', 'cio', 'owner', 'president', 'vp', 'director',
-            'manager', 'head', 'chief', 'founder'
+            'manager', 'head', 'chief', 'founder',
         ];
 
         if ($lead->title) {
@@ -233,7 +239,7 @@ class LeadScoringService
         // Urgency keywords in notes
         $urgencyKeywords = [
             'urgent', 'asap', 'immediately', 'emergency', 'critical',
-            'deadline', 'soon', 'quickly', 'fast', 'now'
+            'deadline', 'soon', 'quickly', 'fast', 'now',
         ];
 
         $notes = strtolower($lead->notes ?? '');
@@ -249,7 +255,7 @@ class LeadScoringService
                 LeadActivity::TYPE_CALL_RECEIVED,
                 LeadActivity::TYPE_EMAIL_REPLIED,
                 LeadActivity::TYPE_MEETING_SCHEDULED,
-                LeadActivity::TYPE_FORM_SUBMITTED
+                LeadActivity::TYPE_FORM_SUBMITTED,
             ])
             ->where('activity_date', '>=', now()->subDays(3))
             ->count();
@@ -259,7 +265,7 @@ class LeadScoringService
         // Compliance deadline indicators
         $complianceKeywords = [
             'audit', 'compliance', 'regulation', 'gdpr', 'hipaa',
-            'sox', 'pci', 'iso', 'certification', 'inspection'
+            'sox', 'pci', 'iso', 'certification', 'inspection',
         ];
 
         foreach ($complianceKeywords as $keyword) {
@@ -297,7 +303,7 @@ class LeadScoringService
     protected function extractTechIndicators(Lead $lead): array
     {
         $indicators = [];
-        $text = strtolower(($lead->notes ?? '') . ' ' . ($lead->website ?? ''));
+        $text = strtolower(($lead->notes ?? '').' '.($lead->website ?? ''));
 
         $techKeywords = [
             'office_365' => ['office 365', 'o365', 'microsoft 365', 'm365'],
@@ -310,7 +316,7 @@ class LeadScoringService
             'vmware' => ['vmware', 'vsphere', 'vcenter'],
             'citrix' => ['citrix', 'xenapp', 'xendesktop'],
             'remote_desktop' => ['remote desktop', 'rdp', 'terminal services'],
-            'vpn' => ['vpn', 'virtual private network']
+            'vpn' => ['vpn', 'virtual private network'],
         ];
 
         foreach ($techKeywords as $tech => $keywords) {
@@ -342,7 +348,7 @@ class LeadScoringService
             'backup_failure' => ['backup failed', 'backup issues', 'no backup', 'restore problems'],
             'compliance_issues' => ['compliance', 'audit', 'regulation', 'gdpr', 'hipaa'],
             'it_costs' => ['it costs', 'expensive', 'budget', 'save money'],
-            'staff_turnover' => ['it staff', 'turnover', 'no it person', 'it help']
+            'staff_turnover' => ['it staff', 'turnover', 'no it person', 'it help'],
         ];
 
         foreach ($painKeywords as $pain => $keywords) {
@@ -398,7 +404,7 @@ class LeadScoringService
     {
         $staleLeads = Lead::where(function ($query) use ($hoursThreshold) {
             $query->whereNull('last_scored_at')
-                  ->orWhere('last_scored_at', '<', now()->subHours($hoursThreshold));
+                ->orWhere('last_scored_at', '<', now()->subHours($hoursThreshold));
         })->get();
 
         $count = 0;

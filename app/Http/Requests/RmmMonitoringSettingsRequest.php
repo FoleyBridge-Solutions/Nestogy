@@ -32,7 +32,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'connectwise_automate_settings.sync_clients' => 'boolean',
             'connectwise_automate_settings.sync_assets' => 'boolean',
             'connectwise_automate_settings.monitor_connectivity' => 'boolean',
-            
+
             // Datto RMM Settings
             'datto_rmm_settings' => 'nullable|array',
             'datto_rmm_settings.enabled' => 'boolean',
@@ -45,7 +45,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'datto_rmm_settings.sync_alerts' => 'boolean',
             'datto_rmm_settings.sync_patches' => 'boolean',
             'datto_rmm_settings.monitor_agent_status' => 'boolean',
-            
+
             // NinjaOne Settings
             'ninja_rmm_settings' => 'nullable|array',
             'ninja_rmm_settings.enabled' => 'boolean',
@@ -60,7 +60,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'ninja_rmm_settings.sync_devices' => 'boolean',
             'ninja_rmm_settings.sync_activities' => 'boolean',
             'ninja_rmm_settings.monitor_policy_compliance' => 'boolean',
-            
+
             // Kaseya VSA Settings
             'kaseya_vsa_settings' => 'nullable|array',
             'kaseya_vsa_settings.enabled' => 'boolean',
@@ -74,7 +74,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'kaseya_vsa_settings.sync_alarms' => 'boolean',
             'kaseya_vsa_settings.sync_procedures' => 'boolean',
             'kaseya_vsa_settings.monitor_agent_procedures' => 'boolean',
-            
+
             // Auvik Settings
             'auvik_settings' => 'nullable|array',
             'auvik_settings.enabled' => 'boolean',
@@ -88,7 +88,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'auvik_settings.sync_device_info' => 'boolean',
             'auvik_settings.monitor_device_status' => 'boolean',
             'auvik_settings.network_mapping_enabled' => 'boolean',
-            
+
             // PRTG Settings
             'prtg_settings' => 'nullable|array',
             'prtg_settings.enabled' => 'boolean',
@@ -102,7 +102,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'prtg_settings.sync_devices' => 'boolean',
             'prtg_settings.sync_groups' => 'boolean',
             'prtg_settings.monitor_sensor_status' => 'boolean',
-            
+
             // SolarWinds Settings
             'solarwinds_settings' => 'nullable|array',
             'solarwinds_settings.enabled' => 'boolean',
@@ -116,7 +116,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'solarwinds_settings.sync_interfaces' => 'boolean',
             'solarwinds_settings.sync_applications' => 'boolean',
             'solarwinds_settings.monitor_node_status' => 'boolean',
-            
+
             // Monitoring Alert Thresholds
             'monitoring_alert_thresholds' => 'nullable|array',
             'monitoring_alert_thresholds.cpu_usage_critical' => 'integer|min:50|max:100',
@@ -129,7 +129,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'monitoring_alert_thresholds.network_latency_warning' => 'integer|min:50|max:2000',
             'monitoring_alert_thresholds.uptime_critical_hours' => 'integer|min:1|max:168',
             'monitoring_alert_thresholds.offline_duration_minutes' => 'integer|min:5|max:1440',
-            
+
             // Escalation Rules
             'escalation_rules' => 'nullable|array',
             'escalation_rules.enabled' => 'boolean',
@@ -142,7 +142,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'escalation_rules.escalate_holidays' => 'boolean',
             'escalation_rules.notification_channels' => 'nullable|array',
             'escalation_rules.notification_channels.*' => 'string|in:email,sms,slack,teams,webhook',
-            
+
             // Asset Discovery Settings
             'asset_discovery_settings' => 'nullable|array',
             'asset_discovery_settings.enabled' => 'boolean',
@@ -156,7 +156,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'asset_discovery_settings.require_approval_for_new_assets' => 'boolean',
             'asset_discovery_settings.discovery_ip_ranges' => 'nullable|array',
             'asset_discovery_settings.excluded_ip_ranges' => 'nullable|array',
-            
+
             // Patch Management Settings
             'patch_management_settings' => 'nullable|array',
             'patch_management_settings.enabled' => 'boolean',
@@ -170,7 +170,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'patch_management_settings.auto_reboot_non_business_hours' => 'boolean',
             'patch_management_settings.patch_groups' => 'nullable|array',
             'patch_management_settings.test_deployment_percentage' => 'integer|min:5|max:50',
-            
+
             // Remote Access Settings
             'remote_access_settings' => 'nullable|array',
             'remote_access_settings.enabled' => 'boolean',
@@ -183,7 +183,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'remote_access_settings.encryption_level' => 'string|in:low,medium,high',
             'remote_access_settings.allowed_tools' => 'nullable|array',
             'remote_access_settings.allowed_tools.*' => 'string|in:rdp,vnc,teamviewer,connectwise_control,splashtop,logmein',
-            
+
             // Auto Ticket Creation
             'auto_create_tickets_from_alerts' => 'boolean',
             'alert_to_ticket_mapping' => 'nullable|array',
@@ -248,25 +248,25 @@ class RmmMonitoringSettingsRequest extends FormRequest
         $validator->after(function ($validator) {
             // Validate that warning thresholds are lower than critical thresholds
             $thresholds = $this->input('monitoring_alert_thresholds', []);
-            
+
             if (isset($thresholds['cpu_usage_warning'], $thresholds['cpu_usage_critical'])) {
                 if ($thresholds['cpu_usage_warning'] >= $thresholds['cpu_usage_critical']) {
                     $validator->errors()->add('monitoring_alert_thresholds.cpu_usage_warning', 'Warning threshold must be lower than critical threshold.');
                 }
             }
-            
+
             if (isset($thresholds['memory_usage_warning'], $thresholds['memory_usage_critical'])) {
                 if ($thresholds['memory_usage_warning'] >= $thresholds['memory_usage_critical']) {
                     $validator->errors()->add('monitoring_alert_thresholds.memory_usage_warning', 'Warning threshold must be lower than critical threshold.');
                 }
             }
-            
+
             if (isset($thresholds['disk_usage_warning'], $thresholds['disk_usage_critical'])) {
                 if ($thresholds['disk_usage_warning'] >= $thresholds['disk_usage_critical']) {
                     $validator->errors()->add('monitoring_alert_thresholds.disk_usage_warning', 'Warning threshold must be lower than critical threshold.');
                 }
             }
-            
+
             // Validate escalation timing
             $escalation = $this->input('escalation_rules', []);
             if (isset($escalation['first_escalation_minutes'], $escalation['second_escalation_minutes'])) {
@@ -274,19 +274,19 @@ class RmmMonitoringSettingsRequest extends FormRequest
                     $validator->errors()->add('escalation_rules.second_escalation_minutes', 'Second escalation must be later than first escalation.');
                 }
             }
-            
+
             if (isset($escalation['second_escalation_minutes'], $escalation['final_escalation_minutes'])) {
                 if ($escalation['second_escalation_minutes'] >= $escalation['final_escalation_minutes']) {
                     $validator->errors()->add('escalation_rules.final_escalation_minutes', 'Final escalation must be later than second escalation.');
                 }
             }
-            
+
             // Validate patch window
             $patchSettings = $this->input('patch_management_settings', []);
             if (isset($patchSettings['patch_window_start'], $patchSettings['patch_window_end'])) {
                 $start = $patchSettings['patch_window_start'];
                 $end = $patchSettings['patch_window_end'];
-                
+
                 if ($start && $end && $start >= $end) {
                     $validator->errors()->add('patch_management_settings.patch_window_end', 'Patch window end time must be after start time.');
                 }

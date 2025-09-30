@@ -10,13 +10,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Ticket Workflow Model
- * 
+ *
  * Represents workflow definitions that control ticket status transitions,
  * assignment rules, and automated actions.
  */
 class TicketWorkflow extends Model
 {
-    use HasFactory, BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -79,13 +79,13 @@ class TicketWorkflow extends Model
             ->where('is_active', true)
             ->first();
 
-        if (!$transition) {
+        if (! $transition) {
             return false;
         }
 
         // Check role requirements
         if ($transition->required_role && $user) {
-            if (!$user->hasRole($transition->required_role)) {
+            if (! $user->hasRole($transition->required_role)) {
                 return false;
             }
         }
@@ -104,7 +104,7 @@ class TicketWorkflow extends Model
             ->where('is_active', true)
             ->first();
 
-        if (!$transition) {
+        if (! $transition) {
             return false;
         }
 
@@ -134,15 +134,15 @@ class TicketWorkflow extends Model
                 case 'send_notification':
                     $this->sendNotificationAction($ticket, $action, $context);
                     break;
-                
+
                 case 'add_comment':
                     $this->addCommentAction($ticket, $action, $context);
                     break;
-                
+
                 case 'update_priority':
                     $this->updatePriorityAction($ticket, $action);
                     break;
-                
+
                 case 'set_due_date':
                     $this->setDueDateAction($ticket, $action);
                     break;
@@ -162,7 +162,7 @@ class TicketWorkflow extends Model
             $nextIndex = (array_search($lastAssigned, $userIds) + 1) % count($userIds);
             $ticket->update(['assigned_to' => $userIds[$nextIndex]]);
         }
-        
+
         // Load balancing assignment
         elseif ($rules['type'] === 'load_balance' && isset($rules['user_ids'])) {
             $userIds = $rules['user_ids'];
@@ -176,7 +176,7 @@ class TicketWorkflow extends Model
             // Find user with least tickets
             $minCount = PHP_INT_MAX;
             $selectedUser = $userIds[0];
-            
+
             foreach ($userIds as $userId) {
                 $count = $assignments[$userId] ?? 0;
                 if ($count < $minCount) {
@@ -184,7 +184,7 @@ class TicketWorkflow extends Model
                     $selectedUser = $userId;
                 }
             }
-            
+
             $ticket->update(['assigned_to' => $selectedUser]);
         }
     }
@@ -216,7 +216,7 @@ class TicketWorkflow extends Model
     private function addCommentAction(Ticket $ticket, array $action, array $context): void
     {
         $message = $action['message'] ?? 'Status changed automatically by workflow';
-        
+
         // Replace placeholders in message
         $message = str_replace([
             '{{old_status}}',
@@ -252,7 +252,7 @@ class TicketWorkflow extends Model
     {
         if (isset($action['hours_from_now'])) {
             $dueDate = now()->addHours($action['hours_from_now']);
-            
+
             // Update or create priority queue entry with SLA deadline
             $ticket->priorityQueue()->updateOrCreate(
                 ['ticket_id' => $ticket->id],
@@ -267,10 +267,10 @@ class TicketWorkflow extends Model
     /**
      * Create a copy of this workflow
      */
-    public function duplicate(string $newName = null): self
+    public function duplicate(?string $newName = null): self
     {
         $copy = $this->replicate();
-        $copy->name = $newName ?? ($this->name . ' (Copy)');
+        $copy->name = $newName ?? ($this->name.' (Copy)');
         $copy->is_default = false;
         $copy->is_active = false;
         $copy->save();

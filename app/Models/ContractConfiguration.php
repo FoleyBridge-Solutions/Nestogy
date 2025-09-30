@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Contract Configuration Model
- * 
+ *
  * Manages dynamic contract system configurations per company
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property array|null $configuration
@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class ContractConfiguration extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.

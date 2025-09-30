@@ -3,26 +3,24 @@
 namespace App\Domains\Financial\Services;
 
 use App\Models\Client;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\DunningAction;
-use App\Models\PaymentPlan;
 use App\Models\CollectionNote;
-use App\Models\AccountHold;
+use App\Models\DunningAction;
+use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Collection Management Service
- * 
+ *
  * Handles sophisticated client risk assessment, payment behavior analysis,
  * and intelligent collection strategy optimization with ML-driven insights.
  */
 class CollectionManagementService
 {
     protected string $cachePrefix = 'collection_mgmt:';
+
     protected int $cacheTtl = 3600; // 1 hour
 
     /**
@@ -30,8 +28,8 @@ class CollectionManagementService
      */
     public function assessClientRisk(Client $client): array
     {
-        $cacheKey = $this->cachePrefix . "risk_assessment:{$client->id}";
-        
+        $cacheKey = $this->cachePrefix."risk_assessment:{$client->id}";
+
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($client) {
             $assessment = [
                 'client_id' => $client->id,
@@ -41,7 +39,7 @@ class CollectionManagementService
                 'assessment_date' => Carbon::now()->toISOString(),
                 'factors' => [],
                 'recommendations' => [],
-                'predicted_outcomes' => []
+                'predicted_outcomes' => [],
             ];
 
             // Calculate risk factors
@@ -67,7 +65,7 @@ class CollectionManagementService
             Log::info('Client risk assessment completed', [
                 'client_id' => $client->id,
                 'risk_level' => $assessment['risk_level'],
-                'risk_score' => $assessment['risk_score']
+                'risk_score' => $assessment['risk_score'],
             ]);
 
             return $assessment;
@@ -84,7 +82,7 @@ class CollectionManagementService
             'account_aging' => $this->analyzeAccountAging($client),
             'behavioral_patterns' => $this->analyzeBehavioralPatterns($client),
             'financial_stability' => $this->analyzeFinancialStability($client),
-            'communication_history' => $this->analyzeCommunicationHistory($client)
+            'communication_history' => $this->analyzeCommunicationHistory($client),
         ];
     }
 
@@ -112,7 +110,7 @@ class CollectionManagementService
             'partial_payments' => 0,
             'late_payments' => 0,
             'payment_trend' => 'stable',
-            'risk_score' => 0
+            'risk_score' => 0,
         ];
 
         if ($analysis['total_invoices'] > 0) {
@@ -126,35 +124,49 @@ class CollectionManagementService
             if ($payment) {
                 $delay = Carbon::parse($payment->created_at)->diffInDays($invoice->due_date, false);
                 $paymentDelays[] = $delay;
-                
-                if ($delay > 0) $analysis['late_payments']++;
-                if ($payment->amount < $invoice->amount) $analysis['partial_payments']++;
+
+                if ($delay > 0) {
+                    $analysis['late_payments']++;
+                }
+                if ($payment->amount < $invoice->amount) {
+                    $analysis['partial_payments']++;
+                }
             } else {
                 $analysis['missed_payments']++;
                 $paymentDelays[] = Carbon::now()->diffInDays($invoice->due_date);
             }
         }
 
-        if (!empty($paymentDelays)) {
+        if (! empty($paymentDelays)) {
             $analysis['average_days_to_pay'] = array_sum($paymentDelays) / count($paymentDelays);
         }
 
         // Calculate payment consistency
         if (count($paymentDelays) > 1) {
             $mean = $analysis['average_days_to_pay'];
-            $variance = array_sum(array_map(function($x) use ($mean) { 
-                return pow($x - $mean, 2); 
+            $variance = array_sum(array_map(function ($x) use ($mean) {
+                return pow($x - $mean, 2);
             }, $paymentDelays)) / count($paymentDelays);
             $analysis['payment_consistency'] = max(0, 100 - sqrt($variance));
         }
 
         // Calculate risk score
         $riskScore = 0;
-        if ($analysis['payment_ratio'] < 80) $riskScore += 25;
-        if ($analysis['average_days_to_pay'] > 30) $riskScore += 20;
-        if ($analysis['payment_consistency'] < 50) $riskScore += 15;
-        if ($analysis['missed_payments'] > 2) $riskScore += 20;
-        if ($analysis['partial_payments'] > 1) $riskScore += 10;
+        if ($analysis['payment_ratio'] < 80) {
+            $riskScore += 25;
+        }
+        if ($analysis['average_days_to_pay'] > 30) {
+            $riskScore += 20;
+        }
+        if ($analysis['payment_consistency'] < 50) {
+            $riskScore += 15;
+        }
+        if ($analysis['missed_payments'] > 2) {
+            $riskScore += 20;
+        }
+        if ($analysis['partial_payments'] > 1) {
+            $riskScore += 10;
+        }
 
         $analysis['risk_score'] = min(100, $riskScore);
 
@@ -182,9 +194,9 @@ class CollectionManagementService
                 '31_60' => 0,
                 '61_90' => 0,
                 '91_120' => 0,
-                'over_120' => 0
+                'over_120' => 0,
             ],
-            'risk_score' => 0
+            'risk_score' => 0,
         ];
 
         if ($overdueInvoices->isNotEmpty()) {
@@ -192,7 +204,7 @@ class CollectionManagementService
             foreach ($overdueInvoices as $invoice) {
                 $days = Carbon::now()->diffInDays($invoice->due_date);
                 $overdueDays[] = $days;
-                
+
                 // Categorize into aging buckets
                 if ($days <= 30) {
                     $aging['aging_buckets']['1_30'] += $invoice->getBalance();
@@ -206,17 +218,25 @@ class CollectionManagementService
                     $aging['aging_buckets']['over_120'] += $invoice->getBalance();
                 }
             }
-            
+
             $aging['oldest_overdue_days'] = max($overdueDays);
             $aging['average_overdue_days'] = array_sum($overdueDays) / count($overdueDays);
         }
 
         // Calculate aging risk score
         $riskScore = 0;
-        if ($aging['past_due_ratio'] > 50) $riskScore += 30;
-        if ($aging['oldest_overdue_days'] > 90) $riskScore += 25;
-        if ($aging['aging_buckets']['over_120'] > 0) $riskScore += 25;
-        if ($aging['overdue_invoices_count'] > 3) $riskScore += 20;
+        if ($aging['past_due_ratio'] > 50) {
+            $riskScore += 30;
+        }
+        if ($aging['oldest_overdue_days'] > 90) {
+            $riskScore += 25;
+        }
+        if ($aging['aging_buckets']['over_120'] > 0) {
+            $riskScore += 25;
+        }
+        if ($aging['overdue_invoices_count'] > 3) {
+            $riskScore += 20;
+        }
 
         $aging['risk_score'] = min(100, $riskScore);
 
@@ -241,7 +261,7 @@ class CollectionManagementService
             'promises_kept' => 0,
             'disputes_raised' => 0,
             'hostile_interactions' => 0,
-            'risk_score' => 0
+            'risk_score' => 0,
         ];
 
         // Analyze collection notes
@@ -249,18 +269,18 @@ class CollectionManagementService
             if ($note->outcome === CollectionNote::OUTCOME_SPOKE_WITH_CLIENT) {
                 $patterns['successful_contacts']++;
             }
-            
+
             if ($note->contains_promise_to_pay) {
                 $patterns['promises_made']++;
                 if ($note->promise_kept === true) {
                     $patterns['promises_kept']++;
                 }
             }
-            
+
             if ($note->contains_dispute) {
                 $patterns['disputes_raised']++;
             }
-            
+
             if ($note->client_mood === CollectionNote::MOOD_HOSTILE) {
                 $patterns['hostile_interactions']++;
             }
@@ -272,12 +292,12 @@ class CollectionManagementService
             ->count();
 
         if ($totalAttempts > 0) {
-            $patterns['communication_responsiveness'] = 
+            $patterns['communication_responsiveness'] =
                 ($patterns['successful_contacts'] / $totalAttempts) * 100;
         }
 
         if ($patterns['promises_made'] > 0) {
-            $patterns['promise_to_pay_reliability'] = 
+            $patterns['promise_to_pay_reliability'] =
                 ($patterns['promises_kept'] / $patterns['promises_made']) * 100;
         }
 
@@ -290,10 +310,18 @@ class CollectionManagementService
 
         // Calculate risk score
         $riskScore = 0;
-        if ($patterns['communication_responsiveness'] < 30) $riskScore += 25;
-        if ($patterns['promise_to_pay_reliability'] < 50) $riskScore += 20;
-        if ($patterns['disputes_raised'] > 2) $riskScore += 15;
-        if ($patterns['hostile_interactions'] > 0) $riskScore += 20;
+        if ($patterns['communication_responsiveness'] < 30) {
+            $riskScore += 25;
+        }
+        if ($patterns['promise_to_pay_reliability'] < 50) {
+            $riskScore += 20;
+        }
+        if ($patterns['disputes_raised'] > 2) {
+            $riskScore += 15;
+        }
+        if ($patterns['hostile_interactions'] > 0) {
+            $riskScore += 20;
+        }
 
         $patterns['risk_score'] = min(100, $riskScore);
 
@@ -313,13 +341,17 @@ class CollectionManagementService
             'contract_status' => $hasActiveContract ? 'active' : 'expired',
             'revenue_trend' => 'stable',
             'account_growth' => 0,
-            'risk_score' => 0
+            'risk_score' => 0,
         ];
 
         // Calculate financial stability risk score
         $riskScore = 0;
-        if (!$hasActiveContract) $riskScore += 15;
-        if ($monthlyRevenue < 100) $riskScore += 15;
+        if (! $hasActiveContract) {
+            $riskScore += 15;
+        }
+        if ($monthlyRevenue < 100) {
+            $riskScore += 15;
+        }
 
         $stability['risk_score'] = min(100, $riskScore);
 
@@ -342,7 +374,7 @@ class CollectionManagementService
             'phone_communications' => $actions->where('action_type', DunningAction::ACTION_PHONE_CALL)->count(),
             'response_rate' => 0,
             'preferred_channel' => 'email',
-            'risk_score' => 0
+            'risk_score' => 0,
         ];
 
         $responseCount = $actions->where('responded_at', '!=', null)->count();
@@ -352,8 +384,12 @@ class CollectionManagementService
 
         // Calculate communication risk score
         $riskScore = 0;
-        if ($communication['response_rate'] < 25) $riskScore += 30;
-        if ($communication['total_communications'] > 20) $riskScore += 15;
+        if ($communication['response_rate'] < 25) {
+            $riskScore += 30;
+        }
+        if ($communication['total_communications'] > 20) {
+            $riskScore += 15;
+        }
 
         $communication['risk_score'] = min(100, $riskScore);
 
@@ -370,7 +406,7 @@ class CollectionManagementService
             'account_aging' => 0.25,
             'behavioral_patterns' => 0.20,
             'financial_stability' => 0.15,
-            'communication_history' => 0.05
+            'communication_history' => 0.05,
         ];
 
         $weightedScore = 0;
@@ -388,9 +424,16 @@ class CollectionManagementService
      */
     protected function determineRiskLevel(int $score): string
     {
-        if ($score >= 80) return 'critical';
-        if ($score >= 60) return 'high';
-        if ($score >= 40) return 'medium';
+        if ($score >= 80) {
+            return 'critical';
+        }
+        if ($score >= 60) {
+            return 'high';
+        }
+        if ($score >= 40) {
+            return 'medium';
+        }
+
         return 'low';
     }
 
@@ -406,11 +449,11 @@ class CollectionManagementService
         $dataPoints += min(20, $client->invoices()->count());
         $dataPoints += min(20, $client->payments()->count());
         $dataPoints += min(15, $client->collectionNotes()->count());
-        
+
         // Account age contributes to confidence
         $accountAge = $client->created_at->diffInDays(Carbon::now());
         $dataPoints += min(25, $accountAge / 10);
-        
+
         // Communication history
         $communications = $factors['communication_history']['total_communications'] ?? 0;
         $dataPoints += min(20, $communications);
@@ -432,34 +475,34 @@ class CollectionManagementService
                     'type' => 'immediate_action',
                     'priority' => 'urgent',
                     'action' => 'service_suspension',
-                    'reason' => 'Critical risk level requires immediate service protection'
+                    'reason' => 'Critical risk level requires immediate service protection',
                 ];
                 break;
-                
+
             case 'high':
                 $recommendations[] = [
                     'type' => 'collection_strategy',
                     'priority' => 'high',
                     'action' => 'aggressive_dunning',
-                    'reason' => 'High risk requires intensive collection efforts'
+                    'reason' => 'High risk requires intensive collection efforts',
                 ];
                 break;
-                
+
             case 'low':
                 $recommendations[] = [
                     'type' => 'collection_strategy',
                     'priority' => 'low',
                     'action' => 'gentle_reminders',
-                    'reason' => 'Low risk allows for courteous collection approach'
+                    'reason' => 'Low risk allows for courteous collection approach',
                 ];
                 break;
-                
+
             default:
                 $recommendations[] = [
                     'type' => 'collection_strategy',
                     'priority' => 'medium',
                     'action' => 'standard_dunning',
-                    'reason' => 'Medium risk requires standard collection process'
+                    'reason' => 'Medium risk requires standard collection process',
                 ];
                 break;
         }
@@ -480,7 +523,7 @@ class CollectionManagementService
             'settlement_probability' => 0,
             'legal_action_probability' => 0,
             'estimated_recovery_rate' => 0,
-            'predicted_collection_time' => 0
+            'predicted_collection_time' => 0,
         ];
 
         // Base probabilities on risk score
@@ -491,7 +534,7 @@ class CollectionManagementService
                 'settlement_probability' => 5,
                 'legal_action_probability' => 0,
                 'estimated_recovery_rate' => 98,
-                'predicted_collection_time' => 15
+                'predicted_collection_time' => 15,
             ];
         } elseif ($riskScore < 40) {
             $predictions = [
@@ -500,7 +543,7 @@ class CollectionManagementService
                 'settlement_probability' => 15,
                 'legal_action_probability' => 5,
                 'estimated_recovery_rate' => 85,
-                'predicted_collection_time' => 30
+                'predicted_collection_time' => 30,
             ];
         } elseif ($riskScore < 60) {
             $predictions = [
@@ -509,7 +552,7 @@ class CollectionManagementService
                 'settlement_probability' => 30,
                 'legal_action_probability' => 15,
                 'estimated_recovery_rate' => 70,
-                'predicted_collection_time' => 60
+                'predicted_collection_time' => 60,
             ];
         } elseif ($riskScore < 80) {
             $predictions = [
@@ -518,7 +561,7 @@ class CollectionManagementService
                 'settlement_probability' => 40,
                 'legal_action_probability' => 30,
                 'estimated_recovery_rate' => 50,
-                'predicted_collection_time' => 120
+                'predicted_collection_time' => 120,
             ];
         } else {
             $predictions = [
@@ -527,7 +570,7 @@ class CollectionManagementService
                 'settlement_probability' => 25,
                 'legal_action_probability' => 60,
                 'estimated_recovery_rate' => 25,
-                'predicted_collection_time' => 180
+                'predicted_collection_time' => 180,
             ];
         }
 
@@ -540,7 +583,7 @@ class CollectionManagementService
     public function getOptimalCollectionStrategy(Client $client): array
     {
         $assessment = $this->assessClientRisk($client);
-        
+
         $strategy = [
             'strategy_type' => 'standard',
             'contact_frequency' => 'weekly',
@@ -548,7 +591,7 @@ class CollectionManagementService
             'escalation_timeline' => 30,
             'payment_plan_threshold' => 500,
             'settlement_threshold' => 1000,
-            'expected_outcome' => $assessment['predicted_outcomes']
+            'expected_outcome' => $assessment['predicted_outcomes'],
         ];
 
         // Customize strategy based on risk level
@@ -558,19 +601,19 @@ class CollectionManagementService
                 $strategy['contact_frequency'] = 'monthly';
                 $strategy['escalation_timeline'] = 60;
                 break;
-                
+
             case 'medium':
                 $strategy['strategy_type'] = 'standard';
                 $strategy['contact_frequency'] = 'weekly';
                 $strategy['escalation_timeline'] = 30;
                 break;
-                
+
             case 'high':
                 $strategy['strategy_type'] = 'aggressive';
                 $strategy['contact_frequency'] = 'daily';
                 $strategy['escalation_timeline'] = 14;
                 break;
-                
+
             case 'critical':
                 $strategy['strategy_type'] = 'immediate_action';
                 $strategy['contact_frequency'] = 'daily';
@@ -586,7 +629,7 @@ class CollectionManagementService
      */
     public function clearClientRiskCache(Client $client): void
     {
-        $cacheKey = $this->cachePrefix . "risk_assessment:{$client->id}";
+        $cacheKey = $this->cachePrefix."risk_assessment:{$client->id}";
         Cache::forget($cacheKey);
     }
 
@@ -596,20 +639,20 @@ class CollectionManagementService
     public function batchAssessRisk(Collection $clients): array
     {
         $assessments = [];
-        
+
         foreach ($clients as $client) {
             try {
                 $assessments[$client->id] = $this->assessClientRisk($client);
             } catch (\Exception $e) {
                 Log::error('Failed to assess risk for client', [
                     'client_id' => $client->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
-                
+
                 $assessments[$client->id] = [
                     'error' => $e->getMessage(),
                     'risk_level' => 'medium',
-                    'risk_score' => 50
+                    'risk_score' => 50,
                 ];
             }
         }

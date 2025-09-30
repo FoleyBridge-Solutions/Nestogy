@@ -2,26 +2,31 @@
 
 namespace App\View\Components;
 
-use Illuminate\View\Component;
 use App\Domains\Core\Services\NavigationService;
 use App\Domains\Core\Services\SidebarConfigProvider;
+use Illuminate\View\Component;
 
 class FluxSidebar extends Component
 {
     public $sidebarContext;
+
     public $activeSection;
+
     public $mobile;
+
     public $selectedClient;
+
     public $sidebarConfig;
+
     public $customConfig;
 
     /**
      * Create a new component instance.
      *
-     * @param string|null $sidebarContext The context for the sidebar (e.g., 'clients', 'settings', 'admin')
-     * @param string|null $activeSection The active section/item in the sidebar
-     * @param bool $mobile Whether this is a mobile sidebar
-     * @param array|null $customConfig Custom configuration to override defaults
+     * @param  string|null  $sidebarContext  The context for the sidebar (e.g., 'clients', 'settings', 'admin')
+     * @param  string|null  $activeSection  The active section/item in the sidebar
+     * @param  bool  $mobile  Whether this is a mobile sidebar
+     * @param  array|null  $customConfig  Custom configuration to override defaults
      */
     public function __construct($sidebarContext = null, $activeSection = null, $mobile = false, $customConfig = null)
     {
@@ -30,7 +35,7 @@ class FluxSidebar extends Component
         $this->mobile = $mobile ?? false;
         $this->customConfig = $customConfig;
         $this->selectedClient = NavigationService::getSelectedClient();
-        
+
         // Load sidebar configuration
         $configProvider = app(SidebarConfigProvider::class);
         $this->sidebarConfig = $configProvider->getConfiguration($sidebarContext, $customConfig);
@@ -47,7 +52,7 @@ class FluxSidebar extends Component
     public function resolveContextualParams($params, $selectedClient = null)
     {
         $resolvedParams = [];
-        
+
         foreach ($params as $key => $value) {
             // Skip client-related parameters - we use session-based client selection
             // as per the architectural decision documented in docs/CLAUDE.md
@@ -57,14 +62,15 @@ class FluxSidebar extends Component
                 if ($key === 'client' && $value === 'current' && $selectedClient) {
                     $resolvedParams[$key] = $selectedClient->id;
                 }
+
                 // Skip 'client_id' parameters entirely - these are handled via session
                 continue;
             }
-            
+
             // Keep non-client parameters as-is
             $resolvedParams[$key] = $value;
         }
-        
+
         return $resolvedParams;
     }
 
@@ -75,7 +81,7 @@ class FluxSidebar extends Component
     {
         $count = 0;
         $variant = 'zinc';
-        
+
         // Handle client-specific badges
         if ($selectedClient && isset($item['badge_type'])) {
             switch ($item['key']) {
@@ -106,9 +112,9 @@ class FluxSidebar extends Component
                     $count = $selectedClient->communicationLogs()->count();
                     break;
             }
-            
+
             // Apply badge type styling
-            $variant = match($item['badge_type']) {
+            $variant = match ($item['badge_type']) {
                 'urgent' => 'red',
                 'warning' => 'amber',
                 'success' => 'green',
@@ -116,7 +122,7 @@ class FluxSidebar extends Component
                 default => 'zinc'
             };
         }
-        
+
         // Handle custom badge callbacks
         if (isset($item['badge_callback']) && is_callable($item['badge_callback'])) {
             $badgeData = call_user_func($item['badge_callback'], $item);
@@ -127,7 +133,7 @@ class FluxSidebar extends Component
                 $count = $badgeData;
             }
         }
-        
+
         return ['count' => $count, 'variant' => $variant];
     }
 
@@ -137,27 +143,27 @@ class FluxSidebar extends Component
     public function shouldDisplayItem($item, $selectedClient = null)
     {
         // Check permission-based visibility
-        if (isset($item['permission']) && !auth()->user()->can($item['permission'])) {
+        if (isset($item['permission']) && ! auth()->user()->can($item['permission'])) {
             return false;
         }
-        
+
         // Check role-based visibility
         if (isset($item['roles'])) {
             $userRoles = auth()->user()->roles->pluck('name')->toArray();
-            if (!array_intersect($userRoles, $item['roles'])) {
+            if (! array_intersect($userRoles, $item['roles'])) {
                 return false;
             }
         }
-        
+
         // Check conditional visibility
-        if (!isset($item['show_if'])) {
+        if (! isset($item['show_if'])) {
             return true;
         }
-        
+
         // Handle client-specific conditions
         if ($selectedClient) {
             $condition = $item['show_if'];
-            
+
             switch ($condition) {
                 case 'has_open_tickets':
                     return $selectedClient->tickets()->whereIn('status', ['open', 'in-progress'])->exists();
@@ -168,12 +174,12 @@ class FluxSidebar extends Component
                     return $selectedClient->assets()->count() > 0;
             }
         }
-        
+
         // Handle custom visibility callbacks
         if (isset($item['visible_callback']) && is_callable($item['visible_callback'])) {
             return call_user_func($item['visible_callback'], $item, $selectedClient);
         }
-        
+
         return true;
     }
 
@@ -182,6 +188,6 @@ class FluxSidebar extends Component
      */
     public function shouldShow()
     {
-        return !empty($this->sidebarConfig);
+        return ! empty($this->sidebarConfig);
     }
 }

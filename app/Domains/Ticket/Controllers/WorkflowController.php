@@ -2,19 +2,18 @@
 
 namespace App\Domains\Ticket\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Domains\Ticket\Models\TicketWorkflow;
-use App\Domains\Ticket\Models\TicketStatusTransition;
 use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Ticket\Models\TicketStatusTransition;
+use App\Domains\Ticket\Models\TicketWorkflow;
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Workflow Controller
- * 
+ *
  * Manages ticket workflows with status transitions, automated actions,
  * conditional rules, and workflow execution following the domain architecture pattern.
  */
@@ -29,9 +28,9 @@ class WorkflowController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -46,15 +45,15 @@ class WorkflowController extends Controller
         }
 
         $workflows = $query->withCount(['transitions', 'tickets'])
-                          ->orderBy('created_at', 'desc')
-                          ->paginate(20)
-                          ->appends($request->query());
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->appends($request->query());
 
         // Get available categories
         $categories = TicketWorkflow::where('company_id', auth()->user()->company_id)
-                                   ->whereNotNull('category')
-                                   ->distinct()
-                                   ->pluck('category');
+            ->whereNotNull('category')
+            ->distinct()
+            ->pluck('category');
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -74,11 +73,11 @@ class WorkflowController extends Controller
         $availableStatuses = $this->getAvailableStatuses();
         $actionTypes = $this->getActionTypes();
         $conditionTypes = $this->getConditionTypes();
-        
+
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('is_active', true)
-                    ->orderBy('name')
-                    ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         return view('tickets.workflows.create', compact(
             'availableStatuses', 'actionTypes', 'conditionTypes', 'users'
@@ -112,8 +111,8 @@ class WorkflowController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $workflow = null;
@@ -151,12 +150,12 @@ class WorkflowController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Workflow created successfully',
-                'workflow' => $workflow->load('transitions')
+                'workflow' => $workflow->load('transitions'),
             ], 201);
         }
 
         return redirect()->route('tickets.workflows.index')
-                        ->with('success', 'Workflow "' . $workflow->name . '" created successfully.');
+            ->with('success', 'Workflow "'.$workflow->name.'" created successfully.');
     }
 
     /**
@@ -179,10 +178,10 @@ class WorkflowController extends Controller
 
         // Get recent activity
         $recentTickets = $workflow->tickets()
-                                 ->with('client')
-                                 ->latest('updated_at')
-                                 ->limit(10)
-                                 ->get();
+            ->with('client')
+            ->latest('updated_at')
+            ->limit(10)
+            ->get();
 
         if (request()->wantsJson()) {
             return response()->json([
@@ -203,15 +202,15 @@ class WorkflowController extends Controller
         $this->authorize('update', $workflow);
 
         $workflow->load('transitions');
-        
+
         $availableStatuses = $this->getAvailableStatuses();
         $actionTypes = $this->getActionTypes();
         $conditionTypes = $this->getConditionTypes();
-        
+
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('is_active', true)
-                    ->orderBy('name')
-                    ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         return view('tickets.workflows.edit', compact(
             'workflow', 'availableStatuses', 'actionTypes', 'conditionTypes', 'users'
@@ -248,8 +247,8 @@ class WorkflowController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         DB::transaction(function () use ($request, $workflow) {
@@ -261,21 +260,21 @@ class WorkflowController extends Controller
                 'initial_status',
                 'final_statuses',
                 'auto_assign_rules',
-                'global_conditions'
+                'global_conditions',
             ]) + [
                 'is_active' => $request->boolean('is_active'),
             ]);
 
             // Handle transitions
             $existingTransitionIds = collect($request->transitions)
-                                   ->pluck('id')
-                                   ->filter()
-                                   ->toArray();
+                ->pluck('id')
+                ->filter()
+                ->toArray();
 
             // Delete transitions not in the request
             $workflow->transitions()
-                    ->whereNotIn('id', $existingTransitionIds)
-                    ->delete();
+                ->whereNotIn('id', $existingTransitionIds)
+                ->delete();
 
             // Update or create transitions
             foreach ($request->transitions as $transitionData) {
@@ -298,12 +297,12 @@ class WorkflowController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Workflow updated successfully',
-                'workflow' => $workflow->load('transitions')
+                'workflow' => $workflow->load('transitions'),
             ]);
         }
 
         return redirect()->route('tickets.workflows.index')
-                        ->with('success', 'Workflow "' . $workflow->name . '" updated successfully.');
+            ->with('success', 'Workflow "'.$workflow->name.'" updated successfully.');
     }
 
     /**
@@ -317,19 +316,19 @@ class WorkflowController extends Controller
 
         // Check if workflow is being used by active tickets
         $activeTickets = $workflow->tickets()
-                                 ->whereNotIn('status', $workflow->final_statuses)
-                                 ->count();
+            ->whereNotIn('status', $workflow->final_statuses)
+            ->count();
 
         if ($activeTickets > 0) {
             if (request()->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot delete workflow with active tickets'
+                    'message' => 'Cannot delete workflow with active tickets',
                 ], 422);
             }
 
             return redirect()->back()
-                           ->with('error', 'Cannot delete workflow "' . $workflowName . '" because it has active tickets.');
+                ->with('error', 'Cannot delete workflow "'.$workflowName.'" because it has active tickets.');
         }
 
         $workflow->delete();
@@ -337,12 +336,12 @@ class WorkflowController extends Controller
         if (request()->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Workflow deleted successfully'
+                'message' => 'Workflow deleted successfully',
             ]);
         }
 
         return redirect()->route('tickets.workflows.index')
-                        ->with('success', 'Workflow "' . $workflowName . '" deleted successfully.');
+            ->with('success', 'Workflow "'.$workflowName.'" deleted successfully.');
     }
 
     /**
@@ -361,17 +360,17 @@ class WorkflowController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $transition = TicketStatusTransition::findOrFail($request->transition_id);
 
         // Verify transition belongs to ticket's workflow
-        if (!$ticket->workflow || $ticket->workflow_id !== $transition->workflow_id) {
+        if (! $ticket->workflow || $ticket->workflow_id !== $transition->workflow_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid transition for this ticket workflow'
+                'message' => 'Invalid transition for this ticket workflow',
             ], 422);
         }
 
@@ -379,7 +378,7 @@ class WorkflowController extends Controller
         if ($ticket->status !== $transition->from_status) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid transition from current status'
+                'message' => 'Invalid transition from current status',
             ], 422);
         }
 
@@ -392,7 +391,7 @@ class WorkflowController extends Controller
                     'executed_by' => auth()->id(),
                 ]);
 
-                if (!$result) {
+                if (! $result) {
                     throw new \Exception('Transition execution failed');
                 }
             });
@@ -400,13 +399,13 @@ class WorkflowController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Workflow transition executed successfully',
-                'ticket' => $ticket->fresh(['workflow', 'assignee', 'client'])
+                'ticket' => $ticket->fresh(['workflow', 'assignee', 'client']),
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to execute transition: ' . $e->getMessage()
+                'message' => 'Failed to execute transition: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -418,10 +417,10 @@ class WorkflowController extends Controller
     {
         $this->authorize('view', $ticket);
 
-        if (!$ticket->workflow) {
+        if (! $ticket->workflow) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ticket has no workflow assigned'
+                'message' => 'Ticket has no workflow assigned',
             ], 422);
         }
 
@@ -447,7 +446,7 @@ class WorkflowController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -461,7 +460,7 @@ class WorkflowController extends Controller
         return response()->json([
             'success' => true,
             'result' => $result,
-            'message' => $result ? 'Conditions passed' : 'Conditions failed'
+            'message' => $result ? 'Conditions passed' : 'Conditions failed',
         ]);
     }
 
@@ -478,7 +477,7 @@ class WorkflowController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -508,8 +507,8 @@ class WorkflowController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $duplicate = $workflow->duplicate($request->name);
@@ -518,12 +517,12 @@ class WorkflowController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Workflow duplicated successfully',
-                'workflow' => $duplicate->load('transitions')
+                'workflow' => $duplicate->load('transitions'),
             ], 201);
         }
 
         return redirect()->route('tickets.workflows.edit', $duplicate)
-                        ->with('success', 'Workflow duplicated successfully. Review and activate when ready.');
+            ->with('success', 'Workflow duplicated successfully. Review and activate when ready.');
     }
 
     /**
@@ -542,11 +541,11 @@ class WorkflowController extends Controller
             'exported_by' => auth()->user()->name,
         ];
 
-        $filename = 'workflow_' . $workflow->id . '_' . date('Y-m-d') . '.json';
+        $filename = 'workflow_'.$workflow->id.'_'.date('Y-m-d').'.json';
 
         return response()->json($exportData)
-               ->header('Content-Type', 'application/json')
-               ->header('Content-Disposition', "attachment; filename=\"$filename\"");
+            ->header('Content-Type', 'application/json')
+            ->header('Content-Disposition', "attachment; filename=\"$filename\"");
     }
 
     /**
@@ -561,15 +560,15 @@ class WorkflowController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         try {
             $content = file_get_contents($request->file('workflow_file')->getRealPath());
             $data = json_decode($content, true);
 
-            if (!$data || !isset($data['workflow']) || !isset($data['transitions'])) {
+            if (! $data || ! isset($data['workflow']) || ! isset($data['transitions'])) {
                 throw new \Exception('Invalid workflow file format');
             }
 
@@ -577,7 +576,7 @@ class WorkflowController extends Controller
                 // Create new workflow
                 $workflowData = $data['workflow'];
                 unset($workflowData['id'], $workflowData['created_at'], $workflowData['updated_at']);
-                
+
                 $workflow = TicketWorkflow::create(array_merge($workflowData, [
                     'company_id' => auth()->user()->company_id,
                     'name' => $request->name,
@@ -587,9 +586,9 @@ class WorkflowController extends Controller
 
                 // Create transitions
                 foreach ($data['transitions'] as $transitionData) {
-                    unset($transitionData['id'], $transitionData['workflow_id'], 
-                          $transitionData['created_at'], $transitionData['updated_at']);
-                    
+                    unset($transitionData['id'], $transitionData['workflow_id'],
+                        $transitionData['created_at'], $transitionData['updated_at']);
+
                     $workflow->transitions()->create(array_merge($transitionData, [
                         'company_id' => auth()->user()->company_id,
                     ]));
@@ -597,11 +596,11 @@ class WorkflowController extends Controller
             });
 
             return redirect()->route('tickets.workflows.index')
-                            ->with('success', 'Workflow imported successfully.');
+                ->with('success', 'Workflow imported successfully.');
 
         } catch (\Exception $e) {
             return redirect()->back()
-                           ->with('error', 'Failed to import workflow: ' . $e->getMessage());
+                ->with('error', 'Failed to import workflow: '.$e->getMessage());
         }
     }
 
@@ -613,7 +612,7 @@ class WorkflowController extends Controller
         $this->authorize('update', $workflow);
 
         $workflow->update([
-            'is_active' => !$workflow->is_active,
+            'is_active' => ! $workflow->is_active,
         ]);
 
         $status = $workflow->is_active ? 'activated' : 'deactivated';
@@ -621,7 +620,7 @@ class WorkflowController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Workflow {$status} successfully",
-            'is_active' => $workflow->is_active
+            'is_active' => $workflow->is_active,
         ]);
     }
 

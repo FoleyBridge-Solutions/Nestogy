@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('state_tax_rates')) {
+        if (! Schema::hasTable('state_tax_rates')) {
             Schema::create('state_tax_rates', function (Blueprint $table) {
                 $table->id();
                 $table->string('state_code', 2)->unique();
@@ -21,7 +21,7 @@ return new class extends Migration
                 $table->date('effective_date')->nullable();
                 $table->json('metadata')->nullable();
                 $table->timestamps();
-                
+
                 $table->index('state_code');
                 $table->index('is_active');
             });

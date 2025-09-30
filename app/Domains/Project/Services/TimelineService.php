@@ -3,9 +3,7 @@
 namespace App\Domains\Project\Services;
 
 use App\Domains\Project\Models\Project;
-use App\Domains\Project\Models\ProjectTask;
 use App\Domains\Project\Models\Task;
-use App\Domains\Project\Models\ProjectMilestone;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 

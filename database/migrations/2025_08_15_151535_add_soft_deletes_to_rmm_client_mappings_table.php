@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Adds soft delete functionality to rmm_client_mappings table
      * for data retention and audit trail purposes.
      */
@@ -21,7 +21,7 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     * 
+     *
      * Removes soft delete column from rmm_client_mappings table.
      */
     public function down(): void

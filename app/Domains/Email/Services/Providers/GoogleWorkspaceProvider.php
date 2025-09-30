@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class GoogleWorkspaceProvider implements EmailProviderInterface
 {
     protected Company $company;
+
     protected array $config;
 
     public function __construct(Company $company)
@@ -29,7 +30,7 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
             'prompt' => 'consent',
         ];
 
-        return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($params);
+        return 'https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query($params);
     }
 
     public function exchangeCodeForTokens(string $code): array
@@ -118,8 +119,8 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
 
     public function validateConfig(): bool
     {
-        return !empty($this->config['client_id']) &&
-               !empty($this->config['client_secret']);
+        return ! empty($this->config['client_id']) &&
+               ! empty($this->config['client_secret']);
     }
 
     /**
@@ -151,7 +152,7 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
             'q' => $options['query'] ?? '',
         ];
 
-        if (!empty($options['pageToken'])) {
+        if (! empty($options['pageToken'])) {
             $params['pageToken'] = $options['pageToken'];
         }
 

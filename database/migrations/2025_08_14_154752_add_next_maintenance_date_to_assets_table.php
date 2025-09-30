@@ -22,7 +22,7 @@ return new class extends Migration
                 ->nullable()
                 ->after('warranty_expire')
                 ->comment('Date when the next scheduled maintenance is due for this asset');
-            
+
             // Add index for performance when querying assets by maintenance date
             // This is important for dashboard views and maintenance reports
             $table->index('next_maintenance_date');
@@ -40,7 +40,7 @@ return new class extends Migration
         Schema::table('assets', function (Blueprint $table) {
             // Drop the index first before dropping the column
             $table->dropIndex(['next_maintenance_date']);
-            
+
             // Drop the column
             $table->dropColumn('next_maintenance_date');
         });

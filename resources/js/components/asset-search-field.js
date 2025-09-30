@@ -69,7 +69,7 @@ window.assetSearchField = function(options = {}) {
             this.loadingAssets = true;
             
             try {
-                const response = await fetch(`/clients/${this.clientId}/assets`, {
+                const response = await fetch(`/api/clients/${this.clientId}/assets`, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'

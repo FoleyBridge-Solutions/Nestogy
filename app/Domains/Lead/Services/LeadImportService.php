@@ -16,7 +16,7 @@ class LeadImportService
         'success' => 0,
         'errors' => 0,
         'skipped' => 0,
-        'details' => []
+        'details' => [],
     ];
 
     protected LeadScoringService $leadScoringService;
@@ -35,28 +35,28 @@ class LeadImportService
             'success' => 0,
             'errors' => 0,
             'skipped' => 0,
-            'details' => []
+            'details' => [],
         ];
 
         try {
             // Validate file
-            if (!$this->validateCsvFile($file)) {
+            if (! $this->validateCsvFile($file)) {
                 throw new \Exception('Invalid CSV file');
             }
 
             // Read CSV
             $csv = Reader::createFromPath($file->getPathname(), 'r');
             $csv->setHeaderOffset(0);
-            
+
             // Get default lead source for imports
             $defaultSource = $this->getDefaultImportSource();
-            
+
             // Process each row
             $records = Statement::create()->process($csv);
-            
+
             DB::transaction(function () use ($records, $defaultSource, $options) {
                 $rowNumber = 1;
-                
+
                 foreach ($records as $record) {
                     $rowNumber++;
                     $this->processRow($record, $defaultSource, $rowNumber, $options);
@@ -64,7 +64,7 @@ class LeadImportService
             });
 
         } catch (\Exception $e) {
-            $this->results['details'][] = "Import failed: " . $e->getMessage();
+            $this->results['details'][] = 'Import failed: '.$e->getMessage();
         }
 
         return $this->results;
@@ -94,13 +94,14 @@ class LeadImportService
         try {
             // Map CSV columns to lead data
             $leadData = $this->mapCsvToLeadData($record, $defaultSource, $options);
-            
+
             // Validate lead data
             $validator = $this->validateLeadData($leadData);
-            
+
             if ($validator->fails()) {
                 $this->results['errors']++;
-                $this->results['details'][] = "Row {$rowNumber}: " . implode(', ', $validator->errors()->all());
+                $this->results['details'][] = "Row {$rowNumber}: ".implode(', ', $validator->errors()->all());
+
                 return;
             }
 
@@ -109,23 +110,24 @@ class LeadImportService
                 if ($this->isDuplicate($leadData)) {
                     $this->results['skipped']++;
                     $this->results['details'][] = "Row {$rowNumber}: Skipped duplicate (email: {$leadData['email']})";
+
                     return;
                 }
             }
 
             // Create lead
             $lead = Lead::create($leadData);
-            
+
             // Calculate initial score
             $scores = $this->leadScoringService->calculateTotalScore($lead);
             $lead->update($scores);
-            
+
             $this->results['success']++;
             $this->results['details'][] = "Row {$rowNumber}: Created lead {$lead->full_name} (Score: {$lead->total_score})";
 
         } catch (\Exception $e) {
             $this->results['errors']++;
-            $this->results['details'][] = "Row {$rowNumber}: Error - " . $e->getMessage();
+            $this->results['details'][] = "Row {$rowNumber}: Error - ".$e->getMessage();
         }
     }
 
@@ -169,10 +171,11 @@ class LeadImportService
     protected function getFieldValue(array $record, array $possibleKeys): ?string
     {
         foreach ($possibleKeys as $key) {
-            if (isset($record[$key]) && !empty($record[$key])) {
+            if (isset($record[$key]) && ! empty($record[$key])) {
                 return $record[$key];
             }
         }
+
         return null;
     }
 
@@ -189,7 +192,7 @@ class LeadImportService
             'company_name' => 'nullable|string|max:255',
             'website' => 'nullable|url|max:255',
             'lead_source_id' => 'required|exists:lead_sources,id',
-            'status' => 'required|in:' . implode(',', array_keys(Lead::getStatuses())),
+            'status' => 'required|in:'.implode(',', array_keys(Lead::getStatuses())),
             'interest_level' => 'required|in:low,medium,high,urgent',
         ]);
     }
@@ -212,7 +215,7 @@ class LeadImportService
         return LeadSource::firstOrCreate(
             [
                 'company_id' => auth()->user()->company_id,
-                'name' => 'CSV Import'
+                'name' => 'CSV Import',
             ],
             [
                 'type' => 'import',
@@ -229,7 +232,7 @@ class LeadImportService
     {
         return [
             'Last',
-            'First', 
+            'First',
             'Middle',
             'Company Name',
             'Company Address Line 1',
@@ -239,7 +242,7 @@ class LeadImportService
             'ZIP',
             'Email',
             'Website',
-            'Phone'
+            'Phone',
         ];
     }
 
@@ -261,7 +264,7 @@ class LeadImportService
             '75201',
             'john.doe@acmetechnologies.com',
             'https://acmetechnologies.com',
-            '(555) 123-4567'
+            '(555) 123-4567',
         ];
 
         $output = fopen('php://memory', 'w');

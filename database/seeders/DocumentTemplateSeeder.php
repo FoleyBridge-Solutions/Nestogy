@@ -156,7 +156,7 @@ class DocumentTemplateSeeder extends Seeder
             $template['authored_by'] = 1;
             $template['client_id'] = null; // Templates don't belong to specific clients
             $template['version'] = 1;
-            
+
             DB::table('client_it_documentation')->insertOrIgnore($template);
         }
     }

@@ -4,16 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Silber\Bouncer\Database\Role as BouncerRole;
 
 /**
  * Role Model
- * 
+ *
  * DEPRECATED: This model is maintained for backward compatibility only.
  * The system now uses Bouncer's Role model for roles.
- * 
+ *
  * @deprecated Use Silber\Bouncer\Database\Role instead
+ *
  * @property int $id
  * @property string $name
  * @property string $title
@@ -39,14 +38,18 @@ class Role extends Model
      * System role constants - maintained for backward compatibility
      */
     const LEVEL_ACCOUNTANT = 1;
+
     const LEVEL_TECHNICIAN = 2;
+
     const LEVEL_ADMIN = 3;
 
     /**
      * System role slugs
      */
     const SLUG_ACCOUNTANT = 'accountant';
+
     const SLUG_TECHNICIAN = 'technician';
+
     const SLUG_ADMIN = 'admin';
 
     /**
@@ -103,7 +106,7 @@ class Role extends Model
     /**
      * Bouncer compatibility methods
      */
-    
+
     /**
      * Check if this role has a specific permission.
      */
@@ -123,6 +126,7 @@ class Role extends Model
                 return true;
             }
         }
+
         return false;
     }
 
@@ -132,10 +136,11 @@ class Role extends Model
     public function hasAllPermissions(array $permissionSlugs): bool
     {
         foreach ($permissionSlugs as $permission) {
-            if (!$this->hasPermission($permission)) {
+            if (! $this->hasPermission($permission)) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -147,7 +152,7 @@ class Role extends Model
         foreach (collect($permissions)->flatten() as $permission) {
             \Silber\Bouncer\BouncerFacade::allow($this->name)->to($permission);
         }
-        
+
         return $this;
     }
 
@@ -159,7 +164,7 @@ class Role extends Model
         foreach (collect($permissions)->flatten() as $permission) {
             \Silber\Bouncer\BouncerFacade::disallow($this->name)->to($permission);
         }
-        
+
         return $this;
     }
 
@@ -183,7 +188,7 @@ class Role extends Model
             'technician' => self::LEVEL_TECHNICIAN,
             'admin' => self::LEVEL_ADMIN,
         ];
-        
+
         return $levels[$this->name] ?? 1;
     }
 
@@ -209,6 +214,7 @@ class Role extends Model
     public function getLevelLabelAttribute(): string
     {
         $levels = self::getRoleLevels();
-        return $levels[$this->level] ?? 'Custom Level ' . $this->level;
+
+        return $levels[$this->level] ?? 'Custom Level '.$this->level;
     }
 }

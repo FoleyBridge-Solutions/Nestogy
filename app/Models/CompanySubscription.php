@@ -86,10 +86,15 @@ class CompanySubscription extends Model
      * Subscription statuses
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_TRIALING = 'trialing';
+
     const STATUS_PAST_DUE = 'past_due';
+
     const STATUS_CANCELED = 'canceled';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_EXPIRED = 'expired';
 
     /**
@@ -158,7 +163,7 @@ class CompanySubscription extends Model
     public function canAddUser(): bool
     {
         // If no plan or unlimited users
-        if (!$this->subscriptionPlan || $this->max_users === null) {
+        if (! $this->subscriptionPlan || $this->max_users === null) {
             return true;
         }
 
@@ -198,7 +203,7 @@ class CompanySubscription extends Model
      */
     public function hasFeature(string $feature): bool
     {
-        if (!$this->features) {
+        if (! $this->features) {
             return false;
         }
 
@@ -227,7 +232,7 @@ class CompanySubscription extends Model
             return 'Free';
         }
 
-        return '$' . number_format($this->monthly_amount, 2) . '/month';
+        return '$'.number_format($this->monthly_amount, 2).'/month';
     }
 
     /**
@@ -239,7 +244,7 @@ class CompanySubscription extends Model
             return 'Unlimited users';
         }
 
-        return $this->current_user_count . ' of ' . $this->max_users . ' users';
+        return $this->current_user_count.' of '.$this->max_users.' users';
     }
 
     /**
@@ -252,6 +257,7 @@ class CompanySubscription extends Model
         }
 
         $percentage = ($this->current_user_count / $this->max_users) * 100;
+
         return $percentage >= 80;
     }
 
@@ -269,7 +275,7 @@ class CompanySubscription extends Model
     public function scopeNeedsRenewal($query)
     {
         return $query->where('current_period_end', '<=', now()->addDays(7))
-                    ->where('status', self::STATUS_ACTIVE);
+            ->where('status', self::STATUS_ACTIVE);
     }
 
     /**
@@ -278,7 +284,7 @@ class CompanySubscription extends Model
     public function scopeTrialEndingSoon($query, $days = 3)
     {
         return $query->where('status', self::STATUS_TRIALING)
-                    ->whereBetween('trial_ends_at', [now(), now()->addDays($days)]);
+            ->whereBetween('trial_ends_at', [now(), now()->addDays($days)]);
     }
 
     /**
@@ -358,7 +364,7 @@ class CompanySubscription extends Model
      */
     public function getStatusColor(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_ACTIVE => 'green',
             self::STATUS_TRIALING => 'blue',
             self::STATUS_PAST_DUE => 'orange',
@@ -378,16 +384,16 @@ class CompanySubscription extends Model
 
         // Set default values when creating
         static::creating(function ($subscription) {
-            if (!$subscription->status) {
+            if (! $subscription->status) {
                 $subscription->status = self::STATUS_TRIALING;
             }
-            if (!$subscription->trial_ends_at) {
+            if (! $subscription->trial_ends_at) {
                 $subscription->trial_ends_at = now()->addDays(14);
             }
-            if (!$subscription->current_period_start) {
+            if (! $subscription->current_period_start) {
                 $subscription->current_period_start = now();
             }
-            if (!$subscription->current_period_end) {
+            if (! $subscription->current_period_end) {
                 $subscription->current_period_end = now()->addMonth();
             }
         });

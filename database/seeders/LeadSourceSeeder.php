@@ -15,7 +15,7 @@ class LeadSourceSeeder extends Seeder
     {
         // Get all companies to create lead sources for each
         $companies = Company::all();
-        
+
         if ($companies->isEmpty()) {
             // If no companies exist, create for the default demo company
             $companies = collect([['id' => 1]]);
@@ -171,16 +171,16 @@ class LeadSourceSeeder extends Seeder
         // Create lead sources for each company
         foreach ($companies as $company) {
             $companyId = is_array($company) ? $company['id'] : $company->id;
-            
+
             foreach ($leadSources as $sourceData) {
                 // Add company_id to the source data
                 $sourceData['company_id'] = $companyId;
-                
+
                 // Only create if it doesn't exist to avoid duplicates when reseeding
                 LeadSource::firstOrCreate(
                     [
                         'company_id' => $companyId,
-                        'name' => $sourceData['name']
+                        'name' => $sourceData['name'],
                     ],
                     $sourceData
                 );

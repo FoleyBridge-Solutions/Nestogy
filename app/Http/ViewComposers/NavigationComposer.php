@@ -2,8 +2,8 @@
 
 namespace App\Http\ViewComposers;
 
-use Illuminate\View\View;
 use App\Domains\Core\Services\NavigationService;
+use Illuminate\View\View;
 
 class NavigationComposer
 {
@@ -21,10 +21,10 @@ class NavigationComposer
     {
         $activeDomain = $this->navigationService->getActiveDomain();
         $badgeCounts = $activeDomain ? $this->navigationService->getBadgeCounts($activeDomain) : [];
-        
+
         // Get current user's company
         $company = auth()->user()?->company;
-        
+
         $view->with([
             'activeDomain' => $activeDomain,
             'activeItem' => $this->navigationService->getActiveNavigationItem(),

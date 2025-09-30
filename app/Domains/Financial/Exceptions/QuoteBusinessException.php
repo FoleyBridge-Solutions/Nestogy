@@ -25,19 +25,13 @@ class QuoteBusinessException extends FinancialException
 
     /**
      * Create a new quote business exception
-     *
-     * @param string $message
-     * @param string|null $businessRule
-     * @param array $context
-     * @param int $code
-     * @param Exception|null $previous
      */
     public function __construct(
         string $message = 'Quote business rule violation',
         ?string $businessRule = null,
         array $context = [],
         int $code = 422,
-        Exception $previous = null
+        ?Exception $previous = null
     ) {
         $this->businessRule = $businessRule;
         $this->context = $context;
@@ -46,20 +40,15 @@ class QuoteBusinessException extends FinancialException
 
     /**
      * Get the business rule that was violated
-     *
-     * @return string|null
      */
     public function getBusinessRule(): ?string
     {
         return $this->businessRule;
     }
 
-
     /**
      * Create exception for quote expiration
      *
-     * @param int $quoteId
-     * @param string $expireDate
      * @return static
      */
     public static function quoteExpired(int $quoteId, string $expireDate): self
@@ -74,9 +63,6 @@ class QuoteBusinessException extends FinancialException
     /**
      * Create exception for invalid quote status transition
      *
-     * @param int $quoteId
-     * @param string $currentStatus
-     * @param string $targetStatus
      * @return static
      */
     public static function invalidStatusTransition(int $quoteId, string $currentStatus, string $targetStatus): self
@@ -87,7 +73,7 @@ class QuoteBusinessException extends FinancialException
             [
                 'quote_id' => $quoteId,
                 'current_status' => $currentStatus,
-                'target_status' => $targetStatus
+                'target_status' => $targetStatus,
             ]
         );
     }
@@ -95,8 +81,6 @@ class QuoteBusinessException extends FinancialException
     /**
      * Create exception for minimum quote amount
      *
-     * @param float $amount
-     * @param float $minimumAmount
      * @return static
      */
     public static function belowMinimumAmount(float $amount, float $minimumAmount): self
@@ -111,7 +95,6 @@ class QuoteBusinessException extends FinancialException
     /**
      * Create exception for missing required items
      *
-     * @param int $quoteId
      * @return static
      */
     public static function noItems(int $quoteId): self
@@ -126,9 +109,6 @@ class QuoteBusinessException extends FinancialException
     /**
      * Create exception for client credit limit exceeded
      *
-     * @param int $clientId
-     * @param float $quoteAmount
-     * @param float $creditLimit
      * @return static
      */
     public static function creditLimitExceeded(int $clientId, float $quoteAmount, float $creditLimit): self
@@ -139,7 +119,7 @@ class QuoteBusinessException extends FinancialException
             [
                 'client_id' => $clientId,
                 'quote_amount' => $quoteAmount,
-                'credit_limit' => $creditLimit
+                'credit_limit' => $creditLimit,
             ]
         );
     }
@@ -147,7 +127,6 @@ class QuoteBusinessException extends FinancialException
     /**
      * Create exception for duplicate quote
      *
-     * @param string $quoteNumber
      * @return static
      */
     public static function duplicateQuoteNumber(string $quoteNumber): self
@@ -161,8 +140,6 @@ class QuoteBusinessException extends FinancialException
 
     /**
      * Convert to array format for API responses
-     *
-     * @return array
      */
     public function toArray(): array
     {
@@ -171,7 +148,7 @@ class QuoteBusinessException extends FinancialException
             'business_rule' => $this->businessRule,
             'context' => $this->getContext(),
             'type' => $this->getErrorType(),
-            'code' => $this->getCode()
+            'code' => $this->getCode(),
         ];
     }
 }

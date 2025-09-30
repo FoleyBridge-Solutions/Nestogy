@@ -587,7 +587,7 @@ class NavigationService
     {
         return static::getSidebarContext();
     }
-    
+
     /**
      * Get the current sidebar context based on the route
      * This replaces getActiveDomain for the new sidebar system
@@ -601,10 +601,10 @@ class NavigationService
         }
 
         // Special case: Hide sidebar on clients.index when no client is selected
-        if ($currentRouteName === 'clients.index' && !static::getSelectedClient()) {
+        if ($currentRouteName === 'clients.index' && ! static::getSelectedClient()) {
             return null;
         }
-        
+
         // Hide sidebar on client create/edit routes
         if (in_array($currentRouteName, ['clients.create', 'clients.store'])) {
             return null;
@@ -764,10 +764,10 @@ class NavigationService
 
         $breadcrumbs = [];
         $routeSegments = explode('.', $currentRouteName);
-        
+
         // Check if there's a selected client in the session
         $selectedClient = static::getSelectedClient();
-        
+
         // Special handling for clients domain pages
         if ($activeDomain === 'clients') {
             // If we have a selected client on clients.index, just show the client name
@@ -776,9 +776,10 @@ class NavigationService
                     'name' => $selectedClient->name,
                     'active' => true,
                 ];
+
                 return $breadcrumbs;
             }
-            
+
             // For client creation/import pages (no specific client), show the action
             if (in_array($currentRouteName, ['clients.create', 'clients.import.form'])) {
                 $pageTitle = static::getPageTitleFromRoute($currentRouteName, $activeDomain);
@@ -788,15 +789,16 @@ class NavigationService
                         'active' => true,
                     ];
                 }
+
                 return $breadcrumbs;
             }
-            
+
             // For clients.index without a selected client, don't show any breadcrumb
-            if ($currentRouteName === 'clients.index' && !$selectedClient) {
+            if ($currentRouteName === 'clients.index' && ! $selectedClient) {
                 return [];
             }
         }
-        
+
         // For other domain index pages with a selected client
         // Show: Client Name > Domain (e.g., "Acme Corp > Tickets")
         $isDomainIndex = $currentRouteName === static::getDomainIndexRoute($activeDomain);
@@ -810,14 +812,15 @@ class NavigationService
                 'name' => static::getDomainDisplayName($activeDomain),
                 'active' => true,
             ];
+
             return $breadcrumbs;
         }
-        
+
         // Only add client as root if we're not already on the client's page
         // This prevents duplication like "Client Name > Client Name"
         $isClientPage = $activeDomain === 'clients' && in_array($currentRouteName, ['clients.show', 'clients.edit']);
-        
-        if ($selectedClient && !$isClientPage) {
+
+        if ($selectedClient && ! $isClientPage) {
             // Add client as the root breadcrumb
             $breadcrumbs[] = [
                 'name' => $selectedClient->name,
@@ -825,19 +828,19 @@ class NavigationService
                 'params' => ['client' => $selectedClient->id],
             ];
         }
-        
+
         // Add the domain breadcrumb (but never show "Clients" domain)
         $isDomainIndex = $currentRouteName === static::getDomainIndexRoute($activeDomain);
         $domainName = static::getDomainDisplayName($activeDomain);
-        
+
         // Don't add domain breadcrumb if:
         // 1. It's the Clients domain (we never show this)
         // 2. We're on the domain index page AND have a client selected
         // 3. We're on the domain index page with no other breadcrumbs
-        $skipDomainBreadcrumb = ($activeDomain === 'clients') || 
+        $skipDomainBreadcrumb = ($activeDomain === 'clients') ||
                                  ($isDomainIndex && ($selectedClient || empty($breadcrumbs)));
-        
-        if (!$skipDomainBreadcrumb) {
+
+        if (! $skipDomainBreadcrumb) {
             $breadcrumbs[] = [
                 'name' => $domainName,
                 'route' => static::getDomainIndexRoute($activeDomain),
@@ -848,31 +851,31 @@ class NavigationService
         if (count($routeSegments) >= 3) {
             $subsection = $routeSegments[1]; // e.g., 'contracts', 'invoices', 'contacts'
             $subsectionName = static::getSubsectionDisplayName($subsection);
-            
+
             // Add subsection for financial domain
             if ($activeDomain === 'financial') {
                 // Only add subsection breadcrumb if we're not on the subsection index page
                 if ($routeSegments[2] !== 'index' || count($routeSegments) > 3) {
                     $breadcrumbs[] = [
                         'name' => $subsectionName,
-                        'route' => $routeSegments[0] . '.' . $subsection . '.index',
+                        'route' => $routeSegments[0].'.'.$subsection.'.index',
                     ];
                 }
             }
-            
+
             // For client sub-sections (contacts, locations, etc.), add them directly
             // since we're not showing "Clients" as a breadcrumb
             if ($activeDomain === 'clients' && in_array($subsection, ['contacts', 'locations', 'documents', 'notes'])) {
                 $breadcrumbs[] = [
                     'name' => $subsectionName,
-                    'route' => $routeSegments[0] . '.' . $subsection . '.index',
+                    'route' => $routeSegments[0].'.'.$subsection.'.index',
                 ];
             }
         }
 
         // Add specific page breadcrumb based on route
         $pageTitle = static::getPageTitleFromRoute($currentRouteName, $activeDomain);
-        if ($pageTitle && !empty($pageTitle)) {
+        if ($pageTitle && ! empty($pageTitle)) {
             // Check if this is a different title than what we already have
             $lastBreadcrumb = end($breadcrumbs);
             if ($lastBreadcrumb === false || $pageTitle !== $lastBreadcrumb['name']) {
@@ -884,16 +887,16 @@ class NavigationService
         }
 
         // Mark the last breadcrumb as active if no specific page title was added
-        if (!empty($breadcrumbs)) {
+        if (! empty($breadcrumbs)) {
             $lastKey = array_key_last($breadcrumbs);
-            if (!isset($breadcrumbs[$lastKey]['active'])) {
+            if (! isset($breadcrumbs[$lastKey]['active'])) {
                 $breadcrumbs[$lastKey]['active'] = true;
             }
         }
 
         return $breadcrumbs;
     }
-    
+
     /**
      * Get display name for a domain
      */
@@ -910,10 +913,10 @@ class NavigationService
             'integrations' => 'Integrations',
             'settings' => 'Settings',
         ];
-        
+
         return $names[$domain] ?? ucfirst($domain);
     }
-    
+
     /**
      * Get display name for a subsection
      */
@@ -935,7 +938,7 @@ class NavigationService
             'maintenance' => 'Maintenance',
             'warranties' => 'Warranties',
         ];
-        
+
         return $names[$subsection] ?? ucfirst(str_replace('-', ' ', $subsection));
     }
 
@@ -966,7 +969,7 @@ class NavigationService
     {
         // Extract route segments
         $segments = explode('.', $routeName);
-        
+
         // Special handling for specific routes
         $specificRoutes = [
             // Financial routes
@@ -1008,12 +1011,12 @@ class NavigationService
             'projects.show' => 'Project Details',
             'projects.edit' => 'Edit Project',
         ];
-        
+
         // Check if we have a specific route title
         if (isset($specificRoutes[$routeName])) {
             return $specificRoutes[$routeName];
         }
-        
+
         // Generic action titles
         $actionTitles = [
             'create' => 'Create',
@@ -1033,15 +1036,17 @@ class NavigationService
                     // e.g., financial.contracts.index -> Contracts
                     return ucfirst($segments[count($segments) - 2]);
                 }
+
                 return ''; // No additional breadcrumb for domain index
             }
-            
+
             // Get the entity name (second to last segment)
             if (count($segments) > 2) {
                 $entity = $segments[count($segments) - 2];
-                return ucfirst(Str::singular($entity)) . ' ' . $actionTitles[$action];
+
+                return ucfirst(Str::singular($entity)).' '.$actionTitles[$action];
             }
-            
+
             return $actionTitles[$action];
         }
 
@@ -1062,14 +1067,14 @@ class NavigationService
         // For now, returning empty array - can be implemented as needed
         return [];
     }
-    
+
     /**
      * Register a sidebar section dynamically
      * This allows modules to add their own sidebar sections
-     * 
-     * @param string $context The sidebar context (e.g., 'main', 'settings')
-     * @param string $key Unique key for the section
-     * @param array $section Section configuration
+     *
+     * @param  string  $context  The sidebar context (e.g., 'main', 'settings')
+     * @param  string  $key  Unique key for the section
+     * @param  array  $section  Section configuration
      */
     public static function registerSidebarSection(string $context, string $key, array $section): void
     {
@@ -1077,12 +1082,12 @@ class NavigationService
             app(\App\Domains\Core\Services\SidebarConfigProvider::class)->registerSection($context, $key, $section);
         }
     }
-    
+
     /**
      * Register multiple sidebar sections at once
-     * 
-     * @param string $context The sidebar context
-     * @param array $sections Array of sections with keys
+     *
+     * @param  string  $context  The sidebar context
+     * @param  array  $sections  Array of sections with keys
      */
     public static function registerSidebarSections(string $context, array $sections): void
     {
@@ -1934,8 +1939,6 @@ class NavigationService
         }
     }
 
-
-
     /**
      * Clear the selected client from session
      */
@@ -2514,7 +2517,7 @@ class NavigationService
                 'route' => static::getDomainIndexRoute($activeDomain),
                 'active' => false,
             ];
-        } else if (!$selectedClient) {
+        } elseif (! $selectedClient) {
             // Only use Dashboard as root when not in a domain and no client selected
             $breadcrumbs[] = [
                 'name' => 'Dashboard',

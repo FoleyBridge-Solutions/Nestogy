@@ -25,7 +25,7 @@ return new class extends Migration
             $table->integer('usage_count')->default(0);
             $table->json('metadata')->nullable(); // Additional settings
             $table->timestamps();
-            
+
             $table->index(['company_id', 'is_active']);
             $table->index(['work_type', 'category']);
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');

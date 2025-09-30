@@ -2,24 +2,23 @@
 
 namespace App\Domains\Financial\Controllers;
 
-use App\Http\Controllers\Controller;
-
-use App\Models\Payment;
-use App\Models\Invoice;
-use App\Models\Client;
 use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
+use App\Http\Controllers\Controller;
+use App\Models\Client;
+use App\Models\Invoice;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
     use UsesSelectedClient;
-    
+
     public function index(Request $request)
     {
         $companyId = Auth::user()->company_id;
         $selectedClientId = $this->getSelectedClientId();
-        
+
         $payments = Payment::where('company_id', $companyId)
             ->when($request->get('status'), function ($query, $status) {
                 $query->where('status', $status);
@@ -35,9 +34,9 @@ class PaymentController extends Controller
             ->when($request->get('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('reference_number', 'like', "%{$search}%")
-                      ->orWhereHas('invoice', function ($invoice) use ($search) {
-                          $invoice->where('number', 'like', "%{$search}%");
-                      });
+                        ->orWhereHas('invoice', function ($invoice) use ($search) {
+                            $invoice->where('number', 'like', "%{$search}%");
+                        });
                 });
             })
             ->with(['invoice', 'invoice.client'])
@@ -49,14 +48,14 @@ class PaymentController extends Controller
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
-            
+
         $statuses = [
             'pending' => 'Pending',
             'completed' => 'Completed',
             'failed' => 'Failed',
-            'refunded' => 'Refunded'
+            'refunded' => 'Refunded',
         ];
-        
+
         $paymentMethods = [
             'credit_card' => 'Credit Card',
             'bank_transfer' => 'Bank Transfer',
@@ -64,17 +63,17 @@ class PaymentController extends Controller
             'cash' => 'Cash',
             'paypal' => 'PayPal',
             'stripe' => 'Stripe',
-            'other' => 'Other'
+            'other' => 'Other',
         ];
-        
+
         $gateways = [
             'stripe' => 'Stripe',
             'paypal' => 'PayPal',
             'square' => 'Square',
             'authorize_net' => 'Authorize.Net',
-            'manual' => 'Manual Entry'
+            'manual' => 'Manual Entry',
         ];
-        
+
         // Calculate statistics (filtered by selected client if applicable)
         $baseQuery = Payment::where('company_id', $companyId);
         if ($selectedClientId) {
@@ -82,7 +81,7 @@ class PaymentController extends Controller
                 $q->where('id', $selectedClientId);
             });
         }
-        
+
         $stats = [
             'total_amount' => (clone $baseQuery)->where('status', 'completed')->sum('amount'),
             'this_month_amount' => (clone $baseQuery)
@@ -98,7 +97,7 @@ class PaymentController extends Controller
                 ->whereMonth('payment_date', now()->month)
                 ->whereYear('payment_date', now()->year)
                 ->sum('amount'),
-            'total_count' => (clone $baseQuery)->count()
+            'total_count' => (clone $baseQuery)->count(),
         ];
 
         return view('financial.payments.index', compact('payments', 'clients', 'statuses', 'paymentMethods', 'gateways', 'stats'));
@@ -122,18 +121,18 @@ class PaymentController extends Controller
             'payment_date' => 'required|date',
             'payment_method' => 'required|string',
             'reference_number' => 'nullable|string|max:255',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         $validated['company_id'] = Auth::user()->company_id;
         $validated['status'] = 'completed';
-        
+
         $payment = Payment::create($validated);
 
         // Update invoice status
         $invoice = Invoice::find($validated['invoice_id']);
         $totalPaid = $invoice->payments()->where('status', 'completed')->sum('amount');
-        
+
         if ($totalPaid >= $invoice->total) {
             $invoice->status = 'paid';
         } else {
@@ -148,7 +147,7 @@ class PaymentController extends Controller
     public function show(Payment $payment)
     {
         $this->authorize('view', $payment);
-        
+
         $payment->load(['invoice', 'invoice.client']);
 
         return view('financial.payments.show', compact('payment'));
@@ -157,7 +156,7 @@ class PaymentController extends Controller
     public function edit(Payment $payment)
     {
         $this->authorize('update', $payment);
-        
+
         $invoices = Invoice::where('company_id', Auth::user()->company_id)
             ->with('client')
             ->get();
@@ -174,7 +173,7 @@ class PaymentController extends Controller
             'payment_date' => 'required|date',
             'payment_method' => 'required|string',
             'reference_number' => 'nullable|string|max:255',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         $payment->update($validated);

@@ -59,7 +59,7 @@ class EmailSignature extends Model
         $processedText = $this->content_text;
 
         foreach ($allVariables as $key => $value) {
-            $placeholder = '{{' . $key . '}}';
+            $placeholder = '{{'.$key.'}}';
             $processedHtml = str_replace($placeholder, $value, $processedHtml);
             $processedText = str_replace($placeholder, $value, $processedText);
         }
@@ -82,7 +82,7 @@ class EmailSignature extends Model
 
     public function matchesConditions(array $context = []): bool
     {
-        if (!$this->conditions || empty($this->conditions)) {
+        if (! $this->conditions || empty($this->conditions)) {
             return true;
         }
 
@@ -92,7 +92,7 @@ class EmailSignature extends Model
             $value = $condition['value'] ?? null;
             $contextValue = $context[$field] ?? null;
 
-            if (!$this->evaluateCondition($contextValue, $operator, $value)) {
+            if (! $this->evaluateCondition($contextValue, $operator, $value)) {
                 return false;
             }
         }
@@ -106,11 +106,11 @@ class EmailSignature extends Model
             'equals' => $contextValue === $expectedValue,
             'not_equals' => $contextValue !== $expectedValue,
             'contains' => str_contains((string) $contextValue, (string) $expectedValue),
-            'not_contains' => !str_contains((string) $contextValue, (string) $expectedValue),
+            'not_contains' => ! str_contains((string) $contextValue, (string) $expectedValue),
             'starts_with' => str_starts_with((string) $contextValue, (string) $expectedValue),
             'ends_with' => str_ends_with((string) $contextValue, (string) $expectedValue),
             'in' => in_array($contextValue, (array) $expectedValue),
-            'not_in' => !in_array($contextValue, (array) $expectedValue),
+            'not_in' => ! in_array($contextValue, (array) $expectedValue),
             default => true
         };
     }
@@ -118,6 +118,7 @@ class EmailSignature extends Model
     public function getPreview(int $length = 100): string
     {
         $text = strip_tags($this->content_html ?: $this->content_text);
+
         return \Illuminate\Support\Str::limit($text, $length);
     }
 

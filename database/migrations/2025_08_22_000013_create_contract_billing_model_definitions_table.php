@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('contract_billing_model_definitions', function (Blueprint $table) {
             $table->id();
-            
+
             // Multi-tenancy
             $table->unsignedBigInteger('company_id')->index();
-            
+
             // Billing model definition
             $table->string('slug')->index();
             $table->string('name');
@@ -32,20 +32,20 @@ return new class extends Migration
             $table->boolean('supports_tiers')->default(false);
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
-            
+
             $table->timestamps();
-            
+
             // Foreign key constraints
             $table->foreign('company_id')
                 ->references('id')
                 ->on('companies')
                 ->onDelete('cascade');
-            
+
             // Indexes
             $table->index(['company_id', 'slug']);
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'sort_order']);
-            
+
             // Unique constraint
             $table->unique(['company_id', 'slug']);
         });

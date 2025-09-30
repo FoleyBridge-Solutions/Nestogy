@@ -2,17 +2,13 @@
 
 namespace App\Domains\Project\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Project\Models\Project;
 use App\Domains\Project\Models\Task;
-use App\Domains\Project\Models\ProjectMilestone;
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
 {
@@ -81,7 +77,7 @@ class TaskController extends Controller
         // Apply sorting
         $sortBy = $request->get('sort', 'sort_order');
         $sortDirection = $request->get('direction', 'asc');
-        
+
         if (in_array($sortBy, ['name', 'status', 'priority', 'due_date', 'created_at', 'sort_order'])) {
             $query->orderBy($sortBy, $sortDirection);
         }
@@ -103,11 +99,11 @@ class TaskController extends Controller
 
         // Get filter options
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->whereHas('assignedTasks', function($q) use ($project) {
-                            $q->where('project_id', $project->id);
-                        })
-                        ->orderBy('name')
-                        ->get();
+            ->whereHas('assignedTasks', function ($q) use ($project) {
+                $q->where('project_id', $project->id);
+            })
+            ->orderBy('name')
+            ->get();
 
         $milestones = $project->milestones()->orderBy('sort_order')->get();
 
@@ -125,7 +121,7 @@ class TaskController extends Controller
     protected function kanbanView(Project $project, $query, Request $request)
     {
         $tasks = $query->get();
-        
+
         $kanbanColumns = [
             Task::STATUS_TODO => 'To Do',
             Task::STATUS_IN_PROGRESS => 'In Progress',
@@ -154,7 +150,7 @@ class TaskController extends Controller
     protected function calendarView(Project $project, $query, Request $request)
     {
         $tasks = $query->whereNotNull('due_date')->get();
-        
+
         $calendarEvents = $tasks->map(function ($task) {
             return [
                 'id' => $task->id,
@@ -162,7 +158,7 @@ class TaskController extends Controller
                 'start' => $task->start_date?->format('Y-m-d'),
                 'end' => $task->due_date?->format('Y-m-d'),
                 'color' => $this->getTaskColor($task),
-                'className' => 'task-event task-' . $task->status,
+                'className' => 'task-event task-'.$task->status,
                 'extendedProps' => [
                     'status' => $task->status,
                     'priority' => $task->priority,
@@ -183,7 +179,7 @@ class TaskController extends Controller
     protected function ganttView(Project $project, $query, Request $request)
     {
         $tasks = $query->with(['dependencies', 'dependentTasks'])->get();
-        
+
         $ganttData = $tasks->map(function ($task) {
             return [
                 'id' => $task->id,
@@ -212,26 +208,26 @@ class TaskController extends Controller
         $this->authorize('update', $project);
 
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $milestones = $project->milestones()->orderBy('sort_order')->get();
 
         $parentTasks = $project->tasks()->parentTasks()
-                              ->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])
-                              ->orderBy('name')
-                              ->get();
+            ->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])
+            ->orderBy('name')
+            ->get();
 
         $availableDependencies = $project->tasks()
-                                        ->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])
-                                        ->orderBy('name')
-                                        ->get();
+            ->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])
+            ->orderBy('name')
+            ->get();
 
         $selectedParentId = $request->get('parent_id');
         $selectedMilestoneId = $request->get('milestone_id');
 
         return view('projects.tasks.create', compact(
-            'project', 'assignees', 'milestones', 'parentTasks', 
+            'project', 'assignees', 'milestones', 'parentTasks',
             'availableDependencies', 'selectedParentId', 'selectedMilestoneId'
         ));
     }
@@ -250,12 +246,12 @@ class TaskController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         DB::beginTransaction();
-        
+
         try {
             $taskData = $request->all();
             $taskData['project_id'] = $project->id;
@@ -281,7 +277,7 @@ class TaskController extends Controller
             // Create checklist items if provided
             if ($request->has('checklist_items')) {
                 foreach ($request->get('checklist_items', []) as $item) {
-                    if (!empty($item['name'])) {
+                    if (! empty($item['name'])) {
                         $task->checklistItems()->create([
                             'name' => $item['name'],
                             'is_completed' => false,
@@ -302,21 +298,21 @@ class TaskController extends Controller
             }
 
             return redirect()->route('projects.tasks.show', [$project, $task])
-                           ->with('success', 'Task created successfully.');
+                ->with('success', 'Task created successfully.');
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create task: ' . $e->getMessage(),
+                    'message' => 'Failed to create task: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()->back()
-                           ->withErrors(['error' => 'Failed to create task: ' . $e->getMessage()])
-                           ->withInput();
+                ->withErrors(['error' => 'Failed to create task: '.$e->getMessage()])
+                ->withInput();
         }
     }
 
@@ -379,27 +375,27 @@ class TaskController extends Controller
         }
 
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $milestones = $project->milestones()->orderBy('sort_order')->get();
 
         $parentTasks = $project->tasks()->parentTasks()
-                              ->where('id', '!=', $task->id)
-                              ->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])
-                              ->orderBy('name')
-                              ->get();
+            ->where('id', '!=', $task->id)
+            ->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])
+            ->orderBy('name')
+            ->get();
 
         $availableDependencies = $project->tasks()
-                                        ->where('id', '!=', $task->id)
-                                        ->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])
-                                        ->orderBy('name')
-                                        ->get();
+            ->where('id', '!=', $task->id)
+            ->whereNotIn('status', [Task::STATUS_COMPLETED, Task::STATUS_CLOSED])
+            ->orderBy('name')
+            ->get();
 
         $currentDependencies = $task->dependencies->pluck('id')->toArray();
 
         return view('projects.tasks.edit', compact(
-            'project', 'task', 'assignees', 'milestones', 'parentTasks', 
+            'project', 'task', 'assignees', 'milestones', 'parentTasks',
             'availableDependencies', 'currentDependencies'
         ));
     }
@@ -419,12 +415,12 @@ class TaskController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         DB::beginTransaction();
-        
+
         try {
             $task->fill($request->all());
             $task->save();
@@ -432,7 +428,7 @@ class TaskController extends Controller
             // Update dependencies
             if ($request->has('dependencies')) {
                 $task->dependencies()->detach();
-                
+
                 foreach ($request->get('dependencies', []) as $dependencyId) {
                     $dependencyTask = Task::find($dependencyId);
                     if ($dependencyTask && $dependencyTask->project_id === $project->id) {
@@ -457,21 +453,21 @@ class TaskController extends Controller
             }
 
             return redirect()->route('projects.tasks.show', [$project, $task])
-                           ->with('success', 'Task updated successfully.');
+                ->with('success', 'Task updated successfully.');
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update task: ' . $e->getMessage(),
+                    'message' => 'Failed to update task: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()->back()
-                           ->withErrors(['error' => 'Failed to update task: ' . $e->getMessage()])
-                           ->withInput();
+                ->withErrors(['error' => 'Failed to update task: '.$e->getMessage()])
+                ->withInput();
         }
     }
 
@@ -487,7 +483,7 @@ class TaskController extends Controller
         }
 
         DB::beginTransaction();
-        
+
         try {
             // Remove dependencies
             $task->dependencies()->detach();
@@ -517,20 +513,20 @@ class TaskController extends Controller
             }
 
             return redirect()->route('projects.tasks.index', $project)
-                           ->with('success', 'Task deleted successfully.');
+                ->with('success', 'Task deleted successfully.');
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to delete task: ' . $e->getMessage(),
+                    'message' => 'Failed to delete task: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()->back()
-                           ->withErrors(['error' => 'Failed to delete task: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to delete task: '.$e->getMessage()]);
         }
     }
 
@@ -546,7 +542,7 @@ class TaskController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:' . implode(',', Task::getAvailableStatuses()),
+            'status' => 'required|in:'.implode(',', Task::getAvailableStatuses()),
             'comment' => 'nullable|string|max:500',
         ]);
 
@@ -627,7 +623,7 @@ class TaskController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to assign task: ' . $e->getMessage(),
+                'message' => 'Failed to assign task: '.$e->getMessage(),
             ], 400);
         }
     }
@@ -655,7 +651,7 @@ class TaskController extends Controller
         $task->update(['progress_percentage' => $progress]);
 
         // Auto-update status based on progress
-        if ($progress === 100 && !$task->isCompleted()) {
+        if ($progress === 100 && ! $task->isCompleted()) {
             $task->markAsCompleted();
         } elseif ($progress > 0 && $task->status === Task::STATUS_TODO) {
             $task->update(['status' => Task::STATUS_IN_PROGRESS]);
@@ -679,7 +675,7 @@ class TaskController extends Controller
             'tasks' => 'required|array',
             'tasks.*.id' => 'required|integer|exists:project_tasks,id',
             'tasks.*.sort_order' => 'required|integer|min:0',
-            'tasks.*.status' => 'nullable|in:' . implode(',', Task::getAvailableStatuses()),
+            'tasks.*.status' => 'nullable|in:'.implode(',', Task::getAvailableStatuses()),
         ]);
 
         if ($validator->fails()) {
@@ -687,21 +683,21 @@ class TaskController extends Controller
         }
 
         DB::beginTransaction();
-        
+
         try {
             foreach ($request->get('tasks') as $taskData) {
                 $task = Task::where('id', $taskData['id'])
-                           ->where('project_id', $project->id)
-                           ->first();
-                
+                    ->where('project_id', $project->id)
+                    ->first();
+
                 if ($task) {
                     $updateData = ['sort_order' => $taskData['sort_order']];
-                    
+
                     // Update status if provided (for kanban moves)
                     if (isset($taskData['status']) && $taskData['status'] !== $task->status) {
                         $updateData['status'] = $taskData['status'];
                     }
-                    
+
                     $task->update($updateData);
                 }
             }
@@ -715,9 +711,10 @@ class TaskController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to reorder tasks: ' . $e->getMessage(),
+                'message' => 'Failed to reorder tasks: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -745,7 +742,7 @@ class TaskController extends Controller
         }
 
         DB::beginTransaction();
-        
+
         try {
             $newTask = $task->clone([
                 'name' => $request->get('name'),
@@ -791,9 +788,10 @@ class TaskController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to clone task: ' . $e->getMessage(),
+                'message' => 'Failed to clone task: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -807,7 +805,7 @@ class TaskController extends Controller
             return '#dc3545'; // Red
         }
 
-        return match($task->priority) {
+        return match ($task->priority) {
             Task::PRIORITY_CRITICAL => '#dc3545',
             Task::PRIORITY_URGENT => '#fd7e14',
             Task::PRIORITY_HIGH => '#ffc107',
@@ -823,7 +821,7 @@ class TaskController extends Controller
     protected function calculateTaskStatistics(Project $project): array
     {
         $baseQuery = $project->tasks();
-        
+
         return [
             'total' => (clone $baseQuery)->count(),
             'completed' => (clone $baseQuery)->completed()->count(),
@@ -833,11 +831,11 @@ class TaskController extends Controller
             'overdue' => (clone $baseQuery)->overdue()->count(),
             'due_soon' => (clone $baseQuery)->dueSoon()->count(),
             'unassigned' => (clone $baseQuery)->whereNull('assigned_to')->count(),
-            
+
             // Priority breakdown
             'high_priority' => (clone $baseQuery)->byPriority(Task::PRIORITY_HIGH)->active()->count(),
             'critical_priority' => (clone $baseQuery)->byPriority(Task::PRIORITY_CRITICAL)->active()->count(),
-            
+
             // Time tracking
             'total_estimated_hours' => (clone $baseQuery)->sum('estimated_hours') ?? 0,
             'total_actual_hours' => (clone $baseQuery)->sum('actual_hours') ?? 0,

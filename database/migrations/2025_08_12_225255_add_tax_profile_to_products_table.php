@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            if (!Schema::hasColumn('products', 'tax_profile_id')) {
+            if (! Schema::hasColumn('products', 'tax_profile_id')) {
                 $table->unsignedBigInteger('tax_profile_id')->nullable()->after('tax_rate');
                 $table->index('tax_profile_id');
                 $table->foreign('tax_profile_id')->references('id')->on('tax_profiles')->onDelete('set null');
             }
-            
-            if (!Schema::hasColumn('products', 'tax_specific_data')) {
+
+            if (! Schema::hasColumn('products', 'tax_specific_data')) {
                 $table->json('tax_specific_data')->nullable()->after('tax_profile_id');
             }
         });

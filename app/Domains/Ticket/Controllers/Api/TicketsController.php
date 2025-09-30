@@ -2,12 +2,12 @@
 
 namespace App\Domains\Ticket\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Domains\Core\Services\NotificationService;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Services\TicketService;
-use App\Domains\Core\Services\NotificationService;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -15,6 +15,7 @@ use Illuminate\Validation\Rule;
 class TicketsController extends Controller
 {
     protected TicketService $ticketService;
+
     protected NotificationService $notificationService;
 
     public function __construct(
@@ -77,13 +78,14 @@ class TicketsController extends Controller
             $ticket->sla_response_deadline = $slaInfo['response_deadline'];
             $ticket->sla_resolution_deadline = $slaInfo['resolution_deadline'];
             $ticket->is_sla_breached = $this->ticketService->isSlaBreached($ticket);
+
             return $ticket;
         });
 
         return response()->json([
             'success' => true,
             'data' => $tickets,
-            'message' => 'Tickets retrieved successfully'
+            'message' => 'Tickets retrieved successfully',
         ]);
     }
 
@@ -127,7 +129,7 @@ class TicketsController extends Controller
                 foreach ($request->file('attachments') as $file) {
                     $ticket->attachments()->create([
                         'filename' => $file->getClientOriginalName(),
-                        'path' => $file->store('tickets/' . $ticket->id, 'private'),
+                        'path' => $file->store('tickets/'.$ticket->id, 'private'),
                         'size' => $file->getSize(),
                         'mime_type' => $file->getMimeType(),
                         'uploaded_by' => auth()->id(),
@@ -143,11 +145,11 @@ class TicketsController extends Controller
             ]);
 
             // Auto-assign if not already assigned
-            if (!$ticket->assigned_to) {
+            if (! $ticket->assigned_to) {
                 $assignedUser = $this->ticketService->autoAssignTicket($ticket);
                 if ($assignedUser) {
                     $ticket->update(['assigned_to' => $assignedUser->id]);
-                    
+
                     // Send notification to assigned technician
                     $this->notificationService->notifyTicketAssigned($ticket, $assignedUser);
                 }
@@ -161,17 +163,17 @@ class TicketsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $ticket->load(['client', 'assignee', 'category', 'attachments']),
-                'message' => 'Ticket created successfully'
+                'message' => 'Ticket created successfully',
             ], 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create ticket', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create ticket',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -185,7 +187,7 @@ class TicketsController extends Controller
         if ($ticket->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Unauthorized',
             ], 403);
         }
 
@@ -197,7 +199,7 @@ class TicketsController extends Controller
             'replies.user',
             'attachments',
             'watchers',
-            'timeEntries.user'
+            'timeEntries.user',
         ]);
 
         // Calculate SLA status
@@ -215,7 +217,7 @@ class TicketsController extends Controller
         return response()->json([
             'success' => true,
             'data' => $ticket,
-            'message' => 'Ticket retrieved successfully'
+            'message' => 'Ticket retrieved successfully',
         ]);
     }
 
@@ -228,7 +230,7 @@ class TicketsController extends Controller
         if ($ticket->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Unauthorized',
             ], 403);
         }
 
@@ -261,11 +263,11 @@ class TicketsController extends Controller
             // Track status changes
             if (isset($validated['status']) && $oldStatus !== $validated['status']) {
                 // Update response/resolution times
-                if ($validated['status'] === 'in_progress' && !$ticket->first_response_at) {
+                if ($validated['status'] === 'in_progress' && ! $ticket->first_response_at) {
                     $ticket->update(['first_response_at' => now()]);
                 }
-                
-                if (in_array($validated['status'], ['resolved', 'closed']) && !$ticket->resolved_at) {
+
+                if (in_array($validated['status'], ['resolved', 'closed']) && ! $ticket->resolved_at) {
                     $ticket->update(['resolved_at' => now()]);
                 }
 
@@ -288,17 +290,17 @@ class TicketsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $ticket->fresh(['client', 'assignee', 'category']),
-                'message' => 'Ticket updated successfully'
+                'message' => 'Ticket updated successfully',
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update ticket', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update ticket',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -312,7 +314,7 @@ class TicketsController extends Controller
         if ($ticket->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Unauthorized',
             ], 403);
         }
 
@@ -321,16 +323,16 @@ class TicketsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Ticket deleted successfully'
+                'message' => 'Ticket deleted successfully',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to delete ticket', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete ticket',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -359,16 +361,16 @@ class TicketsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $result,
-                'message' => 'Tickets assigned successfully'
+                'message' => 'Tickets assigned successfully',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to bulk assign tickets', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to assign tickets',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -397,16 +399,16 @@ class TicketsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $result,
-                'message' => 'Ticket statuses updated successfully'
+                'message' => 'Ticket statuses updated successfully',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to bulk update ticket status', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update ticket statuses',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -432,16 +434,16 @@ class TicketsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $report,
-                'message' => 'SLA performance report generated successfully'
+                'message' => 'SLA performance report generated successfully',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to generate SLA report', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to generate SLA report',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -458,18 +460,18 @@ class TicketsController extends Controller
                 'success' => true,
                 'data' => [
                     'escalated_count' => $escalated->count(),
-                    'tickets' => $escalated
+                    'tickets' => $escalated,
                 ],
-                'message' => 'Escalation check completed'
+                'message' => 'Escalation check completed',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to check escalations', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to check escalations',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

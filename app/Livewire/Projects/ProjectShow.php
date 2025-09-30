@@ -3,31 +3,38 @@
 namespace App\Livewire\Projects;
 
 use App\Domains\Project\Models\Project;
-use App\Domains\Project\Models\ProjectTask;
 use App\Domains\Project\Models\ProjectNote;
+use App\Domains\Project\Models\ProjectTask;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Auth;
 
 class ProjectShow extends Component
 {
     use WithFileUploads;
 
     public Project $project;
+
     public $activeTab = 'summary';
-    
+
     // Task management
     public $showTaskModal = false;
+
     public $taskName = '';
+
     public $taskDescription = '';
+
     public $taskDueDate = '';
+
     public $taskAssignedTo = '';
+
     public $taskPriority = 'medium';
-    
+
     // Note management
     public $noteContent = '';
+
     public $noteIsPrivate = false;
-    
+
     // File uploads
     public $files = [];
 
@@ -46,22 +53,22 @@ class ProjectShow extends Component
     public function mount(Project $project)
     {
         $this->project = $project;
-        
+
         // Load relationships
         $this->project->load([
             'client',
             'manager',
             'teamMembers',
-            'tasks' => function($query) {
+            'tasks' => function ($query) {
                 $query->orderBy('due_date')->orderBy('priority', 'desc');
             },
-            'notes' => function($query) {
+            'notes' => function ($query) {
                 $query->latest();
             },
             'tickets',
             'invoices',
             'files',
-            'activities.user'
+            'activities.user',
         ]);
     }
 
@@ -88,7 +95,7 @@ class ProjectShow extends Component
 
         $this->reset(['taskName', 'taskDescription', 'taskDueDate', 'taskAssignedTo', 'taskPriority', 'showTaskModal']);
         $this->project->load('tasks');
-        
+
         session()->flash('message', 'Task created successfully.');
     }
 
@@ -97,13 +104,13 @@ class ProjectShow extends Component
         $task = ProjectTask::where('id', $taskId)
             ->where('project_id', $this->project->id)
             ->first();
-            
+
         if ($task) {
             $task->status = $task->status === 'completed' ? 'pending' : 'completed';
             $task->completed_at = $task->status === 'completed' ? now() : null;
             $task->completed_by = $task->status === 'completed' ? Auth::id() : null;
             $task->save();
-            
+
             $this->project->load('tasks');
             $this->updateProjectProgress();
         }
@@ -114,10 +121,10 @@ class ProjectShow extends Component
         ProjectTask::where('id', $taskId)
             ->where('project_id', $this->project->id)
             ->delete();
-            
+
         $this->project->load('tasks');
         $this->updateProjectProgress();
-        
+
         session()->flash('message', 'Task deleted successfully.');
     }
 
@@ -137,7 +144,7 @@ class ProjectShow extends Component
 
         $this->reset(['noteContent', 'noteIsPrivate']);
         $this->project->load('notes');
-        
+
         session()->flash('message', 'Note added successfully.');
     }
 
@@ -147,9 +154,9 @@ class ProjectShow extends Component
             ->where('project_id', $this->project->id)
             ->where('user_id', Auth::id())
             ->delete();
-            
+
         $this->project->load('notes');
-        
+
         session()->flash('message', 'Note deleted successfully.');
     }
 
@@ -173,7 +180,7 @@ class ProjectShow extends Component
 
         $this->reset('files');
         $this->project->load('files');
-        
+
         session()->flash('message', 'Files uploaded successfully.');
     }
 
@@ -181,7 +188,7 @@ class ProjectShow extends Component
     {
         $this->project->status = $status;
         $this->project->save();
-        
+
         // Log activity
         $this->project->activities()->create([
             'type' => 'status_changed',
@@ -189,7 +196,7 @@ class ProjectShow extends Component
             'user_id' => Auth::id(),
             'company_id' => Auth::user()->company_id,
         ]);
-        
+
         session()->flash('message', 'Project status updated successfully.');
     }
 
@@ -197,7 +204,7 @@ class ProjectShow extends Component
     {
         $this->project->priority = $priority;
         $this->project->save();
-        
+
         session()->flash('message', 'Project priority updated successfully.');
     }
 
@@ -205,7 +212,7 @@ class ProjectShow extends Component
     {
         $totalTasks = $this->project->tasks()->count();
         $completedTasks = $this->project->tasks()->where('status', 'completed')->count();
-        
+
         if ($totalTasks > 0) {
             $this->project->progress = round(($completedTasks / $totalTasks) * 100);
             $this->project->save();
@@ -218,7 +225,7 @@ class ProjectShow extends Component
             ->whereNull('archived_at')
             ->orderBy('name')
             ->get();
-            
+
         return view('livewire.projects.project-show', [
             'technicians' => $technicians,
             'statuses' => ['planning', 'active', 'in_progress', 'on_hold', 'completed', 'cancelled'],

@@ -2,19 +2,18 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\Product;
 use App\Models\Client;
 use App\Models\PricingRule;
+use App\Models\Product;
 use App\Models\ProductBundle;
 use Illuminate\Support\Collection;
-use Carbon\Carbon;
 
 class ProductPricingService
 {
     /**
      * Calculate product price for a client with all applicable rules
      */
-    public function calculatePrice(Product $product, Client $client = null, int $quantity = 1, array $options = []): array
+    public function calculatePrice(Product $product, ?Client $client = null, int $quantity = 1, array $options = []): array
     {
         $basePrice = $product->base_price;
         $finalPrice = $basePrice;
@@ -26,34 +25,34 @@ class ProductPricingService
 
         // Apply rules in priority order
         foreach ($rules as $rule) {
-            if (!$rule->isValid()) {
+            if (! $rule->isValid()) {
                 continue;
             }
 
             // Check if rule can be combined with already applied rules
             $canApply = true;
             foreach ($appliedRules as $appliedRule) {
-                if (!$rule->canCombineWith($appliedRule)) {
+                if (! $rule->canCombineWith($appliedRule)) {
                     $canApply = false;
                     break;
                 }
             }
 
-            if (!$canApply) {
+            if (! $canApply) {
                 continue;
             }
 
             $rulePrice = $rule->calculatePrice($finalPrice, $quantity);
-            
+
             if ($rulePrice < $finalPrice) {
                 $finalPrice = $rulePrice;
                 $appliedRules->push($rule);
-                
+
                 $breakdown[] = [
-                    'rule' => $rule->name ?? 'Pricing Rule #' . $rule->id,
+                    'rule' => $rule->name ?? 'Pricing Rule #'.$rule->id,
                     'type' => $rule->discount_type,
                     'value' => $rule->discount_value,
-                    'savings' => $basePrice - $rulePrice
+                    'savings' => $basePrice - $rulePrice,
                 ];
             }
         }
@@ -65,7 +64,7 @@ class ProductPricingService
                 'rule' => 'Product Discount',
                 'type' => 'percentage',
                 'value' => $product->discount_percentage,
-                'savings' => $basePrice - $finalPrice
+                'savings' => $basePrice - $finalPrice,
             ];
         }
 
@@ -85,24 +84,24 @@ class ProductPricingService
             'applied_rules' => $appliedRules->pluck('id')->toArray(),
             'breakdown' => $breakdown,
             'savings' => ($basePrice - $finalPrice) * $quantity,
-            'savings_percentage' => $basePrice > 0 ? (($basePrice - $finalPrice) / $basePrice) * 100 : 0
+            'savings_percentage' => $basePrice > 0 ? (($basePrice - $finalPrice) / $basePrice) * 100 : 0,
         ];
     }
 
     /**
      * Calculate bundle price with selected products
      */
-    public function calculateBundlePrice(ProductBundle $bundle, array $selectedProductIds = [], Client $client = null): array
+    public function calculateBundlePrice(ProductBundle $bundle, array $selectedProductIds = [], ?Client $client = null): array
     {
-        if (!$bundle->isAvailable()) {
+        if (! $bundle->isAvailable()) {
             throw new \Exception('Bundle is not currently available');
         }
 
         // Validate product selection for configurable bundles
         if ($bundle->isConfigurable()) {
             $errors = $bundle->validateSelection($selectedProductIds);
-            if (!empty($errors)) {
-                throw new \Exception('Invalid product selection: ' . implode(', ', $errors));
+            if (! empty($errors)) {
+                throw new \Exception('Invalid product selection: '.implode(', ', $errors));
             }
         }
 
@@ -112,9 +111,9 @@ class ProductPricingService
 
         // Calculate original prices and item details
         foreach ($bundle->products as $product) {
-            if ($selectedProductIds !== null && 
-                !$product->pivot->is_required && 
-                !in_array($product->id, $selectedProductIds)) {
+            if ($selectedProductIds !== null &&
+                ! $product->pivot->is_required &&
+                ! in_array($product->id, $selectedProductIds)) {
                 continue;
             }
 
@@ -126,9 +125,9 @@ class ProductPricingService
                 'product_name' => $product->name,
                 'quantity' => $product->pivot->quantity,
                 'original_price' => $product->base_price,
-                'bundle_price' => $product->pivot->price_override ?? 
+                'bundle_price' => $product->pivot->price_override ??
                     ($product->base_price * (1 - ($product->pivot->discount_value ?? 0) / 100)),
-                'is_required' => $product->pivot->is_required
+                'is_required' => $product->pivot->is_required,
             ];
         }
 
@@ -145,14 +144,14 @@ class ProductPricingService
             'savings' => $savings,
             'savings_percentage' => $savingsPercentage,
             'items' => $itemDetails,
-            'selected_products' => $selectedProductIds ?? []
+            'selected_products' => $selectedProductIds ?? [],
         ];
     }
 
     /**
      * Get applicable pricing rules for a product
      */
-    protected function getApplicablePricingRules(Product $product, Client $client = null, int $quantity = 1): Collection
+    protected function getApplicablePricingRules(Product $product, ?Client $client = null, int $quantity = 1): Collection
     {
         $query = PricingRule::where('product_id', $product->id)
             ->active()
@@ -165,7 +164,7 @@ class ProductPricingService
         }
 
         return $query->get()->filter(function ($rule) use ($quantity) {
-            return $rule->appliesToQuantity($quantity) && 
+            return $rule->appliesToQuantity($quantity) &&
                    $rule->appliesToDateTime();
         });
     }
@@ -173,7 +172,7 @@ class ProductPricingService
     /**
      * Calculate tax for a product
      */
-    protected function calculateTax(Product $product, float $subtotal, Client $client = null): float
+    protected function calculateTax(Product $product, float $subtotal, ?Client $client = null): float
     {
         $taxRate = $product->tax_rate ?? 0;
 
@@ -193,7 +192,7 @@ class ProductPricingService
     /**
      * Apply promo code to pricing
      */
-    public function applyPromoCode(Product $product, string $promoCode, Client $client = null, int $quantity = 1): array
+    public function applyPromoCode(Product $product, string $promoCode, ?Client $client = null, int $quantity = 1): array
     {
         $rule = PricingRule::where('product_id', $product->id)
             ->where('promo_code', $promoCode)
@@ -201,15 +200,15 @@ class ProductPricingService
             ->active()
             ->first();
 
-        if (!$rule) {
+        if (! $rule) {
             throw new \Exception('Invalid promo code');
         }
 
-        if (!$rule->validatePromoCode($promoCode)) {
+        if (! $rule->validatePromoCode($promoCode)) {
             throw new \Exception('Promo code is not valid');
         }
 
-        if (!$rule->appliesToQuantity($quantity)) {
+        if (! $rule->appliesToQuantity($quantity)) {
             throw new \Exception('Promo code does not apply to this quantity');
         }
 
@@ -235,15 +234,15 @@ class ProductPricingService
             ->get();
 
         $tiers = [];
-        
+
         foreach ($rules as $rule) {
-            if (!empty($rule->conditions['volumes'])) {
+            if (! empty($rule->conditions['volumes'])) {
                 foreach ($rule->conditions['volumes'] as $volume) {
                     $tiers[] = [
                         'min_quantity' => $volume['min'] ?? 0,
                         'max_quantity' => $volume['max'] ?? null,
                         'price' => $volume['price'] ?? $product->base_price,
-                        'discount_percentage' => (($product->base_price - $volume['price']) / $product->base_price) * 100
+                        'discount_percentage' => (($product->base_price - $volume['price']) / $product->base_price) * 100,
                     ];
                 }
             }
@@ -260,7 +259,7 @@ class ProductPricingService
     /**
      * Calculate recurring revenue for subscription products
      */
-    public function calculateRecurringRevenue(Product $product, int $quantity = 1, string $billingCycle = null): array
+    public function calculateRecurringRevenue(Product $product, int $quantity = 1, ?string $billingCycle = null): array
     {
         if ($product->billing_model !== 'subscription') {
             throw new \Exception('Product is not a subscription');
@@ -270,7 +269,7 @@ class ProductPricingService
         $price = $product->base_price * $quantity;
 
         // Convert to monthly for MRR calculation
-        $monthlyRevenue = match($billingCycle) {
+        $monthlyRevenue = match ($billingCycle) {
             'weekly' => $price * 4.33, // Average weeks per month
             'monthly' => $price,
             'quarterly' => $price / 3,
@@ -280,7 +279,7 @@ class ProductPricingService
         };
 
         // Calculate annual revenue
-        $annualRevenue = match($billingCycle) {
+        $annualRevenue = match ($billingCycle) {
             'weekly' => $price * 52,
             'monthly' => $price * 12,
             'quarterly' => $price * 4,
@@ -294,17 +293,17 @@ class ProductPricingService
             'cycle_price' => $price,
             'monthly_revenue' => round($monthlyRevenue, 2),
             'annual_revenue' => round($annualRevenue, 2),
-            'quantity' => $quantity
+            'quantity' => $quantity,
         ];
     }
 
     /**
      * Get best price for a product across all rules
      */
-    public function getBestPrice(Product $product, Client $client = null, int $quantity = 1): array
+    public function getBestPrice(Product $product, ?Client $client = null, int $quantity = 1): array
     {
         $standardPricing = $this->calculatePrice($product, $client, $quantity);
-        
+
         // Check for better bundle deals
         $bundles = ProductBundle::active()
             ->whereHas('products', function ($query) use ($product) {
@@ -317,14 +316,14 @@ class ProductPricingService
             'price' => $standardPricing['unit_price'],
             'total' => $standardPricing['total'],
             'savings' => $standardPricing['savings'],
-            'details' => $standardPricing
+            'details' => $standardPricing,
         ];
 
         foreach ($bundles as $bundle) {
             try {
                 $bundlePricing = $this->calculateBundlePrice($bundle, [$product->id], $client);
                 $bundleUnitPrice = $bundlePricing['bundle_price'] / $quantity;
-                
+
                 if ($bundleUnitPrice < $bestDeal['price']) {
                     $bestDeal = [
                         'type' => 'bundle',
@@ -333,7 +332,7 @@ class ProductPricingService
                         'price' => $bundleUnitPrice,
                         'total' => $bundlePricing['bundle_price'],
                         'savings' => $bundlePricing['savings'],
-                        'details' => $bundlePricing
+                        'details' => $bundlePricing,
                     ];
                 }
             } catch (\Exception $e) {

@@ -2,19 +2,19 @@
 
 namespace App\Domains\Contract\Services;
 
-use App\Domains\Contract\Models\{
-    ContractFormConfiguration,
-    ContractViewConfiguration,
-    ContractNavigationItem,
-    ContractDashboardWidget
-};
+use App\Domains\Contract\Models\ContractDashboardWidget;
+use App\Domains\Contract\Models\ContractFormConfiguration;
+use App\Domains\Contract\Models\ContractNavigationItem;
+use App\Domains\Contract\Models\ContractViewConfiguration;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ContractConfigurationRegistry
 {
     protected array $configCache = [];
+
     protected int $cacheTimeout = 3600; // 1 hour
+
     protected int $companyId;
 
     /**
@@ -31,7 +31,7 @@ class ContractConfigurationRegistry
     public function getCompanyConfiguration(int $companyId): array
     {
         $cacheKey = "contract_config_{$companyId}";
-        
+
         if (isset($this->configCache[$cacheKey])) {
             return $this->configCache[$cacheKey];
         }
@@ -61,6 +61,7 @@ class ContractConfigurationRegistry
         });
 
         $this->configCache[$cacheKey] = $config;
+
         return $config;
     }
 
@@ -76,7 +77,7 @@ class ContractConfigurationRegistry
             ->pluck('label', 'slug')
             ->toArray();
 
-        if (!empty($navigationTypes)) {
+        if (! empty($navigationTypes)) {
             return $navigationTypes;
         }
 
@@ -99,7 +100,7 @@ class ContractConfigurationRegistry
         // Get from company-specific configuration table if it exists
         // For now, return defaults that can be overridden per company
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['statuses'] ?? [
             'draft' => [
                 'label' => 'Draft',
@@ -180,7 +181,7 @@ class ContractConfigurationRegistry
     protected function getSignatureStatuses(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['signature_statuses'] ?? [
             'not_required' => [
                 'label' => 'Not Required',
@@ -223,11 +224,11 @@ class ContractConfigurationRegistry
     /**
      * Get renewal types configuration
      */
-    public function getRenewalTypes(int $companyId = null): array
+    public function getRenewalTypes(?int $companyId = null): array
     {
         $companyId = $companyId ?? $this->companyId;
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['renewal_types'] ?? [
             'none' => [
                 'label' => 'No Renewal',
@@ -352,7 +353,7 @@ class ContractConfigurationRegistry
     protected function getValidationRules(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['validation_rules'] ?? [];
     }
 
@@ -362,7 +363,7 @@ class ContractConfigurationRegistry
     protected function getWorkflows(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['workflows'] ?? [];
     }
 
@@ -372,7 +373,7 @@ class ContractConfigurationRegistry
     protected function getTemplates(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['templates'] ?? [];
     }
 
@@ -382,7 +383,7 @@ class ContractConfigurationRegistry
     protected function getBusinessRules(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['business_rules'] ?? [];
     }
 
@@ -392,7 +393,7 @@ class ContractConfigurationRegistry
     protected function getActiveStatuses(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['active_statuses'] ?? ['active', 'signed'];
     }
 
@@ -402,7 +403,7 @@ class ContractConfigurationRegistry
     protected function getSignedSignatureStatuses(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['signed_signature_statuses'] ?? ['fully_executed'];
     }
 
@@ -412,9 +413,9 @@ class ContractConfigurationRegistry
     protected function getEditableStatuses(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['editable_statuses'] ?? [
-            'draft', 'pending_review', 'under_negotiation', 'pending_signature', 'active'
+            'draft', 'pending_review', 'under_negotiation', 'pending_signature', 'active',
         ];
     }
 
@@ -424,7 +425,7 @@ class ContractConfigurationRegistry
     protected function getTerminableStatuses(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['terminable_statuses'] ?? ['active', 'signed', 'suspended'];
     }
 
@@ -434,7 +435,7 @@ class ContractConfigurationRegistry
     protected function getNonRenewableTypes(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['non_renewable_types'] ?? ['none'];
     }
 
@@ -444,7 +445,7 @@ class ContractConfigurationRegistry
     protected function getDefaults(int $companyId): array
     {
         $config = $this->getCompanySpecificConfig($companyId);
-        
+
         return $config['defaults'] ?? [
             'default_signed_status' => 'signed',
             'default_active_status' => 'active',
@@ -463,19 +464,19 @@ class ContractConfigurationRegistry
     {
         // This would typically come from a configuration table
         // For now, check if there's any stored configuration
-        
+
         try {
             $result = DB::table('contract_configurations')
                 ->where('company_id', $companyId)
                 ->first();
-                
+
             if ($result && $result->configuration) {
                 return json_decode($result->configuration, true);
             }
         } catch (\Exception $e) {
             // Table doesn't exist yet, return empty array
         }
-        
+
         return [];
     }
 
@@ -492,15 +493,15 @@ class ContractConfigurationRegistry
                     'updated_at' => now(),
                 ]
             );
-            
+
             // Clear cache
             $cacheKey = "contract_config_{$companyId}";
             Cache::forget($cacheKey);
             unset($this->configCache[$cacheKey]);
-            
+
         } catch (\Exception $e) {
             // Handle gracefully if table doesn't exist
-            \Log::warning("Could not update contract configuration: " . $e->getMessage());
+            \Log::warning('Could not update contract configuration: '.$e->getMessage());
         }
     }
 
@@ -582,21 +583,21 @@ class ContractConfigurationRegistry
         $errors = [];
 
         // Validate contract types
-        if (!isset($config['contract_types']) || empty($config['contract_types'])) {
+        if (! isset($config['contract_types']) || empty($config['contract_types'])) {
             $errors[] = 'At least one contract type must be defined';
         }
 
         // Validate statuses
-        if (!isset($config['statuses']) || empty($config['statuses'])) {
+        if (! isset($config['statuses']) || empty($config['statuses'])) {
             $errors[] = 'At least one status must be defined';
         }
 
         // Check for required default status
         if (isset($config['statuses'])) {
             $statusKeys = array_keys($config['statuses']);
-            
+
             foreach (['draft', 'active'] as $requiredStatus) {
-                if (!in_array($requiredStatus, $statusKeys)) {
+                if (! in_array($requiredStatus, $statusKeys)) {
                     $errors[] = "Required status '{$requiredStatus}' is missing";
                 }
             }
@@ -607,7 +608,7 @@ class ContractConfigurationRegistry
             foreach ($config['statuses'] as $status => $statusConfig) {
                 if (isset($statusConfig['transitions'])) {
                     foreach ($statusConfig['transitions'] as $transition) {
-                        if (!isset($config['statuses'][$transition])) {
+                        if (! isset($config['statuses'][$transition])) {
                             $errors[] = "Status '{$status}' has invalid transition to '{$transition}'";
                         }
                     }
@@ -629,8 +630,8 @@ class ContractConfigurationRegistry
                 'description' => 'Available contract types',
                 'additionalProperties' => [
                     'type' => 'string',
-                    'description' => 'Display name for the contract type'
-                ]
+                    'description' => 'Display name for the contract type',
+                ],
             ],
             'statuses' => [
                 'type' => 'object',
@@ -644,31 +645,31 @@ class ContractConfigurationRegistry
                         'description' => ['type' => 'string'],
                         'transitions' => [
                             'type' => 'array',
-                            'items' => ['type' => 'string']
-                        ]
-                    ]
-                ]
+                            'items' => ['type' => 'string'],
+                        ],
+                    ],
+                ],
             ],
             'signature_statuses' => [
                 'type' => 'object',
-                'description' => 'Available signature statuses'
+                'description' => 'Available signature statuses',
             ],
             'renewal_types' => [
                 'type' => 'object',
-                'description' => 'Available renewal types'
+                'description' => 'Available renewal types',
             ],
             'field_types' => [
                 'type' => 'object',
-                'description' => 'Available field types for forms'
+                'description' => 'Available field types for forms',
             ],
             'workflows' => [
                 'type' => 'object',
-                'description' => 'Workflow definitions'
+                'description' => 'Workflow definitions',
             ],
             'business_rules' => [
                 'type' => 'object',
-                'description' => 'Business rule definitions'
-            ]
+                'description' => 'Business rule definitions',
+            ],
         ];
     }
 
@@ -678,7 +679,7 @@ class ContractConfigurationRegistry
     public function getTemplateStatuses(): array
     {
         $config = $this->getCompanySpecificConfig($this->companyId);
-        
+
         return $config['template_statuses'] ?? [
             'draft' => 'Draft',
             'active' => 'Active',
@@ -693,7 +694,7 @@ class ContractConfigurationRegistry
     public function getTemplateCategories(): array
     {
         $config = $this->getCompanySpecificConfig($this->companyId);
-        
+
         return $config['template_categories'] ?? [
             'msp' => 'Managed Service Provider',
             'voip' => 'VoIP Carrier',
@@ -709,7 +710,7 @@ class ContractConfigurationRegistry
     public function getBillingModels(): array
     {
         $config = $this->getCompanySpecificConfig($this->companyId);
-        
+
         return $config['billing_models'] ?? [
             'fixed' => 'Fixed Price',
             'per_asset' => 'Per Asset/Device',
@@ -745,7 +746,7 @@ class ContractConfigurationRegistry
     public function getContractSignatureStatuses(): array
     {
         $config = $this->getCompanySpecificConfig($this->companyId);
-        
+
         return $config['contract_signature_statuses'] ?? [
             'pending' => 'Pending',
             'signed' => 'Signed',
@@ -760,13 +761,13 @@ class ContractConfigurationRegistry
     public function getContractType(string $id): ?array
     {
         $contractTypes = $this->getContractTypes();
-        
+
         foreach ($contractTypes as $type) {
             if ($type['id'] === $id) {
                 return $type;
             }
         }
-        
+
         return null;
     }
 
@@ -776,10 +777,10 @@ class ContractConfigurationRegistry
     public function createContractType(array $data): array
     {
         $contractTypes = $this->getContractTypes();
-        
+
         // Generate unique ID
-        $id = strtolower(str_replace([' ', '-', '.'], '_', $data['name'])) . '_' . time();
-        
+        $id = strtolower(str_replace([' ', '-', '.'], '_', $data['name'])).'_'.time();
+
         $contractType = array_merge([
             'id' => $id,
             'name' => $data['name'],
@@ -803,9 +804,9 @@ class ContractConfigurationRegistry
         ], $data);
 
         $contractTypes[] = $contractType;
-        
+
         $this->saveContractTypes($contractTypes);
-        
+
         return $contractType;
     }
 
@@ -816,23 +817,23 @@ class ContractConfigurationRegistry
     {
         $contractTypes = $this->getContractTypes();
         $updated = false;
-        
+
         foreach ($contractTypes as &$type) {
             if ($type['id'] === $id) {
                 $type = array_merge($type, $data, [
-                    'updated_at' => now()->toISOString()
+                    'updated_at' => now()->toISOString(),
                 ]);
                 $updated = true;
                 break;
             }
         }
-        
-        if (!$updated) {
+
+        if (! $updated) {
             return null;
         }
-        
+
         $this->saveContractTypes($contractTypes);
-        
+
         return $this->getContractType($id);
     }
 
@@ -843,15 +844,15 @@ class ContractConfigurationRegistry
     {
         $contractTypes = $this->getContractTypes();
         $initialCount = count($contractTypes);
-        
-        $contractTypes = array_filter($contractTypes, fn($type) => $type['id'] !== $id);
-        
+
+        $contractTypes = array_filter($contractTypes, fn ($type) => $type['id'] !== $id);
+
         if (count($contractTypes) === $initialCount) {
             return false; // Type not found
         }
-        
+
         $this->saveContractTypes($contractTypes);
-        
+
         return true;
     }
 
@@ -862,11 +863,11 @@ class ContractConfigurationRegistry
     {
         $config = $this->getCompanySpecificConfig($this->companyId);
         $config['contract_types'] = $contractTypes;
-        
-        // For now, we'll cache this. In a real implementation, 
+
+        // For now, we'll cache this. In a real implementation,
         // you'd save to database or configuration file
         $this->companyConfigs[$this->companyId] = $config;
-        
+
         // Here you would typically save to the database
         // ContractConfiguration::updateOrCreate(['company_id' => $this->companyId], ['config' => $config]);
     }

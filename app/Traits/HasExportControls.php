@@ -2,13 +2,12 @@
 
 namespace App\Traits;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 /**
  * HasExportControls Trait
- * 
+ *
  * Provides comprehensive export permission controls and security features.
  * Handles different types of exports with appropriate authorization checks.
  */
@@ -21,9 +20,9 @@ trait HasExportControls
     {
         $exportType = $options['type'] ?? 'basic';
         $format = $options['format'] ?? 'csv';
-        
+
         // Basic export permission check
-        if (!auth()->user()->hasPermission("{$domain}.export")) {
+        if (! auth()->user()->hasPermission("{$domain}.export")) {
             $this->logExportAttempt($domain, 'denied', 'Missing basic export permission');
             abort(403, "Insufficient permissions to export {$domain} data");
         }
@@ -47,9 +46,9 @@ trait HasExportControls
     protected function checkFormatPermissions(string $format): void
     {
         $restrictedFormats = ['pdf', 'excel', 'xml'];
-        
+
         if (in_array($format, $restrictedFormats)) {
-            if (!auth()->user()->hasAnyPermission(['reports.export', 'system.settings.manage'])) {
+            if (! auth()->user()->hasAnyPermission(['reports.export', 'system.settings.manage'])) {
                 abort(403, "Insufficient permissions to export {$format} format");
             }
         }
@@ -64,23 +63,23 @@ trait HasExportControls
             case 'sensitive':
                 $this->authorizeSensitiveExport($domain);
                 break;
-                
+
             case 'financial':
                 $this->authorizeFinancialExport();
                 break;
-                
+
             case 'personal':
                 $this->authorizePersonalDataExport();
                 break;
-                
+
             case 'bulk':
                 $this->authorizeBulkExport($domain);
                 break;
-                
+
             case 'scheduled':
                 $this->authorizeScheduledExport();
                 break;
-                
+
             case 'audit':
                 $this->authorizeAuditExport();
                 break;
@@ -92,15 +91,15 @@ trait HasExportControls
      */
     protected function authorizeSensitiveExport(string $domain): void
     {
-        if (!Gate::allows('export-sensitive-data')) {
+        if (! Gate::allows('export-sensitive-data')) {
             abort(403, 'Insufficient permissions to export sensitive data');
         }
 
         // Additional checks for specific domains
         $sensitiveDomains = ['users', 'financial', 'clients'];
-        
+
         if (in_array($domain, $sensitiveDomains)) {
-            if (!auth()->user()->hasPermission("{$domain}.manage") && !auth()->user()->isAdmin()) {
+            if (! auth()->user()->hasPermission("{$domain}.manage") && ! auth()->user()->isAdmin()) {
                 abort(403, "Elevated permissions required for sensitive {$domain} export");
             }
         }
@@ -111,11 +110,11 @@ trait HasExportControls
      */
     protected function authorizeFinancialExport(): void
     {
-        if (!auth()->user()->hasAnyPermission(['financial.export', 'financial.manage'])) {
+        if (! auth()->user()->hasAnyPermission(['financial.export', 'financial.manage'])) {
             abort(403, 'Insufficient permissions to export financial data');
         }
 
-        if (!Gate::allows('export-financial-data')) {
+        if (! Gate::allows('export-financial-data')) {
             abort(403, 'Financial export permissions denied');
         }
     }
@@ -125,7 +124,7 @@ trait HasExportControls
      */
     protected function authorizePersonalDataExport(): void
     {
-        if (!auth()->user()->hasAnyPermission(['users.export', 'users.manage'])) {
+        if (! auth()->user()->hasAnyPermission(['users.export', 'users.manage'])) {
             abort(403, 'Insufficient permissions to export personal data');
         }
 
@@ -138,12 +137,12 @@ trait HasExportControls
      */
     protected function authorizeBulkExport(string $domain): void
     {
-        if (!Gate::allows('bulk-export')) {
+        if (! Gate::allows('bulk-export')) {
             abort(403, 'Insufficient permissions for bulk export operations');
         }
 
         // Additional check for large dataset exports
-        if (!auth()->user()->hasPermission('reports.export')) {
+        if (! auth()->user()->hasPermission('reports.export')) {
             abort(403, 'Reports export permission required for bulk operations');
         }
     }
@@ -153,11 +152,11 @@ trait HasExportControls
      */
     protected function authorizeScheduledExport(): void
     {
-        if (!Gate::allows('scheduled-exports')) {
+        if (! Gate::allows('scheduled-exports')) {
             abort(403, 'Insufficient permissions to schedule exports');
         }
 
-        if (!auth()->user()->hasPermission('reports.export')) {
+        if (! auth()->user()->hasPermission('reports.export')) {
             abort(403, 'Reports export permission required for scheduling');
         }
     }
@@ -167,11 +166,11 @@ trait HasExportControls
      */
     protected function authorizeAuditExport(): void
     {
-        if (!auth()->user()->hasPermission('system.logs.view')) {
+        if (! auth()->user()->hasPermission('system.logs.view')) {
             abort(403, 'Insufficient permissions to export audit data');
         }
 
-        if (!auth()->user()->isAdmin()) {
+        if (! auth()->user()->isAdmin()) {
             abort(403, 'Administrator access required for audit exports');
         }
     }
@@ -181,17 +180,17 @@ trait HasExportControls
      */
     protected function applyExportRateLimit(string $domain): void
     {
-        $key = "export_rate_limit:{$domain}:" . auth()->id();
+        $key = "export_rate_limit:{$domain}:".auth()->id();
         $maxExports = config('app.max_exports_per_hour', 10);
-        
+
         if (cache()->has($key)) {
             $count = cache()->get($key, 0);
-            
+
             if ($count >= $maxExports) {
                 $this->logExportAttempt($domain, 'rate_limited', 'Export rate limit exceeded');
                 abort(429, "Export rate limit exceeded. Maximum {$maxExports} exports per hour allowed.");
             }
-            
+
             cache()->put($key, $count + 1, now()->addHour());
         } else {
             cache()->put($key, 1, now()->addHour());
@@ -214,16 +213,16 @@ trait HasExportControls
         switch ($domain) {
             case 'users':
                 return $this->filterUserExportData($query, $options);
-                
+
             case 'financial':
                 return $this->filterFinancialExportData($query, $options);
-                
+
             case 'clients':
                 return $this->filterClientExportData($query, $options);
-                
+
             case 'projects':
                 return $this->filterProjectExportData($query, $options);
-                
+
             default:
                 return $this->filterGeneralExportData($query, $options);
         }
@@ -237,12 +236,12 @@ trait HasExportControls
         $user = auth()->user();
 
         // Non-admins can only export basic user info
-        if (!$user->hasPermission('users.manage')) {
+        if (! $user->hasPermission('users.manage')) {
             $query = $query->select(['id', 'name', 'email', 'created_at']);
         }
 
         // Exclude sensitive fields unless specifically authorized
-        if (!$user->hasPermission('system.permissions.manage')) {
+        if (! $user->hasPermission('system.permissions.manage')) {
             // This would exclude fields like password hashes, tokens, etc.
             $hiddenFields = ['password', 'remember_token', 'api_token'];
             foreach ($hiddenFields as $field) {
@@ -261,7 +260,7 @@ trait HasExportControls
         $user = auth()->user();
 
         // Only users with financial permissions can export detailed data
-        if (!$user->hasPermission('financial.manage')) {
+        if (! $user->hasPermission('financial.manage')) {
             // Exclude sensitive financial details
             $query = $query->select(['id', 'amount', 'date', 'description', 'status']);
         }
@@ -277,7 +276,7 @@ trait HasExportControls
         $user = auth()->user();
 
         // Apply visibility filters based on user role
-        if (!$user->hasPermission('clients.manage')) {
+        if (! $user->hasPermission('clients.manage')) {
             // Hide internal notes and sensitive client information
             $query = $query->makeHidden(['internal_notes', 'credit_limit']);
         }
@@ -293,12 +292,12 @@ trait HasExportControls
         $user = auth()->user();
 
         // Only show projects user has access to
-        if (!$user->hasPermission('projects.manage')) {
-            $query = $query->where(function($q) use ($user) {
+        if (! $user->hasPermission('projects.manage')) {
+            $query = $query->where(function ($q) use ($user) {
                 $q->where('manager_id', $user->id)
-                  ->orWhereHas('members', function($memberQuery) use ($user) {
-                      $memberQuery->where('user_id', $user->id);
-                  });
+                    ->orWhereHas('members', function ($memberQuery) use ($user) {
+                        $memberQuery->where('user_id', $user->id);
+                    });
             });
         }
 
@@ -357,13 +356,13 @@ trait HasExportControls
         $timestamp = now()->format('Y-m-d_H-i-s');
         $userId = auth()->id();
         $companyId = auth()->user()->company_id;
-        
+
         $filename = "{$domain}_export_{$companyId}_{$userId}_{$timestamp}";
-        
+
         if (isset($options['suffix'])) {
             $filename .= "_{$options['suffix']}";
         }
-        
+
         return "{$filename}.{$format}";
     }
 
@@ -374,7 +373,7 @@ trait HasExportControls
     {
         $maxRecords = config("export.limits.{$domain}", 10000);
         $count = $query->count();
-        
+
         if ($count > $maxRecords) {
             abort(413, "Export size limit exceeded. Maximum {$maxRecords} records allowed for {$domain} exports.");
         }
@@ -387,7 +386,7 @@ trait HasExportControls
     {
         $allowedHours = config('export.allowed_hours', [9, 17]); // 9 AM to 5 PM
         $currentHour = now()->hour;
-        
+
         if ($currentHour < $allowedHours[0] || $currentHour > $allowedHours[1]) {
             abort(403, 'Exports are only allowed during business hours (9 AM - 5 PM)');
         }

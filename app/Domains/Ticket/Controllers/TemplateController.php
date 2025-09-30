@@ -2,8 +2,8 @@
 
 namespace App\Domains\Ticket\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Ticket\Models\TicketTemplate;
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * Template Controller
- * 
+ *
  * Manages ticket templates with full CRUD operations, template processing,
  * duplication, and usage analytics following the domain architecture pattern.
  */
@@ -26,10 +26,10 @@ class TemplateController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('subject_template', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('subject_template', 'like', "%{$search}%");
             });
         }
 
@@ -49,16 +49,16 @@ class TemplateController extends Controller
         }
 
         $templates = $query->with('defaultAssignee')
-                          ->withCount('tickets')
-                          ->orderBy('name')
-                          ->paginate(20)
-                          ->appends($request->query());
+            ->withCount('tickets')
+            ->orderBy('name')
+            ->paginate(20)
+            ->appends($request->query());
 
         // Get filter options
         $categories = TicketTemplate::where('company_id', auth()->user()->company_id)
-                                   ->whereNotNull('category')
-                                   ->distinct()
-                                   ->pluck('category');
+            ->whereNotNull('category')
+            ->distinct()
+            ->pluck('category');
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -76,9 +76,9 @@ class TemplateController extends Controller
     public function create()
     {
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->where('is_active', true)
-                        ->orderBy('name')
-                        ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $priorities = ['Low', 'Medium', 'High', 'Critical'];
         $categories = $this->getAvailableCategories();
@@ -112,8 +112,8 @@ class TemplateController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $template = TicketTemplate::create([
@@ -134,12 +134,12 @@ class TemplateController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Template created successfully',
-                'template' => $template->load('defaultAssignee')
+                'template' => $template->load('defaultAssignee'),
             ], 201);
         }
 
         return redirect()->route('tickets.templates.index')
-                        ->with('success', 'Template "' . $template->name . '" created successfully.');
+            ->with('success', 'Template "'.$template->name.'" created successfully.');
     }
 
     /**
@@ -149,7 +149,7 @@ class TemplateController extends Controller
     {
         $this->authorize('view', $template);
 
-        $template->load(['defaultAssignee', 'tickets' => function($query) {
+        $template->load(['defaultAssignee', 'tickets' => function ($query) {
             $query->latest()->limit(10);
         }]);
 
@@ -178,9 +178,9 @@ class TemplateController extends Controller
         $this->authorize('update', $template);
 
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->where('is_active', true)
-                        ->orderBy('name')
-                        ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $priorities = ['Low', 'Medium', 'High', 'Critical'];
         $categories = $this->getAvailableCategories();
@@ -216,8 +216,8 @@ class TemplateController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $template->update($request->only([
@@ -229,19 +229,19 @@ class TemplateController extends Controller
             'category',
             'estimated_hours',
             'default_assignee_id',
-            'custom_fields'
+            'custom_fields',
         ]) + ['is_active' => $request->boolean('is_active')]);
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Template updated successfully',
-                'template' => $template->load('defaultAssignee')
+                'template' => $template->load('defaultAssignee'),
             ]);
         }
 
         return redirect()->route('tickets.templates.index')
-                        ->with('success', 'Template "' . $template->name . '" updated successfully.');
+            ->with('success', 'Template "'.$template->name.'" updated successfully.');
     }
 
     /**
@@ -255,17 +255,17 @@ class TemplateController extends Controller
 
         // Check if template is being used by active recurring tickets
         $activeRecurring = $template->recurringTickets()->where('is_active', true)->count();
-        
+
         if ($activeRecurring > 0) {
             if (request()->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot delete template with active recurring tickets'
+                    'message' => 'Cannot delete template with active recurring tickets',
                 ], 422);
             }
 
             return redirect()->back()
-                           ->with('error', 'Cannot delete template "' . $templateName . '" because it has active recurring tickets.');
+                ->with('error', 'Cannot delete template "'.$templateName.'" because it has active recurring tickets.');
         }
 
         $template->delete();
@@ -273,12 +273,12 @@ class TemplateController extends Controller
         if (request()->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Template deleted successfully'
+                'message' => 'Template deleted successfully',
             ]);
         }
 
         return redirect()->route('tickets.templates.index')
-                        ->with('success', 'Template "' . $templateName . '" deleted successfully.');
+            ->with('success', 'Template "'.$templateName.'" deleted successfully.');
     }
 
     /**
@@ -294,8 +294,8 @@ class TemplateController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $duplicate = $template->duplicate($request->name);
@@ -304,12 +304,12 @@ class TemplateController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Template duplicated successfully',
-                'template' => $duplicate->load('defaultAssignee')
+                'template' => $duplicate->load('defaultAssignee'),
             ], 201);
         }
 
         return redirect()->route('tickets.templates.edit', $duplicate)
-                        ->with('success', 'Template duplicated successfully. Review and activate when ready.');
+            ->with('success', 'Template duplicated successfully. Review and activate when ready.');
     }
 
     /**
@@ -345,8 +345,8 @@ class TemplateController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         try {
@@ -361,22 +361,22 @@ class TemplateController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Ticket created successfully from template',
-                    'ticket' => $ticket
+                    'ticket' => $ticket,
                 ], 201);
             }
 
             return redirect()->route('tickets.show', $ticket)
-                            ->with('success', 'Ticket created successfully from template.');
+                ->with('success', 'Ticket created successfully from template.');
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create ticket from template'
+                    'message' => 'Failed to create ticket from template',
                 ], 500);
             }
 
             return redirect()->back()
-                           ->with('error', 'Failed to create ticket from template.');
+                ->with('error', 'Failed to create ticket from template.');
         }
     }
 
@@ -389,9 +389,9 @@ class TemplateController extends Controller
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -404,16 +404,16 @@ class TemplateController extends Controller
         }
 
         $templates = $query->with('defaultAssignee')->orderBy('name')->get();
-        $filename = 'ticket-templates_' . date('Y-m-d_H-i-s') . '.csv';
+        $filename = 'ticket-templates_'.date('Y-m-d_H-i-s').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($templates) {
+        $callback = function () use ($templates) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Name',
@@ -424,7 +424,7 @@ class TemplateController extends Controller
                 'Default Assignee',
                 'Active',
                 'Tickets Created',
-                'Created Date'
+                'Created Date',
             ]);
 
             // CSV data
@@ -441,7 +441,7 @@ class TemplateController extends Controller
                     $template->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 

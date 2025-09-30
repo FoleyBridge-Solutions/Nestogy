@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\CustomQuickAction;
 use App\Models\Company;
+use App\Models\CustomQuickAction;
+use Illuminate\Database\Seeder;
 
 class QuickActionsSeeder extends Seeder
 {
@@ -15,12 +15,12 @@ class QuickActionsSeeder extends Seeder
     {
         // Get all companies to create default actions for each
         $companies = Company::all();
-        
+
         foreach ($companies as $company) {
             $this->createDefaultActionsForCompany($company->id);
         }
     }
-    
+
     /**
      * Create default quick actions for a specific company
      */
@@ -197,7 +197,7 @@ class QuickActionsSeeder extends Seeder
                 'permission' => null, // No specific permission needed
                 'position' => 13,
             ],
-            
+
             // External links examples
             [
                 'company_id' => $companyId,
@@ -225,14 +225,14 @@ class QuickActionsSeeder extends Seeder
                 'position' => 15,
             ],
         ];
-        
+
         foreach ($defaultActions as $action) {
             // Check if action already exists to avoid duplicates
             $exists = CustomQuickAction::where('company_id', $companyId)
                 ->where('title', $action['title'])
                 ->exists();
-                
-            if (!$exists) {
+
+            if (! $exists) {
                 CustomQuickAction::create($action);
             }
         }

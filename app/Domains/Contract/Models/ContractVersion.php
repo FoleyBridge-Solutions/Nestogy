@@ -2,7 +2,6 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * ContractVersion Model
- * 
+ *
  * Manages contract versioning for negotiation and change tracking
  */
 class ContractVersion extends Model
@@ -54,20 +53,29 @@ class ContractVersion extends Model
 
     // Version types
     const TYPE_INITIAL = 'initial';
+
     const TYPE_REVISION = 'revision';
+
     const TYPE_AMENDMENT = 'amendment';
+
     const TYPE_RENEWAL = 'renewal';
 
     // Version statuses
     const STATUS_DRAFT = 'draft';
+
     const STATUS_REVIEW = 'review';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_FINAL = 'final';
 
     // Approval statuses
     const APPROVAL_PENDING = 'pending';
+
     const APPROVAL_APPROVED = 'approved';
+
     const APPROVAL_REJECTED = 'rejected';
 
     /**
@@ -142,18 +150,21 @@ class ContractVersion extends Model
     public function getTotalValue(): float
     {
         $snapshot = $this->pricing_snapshot ?? [];
+
         return (float) ($snapshot['total_value'] ?? 0);
     }
 
     public function getComponentCount(): int
     {
         $components = $this->components ?? [];
+
         return count($components);
     }
 
     public function getChangeCount(): int
     {
         $changes = $this->changes ?? [];
+
         return count($changes['items'] ?? []);
     }
 
@@ -162,7 +173,7 @@ class ContractVersion extends Model
         return $this->getChangeCount() > 0;
     }
 
-    public function approve(\App\Models\User $user, string $notes = null): bool
+    public function approve(\App\Models\User $user, ?string $notes = null): bool
     {
         $approvals = $this->approvals ?? [];
         $approvals[] = [
@@ -170,14 +181,14 @@ class ContractVersion extends Model
             'user_name' => $user->name,
             'action' => 'approved',
             'notes' => $notes,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
 
         $this->update([
             'approval_status' => self::APPROVAL_APPROVED,
             'approvals' => $approvals,
             'approved_by' => $user->id,
-            'approved_at' => now()
+            'approved_at' => now(),
         ]);
 
         return true;
@@ -191,13 +202,13 @@ class ContractVersion extends Model
             'user_name' => $user->name,
             'action' => 'rejected',
             'reason' => $reason,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
 
         $this->update([
             'approval_status' => self::APPROVAL_REJECTED,
             'rejection_reason' => $reason,
-            'approvals' => $approvals
+            'approvals' => $approvals,
         ]);
 
         return true;
@@ -207,7 +218,7 @@ class ContractVersion extends Model
     {
         return $this->update([
             'is_final' => true,
-            'status' => self::STATUS_FINAL
+            'status' => self::STATUS_FINAL,
         ]);
     }
 
@@ -225,39 +236,39 @@ class ContractVersion extends Model
                         'configuration' => $assignment->configuration,
                         'pricing_override' => $assignment->pricing_override,
                         'variable_values' => $assignment->variable_values,
-                        'calculated_price' => $assignment->calculatePrice()
+                        'calculated_price' => $assignment->calculatePrice(),
                     ];
                 }),
             'pricing_snapshot' => [
                 'total_value' => $this->contract->calculateTotalValue(),
                 'component_count' => $this->contract->componentAssignments()->count(),
-                'snapshot_date' => now()->toISOString()
-            ]
+                'snapshot_date' => now()->toISOString(),
+            ],
         ];
     }
 
-    public static function getNextVersionNumber(int $contractId, string $branch = null): string
+    public static function getNextVersionNumber(int $contractId, ?string $branch = null): string
     {
         $query = self::where('contract_id', $contractId);
-        
+
         if ($branch) {
             $query->where('branch', $branch);
         }
-        
+
         $lastVersion = $query->orderBy('version_number', 'desc')->first();
-        
-        if (!$lastVersion) {
+
+        if (! $lastVersion) {
             return 'v1.0';
         }
-        
+
         // Extract version number and increment
         $versionParts = explode('.', str_replace('v', '', $lastVersion->version_number));
         $major = (int) ($versionParts[0] ?? 1);
         $minor = (int) ($versionParts[1] ?? 0);
-        
+
         // Increment minor version
         $minor++;
-        
+
         return "v{$major}.{$minor}";
     }
 
@@ -265,9 +276,9 @@ class ContractVersion extends Model
     {
         $thisData = $this->contract_data ?? [];
         $otherData = $other->contract_data ?? [];
-        
+
         $changes = [];
-        
+
         // Compare basic contract fields
         foreach (['title', 'value', 'start_date', 'end_date'] as $field) {
             if (($thisData[$field] ?? null) !== ($otherData[$field] ?? null)) {
@@ -275,35 +286,35 @@ class ContractVersion extends Model
                     'field' => $field,
                     'old_value' => $otherData[$field] ?? null,
                     'new_value' => $thisData[$field] ?? null,
-                    'type' => 'field_change'
+                    'type' => 'field_change',
                 ];
             }
         }
-        
+
         // Compare components
         $thisComponents = collect($this->components ?? []);
         $otherComponents = collect($other->components ?? []);
-        
+
         // Find added components
         $added = $thisComponents->whereNotIn('component_id', $otherComponents->pluck('component_id'));
         foreach ($added as $component) {
             $changes[] = [
                 'type' => 'component_added',
                 'component_name' => $component['component_name'],
-                'component_id' => $component['component_id']
+                'component_id' => $component['component_id'],
             ];
         }
-        
+
         // Find removed components
         $removed = $otherComponents->whereNotIn('component_id', $thisComponents->pluck('component_id'));
         foreach ($removed as $component) {
             $changes[] = [
                 'type' => 'component_removed',
                 'component_name' => $component['component_name'],
-                'component_id' => $component['component_id']
+                'component_id' => $component['component_id'],
             ];
         }
-        
+
         return $changes;
     }
 }

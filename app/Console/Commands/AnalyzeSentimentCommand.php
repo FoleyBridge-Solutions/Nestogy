@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\AnalyzeTicketSentiment;
 use App\Domains\Ticket\Models\Ticket;
+use App\Jobs\AnalyzeTicketSentiment;
 use App\Models\TicketReply;
 use Illuminate\Console\Command;
 
@@ -106,7 +106,7 @@ class AnalyzeSentimentCommand extends Command
     {
         $query = Ticket::where('company_id', $companyId);
 
-        if (!$force) {
+        if (! $force) {
             $query->whereNull('sentiment_analyzed_at');
         }
 
@@ -114,6 +114,7 @@ class AnalyzeSentimentCommand extends Command
 
         if ($totalTickets === 0) {
             $this->line("No tickets to analyze for company {$companyId}");
+
             return;
         }
 
@@ -141,7 +142,7 @@ class AnalyzeSentimentCommand extends Command
     {
         $query = TicketReply::where('company_id', $companyId);
 
-        if (!$force) {
+        if (! $force) {
             $query->whereNull('sentiment_analyzed_at');
         }
 
@@ -149,6 +150,7 @@ class AnalyzeSentimentCommand extends Command
 
         if ($totalReplies === 0) {
             $this->line("No replies to analyze for company {$companyId}");
+
             return;
         }
 

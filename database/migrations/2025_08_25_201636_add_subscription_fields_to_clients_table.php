@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamp('subscription_started_at')->nullable()->after('next_billing_date');
             $table->timestamp('subscription_canceled_at')->nullable()->after('subscription_started_at');
             $table->integer('current_user_count')->default(0)->after('subscription_canceled_at');
-            
+
             // Add foreign keys
             $table->foreign('company_link_id')->references('id')->on('companies')->onDelete('set null');
             if (Schema::hasTable('subscription_plans')) {
@@ -43,7 +43,7 @@ return new class extends Migration
             if (Schema::hasTable('subscription_plans')) {
                 $table->dropForeign(['subscription_plan_id']);
             }
-            
+
             // Drop columns
             $table->dropColumn([
                 'company_link_id',
@@ -55,7 +55,7 @@ return new class extends Migration
                 'next_billing_date',
                 'subscription_started_at',
                 'subscription_canceled_at',
-                'current_user_count'
+                'current_user_count',
             ]);
         });
     }

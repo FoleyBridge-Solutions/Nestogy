@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Domains\Financial\Services\TaxEngine\IntelligentJurisdictionDiscoveryService;
 use App\Domains\Financial\Services\TaxEngine\NationwideTaxDiscoveryService;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class ShowTaxSystemStatus extends Command
@@ -12,6 +12,7 @@ class ShowTaxSystemStatus extends Command
     private const DEFAULT_PAGE_SIZE = 50;
 
     protected $signature = 'tax:status';
+
     protected $description = 'Show the current status of the tax calculation system';
 
     public function handle()
@@ -35,11 +36,11 @@ class ShowTaxSystemStatus extends Command
         $this->info('🤖 INTELLIGENT DISCOVERY:');
         $this->info('─────────────────────────');
 
-        $discoveryService = new IntelligentJurisdictionDiscoveryService();
+        $discoveryService = new IntelligentJurisdictionDiscoveryService;
         $stats = $discoveryService->getDiscoveryStatistics();
 
         $this->info("• Discovered Patterns: {$stats['total_patterns']}");
-        $this->info("• Pattern Types: " . implode(', ', array_keys($stats['pattern_types'] ?? [])));
+        $this->info('• Pattern Types: '.implode(', ', array_keys($stats['pattern_types'] ?? [])));
 
         // Check learned patterns
         $learnedCount = DB::table('jurisdiction_patterns_learned')->count();
@@ -68,7 +69,7 @@ class ShowTaxSystemStatus extends Command
         $this->info('🌎 NATIONWIDE COVERAGE:');
         $this->info('───────────────────────');
 
-        $nationwideService = new NationwideTaxDiscoveryService();
+        $nationwideService = new NationwideTaxDiscoveryService;
 
         // Count states with data
         $statesWithData = DB::table('service_tax_rates')
@@ -76,9 +77,9 @@ class ShowTaxSystemStatus extends Command
             ->selectRaw("COUNT(DISTINCT JSON_EXTRACT(metadata, '$.applicable_states[0]')) as state_count")
             ->first();
 
-        $this->info("• States with Tax Data: " . ($statesWithData->state_count ?? 0) . "/50");
-        $this->info("• Fallback System: ACTIVE (all 50 states supported)");
-        $this->info("• Dynamic Updates: ENABLED");
+        $this->info('• States with Tax Data: '.($statesWithData->state_count ?? 0).'/50');
+        $this->info('• Fallback System: ACTIVE (all 50 states supported)');
+        $this->info('• Dynamic Updates: ENABLED');
         $this->info('');
 
         // Show key improvements
@@ -144,16 +145,16 @@ class ShowTaxSystemStatus extends Command
             'service_tax_rates',
             'jurisdiction_patterns_learned',
             'state_tax_rates',
-            'zip_codes'
+            'zip_codes',
         ];
 
         $missing = [];
         foreach ($requiredTables as $table) {
-            if (!DB::getSchemaBuilder()->hasTable($table)) {
+            if (! DB::getSchemaBuilder()->hasTable($table)) {
                 $missing[] = $table;
             }
         }
 
-        return empty($missing) ? 'OK' : 'Missing: ' . implode(', ', $missing);
+        return empty($missing) ? 'OK' : 'Missing: '.implode(', ', $missing);
     }
 }

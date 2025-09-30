@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Events\AssetCreated;
 use App\Domains\Contract\Services\ContractAutomationService;
+use App\Events\AssetCreated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +32,7 @@ class ProcessAssetAutomation implements ShouldQueue
         } catch (\Exception $e) {
             Log::error('Failed to process asset automation', [
                 'asset_id' => $event->asset->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }

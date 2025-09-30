@@ -2,10 +2,10 @@
 
 namespace App\Domains\Client\Controllers;
 
+use App\Domains\Core\Services\NavigationService;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\CommunicationLog;
-use App\Domains\Core\Services\NavigationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
@@ -25,15 +25,15 @@ class CommunicationLogController extends Controller
     public function index(Request $request)
     {
         $client = $this->navigationService->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.select-screen')
                 ->with('error', 'Please select a client to view communications.');
         }
 
         // Check if user wants to include automatic sources
         $includeAutomatic = $request->get('include_automatic', true);
-        
+
         if ($includeAutomatic) {
             // Get unified communication timeline from multiple sources
             $communications = $this->getUnifiedCommunications($client, $request);
@@ -42,7 +42,7 @@ class CommunicationLogController extends Controller
             $query = CommunicationLog::where('client_id', $client->id)
                 ->with(['user', 'contact'])
                 ->orderBy('created_at', 'desc');
-            
+
             $communications = $this->applyFilters($query, $request)->paginate(20)->withQueryString();
         }
 
@@ -70,8 +70,8 @@ class CommunicationLogController extends Controller
     public function create()
     {
         $client = $this->navigationService->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.select-screen')
                 ->with('error', 'Please select a client to add a communication.');
         }
@@ -100,15 +100,15 @@ class CommunicationLogController extends Controller
     public function store(Request $request)
     {
         $client = $this->navigationService->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.select-screen')
                 ->with('error', 'Please select a client to add a communication.');
         }
 
         $validated = $request->validate([
-            'type' => 'required|string|in:' . implode(',', array_keys(CommunicationLog::TYPES)),
-            'channel' => 'required|string|in:' . implode(',', array_keys(CommunicationLog::CHANNELS)),
+            'type' => 'required|string|in:'.implode(',', array_keys(CommunicationLog::TYPES)),
+            'channel' => 'required|string|in:'.implode(',', array_keys(CommunicationLog::CHANNELS)),
             'contact_id' => 'nullable|exists:contacts,id',
             'contact_name' => 'nullable|string|max:255',
             'contact_email' => 'nullable|email|max:255',
@@ -144,8 +144,8 @@ class CommunicationLogController extends Controller
     public function show(CommunicationLog $communication)
     {
         $client = $this->navigationService->getSelectedClient();
-        
-        if (!$client || $communication->client_id !== $client->id) {
+
+        if (! $client || $communication->client_id !== $client->id) {
             return redirect()->route('clients.select-screen')
                 ->with('error', 'Communication not found or access denied.');
         }
@@ -170,8 +170,8 @@ class CommunicationLogController extends Controller
     public function edit(CommunicationLog $communication)
     {
         $client = $this->navigationService->getSelectedClient();
-        
-        if (!$client || $communication->client_id !== $client->id) {
+
+        if (! $client || $communication->client_id !== $client->id) {
             return redirect()->route('clients.select-screen')
                 ->with('error', 'Communication not found or access denied.');
         }
@@ -201,15 +201,15 @@ class CommunicationLogController extends Controller
     public function update(Request $request, CommunicationLog $communication)
     {
         $client = $this->navigationService->getSelectedClient();
-        
-        if (!$client || $communication->client_id !== $client->id) {
+
+        if (! $client || $communication->client_id !== $client->id) {
             return redirect()->route('clients.select-screen')
                 ->with('error', 'Communication not found or access denied.');
         }
 
         $validated = $request->validate([
-            'type' => 'required|string|in:' . implode(',', array_keys(CommunicationLog::TYPES)),
-            'channel' => 'required|string|in:' . implode(',', array_keys(CommunicationLog::CHANNELS)),
+            'type' => 'required|string|in:'.implode(',', array_keys(CommunicationLog::TYPES)),
+            'channel' => 'required|string|in:'.implode(',', array_keys(CommunicationLog::CHANNELS)),
             'contact_id' => 'nullable|exists:contacts,id',
             'contact_name' => 'nullable|string|max:255',
             'contact_email' => 'nullable|email|max:255',
@@ -232,8 +232,8 @@ class CommunicationLogController extends Controller
     public function destroy(CommunicationLog $communication)
     {
         $client = $this->navigationService->getSelectedClient();
-        
-        if (!$client || $communication->client_id !== $client->id) {
+
+        if (! $client || $communication->client_id !== $client->id) {
             return redirect()->route('clients.select-screen')
                 ->with('error', 'Communication not found or access denied.');
         }
@@ -250,8 +250,8 @@ class CommunicationLogController extends Controller
     public function export(Request $request)
     {
         $client = $this->navigationService->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.select-screen')
                 ->with('error', 'Please select a client to export communications.');
         }
@@ -265,8 +265,8 @@ class CommunicationLogController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%")
-                  ->orWhere('contact_name', 'like', "%{$search}%");
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhere('contact_name', 'like', "%{$search}%");
             });
         }
 
@@ -298,7 +298,7 @@ class CommunicationLogController extends Controller
             'Notes',
             'User',
             'Follow Up Required',
-            'Follow Up Date'
+            'Follow Up Date',
         ];
 
         foreach ($communications as $communication) {
@@ -311,13 +311,13 @@ class CommunicationLogController extends Controller
                 strip_tags($communication->notes),
                 $communication->user ? $communication->user->name : 'N/A',
                 $communication->follow_up_required ? 'Yes' : 'No',
-                $communication->follow_up_date ? $communication->follow_up_date->format('Y-m-d') : ''
+                $communication->follow_up_date ? $communication->follow_up_date->format('Y-m-d') : '',
             ];
         }
 
-        $filename = "communications_{$client->name}_" . date('Y-m-d') . '.csv';
+        $filename = "communications_{$client->name}_".date('Y-m-d').'.csv';
 
-        $callback = function() use ($csvData) {
+        $callback = function () use ($csvData) {
             $file = fopen('php://output', 'w');
             foreach ($csvData as $row) {
                 fputcsv($file, $row);
@@ -337,7 +337,7 @@ class CommunicationLogController extends Controller
     protected function getUnifiedCommunications($client, $request)
     {
         $communications = collect();
-        
+
         // 1. Manual Communication Logs
         $manualLogs = CommunicationLog::where('client_id', $client->id)
             ->with(['user', 'contact'])
@@ -359,7 +359,7 @@ class CommunicationLogController extends Controller
                     'follow_up_date' => $log->follow_up_date,
                     'created_at' => $log->created_at,
                     'route' => route('clients.communications.show', $log),
-                    'raw_data' => $log
+                    'raw_data' => $log,
                 ];
             });
 
@@ -372,30 +372,30 @@ class CommunicationLogController extends Controller
                     ->with(['creator', 'assignee', 'contact'])
                     ->get()
                     ->map(function ($ticket) {
-                    return (object) [
-                        'id' => 'ticket_' . $ticket->id,
-                        'type' => 'automatic',
-                        'source' => 'Support Ticket',
-                        'communication_type' => 'support',
-                        'channel' => 'ticket_system',
-                        'subject' => $ticket->title ?? $ticket->subject ?? 'Ticket #' . ($ticket->id ?? 'Unknown'),
-                        'notes' => $ticket->description ?? $ticket->notes ?? 'Support ticket created',
-                        'contact_name' => $ticket->contact ? $ticket->contact->name : 'N/A',
-                        'contact_email' => $ticket->contact ? $ticket->contact->email : null,
-                        'contact_phone' => $ticket->contact ? $ticket->contact->phone : null,
-                        'user_name' => $ticket->creator ? $ticket->creator->name : ($ticket->assignee ? $ticket->assignee->name : 'System'),
-                        'follow_up_required' => in_array($ticket->status ?? '', ['open', 'in-progress']),
-                        'follow_up_date' => null,
-                        'created_at' => $ticket->created_at,
-                        'route' => route('tickets.show', $ticket),
-                        'raw_data' => $ticket
-                    ];
-                });
+                        return (object) [
+                            'id' => 'ticket_'.$ticket->id,
+                            'type' => 'automatic',
+                            'source' => 'Support Ticket',
+                            'communication_type' => 'support',
+                            'channel' => 'ticket_system',
+                            'subject' => $ticket->title ?? $ticket->subject ?? 'Ticket #'.($ticket->id ?? 'Unknown'),
+                            'notes' => $ticket->description ?? $ticket->notes ?? 'Support ticket created',
+                            'contact_name' => $ticket->contact ? $ticket->contact->name : 'N/A',
+                            'contact_email' => $ticket->contact ? $ticket->contact->email : null,
+                            'contact_phone' => $ticket->contact ? $ticket->contact->phone : null,
+                            'user_name' => $ticket->creator ? $ticket->creator->name : ($ticket->assignee ? $ticket->assignee->name : 'System'),
+                            'follow_up_required' => in_array($ticket->status ?? '', ['open', 'in-progress']),
+                            'follow_up_date' => null,
+                            'created_at' => $ticket->created_at,
+                            'route' => route('tickets.show', $ticket),
+                            'raw_data' => $ticket,
+                        ];
+                    });
 
                 $communications = $communications->concat($ticketComms);
             } catch (\Exception $e) {
                 // Skip tickets if there's an issue
-                \Log::warning('Could not load tickets for communication log: ' . $e->getMessage());
+                \Log::warning('Could not load tickets for communication log: '.$e->getMessage());
             }
         }
 
@@ -408,13 +408,13 @@ class CommunicationLogController extends Controller
                     ->get()
                     ->map(function ($invoice) {
                         return (object) [
-                            'id' => 'invoice_' . $invoice->id,
+                            'id' => 'invoice_'.$invoice->id,
                             'type' => 'automatic',
                             'source' => 'Invoice',
                             'communication_type' => 'billing',
                             'channel' => 'email',
-                            'subject' => 'Invoice #' . ($invoice->number ?? $invoice->id) . ' sent',
-                            'notes' => 'Invoice for $' . number_format($invoice->amount ?? 0, 2) . ' sent to client',
+                            'subject' => 'Invoice #'.($invoice->number ?? $invoice->id).' sent',
+                            'notes' => 'Invoice for $'.number_format($invoice->amount ?? 0, 2).' sent to client',
                             'contact_name' => $invoice->client->name ?? 'Billing Contact',
                             'contact_email' => $invoice->client->email ?? null,
                             'contact_phone' => null,
@@ -423,14 +423,14 @@ class CommunicationLogController extends Controller
                             'follow_up_date' => $invoice->due_date ?? null,
                             'created_at' => $invoice->created_at,
                             'route' => route('financial.invoices.show', $invoice),
-                            'raw_data' => $invoice
+                            'raw_data' => $invoice,
                         ];
                     });
 
                 $communications = $communications->concat($invoiceComms);
             } catch (\Exception $e) {
                 // Skip invoices if there's an issue
-                \Log::warning('Could not load invoices for communication log: ' . $e->getMessage());
+                \Log::warning('Could not load invoices for communication log: '.$e->getMessage());
             }
         }
 
@@ -442,7 +442,7 @@ class CommunicationLogController extends Controller
 
         // Sort by date and paginate
         $communications = $communications->sortByDesc('created_at');
-        
+
         // Manual pagination for collection
         $page = $request->get('page', 1);
         $perPage = 20;
@@ -468,8 +468,8 @@ class CommunicationLogController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%")
-                  ->orWhere('contact_name', 'like', "%{$search}%");
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhere('contact_name', 'like', "%{$search}%");
             });
         }
 

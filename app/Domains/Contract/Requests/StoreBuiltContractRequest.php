@@ -43,7 +43,7 @@ class StoreBuiltContractRequest extends FormRequest
                 'integer',
                 Rule::exists('contract_components', 'id')->where(function ($query) {
                     return $query->where('company_id', auth()->user()->company_id)
-                                 ->where('status', 'active');
+                        ->where('status', 'active');
                 }),
             ],
             'components.*.variable_values' => 'nullable|array',
@@ -91,14 +91,14 @@ class StoreBuiltContractRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Ensure is_programmable is set
-        if (!$this->has('is_programmable')) {
+        if (! $this->has('is_programmable')) {
             $this->merge(['is_programmable' => true]);
         }
 
         // Validate component data structure
         if ($this->has('components')) {
             $components = $this->input('components');
-            
+
             // Normalize component data
             $normalized = collect($components)->map(function ($componentData) {
                 return [
@@ -108,7 +108,7 @@ class StoreBuiltContractRequest extends FormRequest
                     'pricing_override' => $componentData['pricing_override'] ?? null,
                 ];
             })->toArray();
-            
+
             $this->merge(['components' => $normalized]);
         }
     }
@@ -171,13 +171,13 @@ class StoreBuiltContractRequest extends FormRequest
 
         foreach ($this->input('components') as $index => $componentData) {
             $componentId = $componentData['component']['id'] ?? null;
-            
-            if (!$componentId) {
+
+            if (! $componentId) {
                 continue;
             }
 
             $component = \App\Domains\Contract\Models\ContractComponent::find($componentId);
-            if (!$component) {
+            if (! $component) {
                 continue;
             }
 
@@ -208,8 +208,8 @@ class StoreBuiltContractRequest extends FormRequest
         if ($difference > 0.01) {
             $validator->errors()->add(
                 'total_value',
-                "Submitted total value ($" . number_format($submittedTotal, 2) . 
-                ") does not match calculated total ($" . number_format($calculatedTotal, 2) . ")."
+                'Submitted total value ($'.number_format($submittedTotal, 2).
+                ') does not match calculated total ($'.number_format($calculatedTotal, 2).').'
             );
         }
     }
@@ -221,13 +221,13 @@ class StoreBuiltContractRequest extends FormRequest
     {
         foreach ($this->input('components') as $index => $componentData) {
             $componentId = $componentData['component']['id'] ?? null;
-            
-            if (!$componentId) {
+
+            if (! $componentId) {
                 continue;
             }
 
             $component = \App\Domains\Contract\Models\ContractComponent::find($componentId);
-            if (!$component) {
+            if (! $component) {
                 continue;
             }
 
@@ -238,7 +238,7 @@ class StoreBuiltContractRequest extends FormRequest
             foreach ($componentVariables as $variableConfig) {
                 if (($variableConfig['required'] ?? false)) {
                     $variableName = $variableConfig['name'];
-                    
+
                     if (empty($variables[$variableName])) {
                         $validator->errors()->add(
                             "components.{$index}.variable_values.{$variableName}",
@@ -251,18 +251,18 @@ class StoreBuiltContractRequest extends FormRequest
             // Validate pricing override values
             if ($componentData['has_pricing_override']) {
                 $override = $componentData['pricing_override'] ?? [];
-                
+
                 if (empty($override['type'])) {
                     $validator->errors()->add(
                         "components.{$index}.pricing_override.type",
-                        "Pricing override type is required when custom pricing is enabled."
+                        'Pricing override type is required when custom pricing is enabled.'
                     );
                 }
 
-                if (!isset($override['amount']) || $override['amount'] < 0) {
+                if (! isset($override['amount']) || $override['amount'] < 0) {
                     $validator->errors()->add(
                         "components.{$index}.pricing_override.amount",
-                        "Pricing override amount must be a positive number."
+                        'Pricing override amount must be a positive number.'
                     );
                 }
             }
@@ -307,8 +307,8 @@ class StoreBuiltContractRequest extends FormRequest
                 'component_id' => $componentData['component']['id'],
                 'configuration' => [], // Could be extended later
                 'variable_values' => $componentData['variable_values'] ?? [],
-                'pricing_override' => $componentData['has_pricing_override'] 
-                    ? $componentData['pricing_override'] 
+                'pricing_override' => $componentData['has_pricing_override']
+                    ? $componentData['pricing_override']
                     : null,
                 'status' => 'active',
                 'sort_order' => $index + 1,

@@ -2,12 +2,12 @@
 
 namespace App\Domains\Product\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Product;
-use App\Models\Category;
 use App\Domains\Product\Requests\StoreServiceRequest;
 use App\Domains\Product\Requests\UpdateServiceRequest;
 use App\Domains\Product\Services\ProductService;
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -29,8 +29,8 @@ class ServiceController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
             });
         }
 
@@ -51,7 +51,7 @@ class ServiceController extends Controller
         }
 
         $services = $query->orderBy('name')->paginate(20)->appends($request->query());
-        
+
         $categories = Category::where('company_id', auth()->user()->company_id)
             ->orderBy('name')
             ->get();
@@ -62,9 +62,9 @@ class ServiceController extends Controller
     public function show(Product $service)
     {
         $this->authorize('view', $service);
-        
+
         // Ensure this is actually a service
-        if (!$service->isService()) {
+        if (! $service->isService()) {
             abort(404);
         }
 
@@ -109,9 +109,9 @@ class ServiceController extends Controller
     public function edit(Product $service)
     {
         $this->authorize('update', $service);
-        
+
         // Ensure this is actually a service
-        if (!$service->isService()) {
+        if (! $service->isService()) {
             abort(404);
         }
 
@@ -127,15 +127,15 @@ class ServiceController extends Controller
     public function update(UpdateServiceRequest $request, Product $service)
     {
         $this->authorize('update', $service);
-        
+
         // Ensure this is actually a service
-        if (!$service->isService()) {
+        if (! $service->isService()) {
             abort(404);
         }
 
         $data = $request->validated();
         $data['type'] = 'service'; // Ensure type remains service
-        
+
         // Handle tax profile assignment
         if ($request->filled('tax_profile_id')) {
             $data['tax_profile_id'] = $request->input('tax_profile_id');
@@ -151,9 +151,9 @@ class ServiceController extends Controller
     public function destroy(Product $service)
     {
         $this->authorize('delete', $service);
-        
+
         // Ensure this is actually a service
-        if (!$service->isService()) {
+        if (! $service->isService()) {
             abort(404);
         }
 
@@ -167,9 +167,9 @@ class ServiceController extends Controller
     public function duplicate(Product $service)
     {
         $this->authorize('create', Product::class);
-        
+
         // Ensure this is actually a service
-        if (!$service->isService()) {
+        if (! $service->isService()) {
             abort(404);
         }
 
@@ -201,6 +201,7 @@ class ServiceController extends Controller
         $this->productService->bulkUpdate($services->toArray(), $request->action, $request->only(['category_id']));
 
         $count = $services->count();
+
         return back()->with('success', "Successfully updated {$count} services.");
     }
 
@@ -224,7 +225,6 @@ class ServiceController extends Controller
 
         return $this->productService->exportToCsv($services, 'services');
     }
-    
 
     public function calculatePrice(Request $request, Product $service)
     {
@@ -234,7 +234,7 @@ class ServiceController extends Controller
             'usage_amount' => 'numeric|min:0',
         ]);
 
-        if (!$service->isService()) {
+        if (! $service->isService()) {
             abort(404);
         }
 

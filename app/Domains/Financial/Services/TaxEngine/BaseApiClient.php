@@ -3,14 +3,13 @@
 namespace App\Domains\Financial\Services\TaxEngine;
 
 use App\Models\TaxApiQueryCache;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-use Exception;
 
 /**
  * Base API Client for Tax Services
- * 
+ *
  * Provides common functionality for all tax API integrations including:
  * - Response caching to prevent duplicate calls
  * - Rate limiting and retry logic
@@ -20,8 +19,11 @@ use Exception;
 abstract class BaseApiClient
 {
     protected int $companyId;
+
     protected string $provider;
+
     protected array $config;
+
     protected array $rateLimits;
 
     public function __construct(int $companyId, string $provider, array $config = [])
@@ -60,10 +62,10 @@ abstract class BaseApiClient
         string $queryType,
         array $parameters,
         callable $apiCall,
-        int $cacheDays = null
+        ?int $cacheDays = null
     ): array {
         $cacheDays = $cacheDays ?? $this->config['cache_days'];
-        
+
         // Check cache first
         if ($this->config['enable_caching']) {
             $cached = TaxApiQueryCache::findCachedResponse(
@@ -75,15 +77,16 @@ abstract class BaseApiClient
 
             if ($cached) {
                 $this->logCacheHit($queryType, $parameters);
+
                 return $cached->api_response;
             }
         }
 
         // Check rate limits
-        if ($this->config['enable_rate_limiting'] && !$this->checkRateLimit($queryType)) {
+        if ($this->config['enable_rate_limiting'] && ! $this->checkRateLimit($queryType)) {
             $errorMessage = "Rate limit exceeded for {$this->provider} {$queryType}";
             $this->logRateLimit($queryType, $parameters, $errorMessage);
-            
+
             TaxApiQueryCache::cacheError(
                 $this->companyId,
                 $this->provider,
@@ -93,7 +96,7 @@ abstract class BaseApiClient
                 TaxApiQueryCache::STATUS_RATE_LIMITED,
                 1 // Cache rate limit errors for 1 day
             );
-            
+
             throw new Exception($errorMessage);
         }
 
@@ -104,13 +107,13 @@ abstract class BaseApiClient
 
         while ($attempts < $this->config['retry_attempts']) {
             $attempts++;
-            
+
             try {
                 $response = $apiCall();
                 $responseTime = (microtime(true) - $startTime) * 1000; // Convert to milliseconds
-                
+
                 $this->logSuccessfulRequest($queryType, $parameters, $responseTime, $attempts);
-                
+
                 // Cache successful response
                 if ($this->config['enable_caching']) {
                     TaxApiQueryCache::cacheResponse(
@@ -123,13 +126,13 @@ abstract class BaseApiClient
                         $cacheDays
                     );
                 }
-                
+
                 return $response;
-                
+
             } catch (Exception $e) {
                 $lastException = $e;
                 $this->logFailedRequest($queryType, $parameters, $e, $attempts);
-                
+
                 // If this isn't the last attempt, wait before retrying
                 if ($attempts < $this->config['retry_attempts']) {
                     usleep($this->config['retry_delay'] * 1000); // Convert to microseconds
@@ -139,7 +142,7 @@ abstract class BaseApiClient
 
         // All attempts failed - cache the error
         $errorMessage = $lastException ? $lastException->getMessage() : 'Unknown API error';
-        
+
         if ($this->config['enable_caching']) {
             TaxApiQueryCache::cacheError(
                 $this->companyId,
@@ -158,7 +161,7 @@ abstract class BaseApiClient
      */
     protected function checkRateLimit(string $queryType): bool
     {
-        if (!isset($this->rateLimits[$queryType])) {
+        if (! isset($this->rateLimits[$queryType])) {
             return true; // No rate limit defined
         }
 
@@ -182,7 +185,7 @@ abstract class BaseApiClient
     protected function createHttpClient(): \Illuminate\Http\Client\PendingRequest
     {
         return Http::timeout($this->config['timeout'])
-                   ->retry($this->config['retry_attempts'], $this->config['retry_delay']);
+            ->retry($this->config['retry_attempts'], $this->config['retry_delay']);
     }
 
     /**
@@ -191,7 +194,7 @@ abstract class BaseApiClient
     protected function logCacheHit(string $queryType, array $parameters): void
     {
         if ($this->config['log_requests']) {
-            Log::info("Tax API cache hit", [
+            Log::info('Tax API cache hit', [
                 'provider' => $this->provider,
                 'query_type' => $queryType,
                 'company_id' => $this->companyId,
@@ -206,7 +209,7 @@ abstract class BaseApiClient
     protected function logSuccessfulRequest(string $queryType, array $parameters, float $responseTime, int $attempts): void
     {
         if ($this->config['log_requests']) {
-            Log::info("Tax API request successful", [
+            Log::info('Tax API request successful', [
                 'provider' => $this->provider,
                 'query_type' => $queryType,
                 'company_id' => $this->companyId,
@@ -222,7 +225,7 @@ abstract class BaseApiClient
      */
     protected function logFailedRequest(string $queryType, array $parameters, Exception $exception, int $attempt): void
     {
-        Log::warning("Tax API request failed", [
+        Log::warning('Tax API request failed', [
             'provider' => $this->provider,
             'query_type' => $queryType,
             'company_id' => $this->companyId,
@@ -237,7 +240,7 @@ abstract class BaseApiClient
      */
     protected function logRateLimit(string $queryType, array $parameters, string $message): void
     {
-        Log::warning("Tax API rate limit exceeded", [
+        Log::warning('Tax API rate limit exceeded', [
             'provider' => $this->provider,
             'query_type' => $queryType,
             'company_id' => $this->companyId,
@@ -292,7 +295,7 @@ abstract class BaseApiClient
                 'total_requests' => array_sum(array_column($metrics, 'total_requests')),
                 'success_rate' => count($metrics) > 0 ? round(array_sum(array_column($metrics, 'success_rate')) / count($metrics), 2) : 0,
                 'avg_response_time' => count($metrics) > 0 ? round(array_sum(array_column($metrics, 'avg_response_time')) / count($metrics), 2) : 0,
-            ]
+            ],
         ];
     }
 

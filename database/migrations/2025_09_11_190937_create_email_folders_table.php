@@ -24,7 +24,7 @@ return new class extends Migration
             $table->json('attributes')->nullable(); // IMAP folder attributes
             $table->timestamp('last_synced_at')->nullable();
             $table->timestamps();
-            
+
             $table->index(['email_account_id', 'type']);
             $table->unique(['email_account_id', 'path']);
         });

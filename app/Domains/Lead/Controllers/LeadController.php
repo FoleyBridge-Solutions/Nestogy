@@ -2,15 +2,13 @@
 
 namespace App\Domains\Lead\Controllers;
 
-use App\Http\Controllers\Controller;
-
+use App\Domains\Core\Controllers\BaseResourceController;
+use App\Domains\Core\Controllers\Traits\HasClientRelation;
 use App\Domains\Lead\Models\Lead;
 use App\Domains\Lead\Models\LeadSource;
 use App\Domains\Lead\Services\LeadScoringService;
-use App\Domains\Core\Controllers\BaseResourceController;
-use App\Domains\Core\Controllers\Traits\HasClientRelation;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class LeadController extends BaseResourceController
@@ -73,7 +71,7 @@ class LeadController extends BaseResourceController
         // Apply sorting
         $sortField = $request->get('sort', 'total_score');
         $sortDirection = $request->get('direction', 'desc');
-        
+
         if (in_array($sortField, ['total_score', 'created_at', 'last_contact_date', 'qualified_at'])) {
             $query->orderBy($sortField, $sortDirection);
         }
@@ -96,7 +94,7 @@ class LeadController extends BaseResourceController
                     'priorities' => Lead::getPriorities(),
                     'leadSources' => $leadSources,
                     'users' => $users,
-                ]
+                ],
             ]);
         }
 
@@ -161,7 +159,7 @@ class LeadController extends BaseResourceController
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Lead created successfully',
-                'lead' => $lead->load(['leadSource', 'assignedUser'])
+                'lead' => $lead->load(['leadSource', 'assignedUser']),
             ], 201);
         }
 
@@ -179,11 +177,11 @@ class LeadController extends BaseResourceController
 
         $lead->load([
             'leadSource',
-            'assignedUser', 
+            'assignedUser',
             'client',
-            'activities' => function($query) {
+            'activities' => function ($query) {
                 $query->with('user')->orderBy('activity_date', 'desc')->limit(20);
-            }
+            },
         ]);
 
         if (request()->expectsJson()) {
@@ -222,7 +220,7 @@ class LeadController extends BaseResourceController
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:leads,email,' . $lead->id,
+            'email' => 'required|email|unique:leads,email,'.$lead->id,
             'phone' => 'nullable|string|max:20',
             'company_name' => 'nullable|string|max:255',
             'title' => 'nullable|string|max:255',
@@ -253,7 +251,7 @@ class LeadController extends BaseResourceController
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Lead updated successfully',
-                'lead' => $lead->load(['leadSource', 'assignedUser'])
+                'lead' => $lead->load(['leadSource', 'assignedUser']),
             ]);
         }
 
@@ -290,6 +288,7 @@ class LeadController extends BaseResourceController
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Lead is already converted'], 400);
             }
+
             return back()->with('error', 'Lead is already converted');
         }
 
@@ -306,7 +305,7 @@ class LeadController extends BaseResourceController
             return response()->json([
                 'message' => 'Lead converted to client successfully',
                 'client' => $client,
-                'lead' => $lead->refresh()
+                'lead' => $lead->refresh(),
             ]);
         }
 
@@ -326,7 +325,7 @@ class LeadController extends BaseResourceController
         return response()->json([
             'message' => 'Lead score updated successfully',
             'scores' => $scores,
-            'lead' => $lead->refresh()
+            'lead' => $lead->refresh(),
         ]);
     }
 
@@ -395,7 +394,7 @@ class LeadController extends BaseResourceController
 
         return response()->json([
             'message' => 'Leads assigned successfully',
-            'updated_count' => $leads->count()
+            'updated_count' => $leads->count(),
         ]);
     }
 
@@ -418,7 +417,7 @@ class LeadController extends BaseResourceController
         foreach ($leads as $lead) {
             $this->authorize('update', $lead);
             $lead->update(['status' => $validated['status']]);
-            
+
             if ($validated['status'] === Lead::STATUS_QUALIFIED) {
                 $lead->update(['qualified_at' => now()]);
             }
@@ -426,7 +425,7 @@ class LeadController extends BaseResourceController
 
         return response()->json([
             'message' => 'Lead status updated successfully',
-            'updated_count' => $leads->count()
+            'updated_count' => $leads->count(),
         ]);
     }
 
@@ -458,14 +457,14 @@ class LeadController extends BaseResourceController
             'csv_file' => 'required|file|mimes:csv,txt|max:10240',
             'lead_source_id' => 'nullable|exists:lead_sources,id',
             'assigned_user_id' => 'nullable|exists:users,id',
-            'default_status' => 'required|in:' . implode(',', array_keys(Lead::getStatuses())),
+            'default_status' => 'required|in:'.implode(',', array_keys(Lead::getStatuses())),
             'default_interest_level' => 'required|in:low,medium,high,urgent',
             'skip_duplicates' => 'boolean',
             'import_notes' => 'nullable|string|max:1000',
         ]);
 
         $importService = app(\App\Domains\Lead\Services\LeadImportService::class);
-        
+
         $options = [
             'lead_source_id' => $request->lead_source_id,
             'assigned_user_id' => $request->assigned_user_id,
@@ -480,7 +479,7 @@ class LeadController extends BaseResourceController
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Import completed',
-                'results' => $results
+                'results' => $results,
             ]);
         }
 
@@ -507,8 +506,8 @@ class LeadController extends BaseResourceController
     public function downloadTemplate(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $csvContent = \App\Domains\Lead\Services\LeadImportService::generateCsvTemplate();
-        
-        $fileName = 'leads_import_template_' . date('Y-m-d') . '.csv';
+
+        $fileName = 'leads_import_template_'.date('Y-m-d').'.csv';
         $tempFile = tempnam(sys_get_temp_dir(), 'leads_template');
         file_put_contents($tempFile, $csvContent);
 
@@ -547,8 +546,8 @@ class LeadController extends BaseResourceController
         $leads = $query->get();
 
         $csvContent = $this->generateCsvContent($leads);
-        
-        $fileName = 'leads_export_' . date('Y-m-d_H-i-s') . '.csv';
+
+        $fileName = 'leads_export_'.date('Y-m-d_H-i-s').'.csv';
         $tempFile = tempnam(sys_get_temp_dir(), 'leads_export');
         file_put_contents($tempFile, $csvContent);
 
@@ -563,13 +562,13 @@ class LeadController extends BaseResourceController
     protected function generateCsvContent($leads): string
     {
         $output = fopen('php://memory', 'w');
-        
+
         // CSV headers
         fputcsv($output, [
             'Last', 'First', 'Middle', 'Email', 'Phone', 'Company Name',
             'Company Address Line 1', 'Company Address Line 2', 'City', 'State', 'ZIP',
             'Website', 'Status', 'Lead Source', 'Assigned To', 'Total Score',
-            'Interest Level', 'Created Date', 'Notes'
+            'Interest Level', 'Created Date', 'Notes',
         ]);
 
         // CSV data
@@ -593,7 +592,7 @@ class LeadController extends BaseResourceController
                 $lead->total_score,
                 ucfirst($lead->interest_level),
                 $lead->created_at->format('Y-m-d H:i:s'),
-                $lead->notes
+                $lead->notes,
             ]);
         }
 

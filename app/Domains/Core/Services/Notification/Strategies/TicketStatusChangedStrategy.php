@@ -7,7 +7,7 @@ use App\Domains\Ticket\Models\Ticket;
 
 /**
  * Ticket Status Changed Notification Strategy
- * 
+ *
  * Handles notifications when a ticket's status changes.
  * Different recipients and messaging based on status transitions.
  */
@@ -18,7 +18,7 @@ class TicketStatusChangedStrategy implements NotificationStrategyInterface
      */
     public function execute(Ticket $ticket, array $eventData = []): array
     {
-        if (!$this->shouldExecute($ticket, $eventData)) {
+        if (! $this->shouldExecute($ticket, $eventData)) {
             return ['skipped' => true, 'reason' => 'Strategy execution conditions not met'];
         }
 
@@ -100,7 +100,7 @@ class TicketStatusChangedStrategy implements NotificationStrategyInterface
     {
         $newStatus = $eventData['new_status'] ?? $ticket->status;
         $statusLabel = ucfirst($newStatus);
-        
+
         return "Ticket {$statusLabel}: #{$ticket->ticket_number}";
     }
 
@@ -111,19 +111,19 @@ class TicketStatusChangedStrategy implements NotificationStrategyInterface
     {
         $newStatus = $eventData['new_status'] ?? $ticket->status;
         $oldStatus = $eventData['old_status'] ?? 'Unknown';
-        
+
         $message = "Ticket status has been changed:\n\n";
         $message .= "From: {$oldStatus}\n";
         $message .= "To: {$newStatus}\n\n";
-        
+
         $message .= "Ticket Details:\n";
         $message .= "Subject: {$ticket->subject}\n";
         $message .= "Priority: {$ticket->priority}\n";
-        
+
         if ($ticket->client) {
             $message .= "Client: {$ticket->client->display_name}\n";
         }
-        
+
         if ($ticket->assignee) {
             $message .= "Assigned to: {$ticket->assignee->name}\n";
         }
@@ -157,7 +157,7 @@ class TicketStatusChangedStrategy implements NotificationStrategyInterface
     public function shouldExecute(Ticket $ticket, array $eventData = []): bool
     {
         // Must have both old and new status
-        if (!isset($eventData['old_status']) || !isset($eventData['new_status'])) {
+        if (! isset($eventData['old_status']) || ! isset($eventData['new_status'])) {
             return false;
         }
 
@@ -167,7 +167,7 @@ class TicketStatusChangedStrategy implements NotificationStrategyInterface
         }
 
         // Skip if notifications are disabled
-        if ($ticket->company && !$ticket->company->notifications_enabled) {
+        if ($ticket->company && ! $ticket->company->notifications_enabled) {
             return false;
         }
 
@@ -201,6 +201,7 @@ class TicketStatusChangedStrategy implements NotificationStrategyInterface
     protected function watcherWantsStatusNotifications($watcher): bool
     {
         $preferences = $watcher->notification_preferences ?? [];
+
         return $preferences['status_changes'] ?? true;
     }
 
@@ -210,7 +211,7 @@ class TicketStatusChangedStrategy implements NotificationStrategyInterface
     protected function requiresSupervisorNotification(string $oldStatus, string $newStatus): bool
     {
         // Notify supervisors when tickets are escalated or reopened
-        return in_array($newStatus, ['escalated']) || 
+        return in_array($newStatus, ['escalated']) ||
                ($oldStatus === 'closed' && $newStatus !== 'closed');
     }
 

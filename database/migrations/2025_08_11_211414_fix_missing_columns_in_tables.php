@@ -20,10 +20,10 @@ return new class extends Migration
         Schema::table('ticket_time_entries', function (Blueprint $table) {
             // Add work_date column
             $table->date('work_date')->nullable()->after('user_id');
-            
+
             // Add hours column (for compatibility with dashboard)
             $table->decimal('hours', 8, 2)->nullable()->after('minutes');
-            
+
             // Add additional columns expected by the model
             $table->text('work_performed')->nullable()->after('description');
             $table->decimal('hours_worked', 8, 2)->nullable()->after('hours');
@@ -35,7 +35,7 @@ return new class extends Migration
             $table->string('work_type')->nullable()->after('entry_type');
             $table->string('rate_type')->nullable()->after('work_type');
             $table->string('status')->nullable()->after('rate_type');
-            
+
             // Approval workflow columns
             $table->timestamp('submitted_at')->nullable()->after('status');
             $table->unsignedBigInteger('submitted_by')->nullable()->after('submitted_at');
@@ -45,14 +45,14 @@ return new class extends Migration
             $table->timestamp('rejected_at')->nullable()->after('approval_notes');
             $table->unsignedBigInteger('rejected_by')->nullable()->after('rejected_at');
             $table->text('rejection_reason')->nullable()->after('rejected_by');
-            
+
             // Invoice tracking
             $table->unsignedBigInteger('invoice_id')->nullable()->after('rejection_reason');
             $table->timestamp('invoiced_at')->nullable()->after('invoice_id');
-            
+
             // Metadata
             $table->json('metadata')->nullable()->after('invoiced_at');
-            
+
             // Add soft deletes
             $table->softDeletes();
         });
@@ -92,7 +92,7 @@ return new class extends Migration
                 'invoice_id',
                 'invoiced_at',
                 'metadata',
-                'deleted_at'
+                'deleted_at',
             ]);
         });
     }

@@ -6,50 +6,73 @@ use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketComment;
 use App\Domains\Ticket\Services\CommentService;
 use App\Domains\Ticket\Services\TimeTrackingService;
-use Livewire\Component;
-use Livewire\WithFileUploads;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class TicketShow extends Component
 {
     use WithFileUploads;
 
     public Ticket $ticket;
+
     public $comment = '';
+
     public $internalNote = false;
+
     public $attachments = [];
+
     public $status;
+
     public $priority;
+
     public $assignedTo;
-    
+
     public $timeTracking = false;
+
     public $timeSpent = '';
+
     public $timeDescription = '';
+
     public $billable = true;
 
     // Timer properties
     public $activeTimer = null;
+
     public $elapsedTime = '00:00:00';
+
     public $timerDescription = '';
 
     // Timer completion modal
     public $showTimerCompletionModal = false;
+
     public $timerWorkDescription = '';
+
     public $timerIsBillable = true;
+
     public $timerWorkType = 'general_support';
+
     public $pendingTimerMinutes = 0;
+
     public $pendingTimerHours = 0;
 
     public $showStatusChangeModal = false;
+
     public $newStatus = '';
+
     public $statusChangeReason = '';
 
     public $showTimeEntryModal = false;
+
     public $showUploadModal = false;
+
     public $draftSaved = false;
+
     public $reopenOnComment = false;
+
     public $editingCommentId = null;
+
     public $editingCommentText = '';
 
     protected $listeners = [
@@ -57,7 +80,7 @@ class TicketShow extends Component
         'ticketUpdated' => 'refreshTicketData',
         'timer:completion-confirmed' => 'handleTimerCompleted',
         'refreshTimer' => 'checkActiveTimer',
-        'confirmed-start-timer' => 'handleConfirmedStart'
+        'confirmed-start-timer' => 'handleConfirmedStart',
     ];
 
     protected $rules = [
@@ -97,7 +120,7 @@ class TicketShow extends Component
             'creator',
             'resolver',
             'reopener',
-            'closer'
+            'closer',
         ]);
     }
 
@@ -158,7 +181,7 @@ class TicketShow extends Component
         }
 
         // Clear draft
-        cache()->forget('ticket_comment_draft_' . $this->ticket->id . '_' . Auth::id());
+        cache()->forget('ticket_comment_draft_'.$this->ticket->id.'_'.Auth::id());
 
         // Reset form
         $this->reset(['comment', 'internalNote', 'attachments', 'timeSpent', 'timeDescription', 'reopenOnComment', 'draftSaved']);
@@ -190,18 +213,18 @@ class TicketShow extends Component
 
         $this->status = $this->newStatus;
         $this->reset(['showStatusChangeModal', 'newStatus', 'statusChangeReason']);
-        
+
         session()->flash('message', 'Ticket status updated successfully.');
     }
 
     public function updatePriority()
     {
         $this->validate(['priority' => 'required|in:low,medium,high,urgent']);
-        
+
         $oldPriority = $this->ticket->priority;
         $this->ticket->priority = $this->priority;
         $this->ticket->save();
-        
+
         // Log activity
         if ($oldPriority !== $this->priority) {
             $commentService = app(CommentService::class);
@@ -210,18 +233,18 @@ class TicketShow extends Component
                 "Priority changed from {$oldPriority} to {$this->priority}"
             );
         }
-        
+
         session()->flash('message', 'Priority updated successfully.');
     }
 
     public function updateAssignee()
     {
         $this->validate(['assignedTo' => 'nullable|exists:users,id']);
-        
+
         $oldAssignee = $this->ticket->assignee?->name ?? 'Unassigned';
         $this->ticket->assigned_to = $this->assignedTo;
         $this->ticket->save();
-        
+
         // Log activity
         $newAssignee = $this->ticket->fresh()->assignee?->name ?? 'Unassigned';
         if ($oldAssignee !== $newAssignee) {
@@ -231,7 +254,7 @@ class TicketShow extends Component
                 "Ticket reassigned from {$oldAssignee} to {$newAssignee}"
             );
         }
-        
+
         $this->ticket->refresh();
         session()->flash('message', 'Assignee updated successfully.');
     }
@@ -239,7 +262,7 @@ class TicketShow extends Component
     public function toggleWatch()
     {
         $watcher = $this->ticket->watchers()->where('user_id', Auth::id())->first();
-        
+
         if ($watcher) {
             $watcher->delete();
             session()->flash('message', 'You are no longer watching this ticket.');
@@ -247,7 +270,7 @@ class TicketShow extends Component
             $this->ticket->watchers()->create(['user_id' => Auth::id()]);
             session()->flash('message', 'You are now watching this ticket.');
         }
-        
+
         $this->ticket->load('watchers.user');
     }
 
@@ -282,7 +305,9 @@ class TicketShow extends Component
 
     public function updateComment()
     {
-        if (!$this->editingCommentId) return;
+        if (! $this->editingCommentId) {
+            return;
+        }
 
         $comment = TicketComment::where('id', $this->editingCommentId)
             ->where('ticket_id', $this->ticket->id)
@@ -304,10 +329,11 @@ class TicketShow extends Component
         $newTicket->closed_at = null;
         $newTicket->resolved_at = null;
         $newTicket->resolution_summary = null;
-        $newTicket->subject = 'Copy of: ' . $this->ticket->subject;
+        $newTicket->subject = 'Copy of: '.$this->ticket->subject;
         $newTicket->save();
 
         session()->flash('message', 'Ticket cloned successfully.');
+
         return redirect()->route('tickets.show', $newTicket);
     }
 
@@ -315,6 +341,7 @@ class TicketShow extends Component
     {
         $this->ticket->update(['archived_at' => now()]);
         session()->flash('message', 'Ticket archived successfully.');
+
         return redirect()->route('tickets.index');
     }
 
@@ -364,7 +391,7 @@ class TicketShow extends Component
         try {
             $timeService = app(TimeTrackingService::class);
             $this->activeTimer = $timeService->startTracking($this->ticket, Auth::user(), [
-                'description' => $this->timerDescription ?: 'Working on ticket #' . $this->ticket->number,
+                'description' => $this->timerDescription ?: 'Working on ticket #'.$this->ticket->number,
                 'work_type' => 'general_support',
                 'billable' => $this->ticket->billable ?? true,
             ]);
@@ -380,7 +407,7 @@ class TicketShow extends Component
             $this->checkActiveTimer();
         } catch (\Exception $e) {
             Flux::toast(
-                text: 'Failed to start timer: ' . $e->getMessage(),
+                text: 'Failed to start timer: '.$e->getMessage(),
                 variant: 'danger'
             );
         }
@@ -388,7 +415,7 @@ class TicketShow extends Component
 
     public function stopTimer()
     {
-        if (!$this->activeTimer) {
+        if (! $this->activeTimer) {
             return;
         }
 
@@ -413,8 +440,9 @@ class TicketShow extends Component
 
     public function updateElapsedTime()
     {
-        if (!$this->activeTimer) {
+        if (! $this->activeTimer) {
             $this->elapsedTime = '00:00:00';
+
             return;
         }
 
@@ -460,7 +488,7 @@ class TicketShow extends Component
     {
         if ($this->comment) {
             cache()->put(
-                'ticket_comment_draft_' . $this->ticket->id . '_' . Auth::id(),
+                'ticket_comment_draft_'.$this->ticket->id.'_'.Auth::id(),
                 $this->comment,
                 now()->addDays(1)
             );
@@ -470,7 +498,7 @@ class TicketShow extends Component
 
     public function loadDraft()
     {
-        $draft = cache()->get('ticket_comment_draft_' . $this->ticket->id . '_' . Auth::id());
+        $draft = cache()->get('ticket_comment_draft_'.$this->ticket->id.'_'.Auth::id());
         if ($draft) {
             $this->comment = $draft;
         }
@@ -484,7 +512,7 @@ class TicketShow extends Component
             'comments.attachments',
             'timeLogs.user',
             'watchers.user',
-            'priorityQueue'
+            'priorityQueue',
         ]);
     }
 
@@ -498,7 +526,7 @@ class TicketShow extends Component
         $isWatching = $this->ticket->watchers()->where('user_id', Auth::id())->exists();
 
         // Load draft if exists
-        if (!$this->comment) {
+        if (! $this->comment) {
             $this->loadDraft();
         }
 

@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * QuoteTemplate Model
- * 
+ *
  * Reusable quote templates with predefined items and configurations.
  * Generic implementation supporting any service type (VoIP, cloud, hosting, etc.).
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $name
@@ -33,7 +33,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class QuoteTemplate extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -82,13 +82,21 @@ class QuoteTemplate extends Model
      * Template categories - Generic for any service type
      */
     const CATEGORY_BASIC = 'basic';
+
     const CATEGORY_STANDARD = 'standard';
+
     const CATEGORY_PREMIUM = 'premium';
+
     const CATEGORY_ENTERPRISE = 'enterprise';
+
     const CATEGORY_CUSTOM = 'custom';
+
     const CATEGORY_EQUIPMENT = 'equipment';
+
     const CATEGORY_MAINTENANCE = 'maintenance';
+
     const CATEGORY_PROFESSIONAL = 'professional';
+
     const CATEGORY_MANAGED = 'managed';
 
     /**
@@ -220,6 +228,7 @@ class QuoteTemplate extends Model
         }
 
         $quote->calculateTotals();
+
         return $quote;
     }
 
@@ -258,8 +267,8 @@ class QuoteTemplate extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('description', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('description', 'like', '%'.$search.'%');
         });
     }
 
@@ -273,7 +282,7 @@ class QuoteTemplate extends Model
         return [
             'name' => 'required|string|max:255|unique:quote_templates,name',
             'description' => 'nullable|string',
-            'category' => 'required|in:' . $categories,
+            'category' => 'required|in:'.$categories,
             'template_items' => 'nullable|array',
             'template_items.*.name' => 'required|string|max:255',
             'template_items.*.description' => 'nullable|string',
@@ -294,7 +303,8 @@ class QuoteTemplate extends Model
     public static function getUpdateValidationRules(int $templateId): array
     {
         $rules = static::getValidationRules();
-        $rules['name'] = 'required|string|max:255|unique:quote_templates,name,' . $templateId;
+        $rules['name'] = 'required|string|max:255|unique:quote_templates,name,'.$templateId;
+
         return $rules;
     }
 
@@ -414,7 +424,7 @@ class QuoteTemplate extends Model
 
         // Set creator when creating
         static::creating(function ($template) {
-            if (!$template->created_by && auth()->check()) {
+            if (! $template->created_by && auth()->check()) {
                 $template->created_by = auth()->id();
             }
         });

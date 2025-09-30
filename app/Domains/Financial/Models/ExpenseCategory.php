@@ -155,7 +155,7 @@ class ExpenseCategory extends Model
      */
     public function requiresApprovalForAmount(float $amount): bool
     {
-        if (!$this->requires_approval) {
+        if (! $this->requires_approval) {
             return false;
         }
 

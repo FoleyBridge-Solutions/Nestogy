@@ -16,14 +16,14 @@ return new class extends Migration
             ['name' => 'Create Contracts', 'slug' => 'contracts.create', 'domain' => 'financial', 'action' => 'create'],
             ['name' => 'Edit Contracts', 'slug' => 'contracts.edit', 'domain' => 'financial', 'action' => 'edit'],
             ['name' => 'Delete Contracts', 'slug' => 'contracts.delete', 'domain' => 'financial', 'action' => 'delete'],
-            
+
             // Contract lifecycle management
             ['name' => 'Approve Contracts', 'slug' => 'contracts.approve', 'domain' => 'financial', 'action' => 'approve'],
             ['name' => 'Sign Contracts', 'slug' => 'contracts.signature', 'domain' => 'financial', 'action' => 'signature'],
             ['name' => 'Activate Contracts', 'slug' => 'contracts.activate', 'domain' => 'financial', 'action' => 'activate'],
             ['name' => 'Terminate Contracts', 'slug' => 'contracts.terminate', 'domain' => 'financial', 'action' => 'terminate'],
             ['name' => 'Suspend Contracts', 'slug' => 'contracts.suspend', 'domain' => 'financial', 'action' => 'suspend'],
-            
+
             // Contract management features
             ['name' => 'Amend Contracts', 'slug' => 'contracts.amend', 'domain' => 'financial', 'action' => 'amend'],
             ['name' => 'Renew Contracts', 'slug' => 'contracts.renew', 'domain' => 'financial', 'action' => 'renew'],
@@ -42,19 +42,19 @@ return new class extends Migration
             $permission['is_system'] = true;
             $permission['created_at'] = now();
             $permission['updated_at'] = now();
-            
+
             DB::table('permissions')->insert($permission);
         }
-        
+
         // Assign all contract permissions to existing admin roles
         $adminRoleId = DB::table('roles')->where('slug', 'admin')->value('id');
         $superAdminRoleId = DB::table('roles')->where('slug', 'super-admin')->value('id');
-        
+
         if ($adminRoleId || $superAdminRoleId) {
             $permissionIds = DB::table('permissions')
                 ->whereIn('slug', array_column($contractPermissions, 'slug'))
                 ->pluck('id');
-            
+
             foreach ($permissionIds as $permissionId) {
                 if ($adminRoleId) {
                     DB::table('role_permissions')->insertOrIgnore([
@@ -64,7 +64,7 @@ return new class extends Migration
                         'updated_at' => now(),
                     ]);
                 }
-                
+
                 if ($superAdminRoleId) {
                     DB::table('role_permissions')->insertOrIgnore([
                         'role_id' => $superAdminRoleId,
@@ -103,7 +103,7 @@ return new class extends Migration
             'contracts.history',
             'contracts.milestones',
         ];
-        
+
         DB::table('permissions')->whereIn('slug', $slugs)->delete();
     }
 };

@@ -2,10 +2,10 @@
 
 namespace App\Domains\Email\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Email\Models\EmailAccount;
 use App\Domains\Email\Services\ImapService;
 use App\Domains\Email\Services\UnifiedEmailSyncService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -100,7 +100,7 @@ class EmailAccountController extends Controller
         }
 
         // If this is the user's first account, make it default
-        $isFirstAccount = !EmailAccount::forUser(Auth::id())->exists();
+        $isFirstAccount = ! EmailAccount::forUser(Auth::id())->exists();
 
         $account = EmailAccount::create([
             'user_id' => Auth::id(),
@@ -126,11 +126,12 @@ class EmailAccountController extends Controller
 
         // Test connection
         $testResult = $this->imapService->testConnection($account);
-        
-        if (!$testResult['success']) {
+
+        if (! $testResult['success']) {
             $account->update(['sync_error' => $testResult['message']]);
+
             return back()
-                ->withErrors(['connection' => 'Connection test failed: ' . $testResult['message']])
+                ->withErrors(['connection' => 'Connection test failed: '.$testResult['message']])
                 ->withInput();
         }
 
@@ -139,7 +140,7 @@ class EmailAccountController extends Controller
             $this->imapService->syncAccount($account);
             $successMessage = "Email account added successfully! Found {$testResult['folder_count']} folders.";
         } catch (\Exception $e) {
-            $successMessage = "Email account added successfully, but initial sync failed. You can retry sync from the account list.";
+            $successMessage = 'Email account added successfully, but initial sync failed. You can retry sync from the account list.';
         }
 
         return redirect()
@@ -152,15 +153,15 @@ class EmailAccountController extends Controller
         $emailAccount = EmailAccount::where('id', $id)
             ->where('company_id', auth()->user()->company_id)
             ->first();
-        
-        if (!$emailAccount) {
+
+        if (! $emailAccount) {
             abort(404, 'Email account not found');
         }
-        
+
         $this->authorize('view', $emailAccount);
 
         $emailAccount->load(['folders', 'signatures']);
-        
+
         $stats = [
             'total_messages' => $emailAccount->messages()->count(),
             'unread_messages' => $emailAccount->messages()->unread()->count(),
@@ -177,11 +178,11 @@ class EmailAccountController extends Controller
         $emailAccount = EmailAccount::where('id', $id)
             ->where('company_id', auth()->user()->company_id)
             ->first();
-        
-        if (!$emailAccount) {
+
+        if (! $emailAccount) {
             abort(404, 'Email account not found');
         }
-        
+
         $this->authorize('update', $emailAccount);
 
         $providers = [
@@ -231,11 +232,11 @@ class EmailAccountController extends Controller
         $emailAccount = EmailAccount::where('id', $id)
             ->where('company_id', auth()->user()->company_id)
             ->first();
-        
-        if (!$emailAccount) {
+
+        if (! $emailAccount) {
             abort(404, 'Email account not found');
         }
-        
+
         $this->authorize('update', $emailAccount);
 
         $validator = Validator::make($request->all(), [
@@ -245,7 +246,7 @@ class EmailAccountController extends Controller
                 'email',
                 Rule::unique('email_accounts')->where(function ($query) use ($emailAccount) {
                     return $query->where('user_id', Auth::id())
-                                 ->where('id', '!=', $emailAccount->id);
+                        ->where('id', '!=', $emailAccount->id);
                 }),
             ],
             'imap_host' => 'required|string|max:255',
@@ -301,11 +302,12 @@ class EmailAccountController extends Controller
         // Test connection if credentials changed
         if ($request->filled(['imap_password', 'smtp_password', 'imap_host', 'imap_port'])) {
             $testResult = $this->imapService->testConnection($emailAccount);
-            
-            if (!$testResult['success']) {
+
+            if (! $testResult['success']) {
                 $emailAccount->update(['sync_error' => $testResult['message']]);
+
                 return back()
-                    ->with('warning', 'Account updated but connection test failed: ' . $testResult['message'])
+                    ->with('warning', 'Account updated but connection test failed: '.$testResult['message'])
                     ->withInput();
             } else {
                 $emailAccount->update(['sync_error' => null]);
@@ -322,11 +324,11 @@ class EmailAccountController extends Controller
         $emailAccount = EmailAccount::where('id', $id)
             ->where('company_id', auth()->user()->company_id)
             ->first();
-        
-        if (!$emailAccount) {
+
+        if (! $emailAccount) {
             abort(404, 'Email account not found');
         }
-        
+
         $this->authorize('delete', $emailAccount);
 
         $accountName = $emailAccount->name;
@@ -345,6 +347,7 @@ class EmailAccountController extends Controller
 
         if ($result['success']) {
             $emailAccount->update(['sync_error' => null]);
+
             return response()->json([
                 'success' => true,
                 'message' => $result['message'],
@@ -352,6 +355,7 @@ class EmailAccountController extends Controller
             ]);
         } else {
             $emailAccount->update(['sync_error' => $result['message']]);
+
             return response()->json([
                 'success' => false,
                 'message' => $result['message'],
@@ -363,10 +367,10 @@ class EmailAccountController extends Controller
     {
         error_log("OAUTH_DEBUG: EmailAccountController::sync() called for account {$emailAccount->id}");
         error_log("OAUTH_DEBUG: Account email: {$emailAccount->email_address}, connection_type: {$emailAccount->connection_type}");
-        
+
         $this->authorize('update', $emailAccount);
-        
-        error_log("OAUTH_DEBUG: Authorization passed, about to sync");
+
+        error_log('OAUTH_DEBUG: Authorization passed, about to sync');
 
         try {
             \Log::info('Starting email sync', [
@@ -378,24 +382,24 @@ class EmailAccountController extends Controller
 
             // Use UnifiedEmailSyncService to handle both OAuth and IMAP accounts
             $result = $this->unifiedSyncService->syncAccount($emailAccount);
-            
+
             \Log::info('Email sync completed', [
                 'account_id' => $emailAccount->id,
                 'result' => $result,
             ]);
-            
+
             return response()->json([
                 'success' => $result['success'] ?? true,
-                'message' => "Sync completed! " . ($result['folders_synced'] ?? 0) . " folders and " . ($result['messages_synced'] ?? 0) . " messages synced.",
+                'message' => 'Sync completed! '.($result['folders_synced'] ?? 0).' folders and '.($result['messages_synced'] ?? 0).' messages synced.',
                 'folders_synced' => $result['folders_synced'] ?? 0,
                 'messages_synced' => $result['messages_synced'] ?? 0,
                 'errors' => $result['errors'] ?? [],
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Sync failed: ' . $e->getMessage(),
+                'message' => 'Sync failed: '.$e->getMessage(),
             ], 500);
         }
     }

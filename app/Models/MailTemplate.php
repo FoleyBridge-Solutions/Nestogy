@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class MailTemplate extends Model
 {
-    use HasFactory, BelongsToCompany;
-    
+    use BelongsToCompany, HasFactory;
+
     protected $fillable = [
         'company_id',
         'name',
@@ -24,7 +24,7 @@ class MailTemplate extends Model
         'is_system',
         'settings',
     ];
-    
+
     protected $casts = [
         'available_variables' => 'array',
         'default_data' => 'array',
@@ -32,15 +32,21 @@ class MailTemplate extends Model
         'is_active' => 'boolean',
         'is_system' => 'boolean',
     ];
-    
+
     const CATEGORY_INVOICE = 'invoice';
+
     const CATEGORY_NOTIFICATION = 'notification';
+
     const CATEGORY_MARKETING = 'marketing';
+
     const CATEGORY_SYSTEM = 'system';
+
     const CATEGORY_PORTAL = 'portal';
+
     const CATEGORY_SUPPORT = 'support';
+
     const CATEGORY_REPORT = 'report';
-    
+
     /**
      * Get all categories
      */
@@ -56,7 +62,7 @@ class MailTemplate extends Model
             self::CATEGORY_REPORT => 'Report',
         ];
     }
-    
+
     /**
      * Scope to active templates
      */
@@ -64,7 +70,7 @@ class MailTemplate extends Model
     {
         return $query->where('is_active', true);
     }
-    
+
     /**
      * Scope to category
      */

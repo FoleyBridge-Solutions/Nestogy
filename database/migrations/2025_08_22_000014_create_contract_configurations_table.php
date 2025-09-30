@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->unique(['company_id'], 'unique_company_config');
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'version']);

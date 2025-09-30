@@ -3,12 +3,11 @@
 namespace App\Domains\Project\Repositories;
 
 use App\Domains\Project\Models\Project;
-use App\Domains\Project\Models\Task;
 use App\Domains\Project\Models\ProjectMilestone;
+use App\Domains\Project\Models\Task;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class ProjectRepository
 {
@@ -25,16 +24,16 @@ class ProjectRepository
         }
 
         // Apply search
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('name', 'like', "%{$filters['search']}%")
-                  ->orWhere('description', 'like', "%{$filters['search']}%")
-                  ->orWhere('project_code', 'like', "%{$filters['search']}%");
+                    ->orWhere('description', 'like', "%{$filters['search']}%")
+                    ->orWhere('project_code', 'like', "%{$filters['search']}%");
             });
         }
 
         // Apply status filter
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             if (is_array($filters['status'])) {
                 $query->whereIn('status', $filters['status']);
             } else {
@@ -43,22 +42,22 @@ class ProjectRepository
         }
 
         // Apply priority filter
-        if (!empty($filters['priority'])) {
+        if (! empty($filters['priority'])) {
             $query->where('priority', $filters['priority']);
         }
 
         // Apply client filter
-        if (!empty($filters['client_id'])) {
+        if (! empty($filters['client_id'])) {
             $query->where('client_id', $filters['client_id']);
         }
 
         // Apply manager filter
-        if (!empty($filters['manager_id'])) {
+        if (! empty($filters['manager_id'])) {
             $query->where('manager_id', $filters['manager_id']);
         }
 
         // Apply date range filter
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+        if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
             $query->whereBetween('start_date', [$filters['start_date'], $filters['end_date']]);
         }
 
@@ -158,11 +157,11 @@ class ProjectRepository
     {
         return Project::whereHas('members', function ($query) use ($userId) {
             $query->where('user_id', $userId)
-                  ->where('is_active', true);
+                ->where('is_active', true);
         })
-        ->with(['client', 'manager'])
-        ->orderBy('priority', 'desc')
-        ->get();
+            ->with(['client', 'manager'])
+            ->orderBy('priority', 'desc')
+            ->get();
     }
 
     /**
@@ -197,8 +196,8 @@ class ProjectRepository
     public function getProjectTimeline(int $projectId): array
     {
         $project = $this->getProjectWithRelations($projectId);
-        
-        if (!$project) {
+
+        if (! $project) {
             return [];
         }
 
@@ -245,8 +244,8 @@ class ProjectRepository
     public function getProjectResourceAllocation(int $projectId): array
     {
         $project = Project::with(['members.user', 'tasks'])->find($projectId);
-        
-        if (!$project) {
+
+        if (! $project) {
             return [];
         }
 
@@ -254,7 +253,7 @@ class ProjectRepository
 
         foreach ($project->members as $member) {
             $userTasks = $project->tasks->where('assigned_to', $member->user_id);
-            
+
             $allocation[] = [
                 'user_id' => $member->user_id,
                 'user_name' => $member->user->name,
@@ -276,8 +275,8 @@ class ProjectRepository
     public function getProjectBudgetBreakdown(int $projectId): array
     {
         $project = Project::with(['timeEntries', 'expenses'])->find($projectId);
-        
-        if (!$project) {
+
+        if (! $project) {
             return [];
         }
 
@@ -296,8 +295,8 @@ class ProjectRepository
             'expenses_cost' => $expensesCost,
             'total_cost' => $laborCost + $expensesCost,
             'remaining' => $project->budget - ($laborCost + $expensesCost),
-            'utilization_percentage' => $project->budget > 0 
-                ? round((($laborCost + $expensesCost) / $project->budget) * 100, 2) 
+            'utilization_percentage' => $project->budget > 0
+                ? round((($laborCost + $expensesCost) / $project->budget) * 100, 2)
                 : 0,
         ];
     }
@@ -310,8 +309,8 @@ class ProjectRepository
         return Project::where('company_id', $companyId)
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%")
-                  ->orWhere('project_code', 'like', "%{$query}%");
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhere('project_code', 'like', "%{$query}%");
             })
             ->with(['client', 'manager'])
             ->limit($limit)
@@ -336,7 +335,7 @@ class ProjectRepository
     public function getProjectCompletionTrends(int $companyId, int $months = 6): array
     {
         $startDate = now()->subMonths($months)->startOfMonth();
-        
+
         $completions = Project::where('company_id', $companyId)
             ->where('status', Project::STATUS_COMPLETED)
             ->where('completed_at', '>=', $startDate)
@@ -356,7 +355,7 @@ class ProjectRepository
     public function cloneProject(Project $project, array $overrides = []): Project
     {
         DB::beginTransaction();
-        
+
         try {
             // Clone the project
             $newProject = $project->replicate();
@@ -402,6 +401,7 @@ class ProjectRepository
             }
 
             DB::commit();
+
             return $newProject;
 
         } catch (\Exception $e) {

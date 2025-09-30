@@ -2,25 +2,25 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Auth\AuthenticationException;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
 use Illuminate\Session\TokenMismatchException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 /**
  * Global Exception Handler for Nestogy MSP Platform
- * 
+ *
  * Handles all exceptions with proper error responses, logging, and user-friendly messages
  * while maintaining security and providing detailed information for debugging.
  */
@@ -98,7 +98,7 @@ class Handler extends ExceptionHandler
         $context['query_params'] = $this->sanitizeLogData($queryParams);
 
         // Add POST data (sanitized) for non-GET requests
-        if (!request()->isMethod('GET') && !empty(request()->input())) {
+        if (! request()->isMethod('GET') && ! empty(request()->input())) {
             $context['request_data'] = $this->sanitizeLogData(request()->input());
         }
 
@@ -224,7 +224,7 @@ class Handler extends ExceptionHandler
     protected function handleModelNotFoundException(ModelNotFoundException $exception, Request $request): Response
     {
         $model = class_basename($exception->getModel());
-        
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => false,
@@ -293,7 +293,7 @@ class Handler extends ExceptionHandler
     protected function handleDatabaseException(QueryException $exception, Request $request): Response
     {
         $message = $this->getDatabaseErrorMessage($exception);
-        
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => false,
@@ -334,8 +334,8 @@ class Handler extends ExceptionHandler
      */
     protected function handleGenericException(Throwable $exception, Request $request): Response
     {
-        $message = config('app.debug') 
-            ? $exception->getMessage() 
+        $message = config('app.debug')
+            ? $exception->getMessage()
             : 'An unexpected error occurred. Please try again later.';
 
         if ($request->expectsJson()) {

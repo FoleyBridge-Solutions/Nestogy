@@ -2,19 +2,19 @@
 
 namespace App\Domains\Knowledge\Controllers\Knowledge;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Knowledge\Models\KbArticle;
 use App\Domains\Knowledge\Models\KbCategory;
-use App\Domains\Knowledge\Services\KnowledgeBaseService;
 use App\Domains\Knowledge\Services\ArticleSearchService;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use App\Domains\Knowledge\Services\KnowledgeBaseService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 /**
  * Knowledge Base Article Controller
- * 
+ *
  * CRUD operations and management for knowledge base articles
  */
 class KbArticleController extends Controller
@@ -92,7 +92,7 @@ class KbArticleController extends Controller
         if ($request->filled('from_ticket')) {
             $ticket = \App\Domains\Ticket\Models\Ticket::where('company_id', auth()->user()->company_id)
                 ->findOrFail($request->from_ticket);
-            
+
             $ticketData = [
                 'title' => $ticket->subject,
                 'content' => $this->formatTicketForArticle($ticket),
@@ -113,15 +113,15 @@ class KbArticleController extends Controller
             'content' => 'required|string',
             'excerpt' => 'nullable|string|max:500',
             'category_id' => 'required|exists:kb_categories,id',
-            'status' => 'required|in:' . implode(',', [
+            'status' => 'required|in:'.implode(',', [
                 KbArticle::STATUS_DRAFT,
                 KbArticle::STATUS_PUBLISHED,
-                KbArticle::STATUS_UNDER_REVIEW
+                KbArticle::STATUS_UNDER_REVIEW,
             ]),
-            'visibility' => 'required|in:' . implode(',', [
+            'visibility' => 'required|in:'.implode(',', [
                 KbArticle::VISIBILITY_PUBLIC,
                 KbArticle::VISIBILITY_INTERNAL,
-                KbArticle::VISIBILITY_CLIENT
+                KbArticle::VISIBILITY_CLIENT,
             ]),
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
@@ -143,7 +143,7 @@ class KbArticleController extends Controller
         } catch (\Exception $e) {
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Failed to create article: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to create article: '.$e->getMessage()]);
         }
     }
 
@@ -204,16 +204,16 @@ class KbArticleController extends Controller
             'content' => 'required|string',
             'excerpt' => 'nullable|string|max:500',
             'category_id' => 'required|exists:kb_categories,id',
-            'status' => 'required|in:' . implode(',', [
+            'status' => 'required|in:'.implode(',', [
                 KbArticle::STATUS_DRAFT,
                 KbArticle::STATUS_PUBLISHED,
                 KbArticle::STATUS_ARCHIVED,
-                KbArticle::STATUS_UNDER_REVIEW
+                KbArticle::STATUS_UNDER_REVIEW,
             ]),
-            'visibility' => 'required|in:' . implode(',', [
+            'visibility' => 'required|in:'.implode(',', [
                 KbArticle::VISIBILITY_PUBLIC,
                 KbArticle::VISIBILITY_INTERNAL,
-                KbArticle::VISIBILITY_CLIENT
+                KbArticle::VISIBILITY_CLIENT,
             ]),
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
@@ -232,7 +232,7 @@ class KbArticleController extends Controller
         } catch (\Exception $e) {
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Failed to update article: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to update article: '.$e->getMessage()]);
         }
     }
 
@@ -251,7 +251,7 @@ class KbArticleController extends Controller
                 ->with('success', 'Article deleted successfully.');
         } catch (\Exception $e) {
             return back()
-                ->withErrors(['error' => 'Failed to delete article: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to delete article: '.$e->getMessage()]);
         }
     }
 
@@ -292,7 +292,7 @@ class KbArticleController extends Controller
     public function suggestions(Request $request): JsonResponse
     {
         $query = $request->input('q', '');
-        
+
         if (strlen($query) < 2) {
             return response()->json([]);
         }
@@ -332,7 +332,7 @@ class KbArticleController extends Controller
 
         $count = 0;
         foreach ($articles as $article) {
-            if (!$this->authorize('update', $article, false)) {
+            if (! $this->authorize('update', $article, false)) {
                 continue;
             }
 
@@ -359,6 +359,7 @@ class KbArticleController extends Controller
         }
 
         $action = ucfirst($validatedData['action']);
+
         return back()->with('success', "{$action}ed {$count} articles successfully.");
     }
 
@@ -368,14 +369,14 @@ class KbArticleController extends Controller
     protected function formatTicketForArticle(\App\Domains\Ticket\Models\Ticket $ticket): string
     {
         $content = "<h2>Issue Description</h2>\n";
-        $content .= "<p>" . nl2br(e($ticket->description)) . "</p>\n\n";
-        
+        $content .= '<p>'.nl2br(e($ticket->description))."</p>\n\n";
+
         $content .= "<h2>Resolution</h2>\n";
         $content .= "<p>Add the resolution steps here...</p>\n\n";
-        
+
         if ($ticket->notes) {
             $content .= "<h2>Additional Notes</h2>\n";
-            $content .= "<p>" . nl2br(e($ticket->notes)) . "</p>\n";
+            $content .= '<p>'.nl2br(e($ticket->notes))."</p>\n";
         }
 
         return $content;
@@ -387,15 +388,15 @@ class KbArticleController extends Controller
     protected function extractTagsFromTicket(\App\Domains\Ticket\Models\Ticket $ticket): array
     {
         $tags = [];
-        
+
         if ($ticket->category) {
             $tags[] = str()->slug($ticket->category);
         }
-        
+
         if ($ticket->priority) {
-            $tags[] = 'priority-' . $ticket->priority;
+            $tags[] = 'priority-'.$ticket->priority;
         }
-        
+
         return $tags;
     }
 }

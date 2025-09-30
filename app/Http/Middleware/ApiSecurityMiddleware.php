@@ -2,16 +2,16 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuditLog;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\AuditLog;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * ApiSecurityMiddleware
- * 
+ *
  * Comprehensive API security middleware that handles rate limiting,
  * API versioning, request validation, and security monitoring.
  */
@@ -25,22 +25,22 @@ class ApiSecurityMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Check if API is enabled
-        if (!config('security.api.enabled', true)) {
+        if (! config('security.api.enabled', true)) {
             return $this->apiDisabledResponse();
         }
 
         // Validate API version
-        if (!$this->validateApiVersion($request)) {
+        if (! $this->validateApiVersion($request)) {
             return $this->invalidVersionResponse($request);
         }
 
         // Check rate limits
-        if (!$this->checkRateLimit($request)) {
+        if (! $this->checkRateLimit($request)) {
             return $this->rateLimitExceededResponse($request);
         }
 
         // Validate request format
-        if (!$this->validateRequestFormat($request)) {
+        if (! $this->validateRequestFormat($request)) {
             return $this->invalidFormatResponse($request);
         }
 
@@ -68,7 +68,7 @@ class ApiSecurityMiddleware
         $supportedVersions = config('security.api.supported_versions', ['v1']);
         $deprecatedVersions = config('security.api.deprecated_versions', []);
 
-        if (!in_array($requestedVersion, $supportedVersions)) {
+        if (! in_array($requestedVersion, $supportedVersions)) {
             return false;
         }
 
@@ -78,6 +78,7 @@ class ApiSecurityMiddleware
         }
 
         $request->attributes->set('api_version', $requestedVersion);
+
         return true;
     }
 
@@ -122,6 +123,7 @@ class ApiSecurityMiddleware
         }
 
         RateLimiter::hit($key, $decayMinutes * 60);
+
         return true;
     }
 
@@ -131,13 +133,13 @@ class ApiSecurityMiddleware
     protected function getRateLimitKey(Request $request): string
     {
         $user = $request->user();
-        
+
         if ($user) {
-            return 'api_rate_limit:user:' . $user->id;
+            return 'api_rate_limit:user:'.$user->id;
         }
 
         // For unauthenticated requests, use IP
-        return 'api_rate_limit:ip:' . $request->ip();
+        return 'api_rate_limit:ip:'.$request->ip();
     }
 
     /**
@@ -146,7 +148,7 @@ class ApiSecurityMiddleware
     protected function getMaxAttempts(Request $request): int
     {
         $user = $request->user();
-        
+
         if ($user) {
             // Check for custom rate limits
             if (method_exists($user, 'getApiRateLimit')) {
@@ -175,20 +177,20 @@ class ApiSecurityMiddleware
         // Check Content-Type for POST/PUT/PATCH requests
         if (in_array($request->method(), ['POST', 'PUT', 'PATCH'])) {
             $contentType = $request->header('Content-Type');
-            
-            if (!$contentType || !str_contains($contentType, 'application/json')) {
+
+            if (! $contentType || ! str_contains($contentType, 'application/json')) {
                 return false;
             }
 
             // Validate JSON format
-            if ($request->getContent() && !$request->isJson()) {
+            if ($request->getContent() && ! $request->isJson()) {
                 return false;
             }
         }
 
         // Check Accept header
         $accept = $request->header('Accept');
-        if ($accept && !str_contains($accept, 'application/json') && !str_contains($accept, '*/*')) {
+        if ($accept && ! str_contains($accept, 'application/json') && ! str_contains($accept, '*/*')) {
             return false;
         }
 
@@ -201,9 +203,9 @@ class ApiSecurityMiddleware
     protected function detectSuspiciousActivity(Request $request): bool
     {
         $ip = $request->ip();
-        
+
         // Check if IP is temporarily blocked
-        if (Cache::get('ip_blocked_' . $ip)) {
+        if (Cache::get('ip_blocked_'.$ip)) {
             return true;
         }
 
@@ -226,14 +228,14 @@ class ApiSecurityMiddleware
     protected function detectEndpointScanning(Request $request): bool
     {
         $ip = $request->ip();
-        $key = 'api_endpoints_accessed:' . $ip;
+        $key = 'api_endpoints_accessed:'.$ip;
         $threshold = config('security.api.endpoint_scan_threshold', 20);
         $window = config('security.api.endpoint_scan_window', 60); // seconds
 
         $endpoints = Cache::get($key, []);
-        $endpoint = $request->method() . ':' . $request->path();
-        
-        if (!in_array($endpoint, $endpoints)) {
+        $endpoint = $request->method().':'.$request->path();
+
+        if (! in_array($endpoint, $endpoints)) {
             $endpoints[] = $endpoint;
             Cache::put($key, $endpoints, $window);
         }
@@ -255,7 +257,7 @@ class ApiSecurityMiddleware
         // Check for suspicious user agents
         $userAgent = strtolower($request->userAgent() ?? '');
         $suspiciousAgents = ['sqlmap', 'nikto', 'scanner', 'havij', 'acunetix'];
-        
+
         foreach ($suspiciousAgents as $agent) {
             if (str_contains($userAgent, $agent)) {
                 return true;
@@ -280,10 +282,10 @@ class ApiSecurityMiddleware
         $request = request();
         $key = $this->getRateLimitKey($request);
         $maxAttempts = $this->getMaxAttempts($request);
-        
+
         $response->headers->set('X-RateLimit-Limit', $maxAttempts);
         $response->headers->set('X-RateLimit-Remaining', RateLimiter::remaining($key, $maxAttempts));
-        
+
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $response->headers->set('X-RateLimit-Reset', RateLimiter::availableIn($key));
         }
@@ -373,7 +375,7 @@ class ApiSecurityMiddleware
     protected function suspiciousActivityResponse(Request $request): Response
     {
         $ip = $request->ip();
-        
+
         AuditLog::logSecurity('Suspicious API Activity', [
             'ip' => $ip,
             'endpoint' => $request->path(),
@@ -382,7 +384,7 @@ class ApiSecurityMiddleware
         ], AuditLog::SEVERITY_CRITICAL);
 
         // Block IP temporarily
-        Cache::put('ip_blocked_' . $ip, true, now()->addHours(1));
+        Cache::put('ip_blocked_'.$ip, true, now()->addHours(1));
 
         return response()->json([
             'error' => 'Access denied',

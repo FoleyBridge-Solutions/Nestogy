@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\PricingRule;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class PricingRulePolicy
 {
@@ -21,7 +20,7 @@ class PricingRulePolicy
      */
     public function view(User $user, PricingRule $pricingRule): bool
     {
-        return $this->belongsToUserCompany($user, $pricingRule) && 
+        return $this->belongsToUserCompany($user, $pricingRule) &&
                $user->getRole() >= User::ROLE_ACCOUNTANT;
     }
 
@@ -38,7 +37,7 @@ class PricingRulePolicy
      */
     public function update(User $user, PricingRule $pricingRule): bool
     {
-        return $this->belongsToUserCompany($user, $pricingRule) && 
+        return $this->belongsToUserCompany($user, $pricingRule) &&
                $user->getRole() >= User::ROLE_TECH;
     }
 
@@ -47,7 +46,7 @@ class PricingRulePolicy
      */
     public function delete(User $user, PricingRule $pricingRule): bool
     {
-        return $this->belongsToUserCompany($user, $pricingRule) && 
+        return $this->belongsToUserCompany($user, $pricingRule) &&
                $user->getRole() >= User::ROLE_TECH;
     }
 
@@ -56,7 +55,7 @@ class PricingRulePolicy
      */
     public function restore(User $user, PricingRule $pricingRule): bool
     {
-        return $this->belongsToUserCompany($user, $pricingRule) && 
+        return $this->belongsToUserCompany($user, $pricingRule) &&
                $user->getRole() >= User::ROLE_ADMIN;
     }
 
@@ -65,7 +64,7 @@ class PricingRulePolicy
      */
     public function forceDelete(User $user, PricingRule $pricingRule): bool
     {
-        return $this->belongsToUserCompany($user, $pricingRule) && 
+        return $this->belongsToUserCompany($user, $pricingRule) &&
                $user->getRole() >= User::ROLE_ADMIN;
     }
 

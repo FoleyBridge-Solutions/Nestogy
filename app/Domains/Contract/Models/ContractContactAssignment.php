@@ -2,7 +2,6 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Domains\Contract\Models\Contract;
 use App\Models\Contact;
 use App\Models\User;
 use App\Traits\BelongsToCompany;
@@ -12,10 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * ContractContactAssignment Model
- * 
+ *
  * Represents the assignment of contacts to contracts for per-seat billing.
  * Supports access levels, usage limits, and billing tiers.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $contract_id
@@ -79,7 +78,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ContractContactAssignment extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -212,33 +211,46 @@ class ContractContactAssignment extends Model
      * Access level constants
      */
     const ACCESS_BASIC = 'basic';
+
     const ACCESS_STANDARD = 'standard';
+
     const ACCESS_PREMIUM = 'premium';
+
     const ACCESS_ADMIN = 'admin';
+
     const ACCESS_CUSTOM = 'custom';
 
     /**
      * Status constants
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_TERMINATED = 'terminated';
+
     const STATUS_PENDING = 'pending';
 
     /**
      * Billing frequency constants
      */
     const FREQUENCY_MONTHLY = 'monthly';
+
     const FREQUENCY_QUARTERLY = 'quarterly';
+
     const FREQUENCY_ANNUALLY = 'annually';
+
     const FREQUENCY_PER_TICKET = 'per_ticket';
 
     /**
      * Priority level constants
      */
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_URGENT = 'urgent';
 
     /**
@@ -313,7 +325,7 @@ class ContractContactAssignment extends Model
         if ($this->max_tickets_per_month === -1) {
             return false; // Unlimited
         }
-        
+
         return $this->current_month_tickets >= $this->max_tickets_per_month;
     }
 
@@ -325,7 +337,7 @@ class ContractContactAssignment extends Model
         if ($this->max_support_hours_per_month === -1) {
             return false; // Unlimited
         }
-        
+
         return $this->current_month_support_hours >= $this->max_support_hours_per_month;
     }
 
@@ -375,6 +387,7 @@ class ContractContactAssignment extends Model
     public function canCreateTicketType(string $type): bool
     {
         $allowed = $this->getAllowedTicketTypes();
+
         return empty($allowed) || in_array($type, $allowed);
     }
 
@@ -400,17 +413,17 @@ class ContractContactAssignment extends Model
     public function calculateMonthlyCharges(): float
     {
         $total = 0;
-        
+
         // Base billing rate
         if ($this->billing_frequency !== self::FREQUENCY_PER_TICKET) {
             $total += $this->billing_rate;
         }
-        
+
         // Per-ticket charges
         if ($this->billing_frequency === self::FREQUENCY_PER_TICKET || $this->per_ticket_rate > 0) {
             $total += $this->current_month_tickets * $this->per_ticket_rate;
         }
-        
+
         // Apply pricing modifiers
         if ($modifiers = $this->pricing_modifiers) {
             if (isset($modifiers['discount'])) {
@@ -423,7 +436,7 @@ class ContractContactAssignment extends Model
                 $total *= (1 - ($modifiers['percentage_discount'] / 100));
             }
         }
-        
+
         return max(0, $total);
     }
 
@@ -465,7 +478,7 @@ class ContractContactAssignment extends Model
     {
         $history = $this->billing_history ?? [];
         $history[] = array_merge($record, ['recorded_at' => now()->toISOString()]);
-        
+
         $this->update([
             'billing_history' => $history,
             'last_billed_at' => now(),
@@ -481,12 +494,12 @@ class ContractContactAssignment extends Model
     {
         $history = $this->usage_history ?? [];
         $history[] = array_merge($usage, ['recorded_at' => now()->toISOString()]);
-        
+
         // Keep only last 12 months
         if (count($history) > 12) {
             $history = array_slice($history, -12);
         }
-        
+
         $this->update(['usage_history' => $history]);
         $this->calculateAverageUsage();
     }
@@ -497,14 +510,14 @@ class ContractContactAssignment extends Model
     protected function calculateAverageUsage(): void
     {
         $history = $this->usage_history ?? [];
-        
+
         if (empty($history)) {
             return;
         }
-        
+
         $totalHours = array_sum(array_column($history, 'support_hours'));
         $average = $totalHours / count($history);
-        
+
         $this->update(['average_monthly_usage' => $average]);
     }
 
@@ -545,10 +558,10 @@ class ContractContactAssignment extends Model
      */
     public function evaluateAutoUpgrade(): void
     {
-        if (!$this->shouldAutoUpgradeTier()) {
+        if (! $this->shouldAutoUpgradeTier()) {
             return;
         }
-        
+
         // Logic to determine if upgrade is needed
         // This would be implemented based on business rules
     }
@@ -631,7 +644,7 @@ class ContractContactAssignment extends Model
     public function scopeDueForBilling($query)
     {
         return $query->whereNotNull('next_billing_date')
-                    ->whereDate('next_billing_date', '<=', now());
+            ->whereDate('next_billing_date', '<=', now());
     }
 
     /**
@@ -640,7 +653,7 @@ class ContractContactAssignment extends Model
     public function scopeNeedsAutoUpgrade($query)
     {
         return $query->where('auto_upgrade_tier', true)
-                    ->where('status', self::STATUS_ACTIVE);
+            ->where('status', self::STATUS_ACTIVE);
     }
 
     /**
@@ -652,7 +665,7 @@ class ContractContactAssignment extends Model
 
         // Set next billing date on creation
         static::creating(function ($assignment) {
-            if (!$assignment->next_billing_date) {
+            if (! $assignment->next_billing_date) {
                 $assignment->next_billing_date = $assignment->start_date;
             }
         });

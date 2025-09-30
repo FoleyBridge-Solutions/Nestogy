@@ -3,14 +3,14 @@
 namespace App\Domains\Knowledge\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\QuoteTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use App\Models\QuoteTemplate;
 
 /**
  * Document Template API Controller
- * 
+ *
  * Handles API requests for document templates used by the enhanced
  * quote/invoice builder components.
  */
@@ -22,7 +22,7 @@ class DocumentTemplateController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         $query = QuoteTemplate::where('company_id', $user->company_id)
             ->where('is_active', true);
 
@@ -39,7 +39,7 @@ class DocumentTemplateController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('scope', 'like', "%{$search}%");
+                    ->orWhere('scope', 'like', "%{$search}%");
             });
         }
 
@@ -76,7 +76,7 @@ class DocumentTemplateController extends Controller
 
         return response()->json([
             'success' => true,
-            'templates' => $templates
+            'templates' => $templates,
         ]);
     }
 
@@ -86,7 +86,7 @@ class DocumentTemplateController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'scope' => 'nullable|string|max:500',
@@ -99,7 +99,7 @@ class DocumentTemplateController extends Controller
             'items.*.quantity' => 'required_with:items|numeric|min:0.01',
             'items.*.rate' => 'required_with:items|numeric|min:0',
             'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
-            'type' => 'required|in:quote,invoice'
+            'type' => 'required|in:quote,invoice',
         ]);
 
         try {
@@ -123,7 +123,7 @@ class DocumentTemplateController extends Controller
                 'template_id' => $template->id,
                 'name' => $template->name,
                 'type' => $template->type,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return response()->json([
@@ -142,18 +142,18 @@ class DocumentTemplateController extends Controller
                     'usage_count' => $template->usage_count,
                     'is_favorite' => $template->is_favorite,
                     'updated_at' => $template->updated_at,
-                ]
+                ],
             ], 201);
 
         } catch (\Exception $e) {
             Log::error('Document template creation failed', [
                 'error' => $e->getMessage(),
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save template'
+                'message' => 'Failed to save template',
             ], 500);
         }
     }
@@ -167,7 +167,7 @@ class DocumentTemplateController extends Controller
 
         try {
             $template->update([
-                'is_favorite' => !$template->is_favorite
+                'is_favorite' => ! $template->is_favorite,
             ]);
 
             // Increment usage count
@@ -176,25 +176,25 @@ class DocumentTemplateController extends Controller
             Log::info('Template favorite toggled', [
                 'template_id' => $template->id,
                 'is_favorite' => $template->is_favorite,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return response()->json([
                 'success' => true,
                 'is_favorite' => $template->is_favorite,
-                'message' => $template->is_favorite ? 'Added to favorites' : 'Removed from favorites'
+                'message' => $template->is_favorite ? 'Added to favorites' : 'Removed from favorites',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Template favorite toggle failed', [
                 'template_id' => $template->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update favorite status'
+                'message' => 'Failed to update favorite status',
             ], 500);
         }
     }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('recurring_frequency')->nullable()->after('recurring_invoice_id')
                 ->comment('monthly, quarterly, yearly, etc.');
             $table->date('next_recurring_date')->nullable()->after('recurring_frequency');
-            
+
             $table->index('is_recurring');
             $table->index('next_recurring_date');
         });
@@ -37,7 +37,7 @@ return new class extends Migration
                 'is_recurring',
                 'recurring_invoice_id',
                 'recurring_frequency',
-                'next_recurring_date'
+                'next_recurring_date',
             ]);
         });
     }

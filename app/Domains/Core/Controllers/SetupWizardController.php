@@ -3,9 +3,7 @@
 namespace App\Domains\Core\Controllers;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Company;
-use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserSetting;
 use Illuminate\Http\Request;
@@ -18,7 +16,7 @@ use Silber\Bouncer\BouncerFacade as Bouncer;
 
 /**
  * SetupWizardController
- * 
+ *
  * Handles the initial setup of the Nestogy ERP system when no companies exist.
  * Creates the first company and admin user to get the system bootstrapped.
  */
@@ -62,7 +60,7 @@ class SetupWizardController extends Controller
 
         // Validate the setup data
         $validator = $this->validateSetupData($request);
-        
+
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
@@ -95,19 +93,19 @@ class SetupWizardController extends Controller
             // Log in the admin user and redirect to dashboard
             auth()->login($user);
 
-            return redirect()->route('dashboard')->with('success', 
+            return redirect()->route('dashboard')->with('success',
                 'Welcome to Nestogy! Your ERP system has been successfully initialized. You can now start adding clients and managing your MSP business.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Initial system setup failed', [
                 'error' => $e->getMessage(),
-                'request_data' => $request->except(['admin_password', 'admin_password_confirmation'])
+                'request_data' => $request->except(['admin_password', 'admin_password_confirmation']),
             ]);
 
             return redirect()->back()
-                ->withErrors(['setup' => 'Setup failed: ' . $e->getMessage()])
+                ->withErrors(['setup' => 'Setup failed: '.$e->getMessage()])
                 ->withInput();
         }
     }
@@ -128,13 +126,13 @@ class SetupWizardController extends Controller
             'company_zip' => 'nullable|string|max:20',
             'company_country' => 'nullable|string|max:100',
             'company_website' => 'nullable|url|max:255',
-            'currency' => 'required|string|size:3|in:' . implode(',', array_keys(Company::SUPPORTED_CURRENCIES)),
-            
+            'currency' => 'required|string|size:3|in:'.implode(',', array_keys(Company::SUPPORTED_CURRENCIES)),
+
             // Admin user information
             'admin_name' => 'required|string|max:255',
             'admin_email' => 'required|email|max:255|unique:users,email',
             'admin_password' => ['required', 'confirmed', Password::defaults()],
-            
+
             // SMTP Configuration (optional)
             'smtp_host' => 'nullable|string|max:255',
             'smtp_port' => 'nullable|integer|min:1|max:65535',
@@ -143,15 +141,15 @@ class SetupWizardController extends Controller
             'smtp_password' => 'nullable|string|max:255',
             'mail_from_email' => 'nullable|email|max:255',
             'mail_from_name' => 'nullable|string|max:255',
-            
+
             // System Preferences
             'timezone' => 'required|string|max:255',
             'date_format' => 'nullable|string|max:20',
-            'theme' => 'nullable|string|in:' . implode(',', array_keys(\App\Models\Setting::getAvailableThemes())),
+            'theme' => 'nullable|string|in:'.implode(',', array_keys(\App\Models\Setting::getAvailableThemes())),
             'company_language' => 'nullable|string|size:2',
             'default_net_terms' => 'nullable|integer|min:0|max:365',
             'default_hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
-            
+
             // Module Selections
             'module_ticketing' => 'nullable|boolean',
             'module_invoicing' => 'nullable|boolean',
@@ -159,7 +157,7 @@ class SetupWizardController extends Controller
             'module_projects' => 'nullable|boolean',
             'module_contracts' => 'nullable|boolean',
             'module_reporting' => 'nullable|boolean',
-            
+
             // MSP Business Settings
             'business_hours_start' => 'nullable|date_format:H:i',
             'business_hours_end' => 'nullable|date_format:H:i',
@@ -175,7 +173,7 @@ class SetupWizardController extends Controller
             'invoice_prefix' => 'nullable|string|max:10',
             'invoice_starting_number' => 'nullable|integer|min:1',
             'invoice_late_fee_percent' => 'nullable|numeric|min:0|max:100',
-            
+
             // Security Options
             'enable_two_factor' => 'nullable|boolean',
             'enable_audit_logging' => 'nullable|boolean',
@@ -234,13 +232,13 @@ class SetupWizardController extends Controller
             'password' => Hash::make($data['admin_password']),
             'status' => true,
         ]);
-        
+
         // Send email verification if SMTP is configured
-        if (!empty($data['smtp_host'])) {
+        if (! empty($data['smtp_host'])) {
             // Dynamically configure mail settings for this request
             $this->configureSmtpForVerification($data);
             $user->sendEmailVerificationNotification();
-            
+
             Log::info('Email verification sent during setup', [
                 'user_id' => $user->id,
                 'email' => $user->email,
@@ -292,7 +290,7 @@ class SetupWizardController extends Controller
             'clients.locations.view', 'clients.locations.manage', 'clients.locations.export',
             'clients.documents.view', 'clients.documents.manage', 'clients.documents.export',
             'clients.files.view', 'clients.files.manage', 'clients.files.export',
-            
+
             'tickets.view', 'tickets.create', 'tickets.edit', 'tickets.delete',
             'assets.view', 'assets.create', 'assets.edit', 'assets.delete',
             'financial.view', 'financial.create', 'financial.edit', 'financial.delete',
@@ -303,7 +301,7 @@ class SetupWizardController extends Controller
             'knowledge.view', 'knowledge.create', 'knowledge.edit', 'knowledge.delete',
             'leads.view', 'leads.create', 'leads.edit', 'leads.delete',
             'marketing.view', 'marketing.create', 'marketing.edit', 'marketing.delete',
-            
+
             // System administration
             'users.manage', 'settings.manage', 'company.manage',
             'contracts.view', 'contracts.create', 'contracts.edit', 'contracts.delete',
@@ -315,7 +313,7 @@ class SetupWizardController extends Controller
                 'name' => $permission,
                 'title' => ucwords(str_replace('.', ' ', $permission)),
             ]);
-            
+
             // Allow admin role to perform this ability
             Bouncer::allow('admin')->to($permission);
         }
@@ -336,38 +334,38 @@ class SetupWizardController extends Controller
             'company_id' => $company->id,
             'current_database_version' => '1.0.0',
             'start_page' => 'dashboard',
-            
+
             // Regional & System Preferences
             'timezone' => $data['timezone'] ?? 'America/New_York',
             'date_format' => $data['date_format'] ?? 'Y-m-d',
             'theme' => $data['theme'] ?? 'blue',
             'company_language' => $data['company_language'] ?? 'en',
             'company_currency' => $data['currency'],
-            
+
             // Default Financial Settings
             'default_net_terms' => $data['default_net_terms'] ?? 30,
             'default_hourly_rate' => $data['default_hourly_rate'] ?? 150.00,
-            
+
             // SMTP Configuration
             'smtp_host' => $data['smtp_host'] ?? null,
             'smtp_port' => $data['smtp_port'] ?? null,
             'smtp_encryption' => $data['smtp_encryption'] ?? null,
             'smtp_username' => $data['smtp_username'] ?? null,
-            'smtp_password' => !empty($data['smtp_password']) ? $data['smtp_password'] : null, // Will be encrypted in model
+            'smtp_password' => ! empty($data['smtp_password']) ? $data['smtp_password'] : null, // Will be encrypted in model
             'mail_from_email' => $data['mail_from_email'] ?? $data['company_email'],
             'mail_from_name' => $data['mail_from_name'] ?? $data['company_name'],
-            
+
             // Business Hours
-            'business_hours' => !empty($data['business_hours_start']) && !empty($data['business_hours_end']) ? [
+            'business_hours' => ! empty($data['business_hours_start']) && ! empty($data['business_hours_end']) ? [
                 'start' => $data['business_hours_start'],
                 'end' => $data['business_hours_end'],
                 'timezone' => $data['timezone'] ?? 'America/New_York',
             ] : [
                 'start' => '08:00',
-                'end' => '18:00', 
+                'end' => '18:00',
                 'timezone' => $data['timezone'] ?? 'America/New_York',
             ],
-            
+
             // MSP Billing Rates (stored as arrays for the Settings model)
             'time_tracking_settings' => [
                 'rates' => [
@@ -380,40 +378,40 @@ class SetupWizardController extends Controller
                 'minimum_billing_increment' => $data['minimum_billing_increment'] ?? 0.25,
                 'time_rounding_method' => $data['time_rounding_method'] ?? 'nearest',
             ],
-            
+
             // Time Tracking
             'time_tracking_enabled' => true,
             'default_minimum_billing_increment' => $data['minimum_billing_increment'] ?? 0.25,
             'default_time_rounding_method' => $data['time_rounding_method'] ?? 'nearest',
-            
+
             // Ticket Settings
             'ticket_prefix' => $data['ticket_prefix'] ?? 'TKT-',
             'ticket_next_number' => 1,
-            'ticket_autoclose' => !empty($data['ticket_autoclose_hours']),
+            'ticket_autoclose' => ! empty($data['ticket_autoclose_hours']),
             'ticket_autoclose_hours' => $data['ticket_autoclose_hours'] ?? 72,
             'ticket_email_parse' => false,
             'ticket_client_general_notifications' => true,
-            
-            // Invoice Settings  
+
+            // Invoice Settings
             'invoice_prefix' => $data['invoice_prefix'] ?? 'INV-',
             'invoice_next_number' => $data['invoice_starting_number'] ?? 1000,
-            'invoice_late_fee_enable' => !empty($data['invoice_late_fee_percent']),
+            'invoice_late_fee_enable' => ! empty($data['invoice_late_fee_percent']),
             'invoice_late_fee_percent' => $data['invoice_late_fee_percent'] ?? 0,
             'recurring_auto_send_invoice' => true,
             'send_invoice_reminders' => true,
-            
+
             // Quote Settings
             'quote_prefix' => 'QUO-',
             'quote_next_number' => 1000,
-            
+
             // Module Settings
-            'module_enable_ticketing' => !empty($data['module_ticketing']),
-            'module_enable_accounting' => !empty($data['module_invoicing']),
+            'module_enable_ticketing' => ! empty($data['module_ticketing']),
+            'module_enable_accounting' => ! empty($data['module_invoicing']),
             'module_enable_itdoc' => true, // Always enable core documentation
-            
+
             // Security Settings
-            'two_factor_enabled' => !empty($data['enable_two_factor']),
-            'audit_logging_enabled' => !empty($data['enable_audit_logging']) || true, // Default to enabled
+            'two_factor_enabled' => ! empty($data['enable_two_factor']),
+            'audit_logging_enabled' => ! empty($data['enable_audit_logging']) || true, // Default to enabled
             'audit_retention_days' => 365,
             'password_min_length' => 8,
             'password_require_special' => true,
@@ -421,13 +419,13 @@ class SetupWizardController extends Controller
             'password_require_uppercase' => true,
             'password_expiry_days' => 90,
             'session_timeout_minutes' => 480,
-            
+
             // System Settings
             'telemetry' => false,
             'destructive_deletes_enable' => false,
             'enable_cron' => true,
             'enable_alert_domain_expire' => true,
-            
+
             // Client Portal Settings
             'client_portal_enable' => true,
             'portal_self_service_tickets' => true,
@@ -436,27 +434,27 @@ class SetupWizardController extends Controller
             'portal_payment_processing' => false,
             'portal_asset_visibility' => true,
         ];
-        
+
         // Update the existing settings record (created by Company model observer)
         $existingSettings = \App\Models\Setting::where('company_id', $company->id)->first();
-        
+
         if ($existingSettings) {
             $existingSettings->update($settingsData);
         } else {
             // Fallback: create new settings if none exist (shouldn't happen normally)
             \App\Models\Setting::create($settingsData);
         }
-        
+
         Log::info('Company settings created during setup', [
             'company_id' => $company->id,
-            'smtp_configured' => !empty($data['smtp_host']),
+            'smtp_configured' => ! empty($data['smtp_host']),
             'modules_enabled' => array_filter([
-                'ticketing' => !empty($data['module_ticketing']),
-                'invoicing' => !empty($data['module_invoicing']),
-                'assets' => !empty($data['module_assets']),
-                'projects' => !empty($data['module_projects']),
-                'contracts' => !empty($data['module_contracts']),
-                'reporting' => !empty($data['module_reporting']),
+                'ticketing' => ! empty($data['module_ticketing']),
+                'invoicing' => ! empty($data['module_invoicing']),
+                'assets' => ! empty($data['module_assets']),
+                'projects' => ! empty($data['module_projects']),
+                'contracts' => ! empty($data['module_contracts']),
+                'reporting' => ! empty($data['module_reporting']),
             ]),
         ]);
     }
@@ -482,27 +480,27 @@ class SetupWizardController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Please fill in all required SMTP fields: ' . implode(', ', $validator->errors()->all()),
+                'message' => 'Please fill in all required SMTP fields: '.implode(', ', $validator->errors()->all()),
             ]);
         }
 
         try {
             // Configure SMTP settings temporarily
             $this->configureSmtpForVerification($request->all());
-            
+
             // Create a test email
             $testEmail = $request->input('mail_from_email') ?: $request->input('company_email');
             $companyName = $request->input('company_name');
-            
+
             // Send test email
             \Mail::raw(
-                "This is a test email from your Nestogy ERP setup wizard.\n\n" .
-                "If you receive this email, your SMTP configuration is working correctly!\n\n" .
-                "Company: {$companyName}\n" .
-                "Test sent at: " . now()->format('Y-m-d H:i:s T'),
+                "This is a test email from your Nestogy ERP setup wizard.\n\n".
+                "If you receive this email, your SMTP configuration is working correctly!\n\n".
+                "Company: {$companyName}\n".
+                'Test sent at: '.now()->format('Y-m-d H:i:s T'),
                 function ($message) use ($testEmail, $companyName) {
                     $message->to($testEmail)
-                           ->subject("SMTP Test - {$companyName} ERP Setup");
+                        ->subject("SMTP Test - {$companyName} ERP Setup");
                 }
             );
 
@@ -520,7 +518,7 @@ class SetupWizardController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'SMTP test failed: ' . $e->getMessage(),
+                'message' => 'SMTP test failed: '.$e->getMessage(),
             ]);
         }
     }
@@ -541,7 +539,7 @@ class SetupWizardController extends Controller
             'mail.from.address' => $data['mail_from_email'] ?? $data['company_email'],
             'mail.from.name' => $data['mail_from_name'] ?? $data['company_name'],
         ]);
-        
+
         // Clear any cached mail configuration
         app()->forgetInstance('mail.manager');
         app()->forgetInstance('swift.mailer');
@@ -552,6 +550,6 @@ class SetupWizardController extends Controller
      */
     public function needsSetup(): bool
     {
-        return !Company::exists();
+        return ! Company::exists();
     }
 }

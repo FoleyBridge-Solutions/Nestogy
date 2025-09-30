@@ -2,19 +2,18 @@
 
 namespace App\Domains\Financial\Services;
 
+use App\Models\Client;
 use App\Models\Product;
 use App\Models\Service;
-use App\Models\Client;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 
 /**
  * Billing Orchestrator (Refactored with Composition)
- * 
+ *
  * This service demonstrates the complete transformation from inheritance
  * to composition patterns. Instead of one monolithic BillingService with
  * 7+ responsibilities, we now compose specialized services.
- * 
+ *
  * COMPOSITION BENEFITS DEMONSTRATED:
  * - Single Responsibility: Each composed service has one clear purpose
  * - Dependency Injection: Services are injected, not inherited
@@ -34,7 +33,7 @@ class BillingOrchestrator
 
     /**
      * Generate comprehensive billing for a product.
-     * 
+     *
      * COMPOSITION PATTERN: Delegates to specialized services rather than handling everything.
      */
     public function generateComprehensiveBilling(Product $product, Client $client, array $options = []): array
@@ -47,27 +46,27 @@ class BillingOrchestrator
             'product' => [
                 'id' => $product->id,
                 'name' => $product->name,
-                'billing_model' => $product->billing_model
+                'billing_model' => $product->billing_model,
             ],
             'client' => [
                 'id' => $client->id,
-                'name' => $client->display_name
+                'name' => $client->display_name,
             ],
-            'billing_components' => []
+            'billing_components' => [],
         ];
 
         // 1. Generate billing schedule using specialized service
         $result['billing_components']['schedule'] = $this->scheduleService->generateSchedule(
-            $product, 
-            $startDate, 
+            $product,
+            $startDate,
             $periods
         );
 
         // 2. Calculate proration if needed using specialized service
         if ($options['calculate_proration'] ?? false) {
             $result['billing_components']['proration'] = $this->prorationService->calculateProratedAmount(
-                $product, 
-                $startDate, 
+                $product,
+                $startDate,
                 $options['proration_end_date'] ?? null
             );
         }
@@ -75,17 +74,17 @@ class BillingOrchestrator
         // 3. Calculate usage billing if applicable using specialized service
         if ($product->billing_model === 'usage_based' && $usage > 0) {
             $result['billing_components']['usage'] = $this->usageService->calculateUsageBilling(
-                $product, 
-                $usage, 
-                $startDate, 
+                $product,
+                $usage,
+                $startDate,
                 $startDate->copy()->addMonth()
             );
         }
 
         // 4. Calculate pricing using specialized service
         $result['billing_components']['pricing'] = $this->pricingService->calculatePrice(
-            $product, 
-            $client, 
+            $product,
+            $client,
             $options['quantity'] ?? 1
         );
 
@@ -94,7 +93,7 @@ class BillingOrchestrator
 
     /**
      * Process bulk billing operations.
-     * 
+     *
      * COMPOSITION PATTERN: Orchestrates multiple services for complex operations.
      */
     public function processBulkBilling(array $billingRequests): array
@@ -103,13 +102,13 @@ class BillingOrchestrator
             'processed' => 0,
             'failed' => 0,
             'total_amount' => 0,
-            'breakdown' => []
+            'breakdown' => [],
         ];
 
         foreach ($billingRequests as $request) {
             try {
                 $result = $this->processIndividualBilling($request);
-                
+
                 $results['processed']++;
                 $results['total_amount'] += $result['total_amount'];
                 $results['breakdown'][] = $result;
@@ -118,7 +117,7 @@ class BillingOrchestrator
                 $results['failed']++;
                 $results['breakdown'][] = [
                     'error' => $e->getMessage(),
-                    'request' => $request
+                    'request' => $request,
                 ];
             }
         }
@@ -128,7 +127,7 @@ class BillingOrchestrator
 
     /**
      * Calculate setup and termination fees.
-     * 
+     *
      * COMPOSITION PATTERN: Combines multiple calculation services.
      */
     public function calculateServiceFees(Service $service, Client $client, array $options = []): array
@@ -137,7 +136,7 @@ class BillingOrchestrator
             'setup_fees' => [],
             'termination_fees' => [],
             'total_setup_cost' => 0,
-            'total_termination_cost' => 0
+            'total_termination_cost' => 0,
         ];
 
         // Calculate setup fees
@@ -150,14 +149,14 @@ class BillingOrchestrator
         // Calculate termination fees if termination date provided
         if (isset($options['termination_date'])) {
             $terminationFee = $this->calculateEarlyTerminationFee(
-                $service, 
+                $service,
                 $options['start_date'] ?? Carbon::today(),
                 $options['termination_date']
             );
-            
+
             $fees['termination_fees'] = [
                 'amount' => $terminationFee,
-                'reason' => 'Early termination before minimum commitment'
+                'reason' => 'Early termination before minimum commitment',
             ];
             $fees['total_termination_cost'] = $terminationFee;
         }
@@ -167,7 +166,7 @@ class BillingOrchestrator
 
     /**
      * Get comprehensive billing analytics.
-     * 
+     *
      * COMPOSITION PATTERN: Aggregates data from multiple specialized services.
      */
     public function getBillingAnalytics(Carbon $startDate, Carbon $endDate): array
@@ -176,18 +175,18 @@ class BillingOrchestrator
             'period' => [
                 'start' => $startDate->format('Y-m-d'),
                 'end' => $endDate->format('Y-m-d'),
-                'days' => $startDate->diffInDays($endDate)
+                'days' => $startDate->diffInDays($endDate),
             ],
             'recurring_summary' => $this->recurringService->getRecurringSummary($startDate, $endDate),
             'upcoming_bills' => $this->recurringService->previewUpcomingBills(30),
             'proration_summary' => $this->getProrationAnalytics($startDate, $endDate),
-            'usage_summary' => $this->getUsageAnalytics($startDate, $endDate)
+            'usage_summary' => $this->getUsageAnalytics($startDate, $endDate),
         ];
     }
 
     /**
      * Test all billing components.
-     * 
+     *
      * COMPOSITION PATTERN: Validates each composed service independently.
      */
     public function testBillingSystem(Product $testProduct, Client $testClient): array
@@ -197,15 +196,15 @@ class BillingOrchestrator
             'proration_service' => $this->testProrationService($testProduct),
             'usage_service' => $this->testUsageService($testProduct),
             'recurring_service' => $this->testRecurringService($testProduct),
-            'pricing_service' => $this->testPricingService($testProduct, $testClient)
+            'pricing_service' => $this->testPricingService($testProduct, $testClient),
         ];
 
-        $allPassed = collect($tests)->every(fn($test) => $test['status'] === 'passed');
+        $allPassed = collect($tests)->every(fn ($test) => $test['status'] === 'passed');
 
         return [
             'overall_status' => $allPassed ? 'passed' : 'failed',
             'tests' => $tests,
-            'composition_verified' => true
+            'composition_verified' => true,
         ];
     }
 
@@ -222,11 +221,11 @@ class BillingOrchestrator
                 return [
                     'type' => 'schedule',
                     'result' => $this->scheduleService->generateSchedule(
-                        $product, 
+                        $product,
                         Carbon::parse($request['start_date']),
                         $request['periods'] ?? 12
                     ),
-                    'total_amount' => $product->base_price * ($request['periods'] ?? 12)
+                    'total_amount' => $product->base_price * ($request['periods'] ?? 12),
                 ];
 
             case 'usage':
@@ -236,10 +235,11 @@ class BillingOrchestrator
                     Carbon::parse($request['period_start']),
                     Carbon::parse($request['period_end'])
                 );
+
                 return [
                     'type' => 'usage',
                     'result' => $usage,
-                    'total_amount' => $usage['total_amount']
+                    'total_amount' => $usage['total_amount'],
                 ];
 
             case 'proration':
@@ -248,10 +248,11 @@ class BillingOrchestrator
                     Carbon::parse($request['start_date']),
                     isset($request['end_date']) ? Carbon::parse($request['end_date']) : null
                 );
+
                 return [
                     'type' => 'proration',
                     'result' => $proration,
-                    'total_amount' => $proration['amount']
+                    'total_amount' => $proration['amount'],
                 ];
 
             default:
@@ -268,7 +269,7 @@ class BillingOrchestrator
         return [
             'total_prorations' => 0,
             'total_savings' => 0,
-            'average_proration_percentage' => 0
+            'average_proration_percentage' => 0,
         ];
     }
 
@@ -281,7 +282,7 @@ class BillingOrchestrator
         return [
             'total_usage_revenue' => 0,
             'average_overage' => 0,
-            'top_usage_products' => []
+            'top_usage_products' => [],
         ];
     }
 
@@ -290,17 +291,18 @@ class BillingOrchestrator
     {
         try {
             $schedule = $this->scheduleService->generateSchedule($product, Carbon::today(), 3);
+
             return [
                 'status' => 'passed',
                 'service' => 'BillingScheduleService',
                 'test' => 'Generate 3-period schedule',
-                'result_count' => count($schedule)
+                'result_count' => count($schedule),
             ];
         } catch (\Exception $e) {
             return [
                 'status' => 'failed',
                 'service' => 'BillingScheduleService',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -309,17 +311,18 @@ class BillingOrchestrator
     {
         try {
             $proration = $this->prorationService->calculateProratedAmount($product, Carbon::today());
+
             return [
                 'status' => 'passed',
                 'service' => 'ProrationCalculatorService',
                 'test' => 'Calculate proration',
-                'is_prorated' => $proration['is_prorated']
+                'is_prorated' => $proration['is_prorated'],
             ];
         } catch (\Exception $e) {
             return [
                 'status' => 'failed',
                 'service' => 'ProrationCalculatorService',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -329,23 +332,25 @@ class BillingOrchestrator
         try {
             if ($product->billing_model === 'usage_based') {
                 $usage = $this->usageService->calculateUsageBilling($product, 100, Carbon::today(), Carbon::today()->addMonth());
+
                 return [
                     'status' => 'passed',
                     'service' => 'UsageBillingService',
                     'test' => 'Calculate usage billing',
-                    'total_amount' => $usage['total_amount']
+                    'total_amount' => $usage['total_amount'],
                 ];
             }
+
             return [
                 'status' => 'skipped',
                 'service' => 'UsageBillingService',
-                'reason' => 'Product not usage-based'
+                'reason' => 'Product not usage-based',
             ];
         } catch (\Exception $e) {
             return [
                 'status' => 'failed',
                 'service' => 'UsageBillingService',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -354,17 +359,18 @@ class BillingOrchestrator
     {
         try {
             $invoices = $this->recurringService->processRecurringBilling(Carbon::today());
+
             return [
                 'status' => 'passed',
                 'service' => 'RecurringBillingService',
                 'test' => 'Process recurring billing',
-                'invoices_created' => $invoices->count()
+                'invoices_created' => $invoices->count(),
             ];
         } catch (\Exception $e) {
             return [
                 'status' => 'failed',
                 'service' => 'RecurringBillingService',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -373,23 +379,24 @@ class BillingOrchestrator
     {
         try {
             $pricing = $this->pricingService->calculatePrice($product, $client, 1);
+
             return [
                 'status' => 'passed',
                 'service' => 'ProductPricingService',
                 'test' => 'Calculate pricing',
-                'total' => $pricing['total']
+                'total' => $pricing['total'],
             ];
         } catch (\Exception $e) {
             return [
                 'status' => 'failed',
                 'service' => 'ProductPricingService',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
 
     // Legacy methods for backward compatibility
-    protected function calculateServiceSetupFees(Service $service, Client $client = null): array
+    protected function calculateServiceSetupFees(Service $service, ?Client $client = null): array
     {
         // Implementation from original BillingService
         return ['fees' => [], 'total_setup_cost' => 0];

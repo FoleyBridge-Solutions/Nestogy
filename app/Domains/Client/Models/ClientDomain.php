@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientDomain extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -105,7 +105,7 @@ class ClientDomain extends Model
     public function scopeExpiringSoon($query, $days = 30)
     {
         return $query->where('expires_at', '>', now())
-                    ->where('expires_at', '<=', now()->addDays($days));
+            ->where('expires_at', '<=', now()->addDays($days));
     }
 
     /**
@@ -137,13 +137,13 @@ class ClientDomain extends Model
      */
     public function isExpiringSoon($days = null)
     {
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return false;
         }
 
         $alertDays = $days ?: $this->days_before_expiry_alert ?: 30;
-        
-        return !$this->isExpired() && 
+
+        return ! $this->isExpired() &&
                $this->expires_at->diffInDays(now()) <= $alertDays;
     }
 
@@ -152,7 +152,7 @@ class ClientDomain extends Model
      */
     public function getDaysUntilExpiryAttribute()
     {
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return null;
         }
 
@@ -209,9 +209,9 @@ class ClientDomain extends Model
     public function getFullDomainAttribute()
     {
         if ($this->tld) {
-            return $this->domain_name . '.' . $this->tld;
+            return $this->domain_name.'.'.$this->tld;
         }
-        
+
         return $this->domain_name;
     }
 
@@ -221,16 +221,16 @@ class ClientDomain extends Model
     public function getSecurityStatusAttribute()
     {
         $issues = [];
-        
-        if (!$this->privacy_protection) {
+
+        if (! $this->privacy_protection) {
             $issues[] = 'No privacy protection';
         }
-        
-        if (!$this->lock_status) {
+
+        if (! $this->lock_status) {
             $issues[] = 'Domain not locked';
         }
-        
-        if (!$this->transfer_lock) {
+
+        if (! $this->transfer_lock) {
             $issues[] = 'Transfer not locked';
         }
 
@@ -249,16 +249,16 @@ class ClientDomain extends Model
     public function getSecurityIssuesAttribute()
     {
         $issues = [];
-        
-        if (!$this->privacy_protection) {
+
+        if (! $this->privacy_protection) {
             $issues[] = 'No privacy protection';
         }
-        
-        if (!$this->lock_status) {
+
+        if (! $this->lock_status) {
             $issues[] = 'Domain not locked';
         }
-        
-        if (!$this->transfer_lock) {
+
+        if (! $this->transfer_lock) {
             $issues[] = 'Transfer not locked';
         }
 
@@ -274,7 +274,7 @@ class ClientDomain extends Model
             return 'critical';
         }
 
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return 'none';
         }
 
@@ -296,7 +296,7 @@ class ClientDomain extends Model
      */
     public function getFormattedNameserversAttribute()
     {
-        if (!$this->nameservers || empty($this->nameservers)) {
+        if (! $this->nameservers || empty($this->nameservers)) {
             return 'No nameservers specified';
         }
 
@@ -308,7 +308,7 @@ class ClientDomain extends Model
      */
     public function getYearsSinceRegistrationAttribute()
     {
-        if (!$this->registered_at) {
+        if (! $this->registered_at) {
             return null;
         }
 
@@ -320,7 +320,7 @@ class ClientDomain extends Model
      */
     public function hasDnsManagement()
     {
-        return !empty($this->dns_provider) || ($this->dns_records_count && $this->dns_records_count > 0);
+        return ! empty($this->dns_provider) || ($this->dns_records_count && $this->dns_records_count > 0);
     }
 
     /**

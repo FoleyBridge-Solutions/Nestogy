@@ -2,75 +2,91 @@
 
 namespace App\Livewire\Clients;
 
-use Livewire\Component;
-use Livewire\WithFileUploads;
 use App\Models\Client;
 use App\Models\Tag;
 use Illuminate\Support\Facades\DB;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class CreateClient extends Component
 {
     use WithFileUploads;
-    
+
     // Tab management
     public $currentTab = 'basic';
-    
+
     public function setTab($tab)
     {
         $this->currentTab = $tab;
     }
-    
+
     public function nextTab()
     {
         $tabs = ['basic', 'address', 'billing', 'additional'];
         $currentIndex = array_search($this->currentTab, $tabs);
-        
+
         if ($currentIndex !== false && $currentIndex < count($tabs) - 1) {
             $this->currentTab = $tabs[$currentIndex + 1];
         }
     }
-    
+
     public function previousTab()
     {
         $tabs = ['basic', 'address', 'billing', 'additional'];
         $currentIndex = array_search($this->currentTab, $tabs);
-        
+
         if ($currentIndex !== false && $currentIndex > 0) {
             $this->currentTab = $tabs[$currentIndex - 1];
         }
     }
-    
+
     // Form fields
     public $isLead = false;
+
     public $type = 'individual';
+
     public $name = '';
+
     public $company = '';
+
     public $email = '';
+
     public $phone = '';
+
     public $website = '';
+
     public $tax_id_number = '';
+
     public $referral = '';
-    
+
     // Address fields
     public $address = '';
+
     public $city = '';
+
     public $state = '';
+
     public $zip_code = '';
+
     public $country = '';
-    
+
     // Billing fields
     public $status = 'active';
+
     public $hourly_rate = '';
+
     public $currency_code = 'USD';
+
     public $net_terms = 30;
-    
+
     // Additional fields
     public $notes = '';
+
     public $tags = [];
-    
+
     // Available tags
     public $availableTags = [];
-    
+
     protected $rules = [
         'name' => 'required|min:2|max:255',
         'email' => 'required|email|unique:clients,email',
@@ -89,9 +105,9 @@ class CreateClient extends Component
         'hourly_rate' => 'nullable|numeric|min:0',
         'currency_code' => 'required|in:USD,EUR,GBP,CAD,AUD',
         'net_terms' => 'nullable|numeric|min:0',
-        'notes' => 'nullable|max:5000'
+        'notes' => 'nullable|max:5000',
     ];
-    
+
     protected $messages = [
         'name.required' => 'The client name is required.',
         'email.required' => 'The email address is required.',
@@ -99,7 +115,7 @@ class CreateClient extends Component
         'email.unique' => 'This email address is already registered.',
         'website.url' => 'Please enter a valid URL starting with http:// or https://',
     ];
-    
+
     public function mount()
     {
         $this->isLead = request()->has('lead');
@@ -107,7 +123,7 @@ class CreateClient extends Component
             ->orderBy('name')
             ->get();
     }
-    
+
     public function updatedType($value)
     {
         // Clear company field if switching to business type
@@ -115,19 +131,19 @@ class CreateClient extends Component
             $this->company = '';
         }
     }
-    
+
     public function updated($propertyName)
     {
         $this->validateOnly($propertyName);
     }
-    
+
     public function save()
     {
         $this->validate();
-        
+
         DB::transaction(function () {
-            $client = new Client();
-            
+            $client = new Client;
+
             // Set basic fields
             $client->company_id = auth()->user()->company_id;
             $client->created_by = auth()->id();
@@ -140,31 +156,30 @@ class CreateClient extends Component
             $client->website = $this->website;
             $client->tax_id_number = $this->tax_id_number;
             $client->referral = $this->referral;
-            
+
             // Set address fields
             $client->address = $this->address;
             $client->city = $this->city;
             $client->state = $this->state;
             $client->zip_code = $this->zip_code;
             $client->country = $this->country;
-            
+
             // Set billing fields
             $client->status = $this->status;
             $client->hourly_rate = $this->hourly_rate ?: null;
             $client->currency_code = $this->currency_code;
             $client->net_terms = $this->net_terms;
-            
+
             // Set additional fields
             $client->notes = $this->notes;
-            
-            
+
             $client->save();
-            
+
             // Attach tags
-            if (!empty($this->tags)) {
+            if (! empty($this->tags)) {
                 $client->tags()->sync($this->tags);
             }
-            
+
             // Create default location
             $client->locations()->create([
                 'name' => 'Main Office',
@@ -176,17 +191,17 @@ class CreateClient extends Component
                 'is_primary' => true,
             ]);
         });
-        
-        session()->flash('success', ($this->isLead ? 'Lead' : 'Client') . ' created successfully.');
-        
+
+        session()->flash('success', ($this->isLead ? 'Lead' : 'Client').' created successfully.');
+
         return redirect()->route('clients.index', $this->isLead ? ['lead' => 1] : []);
     }
-    
+
     public function cancel()
     {
         return redirect()->route('clients.index', $this->isLead ? ['lead' => 1] : []);
     }
-    
+
     public function render()
     {
         return view('livewire.clients.create-client');

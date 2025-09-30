@@ -96,7 +96,7 @@ class ClientITDocumentationService
     public function scheduleReview(ClientITDocumentation $documentation, string $schedule): void
     {
         $nextReviewDate = $this->calculateNextReviewDate($schedule);
-        
+
         $documentation->update([
             'review_schedule' => $schedule,
             'next_review_at' => $nextReviewDate,
@@ -113,19 +113,19 @@ class ClientITDocumentationService
             ->where('company_id', auth()->user()->company_id);
 
         // Apply filters
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
-        if (!empty($filters['client_id'])) {
+        if (! empty($filters['client_id'])) {
             $query->where('client_id', $filters['client_id']);
         }
 
-        if (!empty($filters['it_category'])) {
+        if (! empty($filters['it_category'])) {
             $query->where('it_category', $filters['it_category']);
         }
 
-        if (!empty($filters['access_level'])) {
+        if (! empty($filters['access_level'])) {
             $query->where('access_level', $filters['access_level']);
         }
 
@@ -150,9 +150,9 @@ class ClientITDocumentationService
     {
         return ClientITDocumentation::where('id', '!=', $documentation->id)
             ->where('company_id', $documentation->company_id)
-            ->where(function($query) use ($documentation) {
+            ->where(function ($query) use ($documentation) {
                 $query->where('client_id', $documentation->client_id)
-                      ->orWhere('it_category', $documentation->it_category);
+                    ->orWhere('it_category', $documentation->it_category);
             })
             ->active()
             ->limit($limit)
@@ -165,20 +165,20 @@ class ClientITDocumentationService
     public function duplicateForClient(ClientITDocumentation $documentation, int $clientId): ClientITDocumentation
     {
         $duplicateData = $documentation->toArray();
-        
+
         // Remove unique identifiers and set new client
         unset($duplicateData['id'], $duplicateData['created_at'], $duplicateData['updated_at'], $duplicateData['deleted_at']);
         $duplicateData['client_id'] = $clientId;
         $duplicateData['authored_by'] = auth()->id();
-        $duplicateData['name'] = $duplicateData['name'] . ' (Copy)';
+        $duplicateData['name'] = $duplicateData['name'].' (Copy)';
         $duplicateData['version'] = '1.0';
         $duplicateData['parent_document_id'] = null;
 
         // Handle file duplication if exists
         if ($documentation->hasFile() && $documentation->fileExists()) {
             $originalPath = $documentation->file_path;
-            $newFilename = Str::uuid() . '.' . pathinfo($documentation->filename, PATHINFO_EXTENSION);
-            $newPath = 'clients/it-documentation/' . $newFilename;
+            $newFilename = Str::uuid().'.'.pathinfo($documentation->filename, PATHINFO_EXTENSION);
+            $newPath = 'clients/it-documentation/'.$newFilename;
 
             Storage::copy($originalPath, $newPath);
 
@@ -202,11 +202,11 @@ class ClientITDocumentationService
             'active' => $query->active()->count(),
             'needs_review' => $query->needsReview()->count(),
             'by_category' => $query->groupBy('it_category')
-                                 ->selectRaw('it_category, count(*) as count')
-                                 ->pluck('count', 'it_category'),
+                ->selectRaw('it_category, count(*) as count')
+                ->pluck('count', 'it_category'),
             'by_access_level' => $query->groupBy('access_level')
-                                    ->selectRaw('access_level, count(*) as count')
-                                    ->pluck('count', 'access_level'),
+                ->selectRaw('access_level, count(*) as count')
+                ->pluck('count', 'access_level'),
         ];
     }
 
@@ -216,8 +216,8 @@ class ClientITDocumentationService
     protected function handleFileUpload(UploadedFile $file): array
     {
         $originalFilename = $file->getClientOriginalName();
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $filePath = 'clients/it-documentation/' . $filename;
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
+        $filePath = 'clients/it-documentation/'.$filename;
 
         // Store the file
         $file->storeAs('clients/it-documentation', $filename);
@@ -240,7 +240,7 @@ class ClientITDocumentationService
      */
     protected function calculateNextReviewDate(string $schedule): Carbon
     {
-        return match($schedule) {
+        return match ($schedule) {
             'monthly' => now()->addMonth(),
             'quarterly' => now()->addQuarter(),
             'annually' => now()->addYear(),
@@ -254,10 +254,10 @@ class ClientITDocumentationService
     protected function incrementVersion(string $version): string
     {
         $parts = explode('.', $version);
-        $minor = (int)($parts[1] ?? 0);
+        $minor = (int) ($parts[1] ?? 0);
         $minor++;
 
-        return $parts[0] . '.' . $minor;
+        return $parts[0].'.'.$minor;
     }
 
     /**

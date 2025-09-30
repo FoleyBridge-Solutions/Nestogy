@@ -5,12 +5,12 @@ namespace App\Domains\Ticket\Services;
 use App\Domains\Ticket\Models\SLA;
 use App\Models\Client;
 use App\Models\Company;
-use Illuminate\Database\Eloquent\Collection;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * SLA Service for Domain-Driven Design
- * 
+ *
  * Handles all SLA-related business logic including creation, assignment,
  * breach detection, and deadline calculations.
  */
@@ -22,12 +22,12 @@ class SLAService
     public function create(int $companyId, array $data): SLA
     {
         $data['company_id'] = $companyId;
-        
+
         // If this is set as default, ensure no other default exists
         if ($data['is_default'] ?? false) {
             $this->clearDefaultSLA($companyId);
         }
-        
+
         return SLA::create($data);
     }
 
@@ -37,12 +37,12 @@ class SLAService
     public function update(SLA $sla, array $data): SLA
     {
         // If this is being set as default, clear other defaults
-        if (($data['is_default'] ?? false) && !$sla->is_default) {
+        if (($data['is_default'] ?? false) && ! $sla->is_default) {
             $this->clearDefaultSLA($sla->company_id);
         }
-        
+
         $sla->update($data);
-        
+
         return $sla->fresh();
     }
 
@@ -53,17 +53,17 @@ class SLAService
     {
         // Get the default SLA for reassignment
         $defaultSLA = $this->getDefaultSLA($sla->company_id);
-        
+
         // Reassign all clients using this SLA to the default SLA
         if ($defaultSLA && $defaultSLA->id !== $sla->id) {
             Client::where('sla_id', $sla->id)
-                  ->update(['sla_id' => $defaultSLA->id]);
+                ->update(['sla_id' => $defaultSLA->id]);
         } else {
             // If deleting the default SLA, set clients to null
             Client::where('sla_id', $sla->id)
-                  ->update(['sla_id' => null]);
+                ->update(['sla_id' => null]);
         }
-        
+
         return $sla->delete();
     }
 
@@ -73,10 +73,10 @@ class SLAService
     public function getDefaultSLA(int $companyId): ?SLA
     {
         return SLA::where('company_id', $companyId)
-                  ->where('is_default', true)
-                  ->where('is_active', true)
-                  ->effectiveOn()
-                  ->first();
+            ->where('is_default', true)
+            ->where('is_active', true)
+            ->effectiveOn()
+            ->first();
     }
 
     /**
@@ -85,11 +85,11 @@ class SLAService
     public function getActiveSLAs(int $companyId): Collection
     {
         return SLA::where('company_id', $companyId)
-                  ->active()
-                  ->effectiveOn()
-                  ->orderBy('is_default', 'desc')
-                  ->orderBy('name')
-                  ->get();
+            ->active()
+            ->effectiveOn()
+            ->orderBy('is_default', 'desc')
+            ->orderBy('name')
+            ->get();
     }
 
     /**
@@ -100,15 +100,15 @@ class SLAService
         // First try to get the client's specific SLA
         if ($client->sla_id) {
             $sla = SLA::where('id', $client->sla_id)
-                      ->active()
-                      ->effectiveOn()
-                      ->first();
-            
+                ->active()
+                ->effectiveOn()
+                ->first();
+
             if ($sla) {
                 return $sla;
             }
         }
-        
+
         // Fallback to company default SLA
         return $this->getDefaultSLA($client->company_id);
     }
@@ -121,18 +121,18 @@ class SLAService
         // Validate SLA belongs to same company
         if ($slaId) {
             $sla = SLA::where('id', $slaId)
-                      ->where('company_id', $client->company_id)
-                      ->active()
-                      ->effectiveOn()
-                      ->first();
-            
-            if (!$sla) {
+                ->where('company_id', $client->company_id)
+                ->active()
+                ->effectiveOn()
+                ->first();
+
+            if (! $sla) {
                 throw new \InvalidArgumentException('Invalid SLA for this client\'s company');
             }
         }
-        
+
         $client->update(['sla_id' => $slaId]);
-        
+
         return $client->fresh();
     }
 
@@ -142,11 +142,11 @@ class SLAService
     public function calculateResponseDeadline(Client $client, string $priority, Carbon $createdAt): ?Carbon
     {
         $sla = $this->getClientSLA($client);
-        
-        if (!$sla) {
+
+        if (! $sla) {
             return null;
         }
-        
+
         return $sla->calculateResponseDeadline($createdAt, $priority);
     }
 
@@ -156,11 +156,11 @@ class SLAService
     public function calculateResolutionDeadline(Client $client, string $priority, Carbon $createdAt): ?Carbon
     {
         $sla = $this->getClientSLA($client);
-        
-        if (!$sla) {
+
+        if (! $sla) {
             return null;
         }
-        
+
         return $sla->calculateResolutionDeadline($createdAt, $priority);
     }
 
@@ -170,11 +170,11 @@ class SLAService
     public function isResponseBreached(Client $client, string $priority, Carbon $createdAt): bool
     {
         $sla = $this->getClientSLA($client);
-        
-        if (!$sla) {
+
+        if (! $sla) {
             return false;
         }
-        
+
         return $sla->isBreached($createdAt, $priority, 'response');
     }
 
@@ -184,11 +184,11 @@ class SLAService
     public function isResolutionBreached(Client $client, string $priority, Carbon $createdAt, ?Carbon $resolvedAt = null): bool
     {
         $sla = $this->getClientSLA($client);
-        
-        if (!$sla) {
+
+        if (! $sla) {
             return false;
         }
-        
+
         return $sla->isBreached($createdAt, $priority, 'resolution', $resolvedAt);
     }
 
@@ -198,11 +198,11 @@ class SLAService
     public function isApproachingBreach(Client $client, string $priority, Carbon $createdAt, string $type = 'response'): bool
     {
         $sla = $this->getClientSLA($client);
-        
-        if (!$sla) {
+
+        if (! $sla) {
             return false;
         }
-        
+
         return $sla->isApproachingBreach($createdAt, $priority, $type);
     }
 
@@ -231,8 +231,8 @@ class SLAService
     public function createDefaultSLA(int $companyId, string $companyName): SLA
     {
         return $this->create($companyId, [
-            'name' => $companyName . ' - Default SLA',
-            'description' => 'Default Service Level Agreement for ' . $companyName,
+            'name' => $companyName.' - Default SLA',
+            'description' => 'Default Service Level Agreement for '.$companyName,
             'is_default' => true,
             'is_active' => true,
             'critical_response_minutes' => 60,
@@ -267,19 +267,19 @@ class SLAService
     public function migrateSLAFromSettings(Company $company): ?SLA
     {
         $settings = $company->settings;
-        
-        if (!$settings || !$settings->sla_definitions) {
+
+        if (! $settings || ! $settings->sla_definitions) {
             return $this->createDefaultSLA($company->id, $company->name);
         }
-        
+
         $slaData = $settings->sla_definitions;
-        
+
         // Extract response times from settings
         $responseTimes = $slaData['response_times'] ?? [];
         $resolutionTimes = $slaData['resolution_times'] ?? [];
-        
+
         return $this->create($company->id, [
-            'name' => $company->name . ' - Migrated SLA',
+            'name' => $company->name.' - Migrated SLA',
             'description' => 'SLA migrated from company settings',
             'is_default' => true,
             'is_active' => true,
@@ -315,8 +315,8 @@ class SLAService
     protected function clearDefaultSLA(int $companyId): void
     {
         SLA::where('company_id', $companyId)
-           ->where('is_default', true)
-           ->update(['is_default' => false]);
+            ->where('is_default', true)
+            ->update(['is_default' => false]);
     }
 
     /**
@@ -325,41 +325,41 @@ class SLAService
     public function validateSLAData(array $data): array
     {
         $errors = [];
-        
+
         // Validate response times are less than resolution times
         $priorities = ['critical', 'high', 'medium', 'low'];
-        
+
         foreach ($priorities as $priority) {
-            $responseField = $priority . '_response_minutes';
-            $resolutionField = $priority . '_resolution_minutes';
-            
+            $responseField = $priority.'_response_minutes';
+            $resolutionField = $priority.'_resolution_minutes';
+
             if (isset($data[$responseField], $data[$resolutionField])) {
                 if ($data[$responseField] >= $data[$resolutionField]) {
                     $errors[] = "Response time must be less than resolution time for {$priority} priority";
                 }
             }
         }
-        
+
         // Validate business hours
         if (isset($data['business_hours_start'], $data['business_hours_end'])) {
             $start = Carbon::createFromTimeString($data['business_hours_start']);
             $end = Carbon::createFromTimeString($data['business_hours_end']);
-            
+
             if ($start->gte($end)) {
                 $errors[] = 'Business hours start time must be before end time';
             }
         }
-        
+
         // Validate effective dates
         if (isset($data['effective_from'], $data['effective_to'])) {
             $from = Carbon::parse($data['effective_from']);
             $to = Carbon::parse($data['effective_to']);
-            
+
             if ($from->gte($to)) {
                 $errors[] = 'Effective from date must be before effective to date';
             }
         }
-        
+
         return $errors;
     }
 }

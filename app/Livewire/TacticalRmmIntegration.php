@@ -2,43 +2,60 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use App\Models\RmmIntegration;
 use App\Models\Client;
 use App\Models\RmmClientMapping;
+use App\Models\RmmIntegration;
 use App\Services\TacticalRmmService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 
 class TacticalRmmIntegration extends Component
 {
     // Integration properties
     public $enabled = false;
+
     public $apiUrl = '';
+
     public $apiKey = '';
+
     public $integrationName = 'Tactical RMM Integration';
+
     public $showApiKey = false;
+
     public $integrationSaved = false;
+
     public $integration = null;
 
     // Status properties
     public $testing = false;
+
     public $saving = false;
+
     public $syncing = false;
+
     public $connectionStatus = null;
+
     public $connectionMessage = '';
 
     // Client mapping modal properties
     public $clientMappingModal = false;
+
     public $nestogyClients = [];
+
     public $rmmClients = [];
+
     public $selectedNestogyClientId = null;
+
     public $selectedRmmClientId = null;
+
     public $loadingNestogyClients = false;
+
     public $loadingRmmClients = false;
+
     public $creatingMapping = false;
+
     public $removingMapping = false;
 
     public function mount()
@@ -62,13 +79,13 @@ class TacticalRmmIntegration extends Component
                 $this->apiKey = '';
             }
         } catch (\Exception $e) {
-            Log::error('Failed to load existing integration: ' . $e->getMessage());
+            Log::error('Failed to load existing integration: '.$e->getMessage());
         }
     }
 
     public function toggleIntegration()
     {
-        if (!$this->enabled && $this->integrationSaved) {
+        if (! $this->enabled && $this->integrationSaved) {
             // Disable the integration
             if ($this->integration) {
                 $this->integration->update(['is_active' => false]);
@@ -85,7 +102,7 @@ class TacticalRmmIntegration extends Component
         try {
             if ($this->integrationSaved && empty($this->apiUrl) && empty($this->apiKey)) {
                 // Test with saved credentials
-                if (!$this->integration) {
+                if (! $this->integration) {
                     throw new \Exception('No saved integration found');
                 }
 
@@ -97,6 +114,7 @@ class TacticalRmmIntegration extends Component
                     $this->connectionStatus = 'error';
                     $this->connectionMessage = 'Please enter both API URL and API Key';
                     $this->testing = false;
+
                     return;
                 }
 
@@ -104,7 +122,7 @@ class TacticalRmmIntegration extends Component
                 $tempIntegration = new RmmIntegration([
                     'api_url' => $this->apiUrl,
                     'api_key' => Crypt::encryptString($this->apiKey),
-                    'rmm_type' => 'TRMM'
+                    'rmm_type' => 'TRMM',
                 ]);
 
                 $service = new TacticalRmmService($tempIntegration);
@@ -120,7 +138,7 @@ class TacticalRmmIntegration extends Component
             }
         } catch (\Exception $e) {
             $this->connectionStatus = 'error';
-            $this->connectionMessage = 'Failed to test connection: ' . $e->getMessage();
+            $this->connectionMessage = 'Failed to test connection: '.$e->getMessage();
         } finally {
             $this->testing = false;
         }
@@ -131,6 +149,7 @@ class TacticalRmmIntegration extends Component
         if (empty($this->apiUrl) || empty($this->apiKey)) {
             $this->connectionStatus = 'error';
             $this->connectionMessage = 'Please enter both API URL and API Key';
+
             return;
         }
 
@@ -155,18 +174,18 @@ class TacticalRmmIntegration extends Component
             $this->integrationSaved = true;
             $this->connectionStatus = 'success';
             $this->connectionMessage = 'Integration saved successfully!';
-            
+
             // Clear credentials from view
             $this->apiUrl = '';
             $this->apiKey = '';
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'RMM Integration saved successfully!'
+                'message' => 'RMM Integration saved successfully!',
             ]);
         } catch (\Exception $e) {
             $this->connectionStatus = 'error';
-            $this->connectionMessage = 'Failed to save integration: ' . $e->getMessage();
+            $this->connectionMessage = 'Failed to save integration: '.$e->getMessage();
         } finally {
             $this->saving = false;
         }
@@ -174,7 +193,7 @@ class TacticalRmmIntegration extends Component
 
     public function syncAgents()
     {
-        if (!$this->integrationSaved || !$this->integration) {
+        if (! $this->integrationSaved || ! $this->integration) {
             return;
         }
 
@@ -183,15 +202,15 @@ class TacticalRmmIntegration extends Component
         try {
             // Dispatch sync job
             \App\Jobs\SyncTacticalRmmAgents::dispatch($this->integration);
-            
+
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Agent sync job queued successfully!'
+                'message' => 'Agent sync job queued successfully!',
             ]);
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to sync agents: ' . $e->getMessage()
+                'message' => 'Failed to sync agents: '.$e->getMessage(),
             ]);
         } finally {
             $this->syncing = false;
@@ -200,7 +219,7 @@ class TacticalRmmIntegration extends Component
 
     public function syncAlerts()
     {
-        if (!$this->integrationSaved || !$this->integration) {
+        if (! $this->integrationSaved || ! $this->integration) {
             return;
         }
 
@@ -209,15 +228,15 @@ class TacticalRmmIntegration extends Component
         try {
             // Dispatch sync job
             \App\Jobs\SyncTacticalRmmAlerts::dispatch($this->integration);
-            
+
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Alert sync job queued successfully!'
+                'message' => 'Alert sync job queued successfully!',
             ]);
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to sync alerts: ' . $e->getMessage()
+                'message' => 'Failed to sync alerts: '.$e->getMessage(),
             ]);
         } finally {
             $this->syncing = false;
@@ -250,18 +269,19 @@ class TacticalRmmIntegration extends Component
 
             $this->nestogyClients = $clients->map(function ($client) {
                 $mapping = $client->rmmClientMappings->first();
+
                 return [
                     'id' => $client->id,
                     'name' => $client->name,
                     'display_name' => $client->company_name ?: $client->name,
                     'existing_mapping' => $mapping ? [
                         'rmm_client_id' => $mapping->rmm_client_id,
-                        'rmm_client_name' => $mapping->rmm_client_name
-                    ] : null
+                        'rmm_client_name' => $mapping->rmm_client_name,
+                    ] : null,
                 ];
             })->toArray();
         } catch (\Exception $e) {
-            Log::error('Failed to load Nestogy clients: ' . $e->getMessage());
+            Log::error('Failed to load Nestogy clients: '.$e->getMessage());
         } finally {
             $this->loadingNestogyClients = false;
         }
@@ -272,8 +292,9 @@ class TacticalRmmIntegration extends Component
         $this->loadingRmmClients = true;
 
         try {
-            if (!$this->integration) {
+            if (! $this->integration) {
                 $this->rmmClients = [];
+
                 return;
             }
 
@@ -282,7 +303,7 @@ class TacticalRmmIntegration extends Component
 
             if ($result['success']) {
                 $rmmClients = $result['clients'] ?? [];
-                
+
                 // Check which RMM clients are already mapped
                 $mappedRmmClientIds = RmmClientMapping::where('company_id', Auth::user()->company_id)
                     ->pluck('rmm_client_id')
@@ -292,16 +313,16 @@ class TacticalRmmIntegration extends Component
                     return [
                         'id' => $client['id'],
                         'name' => $client['name'],
-                        'is_mapped' => in_array((string)$client['id'], $mappedRmmClientIds)
+                        'is_mapped' => in_array((string) $client['id'], $mappedRmmClientIds),
                     ];
                 })->toArray();
             } else {
                 $this->rmmClients = [];
-                Log::error('Failed to fetch RMM clients: ' . ($result['message'] ?? 'Unknown error'));
+                Log::error('Failed to fetch RMM clients: '.($result['message'] ?? 'Unknown error'));
             }
         } catch (\Exception $e) {
             $this->rmmClients = [];
-            Log::error('Error fetching RMM clients: ' . $e->getMessage());
+            Log::error('Error fetching RMM clients: '.$e->getMessage());
         } finally {
             $this->loadingRmmClients = false;
         }
@@ -320,7 +341,7 @@ class TacticalRmmIntegration extends Component
 
     public function createMapping()
     {
-        if (!$this->selectedNestogyClientId || !$this->selectedRmmClientId) {
+        if (! $this->selectedNestogyClientId || ! $this->selectedRmmClientId) {
             return;
         }
 
@@ -329,8 +350,8 @@ class TacticalRmmIntegration extends Component
         try {
             // Find the RMM client name
             $rmmClient = collect($this->rmmClients)->firstWhere('id', $this->selectedRmmClientId);
-            
-            if (!$rmmClient) {
+
+            if (! $rmmClient) {
                 throw new \Exception('RMM client not found');
             }
 
@@ -344,8 +365,8 @@ class TacticalRmmIntegration extends Component
                 'client_id' => $this->selectedNestogyClientId,
                 'company_id' => Auth::user()->company_id,
                 'rmm_integration_id' => $this->integration->id,
-                'rmm_client_id' => (string)$this->selectedRmmClientId,
-                'rmm_client_name' => $rmmClient['name']
+                'rmm_client_id' => (string) $this->selectedRmmClientId,
+                'rmm_client_name' => $rmmClient['name'],
             ]);
 
             // Refresh the client lists
@@ -358,12 +379,12 @@ class TacticalRmmIntegration extends Component
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Client mapping created successfully!'
+                'message' => 'Client mapping created successfully!',
             ]);
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to create mapping: ' . $e->getMessage()
+                'message' => 'Failed to create mapping: '.$e->getMessage(),
             ]);
         } finally {
             $this->creatingMapping = false;
@@ -372,7 +393,7 @@ class TacticalRmmIntegration extends Component
 
     public function removeMapping()
     {
-        if (!$this->selectedNestogyClientId) {
+        if (! $this->selectedNestogyClientId) {
             return;
         }
 
@@ -393,12 +414,12 @@ class TacticalRmmIntegration extends Component
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Client mapping removed successfully!'
+                'message' => 'Client mapping removed successfully!',
             ]);
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to remove mapping: ' . $e->getMessage()
+                'message' => 'Failed to remove mapping: '.$e->getMessage(),
             ]);
         } finally {
             $this->removingMapping = false;

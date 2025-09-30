@@ -4,13 +4,13 @@ namespace App\Providers;
 
 use App\Domains\Contract\Services\ContractPluginManager;
 use App\Plugins\BillingCalculators\AssetBasedCalculator;
-use App\Plugins\StatusTransitions\StandardStatusTransition;
 use App\Plugins\FieldTypes\AssetSelectorFieldType;
+use App\Plugins\StatusTransitions\StandardStatusTransition;
 use Illuminate\Support\ServiceProvider;
 
 /**
  * Contract Plugin Service Provider
- * 
+ *
  * Registers and manages contract plugins
  */
 class ContractPluginServiceProvider extends ServiceProvider
@@ -22,7 +22,7 @@ class ContractPluginServiceProvider extends ServiceProvider
     {
         // Register the plugin manager
         $this->app->singleton(ContractPluginManager::class, function ($app) {
-            return new ContractPluginManager();
+            return new ContractPluginManager;
         });
 
         $this->app->alias(ContractPluginManager::class, 'contract.plugin.manager');
@@ -34,13 +34,13 @@ class ContractPluginServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Performance optimization: Only load contract plugins for contract-related routes
-        if (!$this->shouldLoadContractPlugins()) {
+        if (! $this->shouldLoadContractPlugins()) {
             return;
         }
 
         // Log when contract plugins are being loaded for debugging
         if (config('app.debug')) {
-            \Illuminate\Support\Facades\Log::debug('Loading contract plugins for route: ' . request()->path());
+            \Illuminate\Support\Facades\Log::debug('Loading contract plugins for route: '.request()->path());
         }
 
         $pluginManager = $this->app->make(ContractPluginManager::class);
@@ -49,7 +49,7 @@ class ContractPluginServiceProvider extends ServiceProvider
         $this->registerCorePlugins($pluginManager);
 
         // Discover and register additional plugins
-        if (!$this->app->runningInConsole() || $this->app->runningUnitTests()) {
+        if (! $this->app->runningInConsole() || $this->app->runningUnitTests()) {
             $pluginManager->discoverPlugins();
         }
     }
@@ -63,28 +63,28 @@ class ContractPluginServiceProvider extends ServiceProvider
         if ($this->app->runningUnitTests()) {
             return true;
         }
-        
+
         // For console commands, only load if it's a contract-related command
         if ($this->app->runningInConsole()) {
             $command = $_SERVER['argv'][1] ?? '';
             $contractCommands = ['contracts:', 'plugin:', 'migrate', 'seed', 'tinker'];
-            
+
             foreach ($contractCommands as $contractCommand) {
                 if (str_starts_with($command, $contractCommand)) {
                     return true;
                 }
             }
-            
+
             // Don't load for other console commands unless explicitly needed
             return false;
         }
 
         // Get the current request
         $request = request();
-        if (!$request) {
+        if (! $request) {
             return false;
         }
-        
+
         $path = $request->path();
 
         // Check if we're on a contract-related route
@@ -96,7 +96,7 @@ class ContractPluginServiceProvider extends ServiceProvider
         ];
 
         foreach ($contractPaths as $contractPath) {
-            if ($path === $contractPath || str_starts_with($path, $contractPath . '/')) {
+            if ($path === $contractPath || str_starts_with($path, $contractPath.'/')) {
                 return true;
             }
         }
@@ -153,10 +153,10 @@ class ContractPluginServiceProvider extends ServiceProvider
     {
         try {
             $app = app();
-            
+
             // Check if we should load plugins for current context
             $provider = $app->getProvider(static::class);
-            if ($provider && !$provider->shouldLoadContractPlugins()) {
+            if ($provider && ! $provider->shouldLoadContractPlugins()) {
                 // Force load plugins now that they're actually needed
                 $provider->boot();
             }
@@ -164,8 +164,9 @@ class ContractPluginServiceProvider extends ServiceProvider
             return $app->make(ContractPluginManager::class);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning(
-                'Failed to get contract plugin manager: ' . $e->getMessage()
+                'Failed to get contract plugin manager: '.$e->getMessage()
             );
+
             return null;
         }
     }
@@ -175,7 +176,6 @@ class ContractPluginServiceProvider extends ServiceProvider
  * Placeholder classes for additional plugins
  * These would be implemented as separate plugin files
  */
-
 class ContactBasedCalculator extends AssetBasedCalculator
 {
     public function getName(): string
@@ -269,54 +269,117 @@ class AutomatedStatusTransition extends StandardStatusTransition
 // Field type placeholder classes
 class ClientSelectorFieldType extends AssetSelectorFieldType
 {
-    public function getName(): string { return 'Client Selector'; }
-    public function getFieldType(): string { return 'client_selector'; }
+    public function getName(): string
+    {
+        return 'Client Selector';
+    }
+
+    public function getFieldType(): string
+    {
+        return 'client_selector';
+    }
 }
 
 class UserSelectorFieldType extends AssetSelectorFieldType
 {
-    public function getName(): string { return 'User Selector'; }
-    public function getFieldType(): string { return 'user_selector'; }
+    public function getName(): string
+    {
+        return 'User Selector';
+    }
+
+    public function getFieldType(): string
+    {
+        return 'user_selector';
+    }
 }
 
 class ContactSelectorFieldType extends AssetSelectorFieldType
 {
-    public function getName(): string { return 'Contact Selector'; }
-    public function getFieldType(): string { return 'contact_selector'; }
+    public function getName(): string
+    {
+        return 'Contact Selector';
+    }
+
+    public function getFieldType(): string
+    {
+        return 'contact_selector';
+    }
 }
 
 class ServiceSelectorFieldType extends AssetSelectorFieldType
 {
-    public function getName(): string { return 'Service Selector'; }
-    public function getFieldType(): string { return 'service_selector'; }
+    public function getName(): string
+    {
+        return 'Service Selector';
+    }
+
+    public function getFieldType(): string
+    {
+        return 'service_selector';
+    }
 }
 
 class LocationSelectorFieldType extends AssetSelectorFieldType
 {
-    public function getName(): string { return 'Location Selector'; }
-    public function getFieldType(): string { return 'location_selector'; }
+    public function getName(): string
+    {
+        return 'Location Selector';
+    }
+
+    public function getFieldType(): string
+    {
+        return 'location_selector';
+    }
 }
 
 class BillingScheduleFieldType extends AssetSelectorFieldType
 {
-    public function getName(): string { return 'Billing Schedule'; }
-    public function getFieldType(): string { return 'billing_schedule'; }
+    public function getName(): string
+    {
+        return 'Billing Schedule';
+    }
+
+    public function getFieldType(): string
+    {
+        return 'billing_schedule';
+    }
 }
 
 class SlaTermsFieldType extends AssetSelectorFieldType
 {
-    public function getName(): string { return 'SLA Terms'; }
-    public function getFieldType(): string { return 'sla_terms'; }
+    public function getName(): string
+    {
+        return 'SLA Terms';
+    }
+
+    public function getFieldType(): string
+    {
+        return 'sla_terms';
+    }
 }
 
 class PricingMatrixFieldType extends AssetSelectorFieldType
 {
-    public function getName(): string { return 'Pricing Matrix'; }
-    public function getFieldType(): string { return 'pricing_matrix'; }
+    public function getName(): string
+    {
+        return 'Pricing Matrix';
+    }
+
+    public function getFieldType(): string
+    {
+        return 'pricing_matrix';
+    }
 }
 
 class ConditionalLogicFieldType extends AssetSelectorFieldType
 {
-    public function getName(): string { return 'Conditional Logic'; }
-    public function getFieldType(): string { return 'conditional_logic'; }
+    public function getName(): string
+    {
+        return 'Conditional Logic';
+    }
+
+    public function getFieldType(): string
+    {
+        return 'conditional_logic';
+    }
 }

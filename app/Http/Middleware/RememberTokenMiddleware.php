@@ -2,17 +2,17 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Contact;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\User;
-use App\Models\Contact;
 
 /**
  * RememberTokenMiddleware
- * 
+ *
  * Handles "Remember Me" functionality by checking for valid remember tokens
  * and automatically logging in users with valid tokens.
  * Supports multiple guards (web and client).
@@ -23,21 +23,20 @@ class RememberTokenMiddleware
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     * @param  string|null  $guard
      */
     public function handle(Request $request, Closure $next, ?string $guard = null): Response
     {
         // Determine which guard to use
         $guard = $guard ?: $this->getGuardFromRoute($request);
-        
+
         // Only process if user is not already authenticated for this guard
-        if (!Auth::guard($guard)->check()) {
+        if (! Auth::guard($guard)->check()) {
             $this->attemptRememberLogin($request, $guard);
         }
 
         return $next($request);
     }
-    
+
     /**
      * Determine the guard based on the route.
      */
@@ -47,7 +46,7 @@ class RememberTokenMiddleware
         if ($request->is('client-portal/*')) {
             return 'client';
         }
-        
+
         return 'web';
     }
 
@@ -59,7 +58,7 @@ class RememberTokenMiddleware
         $authGuard = Auth::guard($guard);
         $rememberToken = $request->cookie($authGuard->getRecallerName());
 
-        if (!$rememberToken) {
+        if (! $rememberToken) {
             return;
         }
 
@@ -67,6 +66,7 @@ class RememberTokenMiddleware
         $segments = explode('|', $rememberToken);
         if (count($segments) !== 2) {
             $this->clearRememberCookie($guard);
+
             return;
         }
 
@@ -74,20 +74,23 @@ class RememberTokenMiddleware
 
         // Find user by ID based on guard
         $user = $this->findUserByGuard($userId, $guard);
-        if (!$user) {
+        if (! $user) {
             $this->clearRememberCookie($guard);
+
             return;
         }
 
         // Check if user/contact is active
-        if (!$this->isUserActive($user, $guard)) {
+        if (! $this->isUserActive($user, $guard)) {
             $this->clearRememberCookie($guard);
+
             return;
         }
 
         // Verify the remember token
-        if (!$this->verifyRememberToken($user, $token, $guard)) {
+        if (! $this->verifyRememberToken($user, $token, $guard)) {
             $this->clearRememberCookie($guard);
+
             return;
         }
 
@@ -100,7 +103,7 @@ class RememberTokenMiddleware
         // Regenerate remember token for security
         $this->regenerateRememberToken($user, $guard);
     }
-    
+
     /**
      * Find user based on guard type.
      */
@@ -109,10 +112,10 @@ class RememberTokenMiddleware
         if ($guard === 'client') {
             return Contact::find($userId);
         }
-        
+
         return User::find($userId);
     }
-    
+
     /**
      * Check if user/contact is active based on guard.
      */
@@ -122,7 +125,7 @@ class RememberTokenMiddleware
             // For contacts, check if they can access the portal
             return $user instanceof Contact && $user->canAccessPortal();
         }
-        
+
         // For regular users
         return $user instanceof User && $user->isActive();
     }
@@ -153,7 +156,7 @@ class RememberTokenMiddleware
     protected function regenerateRememberToken($user, string $guard): void
     {
         $newToken = \Str::random(60);
-        
+
         // Update Laravel's remember token
         $user->setRememberToken($newToken);
         $user->save();
@@ -161,12 +164,12 @@ class RememberTokenMiddleware
         // For regular users, update custom remember token in user settings
         if ($guard === 'web' && $user instanceof User && $user->userSetting) {
             $user->userSetting->update([
-                'remember_me_token' => hash('sha256', $newToken)
+                'remember_me_token' => hash('sha256', $newToken),
             ]);
         }
 
         // Set new cookie
-        $recaller = $user->id . '|' . $newToken;
+        $recaller = $user->id.'|'.$newToken;
         Cookie::queue(
             Auth::guard($guard)->getRecallerName(),
             $recaller,
@@ -188,8 +191,8 @@ class RememberTokenMiddleware
     protected function logRememberLogin($user, Request $request, string $guard): void
     {
         $modelType = $guard === 'client' ? 'Contact' : 'User';
-        
-        \Log::info($modelType . ' logged in via remember token', [
+
+        \Log::info($modelType.' logged in via remember token', [
             'guard' => $guard,
             'user_id' => $user->id,
             'email' => $user->email,

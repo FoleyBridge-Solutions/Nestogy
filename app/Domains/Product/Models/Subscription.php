@@ -2,12 +2,12 @@
 
 namespace App\Domains\Product\Models;
 
+use App\Domains\Client\Models\Client;
+use App\Domains\Financial\Models\Invoice;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Domains\Client\Models\Client;
-use App\Domains\Financial\Models\Invoice;
 
 class Subscription extends Model
 {
@@ -82,7 +82,7 @@ class Subscription extends Model
 
     public function daysUntilNextBilling(): int
     {
-        if (!$this->next_billing_date) {
+        if (! $this->next_billing_date) {
             return 0;
         }
 

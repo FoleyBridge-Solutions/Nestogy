@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Models\DeviceMapping;
+use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Services\RmmServiceFactory;
 use App\Models\Client;
 use Illuminate\Console\Command;
@@ -11,6 +11,7 @@ use Illuminate\Console\Command;
 class SyncRmmAgents extends Command
 {
     protected $signature = 'rmm:sync-agents {--client=} {--integration=}';
+
     protected $description = 'Sync RMM agents to specific client';
 
     public function handle()
@@ -21,23 +22,25 @@ class SyncRmmAgents extends Command
         // Find the integration and client
         $integration = RmmIntegration::find($integrationId);
         $client = Client::where('company_id', $integration->company_id)
-                       ->where('name', $clientName)
-                       ->first();
+            ->where('name', $clientName)
+            ->first();
 
-        if (!$integration || !$client) {
+        if (! $integration || ! $client) {
             $this->error('Integration or client not found');
+
             return 1;
         }
 
         $this->info("Syncing agents to client: {$client->name}");
 
         // Get agents from RMM
-        $factory = new RmmServiceFactory();
+        $factory = new RmmServiceFactory;
         $rmmService = $factory->make($integration);
         $result = $rmmService->getAgents(['limit' => 50]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $this->error('Failed to get agents from RMM');
+
             return 1;
         }
 
@@ -45,7 +48,7 @@ class SyncRmmAgents extends Command
         foreach ($result['data'] as $agent) {
             // Debug: show agent structure for first agent
             if ($count === 0) {
-                $this->info('Agent data keys: ' . implode(', ', array_keys($agent)));
+                $this->info('Agent data keys: '.implode(', ', array_keys($agent)));
             }
 
             $agentId = $agent['id'] ?? $agent['agent_id'] ?? $agent['pk'] ?? 'unknown';
@@ -70,6 +73,7 @@ class SyncRmmAgents extends Command
         }
 
         $this->info("Created {$count} device mappings for {$client->name}");
+
         return 0;
     }
 }

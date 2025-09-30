@@ -2,15 +2,15 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuditLog;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\AuditLog;
 use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * WebhookVerificationMiddleware
- * 
+ *
  * Verifies webhook signatures from external services to ensure
  * requests are authentic and haven't been tampered with.
  */
@@ -42,12 +42,12 @@ class WebhookVerificationMiddleware
     public function handle(Request $request, Closure $next, string $provider): Response
     {
         // Check if webhooks are enabled
-        if (!config('security.webhooks.enabled', true)) {
+        if (! config('security.webhooks.enabled', true)) {
             return $this->webhooksDisabledResponse();
         }
 
         // Validate provider
-        if (!isset($this->providers[$provider])) {
+        if (! isset($this->providers[$provider])) {
             return $this->invalidProviderResponse($provider);
         }
 
@@ -58,8 +58,9 @@ class WebhookVerificationMiddleware
 
         // Verify signature
         $verificationMethod = $this->providers[$provider];
-        if (!$this->$verificationMethod($request)) {
+        if (! $this->$verificationMethod($request)) {
             $this->logFailedVerification($request, $provider);
+
             return $this->unauthorizedResponse($provider);
         }
 
@@ -79,12 +80,12 @@ class WebhookVerificationMiddleware
     protected function verifyStripeSignature(Request $request): bool
     {
         $signature = $request->header('Stripe-Signature');
-        if (!$signature) {
+        if (! $signature) {
             return false;
         }
 
         $secret = config('security.webhooks.secrets.stripe');
-        if (!$secret) {
+        if (! $secret) {
             return false;
         }
 
@@ -102,7 +103,7 @@ class WebhookVerificationMiddleware
             }
         }
 
-        if (!$timestamp || empty($signatures)) {
+        if (! $timestamp || empty($signatures)) {
             return false;
         }
 
@@ -111,7 +112,7 @@ class WebhookVerificationMiddleware
             return false;
         }
 
-        $signedPayload = $timestamp . '.' . $payload;
+        $signedPayload = $timestamp.'.'.$payload;
         $expectedSignature = hash_hmac('sha256', $signedPayload, $secret);
 
         foreach ($signatures as $signature) {
@@ -129,22 +130,23 @@ class WebhookVerificationMiddleware
     protected function verifyGithubSignature(Request $request): bool
     {
         $signature = $request->header('X-Hub-Signature-256');
-        if (!$signature) {
+        if (! $signature) {
             // Fallback to SHA1 for older webhooks
             $signature = $request->header('X-Hub-Signature');
-            if (!$signature) {
+            if (! $signature) {
                 return false;
             }
+
             return $this->verifyGithubSha1Signature($request, $signature);
         }
 
         $secret = config('security.webhooks.secrets.github');
-        if (!$secret) {
+        if (! $secret) {
             return false;
         }
 
         $payload = $request->getContent();
-        $expectedSignature = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+        $expectedSignature = 'sha256='.hash_hmac('sha256', $payload, $secret);
 
         return hash_equals($expectedSignature, $signature);
     }
@@ -155,12 +157,12 @@ class WebhookVerificationMiddleware
     protected function verifyGithubSha1Signature(Request $request, string $signature): bool
     {
         $secret = config('security.webhooks.secrets.github');
-        if (!$secret) {
+        if (! $secret) {
             return false;
         }
 
         $payload = $request->getContent();
-        $expectedSignature = 'sha1=' . hash_hmac('sha1', $payload, $secret);
+        $expectedSignature = 'sha1='.hash_hmac('sha1', $payload, $secret);
 
         return hash_equals($expectedSignature, $signature);
     }
@@ -171,12 +173,12 @@ class WebhookVerificationMiddleware
     protected function verifyGitlabSignature(Request $request): bool
     {
         $token = $request->header('X-Gitlab-Token');
-        if (!$token) {
+        if (! $token) {
             return false;
         }
 
         $expectedToken = config('security.webhooks.secrets.gitlab');
-        if (!$expectedToken) {
+        if (! $expectedToken) {
             return false;
         }
 
@@ -189,17 +191,17 @@ class WebhookVerificationMiddleware
     protected function verifyBitbucketSignature(Request $request): bool
     {
         $signature = $request->header('X-Hub-Signature');
-        if (!$signature) {
+        if (! $signature) {
             return false;
         }
 
         $secret = config('security.webhooks.secrets.bitbucket');
-        if (!$secret) {
+        if (! $secret) {
             return false;
         }
 
         $payload = $request->getContent();
-        $expectedSignature = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+        $expectedSignature = 'sha256='.hash_hmac('sha256', $payload, $secret);
 
         return hash_equals($expectedSignature, $signature);
     }
@@ -211,8 +213,8 @@ class WebhookVerificationMiddleware
     {
         $signature = $request->header('X-Slack-Signature');
         $timestamp = $request->header('X-Slack-Request-Timestamp');
-        
-        if (!$signature || !$timestamp) {
+
+        if (! $signature || ! $timestamp) {
             return false;
         }
 
@@ -222,13 +224,13 @@ class WebhookVerificationMiddleware
         }
 
         $secret = config('security.webhooks.secrets.slack');
-        if (!$secret) {
+        if (! $secret) {
             return false;
         }
 
         $payload = $request->getContent();
-        $sigBasestring = 'v0:' . $timestamp . ':' . $payload;
-        $expectedSignature = 'v0=' . hash_hmac('sha256', $sigBasestring, $secret);
+        $sigBasestring = 'v0:'.$timestamp.':'.$payload;
+        $expectedSignature = 'v0='.hash_hmac('sha256', $sigBasestring, $secret);
 
         return hash_equals($expectedSignature, $signature);
     }
@@ -239,25 +241,25 @@ class WebhookVerificationMiddleware
     protected function verifyTwilioSignature(Request $request): bool
     {
         $signature = $request->header('X-Twilio-Signature');
-        if (!$signature) {
+        if (! $signature) {
             return false;
         }
 
         $authToken = config('security.webhooks.secrets.twilio');
-        if (!$authToken) {
+        if (! $authToken) {
             return false;
         }
 
         $url = $request->fullUrl();
         $data = $request->all();
-        
+
         // Sort parameters
         ksort($data);
-        
+
         // Build the string to sign
         $string = $url;
         foreach ($data as $key => $value) {
-            $string .= $key . $value;
+            $string .= $key.$value;
         }
 
         $expectedSignature = base64_encode(hash_hmac('sha1', $string, $authToken, true));
@@ -272,22 +274,22 @@ class WebhookVerificationMiddleware
     {
         $signature = $request->header('X-Twilio-Email-Event-Webhook-Signature');
         $timestamp = $request->header('X-Twilio-Email-Event-Webhook-Timestamp');
-        
-        if (!$signature || !$timestamp) {
+
+        if (! $signature || ! $timestamp) {
             return false;
         }
 
         $publicKey = config('security.webhooks.secrets.sendgrid_public_key');
-        if (!$publicKey) {
+        if (! $publicKey) {
             return false;
         }
 
         $payload = $request->getContent();
-        $signedContent = $timestamp . $payload;
-        
+        $signedContent = $timestamp.$payload;
+
         // Verify using public key
         $publicKeyResource = openssl_pkey_get_public($publicKey);
-        if (!$publicKeyResource) {
+        if (! $publicKeyResource) {
             return false;
         }
 
@@ -309,17 +311,17 @@ class WebhookVerificationMiddleware
         $timestamp = $request->input('timestamp');
         $token = $request->input('token');
         $signature = $request->input('signature');
-        
-        if (!$timestamp || !$token || !$signature) {
+
+        if (! $timestamp || ! $token || ! $signature) {
             return false;
         }
 
         $secret = config('security.webhooks.secrets.mailgun');
-        if (!$secret) {
+        if (! $secret) {
             return false;
         }
 
-        $expectedSignature = hash_hmac('sha256', $timestamp . $token, $secret);
+        $expectedSignature = hash_hmac('sha256', $timestamp.$token, $secret);
 
         return hash_equals($expectedSignature, $signature);
     }
@@ -336,8 +338,8 @@ class WebhookVerificationMiddleware
         $certUrl = $request->header('PAYPAL-CERT-URL');
         $authAlgo = $request->header('PAYPAL-AUTH-ALGO');
         $transmissionSig = $request->header('PAYPAL-TRANSMISSION-SIG');
-        
-        if (!$transmissionId || !$transmissionTime || !$certUrl || !$authAlgo || !$transmissionSig) {
+
+        if (! $transmissionId || ! $transmissionTime || ! $certUrl || ! $authAlgo || ! $transmissionSig) {
             return false;
         }
 
@@ -352,12 +354,12 @@ class WebhookVerificationMiddleware
     protected function verifyShopifySignature(Request $request): bool
     {
         $signature = $request->header('X-Shopify-Hmac-Sha256');
-        if (!$signature) {
+        if (! $signature) {
             return false;
         }
 
         $secret = config('security.webhooks.secrets.shopify');
-        if (!$secret) {
+        if (! $secret) {
             return false;
         }
 
@@ -373,28 +375,28 @@ class WebhookVerificationMiddleware
     protected function verifyCustomSignature(Request $request): bool
     {
         $config = config('security.webhooks.custom');
-        if (!$config) {
+        if (! $config) {
             return false;
         }
 
         $signatureHeader = $config['signature_header'] ?? 'X-Webhook-Signature';
         $signature = $request->header($signatureHeader);
-        if (!$signature) {
+        if (! $signature) {
             return false;
         }
 
         $secret = $config['secret'] ?? '';
-        if (!$secret) {
+        if (! $secret) {
             return false;
         }
 
         $algorithm = $config['algorithm'] ?? 'sha256';
         $payload = $request->getContent();
-        
+
         // Check if signature includes algorithm prefix
         $prefix = $config['signature_prefix'] ?? '';
         if ($prefix) {
-            $expectedSignature = $prefix . hash_hmac($algorithm, $payload, $secret);
+            $expectedSignature = $prefix.hash_hmac($algorithm, $payload, $secret);
         } else {
             $expectedSignature = hash_hmac($algorithm, $payload, $secret);
         }
@@ -409,12 +411,12 @@ class WebhookVerificationMiddleware
     {
         // Get unique identifier for this webhook
         $identifier = $this->getWebhookIdentifier($request, $provider);
-        if (!$identifier) {
+        if (! $identifier) {
             return false;
         }
 
-        $cacheKey = 'webhook_processed:' . $provider . ':' . $identifier;
-        
+        $cacheKey = 'webhook_processed:'.$provider.':'.$identifier;
+
         // Check if we've seen this webhook before
         if (Cache::has($cacheKey)) {
             return true;
@@ -422,7 +424,7 @@ class WebhookVerificationMiddleware
 
         // Mark as processed (store for 24 hours)
         Cache::put($cacheKey, true, now()->addDay());
-        
+
         return false;
     }
 
@@ -431,11 +433,11 @@ class WebhookVerificationMiddleware
      */
     protected function getWebhookIdentifier(Request $request, string $provider): ?string
     {
-        return match($provider) {
+        return match ($provider) {
             'stripe' => $request->header('Stripe-Signature'),
             'github' => $request->header('X-GitHub-Delivery'),
             'gitlab' => $request->header('X-Gitlab-Event-UUID'),
-            'slack' => $request->header('X-Slack-Request-Timestamp') . ':' . $request->header('X-Slack-Signature'),
+            'slack' => $request->header('X-Slack-Request-Timestamp').':'.$request->header('X-Slack-Signature'),
             'twilio' => $request->header('X-Twilio-Signature'),
             default => hash('sha256', $request->getContent()),
         };
@@ -473,11 +475,11 @@ class WebhookVerificationMiddleware
     {
         $headers = $request->headers->all();
         $sensitiveHeaders = ['authorization', 'x-api-key', 'cookie'];
-        
+
         foreach ($sensitiveHeaders as $header) {
             unset($headers[$header]);
         }
-        
+
         return $headers;
     }
 
@@ -486,7 +488,7 @@ class WebhookVerificationMiddleware
      */
     protected function getEventType(Request $request, string $provider): ?string
     {
-        return match($provider) {
+        return match ($provider) {
             'stripe' => $request->input('type'),
             'github' => $request->header('X-GitHub-Event'),
             'gitlab' => $request->header('X-Gitlab-Event'),

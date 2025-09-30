@@ -3,20 +3,20 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
  * UsageBucket Model
- * 
+ *
  * Manages usage categorization and allocation for complex billing scenarios.
  * Supports bucket-based usage allocation with overflows and priority handling.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Log;
  */
 class UsageBucket extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -254,47 +254,64 @@ class UsageBucket extends Model
      * Bucket type constants
      */
     const BUCKET_TYPE_INCLUDED = 'included';
+
     const BUCKET_TYPE_BONUS = 'bonus';
+
     const BUCKET_TYPE_PROMOTIONAL = 'promotional';
+
     const BUCKET_TYPE_OVERAGE = 'overage';
+
     const BUCKET_TYPE_ROLLOVER = 'rollover';
 
     /**
      * Bucket status constants
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_DEPLETED = 'depleted';
+
     const STATUS_EXPIRED = 'expired';
 
     /**
      * Allocation order constants
      */
     const ALLOCATION_FIFO = 'fifo';
+
     const ALLOCATION_LIFO = 'lifo';
+
     const ALLOCATION_PRIORITY = 'priority';
+
     const ALLOCATION_WEIGHTED = 'weighted';
 
     /**
      * Overflow behavior constants
      */
     const OVERFLOW_SPILLOVER = 'spillover';
+
     const OVERFLOW_BLOCK = 'block';
+
     const OVERFLOW_CHARGE_OVERAGE = 'charge_overage';
 
     /**
      * Reset frequency constants
      */
     const RESET_DAILY = 'daily';
+
     const RESET_WEEKLY = 'weekly';
+
     const RESET_MONTHLY = 'monthly';
+
     const RESET_BILLING_CYCLE = 'billing_cycle';
 
     /**
      * Roaming behavior constants
      */
     const ROAMING_ALLOWED = 'allowed';
+
     const ROAMING_BLOCKED = 'blocked';
+
     const ROAMING_CHARGED = 'charged';
 
     /**
@@ -426,12 +443,12 @@ class UsageBucket extends Model
      */
     public function isUsageAllowedNow(): bool
     {
-        if (!$this->has_time_restrictions) {
+        if (! $this->has_time_restrictions) {
             return true;
         }
 
         $now = now();
-        
+
         // Check blackout periods
         if ($this->blackout_periods) {
             foreach ($this->blackout_periods as $period) {
@@ -454,13 +471,13 @@ class UsageBucket extends Model
                     break;
                 }
             }
-            if (!$allowed) {
+            if (! $allowed) {
                 return false;
             }
         }
 
         // Check peak/off-peak restrictions
-        if ($this->peak_hour_only && !$this->isPeakTime($now)) {
+        if ($this->peak_hour_only && ! $this->isPeakTime($now)) {
             return false;
         }
 
@@ -477,6 +494,7 @@ class UsageBucket extends Model
     protected function isPeakTime(Carbon $timestamp): bool
     {
         $hour = $timestamp->hour;
+
         return $hour >= 8 && $hour < 18; // Default peak hours 8 AM to 6 PM
     }
 
@@ -485,11 +503,11 @@ class UsageBucket extends Model
      */
     public function allocateUsage(float $amount, array $options = []): float
     {
-        if (!$this->canAllocate($amount)) {
+        if (! $this->canAllocate($amount)) {
             return 0;
         }
 
-        if (!$this->isUsageAllowedNow()) {
+        if (! $this->isUsageAllowedNow()) {
             return 0;
         }
 
@@ -516,7 +534,7 @@ class UsageBucket extends Model
         }
 
         $this->checkThresholds();
-        
+
         return $allocatedAmount;
     }
 
@@ -525,7 +543,7 @@ class UsageBucket extends Model
      */
     public function canAllocate(float $amount): bool
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return false;
         }
 
@@ -533,7 +551,7 @@ class UsageBucket extends Model
             return false;
         }
 
-        if (!$this->isUsageAllowedNow()) {
+        if (! $this->isUsageAllowedNow()) {
             return false;
         }
 
@@ -566,28 +584,28 @@ class UsageBucket extends Model
         ];
 
         // Update daily usage if it's the same day
-        if (!$this->last_usage_at || $this->last_usage_at->isSameDay($now)) {
+        if (! $this->last_usage_at || $this->last_usage_at->isSameDay($now)) {
             $updates['daily_usage'] = $this->daily_usage + $amount;
         } else {
             $updates['daily_usage'] = $amount;
         }
 
         // Update weekly usage if it's the same week
-        if (!$this->last_usage_at || $this->last_usage_at->isSameWeek($now)) {
+        if (! $this->last_usage_at || $this->last_usage_at->isSameWeek($now)) {
             $updates['weekly_usage'] = $this->weekly_usage + $amount;
         } else {
             $updates['weekly_usage'] = $amount;
         }
 
         // Update monthly usage if it's the same month
-        if (!$this->last_usage_at || $this->last_usage_at->isSameMonth($now)) {
+        if (! $this->last_usage_at || $this->last_usage_at->isSameMonth($now)) {
             $updates['monthly_usage'] = $this->monthly_usage + $amount;
         } else {
             $updates['monthly_usage'] = $amount;
         }
 
         // Set first usage timestamp if not set
-        if (!$this->first_usage_at) {
+        if (! $this->first_usage_at) {
             $updates['first_usage_at'] = $now;
         }
 
@@ -597,7 +615,7 @@ class UsageBucket extends Model
     /**
      * Reset bucket for new period.
      */
-    public function resetForNewPeriod(string $resetType = null): void
+    public function resetForNewPeriod(?string $resetType = null): void
     {
         $resetType = $resetType ?? $this->reset_frequency;
         $rolloverAmount = $this->calculateRollover();
@@ -636,11 +654,12 @@ class UsageBucket extends Model
      */
     protected function calculateRollover(): float
     {
-        if (!$this->allows_rollover) {
+        if (! $this->allows_rollover) {
             return 0;
         }
 
         $unusedCapacity = $this->getRemainingCapacity();
+
         return $unusedCapacity * ($this->rollover_percentage / 100);
     }
 
@@ -668,7 +687,7 @@ class UsageBucket extends Model
      */
     protected function checkThresholds(): void
     {
-        if (!$this->email_alerts_enabled && !$this->sms_alerts_enabled) {
+        if (! $this->email_alerts_enabled && ! $this->sms_alerts_enabled) {
             return;
         }
 
@@ -694,7 +713,7 @@ class UsageBucket extends Model
      */
     protected function shouldSendAlert(): bool
     {
-        if (!$this->last_alert_sent) {
+        if (! $this->last_alert_sent) {
             return true;
         }
 
@@ -707,7 +726,7 @@ class UsageBucket extends Model
      */
     protected function sendThresholdAlert(string $level, float $utilization): void
     {
-        Log::info("Usage bucket threshold alert", [
+        Log::info('Usage bucket threshold alert', [
             'bucket_id' => $this->id,
             'bucket_name' => $this->bucket_name,
             'level' => $level,
@@ -723,7 +742,7 @@ class UsageBucket extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-                    ->where('bucket_status', self::STATUS_ACTIVE);
+            ->where('bucket_status', self::STATUS_ACTIVE);
     }
 
     /**
@@ -809,18 +828,18 @@ class UsageBucket extends Model
         parent::boot();
 
         static::creating(function ($bucket) {
-            if (!$bucket->bucket_code) {
-                $bucket->bucket_code = 'BUCKET-' . strtoupper(uniqid());
+            if (! $bucket->bucket_code) {
+                $bucket->bucket_code = 'BUCKET-'.strtoupper(uniqid());
             }
-            
-            if (!$bucket->next_reset_date) {
+
+            if (! $bucket->next_reset_date) {
                 $bucket->next_reset_date = $bucket->calculateNextResetDate($bucket->reset_frequency ?? self::RESET_MONTHLY);
             }
         });
 
         static::updating(function ($bucket) {
             $bucket->updated_by = auth()->id() ?? 1;
-            
+
             // Update bucket status based on capacity
             if ($bucket->isDirty(['used_amount', 'bucket_capacity'])) {
                 if ($bucket->getRemainingCapacity() <= 0 && $bucket->bucket_status === self::STATUS_ACTIVE) {

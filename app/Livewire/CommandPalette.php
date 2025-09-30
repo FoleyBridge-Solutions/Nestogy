@@ -2,41 +2,45 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use App\Models\Client;
+use App\Domains\Contract\Models\Contract;
+use App\Domains\Core\Services\QuickActionService;
+use App\Domains\Knowledge\Models\KbArticle;
+use App\Domains\Lead\Models\Lead;
+use App\Domains\Project\Models\Project;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\Asset;
-use App\Domains\Contract\Models\Contract;
-use App\Models\Invoice;
-use App\Domains\Project\Models\Project;
-use App\Domains\Lead\Models\Lead;
-use App\Domains\Knowledge\Models\KbArticle;
-use App\Domains\Core\Services\QuickActionService;
+use App\Models\Client;
 use App\Models\CustomQuickAction;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Component;
 
 class CommandPalette extends Component
 {
     public $isOpen = false;
+
     public $search = '';
+
     public $results = [];
+
     public $selectedIndex = 0;
+
     public $currentRoute = null;
-    
+
     // Cache for computed results to ensure consistency
     private $cachedResults = null;
+
     private $lastSearchTerm = null;
 
     protected $listeners = ['openCommandPalette' => 'handleOpen'];
-    
+
     public function handleOpen($data = [])
     {
         $currentRoute = $data['currentRoute'] ?? null;
         $this->open($currentRoute);
     }
-    
+
     public function mount()
     {
         // Initialize with empty results - they'll be populated when opened
@@ -47,12 +51,12 @@ class CommandPalette extends Component
         if ($route) {
             $routeName = $route->getName();
             // Filter out Livewire-specific routes
-            if (!in_array($routeName, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
+            if (! in_array($routeName, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
                 $this->currentRoute = $routeName;
             }
         }
     }
-    
+
     public function setCurrentRoute($routeName)
     {
         $this->currentRoute = $routeName;
@@ -62,29 +66,29 @@ class CommandPalette extends Component
     {
         $this->isOpen = true;
         $this->search = '';
-        
+
         // Clear cache when opening
         $this->cachedResults = null;
         $this->lastSearchTerm = null;
-        
+
         // If a route is passed explicitly, always use it
-        if ($currentRoute && !in_array($currentRoute, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
+        if ($currentRoute && ! in_array($currentRoute, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
             $this->currentRoute = $currentRoute;
-        } elseif (!$currentRoute) {
+        } elseif (! $currentRoute) {
             // Try to detect current route if not passed
             $detectedRoute = request()->route() ? request()->route()->getName() : null;
             // Only update if it's not a Livewire route
-            if ($detectedRoute && !in_array($detectedRoute, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
+            if ($detectedRoute && ! in_array($detectedRoute, ['livewire.update', 'livewire.message', 'livewire.upload-file'])) {
                 $this->currentRoute = $detectedRoute;
             }
         }
-        
+
         // Initialize results with popular commands
         $popularCommands = $this->getPopularCommands();
         $this->results = $popularCommands;
         $this->cachedResults = $popularCommands;
         $this->selectedIndex = 0;
-        
+
         logger()->info('CommandPalette::open', [
             'current_route' => $this->currentRoute,
             'passed_route' => $currentRoute,
@@ -110,22 +114,22 @@ class CommandPalette extends Component
         if ($this->lastSearchTerm === $this->search && $this->cachedResults !== null) {
             return $this->cachedResults;
         }
-        
+
         // Calculate results based on search term
         if (strlen($this->search) < 1) {
             $results = $this->getPopularCommands();
         } else {
             $results = $this->getSearchResults($this->search);
         }
-        
+
         // Cache the results
         $this->cachedResults = $results;
         $this->lastSearchTerm = $this->search;
         $this->results = $results; // Keep this in sync
-        
+
         return $results;
     }
-    
+
     public function updatedSearch($value)
     {
         // Reset selected index when search changes
@@ -147,13 +151,13 @@ class CommandPalette extends Component
         try {
             // Search Clients - bypass global scope and filter manually
             $clients = Client::withoutGlobalScope('company')
-                ->when($user && $user->company_id, function($q) use ($user) {
+                ->when($user && $user->company_id, function ($q) use ($user) {
                     return $q->where('company_id', $user->company_id);
                 })
-                ->where(function($q) use ($query) {
+                ->where(function ($q) use ($query) {
                     $q->where('name', 'like', "%{$query}%")
-                      ->orWhere('company_name', 'like', "%{$query}%")
-                      ->orWhere('email', 'like', "%{$query}%");
+                        ->orWhere('company_name', 'like', "%{$query}%")
+                        ->orWhere('email', 'like', "%{$query}%");
                 })
                 ->limit($limit)
                 ->get();
@@ -163,25 +167,25 @@ class CommandPalette extends Component
                     'type' => 'client',
                     'id' => $client->id,
                     'title' => $client->name,
-                    'subtitle' => "Client" . ($client->company_name ? " • {$client->company_name}" : ''),
+                    'subtitle' => 'Client'.($client->company_name ? " • {$client->company_name}" : ''),
                     'route_name' => 'clients.show',
                     'route_params' => ['client' => $client->id],
-                    'icon' => 'building-office'
+                    'icon' => 'building-office',
                 ];
             }
 
             // Search Tickets
-            $ticketQuery = method_exists(Ticket::class, 'withoutGlobalScope') 
-                ? Ticket::withoutGlobalScope('company') 
+            $ticketQuery = method_exists(Ticket::class, 'withoutGlobalScope')
+                ? Ticket::withoutGlobalScope('company')
                 : Ticket::query();
-                
+
             $tickets = $ticketQuery
-                ->when($user && $user->company_id, function($q) use ($user) {
+                ->when($user && $user->company_id, function ($q) use ($user) {
                     return $q->where('company_id', $user->company_id);
                 })
-                ->where(function($q) use ($query) {
+                ->where(function ($q) use ($query) {
                     $q->where('subject', 'like', "%{$query}%")
-                      ->orWhere('number', 'like', "%{$query}%");
+                        ->orWhere('number', 'like', "%{$query}%");
                 })
                 ->limit($limit)
                 ->get();
@@ -194,24 +198,24 @@ class CommandPalette extends Component
                     'subtitle' => "Ticket #{$ticket->number} • {$ticket->status}",
                     'route_name' => 'tickets.show',
                     'route_params' => ['ticket' => $ticket->id],
-                    'icon' => 'ticket'
+                    'icon' => 'ticket',
                 ];
             }
 
             // Search Assets
-            $assetQuery = method_exists(Asset::class, 'withoutGlobalScope') 
-                ? Asset::withoutGlobalScope('company') 
+            $assetQuery = method_exists(Asset::class, 'withoutGlobalScope')
+                ? Asset::withoutGlobalScope('company')
                 : Asset::query();
-                
+
             $assets = $assetQuery
-                ->when($user && $user->company_id, function($q) use ($user) {
+                ->when($user && $user->company_id, function ($q) use ($user) {
                     return $q->where('company_id', $user->company_id);
                 })
-                ->where(function($q) use ($query) {
+                ->where(function ($q) use ($query) {
                     $q->where('name', 'like', "%{$query}%")
-                      ->orWhere('serial', 'like', "%{$query}%")
-                      ->orWhere('make', 'like', "%{$query}%")
-                      ->orWhere('model', 'like', "%{$query}%");
+                        ->orWhere('serial', 'like', "%{$query}%")
+                        ->orWhere('make', 'like', "%{$query}%")
+                        ->orWhere('model', 'like', "%{$query}%");
                 })
                 ->limit($limit)
                 ->get();
@@ -224,22 +228,22 @@ class CommandPalette extends Component
                     'subtitle' => "Asset • {$asset->type}",
                     'route_name' => 'assets.show',
                     'route_params' => ['asset' => $asset->id],
-                    'icon' => 'computer-desktop'
+                    'icon' => 'computer-desktop',
                 ];
             }
 
             // Search Contracts
-            $contractQuery = method_exists(Contract::class, 'withoutGlobalScope') 
-                ? Contract::withoutGlobalScope('company') 
+            $contractQuery = method_exists(Contract::class, 'withoutGlobalScope')
+                ? Contract::withoutGlobalScope('company')
                 : Contract::query();
-                
+
             $contracts = $contractQuery
-                ->when($user && $user->company_id, function($q) use ($user) {
+                ->when($user && $user->company_id, function ($q) use ($user) {
                     return $q->where('company_id', $user->company_id);
                 })
-                ->where(function($q) use ($query) {
+                ->where(function ($q) use ($query) {
                     $q->where('title', 'like', "%{$query}%")
-                      ->orWhere('contract_number', 'like', "%{$query}%");
+                        ->orWhere('contract_number', 'like', "%{$query}%");
                 })
                 ->limit($limit)
                 ->get();
@@ -252,17 +256,17 @@ class CommandPalette extends Component
                     'subtitle' => "Contract • {$contract->contract_type}",
                     'route_name' => 'contracts.show',
                     'route_params' => ['contract' => $contract->id],
-                    'icon' => 'document-text'
+                    'icon' => 'document-text',
                 ];
             }
 
             // Search Invoices
-            $invoiceQuery = method_exists(Invoice::class, 'withoutGlobalScope') 
-                ? Invoice::withoutGlobalScope('company') 
+            $invoiceQuery = method_exists(Invoice::class, 'withoutGlobalScope')
+                ? Invoice::withoutGlobalScope('company')
                 : Invoice::query();
-                
+
             $invoices = $invoiceQuery
-                ->when($user && $user->company_id, function($q) use ($user) {
+                ->when($user && $user->company_id, function ($q) use ($user) {
                     return $q->where('company_id', $user->company_id);
                 })
                 ->where('number', 'like', "%{$query}%")
@@ -277,17 +281,17 @@ class CommandPalette extends Component
                     'subtitle' => "Invoice • \${$invoice->amount}",
                     'route_name' => 'financial.invoices.show',
                     'route_params' => ['invoice' => $invoice->id],
-                    'icon' => 'currency-dollar'
+                    'icon' => 'currency-dollar',
                 ];
             }
 
             // Search Projects
-            $projectQuery = method_exists(Project::class, 'withoutGlobalScope') 
-                ? Project::withoutGlobalScope('company') 
+            $projectQuery = method_exists(Project::class, 'withoutGlobalScope')
+                ? Project::withoutGlobalScope('company')
                 : Project::query();
-                
+
             $projects = $projectQuery
-                ->when($user && $user->company_id, function($q) use ($user) {
+                ->when($user && $user->company_id, function ($q) use ($user) {
                     return $q->where('company_id', $user->company_id);
                 })
                 ->where('name', 'like', "%{$query}%")
@@ -302,7 +306,7 @@ class CommandPalette extends Component
                     'subtitle' => "Project • {$project->status}",
                     'route_name' => 'projects.show',
                     'route_params' => ['project' => $project->id],
-                    'icon' => 'briefcase'
+                    'icon' => 'briefcase',
                 ];
             }
 
@@ -325,7 +329,7 @@ class CommandPalette extends Component
 
             // Add quick actions
             $quickActions = $this->getQuickActions($query);
-            
+
             // Put actual search results first, then quick actions
             // This makes the search results more prominent
             $results = array_merge($results, $quickActions);
@@ -334,13 +338,14 @@ class CommandPalette extends Component
             return array_slice($results, 0, 15);
         } catch (\Exception $e) {
             // Log the error but don't crash the search
-            \Log::error('Command palette search error: ' . $e->getMessage(), [
-                'exception' => $e->getTraceAsString()
+            \Log::error('Command palette search error: '.$e->getMessage(), [
+                'exception' => $e->getTraceAsString(),
             ]);
+
             return [];
         }
     }
-    
+
     /**
      * Legacy method for backward compatibility - delegates to getSearchResults
      */
@@ -353,52 +358,52 @@ class CommandPalette extends Component
     {
         $actions = [];
         $user = Auth::user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return $actions;
         }
-        
+
         // Use the stored current route
         $currentRouteName = $this->currentRoute;
-        
+
         // Use QuickActionService to search for quick actions
         $quickActions = QuickActionService::searchActions($query, $user);
-        
+
         foreach ($quickActions as $action) {
             // Skip if this action leads to the current page
             if ($currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName) {
                 continue;
             }
-            
+
             $formattedAction = [
                 'type' => 'quick_action',
                 'id' => $action['id'] ?? null,
                 'title' => $action['title'],
-                'subtitle' => 'Quick Action • ' . ($action['description'] ?? ''),
+                'subtitle' => 'Quick Action • '.($action['description'] ?? ''),
                 'icon' => $action['icon'] ?? 'bolt',
                 'action_data' => $action, // This includes all settings including open_in
             ];
-            
+
             // Add route information if available
             if (isset($action['route'])) {
                 $formattedAction['route_name'] = $action['route'];
                 $formattedAction['route_params'] = $action['parameters'] ?? [];
             }
-            
+
             // Add custom action ID if it's a custom action
             if (isset($action['custom_id'])) {
                 $formattedAction['custom_id'] = $action['custom_id'];
             }
-            
+
             // Add action key for system actions
             if (isset($action['action'])) {
                 $formattedAction['action_key'] = $action['action'];
             }
-            
+
             $actions[] = $formattedAction;
         }
 
-        // Get all navigation items from sidebar configurations  
+        // Get all navigation items from sidebar configurations
         $navigationActions = $this->getAllNavigationCommands();
         $queryLower = strtolower($query);
 
@@ -408,7 +413,7 @@ class CommandPalette extends Component
             if ($currentRouteName && isset($action['route_name']) && $action['route_name'] === $currentRouteName) {
                 continue;
             }
-            
+
             // Check if title or keywords match the query
             if (str_contains(strtolower($action['title']), $queryLower) ||
                 (isset($action['keywords']) && $this->matchesKeywords($action['keywords'], $queryLower))) {
@@ -432,14 +437,14 @@ class CommandPalette extends Component
                     // Check if not already added
                     $exists = false;
                     foreach ($actions as $existingAction) {
-                        if (isset($existingAction['route_name']) && 
+                        if (isset($existingAction['route_name']) &&
                             isset($mapping['action']['route_name']) &&
                             $existingAction['route_name'] === $mapping['action']['route_name']) {
                             $exists = true;
                             break;
                         }
                     }
-                    if (!$exists) {
+                    if (! $exists) {
                         $actions[] = $mapping['action'];
                     }
                     break;
@@ -470,13 +475,13 @@ class CommandPalette extends Component
 
             // Extract navigation items from each section
             foreach ($config['sections'] as $section) {
-                if (!isset($section['items'])) {
+                if (! isset($section['items'])) {
                     continue;
                 }
 
                 foreach ($section['items'] as $item) {
                     // Skip if no route defined
-                    if (!isset($item['route'])) {
+                    if (! isset($item['route'])) {
                         continue;
                     }
 
@@ -488,16 +493,16 @@ class CommandPalette extends Component
                     $command = [
                         'type' => 'navigation',
                         'title' => $item['name'],
-                        'subtitle' => 'Navigation • ' . ucfirst($context),
+                        'subtitle' => 'Navigation • '.ucfirst($context),
                         'route_name' => $item['route'],
                         'route_params' => $processedParams,
                         'icon' => $item['icon'] ?? 'arrow-right',
-                        'keywords' => $this->generateKeywords($item['name'], $context)
+                        'keywords' => $this->generateKeywords($item['name'], $context),
                     ];
 
                     // Add description if available
                     if (isset($item['description'])) {
-                        $command['subtitle'] .= ' • ' . $item['description'];
+                        $command['subtitle'] .= ' • '.$item['description'];
                     }
 
                     $commands[] = $command;
@@ -513,7 +518,7 @@ class CommandPalette extends Component
             'route_name' => 'dashboard',
             'route_params' => [],
             'icon' => 'home',
-            'keywords' => ['dashboard', 'home', 'main', 'overview']
+            'keywords' => ['dashboard', 'home', 'main', 'overview'],
         ];
 
         return $commands;
@@ -537,6 +542,7 @@ class CommandPalette extends Component
                 if ($selectedClient) {
                     $processed[$key] = $selectedClient->id;
                 }
+
                 // Skip this parameter if no client is selected
                 continue;
             }
@@ -607,6 +613,7 @@ class CommandPalette extends Component
                 return true;
             }
         }
+
         return false;
     }
 
@@ -617,15 +624,15 @@ class CommandPalette extends Component
     {
         $user = Auth::user();
         $commands = [];
-        
+
         // Use the stored current route
         $currentRouteName = $this->currentRoute;
-        
+
         if ($user) {
             // Get ALL favorite quick actions first - these should be the primary items shown
             $allActions = QuickActionService::getActionsForUser($user);
             $favoriteIds = QuickActionService::getFavoriteIdentifiers($user);
-            
+
             // Filter to get only favorites and format them for display
             $favoriteActions = $allActions->filter(function ($action) use ($favoriteIds, $currentRouteName) {
                 // Skip if this action leads to the current page
@@ -633,102 +640,103 @@ class CommandPalette extends Component
                     logger()->info('Filtering out action because it matches current route', [
                         'action_title' => $action['title'] ?? 'unknown',
                         'action_route' => $action['route'],
-                        'current_route' => $currentRouteName
+                        'current_route' => $currentRouteName,
                     ]);
+
                     return false;
                 }
-                
+
                 // Check various identifiers to see if this action is favorited
                 $actionId = $action['id'] ?? null;
                 $route = $action['route'] ?? null;
                 $actionKey = $action['action'] ?? null;
-                $customId = isset($action['custom_id']) ? 'custom_' . $action['custom_id'] : null;
-                
+                $customId = isset($action['custom_id']) ? 'custom_'.$action['custom_id'] : null;
+
                 return in_array($actionId, $favoriteIds) ||
                        in_array($route, $favoriteIds) ||
                        in_array($actionKey, $favoriteIds) ||
                        in_array($customId, $favoriteIds);
             });
-            
+
             // Add all favorite actions with a star indicator
             foreach ($favoriteActions as $action) {
                 $command = [
                     'type' => 'quick_action',
                     'id' => $action['id'] ?? null,
                     'title' => $action['title'],
-                    'subtitle' => '⭐ Favorite • ' . ($action['description'] ?? 'Quick Action'),
+                    'subtitle' => '⭐ Favorite • '.($action['description'] ?? 'Quick Action'),
                     'icon' => $action['icon'] ?? 'star',
                     'action_data' => $action, // This includes all settings including open_in
                 ];
-                
+
                 // Add route information if available
                 if (isset($action['route'])) {
                     $command['route_name'] = $action['route'];
                     $command['route_params'] = $action['parameters'] ?? [];
                 }
-                
+
                 // Add custom action ID if it's a custom action
                 if (isset($action['custom_id'])) {
                     $command['custom_id'] = $action['custom_id'];
                 }
-                
+
                 // Add action key for system actions
                 if (isset($action['action'])) {
                     $command['action_key'] = $action['action'];
                 }
-                
+
                 $commands[] = $command;
             }
-            
+
             // If no favorites, show some popular quick actions
             if (empty($commands)) {
                 $popularActions = QuickActionService::getPopularActions($user);
-                
+
                 foreach ($popularActions as $action) {
                     // Skip if this action leads to the current page
                     if ($currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName) {
                         continue;
                     }
-                    
+
                     $command = [
                         'type' => 'quick_action',
                         'id' => $action['id'] ?? null,
                         'title' => $action['title'],
-                        'subtitle' => 'Quick Action • ' . ($action['description'] ?? ''),
+                        'subtitle' => 'Quick Action • '.($action['description'] ?? ''),
                         'icon' => $action['icon'] ?? 'bolt',
                         'action_data' => $action, // This includes all settings including open_in
                     ];
-                    
+
                     // Add route information if available
                     if (isset($action['route'])) {
                         $command['route_name'] = $action['route'];
                         $command['route_params'] = $action['parameters'] ?? [];
                     }
-                    
+
                     // Add custom action ID if it's a custom action
                     if (isset($action['custom_id'])) {
                         $command['custom_id'] = $action['custom_id'];
                     }
-                    
+
                     // Add action key for system actions
                     if (isset($action['action'])) {
                         $command['action_key'] = $action['action'];
                     }
-                    
+
                     $commands[] = $command;
                 }
             }
         }
-        
+
         // Add standard navigation commands (but only if we don't have too many favorites)
         $navigationCommands = [];
-        
+
         // Collect routes that are already in favorites to avoid duplicates
         $existingRoutes = collect($commands)->pluck('route_name')->filter()->toArray();
         $existingTitles = collect($commands)->pluck('title')->map(function ($title) {
             return strtolower($title);
         })->toArray();
-        
+
         // Only add navigation if we have less than 8 favorites
         if (count($commands) < 8) {
             $allNavigationCommands = [
@@ -738,7 +746,7 @@ class CommandPalette extends Component
                     'subtitle' => 'Navigation • Main',
                     'route_name' => 'dashboard',
                     'route_params' => [],
-                    'icon' => 'home'
+                    'icon' => 'home',
                 ],
                 [
                     'type' => 'navigation',
@@ -746,7 +754,7 @@ class CommandPalette extends Component
                     'subtitle' => 'Navigation • View all clients',
                     'route_name' => 'clients.index',
                     'route_params' => [],
-                    'icon' => 'user-group'
+                    'icon' => 'user-group',
                 ],
                 [
                     'type' => 'navigation',
@@ -754,7 +762,7 @@ class CommandPalette extends Component
                     'subtitle' => 'Navigation • Support tickets',
                     'route_name' => 'tickets.index',
                     'route_params' => [],
-                    'icon' => 'ticket'
+                    'icon' => 'ticket',
                 ],
                 [
                     'type' => 'navigation',
@@ -762,7 +770,7 @@ class CommandPalette extends Component
                     'subtitle' => 'Navigation • Financial',
                     'route_name' => 'financial.invoices.index',
                     'route_params' => [],
-                    'icon' => 'document-text'
+                    'icon' => 'document-text',
                 ],
                 [
                     'type' => 'navigation',
@@ -770,7 +778,7 @@ class CommandPalette extends Component
                     'subtitle' => 'Navigation • Project management',
                     'route_name' => 'projects.index',
                     'route_params' => [],
-                    'icon' => 'folder'
+                    'icon' => 'folder',
                 ],
                 [
                     'type' => 'navigation',
@@ -778,24 +786,24 @@ class CommandPalette extends Component
                     'subtitle' => 'Navigation • Equipment & inventory',
                     'route_name' => 'assets.index',
                     'route_params' => [],
-                    'icon' => 'computer-desktop'
-                ]
+                    'icon' => 'computer-desktop',
+                ],
             ];
-            
+
             // Filter out navigation items that are already in favorites or lead to current page
             foreach ($allNavigationCommands as $navCommand) {
                 $isDuplicate = false;
-                
+
                 // Skip if this navigation item leads to the current page
                 if ($currentRouteName && isset($navCommand['route_name']) && $navCommand['route_name'] === $currentRouteName) {
                     continue;
                 }
-                
+
                 // Check if route already exists in favorites
                 if (isset($navCommand['route_name']) && in_array($navCommand['route_name'], $existingRoutes)) {
                     $isDuplicate = true;
                 }
-                
+
                 // Check if title is similar (to catch things like "View Tickets" vs "Tickets")
                 $navTitleLower = strtolower($navCommand['title']);
                 foreach ($existingTitles as $existingTitle) {
@@ -816,18 +824,18 @@ class CommandPalette extends Component
                         break;
                     }
                 }
-                
-                if (!$isDuplicate) {
+
+                if (! $isDuplicate) {
                     $navigationCommands[] = $navCommand;
                 }
-                
+
                 // Stop if we have enough commands
                 if (count($commands) + count($navigationCommands) >= 10) {
                     break;
                 }
             }
         }
-        
+
         // Merge commands, favorites first
         return array_merge($commands, $navigationCommands);
     }
@@ -845,12 +853,12 @@ class CommandPalette extends Component
             $this->selectedIndex--;
         }
     }
-    
+
     public function setSelectedIndex($index)
     {
         $this->selectedIndex = $index;
     }
-    
+
     /**
      * Get current state for debugging
      */
@@ -869,10 +877,10 @@ class CommandPalette extends Component
     public function selectResult($index = null)
     {
         $index = $index ?? $this->selectedIndex;
-        
+
         // Always use the computed property for consistency
         $results = $this->searchResults;
-        
+
         // Add debug logging to track the issue
         \Log::info('CommandPalette::selectResult called', [
             'index' => $index,
@@ -884,53 +892,50 @@ class CommandPalette extends Component
             'result_exists' => isset($results[$index]),
             'first_result_title' => isset($results[0]) ? $results[0]['title'] : 'no results',
         ]);
-        
+
         // Validate index is within bounds
-        if (!is_numeric($index) || $index < 0 || $index >= count($results)) {
+        if (! is_numeric($index) || $index < 0 || $index >= count($results)) {
             \Log::warning('CommandPalette::selectResult - Invalid index', [
                 'index' => $index,
                 'results_count' => count($results),
             ]);
+
             return;
         }
-        
+
         if (isset($results[$index])) {
             $result = $results[$index];
-            
+
             // Close the modal first
             $this->close();
 
             // Handle quick actions
             if ($result['type'] === 'quick_action' && isset($result['action_data'])) {
                 $action = $result['action_data'];
-                
 
-                
                 // Handle custom actions - check both result level and action level for custom_id
                 if (isset($result['custom_id']) || isset($action['custom_id'])) {
                     $customId = $result['custom_id'] ?? $action['custom_id'];
 
-                    
                     // Get the custom action from database to ensure we have all data
                     $customAction = CustomQuickAction::find($customId);
-                    if (!$customAction || !$customAction->canBeExecutedBy(Auth::user())) {
+                    if (! $customAction || ! $customAction->canBeExecutedBy(Auth::user())) {
                         \Log::warning('CommandPalette: Custom action not found or no permission', [
                             'custom_id' => $customId,
                             'found' => $customAction ? 'yes' : 'no',
                         ]);
+
                         return;
                     }
-                    
+
                     $customAction->recordUsage();
-                    
+
                     // Use values from database (most reliable source)
                     $actionType = $customAction->type;
                     $actionTarget = $customAction->target;
                     $actionOpenIn = $customAction->open_in;
                     $actionParameters = $customAction->parameters ?? [];
-                    
 
-                    
                     // Now execute the action based on type
                     if ($actionType === 'route') {
                         // Respect the open_in setting for routes
@@ -938,9 +943,11 @@ class CommandPalette extends Component
                             $routeUrl = route($actionTarget, $actionParameters);
                             $this->js("window.open('$routeUrl', '_blank')");
                             $this->close();
+
                             return;
                         } else {
                             $this->close();
+
                             return $this->redirectRoute(
                                 $actionTarget,
                                 $actionParameters,
@@ -949,24 +956,24 @@ class CommandPalette extends Component
                         }
                     } elseif ($actionType === 'url') {
                         $url = $actionTarget;
-                        if (!empty($actionParameters)) {
-                            $url .= '?' . http_build_query($actionParameters);
+                        if (! empty($actionParameters)) {
+                            $url .= '?'.http_build_query($actionParameters);
                         }
-                        
 
-                        
                         if ($actionOpenIn === 'new_tab') {
                             // For new tab, dispatch browser event and close modal after
                             $this->js("window.open('$url', '_blank')");
                             $this->close();
+
                             return;
                         } else {
                             // For same tab, close modal first then redirect
                             $this->close();
+
                             return $this->redirect($url, navigate: true);
                         }
                     }
-                    
+
                     return; // End of custom action handling
                 }
                 // Handle system actions with special dispatch events
@@ -983,6 +990,7 @@ class CommandPalette extends Component
                             break;
                     }
                     $this->close();
+
                     return;
                 }
                 // Handle route-based system actions
@@ -992,9 +1000,11 @@ class CommandPalette extends Component
                         $routeUrl = route($action['route'], $action['parameters'] ?? []);
                         $this->js("window.open('$routeUrl', '_blank')");
                         $this->close();
+
                         return;
                     } else {
                         $this->close();
+
                         return $this->redirectRoute(
                             $action['route'],
                             $action['parameters'] ?? [],
@@ -1007,15 +1017,13 @@ class CommandPalette extends Component
             // Use redirectRoute with navigate for SPA-like behavior
             if (isset($result['route_name'])) {
 
-                
                 try {
                     // Verify the route exists
                     $routeUrl = route($result['route_name'], $result['route_params'] ?? []);
-                    
 
-                    
                     // Close modal and navigate
                     $this->close();
+
                     return $this->redirectRoute(
                         $result['route_name'],
                         $result['route_params'] ?? [],
@@ -1027,6 +1035,7 @@ class CommandPalette extends Component
                         'error' => $e->getMessage(),
                     ]);
                     $this->close();
+
                     return;
                 }
             }
@@ -1034,6 +1043,7 @@ class CommandPalette extends Component
             // Fallback for any results that still have URL
             if (isset($result['url'])) {
                 $this->close();
+
                 return $this->redirect($result['url'], navigate: true);
             }
         } else {
@@ -1043,14 +1053,14 @@ class CommandPalette extends Component
             ]);
         }
     }
-    
+
     public function navigateTo($url)
     {
         // Don't close modal here - let redirect handle it
         // Use Livewire's redirect method with navigate for SPA-like behavior
         return $this->redirect($url, navigate: true);
     }
-    
+
     public function navigateToRoute($routeName, $params = [])
     {
         // Don't close modal here - let redirect handle it

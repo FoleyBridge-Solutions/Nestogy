@@ -2,8 +2,8 @@
 
 namespace App\Domains\Asset\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Asset\Models\AssetWarranty;
+use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
@@ -18,20 +18,20 @@ class WarrantyController extends Controller
     public function index(Request $request)
     {
         $query = AssetWarranty::with(['asset.client', 'vendor'])
-            ->whereHas('asset', function($q) {
+            ->whereHas('asset', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('warranty_provider', 'like', "%{$search}%")
-                  ->orWhere('warranty_type', 'like', "%{$search}%")
-                  ->orWhere('terms', 'like', "%{$search}%")
-                  ->orWhereHas('asset', function($assetQuery) use ($search) {
-                      $assetQuery->where('name', 'like', "%{$search}%")
-                                 ->orWhere('serial', 'like', "%{$search}%");
-                  });
+                    ->orWhere('warranty_type', 'like', "%{$search}%")
+                    ->orWhere('terms', 'like', "%{$search}%")
+                    ->orWhereHas('asset', function ($assetQuery) use ($search) {
+                        $assetQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('serial', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -60,16 +60,16 @@ class WarrantyController extends Controller
         }
 
         $warranties = $query->orderBy('warranty_end_date', 'desc')
-                           ->paginate(20)
-                           ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $assets = Asset::where('company_id', auth()->user()->company_id)
-                      ->orderBy('name')
-                      ->get();
+            ->orderBy('name')
+            ->get();
 
         $vendors = Vendor::where('company_id', auth()->user()->company_id)
-                         ->orderBy('name')
-                         ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('assets.warranties.index', compact('warranties', 'assets', 'vendors'));
     }
@@ -80,12 +80,12 @@ class WarrantyController extends Controller
     public function create(Request $request)
     {
         $assets = Asset::where('company_id', auth()->user()->company_id)
-                      ->orderBy('name')
-                      ->get();
+            ->orderBy('name')
+            ->get();
 
         $vendors = Vendor::where('company_id', auth()->user()->company_id)
-                         ->orderBy('name')
-                         ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedAssetId = $request->get('asset_id');
 
@@ -130,8 +130,8 @@ class WarrantyController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $warranty = new AssetWarranty($request->all());
@@ -139,7 +139,7 @@ class WarrantyController extends Controller
         $warranty->save();
 
         return redirect()->route('assets.warranties.index')
-                        ->with('success', 'Warranty record created successfully.');
+            ->with('success', 'Warranty record created successfully.');
     }
 
     /**
@@ -162,12 +162,12 @@ class WarrantyController extends Controller
         $this->authorize('update', $warranty);
 
         $assets = Asset::where('company_id', auth()->user()->company_id)
-                      ->orderBy('name')
-                      ->get();
+            ->orderBy('name')
+            ->get();
 
         $vendors = Vendor::where('company_id', auth()->user()->company_id)
-                         ->orderBy('name')
-                         ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('assets.warranties.edit', compact('warranty', 'assets', 'vendors'));
     }
@@ -212,15 +212,15 @@ class WarrantyController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $warranty->fill($request->all());
         $warranty->save();
 
         return redirect()->route('assets.warranties.index')
-                        ->with('success', 'Warranty record updated successfully.');
+            ->with('success', 'Warranty record updated successfully.');
     }
 
     /**
@@ -233,7 +233,7 @@ class WarrantyController extends Controller
         $warranty->delete();
 
         return redirect()->route('assets.warranties.index')
-                        ->with('success', 'Warranty record deleted successfully.');
+            ->with('success', 'Warranty record deleted successfully.');
     }
 
     /**
@@ -242,15 +242,15 @@ class WarrantyController extends Controller
     public function export(Request $request)
     {
         $query = AssetWarranty::with(['asset.client', 'vendor'])
-            ->whereHas('asset', function($q) {
+            ->whereHas('asset', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('warranty_provider', 'like', "%{$search}%")
-                  ->orWhere('warranty_type', 'like', "%{$search}%");
+                    ->orWhere('warranty_type', 'like', "%{$search}%");
             });
         }
 
@@ -268,16 +268,16 @@ class WarrantyController extends Controller
 
         $warranties = $query->orderBy('warranty_end_date', 'desc')->get();
 
-        $filename = 'asset_warranties_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'asset_warranties_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($warranties) {
+        $callback = function () use ($warranties) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Asset Name',
@@ -295,7 +295,7 @@ class WarrantyController extends Controller
                 'Contact Phone',
                 'Reference Number',
                 'Coverage Details',
-                'Notes'
+                'Notes',
             ]);
 
             // CSV data
@@ -309,8 +309,8 @@ class WarrantyController extends Controller
                     $warranty->warranty_start_date?->format('Y-m-d'),
                     $warranty->warranty_end_date?->format('Y-m-d'),
                     ucfirst($warranty->status),
-                    $warranty->cost ? '$' . number_format($warranty->cost, 2) : '',
-                    $warranty->renewal_cost ? '$' . number_format($warranty->renewal_cost, 2) : '',
+                    $warranty->cost ? '$'.number_format($warranty->cost, 2) : '',
+                    $warranty->renewal_cost ? '$'.number_format($warranty->renewal_cost, 2) : '',
                     $warranty->auto_renewal ? 'Yes' : 'No',
                     $warranty->contact_email,
                     $warranty->contact_phone,
@@ -319,7 +319,7 @@ class WarrantyController extends Controller
                     $warranty->notes,
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -332,14 +332,14 @@ class WarrantyController extends Controller
     public function expiryReport(Request $request)
     {
         $expiredQuery = AssetWarranty::with(['asset.client'])
-            ->whereHas('asset', function($q) {
+            ->whereHas('asset', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             })
             ->where('warranty_end_date', '<', now())
             ->where('status', '!=', 'expired');
 
         $expiringSoonQuery = AssetWarranty::with(['asset.client'])
-            ->whereHas('asset', function($q) {
+            ->whereHas('asset', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             })
             ->whereBetween('warranty_end_date', [now(), now()->addDays(30)])
@@ -371,7 +371,7 @@ class WarrantyController extends Controller
         ]);
 
         return redirect()->back()
-                        ->with('success', 'Warranty renewed successfully.');
+            ->with('success', 'Warranty renewed successfully.');
     }
 
     /**
@@ -384,6 +384,6 @@ class WarrantyController extends Controller
         $warranty->update(['status' => 'expired']);
 
         return redirect()->back()
-                        ->with('success', 'Warranty marked as expired.');
+            ->with('success', 'Warranty marked as expired.');
     }
 }

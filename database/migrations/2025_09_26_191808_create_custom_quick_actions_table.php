@@ -31,11 +31,11 @@ return new class extends Migration
             $table->integer('usage_count')->default(0);
             $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'user_id', 'is_active']);
             $table->index(['company_id', 'visibility', 'is_active']);
         });
-        
+
         // Table for tracking user favorites (pinned actions)
         Schema::create('quick_action_favorites', function (Blueprint $table) {
             $table->id();
@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('system_action')->nullable()->comment('For favoriting system-defined actions');
             $table->integer('position')->default(0);
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'custom_quick_action_id']);
             $table->unique(['user_id', 'system_action']);
             $table->index('user_id');

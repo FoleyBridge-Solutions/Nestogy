@@ -2,21 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
  * CompanyHierarchy Model
- * 
+ *
  * Manages complex organizational hierarchies using the Closure Table pattern.
  * Supports efficient queries for ancestors, descendants, and path operations.
- * 
+ *
  * @property int $id
  * @property int $ancestor_id
- * @property int $descendant_id  
+ * @property int $descendant_id
  * @property int $depth
  * @property string|null $path
  * @property string|null $path_names
@@ -119,8 +119,8 @@ class CompanyHierarchy extends Model
     public static function getSiblings(int $companyId): Collection
     {
         $parent = static::getParent($companyId);
-        
-        if (!$parent) {
+
+        if (! $parent) {
             return collect();
         }
 
@@ -168,7 +168,7 @@ class CompanyHierarchy extends Model
      */
     public static function areRelated(int $companyId1, int $companyId2): bool
     {
-        return static::isAncestor($companyId1, $companyId2) || 
+        return static::isAncestor($companyId1, $companyId2) ||
                static::isAncestor($companyId2, $companyId1);
     }
 
@@ -185,13 +185,13 @@ class CompanyHierarchy extends Model
 
         // Start with root
         $rootCompany = Company::find($rootCompanyId);
-        if (!$rootCompany) {
+        if (! $rootCompany) {
             return [];
         }
 
         $tree = [
             'company' => $rootCompany,
-            'children' => static::buildTreeLevel($rootCompanyId, $byDepth, 1)
+            'children' => static::buildTreeLevel($rootCompanyId, $byDepth, 1),
         ];
 
         return $tree;
@@ -210,7 +210,7 @@ class CompanyHierarchy extends Model
                 $children[] = [
                     'company' => $hierarchy->descendant,
                     'hierarchy' => $hierarchy,
-                    'children' => static::buildTreeLevel($hierarchy->descendant_id, $byDepth, $depth + 1)
+                    'children' => static::buildTreeLevel($hierarchy->descendant_id, $byDepth, $depth + 1),
                 ];
             }
         }
@@ -224,7 +224,7 @@ class CompanyHierarchy extends Model
     private static function isDirectChild(int $parentId, int $childId, Collection $byDepth): bool
     {
         $directChildren = $byDepth->get(1, collect());
-        
+
         return $directChildren->contains(function ($hierarchy) use ($parentId, $childId) {
             return $hierarchy->ancestor_id == $parentId && $hierarchy->descendant_id == $childId;
         });
@@ -339,7 +339,7 @@ class CompanyHierarchy extends Model
     protected static function updatePaths(int $companyId): void
     {
         $company = Company::find($companyId);
-        if (!$company) {
+        if (! $company) {
             return;
         }
 
@@ -361,14 +361,14 @@ class CompanyHierarchy extends Model
         $pathIds[] = $companyId;
         $pathNames[] = $company->name;
 
-        $path = '/' . implode('/', $pathIds) . '/';
+        $path = '/'.implode('/', $pathIds).'/';
         $pathNamesStr = implode(' / ', $pathNames);
 
         // Update all hierarchy records for this company
         static::where('descendant_id', $companyId)
             ->update([
                 'path' => $path,
-                'path_names' => $pathNamesStr
+                'path_names' => $pathNamesStr,
             ]);
 
         // Recursively update descendants

@@ -26,7 +26,7 @@ return new class extends Migration
             $table->boolean('follow_up_required')->default(false);
             $table->date('follow_up_date')->nullable();
             $table->timestamps();
-            
+
             $table->index(['client_id', 'created_at']);
             $table->index(['type', 'channel']);
             $table->index(['follow_up_required', 'follow_up_date']);

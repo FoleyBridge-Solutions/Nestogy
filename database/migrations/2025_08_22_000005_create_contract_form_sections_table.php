@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('contract_form_sections', function (Blueprint $table) {
             $table->id();
-            
+
             // Multi-tenancy
             $table->unsignedBigInteger('company_id')->index();
-            
+
             // Form section definition
             $table->string('section_slug')->index();
             $table->string('section_name');
@@ -29,20 +29,20 @@ return new class extends Migration
             $table->boolean('is_collapsed_by_default')->default(false);
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
-            
+
             $table->timestamps();
-            
+
             // Foreign key constraints
             $table->foreign('company_id')
                 ->references('id')
                 ->on('companies')
                 ->onDelete('cascade');
-            
+
             // Indexes
             $table->index(['company_id', 'section_slug']);
             $table->index(['company_id', 'sort_order']);
             $table->index(['company_id', 'is_active']);
-            
+
             // Unique constraint
             $table->unique(['company_id', 'section_slug']);
         });

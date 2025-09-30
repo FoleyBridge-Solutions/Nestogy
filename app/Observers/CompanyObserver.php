@@ -12,7 +12,7 @@ class CompanyObserver
     public function created(Company $company): void
     {
         // Create default quick actions for the new company
-        $seeder = new \Database\Seeders\QuickActionsSeeder();
+        $seeder = new \Database\Seeders\QuickActionsSeeder;
         $seeder->createDefaultActionsForCompany($company->id);
     }
 

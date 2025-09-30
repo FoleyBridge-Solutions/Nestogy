@@ -4,17 +4,17 @@ namespace App\Domains\Security\Services;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractAuditLog;
-use App\Models\ComplianceRequirement;
 use App\Models\ComplianceCheck;
+use App\Models\ComplianceRequirement;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-use Illuminate\Support\Collection;
 
 /**
  * ComplianceTrackingService
- * 
+ *
  * Comprehensive compliance tracking and audit trail service for contracts.
  * Handles legal requirements, document retention, audit logging, and compliance monitoring.
  */
@@ -28,7 +28,7 @@ class ComplianceTrackingService
         string $action,
         array $details = [],
         string $category = 'general',
-        int $userId = null
+        ?int $userId = null
     ): ContractAuditLog {
         $userId = $userId ?? Auth::id();
 
@@ -54,7 +54,7 @@ class ComplianceTrackingService
             'audit_log_id' => $auditLog->id,
             'contract_id' => $contract->id,
             'action' => $action,
-            'user_id' => $userId
+            'user_id' => $userId,
         ]);
 
         return $auditLog;
@@ -114,7 +114,7 @@ class ComplianceTrackingService
                 'evidence_documents' => $checkData['evidence_documents'] ?? [],
                 'checked_by' => Auth::id(),
                 'checked_at' => now(),
-                'next_check_date' => isset($checkData['next_check_date']) ? 
+                'next_check_date' => isset($checkData['next_check_date']) ?
                     Carbon::parse($checkData['next_check_date']) : null,
                 'compliance_score' => $checkData['compliance_score'] ?? null,
                 'risk_level' => $checkData['risk_level'] ?? 'medium',
@@ -131,7 +131,7 @@ class ComplianceTrackingService
                     'requirement_id' => $requirement->id,
                     'check_id' => $check->id,
                     'status' => $check->status,
-                    'risk_level' => $check->risk_level
+                    'risk_level' => $check->risk_level,
                 ],
                 'compliance'
             );
@@ -146,7 +146,7 @@ class ComplianceTrackingService
     public function generateComplianceReport(Contract $contract): array
     {
         $requirements = $contract->complianceRequirements()->with('latestCheck')->get();
-        
+
         $report = [
             'contract_id' => $contract->id,
             'contract_number' => $contract->contract_number,
@@ -168,7 +168,7 @@ class ComplianceTrackingService
         // Analyze each requirement
         foreach ($requirements as $requirement) {
             $status = $requirement->latestCheck ? $requirement->latestCheck->status : $requirement->status;
-            
+
             switch ($status) {
                 case 'compliant':
                     $report['compliant_requirements']++;
@@ -242,7 +242,7 @@ class ComplianceTrackingService
     {
         $retentionPolicy = $this->getRetentionPolicy($contract);
         $documents = $contract->documents ?? [];
-        
+
         $status = [
             'is_compliant' => true,
             'retention_period' => $retentionPolicy['period'],
@@ -256,7 +256,7 @@ class ComplianceTrackingService
         foreach ($documents as $document) {
             $documentAge = Carbon::parse($document['created_at'] ?? $contract->created_at)
                 ->diffInYears(now());
-                
+
             if ($documentAge >= $retentionPolicy['period']) {
                 $status['expired_documents'][] = $document;
                 $status['is_compliant'] = false;
@@ -269,7 +269,7 @@ class ComplianceTrackingService
         $requiredDocs = $retentionPolicy['required_documents'] ?? [];
         foreach ($requiredDocs as $requiredDoc) {
             $found = collect($documents)->contains('type', $requiredDoc);
-            if (!$found) {
+            if (! $found) {
                 $status['issues'][] = "Missing required document: {$requiredDoc}";
                 $status['is_compliant'] = false;
             }
@@ -298,7 +298,7 @@ class ComplianceTrackingService
         // Check required signatures
         $requiredSignatures = $contract->signatures()->where('is_required', true)->get();
         $missingSignatures = $requiredSignatures->where('status', '!=', 'signed');
-        
+
         if ($missingSignatures->count() > 0) {
             $checks->push([
                 'type' => 'missing_signatures',
@@ -313,7 +313,7 @@ class ComplianceTrackingService
             ->where('status', '!=', 'completed')
             ->where('due_date', '<', now())
             ->get();
-            
+
         if ($overdueMilestones->count() > 0) {
             $checks->push([
                 'type' => 'overdue_milestones',
@@ -328,7 +328,7 @@ class ComplianceTrackingService
             ->where('status', 'Sent')
             ->where('due_date', '<', now())
             ->get();
-            
+
         if ($overdueInvoices->count() > 0) {
             $checks->push([
                 'type' => 'overdue_payments',
@@ -340,7 +340,7 @@ class ComplianceTrackingService
 
         // Check data retention compliance
         $retentionStatus = $this->checkDocumentRetention($contract);
-        if (!$retentionStatus['is_compliant']) {
+        if (! $retentionStatus['is_compliant']) {
             $checks->push([
                 'type' => 'document_retention',
                 'status' => 'non_compliant',
@@ -367,7 +367,7 @@ class ComplianceTrackingService
     public function getComplianceDashboard(int $companyId): array
     {
         $contracts = Contract::where('company_id', $companyId)->get();
-        
+
         $dashboard = [
             'total_contracts' => $contracts->count(),
             'compliant_contracts' => 0,
@@ -382,7 +382,7 @@ class ComplianceTrackingService
 
         foreach ($contracts as $contract) {
             $report = $this->generateComplianceReport($contract);
-            
+
             switch ($report['overall_compliance_status']) {
                 case 'compliant':
                     $dashboard['compliant_contracts']++;
@@ -400,7 +400,7 @@ class ComplianceTrackingService
             }
 
             $dashboard['risk_breakdown'][$report['risk_assessment']]++;
-            
+
             // Collect upcoming deadlines
             foreach ($report['upcoming_deadlines'] as $deadline) {
                 $dashboard['upcoming_deadlines'][] = array_merge($deadline, [
@@ -421,7 +421,7 @@ class ComplianceTrackingService
     /**
      * Export compliance audit report
      */
-    public function exportAuditReport(Contract $contract, Carbon $startDate = null, Carbon $endDate = null): array
+    public function exportAuditReport(Contract $contract, ?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
         $startDate = $startDate ?? $contract->created_at;
         $endDate = $endDate ?? now();
@@ -464,7 +464,6 @@ class ComplianceTrackingService
     /**
      * Helper methods
      */
-
     protected function generateAuditDescription(string $action, array $details): string
     {
         $descriptions = [
@@ -483,9 +482,9 @@ class ComplianceTrackingService
         ];
 
         $baseDescription = $descriptions[$action] ?? "Action performed: {$action}";
-        
-        if (!empty($details)) {
-            $baseDescription .= ' - ' . json_encode($details);
+
+        if (! empty($details)) {
+            $baseDescription .= ' - '.json_encode($details);
         }
 
         return $baseDescription;
@@ -493,7 +492,7 @@ class ComplianceTrackingService
 
     protected function updateRequirementStatus(ComplianceRequirement $requirement, ComplianceCheck $check): void
     {
-        $newStatus = match($check->status) {
+        $newStatus = match ($check->status) {
             'compliant' => 'compliant',
             'non_compliant' => 'non_compliant',
             'needs_review' => 'under_review',
@@ -522,7 +521,7 @@ class ComplianceTrackingService
     protected function getAuditTrailSummary(Contract $contract): array
     {
         $logs = $contract->auditLogs()->get();
-        
+
         return [
             'total_activities' => $logs->count(),
             'last_activity' => $logs->max('occurred_at'),

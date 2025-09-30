@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Tax Exemption Usage Model
- * 
+ *
  * Tracks usage of tax exemptions for audit and reporting purposes.
  * Records when and how tax exemptions are applied.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $tax_exemption_id
@@ -31,7 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class TaxExemptionUsage extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -132,7 +132,7 @@ class TaxExemptionUsage extends Model
      */
     public function getFormattedExemptedAmount(): string
     {
-        return '$' . number_format($this->exempted_amount, 2);
+        return '$'.number_format($this->exempted_amount, 2);
     }
 
     /**
@@ -140,7 +140,7 @@ class TaxExemptionUsage extends Model
      */
     public function getFormattedOriginalAmount(): string
     {
-        return '$' . number_format($this->original_tax_amount, 2);
+        return '$'.number_format($this->original_tax_amount, 2);
     }
 
     /**
@@ -148,7 +148,7 @@ class TaxExemptionUsage extends Model
      */
     public function getFormattedFinalAmount(): string
     {
-        return '$' . number_format($this->final_tax_amount, 2);
+        return '$'.number_format($this->final_tax_amount, 2);
     }
 
     /**
@@ -207,7 +207,7 @@ class TaxExemptionUsage extends Model
         parent::boot();
 
         static::creating(function ($usage) {
-            if (!$usage->used_at) {
+            if (! $usage->used_at) {
                 $usage->used_at = now();
             }
         });

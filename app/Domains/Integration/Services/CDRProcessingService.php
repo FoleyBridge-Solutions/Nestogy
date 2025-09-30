@@ -2,22 +2,17 @@
 
 namespace App\Domains\Integration\Services;
 
-use App\Models\UsageRecord;
-use App\Models\UsagePool;
-use App\Models\UsageBucket;
 use App\Models\Client;
-use App\Models\PricingRule;
-use App\Models\UsageAlert;
+use App\Models\UsageRecord;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Collection;
 use Exception;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * CDR Processing Service
- * 
+ *
  * Real-time Call Detail Record (CDR) ingestion and parsing service with support for
  * multi-format CDR data, intelligent usage categorization, duplicate detection,
  * fraud prevention, and real-time usage allocation to pools and buckets.
@@ -25,29 +20,38 @@ use Exception;
 class CDRProcessingService
 {
     protected UsageBillingService $usageBillingService;
+
     protected PricingEngineService $pricingEngineService;
-    
+
     /**
      * Supported CDR formats
      */
     const FORMAT_CSV = 'csv';
+
     const FORMAT_JSON = 'json';
+
     const FORMAT_XML = 'xml';
+
     const FORMAT_PROPRIETARY = 'proprietary';
-    
+
     /**
      * CDR validation status
      */
     const VALIDATION_PASSED = 'passed';
+
     const VALIDATION_FAILED = 'failed';
+
     const VALIDATION_WARNING = 'warning';
-    
+
     /**
      * Fraud detection flags
      */
     const FRAUD_NONE = 'none';
+
     const FRAUD_SUSPICIOUS = 'suspicious';
+
     const FRAUD_HIGH_RISK = 'high_risk';
+
     const FRAUD_CONFIRMED = 'confirmed';
 
     public function __construct(
@@ -64,7 +68,7 @@ class CDRProcessingService
     public function processCDR(array $cdrData, array $options = []): array
     {
         $startTime = microtime(true);
-        
+
         try {
             // Step 1: Validate CDR data structure
             $validation = $this->validateCDR($cdrData, $options);
@@ -78,6 +82,7 @@ class CDRProcessingService
             // Step 3: Check for duplicates
             if ($this->isDuplicate($normalizedCDR)) {
                 Log::warning('Duplicate CDR detected', ['cdr_id' => $normalizedCDR['cdr_id']]);
+
                 return $this->createProcessingResult(false, ['Duplicate CDR detected'], [], $startTime);
             }
 
@@ -86,13 +91,13 @@ class CDRProcessingService
             if ($fraudCheck['is_fraud']) {
                 Log::alert('Fraudulent CDR detected', [
                     'cdr_id' => $normalizedCDR['cdr_id'],
-                    'fraud_indicators' => $fraudCheck['indicators']
+                    'fraud_indicators' => $fraudCheck['indicators'],
                 ]);
             }
 
             // Step 5: Identify client and service classification
             $client = $this->identifyClient($normalizedCDR);
-            if (!$client) {
+            if (! $client) {
                 return $this->createProcessingResult(false, ['Client not found'], [], $startTime);
             }
 
@@ -140,9 +145,9 @@ class CDRProcessingService
             Log::error('CDR processing failed', [
                 'cdr_data' => $cdrData,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return $this->createProcessingResult(false, [$e->getMessage()], [], $startTime);
         }
     }
@@ -152,12 +157,12 @@ class CDRProcessingService
      */
     public function processCDRBatch(array $cdrBatch, array $options = []): array
     {
-        $batchId = $options['batch_id'] ?? 'BATCH-' . uniqid();
+        $batchId = $options['batch_id'] ?? 'BATCH-'.uniqid();
         $startTime = microtime(true);
-        
+
         Log::info('Starting CDR batch processing', [
             'batch_id' => $batchId,
-            'cdr_count' => count($cdrBatch)
+            'cdr_count' => count($cdrBatch),
         ]);
 
         $results = [
@@ -169,7 +174,7 @@ class CDRProcessingService
             'fraud_detected' => 0,
             'processing_time' => 0,
             'errors' => [],
-            'processed_records' => []
+            'processed_records' => [],
         ];
 
         // Process CDRs in chunks for memory efficiency
@@ -178,45 +183,45 @@ class CDRProcessingService
 
         foreach ($chunks as $chunkIndex => $chunk) {
             DB::beginTransaction();
-            
+
             try {
                 foreach ($chunk as $cdrIndex => $cdrData) {
                     $cdrData['batch_id'] = $batchId;
                     $cdrData['batch_sequence'] = ($chunkIndex * $chunkSize) + $cdrIndex;
-                    
+
                     $result = $this->processCDR($cdrData, $options);
-                    
+
                     if ($result['success']) {
                         $results['successful']++;
                         $results['processed_records'][] = $result['data'];
                     } else {
                         $results['failed']++;
                         $results['errors'] = array_merge($results['errors'], $result['errors']);
-                        
+
                         if (in_array('Duplicate CDR detected', $result['errors'])) {
                             $results['duplicates']++;
                         }
                     }
                 }
-                
+
                 DB::commit();
-                
+
             } catch (Exception $e) {
                 DB::rollBack();
                 Log::error('CDR batch chunk processing failed', [
                     'batch_id' => $batchId,
                     'chunk_index' => $chunkIndex,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 $results['failed'] += count($chunk);
-                $results['errors'][] = 'Chunk processing failed: ' . $e->getMessage();
+                $results['errors'][] = 'Chunk processing failed: '.$e->getMessage();
             }
         }
 
         $results['processing_time'] = microtime(true) - $startTime;
-        
+
         Log::info('CDR batch processing completed', $results);
-        
+
         return $results;
     }
 
@@ -226,28 +231,28 @@ class CDRProcessingService
     public function processCDRFile(string $filePath, string $format, array $options = []): array
     {
         $startTime = microtime(true);
-        
+
         try {
             // Parse file based on format
             $cdrData = $this->parseFile($filePath, $format, $options);
-            
+
             // Process the batch
             return $this->processCDRBatch($cdrData, array_merge($options, [
                 'source_file' => basename($filePath),
-                'file_format' => $format
+                'file_format' => $format,
             ]));
-            
+
         } catch (Exception $e) {
             Log::error('CDR file processing failed', [
                 'file_path' => $filePath,
                 'format' => $format,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return [
                 'success' => false,
                 'errors' => [$e->getMessage()],
-                'processing_time' => microtime(true) - $startTime
+                'processing_time' => microtime(true) - $startTime,
             ];
         }
     }
@@ -280,35 +285,36 @@ class CDRProcessingService
         $delimiter = $options['csv_delimiter'] ?? ',';
         $hasHeader = $options['csv_has_header'] ?? true;
         $fieldMapping = $options['field_mapping'] ?? [];
-        
-        if (($handle = fopen($filePath, "r")) !== false) {
+
+        if (($handle = fopen($filePath, 'r')) !== false) {
             $headerRow = null;
             $rowIndex = 0;
-            
+
             while (($data = fgetcsv($handle, 1000, $delimiter)) !== false) {
                 if ($hasHeader && $rowIndex === 0) {
                     $headerRow = $data;
                     $rowIndex++;
+
                     continue;
                 }
-                
+
                 if ($hasHeader && $headerRow) {
                     $record = array_combine($headerRow, $data);
                 } else {
                     $record = $data;
                 }
-                
+
                 // Apply field mapping
-                if (!empty($fieldMapping)) {
+                if (! empty($fieldMapping)) {
                     $record = $this->applyFieldMapping($record, $fieldMapping);
                 }
-                
+
                 $csvData[] = $record;
                 $rowIndex++;
             }
             fclose($handle);
         }
-        
+
         return $csvData;
     }
 
@@ -319,23 +325,23 @@ class CDRProcessingService
     {
         $jsonContent = file_get_contents($filePath);
         $data = json_decode($jsonContent, true);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception('Invalid JSON format: ' . json_last_error_msg());
+            throw new Exception('Invalid JSON format: '.json_last_error_msg());
         }
-        
+
         // Handle different JSON structures
         if (isset($options['json_root_key'])) {
             $data = $data[$options['json_root_key']] ?? [];
         }
-        
+
         // Apply field mapping
-        if (!empty($options['field_mapping'])) {
-            $data = array_map(function($record) use ($options) {
+        if (! empty($options['field_mapping'])) {
+            $data = array_map(function ($record) use ($options) {
                 return $this->applyFieldMapping($record, $options['field_mapping']);
             }, $data);
         }
-        
+
         return is_array($data) ? $data : [$data];
     }
 
@@ -346,25 +352,25 @@ class CDRProcessingService
     {
         $xmlContent = file_get_contents($filePath);
         $xml = simplexml_load_string($xmlContent);
-        
+
         if ($xml === false) {
             throw new Exception('Invalid XML format');
         }
-        
+
         $recordPath = $options['xml_record_path'] ?? 'record';
         $records = [];
-        
+
         foreach ($xml->xpath("//{$recordPath}") as $record) {
             $recordArray = json_decode(json_encode($record), true);
-            
+
             // Apply field mapping
-            if (!empty($options['field_mapping'])) {
+            if (! empty($options['field_mapping'])) {
                 $recordArray = $this->applyFieldMapping($recordArray, $options['field_mapping']);
             }
-            
+
             $records[] = $recordArray;
         }
-        
+
         return $records;
     }
 
@@ -374,11 +380,11 @@ class CDRProcessingService
     protected function parseProprietaryFile(string $filePath, array $options = []): array
     {
         $parser = $options['proprietary_parser'] ?? null;
-        
-        if (!$parser || !is_callable($parser)) {
+
+        if (! $parser || ! is_callable($parser)) {
             throw new Exception('Proprietary parser not provided or not callable');
         }
-        
+
         return $parser($filePath, $options);
     }
 
@@ -388,13 +394,13 @@ class CDRProcessingService
     protected function applyFieldMapping(array $record, array $fieldMapping): array
     {
         $mappedRecord = [];
-        
+
         foreach ($fieldMapping as $sourceField => $targetField) {
             if (isset($record[$sourceField])) {
                 $mappedRecord[$targetField] = $record[$sourceField];
             }
         }
-        
+
         return $mappedRecord;
     }
 
@@ -405,26 +411,26 @@ class CDRProcessingService
     {
         $errors = [];
         $warnings = [];
-        
+
         // Required fields validation
         $requiredFields = $options['required_fields'] ?? [
             'origination_number',
             'destination_number',
             'usage_start_time',
-            'duration_seconds'
+            'duration_seconds',
         ];
-        
+
         foreach ($requiredFields as $field) {
-            if (!isset($cdrData[$field]) || empty($cdrData[$field])) {
+            if (! isset($cdrData[$field]) || empty($cdrData[$field])) {
                 $errors[] = "Missing required field: {$field}";
             }
         }
-        
+
         // Data type validation
-        if (isset($cdrData['duration_seconds']) && !is_numeric($cdrData['duration_seconds'])) {
+        if (isset($cdrData['duration_seconds']) && ! is_numeric($cdrData['duration_seconds'])) {
             $errors[] = 'Duration seconds must be numeric';
         }
-        
+
         if (isset($cdrData['usage_start_time'])) {
             try {
                 Carbon::parse($cdrData['usage_start_time']);
@@ -432,20 +438,20 @@ class CDRProcessingService
                 $errors[] = 'Invalid usage start time format';
             }
         }
-        
+
         // Business logic validation
         if (isset($cdrData['duration_seconds']) && $cdrData['duration_seconds'] < 0) {
             $errors[] = 'Duration cannot be negative';
         }
-        
+
         if (isset($cdrData['duration_seconds']) && $cdrData['duration_seconds'] > 86400) {
             $warnings[] = 'Unusually long call duration (>24 hours)';
         }
-        
+
         return [
             'status' => empty($errors) ? (empty($warnings) ? self::VALIDATION_PASSED : self::VALIDATION_WARNING) : self::VALIDATION_FAILED,
             'errors' => $errors,
-            'warnings' => $warnings
+            'warnings' => $warnings,
         ];
     }
 
@@ -486,12 +492,12 @@ class CDRProcessingService
     {
         // Remove all non-numeric characters
         $cleaned = preg_replace('/[^0-9]/', '', $phoneNumber);
-        
+
         // Add country code if missing
-        if (strlen($cleaned) === 10 && !str_starts_with($cleaned, '1')) {
-            $cleaned = '1' . $cleaned;
+        if (strlen($cleaned) === 10 && ! str_starts_with($cleaned, '1')) {
+            $cleaned = '1'.$cleaned;
         }
-        
+
         return $cleaned;
     }
 
@@ -500,18 +506,18 @@ class CDRProcessingService
      */
     protected function isDuplicate(array $normalizedCDR): bool
     {
-        $cacheKey = 'cdr_duplicate_' . md5(json_encode([
+        $cacheKey = 'cdr_duplicate_'.md5(json_encode([
             'cdr_id' => $normalizedCDR['cdr_id'],
             'origination_number' => $normalizedCDR['origination_number'],
             'destination_number' => $normalizedCDR['destination_number'],
             'usage_start_time' => $normalizedCDR['usage_start_time']->toISOString(),
-            'duration_seconds' => $normalizedCDR['duration_seconds']
+            'duration_seconds' => $normalizedCDR['duration_seconds'],
         ]));
-        
+
         if (Cache::has($cacheKey)) {
             return true;
         }
-        
+
         // Check database for duplicate
         $exists = UsageRecord::where('cdr_id', $normalizedCDR['cdr_id'])
             ->where('origination_number', $normalizedCDR['origination_number'])
@@ -519,12 +525,12 @@ class CDRProcessingService
             ->where('usage_start_time', $normalizedCDR['usage_start_time'])
             ->where('duration_seconds', $normalizedCDR['duration_seconds'])
             ->exists();
-        
-        if (!$exists) {
+
+        if (! $exists) {
             // Cache for 1 hour to prevent duplicates
             Cache::put($cacheKey, true, 3600);
         }
-        
+
         return $exists;
     }
 
@@ -535,46 +541,46 @@ class CDRProcessingService
     {
         $fraudScore = 0;
         $indicators = [];
-        
+
         // Check for unusually high duration
         if ($normalizedCDR['duration_seconds'] > 7200) { // > 2 hours
             $fraudScore += 20;
             $indicators[] = 'excessive_duration';
         }
-        
+
         // Check for premium rate destinations
         $destination = $normalizedCDR['destination_number'];
         if ($this->isPremiumRateNumber($destination)) {
             $fraudScore += 30;
             $indicators[] = 'premium_rate_destination';
         }
-        
+
         // Check for international calls from suspicious origins
         if ($this->isSuspiciousInternationalCall($normalizedCDR)) {
             $fraudScore += 25;
             $indicators[] = 'suspicious_international';
         }
-        
+
         // Check call frequency from same origination
         $recentCallCount = $this->getRecentCallCount($normalizedCDR['origination_number'], 60); // Last 60 minutes
         if ($recentCallCount > 100) {
             $fraudScore += 40;
             $indicators[] = 'excessive_call_frequency';
         }
-        
+
         // Check for unusual call patterns
         if ($this->hasUnusualCallPattern($normalizedCDR)) {
             $fraudScore += 15;
             $indicators[] = 'unusual_pattern';
         }
-        
+
         $fraudLevel = $this->determineFraudLevel($fraudScore);
-        
+
         return [
             'is_fraud' => $fraudLevel !== self::FRAUD_NONE,
             'score' => $fraudScore,
             'level' => $fraudLevel,
-            'indicators' => $indicators
+            'indicators' => $indicators,
         ];
     }
 
@@ -584,13 +590,13 @@ class CDRProcessingService
     protected function isPremiumRateNumber(string $phoneNumber): bool
     {
         $premiumPrefixes = ['1900', '1976', '+44871', '+44872', '+44873'];
-        
+
         foreach ($premiumPrefixes as $prefix) {
             if (str_starts_with($phoneNumber, $prefix)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -600,7 +606,7 @@ class CDRProcessingService
     protected function isSuspiciousInternationalCall(array $cdr): bool
     {
         $suspiciousCountries = ['SY', 'IR', 'KP', 'CU']; // Example suspicious country codes
-        
+
         return in_array($cdr['destination_country'] ?? '', $suspiciousCountries);
     }
 
@@ -610,7 +616,7 @@ class CDRProcessingService
     protected function getRecentCallCount(string $originationNumber, int $minutes): int
     {
         $cutoff = now()->subMinutes($minutes);
-        
+
         return UsageRecord::where('origination_number', $originationNumber)
             ->where('usage_start_time', '>=', $cutoff)
             ->count();
@@ -625,13 +631,13 @@ class CDRProcessingService
         if ($cdr['duration_seconds'] < 5) {
             return true;
         }
-        
+
         // Check for exact duration matches (might indicate artificial generation)
         $exactDurationCount = UsageRecord::where('origination_number', $cdr['origination_number'])
             ->where('duration_seconds', $cdr['duration_seconds'])
             ->where('usage_start_time', '>=', now()->subHour())
             ->count();
-        
+
         return $exactDurationCount > 10;
     }
 
@@ -647,7 +653,7 @@ class CDRProcessingService
         } elseif ($score >= 25) {
             return self::FRAUD_SUSPICIOUS;
         }
-        
+
         return self::FRAUD_NONE;
     }
 
@@ -658,13 +664,13 @@ class CDRProcessingService
     {
         // Try to identify by origination number first
         $client = Client::where('phone', $normalizedCDR['origination_number'])->first();
-        
-        if (!$client) {
+
+        if (! $client) {
             // Try other identification methods
             // This could be extended to use DID ranges, account IDs, etc.
             $client = $this->identifyClientByCustomLogic($normalizedCDR);
         }
-        
+
         return $client;
     }
 
@@ -686,17 +692,17 @@ class CDRProcessingService
         $usageType = UsageRecord::USAGE_TYPE_VOICE; // Default
         $serviceType = $this->determineServiceType($normalizedCDR);
         $category = $this->determineUsageCategory($normalizedCDR);
-        
+
         // Determine usage type based on CDR data
         if ($normalizedCDR['data_volume_mb'] > 0) {
             $usageType = UsageRecord::USAGE_TYPE_DATA;
         }
-        
+
         return [
             'usage_type' => $usageType,
             'service_type' => $serviceType,
             'usage_category' => $category,
-            'billing_category' => $this->determineBillingCategory($serviceType, $category)
+            'billing_category' => $this->determineBillingCategory($serviceType, $category),
         ];
     }
 
@@ -708,17 +714,17 @@ class CDRProcessingService
         $destination = $cdr['destination_number'];
         $originationCountry = $cdr['origination_country'] ?? 'US';
         $destinationCountry = $cdr['destination_country'] ?? 'US';
-        
+
         // International calls
         if ($originationCountry !== $destinationCountry) {
             return UsageRecord::SERVICE_TYPE_INTERNATIONAL;
         }
-        
+
         // Long distance (different area codes in same country)
         if ($this->isLongDistance($cdr['origination_number'], $destination)) {
             return UsageRecord::SERVICE_TYPE_LONG_DISTANCE;
         }
-        
+
         return UsageRecord::SERVICE_TYPE_LOCAL;
     }
 
@@ -730,9 +736,10 @@ class CDRProcessingService
         if (strlen($origination) >= 10 && strlen($destination) >= 10) {
             $originNPA = substr($origination, -10, 3); // Area code
             $destNPA = substr($destination, -10, 3);
+
             return $originNPA !== $destNPA;
         }
-        
+
         return false;
     }
 
@@ -743,19 +750,19 @@ class CDRProcessingService
     {
         // Categorize based on destination patterns
         $destination = $cdr['destination_number'];
-        
+
         if (str_starts_with($destination, '911') || str_starts_with($destination, '112')) {
             return 'emergency';
         }
-        
+
         if (str_starts_with($destination, '1800') || str_starts_with($destination, '1888')) {
             return 'toll_free';
         }
-        
+
         if ($this->isPremiumRateNumber($destination)) {
             return 'premium';
         }
-        
+
         return 'standard';
     }
 
@@ -764,7 +771,7 @@ class CDRProcessingService
      */
     protected function determineBillingCategory(string $serviceType, string $category): string
     {
-        return $serviceType . '_' . $category;
+        return $serviceType.'_'.$category;
     }
 
     /**
@@ -774,29 +781,29 @@ class CDRProcessingService
     {
         $quantity = 0;
         $unitType = UsageRecord::UNIT_TYPE_MINUTE;
-        
+
         switch ($classification['usage_type']) {
             case UsageRecord::USAGE_TYPE_VOICE:
                 $quantity = ceil($normalizedCDR['duration_seconds'] / 60); // Round up to next minute
                 $unitType = UsageRecord::UNIT_TYPE_MINUTE;
                 break;
-                
+
             case UsageRecord::USAGE_TYPE_DATA:
                 $quantity = $normalizedCDR['data_volume_mb'];
                 $unitType = UsageRecord::UNIT_TYPE_MB;
                 break;
-                
+
             default:
                 $quantity = 1;
                 $unitType = UsageRecord::UNIT_TYPE_CALL;
         }
-        
+
         return [
             'quantity' => $quantity,
             'unit_type' => $unitType,
             'duration_seconds' => $normalizedCDR['duration_seconds'],
             'data_volume_mb' => $normalizedCDR['data_volume_mb'],
-            'line_count' => 1 // Default to 1 line
+            'line_count' => 1, // Default to 1 line
         ];
     }
 
@@ -812,11 +819,11 @@ class CDRProcessingService
     ): UsageRecord {
         $usageDate = $normalizedCDR['usage_start_time']->toDateString();
         $billingPeriod = $normalizedCDR['usage_start_time']->format('Y-m');
-        
+
         return UsageRecord::create([
             'company_id' => $client->company_id,
             'client_id' => $client->id,
-            'transaction_id' => 'TXN-' . uniqid() . '-' . time(),
+            'transaction_id' => 'TXN-'.uniqid().'-'.time(),
             'cdr_id' => $normalizedCDR['cdr_id'],
             'external_id' => $normalizedCDR['external_id'],
             'batch_id' => $normalizedCDR['batch_id'],
@@ -830,7 +837,7 @@ class CDRProcessingService
             'total_cost' => $usageMetrics['total_cost'] ?? 0.00,
             'recorded_at' => now(),
             'processed_at' => now(),
-            'status' => 'processed'
+            'status' => 'processed',
         ]);
     }
 }

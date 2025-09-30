@@ -11,15 +11,15 @@ class RecurringInvoiceController extends Controller
     {
         // TODO: Implement recurring invoice listing logic
         $invoices = collect(); // Empty collection for now
-        
+
         return view('financial.recurring-invoices.index', [
             'invoices' => $invoices,
             'stats' => [
                 'total' => 0,
                 'active' => 0,
                 'paused' => 0,
-                'upcoming' => 0
-            ]
+                'upcoming' => 0,
+            ],
         ]);
     }
 

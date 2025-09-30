@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ClientFile extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -93,17 +93,17 @@ class ClientFile extends Model
     public function getFileSizeHumanAttribute()
     {
         $bytes = $this->file_size;
-        
+
         if ($bytes >= 1073741824) {
-            $bytes = number_format($bytes / 1073741824, 2) . ' GB';
+            $bytes = number_format($bytes / 1073741824, 2).' GB';
         } elseif ($bytes >= 1048576) {
-            $bytes = number_format($bytes / 1048576, 2) . ' MB';
+            $bytes = number_format($bytes / 1048576, 2).' MB';
         } elseif ($bytes >= 1024) {
-            $bytes = number_format($bytes / 1024, 2) . ' KB';
+            $bytes = number_format($bytes / 1024, 2).' KB';
         } elseif ($bytes > 1) {
-            $bytes = $bytes . ' bytes';
+            $bytes = $bytes.' bytes';
         } elseif ($bytes == 1) {
-            $bytes = $bytes . ' byte';
+            $bytes = $bytes.' byte';
         } else {
             $bytes = '0 bytes';
         }
@@ -125,7 +125,7 @@ class ClientFile extends Model
     public function getFileIconAttribute()
     {
         $extension = strtolower($this->file_extension);
-        
+
         $icons = [
             // Documents
             'pdf' => '📄',
@@ -133,16 +133,16 @@ class ClientFile extends Model
             'docx' => '📝',
             'txt' => '📄',
             'rtf' => '📄',
-            
+
             // Spreadsheets
             'xls' => '📊',
             'xlsx' => '📊',
             'csv' => '📊',
-            
+
             // Presentations
             'ppt' => '📋',
             'pptx' => '📋',
-            
+
             // Images
             'jpg' => '🖼️',
             'jpeg' => '🖼️',
@@ -151,14 +151,14 @@ class ClientFile extends Model
             'bmp' => '🖼️',
             'webp' => '🖼️',
             'svg' => '🖼️',
-            
+
             // Archives
             'zip' => '🗜️',
             'rar' => '🗜️',
             '7z' => '🗜️',
             'tar' => '🗜️',
             'gz' => '🗜️',
-            
+
             // Video
             'mp4' => '🎥',
             'avi' => '🎥',
@@ -166,14 +166,14 @@ class ClientFile extends Model
             'wmv' => '🎥',
             'flv' => '🎥',
             'mkv' => '🎥',
-            
+
             // Audio
             'mp3' => '🎵',
             'wav' => '🎵',
             'flac' => '🎵',
             'aac' => '🎵',
             'ogg' => '🎵',
-            
+
             // Code
             'html' => '🌐',
             'css' => '🎨',
@@ -183,7 +183,7 @@ class ClientFile extends Model
             'java' => '☕',
             'cpp' => '⚙️',
             'c' => '⚙️',
-            
+
             // Other
             'exe' => '⚙️',
             'dmg' => '💽',
@@ -199,7 +199,7 @@ class ClientFile extends Model
     public function getFileTypeAttribute()
     {
         $extension = strtolower($this->file_extension);
-        
+
         $types = [
             'document' => ['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'],
             'spreadsheet' => ['xls', 'xlsx', 'csv', 'ods'],
@@ -249,7 +249,7 @@ class ClientFile extends Model
      */
     public function getStoragePathAttribute()
     {
-        return storage_path('app/' . $this->file_path);
+        return storage_path('app/'.$this->file_path);
     }
 
     /**

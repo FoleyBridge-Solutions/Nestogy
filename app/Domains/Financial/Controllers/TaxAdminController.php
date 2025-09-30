@@ -2,34 +2,34 @@
 
 namespace App\Domains\Financial\Controllers;
 
-use App\Http\Controllers\Controller;
-
-use App\Models\ServiceTaxRate;
-use App\Models\TaxProfile;
-use App\Models\TaxJurisdiction;
-use App\Models\TaxCategory;
 use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
 use App\Domains\Financial\Services\TaxEngine\TaxProfileService;
+use App\Http\Controllers\Controller;
+use App\Models\ServiceTaxRate;
+use App\Models\TaxCategory;
+use App\Models\TaxJurisdiction;
+use App\Models\TaxProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Tax Administration Controller
- * 
+ *
  * Provides administrative interface for managing tax rates, profiles,
  * and system settings for the comprehensive tax system.
  */
 class TaxAdminController extends Controller
 {
     protected TaxEngineRouter $taxEngine;
+
     protected TaxProfileService $profileService;
 
     public function __construct()
     {
         $this->middleware(['auth', 'verified']);
-        
+
         // Initialize services with company context
         $companyId = auth()->user()->company_id ?? 1;
         $this->taxEngine = new TaxEngineRouter($companyId);
@@ -42,7 +42,7 @@ class TaxAdminController extends Controller
     public function index()
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Get system statistics
         $stats = [
             'tax_profiles' => TaxProfile::where('company_id', $companyId)->count(),
@@ -50,20 +50,20 @@ class TaxAdminController extends Controller
             'jurisdictions' => TaxJurisdiction::where('company_id', $companyId)->count(),
             'categories' => TaxCategory::where('company_id', $companyId)->count(),
         ];
-        
+
         // Get recent tax calculations for monitoring
         $recentCalculations = DB::table('tax_calculations')
             ->where('company_id', $companyId)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-        
+
         // Get performance metrics
         $performanceStats = $this->taxEngine->getCacheStatistics();
-        
+
         return view('admin.tax.index', compact(
             'stats',
-            'recentCalculations', 
+            'recentCalculations',
             'performanceStats'
         ));
     }
@@ -74,20 +74,20 @@ class TaxAdminController extends Controller
     public function profiles()
     {
         $companyId = auth()->user()->company_id;
-        
+
         $profiles = TaxProfile::where('company_id', $companyId)
             ->with(['category', 'taxCategory'])
             ->ordered()
             ->paginate(20);
-        
+
         $availableCategories = \App\Models\Category::where('company_id', $companyId)
             ->orderBy('name')
             ->get();
-        
+
         $availableTaxCategories = TaxCategory::where('company_id', $companyId)
             ->orderBy('name')
             ->get();
-        
+
         return view('admin.tax.profiles', compact(
             'profiles',
             'availableCategories',
@@ -101,23 +101,23 @@ class TaxAdminController extends Controller
     public function rates(Request $request)
     {
         $companyId = auth()->user()->company_id;
-        
+
         $query = ServiceTaxRate::where('company_id', $companyId)
             ->with(['jurisdiction', 'category']);
-        
+
         // Apply filters
         if ($request->filled('service_type')) {
             $query->where('service_type', $request->service_type);
         }
-        
+
         if ($request->filled('tax_type')) {
             $query->where('tax_type', $request->tax_type);
         }
-        
+
         if ($request->filled('jurisdiction_id')) {
             $query->where('tax_jurisdiction_id', $request->jurisdiction_id);
         }
-        
+
         if ($request->filled('active')) {
             if ($request->active === '1') {
                 $query->active();
@@ -125,18 +125,18 @@ class TaxAdminController extends Controller
                 $query->where('is_active', false);
             }
         }
-        
+
         $rates = $query->orderBy('priority')
             ->orderBy('service_type')
             ->paginate(25);
-        
+
         // Get filter options
         $serviceTypes = ServiceTaxRate::getServiceTypes();
         $taxTypes = ServiceTaxRate::getTaxTypes();
         $jurisdictions = TaxJurisdiction::where('company_id', $companyId)
             ->orderBy('name')
             ->get();
-        
+
         return view('admin.tax.rates', compact(
             'rates',
             'serviceTypes',
@@ -151,13 +151,13 @@ class TaxAdminController extends Controller
     public function jurisdictions()
     {
         $companyId = auth()->user()->company_id;
-        
+
         $jurisdictions = TaxJurisdiction::where('company_id', $companyId)
             ->withCount('taxRates')
             ->orderBy('state')
             ->orderBy('name')
             ->paginate(20);
-        
+
         return view('admin.tax.jurisdictions', compact('jurisdictions'));
     }
 
@@ -167,10 +167,10 @@ class TaxAdminController extends Controller
     public function performance()
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Get cache statistics
         $cacheStats = $this->taxEngine->getCacheStatistics();
-        
+
         // Get recent calculation performance
         $performanceData = DB::table('tax_calculations')
             ->where('company_id', $companyId)
@@ -185,7 +185,7 @@ class TaxAdminController extends Controller
             ->groupBy('date')
             ->orderBy('date')
             ->get();
-        
+
         // Get error rates
         $errorData = DB::table('tax_calculations')
             ->where('company_id', $companyId)
@@ -198,7 +198,7 @@ class TaxAdminController extends Controller
             ->groupBy('date')
             ->orderBy('date')
             ->get();
-        
+
         // Get most used engines
         $engineUsage = DB::table('tax_calculations')
             ->where('company_id', $companyId)
@@ -207,7 +207,7 @@ class TaxAdminController extends Controller
             ->groupBy('engine_used')
             ->orderBy('usage_count', 'desc')
             ->get();
-        
+
         return view('admin.tax.performance', compact(
             'cacheStats',
             'performanceData',
@@ -226,50 +226,50 @@ class TaxAdminController extends Controller
             'rate_ids' => 'required|array',
             'rate_ids.*' => 'exists:service_tax_rates,id',
         ]);
-        
+
         $companyId = auth()->user()->company_id;
         $rateIds = $validated['rate_ids'];
-        
+
         // Verify all rates belong to current company
         $rates = ServiceTaxRate::whereIn('id', $rateIds)
             ->where('company_id', $companyId)
             ->get();
-        
+
         if ($rates->count() !== count($rateIds)) {
             return redirect()->back()->withErrors(['bulk' => 'Some rates were not found or do not belong to your company.']);
         }
-        
+
         DB::transaction(function () use ($validated, $rates) {
             switch ($validated['operation']) {
                 case 'activate':
                     ServiceTaxRate::whereIn('id', $rates->pluck('id'))->update(['is_active' => true]);
                     break;
-                    
+
                 case 'deactivate':
                     ServiceTaxRate::whereIn('id', $rates->pluck('id'))->update(['is_active' => false]);
                     break;
-                    
+
                 case 'delete':
                     ServiceTaxRate::whereIn('id', $rates->pluck('id'))->delete();
                     break;
-                    
+
                 case 'recalculate':
                     // Clear caches to force recalculation
                     $this->taxEngine->clearTaxCaches();
                     break;
             }
         });
-        
+
         // Clear relevant caches
         $this->taxEngine->clearTaxCaches();
-        
-        $message = match($validated['operation']) {
+
+        $message = match ($validated['operation']) {
             'activate' => 'Tax rates activated successfully.',
             'deactivate' => 'Tax rates deactivated successfully.',
             'delete' => 'Tax rates deleted successfully.',
             'recalculate' => 'Tax calculation caches cleared successfully.',
         };
-        
+
         return redirect()->back()->with('success', $message);
     }
 
@@ -280,21 +280,21 @@ class TaxAdminController extends Controller
     {
         try {
             $this->taxEngine->clearTaxCaches();
-            
+
             Log::info('Tax caches cleared via admin interface', [
                 'user_id' => auth()->id(),
                 'company_id' => auth()->user()->company_id,
             ]);
-            
+
             return redirect()->back()->with('success', 'All tax caches cleared successfully.');
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to clear tax caches', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
             ]);
-            
-            return redirect()->back()->withErrors(['cache' => 'Failed to clear caches: ' . $e->getMessage()]);
+
+            return redirect()->back()->withErrors(['cache' => 'Failed to clear caches: '.$e->getMessage()]);
         }
     }
 
@@ -306,22 +306,22 @@ class TaxAdminController extends Controller
         try {
             $categoryIds = $request->input('category_ids', []);
             $this->taxEngine->warmUpCaches($categoryIds);
-            
+
             Log::info('Tax caches warmed up via admin interface', [
                 'user_id' => auth()->id(),
                 'company_id' => auth()->user()->company_id,
                 'categories' => count($categoryIds),
             ]);
-            
+
             return redirect()->back()->with('success', 'Tax caches warmed up successfully.');
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to warm up tax caches', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
             ]);
-            
-            return redirect()->back()->withErrors(['cache' => 'Failed to warm up caches: ' . $e->getMessage()]);
+
+            return redirect()->back()->withErrors(['cache' => 'Failed to warm up caches: '.$e->getMessage()]);
         }
     }
 
@@ -331,7 +331,7 @@ class TaxAdminController extends Controller
     public function exportConfig(Request $request)
     {
         $companyId = auth()->user()->company_id;
-        
+
         $config = [
             'profiles' => TaxProfile::where('company_id', $companyId)->get(),
             'rates' => ServiceTaxRate::where('company_id', $companyId)->active()->get(),
@@ -340,11 +340,11 @@ class TaxAdminController extends Controller
             'exported_at' => now()->toISOString(),
             'company_id' => $companyId,
         ];
-        
-        $filename = 'tax-config-' . $companyId . '-' . now()->format('Y-m-d') . '.json';
-        
+
+        $filename = 'tax-config-'.$companyId.'-'.now()->format('Y-m-d').'.json';
+
         return response()->json($config)
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
             ->header('Content-Type', 'application/json');
     }
 
@@ -361,17 +361,17 @@ class TaxAdminController extends Controller
             'test_data.customer_id' => 'nullable|exists:clients,id',
             'test_data.tax_data' => 'nullable|array',
         ]);
-        
+
         try {
             $result = $this->taxEngine->calculateTaxes($validated['test_data']);
-            
+
             return response()->json([
                 'success' => true,
                 'result' => $result,
                 'test_data' => $validated['test_data'],
                 'timestamp' => now()->toISOString(),
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

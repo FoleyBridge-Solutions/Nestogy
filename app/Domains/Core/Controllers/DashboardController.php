@@ -2,31 +2,30 @@
 
 namespace App\Domains\Core\Controllers;
 
+use App\Domains\Core\Services\DashboardDataService;
+use App\Domains\Core\Services\NavigationService;
+use App\Domains\Core\Services\RealtimeDashboardService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use App\Models\Client;
-use App\Models\Ticket;
-use App\Models\Invoice;
 use App\Models\Asset;
-use App\Models\User;
-use App\Models\Location;
-use App\Models\Contact;
+use App\Models\Client;
+use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Project;
-use App\Domains\Core\Services\DashboardDataService;
-use App\Domains\Core\Services\RealtimeDashboardService;
-use App\Domains\Core\Services\NavigationService;
+use App\Models\Ticket;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
     protected ?DashboardDataService $dashboardService = null;
+
     protected ?RealtimeDashboardService $realtimeService = null;
-    
+
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
@@ -35,6 +34,7 @@ class DashboardController extends Controller
                 $this->dashboardService = new DashboardDataService($user->company_id);
                 $this->realtimeService = new RealtimeDashboardService($user->company_id);
             }
+
             return $next($request);
         });
     }
@@ -47,14 +47,14 @@ class DashboardController extends Controller
         $user = Auth::user();
         $workflowView = $request->get('view', 'default');
         $selectedClient = NavigationService::getSelectedClient();
-        
+
         // Get user context for role-based dashboard
         $userContext = $this->getUserContext($user);
-        
+
         // Route to appropriate workflow handler
         return $this->handleWorkflowRequest($user, $userContext, $workflowView, $selectedClient, $request);
     }
-    
+
     /**
      * Handle workflow-specific dashboard requests
      */
@@ -62,27 +62,27 @@ class DashboardController extends Controller
     {
         // Set workflow context in navigation service
         NavigationService::setWorkflowContext($workflow);
-        
+
         // Get workflow-specific data based on role and client context
         $workflowData = $this->getWorkflowData($workflow, $userContext, $selectedClient);
-        
+
         // Get role-appropriate KPIs for this workflow
         $kpis = $this->getWorkflowKPIs($workflow, $userContext->role, $selectedClient);
-        
+
         // Get contextual quick actions
         $quickActions = $this->getWorkflowQuickActions($workflow, $userContext->role, $selectedClient);
-        
+
         // Get real-time notifications and alerts
         $alerts = $this->getWorkflowAlerts($workflow, $userContext, $selectedClient);
         $notifications = $this->getSystemNotifications($user);
-        
+
         // Get chart data for this workflow
         $chartData = $this->getWorkflowChartData($workflow, $userContext, $selectedClient);
-        
+
         // Prepare view data
         $viewData = compact(
             'user',
-            'userContext', 
+            'userContext',
             'workflow',
             'selectedClient',
             'workflowData',
@@ -92,16 +92,16 @@ class DashboardController extends Controller
             'notifications',
             'chartData'
         );
-        
+
         // Add workflowView for backward compatibility
         $viewData['workflowView'] = $workflow;
-        
+
         // Add legacy compatibility data
         $viewData = array_merge($viewData, $this->getLegacyCompatibilityData($user->company_id));
-        
+
         return view('dashboard', $viewData);
     }
-    
+
     /**
      * Get user context with role and permissions
      */
@@ -115,18 +115,25 @@ class DashboardController extends Controller
             'isTech' => $user->isTech(),
             'isAccountant' => $user->isAccountant(),
             'permissions' => $user->getAllPermissions()->pluck('slug')->toArray(),
-            'company_id' => $user->company_id
+            'company_id' => $user->company_id,
         ];
     }
-    
+
     /**
      * Determine user's primary role
      */
     private function getUserPrimaryRole($user)
     {
-        if ($user->isAdmin()) return 'admin';
-        if ($user->isTech()) return 'tech';
-        if ($user->isAccountant()) return 'accountant';
+        if ($user->isAdmin()) {
+            return 'admin';
+        }
+        if ($user->isTech()) {
+            return 'tech';
+        }
+        if ($user->isAccountant()) {
+            return 'accountant';
+        }
+
         return 'user';
     }
 
@@ -139,26 +146,26 @@ class DashboardController extends Controller
             'total_clients' => Client::where('company_id', $companyId)
                 ->whereNull('archived_at')
                 ->count(),
-            
+
             'open_tickets' => Ticket::where('company_id', $companyId)
                 ->whereIn('status', ['Open', 'In Progress', 'Waiting'])
                 ->count(),
-            
+
             'overdue_invoices' => Invoice::where('company_id', $companyId)
                 ->where('status', 'Sent')
                 ->where('due_date', '<', now())
                 ->count(),
-            
+
             'total_assets' => Asset::where('company_id', $companyId)
                 ->whereNull('archived_at')
                 ->count(),
-            
+
             'monthly_revenue' => Invoice::where('company_id', $companyId)
                 ->where('status', 'Paid')
                 ->whereRaw('EXTRACT(MONTH FROM created_at) = ?', [now()->month])
                 ->whereRaw('EXTRACT(YEAR FROM created_at) = ?', [now()->year])
                 ->sum('amount'),
-            
+
             'pending_invoices_amount' => Invoice::where('company_id', $companyId)
                 ->whereIn('status', ['Draft', 'Sent'])
                 ->sum('amount'),
@@ -214,7 +221,7 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
-        
+
         // Map to expected statuses
         $statusMap = [
             'New' => 'Open',
@@ -222,11 +229,11 @@ class DashboardController extends Controller
             'In Progress' => 'In Progress',
             'Waiting' => 'In Progress',
             'Resolved' => 'Resolved',
-            'Closed' => 'Closed'
+            'Closed' => 'Closed',
         ];
-        
+
         $mappedCounts = ['Open' => 0, 'In Progress' => 0, 'Resolved' => 0, 'Closed' => 0];
-        
+
         foreach ($statusCounts as $status => $count) {
             $mappedStatus = $statusMap[$status] ?? 'Open';
             $mappedCounts[$mappedStatus] += $count;
@@ -237,7 +244,7 @@ class DashboardController extends Controller
             'data' => array_values($mappedCounts),
         ];
     }
-    
+
     /**
      * Get ticket trend data for the last 30 days
      */
@@ -290,19 +297,19 @@ class DashboardController extends Controller
         switch ($type) {
             case 'stats':
                 return response()->json($this->getDashboardStats($companyId));
-            
+
             case 'recent_tickets':
                 return response()->json($this->getRecentTickets($companyId));
-            
+
             case 'recent_invoices':
                 return response()->json($this->getRecentInvoices($companyId));
-            
+
             case 'ticket_chart':
                 return response()->json($this->getTicketChartData($companyId));
-            
+
             case 'revenue_chart':
                 return response()->json($this->getRevenueChartData($companyId));
-            
+
             default:
                 return response()->json(['error' => 'Invalid data type'], 400);
         }
@@ -314,7 +321,7 @@ class DashboardController extends Controller
     public function getNotifications(Request $request)
     {
         $user = Auth::user();
-        
+
         try {
             if (DB::getSchemaBuilder()->hasTable('notifications')) {
                 $notifications = DB::table('notifications')
@@ -323,11 +330,11 @@ class DashboardController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->limit(10)
                     ->get();
-                
+
                 return response()->json($notifications);
             }
         } catch (\Exception $e) {
-            Log::warning('Notifications table not accessible: ' . $e->getMessage());
+            Log::warning('Notifications table not accessible: '.$e->getMessage());
         }
 
         return response()->json([]); // Return empty array if table doesn't exist
@@ -339,18 +346,18 @@ class DashboardController extends Controller
     public function markNotificationRead(Request $request, $id)
     {
         $user = Auth::user();
-        
+
         try {
             if (DB::getSchemaBuilder()->hasTable('notifications')) {
                 DB::table('notifications')
                     ->where('id', $id)
                     ->where('user_id', $user->id)
                     ->update(['read_at' => now()]);
-                
+
                 return response()->json(['success' => true]);
             }
         } catch (\Exception $e) {
-            Log::warning('Notifications table not accessible: ' . $e->getMessage());
+            Log::warning('Notifications table not accessible: '.$e->getMessage());
         }
 
         return response()->json(['success' => false, 'message' => 'Notifications not available']);
@@ -363,19 +370,19 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $type = $request->get('type', 'all');
-        
+
         // Initialize services if not already done (fallback for direct calls)
-        if (!$this->dashboardService && $user && $user->company_id) {
+        if (! $this->dashboardService && $user && $user->company_id) {
             $this->dashboardService = new DashboardDataService($user->company_id);
             $this->realtimeService = new RealtimeDashboardService($user->company_id);
         }
-        
+
         // Use realtime service for widget data
         if ($request->has('widget_type') && $this->realtimeService) {
             return $this->getWidgetData($request);
         }
-        
-        if (!$this->dashboardService) {
+
+        if (! $this->dashboardService) {
             return response()->json(['error' => 'Dashboard service not available'], 500);
         }
 
@@ -383,37 +390,40 @@ class DashboardController extends Controller
             switch ($type) {
                 case 'kpis':
                     $kpis = $request->get('kpis', ['total_revenue', 'mrr', 'new_customers', 'churn_rate']);
+
                     return response()->json($this->dashboardService->getRealtimeKPIs($kpis));
-                
+
                 case 'executive':
                     $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : now()->startOfMonth();
                     $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : now()->endOfMonth();
+
                     return response()->json($this->dashboardService->getExecutiveDashboardData($startDate, $endDate));
-                
+
                 case 'revenue':
                     $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : now()->subMonths(11)->startOfMonth();
                     $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : now()->endOfMonth();
+
                     return response()->json($this->dashboardService->getRevenueAnalyticsDashboardData($startDate, $endDate));
-                
+
                 case 'stats':
                     return response()->json($this->getDashboardStats($user->company_id));
-                
+
                 case 'recent_activity':
                     return response()->json([
                         'tickets' => $this->getRecentTickets($user->company_id, 5),
                         'invoices' => $this->getRecentInvoices($user->company_id, 5),
                         'tasks' => $this->getUpcomingTasks($user->company_id, 5),
                     ]);
-                
+
                 case 'charts':
                     return response()->json([
                         'revenue' => $this->getRevenueChartData($user->company_id),
                         'tickets' => $this->getTicketChartData($user->company_id),
                     ]);
-                
+
                 case 'alerts':
                     return response()->json($this->getPerformanceAlerts($user->company_id));
-                
+
                 case 'all':
                 default:
                     return response()->json([
@@ -430,12 +440,12 @@ class DashboardController extends Controller
                     ]);
             }
         } catch (\Exception $e) {
-            Log::error('Dashboard realtime data error: ' . $e->getMessage(), [
+            Log::error('Dashboard realtime data error: '.$e->getMessage(), [
                 'user_id' => $user->id,
                 'type' => $type,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return response()->json(['error' => 'Failed to fetch dashboard data'], 500);
         }
     }
@@ -451,24 +461,24 @@ class DashboardController extends Controller
         $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : now()->startOfMonth();
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : now()->endOfMonth();
 
-        if (!$this->dashboardService) {
+        if (! $this->dashboardService) {
             return response()->json(['error' => 'Dashboard service not available'], 500);
         }
 
         try {
             $data = $this->dashboardService->exportDashboardData($type, $format, $startDate, $endDate);
-            
+
             $filename = "dashboard-{$type}-{$startDate->format('Y-m-d')}-to-{$endDate->format('Y-m-d')}.{$format}";
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $data,
                 'filename' => $filename,
-                'generated_at' => now()->toISOString()
+                'generated_at' => now()->toISOString(),
             ]);
-            
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Export failed: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Export failed: '.$e->getMessage()], 500);
         }
     }
 
@@ -478,13 +488,13 @@ class DashboardController extends Controller
     private function getPerformanceAlerts($companyId)
     {
         $alerts = [];
-        
+
         // Check for overdue invoices
         $overdueInvoices = Invoice::where('company_id', $companyId)
             ->where('status', 'Sent')
             ->where('due_date', '<', now()->subDays(7))
             ->count();
-            
+
         if ($overdueInvoices > 0) {
             $alerts[] = [
                 'type' => 'warning',
@@ -493,16 +503,16 @@ class DashboardController extends Controller
                 'message' => "{$overdueInvoices} invoices are overdue by more than 7 days",
                 'action_url' => route('financial.invoices.index', ['status' => 'overdue']),
                 'action_text' => 'Review Invoices',
-                'priority' => 'high'
+                'priority' => 'high',
             ];
         }
-        
+
         // Check for open tickets without assignment
         $unassignedTickets = Ticket::where('company_id', $companyId)
             ->whereIn('status', ['Open', 'New'])
             ->whereNull('assigned_to')
             ->count();
-            
+
         if ($unassignedTickets > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -511,13 +521,13 @@ class DashboardController extends Controller
                 'message' => "{$unassignedTickets} tickets need to be assigned",
                 'action_url' => route('tickets.index', ['status' => 'unassigned']),
                 'action_text' => 'Assign Tickets',
-                'priority' => 'medium'
+                'priority' => 'medium',
             ];
         }
-        
+
         // Check for expiring assets/licenses (if applicable)
         // This would be expanded based on your specific business logic
-        
+
         return $alerts;
     }
 
@@ -546,12 +556,12 @@ class DashboardController extends Controller
                     });
             }
         } catch (\Exception $e) {
-            Log::warning('Notifications table not accessible: ' . $e->getMessage());
+            Log::warning('Notifications table not accessible: '.$e->getMessage());
         }
-        
+
         return collect(); // Return empty collection if table doesn't exist
     }
-    
+
     /**
      * Get workflow-specific data based on role and client context
      */
@@ -559,32 +569,32 @@ class DashboardController extends Controller
     {
         $companyId = $userContext->company_id;
         $baseQuery = ['company_id' => $companyId];
-        
+
         if ($selectedClient) {
             $baseQuery['client_id'] = $selectedClient->id;
         }
-        
+
         switch ($workflow) {
             case 'urgent':
                 return $this->getUrgentWorkflowData($baseQuery, $userContext);
-            
+
             case 'today':
                 return $this->getTodayWorkflowData($baseQuery, $userContext);
-            
+
             case 'scheduled':
                 return $this->getScheduledWorkflowData($baseQuery, $userContext);
-            
+
             case 'financial':
                 return $this->getFinancialWorkflowData($baseQuery, $userContext);
-            
+
             case 'reports':
                 return $this->getReportsWorkflowData($baseQuery, $userContext);
-            
+
             default:
                 return $this->getDefaultWorkflowData($baseQuery, $userContext);
         }
     }
-    
+
     /**
      * Get urgent workflow data
      */
@@ -598,7 +608,7 @@ class DashboardController extends Controller
             ->orderBy('created_at')
             ->limit(20)
             ->get();
-            
+
         $overdueInvoices = Invoice::where($baseQuery)
             ->where('status', 'Sent')
             ->where('due_date', '<', now())
@@ -606,7 +616,7 @@ class DashboardController extends Controller
             ->orderBy('due_date')
             ->limit(10)
             ->get();
-            
+
         // Check for tickets that have been open for more than 24 hours (simplified SLA check)
         $slaBreaches = Ticket::where($baseQuery)
             ->whereIn('status', ['Open', 'In Progress'])
@@ -615,7 +625,7 @@ class DashboardController extends Controller
             ->orderBy('created_at')
             ->limit(10)
             ->get();
-            
+
         // Get escalation data - tickets approaching SLA breach
         $escalations = Ticket::where($baseQuery)
             ->whereIn('status', ['Open', 'In Progress'])
@@ -623,30 +633,30 @@ class DashboardController extends Controller
             ->with(['client', 'assignee'])
             ->orderBy('created_at')
             ->get();
-            
+
         // Get team workload
         $teamWorkload = User::where('company_id', $userContext->company_id)
-            ->withCount(['assignedTickets as active_tickets' => function($query) {
+            ->withCount(['assignedTickets as active_tickets' => function ($query) {
                 $query->whereIn('status', ['Open', 'In Progress']);
             }])
             ->orderBy('active_tickets', 'desc')
             ->limit(10)
             ->get();
-            
+
         // Get client impact analysis - PostgreSQL compatible approach
         $clientImpact = Client::where('company_id', $userContext->company_id)
-            ->whereHas('tickets', function($query) {
+            ->whereHas('tickets', function ($query) {
                 $query->whereIn('priority', ['Critical', 'High'])
-                      ->whereIn('status', ['Open', 'In Progress']);
+                    ->whereIn('status', ['Open', 'In Progress']);
             })
-            ->withCount(['tickets as critical_tickets' => function($query) {
+            ->withCount(['tickets as critical_tickets' => function ($query) {
                 $query->whereIn('priority', ['Critical', 'High'])
-                      ->whereIn('status', ['Open', 'In Progress']);
+                    ->whereIn('status', ['Open', 'In Progress']);
             }])
             ->orderBy('critical_tickets', 'desc')
             ->limit(10)
             ->get();
-            
+
         // Get recent activity
         $recentActivity = Ticket::where($baseQuery)
             ->whereIn('priority', ['Critical', 'High'])
@@ -655,13 +665,13 @@ class DashboardController extends Controller
             ->orderBy('updated_at', 'desc')
             ->limit(10)
             ->get();
-            
+
         // Calculate financial impact
         $revenueAtRisk = Invoice::where($baseQuery)
             ->where('status', 'Sent')
             ->where('due_date', '<', now()->subDays(30))
             ->sum('amount');
-            
+
         // Get 7-day trend
         $sevenDayTrend = Ticket::where($baseQuery)
             ->whereIn('priority', ['Critical', 'High'])
@@ -670,7 +680,7 @@ class DashboardController extends Controller
             ->groupBy('date')
             ->orderBy('date')
             ->get();
-            
+
         return [
             'urgent_tickets' => $urgentTickets,
             'overdue_invoices' => $overdueInvoices,
@@ -686,11 +696,11 @@ class DashboardController extends Controller
                 'overdue_invoices' => $overdueInvoices->count(),
                 'sla_breaches' => $slaBreaches->count(),
                 'escalations' => $escalations->count(),
-                'revenue_at_risk' => number_format($revenueAtRisk, 2)
-            ]
+                'revenue_at_risk' => number_format($revenueAtRisk, 2),
+            ],
         ];
     }
-    
+
     /**
      * Get today's workflow data
      */
@@ -698,25 +708,25 @@ class DashboardController extends Controller
     {
         $today = now()->startOfDay();
         $endOfDay = now()->endOfDay();
-        
+
         $todaysTickets = Ticket::where($baseQuery)
             ->whereBetween('created_at', [$today, $endOfDay])
             ->with(['client', 'assignee'])
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         $scheduledTickets = Ticket::where($baseQuery)
             ->whereBetween('scheduled_at', [$today, $endOfDay])
             ->with(['client', 'assignee'])
             ->orderBy('scheduled_at')
             ->get();
-            
+
         $todaysInvoices = Invoice::where($baseQuery)
             ->whereBetween('created_at', [$today, $endOfDay])
             ->with('client')
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         $myAssignedTickets = [];
         if ($userContext->isTech || $userContext->isAdmin) {
             $myAssignedTickets = Ticket::where($baseQuery)
@@ -727,50 +737,50 @@ class DashboardController extends Controller
                 ->orderBy('created_at')
                 ->get();
         }
-        
+
         // Get team availability
         $teamAvailability = User::where('company_id', $userContext->company_id)
-            ->withCount(['assignedTickets as today_tickets' => function($query) use ($today, $endOfDay) {
+            ->withCount(['assignedTickets as today_tickets' => function ($query) use ($today, $endOfDay) {
                 $query->whereIn('status', ['Open', 'In Progress'])
-                      ->whereBetween('scheduled_at', [$today, $endOfDay]);
+                    ->whereBetween('scheduled_at', [$today, $endOfDay]);
             }])
             ->get()
-            ->map(function($user) {
+            ->map(function ($user) {
                 return [
                     'id' => $user->id,
                     'name' => $user->name,
                     'status' => $user->today_tickets > 3 ? 'busy' : ($user->today_tickets > 0 ? 'working' : 'available'),
-                    'tickets_today' => $user->today_tickets
+                    'tickets_today' => $user->today_tickets,
                 ];
             });
-            
+
         // Get completed tasks today
         $completedToday = Ticket::where($baseQuery)
             ->where('status', 'Closed')
             ->whereBetween('updated_at', [$today, $endOfDay])
             ->with(['client', 'assignee'])
             ->get();
-            
+
         // Get time tracking data (in minutes)
         $timeTracked = 0;
         if (DB::getSchemaBuilder()->hasTable('ticket_time_entries')) {
             $timeTracked = DB::table('ticket_time_entries')
-                ->whereIn('ticket_id', function($query) use ($baseQuery) {
+                ->whereIn('ticket_id', function ($query) use ($baseQuery) {
                     $query->select('id')->from('tickets')->where($baseQuery);
                 })
                 ->whereBetween('created_at', [$today, $endOfDay])
                 ->sum('minutes') ?? 0;
         }
-            
+
         // Get productivity metrics
         $productivityMetrics = [
             'tickets_opened' => $todaysTickets->count(),
             'tickets_closed' => $completedToday->count(),
-            'resolution_rate' => $todaysTickets->count() > 0 ? 
+            'resolution_rate' => $todaysTickets->count() > 0 ?
                 round(($completedToday->count() / $todaysTickets->count()) * 100) : 0,
-            'avg_response_time' => 0 // Will calculate if column exists
+            'avg_response_time' => 0, // Will calculate if column exists
         ];
-        
+
         // Get hourly breakdown
         $hourlyBreakdown = Ticket::where($baseQuery)
             ->whereBetween('created_at', [$today, $endOfDay])
@@ -778,14 +788,14 @@ class DashboardController extends Controller
             ->groupByRaw('EXTRACT(hour from created_at)')
             ->orderByRaw('EXTRACT(hour from created_at)')
             ->get();
-            
+
         // Get recent solutions/knowledge base (recently closed tickets)
         $recentSolutions = Ticket::where($baseQuery)
             ->where('status', 'Closed')
             ->orderBy('updated_at', 'desc')
             ->limit(5)
             ->get(['id', 'subject', 'updated_at', 'priority']);
-            
+
         return [
             'todays_tickets' => $todaysTickets,
             'scheduled_tickets' => $scheduledTickets,
@@ -803,11 +813,11 @@ class DashboardController extends Controller
                 'todays_invoices' => $todaysInvoices->count(),
                 'my_assigned_tickets' => count($myAssignedTickets),
                 'completed_today' => $completedToday->count(),
-                'time_tracked_hours' => round($timeTracked / 60, 1)
-            ]
+                'time_tracked_hours' => round($timeTracked / 60, 1),
+            ],
         ];
     }
-    
+
     /**
      * Get scheduled workflow data
      */
@@ -817,7 +827,7 @@ class DashboardController extends Controller
         $tomorrow = now()->addDay()->startOfDay();
         $upcomingWeek = now()->addWeek();
         $endOfMonth = now()->endOfMonth();
-        
+
         // Scheduled tickets for different periods
         $todayTickets = Ticket::where($baseQuery)
             ->whereNotNull('scheduled_at')
@@ -825,14 +835,14 @@ class DashboardController extends Controller
             ->with(['client', 'assignee'])
             ->orderBy('scheduled_at')
             ->get();
-            
+
         $tomorrowTickets = Ticket::where($baseQuery)
             ->whereNotNull('scheduled_at')
             ->whereDate('scheduled_at', $tomorrow)
             ->with(['client', 'assignee'])
             ->orderBy('scheduled_at')
             ->get();
-            
+
         $weekTickets = Ticket::where($baseQuery)
             ->whereNotNull('scheduled_at')
             ->where('scheduled_at', '>', $tomorrow)
@@ -840,7 +850,7 @@ class DashboardController extends Controller
             ->with(['client', 'assignee'])
             ->orderBy('scheduled_at')
             ->get();
-            
+
         // Recurring tickets
         $recurringTickets = [];
         if (DB::getSchemaBuilder()->hasTable('recurring_tickets')) {
@@ -853,7 +863,7 @@ class DashboardController extends Controller
                 ->orderBy('next_run_date')
                 ->get();
         }
-        
+
         // Maintenance schedules from assets
         $maintenanceSchedules = [];
         if (DB::getSchemaBuilder()->hasTable('asset_maintenance')) {
@@ -868,24 +878,24 @@ class DashboardController extends Controller
                 ->limit(10)
                 ->get();
         }
-        
+
         // Team availability (simplified - checking who has scheduled work)
         // Exclude clients - in this system, all users with roles are staff (not clients)
         $teamSchedule = User::where('company_id', $userContext->company_id)
             ->whereHas('userSetting')
-            ->withCount(['assignedTickets as today_scheduled' => function($query) use ($today) {
+            ->withCount(['assignedTickets as today_scheduled' => function ($query) use ($today) {
                 $query->whereDate('scheduled_at', $today);
             }])
-            ->withCount(['assignedTickets as tomorrow_scheduled' => function($query) use ($tomorrow) {
+            ->withCount(['assignedTickets as tomorrow_scheduled' => function ($query) use ($tomorrow) {
                 $query->whereDate('scheduled_at', $tomorrow);
             }])
-            ->withCount(['assignedTickets as week_scheduled' => function($query) use ($tomorrow, $upcomingWeek) {
+            ->withCount(['assignedTickets as week_scheduled' => function ($query) use ($tomorrow, $upcomingWeek) {
                 $query->where('scheduled_at', '>', $tomorrow)
-                      ->where('scheduled_at', '<=', $upcomingWeek);
+                    ->where('scheduled_at', '<=', $upcomingWeek);
             }])
             ->orderBy('name')
             ->get();
-            
+
         // Project milestones
         $projectMilestones = [];
         if (DB::getSchemaBuilder()->hasTable('project_milestones')) {
@@ -900,8 +910,8 @@ class DashboardController extends Controller
                 ->limit(10)
                 ->get();
         }
-        
-        // Calendar events  
+
+        // Calendar events
         $calendarEvents = [];
         if (DB::getSchemaBuilder()->hasTable('client_calendar_events')) {
             $calendarEvents = DB::table('client_calendar_events')
@@ -914,23 +924,23 @@ class DashboardController extends Controller
                 ->limit(15)
                 ->get();
         }
-        
+
         // Capacity planning - hours available vs scheduled
         $capacityData = [
             'today' => [
                 'available_hours' => $teamSchedule->count() * 8, // 8 hours per person
-                'scheduled_hours' => $todayTickets->sum('estimated_hours') ?? $todayTickets->count() * 2
+                'scheduled_hours' => $todayTickets->sum('estimated_hours') ?? $todayTickets->count() * 2,
             ],
             'tomorrow' => [
                 'available_hours' => $teamSchedule->count() * 8,
-                'scheduled_hours' => $tomorrowTickets->sum('estimated_hours') ?? $tomorrowTickets->count() * 2
+                'scheduled_hours' => $tomorrowTickets->sum('estimated_hours') ?? $tomorrowTickets->count() * 2,
             ],
             'week' => [
                 'available_hours' => $teamSchedule->count() * 40, // 40 hours per person per week
-                'scheduled_hours' => $weekTickets->sum('estimated_hours') ?? $weekTickets->count() * 2
-            ]
+                'scheduled_hours' => $weekTickets->sum('estimated_hours') ?? $weekTickets->count() * 2,
+            ],
         ];
-        
+
         return [
             'today_tickets' => $todayTickets,
             'tomorrow_tickets' => $tomorrowTickets,
@@ -947,11 +957,11 @@ class DashboardController extends Controller
                 'week_tickets' => $weekTickets->count(),
                 'recurring_tickets' => count($recurringTickets),
                 'maintenance_due' => count($maintenanceSchedules),
-                'milestones_due' => count($projectMilestones)
-            ]
+                'milestones_due' => count($projectMilestones),
+            ],
         ];
     }
-    
+
     /**
      * Get financial workflow data
      */
@@ -963,20 +973,20 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-            
+
         $overdueInvoices = Invoice::where($baseQuery)
             ->where('status', 'Sent')
             ->where('due_date', '<', now())
             ->with('client')
             ->orderBy('due_date')
             ->get();
-            
+
         $recentPayments = Payment::where($baseQuery)
             ->with(['invoice', 'client'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-            
+
         $upcomingInvoices = Invoice::where($baseQuery)
             ->where('status', 'Sent')
             ->where('due_date', '>=', now())
@@ -984,16 +994,16 @@ class DashboardController extends Controller
             ->with('client')
             ->orderBy('due_date')
             ->get();
-            
+
         // Calculate financial metrics
         $totalRevenue = Payment::where($baseQuery)
             ->whereMonth('created_at', now()->month)
             ->sum('amount');
-            
+
         $totalOutstanding = Invoice::where($baseQuery)
             ->where('status', 'Sent')
             ->sum('amount');
-            
+
         $monthlyRecurring = 0;
         if (DB::getSchemaBuilder()->hasTable('recurring')) {
             $monthlyRecurring = DB::table('recurring')
@@ -1001,7 +1011,7 @@ class DashboardController extends Controller
                 ->where('status', true)
                 ->sum('amount');
         }
-        
+
         // Get 30-day revenue trend
         $revenueeTrend = Payment::where($baseQuery)
             ->where('created_at', '>', now()->subDays(30))
@@ -1009,23 +1019,23 @@ class DashboardController extends Controller
             ->groupBy('date')
             ->orderBy('date')
             ->get();
-            
+
         // Get payment methods breakdown
         $paymentMethods = Payment::where($baseQuery)
             ->whereMonth('created_at', now()->month)
             ->selectRaw('payment_method, COUNT(*) as count, SUM(amount) as total')
             ->groupBy('payment_method')
             ->get();
-            
+
         // Get top clients by revenue
         $topClients = Client::where('company_id', $baseQuery['company_id'])
-            ->withSum(['payments' => function($query) {
+            ->withSum(['payments' => function ($query) {
                 $query->whereMonth('created_at', now()->month);
             }], 'amount')
             ->orderBy('payments_sum_amount', 'desc')
             ->limit(5)
             ->get();
-        
+
         return [
             'pending_invoices' => $pendingInvoices,
             'overdue_invoices' => $overdueInvoices,
@@ -1038,17 +1048,17 @@ class DashboardController extends Controller
                 'total_revenue' => $totalRevenue,
                 'total_outstanding' => $totalOutstanding,
                 'monthly_recurring' => $monthlyRecurring,
-                'overdue_amount' => $overdueInvoices->sum('amount')
+                'overdue_amount' => $overdueInvoices->sum('amount'),
             ],
             'counts' => [
                 'pending_invoices' => $pendingInvoices->count(),
                 'overdue_invoices' => $overdueInvoices->count(),
                 'recent_payments' => $recentPayments->count(),
-                'upcoming_invoices' => $upcomingInvoices->count()
-            ]
+                'upcoming_invoices' => $upcomingInvoices->count(),
+            ],
         ];
     }
-    
+
     /**
      * Get reports workflow data
      */
@@ -1060,35 +1070,35 @@ class DashboardController extends Controller
             'report_categories' => [
                 'financial' => ['Revenue', 'Invoicing', 'Payments'],
                 'operational' => ['Tickets', 'Assets', 'Projects'],
-                'client' => ['Client Activity', 'Service Usage']
+                'client' => ['Client Activity', 'Service Usage'],
             ],
-            'quick_stats' => $this->getDashboardStats($baseQuery['company_id'])
+            'quick_stats' => $this->getDashboardStats($baseQuery['company_id']),
         ];
     }
-    
+
     /**
      * Get default workflow data for overview
      */
     private function getDefaultWorkflowData($baseQuery, $userContext)
     {
         $stats = $this->getDashboardStats($baseQuery['company_id']);
-        
+
         return [
             'overview_stats' => $stats,
             'recent_tickets' => $this->getRecentTickets($baseQuery['company_id'], 5),
             'recent_invoices' => $this->getRecentInvoices($baseQuery['company_id'], 5),
             'upcoming_tasks' => $this->getUpcomingTasks($baseQuery['company_id'], 5),
-            'performance_summary' => $this->getPerformanceSummary($baseQuery['company_id'])
+            'performance_summary' => $this->getPerformanceSummary($baseQuery['company_id']),
         ];
     }
-    
+
     /**
      * Get role-appropriate KPIs for workflow
      */
     private function getWorkflowKPIs($workflow, $role, $selectedClient)
     {
         $kpis = [];
-        
+
         switch ($role) {
             case 'admin':
                 $kpis = $this->getAdminKPIs($workflow, $selectedClient);
@@ -1102,10 +1112,10 @@ class DashboardController extends Controller
             default:
                 $kpis = $this->getBasicKPIs($workflow, $selectedClient);
         }
-        
+
         return $kpis;
     }
-    
+
     /**
      * Get admin-level KPIs
      */
@@ -1113,32 +1123,32 @@ class DashboardController extends Controller
     {
         $companyId = Auth::user()->company_id;
         $baseQuery = ['company_id' => $companyId];
-        
+
         if ($selectedClient) {
             $baseQuery['client_id'] = $selectedClient->id;
         }
-        
+
         return [
             'total_revenue' => [
                 'label' => 'Total Revenue',
                 'value' => Invoice::where($baseQuery)->where('status', 'Paid')->sum('amount'),
                 'format' => 'currency',
                 'icon' => 'currency-dollar',
-                'trend' => 'up'
+                'trend' => 'up',
             ],
             'active_clients' => [
                 'label' => 'Active Clients',
                 'value' => $selectedClient ? 1 : Client::where(['company_id' => $companyId])->whereNull('archived_at')->count(),
                 'format' => 'number',
                 'icon' => 'user-group',
-                'trend' => 'stable'
+                'trend' => 'stable',
             ],
             'open_tickets' => [
                 'label' => 'Open Tickets',
                 'value' => Ticket::where($baseQuery)->whereIn('status', ['Open', 'In Progress'])->count(),
                 'format' => 'number',
                 'icon' => 'ticket',
-                'trend' => 'down'
+                'trend' => 'down',
             ],
             'monthly_revenue' => [
                 'label' => 'Monthly Revenue',
@@ -1148,11 +1158,11 @@ class DashboardController extends Controller
                     ->sum('amount'),
                 'format' => 'currency',
                 'icon' => 'arrow-trending-up',
-                'trend' => 'up'
-            ]
+                'trend' => 'up',
+            ],
         ];
     }
-    
+
     /**
      * Get tech-level KPIs
      */
@@ -1161,18 +1171,18 @@ class DashboardController extends Controller
         $userId = Auth::user()->id;
         $companyId = Auth::user()->company_id;
         $baseQuery = ['company_id' => $companyId];
-        
+
         if ($selectedClient) {
             $baseQuery['client_id'] = $selectedClient->id;
         }
-        
+
         return [
             'my_open_tickets' => [
                 'label' => 'My Open Tickets',
                 'value' => Ticket::where($baseQuery)->where('assigned_to', $userId)->whereIn('status', ['Open', 'In Progress'])->count(),
                 'format' => 'number',
                 'icon' => 'user',
-                'trend' => 'stable'
+                'trend' => 'stable',
             ],
             'resolved_today' => [
                 'label' => 'Resolved Today',
@@ -1183,25 +1193,25 @@ class DashboardController extends Controller
                     ->count(),
                 'format' => 'number',
                 'icon' => 'check-circle',
-                'trend' => 'up'
+                'trend' => 'up',
             ],
             'avg_response_time' => [
                 'label' => 'Avg Response Time',
                 'value' => '2.5 hrs',
                 'format' => 'text',
                 'icon' => 'clock',
-                'trend' => 'down'
+                'trend' => 'down',
             ],
             'total_assets' => [
                 'label' => 'Total Assets',
                 'value' => Asset::where($baseQuery)->count(),
                 'format' => 'number',
                 'icon' => 'server',
-                'trend' => 'stable'
-            ]
+                'trend' => 'stable',
+            ],
         ];
     }
-    
+
     /**
      * Get accountant-level KPIs
      */
@@ -1209,25 +1219,25 @@ class DashboardController extends Controller
     {
         $companyId = Auth::user()->company_id;
         $baseQuery = ['company_id' => $companyId];
-        
+
         if ($selectedClient) {
             $baseQuery['client_id'] = $selectedClient->id;
         }
-        
+
         return [
             'outstanding_invoices' => [
                 'label' => 'Outstanding Invoices',
                 'value' => Invoice::where($baseQuery)->where('status', 'Sent')->sum('amount'),
                 'format' => 'currency',
                 'icon' => 'document-text',
-                'trend' => 'stable'
+                'trend' => 'stable',
             ],
             'payments_this_month' => [
                 'label' => 'Payments This Month',
                 'value' => Payment::where($baseQuery)->whereMonth('created_at', now()->month)->sum('amount'),
                 'format' => 'currency',
                 'icon' => 'credit-card',
-                'trend' => 'up'
+                'trend' => 'up',
             ],
             'overdue_amount' => [
                 'label' => 'Overdue Amount',
@@ -1237,18 +1247,18 @@ class DashboardController extends Controller
                     ->sum('amount'),
                 'format' => 'currency',
                 'icon' => 'exclamation-triangle',
-                'trend' => 'down'
+                'trend' => 'down',
             ],
             'collection_rate' => [
                 'label' => 'Collection Rate',
                 'value' => '94.5%',
                 'format' => 'percentage',
                 'icon' => 'percent-badge',
-                'trend' => 'up'
-            ]
+                'trend' => 'up',
+            ],
         ];
     }
-    
+
     /**
      * Get basic KPIs for standard users
      */
@@ -1256,29 +1266,29 @@ class DashboardController extends Controller
     {
         $companyId = Auth::user()->company_id;
         $baseQuery = ['company_id' => $companyId];
-        
+
         if ($selectedClient) {
             $baseQuery['client_id'] = $selectedClient->id;
         }
-        
+
         return [
             'open_tickets' => [
                 'label' => 'Open Tickets',
                 'value' => Ticket::where($baseQuery)->whereIn('status', ['Open', 'In Progress'])->count(),
                 'format' => 'number',
                 'icon' => 'ticket',
-                'trend' => 'stable'
+                'trend' => 'stable',
             ],
             'recent_activity' => [
                 'label' => 'Recent Activity',
                 'value' => Ticket::where($baseQuery)->whereDate('created_at', today())->count(),
                 'format' => 'number',
                 'icon' => 'chart-bar',
-                'trend' => 'up'
-            ]
+                'trend' => 'up',
+            ],
         ];
     }
-    
+
     /**
      * Get contextual quick actions for workflow and role
      */
@@ -1286,46 +1296,46 @@ class DashboardController extends Controller
     {
         $actions = [];
         $clientParam = $selectedClient ? ['client_id' => $selectedClient->id] : [];
-        
+
         switch ($workflow) {
             case 'urgent':
                 $actions = [
                     ['label' => 'Create Urgent Ticket', 'route' => 'tickets.create', 'params' => array_merge($clientParam, ['priority' => 'High']), 'icon' => 'plus', 'color' => 'red'],
                     ['label' => 'Review SLA Breaches', 'route' => 'tickets.index', 'params' => ['filter' => 'sla_breach'], 'icon' => 'clock', 'color' => 'orange'],
-                    ['label' => 'Send Payment Reminder', 'route' => 'financial.invoices.index', 'params' => ['status' => 'overdue'], 'icon' => 'envelope', 'color' => 'yellow']
+                    ['label' => 'Send Payment Reminder', 'route' => 'financial.invoices.index', 'params' => ['status' => 'overdue'], 'icon' => 'envelope', 'color' => 'yellow'],
                 ];
                 break;
-                
+
             case 'today':
                 $actions = [
                     ['label' => 'Create New Ticket', 'route' => 'tickets.create', 'params' => $clientParam, 'icon' => 'plus', 'color' => 'blue'],
                     ['label' => 'Schedule Appointment', 'route' => 'tickets.calendar.index', 'params' => [], 'icon' => 'calendar', 'color' => 'green'],
-                    ['label' => 'Create Invoice', 'route' => 'financial.invoices.create', 'params' => $clientParam, 'icon' => 'file-invoice', 'color' => 'purple']
+                    ['label' => 'Create Invoice', 'route' => 'financial.invoices.create', 'params' => $clientParam, 'icon' => 'file-invoice', 'color' => 'purple'],
                 ];
                 break;
-                
+
             case 'financial':
                 $actions = [
                     ['label' => 'Create Invoice', 'route' => 'financial.invoices.create', 'params' => $clientParam, 'icon' => 'plus', 'color' => 'green'],
                     ['label' => 'Record Payment', 'route' => 'financial.payments.create', 'params' => [], 'icon' => 'credit-card', 'color' => 'blue'],
-                    ['label' => 'Generate Report', 'route' => 'reports.financial.index', 'params' => [], 'icon' => 'chart-bar', 'color' => 'purple']
+                    ['label' => 'Generate Report', 'route' => 'reports.financial.index', 'params' => [], 'icon' => 'chart-bar', 'color' => 'purple'],
                 ];
                 break;
-                
+
             default:
                 $actions = [
                     ['label' => 'Create Ticket', 'route' => 'tickets.create', 'params' => $clientParam, 'icon' => 'plus', 'color' => 'blue'],
                     ['label' => 'Add Client', 'route' => 'clients.create', 'params' => [], 'icon' => 'user-plus', 'color' => 'green'],
-                    ['label' => 'View Calendar', 'route' => 'tickets.calendar.index', 'params' => [], 'icon' => 'calendar', 'color' => 'purple']
+                    ['label' => 'View Calendar', 'route' => 'tickets.calendar.index', 'params' => [], 'icon' => 'calendar', 'color' => 'purple'],
                 ];
         }
-        
+
         // Filter actions based on role permissions
         return collect($actions)->filter(function ($action) use ($role) {
             return $this->userCanAccessAction($action['route'], $role);
         })->values()->toArray();
     }
-    
+
     /**
      * Get workflow-specific alerts
      */
@@ -1334,11 +1344,11 @@ class DashboardController extends Controller
         $alerts = [];
         $companyId = $userContext->company_id;
         $baseQuery = ['company_id' => $companyId];
-        
+
         if ($selectedClient) {
             $baseQuery['client_id'] = $selectedClient->id;
         }
-        
+
         switch ($workflow) {
             case 'urgent':
                 // Critical ticket alerts
@@ -1346,96 +1356,95 @@ class DashboardController extends Controller
                     ->where('priority', 'Critical')
                     ->whereIn('status', ['Open', 'In Progress'])
                     ->count();
-                    
+
                 if ($criticalTickets > 0) {
                     $alerts[] = [
                         'type' => 'error',
                         'title' => 'Critical Tickets',
                         'message' => "{$criticalTickets} critical tickets require immediate attention",
                         'action_url' => route('tickets.index', ['priority' => 'Critical']),
-                        'action_text' => 'Review Now'
+                        'action_text' => 'Review Now',
                     ];
                 }
                 break;
-                
+
             case 'financial':
                 // Overdue invoice alerts
                 $overdueAmount = Invoice::where($baseQuery)
                     ->where('status', 'Sent')
                     ->where('due_date', '<', now()->subDays(30))
                     ->sum('amount');
-                    
+
                 if ($overdueAmount > 0) {
                     $alerts[] = [
                         'type' => 'warning',
                         'title' => 'Overdue Invoices',
-                        'message' => "$" . number_format($overdueAmount, 2) . " in invoices overdue by 30+ days",
+                        'message' => '$'.number_format($overdueAmount, 2).' in invoices overdue by 30+ days',
                         'action_url' => route('financial.invoices.index', ['status' => 'overdue']),
-                        'action_text' => 'Review Collections'
+                        'action_text' => 'Review Collections',
                     ];
                 }
                 break;
         }
-        
+
         return $alerts;
     }
-    
+
     /**
      * Get workflow-specific chart data
      */
     private function getWorkflowChartData($workflow, $userContext, $selectedClient)
     {
         $companyId = $userContext->company_id;
-        
+
         switch ($workflow) {
             case 'urgent':
                 return [
                     'priority_distribution' => $this->getTicketPriorityChart($companyId, $selectedClient),
-                    'sla_performance' => $this->getSLAPerformanceChart($companyId, $selectedClient)
+                    'sla_performance' => $this->getSLAPerformanceChart($companyId, $selectedClient),
                 ];
-                
+
             case 'financial':
                 return [
                     'revenue_trend' => $this->getRevenueChartData($companyId),
-                    'payment_status' => $this->getPaymentStatusChart($companyId, $selectedClient)
+                    'payment_status' => $this->getPaymentStatusChart($companyId, $selectedClient),
                 ];
-                
+
             case 'today':
                 return [
                     'daily_activity' => $this->getDailyActivityChart($companyId, $selectedClient),
-                    'ticket_trend' => $this->getTicketChartData($companyId)
+                    'ticket_trend' => $this->getTicketChartData($companyId),
                 ];
-                
+
             default:
                 return [
                     'overview' => $this->getTicketChartData($companyId),
-                    'revenue' => $this->getRevenueChartData($companyId)
+                    'revenue' => $this->getRevenueChartData($companyId),
                 ];
         }
     }
-    
+
     /**
      * Get legacy compatibility data for existing dashboard views
      */
     private function getLegacyCompatibilityData($companyId)
     {
         // Cache legacy compatibility data for 5 minutes
-        return Cache::remember("dashboard_legacy_{$companyId}", 300, function() use ($companyId) {
+        return Cache::remember("dashboard_legacy_{$companyId}", 300, function () use ($companyId) {
             return [
                 'stats' => $this->getDashboardStats($companyId),
                 'recent_tickets' => $this->getRecentTickets($companyId, 5),
                 'recent_invoices' => $this->getRecentInvoices($companyId, 5),
                 'upcoming_tasks' => $this->getUpcomingTasks($companyId, 5),
                 'ticketChartData' => $this->getTicketChartData($companyId),
-                'revenueChartData' => $this->getRevenueChartData($companyId)
+                'revenueChartData' => $this->getRevenueChartData($companyId),
             ];
         });
     }
-    
+
     /**
      * Helper methods for additional data processing
      */
-    
     private function getCalendarEvents($baseQuery, $endDate)
     {
         return Ticket::where($baseQuery)
@@ -1449,11 +1458,11 @@ class DashboardController extends Controller
                     'id' => $ticket->id,
                     'title' => $ticket->subject,
                     'start' => $ticket->scheduled_at,
-                    'client' => $ticket->client->name ?? 'Unknown'
+                    'client' => $ticket->client->name ?? 'Unknown',
                 ];
             });
     }
-    
+
     private function getFinancialSummary($baseQuery)
     {
         return [
@@ -1463,98 +1472,104 @@ class DashboardController extends Controller
                 ->whereMonth('created_at', now()->month)
                 ->sum('amount'),
             'avg_payment_time' => 15.2, // days - would be calculated from actual data
-            'collection_rate' => 94.5 // percentage - would be calculated from actual data
+            'collection_rate' => 94.5, // percentage - would be calculated from actual data
         ];
     }
-    
+
     private function getPerformanceSummary($companyId)
     {
         return [
             'ticket_resolution_time' => 2.8, // hours - would be calculated
             'client_satisfaction' => 4.2, // rating - would be calculated
             'technician_utilization' => 78.5, // percentage - would be calculated
-            'revenue_growth' => 12.3 // percentage - would be calculated
+            'revenue_growth' => 12.3, // percentage - would be calculated
         ];
     }
-    
+
     private function userCanAccessAction($route, $role)
     {
         // Simplified permission check - would use proper permission system
         $restrictedRoutes = [
             'accountant' => ['clients.create', 'assets.create'],
-            'tech' => ['financial.invoices.create', 'users.create']
+            'tech' => ['financial.invoices.create', 'users.create'],
         ];
-        
-        return !in_array($route, $restrictedRoutes[$role] ?? []);
+
+        return ! in_array($route, $restrictedRoutes[$role] ?? []);
     }
-    
+
     private function getTicketPriorityChart($companyId, $selectedClient)
     {
         $baseQuery = ['company_id' => $companyId];
-        if ($selectedClient) $baseQuery['client_id'] = $selectedClient->id;
-        
+        if ($selectedClient) {
+            $baseQuery['client_id'] = $selectedClient->id;
+        }
+
         $priorities = Ticket::where($baseQuery)
             ->selectRaw('priority, COUNT(*) as count')
             ->groupBy('priority')
             ->pluck('count', 'priority')
             ->toArray();
-            
+
         return [
             'labels' => array_keys($priorities),
-            'data' => array_values($priorities)
+            'data' => array_values($priorities),
         ];
     }
-    
+
     private function getSLAPerformanceChart($companyId, $selectedClient)
     {
         // Simplified SLA performance data
         return [
             'labels' => ['Met SLA', 'Breached SLA'],
-            'data' => [85, 15]
+            'data' => [85, 15],
         ];
     }
-    
+
     private function getPaymentStatusChart($companyId, $selectedClient)
     {
         $baseQuery = ['company_id' => $companyId];
-        if ($selectedClient) $baseQuery['client_id'] = $selectedClient->id;
-        
+        if ($selectedClient) {
+            $baseQuery['client_id'] = $selectedClient->id;
+        }
+
         $statuses = Invoice::where($baseQuery)
             ->selectRaw('status, SUM(amount) as total')
             ->groupBy('status')
             ->pluck('total', 'status')
             ->toArray();
-            
+
         return [
             'labels' => array_keys($statuses),
-            'data' => array_values($statuses)
+            'data' => array_values($statuses),
         ];
     }
-    
+
     private function getDailyActivityChart($companyId, $selectedClient)
     {
         $baseQuery = ['company_id' => $companyId];
-        if ($selectedClient) $baseQuery['client_id'] = $selectedClient->id;
-        
+        if ($selectedClient) {
+            $baseQuery['client_id'] = $selectedClient->id;
+        }
+
         $activities = Ticket::where($baseQuery)
             ->whereDate('created_at', today())
             ->selectRaw('EXTRACT(hour from created_at) as hour, COUNT(*) as count')
             ->groupByRaw('EXTRACT(hour from created_at)')
             ->pluck('count', 'hour')
             ->toArray();
-            
+
         // Fill in missing hours
         $hourlyData = [];
         for ($i = 0; $i < 24; $i++) {
             $hourlyData[$i] = $activities[$i] ?? 0;
         }
-        
+
         return [
             'labels' => array_keys($hourlyData),
-            'data' => array_values($hourlyData)
+            'data' => array_values($hourlyData),
         ];
     }
-    
+
     /**
      * Get widget data using real-time service
      */
@@ -1562,58 +1577,62 @@ class DashboardController extends Controller
     {
         $widgetType = $request->get('widget_type');
         $config = $request->get('config', []);
-        
-        if (!$this->realtimeService) {
+
+        if (! $this->realtimeService) {
             return response()->json(['error' => 'Realtime service not available'], 500);
         }
-        
+
         try {
             $data = $this->realtimeService->getWidgetData($widgetType, $config);
+
             return response()->json($data);
         } catch (\Exception $e) {
-            Log::error('Widget data error: ' . $e->getMessage());
+            Log::error('Widget data error: '.$e->getMessage());
+
             return response()->json(['error' => 'Failed to fetch widget data'], 500);
         }
     }
-    
+
     /**
      * Get multiple widget data
      */
     public function getMultipleWidgetData(Request $request)
     {
         $widgets = $request->get('widgets', []);
-        
-        if (!$this->realtimeService) {
+
+        if (! $this->realtimeService) {
             return response()->json(['error' => 'Realtime service not available'], 500);
         }
-        
+
         try {
             $data = $this->realtimeService->getMultipleWidgetData($widgets);
+
             return response()->json([
                 'success' => true,
                 'data' => $data,
                 'timestamp' => now()->toISOString(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Multiple widget data error: ' . $e->getMessage());
+            Log::error('Multiple widget data error: '.$e->getMessage());
+
             return response()->json(['error' => 'Failed to fetch widget data'], 500);
         }
     }
-    
+
     /**
      * Save user dashboard configuration
      */
     public function saveDashboardConfig(Request $request)
     {
         $user = Auth::user();
-        
+
         $request->validate([
             'dashboard_name' => 'string|max:50',
             'layout' => 'required|array',
             'widgets' => 'required|array',
             'preferences' => 'array',
         ]);
-        
+
         try {
             $config = \DB::table('user_dashboard_configs')->updateOrInsert(
                 [
@@ -1629,17 +1648,18 @@ class DashboardController extends Controller
                     'created_at' => now(),
                 ]
             );
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Dashboard configuration saved',
             ]);
         } catch (\Exception $e) {
-            Log::error('Save dashboard config error: ' . $e->getMessage());
+            Log::error('Save dashboard config error: '.$e->getMessage());
+
             return response()->json(['error' => 'Failed to save configuration'], 500);
         }
     }
-    
+
     /**
      * Load user dashboard configuration
      */
@@ -1647,14 +1667,14 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $dashboardName = $request->get('dashboard_name', 'main');
-        
+
         try {
             $config = \DB::table('user_dashboard_configs')
                 ->where('user_id', $user->id)
                 ->where('dashboard_name', $dashboardName)
                 ->first();
-            
-            if (!$config) {
+
+            if (! $config) {
                 // Return default configuration
                 return response()->json([
                     'success' => true,
@@ -1662,7 +1682,7 @@ class DashboardController extends Controller
                     'config' => $this->getDefaultDashboardConfig(),
                 ]);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'is_default' => false,
@@ -1673,11 +1693,12 @@ class DashboardController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Load dashboard config error: ' . $e->getMessage());
+            Log::error('Load dashboard config error: '.$e->getMessage());
+
             return response()->json(['error' => 'Failed to load configuration'], 500);
         }
     }
-    
+
     /**
      * Get default dashboard configuration
      */
@@ -1707,33 +1728,34 @@ class DashboardController extends Controller
             ],
         ];
     }
-    
+
     /**
      * Get available dashboard presets
      */
     public function getPresets(Request $request)
     {
         $user = Auth::user();
-        
+
         try {
             $presets = \DB::table('dashboard_presets')
                 ->where(function ($query) use ($user) {
                     $query->where('is_system', true)
-                          ->orWhere('company_id', $user->company_id);
+                        ->orWhere('company_id', $user->company_id);
                 })
                 ->where('is_active', true)
                 ->get(['id', 'name', 'slug', 'description', 'role']);
-            
+
             return response()->json([
                 'success' => true,
                 'presets' => $presets,
             ]);
         } catch (\Exception $e) {
-            Log::error('Get presets error: ' . $e->getMessage());
+            Log::error('Get presets error: '.$e->getMessage());
+
             return response()->json(['error' => 'Failed to fetch presets'], 500);
         }
     }
-    
+
     /**
      * Apply dashboard preset
      */
@@ -1741,19 +1763,19 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $presetId = $request->get('preset_id');
-        
+
         try {
             $preset = \DB::table('dashboard_presets')->find($presetId);
-            
-            if (!$preset) {
+
+            if (! $preset) {
                 return response()->json(['error' => 'Preset not found'], 404);
             }
-            
+
             // Check access
-            if (!$preset->is_system && $preset->company_id !== $user->company_id) {
+            if (! $preset->is_system && $preset->company_id !== $user->company_id) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
-            
+
             // Apply preset to user's dashboard
             \DB::table('user_dashboard_configs')->updateOrInsert(
                 [
@@ -1772,18 +1794,19 @@ class DashboardController extends Controller
                     'created_at' => now(),
                 ]
             );
-            
+
             // Increment usage count
             \DB::table('dashboard_presets')
                 ->where('id', $presetId)
                 ->increment('usage_count');
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Preset applied successfully',
             ]);
         } catch (\Exception $e) {
-            Log::error('Apply preset error: ' . $e->getMessage());
+            Log::error('Apply preset error: '.$e->getMessage());
+
             return response()->json(['error' => 'Failed to apply preset'], 500);
         }
     }

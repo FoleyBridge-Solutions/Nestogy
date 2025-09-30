@@ -3,20 +3,21 @@
 namespace App\Domains\Core\Services\Notification\Channels;
 
 use App\Domains\Core\Services\Notification\Contracts\NotificationChannelInterface;
-use App\Models\User;
 use App\Models\Contact;
-use Illuminate\Support\Facades\Log;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * SMS Notification Channel
- * 
+ *
  * Handles SMS delivery for ticket notifications using configurable SMS providers.
  * Supports multiple SMS providers (Twilio, AWS SNS, etc.) through driver pattern.
  */
 class SmsChannel implements NotificationChannelInterface
 {
     protected array $config;
+
     protected string $driver;
 
     public function __construct(array $config = [])
@@ -40,11 +41,12 @@ class SmsChannel implements NotificationChannelInterface
             'sent' => 0,
             'failed' => 0,
             'errors' => [],
-            'channel' => 'sms'
+            'channel' => 'sms',
         ];
 
-        if (!$this->isAvailable()) {
+        if (! $this->isAvailable()) {
             $results['errors'][] = 'SMS channel is not properly configured';
+
             return $results;
         }
 
@@ -61,13 +63,13 @@ class SmsChannel implements NotificationChannelInterface
                         'channel' => 'sms',
                         'recipient' => $this->maskPhoneNumber($recipient['phone']),
                         'message_length' => strlen($smsMessage),
-                        'ticket_id' => $data['ticket']->id ?? null
+                        'ticket_id' => $data['ticket']->id ?? null,
                     ]);
                 } else {
                     $results['failed']++;
                     $results['errors'][] = [
                         'recipient' => $this->maskPhoneNumber($recipient['phone']),
-                        'error' => 'SMS delivery failed'
+                        'error' => 'SMS delivery failed',
                     ];
                 }
 
@@ -75,14 +77,14 @@ class SmsChannel implements NotificationChannelInterface
                 $results['failed']++;
                 $results['errors'][] = [
                     'recipient' => $this->maskPhoneNumber($recipient['phone'] ?? 'unknown'),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
 
                 Log::error('SMS notification failed', [
                     'channel' => 'sms',
                     'recipient' => $this->maskPhoneNumber($recipient['phone'] ?? 'unknown'),
                     'error' => $e->getMessage(),
-                    'ticket_id' => $data['ticket']->id ?? null
+                    'ticket_id' => $data['ticket']->id ?? null,
                 ]);
             }
         }
@@ -97,17 +99,17 @@ class SmsChannel implements NotificationChannelInterface
     {
         switch ($this->driver) {
             case 'twilio':
-                return !empty(config('services.twilio.sid')) && 
-                       !empty(config('services.twilio.token'));
-            
+                return ! empty(config('services.twilio.sid')) &&
+                       ! empty(config('services.twilio.token'));
+
             case 'aws_sns':
-                return !empty(config('services.aws.key')) && 
-                       !empty(config('services.aws.secret'));
-            
+                return ! empty(config('services.aws.key')) &&
+                       ! empty(config('services.aws.secret'));
+
             case 'nexmo':
-                return !empty(config('services.nexmo.key')) && 
-                       !empty(config('services.nexmo.secret'));
-            
+                return ! empty(config('services.nexmo.key')) &&
+                       ! empty(config('services.nexmo.secret'));
+
             default:
                 return false;
         }
@@ -130,7 +132,7 @@ class SmsChannel implements NotificationChannelInterface
 
         foreach ($recipients as $recipient) {
             $phoneData = $this->extractPhoneData($recipient);
-            
+
             if ($phoneData && $this->isValidPhoneNumber($phoneData['phone'])) {
                 $validRecipients[] = $phoneData;
             }
@@ -147,7 +149,7 @@ class SmsChannel implements NotificationChannelInterface
         return [
             'driver' => 'SMS service provider (twilio, aws_sns, nexmo)',
             'api_credentials' => 'Provider-specific API credentials',
-            'sender_number' => 'SMS sender phone number'
+            'sender_number' => 'SMS sender phone number',
         ];
     }
 
@@ -158,17 +160,17 @@ class SmsChannel implements NotificationChannelInterface
     {
         // SMS messages need to be concise
         $formattedMessage = strip_tags($message);
-        
+
         // Add basic ticket info if available
         if (isset($data['ticket'])) {
             $ticket = $data['ticket'];
             $ticketInfo = " [Ticket #{$ticket->ticket_number}]";
-            $formattedMessage = $formattedMessage . $ticketInfo;
+            $formattedMessage = $formattedMessage.$ticketInfo;
         }
 
         // Truncate if too long
         if ($this->config['truncate'] && strlen($formattedMessage) > $this->config['max_length']) {
-            $formattedMessage = substr($formattedMessage, 0, $this->config['max_length'] - 3) . '...';
+            $formattedMessage = substr($formattedMessage, 0, $this->config['max_length'] - 3).'...';
         }
 
         return $formattedMessage;
@@ -182,13 +184,13 @@ class SmsChannel implements NotificationChannelInterface
         switch ($this->driver) {
             case 'twilio':
                 return $this->sendViaTwilio($phoneNumber, $message);
-            
+
             case 'aws_sns':
                 return $this->sendViaAwsSns($phoneNumber, $message);
-            
+
             case 'nexmo':
                 return $this->sendViaNexmo($phoneNumber, $message);
-            
+
             default:
                 throw new \Exception("Unsupported SMS driver: {$this->driver}");
         }
@@ -202,16 +204,17 @@ class SmsChannel implements NotificationChannelInterface
         try {
             $response = Http::asForm()
                 ->withBasicAuth(config('services.twilio.sid'), config('services.twilio.token'))
-                ->post("https://api.twilio.com/2010-04-01/Accounts/" . config('services.twilio.sid') . "/Messages.json", [
+                ->post('https://api.twilio.com/2010-04-01/Accounts/'.config('services.twilio.sid').'/Messages.json', [
                     'From' => config('services.twilio.from'),
                     'To' => $phoneNumber,
-                    'Body' => $message
+                    'Body' => $message,
                 ]);
 
             return $response->successful();
 
         } catch (\Exception $e) {
             Log::error('Twilio SMS failed', ['error' => $e->getMessage()]);
+
             return false;
         }
     }
@@ -225,9 +228,9 @@ class SmsChannel implements NotificationChannelInterface
         // This would require AWS SDK integration
         Log::info('AWS SNS SMS sending not yet implemented', [
             'phone' => $this->maskPhoneNumber($phoneNumber),
-            'message_length' => strlen($message)
+            'message_length' => strlen($message),
         ]);
-        
+
         return false;
     }
 
@@ -239,9 +242,9 @@ class SmsChannel implements NotificationChannelInterface
         // TODO: Implement Nexmo SMS sending
         Log::info('Nexmo SMS sending not yet implemented', [
             'phone' => $this->maskPhoneNumber($phoneNumber),
-            'message_length' => strlen($message)
+            'message_length' => strlen($message),
         ]);
-        
+
         return false;
     }
 
@@ -260,30 +263,30 @@ class SmsChannel implements NotificationChannelInterface
             return [
                 'phone' => $recipient['phone'],
                 'name' => $recipient['name'] ?? null,
-                'type' => $recipient['type'] ?? 'array'
+                'type' => $recipient['type'] ?? 'array',
             ];
         }
 
         if ($recipient instanceof User) {
             // User model - check for phone number
-            if (!empty($recipient->phone)) {
+            if (! empty($recipient->phone)) {
                 return [
                     'phone' => $recipient->phone,
                     'name' => $recipient->name,
                     'type' => 'user',
-                    'user_id' => $recipient->id
+                    'user_id' => $recipient->id,
                 ];
             }
         }
 
         if ($recipient instanceof Contact) {
             // Contact model - check for phone number
-            if (!empty($recipient->phone)) {
+            if (! empty($recipient->phone)) {
                 return [
                     'phone' => $recipient->phone,
                     'name' => $recipient->name,
                     'type' => 'contact',
-                    'contact_id' => $recipient->id
+                    'contact_id' => $recipient->id,
                 ];
             }
         }
@@ -298,6 +301,7 @@ class SmsChannel implements NotificationChannelInterface
     {
         // Basic phone validation - should be enhanced based on requirements
         $cleaned = preg_replace('/[^\d+]/', '', $phone);
+
         return strlen($cleaned) >= 10 && strlen($cleaned) <= 15;
     }
 
@@ -309,8 +313,8 @@ class SmsChannel implements NotificationChannelInterface
         if (strlen($phone) < 4) {
             return '***';
         }
-        
-        return substr($phone, 0, 3) . str_repeat('*', strlen($phone) - 6) . substr($phone, -3);
+
+        return substr($phone, 0, 3).str_repeat('*', strlen($phone) - 6).substr($phone, -3);
     }
 
     /**
@@ -320,6 +324,7 @@ class SmsChannel implements NotificationChannelInterface
     {
         $this->driver = $driver;
         $this->config['driver'] = $driver;
+
         return $this;
     }
 
@@ -337,6 +342,7 @@ class SmsChannel implements NotificationChannelInterface
     public function setConfig(array $config): self
     {
         $this->config = array_merge($this->config, $config);
+
         return $this;
     }
 }

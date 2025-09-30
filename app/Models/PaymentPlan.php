@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\BelongsToCompany;
-use Carbon\Carbon;
 
 /**
  * Payment Plan Model
- * 
+ *
  * Represents flexible payment arrangement management with comprehensive
  * tracking of terms, performance, and compliance.
- * 
+ *
  * @property int $id
  * @property string $plan_number
  * @property int $client_id
@@ -96,7 +96,7 @@ use Carbon\Carbon;
  */
 class PaymentPlan extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'payment_plans';
 
@@ -122,7 +122,7 @@ class PaymentPlan extends Model
         'success_probability', 'risk_factors', 'expected_recovery_amount',
         'estimated_completion_days', 'approval_status', 'approved_by', 'approved_at',
         'approval_notes', 'rejected_by', 'rejected_at', 'rejection_reason',
-        'created_by', 'updated_by'
+        'created_by', 'updated_by',
     ];
 
     protected $casts = [
@@ -193,43 +193,64 @@ class PaymentPlan extends Model
         'updated_by' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Status constants
     const STATUS_DRAFT = 'draft';
+
     const STATUS_PENDING_APPROVAL = 'pending_approval';
+
     const STATUS_ACTIVE = 'active';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_DEFAULTED = 'defaulted';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_RENEGOTIATED = 'renegotiated';
+
     const STATUS_SETTLED = 'settled';
 
     // Plan type constants
     const TYPE_STANDARD = 'standard';
+
     const TYPE_HARDSHIP = 'hardship';
+
     const TYPE_SETTLEMENT = 'settlement';
+
     const TYPE_CUSTOM = 'custom';
 
     // Payment frequency constants
     const FREQUENCY_WEEKLY = 'weekly';
+
     const FREQUENCY_BIWEEKLY = 'biweekly';
+
     const FREQUENCY_MONTHLY = 'monthly';
+
     const FREQUENCY_QUARTERLY = 'quarterly';
 
     // Payment method constants
     const METHOD_AUTO_ACH = 'auto_ach';
+
     const METHOD_AUTO_CREDIT_CARD = 'auto_credit_card';
+
     const METHOD_MANUAL_PAYMENT = 'manual_payment';
+
     const METHOD_CHECK = 'check';
+
     const METHOD_WIRE_TRANSFER = 'wire_transfer';
 
     // Approval status constants
     const APPROVAL_NOT_REQUIRED = 'not_required';
+
     const APPROVAL_PENDING = 'pending';
+
     const APPROVAL_APPROVED = 'approved';
+
     const APPROVAL_REJECTED = 'rejected';
+
     const APPROVAL_EXPIRED = 'expired';
 
     /**
@@ -327,7 +348,7 @@ class PaymentPlan extends Model
     public function getNextPaymentDate(): Carbon
     {
         $lastPayment = $this->last_payment_date ?: $this->first_payment_date;
-        
+
         switch ($this->payment_frequency) {
             case self::FREQUENCY_WEEKLY:
                 return $lastPayment->copy()->addWeek();
@@ -348,8 +369,8 @@ class PaymentPlan extends Model
     {
         $nextPayment = $this->getNextPaymentDate();
         $gracePeriod = Carbon::parse($nextPayment)->addDays($this->grace_period_days);
-        
-        return Carbon::now()->gt($gracePeriod) && !$this->isCompleted();
+
+        return Carbon::now()->gt($gracePeriod) && ! $this->isCompleted();
     }
 
     /**
@@ -357,12 +378,12 @@ class PaymentPlan extends Model
      */
     public function calculateLateFees(): float
     {
-        if (!$this->isPaymentOverdue() || $this->late_fee <= 0) {
+        if (! $this->isPaymentOverdue() || $this->late_fee <= 0) {
             return 0;
         }
 
         $daysLate = Carbon::now()->diffInDays($this->getNextPaymentDate()) - $this->grace_period_days;
-        
+
         if ($daysLate <= 0) {
             return 0;
         }
@@ -374,10 +395,10 @@ class PaymentPlan extends Model
     /**
      * Record a payment made against this plan.
      */
-    public function recordPayment(float $amount, Carbon $paymentDate = null, array $metadata = []): void
+    public function recordPayment(float $amount, ?Carbon $paymentDate = null, array $metadata = []): void
     {
         $paymentDate = $paymentDate ?: Carbon::now();
-        
+
         $this->update([
             'payments_made' => $this->payments_made + 1,
             'total_paid' => $this->total_paid + $amount,
@@ -405,15 +426,15 @@ class PaymentPlan extends Model
             'payment_plan_id' => $this->id,
             'note_type' => 'payment_arrangement',
             'subject' => 'Payment Plan Payment Received',
-            'content' => "Payment of $" . number_format($amount, 2) . " received for payment plan {$this->plan_number}",
-            'created_by' => 1
+            'content' => 'Payment of $'.number_format($amount, 2)." received for payment plan {$this->plan_number}",
+            'created_by' => 1,
         ]);
     }
 
     /**
      * Record a missed payment.
      */
-    public function recordMissedPayment(string $reason = null): void
+    public function recordMissedPayment(?string $reason = null): void
     {
         $this->update([
             'payments_missed' => $this->payments_missed + 1,
@@ -421,7 +442,7 @@ class PaymentPlan extends Model
         ]);
 
         // Check if this triggers default
-        if ($this->consecutive_missed >= 2 && !$this->in_default) {
+        if ($this->consecutive_missed >= 2 && ! $this->in_default) {
             $this->markAsDefault('Consecutive missed payments');
         }
 
@@ -433,10 +454,10 @@ class PaymentPlan extends Model
             'payment_plan_id' => $this->id,
             'note_type' => 'payment_arrangement',
             'subject' => 'Payment Plan Payment Missed',
-            'content' => "Payment missed for payment plan {$this->plan_number}. Reason: " . ($reason ?: 'Not specified'),
+            'content' => "Payment missed for payment plan {$this->plan_number}. Reason: ".($reason ?: 'Not specified'),
             'requires_followup' => true,
             'followup_date' => Carbon::now()->addDays(3),
-            'created_by' => 1
+            'created_by' => 1,
         ]);
     }
 
@@ -469,7 +490,7 @@ class PaymentPlan extends Model
             'requires_followup' => true,
             'followup_date' => Carbon::now()->addDay(),
             'escalation_risk' => true,
-            'created_by' => 1
+            'created_by' => 1,
         ]);
     }
 
@@ -478,7 +499,7 @@ class PaymentPlan extends Model
      */
     public function cureDefault(): void
     {
-        if (!$this->in_default) {
+        if (! $this->in_default) {
             return;
         }
 
@@ -498,7 +519,7 @@ class PaymentPlan extends Model
             'note_type' => 'payment_arrangement',
             'subject' => 'Payment Plan Default Cured',
             'content' => "Payment plan {$this->plan_number} default has been cured",
-            'created_by' => 1
+            'created_by' => 1,
         ]);
     }
 
@@ -516,13 +537,13 @@ class PaymentPlan extends Model
     public function calculateSuccessProbability(): float
     {
         $totalPayments = $this->payments_made + $this->payments_missed;
-        
+
         if ($totalPayments === 0) {
             return 50.0; // No history, neutral probability
         }
 
         $paymentRate = ($this->payments_made / $totalPayments) * 100;
-        
+
         // Adjust for consecutive missed payments
         if ($this->consecutive_missed >= 2) {
             $paymentRate -= 20;
@@ -581,14 +602,14 @@ class PaymentPlan extends Model
             'note_type' => 'payment_arrangement',
             'subject' => 'Payment Plan Modified',
             'content' => "Payment plan {$this->plan_number} has been modified. Reason: {$reason}",
-            'created_by' => $modifiedBy
+            'created_by' => $modifiedBy,
         ]);
     }
 
     /**
      * Approve payment plan.
      */
-    public function approve(int $approvedBy, string $notes = null): void
+    public function approve(int $approvedBy, ?string $notes = null): void
     {
         $this->update([
             'approval_status' => self::APPROVAL_APPROVED,
@@ -654,8 +675,8 @@ class PaymentPlan extends Model
         $prefix = 'PP';
         $year = now()->format('y');
         $sequence = self::whereYear('created_at', now()->year)->count() + 1;
-        
-        return "{$prefix}-{$year}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+        return "{$prefix}-{$year}-".str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -666,10 +687,10 @@ class PaymentPlan extends Model
         parent::boot();
 
         static::creating(function ($plan) {
-            if (!$plan->plan_number) {
+            if (! $plan->plan_number) {
                 $plan->plan_number = self::generatePlanNumber();
             }
-            if (!$plan->created_by) {
+            if (! $plan->created_by) {
                 $plan->created_by = auth()->id() ?? 1;
             }
         });

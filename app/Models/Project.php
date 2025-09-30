@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
-use App\Traits\BelongsToCompany;
 
 /**
  * Project Model
- * 
+ *
  * Represents client projects with tasks, deadlines, and progress tracking.
  * Projects can have associated tickets and be managed by users.
- * 
+ *
  * @property int $id
  * @property string|null $prefix
  * @property int $number
@@ -31,7 +31,7 @@ use App\Traits\BelongsToCompany;
  */
 class Project extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -75,8 +75,11 @@ class Project extends Model
      * Project status enumeration
      */
     const STATUS_ACTIVE = 'Active';
+
     const STATUS_COMPLETED = 'Completed';
+
     const STATUS_ON_HOLD = 'On Hold';
+
     const STATUS_CANCELLED = 'Cancelled';
 
     /**
@@ -109,10 +112,10 @@ class Project extends Model
     public function getFullNumber(): string
     {
         if ($this->prefix) {
-            return $this->prefix . '-' . str_pad($this->number, 4, '0', STR_PAD_LEFT);
+            return $this->prefix.'-'.str_pad($this->number, 4, '0', STR_PAD_LEFT);
         }
 
-        return 'PRJ-' . str_pad($this->number, 4, '0', STR_PAD_LEFT);
+        return 'PRJ-'.str_pad($this->number, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -144,7 +147,7 @@ class Project extends Model
      */
     public function isCompleted(): bool
     {
-        return !is_null($this->completed_at);
+        return ! is_null($this->completed_at);
     }
 
     /**
@@ -152,7 +155,7 @@ class Project extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -160,7 +163,7 @@ class Project extends Model
      */
     public function isActive(): bool
     {
-        return !$this->isCompleted() && !$this->isArchived();
+        return ! $this->isCompleted() && ! $this->isArchived();
     }
 
     /**
@@ -168,7 +171,7 @@ class Project extends Model
      */
     public function isOverdue(): bool
     {
-        if (!$this->due || $this->isCompleted()) {
+        if (! $this->due || $this->isCompleted()) {
             return false;
         }
 
@@ -180,11 +183,11 @@ class Project extends Model
      */
     public function isDueSoon(int $days = 7): bool
     {
-        if (!$this->due || $this->isCompleted()) {
+        if (! $this->due || $this->isCompleted()) {
             return false;
         }
 
-        return Carbon::now()->diffInDays($this->due, false) <= $days && 
+        return Carbon::now()->diffInDays($this->due, false) <= $days &&
                Carbon::now()->lte($this->due);
     }
 
@@ -193,7 +196,7 @@ class Project extends Model
      */
     public function getDaysUntilDue(): ?int
     {
-        if (!$this->due) {
+        if (! $this->due) {
             return null;
         }
 
@@ -206,6 +209,7 @@ class Project extends Model
     public function getDurationInDays(): int
     {
         $endDate = $this->completed_at ?: Carbon::now();
+
         return $this->created_at->diffInDays($endDate);
     }
 
@@ -215,7 +219,7 @@ class Project extends Model
     public function getProgressPercentage(): float
     {
         $totalTickets = $this->tickets()->count();
-        
+
         if ($totalTickets === 0) {
             return $this->isCompleted() ? 100 : 0;
         }
@@ -332,8 +336,8 @@ class Project extends Model
     public function scopeOverdue($query)
     {
         return $query->whereNull('completed_at')
-                    ->whereNotNull('due')
-                    ->where('due', '<', Carbon::now());
+            ->whereNotNull('due')
+            ->where('due', '<', Carbon::now());
     }
 
     /**
@@ -342,9 +346,9 @@ class Project extends Model
     public function scopeDueSoon($query, int $days = 7)
     {
         return $query->whereNull('completed_at')
-                    ->whereNotNull('due')
-                    ->where('due', '>=', Carbon::now())
-                    ->where('due', '<=', Carbon::now()->addDays($days));
+            ->whereNotNull('due')
+            ->where('due', '>=', Carbon::now())
+            ->where('due', '<=', Carbon::now()->addDays($days));
     }
 
     /**
@@ -353,10 +357,10 @@ class Project extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('description', 'like', '%' . $search . '%')
-              ->orWhere('prefix', 'like', '%' . $search . '%')
-              ->orWhere('number', $search);
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('description', 'like', '%'.$search.'%')
+                ->orWhere('prefix', 'like', '%'.$search.'%')
+                ->orWhere('number', $search);
         });
     }
 
@@ -422,7 +426,7 @@ class Project extends Model
 
         // Auto-increment project number for new projects
         static::creating(function ($project) {
-            if (!$project->number) {
+            if (! $project->number) {
                 $lastProject = static::where('client_id', $project->client_id)
                     ->where('prefix', $project->prefix)
                     ->orderBy('number', 'desc')

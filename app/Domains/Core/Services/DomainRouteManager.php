@@ -4,12 +4,13 @@ namespace App\Domains\Core\Services;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 
 class DomainRouteManager
 {
     protected array $domainConfig = [];
+
     protected array $registeredDomains = [];
+
     protected string $configPath;
 
     public function __construct()
@@ -29,7 +30,7 @@ class DomainRouteManager
             // Use Laravel's config system as fallback
             $this->domainConfig = config('domains', []);
         }
-        
+
         // If still empty, auto-discover
         if (empty($this->domainConfig)) {
             $this->domainConfig = $this->discoverDomains();
@@ -44,7 +45,7 @@ class DomainRouteManager
         $domainsPath = app_path('Domains');
         $discovered = [];
 
-        if (!File::exists($domainsPath)) {
+        if (! File::exists($domainsPath)) {
             return $discovered;
         }
 
@@ -77,12 +78,12 @@ class DomainRouteManager
     public function registerDomainRoutes(): void
     {
         $domains = $this->getDomainConfig();
-        
+
         // Sort by priority (lower number = higher priority)
-        uasort($domains, fn($a, $b) => ($a['priority'] ?? 100) <=> ($b['priority'] ?? 100));
+        uasort($domains, fn ($a, $b) => ($a['priority'] ?? 100) <=> ($b['priority'] ?? 100));
 
         foreach ($domains as $domainName => $config) {
-            if (!($config['enabled'] ?? true)) {
+            if (! ($config['enabled'] ?? true)) {
                 continue;
             }
 
@@ -97,22 +98,23 @@ class DomainRouteManager
     {
         $routeFile = $config['route_file'] ?? app_path("Domains/{$domainName}/routes.php");
 
-        if (!File::exists($routeFile) || filesize($routeFile) <= 10) {
+        if (! File::exists($routeFile) || filesize($routeFile) <= 10) {
             if (app()->environment('local')) {
                 logger()->info("Skipping domain '{$domainName}': route file missing or empty", [
                     'file' => $routeFile,
                     'exists' => File::exists($routeFile),
-                    'size' => File::exists($routeFile) ? filesize($routeFile) : 0
+                    'size' => File::exists($routeFile) ? filesize($routeFile) : 0,
                 ]);
             }
+
             return;
         }
 
         // Only apply middleware/prefix/name if they are explicitly set in config
         // This prevents double application when routes define their own
         $applyGrouping = ($config['apply_grouping'] ?? true);
-        
-        if ($applyGrouping && (!empty($config['middleware']) || !empty($config['prefix']) || !empty($config['name']))) {
+
+        if ($applyGrouping && (! empty($config['middleware']) || ! empty($config['prefix']) || ! empty($config['name']))) {
             $middleware = $config['middleware'] ?? [];
             $prefix = $config['prefix'] ?? null;
             $name = $config['name'] ?? null;
@@ -137,9 +139,9 @@ class DomainRouteManager
                         previous: $e
                     );
                 }
-                
+
                 // Log error but continue in production
-                logger()->error("Domain route registration failed", [
+                logger()->error('Domain route registration failed', [
                     'domain' => $domainName,
                     'file' => $routeFile,
                     'error' => $e->getMessage(),
@@ -157,9 +159,9 @@ class DomainRouteManager
                         previous: $e
                     );
                 }
-                
+
                 // Log error but continue in production
-                logger()->error("Domain route registration failed", [
+                logger()->error('Domain route registration failed', [
                     'domain' => $domainName,
                     'file' => $routeFile,
                     'error' => $e->getMessage(),
@@ -185,23 +187,23 @@ class DomainRouteManager
         $registered = [];
         $routes = Route::getRoutes();
         $domains = $this->getDomainConfig();
-        
+
         foreach ($domains as $domain => $config) {
             $prefix = $config['prefix'] ?? '';
             $hasRoutes = false;
-            
+
             // Check if any routes match this domain's configuration
             foreach ($routes as $route) {
                 $uri = $route->uri();
-                
+
                 // Check if route matches domain's prefix
-                if ($prefix && str_starts_with($uri, $prefix . '/')) {
+                if ($prefix && str_starts_with($uri, $prefix.'/')) {
                     $hasRoutes = true;
                     break;
                 }
-                
+
                 // For domains without prefix, check common patterns
-                if (!$prefix) {
+                if (! $prefix) {
                     $domainLower = strtolower($domain);
                     if (str_contains($uri, $domainLower)) {
                         $hasRoutes = true;
@@ -209,12 +211,12 @@ class DomainRouteManager
                     }
                 }
             }
-            
+
             if ($hasRoutes) {
                 $registered[$domain] = $config;
             }
         }
-        
+
         return $registered;
     }
 
@@ -223,18 +225,18 @@ class DomainRouteManager
      */
     public function generateConfig(bool $overwrite = false): bool
     {
-        if (File::exists($this->configPath) && !$overwrite) {
+        if (File::exists($this->configPath) && ! $overwrite) {
             return false;
         }
 
         $discovered = $this->discoverDomains();
         $config = $this->buildConfigArray($discovered);
-        
+
         // Ensure config directory exists
         File::ensureDirectoryExists(dirname($this->configPath));
-        
-        $content = "<?php\n\n// Auto-generated domain configuration\n// Generated at: " . now()->toDateTimeString() . "\n\nreturn " . var_export($config, true) . ";\n";
-        
+
+        $content = "<?php\n\n// Auto-generated domain configuration\n// Generated at: ".now()->toDateTimeString()."\n\nreturn ".var_export($config, true).";\n";
+
         return File::put($this->configPath, $content) !== false;
     }
 
@@ -244,7 +246,7 @@ class DomainRouteManager
     protected function buildConfigArray(array $discovered): array
     {
         $config = [];
-        
+
         foreach ($discovered as $domain => $settings) {
             $config[$domain] = [
                 'enabled' => true,
@@ -340,9 +342,10 @@ class DomainRouteManager
 
         foreach ($config as $domain => $settings) {
             $routeFile = $settings['route_file'] ?? app_path("Domains/{$domain}/routes.php");
-            
-            if (!File::exists($routeFile)) {
+
+            if (! File::exists($routeFile)) {
                 $issues[] = "Route file missing for domain '{$domain}': {$routeFile}";
+
                 continue;
             }
 
@@ -352,7 +355,7 @@ class DomainRouteManager
 
             // Check for conflicting prefixes
             foreach ($config as $otherDomain => $otherSettings) {
-                if ($domain !== $otherDomain && 
+                if ($domain !== $otherDomain &&
                     isset($settings['prefix'], $otherSettings['prefix']) &&
                     $settings['prefix'] === $otherSettings['prefix']) {
                     $issues[] = "Duplicate prefix '{$settings['prefix']}' found in domains '{$domain}' and '{$otherDomain}'";

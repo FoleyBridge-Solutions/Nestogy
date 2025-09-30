@@ -3,7 +3,6 @@
 namespace App\Domains\Client\Services;
 
 use App\Domains\Client\Models\ClientITDocumentation;
-use Illuminate\Support\Collection;
 
 class ComplianceEngineService
 {
@@ -27,7 +26,7 @@ class ComplianceEngineService
                             'privacy_policy' => 'Comprehensive privacy policy with clear data processing information',
                             'data_minimization' => 'Process only necessary data for specified purposes',
                             'purpose_limitation' => 'Use data only for stated purposes',
-                        ]
+                        ],
                     ],
                     'data_subject_rights' => [
                         'name' => 'Data Subject Rights',
@@ -38,7 +37,7 @@ class ComplianceEngineService
                             'rectification' => 'Process correction requests promptly',
                             'objection_handling' => 'Handle objections to processing',
                             'automated_decisions' => 'Rights regarding automated decision-making',
-                        ]
+                        ],
                     ],
                     'security_measures' => [
                         'name' => 'Technical & Organizational Measures',
@@ -49,7 +48,7 @@ class ComplianceEngineService
                             'data_integrity' => 'Ensure ongoing confidentiality, integrity, availability',
                             'security_testing' => 'Regular testing of security measures',
                             'employee_training' => 'Data protection training for all staff',
-                        ]
+                        ],
                     ],
                     'breach_management' => [
                         'name' => 'Data Breach Management',
@@ -59,7 +58,7 @@ class ComplianceEngineService
                             'breach_documentation' => 'Document all breaches, even if not notified',
                             'impact_assessment' => 'Assess risk to individuals\' rights and freedoms',
                             'individual_notification' => 'Notify affected individuals without undue delay',
-                        ]
+                        ],
                     ],
                     'accountability' => [
                         'name' => 'Accountability & Governance',
@@ -70,11 +69,11 @@ class ComplianceEngineService
                             'international_transfers' => 'Appropriate safeguards for international transfers',
                             'privacy_by_design' => 'Privacy by design and by default',
                             'compliance_monitoring' => 'Regular compliance reviews and audits',
-                        ]
-                    ]
-                ]
+                        ],
+                    ],
+                ],
             ],
-            
+
             'hipaa' => [
                 'name' => 'HIPAA (Health Insurance Portability and Accountability Act)',
                 'description' => 'US healthcare data protection standards',
@@ -91,7 +90,7 @@ class ComplianceEngineService
                             'risk_management' => 'Implement risk management process',
                             'sanction_policy' => 'Workforce sanction policy for violations',
                             'information_system_review' => 'Regular information system activity review',
-                        ]
+                        ],
                     ],
                     'physical_safeguards' => [
                         'name' => 'Physical Safeguards',
@@ -103,7 +102,7 @@ class ComplianceEngineService
                             'disposal_procedures' => 'Hardware and media disposal procedures',
                             'media_reuse' => 'Media re-use procedures',
                             'data_backup' => 'Data backup and storage procedures',
-                        ]
+                        ],
                     ],
                     'technical_safeguards' => [
                         'name' => 'Technical Safeguards',
@@ -115,7 +114,7 @@ class ComplianceEngineService
                             'integrity_controls' => 'Electronic PHI integrity controls',
                             'transmission_security' => 'PHI transmission security',
                             'access_controls' => 'Technical access control implementation',
-                        ]
+                        ],
                     ],
                     'organizational_requirements' => [
                         'name' => 'Organizational Requirements',
@@ -126,7 +125,7 @@ class ComplianceEngineService
                             'incident_response' => 'Security incident response procedures',
                             'contingency_plan' => 'Data backup and disaster recovery plan',
                             'evaluation' => 'Periodic technical and non-technical evaluation',
-                        ]
+                        ],
                     ],
                     'breach_notification' => [
                         'name' => 'Breach Notification Rule',
@@ -137,11 +136,11 @@ class ComplianceEngineService
                             'hhs_notification' => 'HHS notification requirements',
                             'breach_log' => 'Breach documentation and logging',
                             'annual_summary' => 'Annual breach summary to HHS',
-                        ]
-                    ]
-                ]
+                        ],
+                    ],
+                ],
             ],
-            
+
             'soc2' => [
                 'name' => 'SOC 2 Type II',
                 'description' => 'Service Organization Control 2 - Trust Service Criteria',
@@ -159,7 +158,7 @@ class ComplianceEngineService
                             'cc7_system_operations' => 'System operations',
                             'cc8_change_management' => 'Change management',
                             'cc9_risk_mitigation' => 'Risk mitigation activities',
-                        ]
+                        ],
                     ],
                     'availability' => [
                         'name' => 'Availability (A - Additional Criteria)',
@@ -169,7 +168,7 @@ class ComplianceEngineService
                             'a1_recovery_capabilities' => 'Recovery capabilities and procedures',
                             'a1_incident_handling' => 'Incident handling and resolution',
                             'a1_performance_monitoring' => 'System performance monitoring',
-                        ]
+                        ],
                     ],
                     'processing_integrity' => [
                         'name' => 'Processing Integrity (PI)',
@@ -179,7 +178,7 @@ class ComplianceEngineService
                             'pi1_data_processing' => 'Data processing accuracy',
                             'pi1_output_completeness' => 'Output completeness and accuracy',
                             'pi1_error_handling' => 'Processing error identification and correction',
-                        ]
+                        ],
                     ],
                     'confidentiality' => [
                         'name' => 'Confidentiality (C)',
@@ -189,7 +188,7 @@ class ComplianceEngineService
                             'c1_data_access' => 'Confidential data access restrictions',
                             'c1_data_disclosure' => 'Data disclosure and dissemination controls',
                             'c1_data_destruction' => 'Secure data destruction procedures',
-                        ]
+                        ],
                     ],
                     'privacy' => [
                         'name' => 'Privacy (P)',
@@ -202,11 +201,11 @@ class ComplianceEngineService
                             'p6_disclosure' => 'Disclosure to third parties',
                             'p7_quality' => 'Personal information quality and accuracy',
                             'p8_monitoring' => 'Privacy monitoring and compliance',
-                        ]
-                    ]
-                ]
+                        ],
+                    ],
+                ],
             ],
-            
+
             'pci_dss' => [
                 'name' => 'PCI DSS 4.0',
                 'description' => 'Payment Card Industry Data Security Standard',
@@ -222,7 +221,7 @@ class ComplianceEngineService
                             'req2_secure_config' => 'Apply secure configurations to all system components',
                             'req2_1_inventory' => 'Maintain inventory of system components',
                             'req2_2_vendor_defaults' => 'Change all vendor default passwords',
-                        ]
+                        ],
                     ],
                     'data_protection' => [
                         'name' => 'Protect Cardholder Data',
@@ -234,7 +233,7 @@ class ComplianceEngineService
                             'req3_5_encryption' => 'Secure cryptographic key storage',
                             'req4_transmission' => 'Encrypt transmission over public networks',
                             'req4_1_strong_crypto' => 'Use strong cryptography and TLS',
-                        ]
+                        ],
                     ],
                     'vulnerability_management' => [
                         'name' => 'Vulnerability Management Program',
@@ -245,7 +244,7 @@ class ComplianceEngineService
                             'req6_1_security_patches' => 'Install critical patches within one month',
                             'req6_2_custom_code' => 'Protect custom code from vulnerabilities',
                             'req6_4_change_control' => 'Follow change control procedures',
-                        ]
+                        ],
                     ],
                     'access_control' => [
                         'name' => 'Strong Access Control Measures',
@@ -257,7 +256,7 @@ class ComplianceEngineService
                             'req8_3_mfa' => 'Multi-factor authentication for all access',
                             'req8_4_strong_auth' => 'Strong authentication requirements',
                             'req9_physical_access' => 'Restrict physical access to CHD',
-                        ]
+                        ],
                     ],
                     'monitoring_testing' => [
                         'name' => 'Regular Monitoring and Testing',
@@ -269,7 +268,7 @@ class ComplianceEngineService
                             'req11_3_penetration_testing' => 'Annual penetration testing',
                             'req11_4_intrusion_detection' => 'Use intrusion detection/prevention',
                             'req11_5_change_detection' => 'Deploy change-detection mechanisms',
-                        ]
+                        ],
                     ],
                     'security_policies' => [
                         'name' => 'Information Security Policy',
@@ -282,11 +281,11 @@ class ComplianceEngineService
                             'req12_6_security_awareness' => 'Security awareness program',
                             'req12_8_incident_response' => 'Incident response plan',
                             'req12_10_annual_risk' => 'Annual risk assessment process',
-                        ]
-                    ]
-                ]
+                        ],
+                    ],
+                ],
             ],
-            
+
             'iso27001' => [
                 'name' => 'ISO/IEC 27001:2022',
                 'description' => 'Information Security Management System',
@@ -309,7 +308,7 @@ class ComplianceEngineService
                             '5.15_access_control' => 'Access control',
                             '5.23_cloud_security' => 'Information security for cloud services',
                             '5.30_ict_readiness' => 'ICT readiness for business continuity',
-                        ]
+                        ],
                     ],
                     'people_controls' => [
                         'name' => 'People Controls (8 controls)',
@@ -322,7 +321,7 @@ class ComplianceEngineService
                             '6.6_nda' => 'Confidentiality or non-disclosure agreements',
                             '6.7_remote_working' => 'Remote working',
                             '6.8_reporting' => 'Information security event reporting',
-                        ]
+                        ],
                     ],
                     'physical_controls' => [
                         'name' => 'Physical Controls (14 controls)',
@@ -341,7 +340,7 @@ class ComplianceEngineService
                             '7.12_cabling' => 'Cabling security',
                             '7.13_maintenance' => 'Equipment maintenance',
                             '7.14_disposal' => 'Secure disposal or reuse of equipment',
-                        ]
+                        ],
                     ],
                     'technological_controls' => [
                         'name' => 'Technological Controls (34 controls)',
@@ -363,11 +362,11 @@ class ComplianceEngineService
                             '8.24_cryptography' => 'Use of cryptography',
                             '8.25_secure_development' => 'Secure development life cycle',
                             '8.28_secure_coding' => 'Secure coding',
-                        ]
-                    ]
-                ]
+                        ],
+                    ],
+                ],
             ],
-            
+
             'nist_csf' => [
                 'name' => 'NIST Cybersecurity Framework 2.0',
                 'description' => 'Framework for improving critical infrastructure cybersecurity',
@@ -382,7 +381,7 @@ class ComplianceEngineService
                             'gv_po' => 'Policy - Organizational cybersecurity policy established',
                             'gv_ov' => 'Oversight - Cybersecurity risk management oversight',
                             'gv_sc' => 'Cybersecurity Supply Chain Risk Management',
-                        ]
+                        ],
                     ],
                     'identify' => [
                         'name' => 'Identify (ID)',
@@ -393,7 +392,7 @@ class ComplianceEngineService
                             'id_ra' => 'Risk Assessment - Identify and document risks',
                             'id_rm' => 'Risk Management Strategy - Priorities and constraints',
                             'id_sc' => 'Supply Chain Risk Management',
-                        ]
+                        ],
                     ],
                     'protect' => [
                         'name' => 'Protect (PR)',
@@ -404,7 +403,7 @@ class ComplianceEngineService
                             'pr_ip' => 'Information Protection Processes',
                             'pr_ma' => 'Maintenance - Timely maintenance and repairs',
                             'pr_pt' => 'Protective Technology - Technical security solutions',
-                        ]
+                        ],
                     ],
                     'detect' => [
                         'name' => 'Detect (DE)',
@@ -412,7 +411,7 @@ class ComplianceEngineService
                             'de_ae' => 'Anomalies and Events - Anomalous activity detection',
                             'de_cm' => 'Security Continuous Monitoring',
                             'de_dp' => 'Detection Processes - Maintained and tested',
-                        ]
+                        ],
                     ],
                     'respond' => [
                         'name' => 'Respond (RS)',
@@ -422,7 +421,7 @@ class ComplianceEngineService
                             'rs_an' => 'Analysis - Understand attack and impact',
                             'rs_mi' => 'Mitigation - Prevent expansion of event',
                             'rs_im' => 'Improvements - Lessons learned',
-                        ]
+                        ],
                     ],
                     'recover' => [
                         'name' => 'Recover (RC)',
@@ -430,10 +429,10 @@ class ComplianceEngineService
                             'rc_rp' => 'Recovery Planning - Recovery processes executed',
                             'rc_im' => 'Improvements - Recovery planning improvements',
                             'rc_co' => 'Communications - Restoration activities coordinated',
-                        ]
-                    ]
-                ]
-            ]
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -443,8 +442,8 @@ class ComplianceEngineService
     public function calculateComplianceScore(ClientITDocumentation $documentation, string $framework): array
     {
         $frameworks = $this->getComplianceFrameworks();
-        
-        if (!isset($frameworks[$framework])) {
+
+        if (! isset($frameworks[$framework])) {
             return ['score' => 0, 'gaps' => [], 'recommendations' => []];
         }
 
@@ -456,7 +455,7 @@ class ComplianceEngineService
         foreach ($frameworks[$framework]['categories'] as $categoryKey => $category) {
             foreach ($category['requirements'] as $reqKey => $requirement) {
                 $totalRequirements++;
-                
+
                 // Check if requirement is met based on documentation fields
                 if ($this->isRequirementMet($documentation, $framework, $categoryKey, $reqKey)) {
                     $metRequirements++;
@@ -464,9 +463,9 @@ class ComplianceEngineService
                     $gaps[] = [
                         'category' => $category['name'],
                         'requirement' => $requirement,
-                        'key' => $reqKey
+                        'key' => $reqKey,
                     ];
-                    
+
                     $recommendations[] = $this->getRecommendation($framework, $categoryKey, $reqKey);
                 }
             }
@@ -479,7 +478,7 @@ class ComplianceEngineService
             'total_requirements' => $totalRequirements,
             'met_requirements' => $metRequirements,
             'gaps' => $gaps,
-            'recommendations' => array_filter($recommendations)
+            'recommendations' => array_filter($recommendations),
         ];
     }
 
@@ -490,11 +489,11 @@ class ComplianceEngineService
     {
         // This is a simplified check - in production, this would be more sophisticated
         // checking actual documentation content, procedures, controls, etc.
-        
+
         $complianceData = $doc->compliance_requirements ?? [];
-        
+
         // Check if framework is selected
-        if (!in_array($framework, $complianceData)) {
+        if (! in_array($framework, $complianceData)) {
             return false;
         }
 
@@ -524,14 +523,14 @@ class ComplianceEngineService
     {
         // Check based on category and requirement
         if ($category === 'data_governance') {
-            if ($requirement === 'legal_basis' && !empty($doc->description)) {
+            if ($requirement === 'legal_basis' && ! empty($doc->description)) {
                 return true;
             }
             if ($requirement === 'privacy_policy' && str_contains(strtolower($doc->description ?? ''), 'privacy')) {
                 return true;
             }
         }
-        
+
         if ($category === 'security_measures') {
             if ($requirement === 'encryption' && ($doc->encryption_required ?? false)) {
                 return true;
@@ -553,11 +552,11 @@ class ComplianceEngineService
             if ($requirement === 'encryption_decryption' && ($doc->encryption_required ?? false)) {
                 return true;
             }
-            if ($requirement === 'audit_logs' && !empty($doc->audit_requirements)) {
+            if ($requirement === 'audit_logs' && ! empty($doc->audit_requirements)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -578,7 +577,7 @@ class ComplianceEngineService
         if ($category === 'network_security' && $doc->network_diagram) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -614,14 +613,14 @@ class ComplianceEngineService
                 'security_measures' => [
                     'encryption' => 'Implement encryption for personal data both at rest and in transit using industry-standard algorithms',
                     'access_controls' => 'Establish role-based access controls with the principle of least privilege',
-                ]
+                ],
             ],
             'hipaa' => [
                 'technical_safeguards' => [
                     'encryption_decryption' => 'Implement NIST-approved encryption methods for all PHI storage and transmission',
                     'audit_logs' => 'Enable comprehensive audit logging for all access to PHI with regular review procedures',
-                ]
-            ]
+                ],
+            ],
         ];
 
         return $recommendations[$framework][$category][$requirement] ?? null;
@@ -635,7 +634,7 @@ class ComplianceEngineService
         $frameworks = ['gdpr', 'hipaa', 'soc2', 'pci_dss', 'iso27001', 'nist_csf'];
         $scores = [];
         $overallGaps = [];
-        
+
         foreach ($frameworks as $framework) {
             if (in_array($framework, $documentation->compliance_requirements ?? [])) {
                 $result = $this->calculateComplianceScore($documentation, $framework);
@@ -648,7 +647,7 @@ class ComplianceEngineService
             'scores' => $scores,
             'overall_compliance' => $this->calculateOverallCompliance($scores),
             'critical_gaps' => $this->identifyCriticalGaps($overallGaps),
-            'next_steps' => $this->generateNextSteps($scores)
+            'next_steps' => $this->generateNextSteps($scores),
         ];
     }
 
@@ -662,6 +661,7 @@ class ComplianceEngineService
         }
 
         $total = array_sum(array_column($scores, 'score'));
+
         return round($total / count($scores), 2);
     }
 
@@ -673,7 +673,7 @@ class ComplianceEngineService
         // Prioritize gaps based on criticality
         $criticalKeywords = ['encryption', 'breach', 'access_control', 'audit', 'risk_assessment'];
         $critical = [];
-        
+
         foreach ($gaps as $gap) {
             foreach ($criticalKeywords as $keyword) {
                 if (str_contains(strtolower($gap['requirement']), $keyword)) {
@@ -682,7 +682,7 @@ class ComplianceEngineService
                 }
             }
         }
-        
+
         return array_slice($critical, 0, 5); // Return top 5 critical gaps
     }
 
@@ -692,7 +692,7 @@ class ComplianceEngineService
     private function generateNextSteps(array $scores): array
     {
         $steps = [];
-        
+
         foreach ($scores as $framework => $result) {
             if ($result['score'] < 50) {
                 $steps[] = "Critical: Address {$framework} compliance gaps urgently (currently at {$result['score']}%)";
@@ -700,7 +700,7 @@ class ComplianceEngineService
                 $steps[] = "Improve {$framework} compliance from {$result['score']}% to meet standards";
             }
         }
-        
+
         return $steps;
     }
 }

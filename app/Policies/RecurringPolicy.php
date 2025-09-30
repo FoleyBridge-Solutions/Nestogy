@@ -2,9 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Recurring;
-use Illuminate\Auth\Access\Response;
+use App\Models\User;
 
 class RecurringPolicy
 {
@@ -22,7 +21,7 @@ class RecurringPolicy
     public function view(User $user, Recurring $recurring): bool
     {
         // User can view if they have permission and recurring belongs to their company
-        return $user->can('financial.recurring.view') 
+        return $user->can('financial.recurring.view')
             && $recurring->company_id === $user->company_id;
     }
 

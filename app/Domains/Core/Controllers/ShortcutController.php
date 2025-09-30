@@ -2,11 +2,10 @@
 
 namespace App\Domains\Core\Controllers;
 
-use App\Http\Controllers\Controller;
-
 use App\Domains\Core\Services\ShortcutService;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ShortcutController extends Controller
 {
@@ -58,12 +57,12 @@ class ShortcutController extends Controller
         }
 
         // For other commands, delegate to NavigationController
-        $navigationController = new NavigationController();
-        
+        $navigationController = new NavigationController;
+
         // Create a new request for the navigation controller
         $commandRequest = new Request(['command' => $request->command]);
         $commandRequest->merge($request->all());
-        
+
         return $navigationController->executeCommand($commandRequest);
     }
 

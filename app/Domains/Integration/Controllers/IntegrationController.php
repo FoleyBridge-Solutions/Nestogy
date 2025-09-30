@@ -2,9 +2,9 @@
 
 namespace App\Domains\Integration\Controllers;
 
+use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Models\Integration;
 use App\Domains\Integration\Models\RMMAlert;
-use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Services\RMMIntegrationService;
 use App\Http\Controllers\Controller;
 use App\Jobs\SyncDeviceInventory;
@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Integration Management Controller
- * 
+ *
  * Handles administrative operations for RMM integrations.
  * Provides CRUD operations, testing, and monitoring capabilities.
  */
@@ -37,7 +37,7 @@ class IntegrationController extends Controller
     {
         try {
             $query = Integration::forCompany()
-                ->with(['rmmAlerts' => function($query) {
+                ->with(['rmmAlerts' => function ($query) {
                     $query->recent(24)->limit(5);
                 }])
                 ->withCount(['rmmAlerts', 'deviceMappings']);
@@ -59,7 +59,7 @@ class IntegrationController extends Controller
                     'total_integrations' => Integration::forCompany()->count(),
                     'active_integrations' => Integration::forCompany()->active()->count(),
                     'providers' => Integration::forCompany()->distinct('provider')->pluck('provider'),
-                ]
+                ],
             ]);
 
         } catch (\Exception $e) {
@@ -68,7 +68,7 @@ class IntegrationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch integrations',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -93,9 +93,9 @@ class IntegrationController extends Controller
                 'provider' => $validated['provider'],
                 'name' => $validated['name'],
                 'api_endpoint' => $validated['api_endpoint'],
-                'field_mappings' => $validated['field_mappings'] 
+                'field_mappings' => $validated['field_mappings']
                     ?? Integration::getDefaultFieldMappings($validated['provider']),
-                'alert_rules' => $validated['alert_rules'] 
+                'alert_rules' => $validated['alert_rules']
                     ?? Integration::getDefaultAlertRules($validated['provider']),
                 'is_active' => false, // Start inactive until tested
             ]);
@@ -127,7 +127,7 @@ class IntegrationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create integration',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -139,12 +139,12 @@ class IntegrationController extends Controller
     {
         try {
             $integration->load([
-                'rmmAlerts' => function($query) {
+                'rmmAlerts' => function ($query) {
                     $query->recent(48)->limit(50);
                 },
-                'deviceMappings' => function($query) {
+                'deviceMappings' => function ($query) {
                     $query->active()->limit(100);
-                }
+                },
             ]);
 
             // Add statistics
@@ -173,7 +173,7 @@ class IntegrationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch integration',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -226,13 +226,13 @@ class IntegrationController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to update integration', [
                 'integration_id' => $integration->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update integration',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -264,13 +264,13 @@ class IntegrationController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to delete integration', [
                 'integration_id' => $integration->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete integration',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -281,7 +281,7 @@ class IntegrationController extends Controller
     public function toggle(Integration $integration): JsonResponse
     {
         try {
-            $integration->update(['is_active' => !$integration->is_active]);
+            $integration->update(['is_active' => ! $integration->is_active]);
 
             $status = $integration->is_active ? 'activated' : 'deactivated';
 
@@ -299,13 +299,13 @@ class IntegrationController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to toggle integration', [
                 'integration_id' => $integration->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to toggle integration',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -327,21 +327,21 @@ class IntegrationController extends Controller
                 'success' => true,
                 'message' => 'Connection test initiated. Check logs for results.',
                 'webhook_url' => $integration->getWebhookEndpoint(),
-                'test_endpoint' => route('api.webhooks.' . $integration->provider . '.test', [
-                    'integration' => $integration->uuid
+                'test_endpoint' => route('api.webhooks.'.$integration->provider.'.test', [
+                    'integration' => $integration->uuid,
                 ]),
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to test integration connection', [
                 'integration_id' => $integration->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to test integration connection',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -366,13 +366,13 @@ class IntegrationController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to initiate device sync', [
                 'integration_id' => $integration->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to initiate device sync',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -428,7 +428,7 @@ class IntegrationController extends Controller
      */
     public function getProviderDefaults(string $provider): JsonResponse
     {
-        if (!in_array($provider, ['connectwise', 'datto', 'ninja', 'generic'])) {
+        if (! in_array($provider, ['connectwise', 'datto', 'ninja', 'generic'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid provider',
@@ -450,27 +450,27 @@ class IntegrationController extends Controller
     public function getStats(): JsonResponse
     {
         try {
-            $cacheKey = 'integration_stats_' . auth()->user()->company_id;
-            
+            $cacheKey = 'integration_stats_'.auth()->user()->company_id;
+
             $stats = Cache::remember($cacheKey, 300, function () { // 5 minute cache
                 return [
                     'total_integrations' => Integration::forCompany()->count(),
                     'active_integrations' => Integration::forCompany()->active()->count(),
                     'inactive_integrations' => Integration::forCompany()->where('is_active', false)->count(),
-                    'total_alerts_today' => RMMAlert::whereHas('integration', function($query) {
+                    'total_alerts_today' => RMMAlert::whereHas('integration', function ($query) {
                         $query->forCompany();
                     })->recent(24)->count(),
-                    'total_devices' => DeviceMapping::whereHas('integration', function($query) {
+                    'total_devices' => DeviceMapping::whereHas('integration', function ($query) {
                         $query->forCompany();
                     })->count(),
-                    'mapped_devices' => DeviceMapping::whereHas('integration', function($query) {
+                    'mapped_devices' => DeviceMapping::whereHas('integration', function ($query) {
                         $query->forCompany();
                     })->mapped()->count(),
                     'provider_breakdown' => Integration::forCompany()
                         ->select('provider', DB::raw('count(*) as count'))
                         ->groupBy('provider')
                         ->pluck('count', 'provider'),
-                    'alert_severity_breakdown' => RMMAlert::whereHas('integration', function($query) {
+                    'alert_severity_breakdown' => RMMAlert::whereHas('integration', function ($query) {
                         $query->forCompany();
                     })->recent(24 * 7)
                         ->select('severity', DB::raw('count(*) as count'))
@@ -490,7 +490,7 @@ class IntegrationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch statistics',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -535,13 +535,13 @@ class IntegrationController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to fetch integration statistics', [
                 'integration_id' => $integration->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch integration statistics',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

@@ -2,17 +2,15 @@
 
 namespace App\Domains\Asset\Services;
 
-use App\Models\Asset;
-use App\Models\Client;
 use App\Domains\Integration\Services\AssetSyncService;
 use App\Jobs\AssetMaintenanceTask;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
+use App\Models\Asset;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Asset Maintenance Service
- * 
+ *
  * Provides automated maintenance workflows and scheduling for assets.
  * Eliminates manual maintenance tasks through RMM automation.
  */
@@ -135,7 +133,7 @@ class AssetMaintenanceService
             $scanResult = $this->scanForSecurityUpdates($asset);
             $results['scan'] = $scanResult;
 
-            if ($scanResult['success'] && !empty($scanResult['security_updates'])) {
+            if ($scanResult['success'] && ! empty($scanResult['security_updates'])) {
                 // 2. Create restore point
                 $restoreResult = $this->createRestorePoint($asset);
                 $results['restore_point'] = $restoreResult;
@@ -333,12 +331,13 @@ class AssetMaintenanceService
         foreach ($assetIds as $assetId) {
             try {
                 $asset = Asset::findOrFail($assetId);
-                
-                if (!$asset->supportsRemoteManagement()) {
+
+                if (! $asset->supportsRemoteManagement()) {
                     $errors[] = [
                         'asset_id' => $assetId,
                         'error' => 'Asset does not support remote management',
                     ];
+
                     continue;
                 }
 
@@ -409,10 +408,11 @@ class AssetMaintenanceService
     }
 
     // Helper methods for specific maintenance tasks
-    
+
     protected function performHealthCheck(Asset $asset): array
     {
         $status = $this->syncService->getDeviceStatus($asset);
+
         return [
             'success' => $status['success'],
             'online' => $status['data']['agent']['online'] ?? false,
@@ -441,7 +441,7 @@ class AssetMaintenanceService
         }
 
         return [
-            'success' => !empty(array_filter($results, fn($r) => $r['success'])),
+            'success' => ! empty(array_filter($results, fn ($r) => $r['success'])),
             'commands_executed' => count($commands),
             'results' => $results,
         ];
@@ -459,10 +459,10 @@ class AssetMaintenanceService
     protected function updatePerformanceBaseline(Asset $asset): array
     {
         $status = $this->syncService->getDeviceStatus($asset);
-        
+
         // Store performance baseline
         $asset->update([
-            'notes' => 'Performance baseline updated: ' . now()->toDateString(),
+            'notes' => 'Performance baseline updated: '.now()->toDateString(),
         ]);
 
         return [
@@ -495,7 +495,7 @@ class AssetMaintenanceService
 
     protected function generateMaintenanceSummary(array $results): array
     {
-        $successful = count(array_filter($results, fn($r) => $r['success'] ?? false));
+        $successful = count(array_filter($results, fn ($r) => $r['success'] ?? false));
         $total = count($results);
 
         return [
@@ -509,7 +509,7 @@ class AssetMaintenanceService
     protected function scheduleTask(Asset $asset, array $task): array
     {
         $scheduledTime = Carbon::parse($task['scheduled_time']);
-        
+
         AssetMaintenanceTask::dispatch($asset, $task['type'])
             ->delay($scheduledTime);
 
@@ -523,27 +523,118 @@ class AssetMaintenanceService
     // Placeholder methods for specific maintenance operations
     // These would be implemented with actual RMM commands
 
-    protected function scanForSecurityUpdates(Asset $asset): array { return ['success' => true, 'security_updates' => []]; }
-    protected function createRestorePoint(Asset $asset): array { return ['success' => true]; }
-    protected function installSecurityUpdates(Asset $asset, array $updates): array { return ['success' => true, 'reboot_required' => false]; }
-    protected function verifySystemStability(Asset $asset): array { return ['success' => true]; }
-    protected function scheduleReboot(Asset $asset, array $options): array { return $this->syncService->rebootDevice($asset, $options); }
-    protected function capturePerformanceBaseline(Asset $asset): array { return ['success' => true]; }
-    protected function optimizeMemoryUsage(Asset $asset): array { return ['success' => true]; }
-    protected function checkDiskFragmentation(Asset $asset): array { return ['success' => true]; }
-    protected function optimizeStartupPrograms(Asset $asset): array { return ['success' => true]; }
-    protected function performRegistryCleanup(Asset $asset): array { return ['success' => true]; }
-    protected function verifyPerformanceImprovement(Asset $asset, array $baseline): array { return ['success' => true]; }
-    protected function checkSystemStatus(Asset $asset): array { return ['success' => true]; }
-    protected function checkHardwareHealth(Asset $asset): array { return ['success' => true]; }
-    protected function checkSecurityStatus(Asset $asset): array { return ['success' => true]; }
-    protected function checkNetworkConnectivity(Asset $asset): array { return ['success' => true]; }
-    protected function checkCriticalServices(Asset $asset): array { return ['success' => true]; }
-    protected function calculateHealthScore(array $results): array { return ['score' => 95, 'status' => 'excellent']; }
-    protected function cleanupTemporaryFiles(Asset $asset): array { return ['success' => true, 'space_freed' => '2.5 GB']; }
-    protected function cleanupBrowserCaches(Asset $asset): array { return ['success' => true, 'space_freed' => '500 MB']; }
-    protected function rotateSystemLogs(Asset $asset): array { return ['success' => true]; }
-    protected function cleanupRecycleBin(Asset $asset): array { return ['success' => true, 'space_freed' => '1.2 GB']; }
-    protected function cleanupOldFiles(Asset $asset): array { return ['success' => true, 'space_freed' => '800 MB']; }
-    protected function calculateSpaceReclaimed(array $results): array { return ['total_space_freed' => '4.5 GB']; }
+    protected function scanForSecurityUpdates(Asset $asset): array
+    {
+        return ['success' => true, 'security_updates' => []];
+    }
+
+    protected function createRestorePoint(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function installSecurityUpdates(Asset $asset, array $updates): array
+    {
+        return ['success' => true, 'reboot_required' => false];
+    }
+
+    protected function verifySystemStability(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function scheduleReboot(Asset $asset, array $options): array
+    {
+        return $this->syncService->rebootDevice($asset, $options);
+    }
+
+    protected function capturePerformanceBaseline(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function optimizeMemoryUsage(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function checkDiskFragmentation(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function optimizeStartupPrograms(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function performRegistryCleanup(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function verifyPerformanceImprovement(Asset $asset, array $baseline): array
+    {
+        return ['success' => true];
+    }
+
+    protected function checkSystemStatus(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function checkHardwareHealth(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function checkSecurityStatus(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function checkNetworkConnectivity(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function checkCriticalServices(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function calculateHealthScore(array $results): array
+    {
+        return ['score' => 95, 'status' => 'excellent'];
+    }
+
+    protected function cleanupTemporaryFiles(Asset $asset): array
+    {
+        return ['success' => true, 'space_freed' => '2.5 GB'];
+    }
+
+    protected function cleanupBrowserCaches(Asset $asset): array
+    {
+        return ['success' => true, 'space_freed' => '500 MB'];
+    }
+
+    protected function rotateSystemLogs(Asset $asset): array
+    {
+        return ['success' => true];
+    }
+
+    protected function cleanupRecycleBin(Asset $asset): array
+    {
+        return ['success' => true, 'space_freed' => '1.2 GB'];
+    }
+
+    protected function cleanupOldFiles(Asset $asset): array
+    {
+        return ['success' => true, 'space_freed' => '800 MB'];
+    }
+
+    protected function calculateSpaceReclaimed(array $results): array
+    {
+        return ['total_space_freed' => '4.5 GB'];
+    }
 }

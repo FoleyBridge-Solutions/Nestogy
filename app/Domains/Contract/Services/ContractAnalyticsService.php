@@ -4,17 +4,15 @@ namespace App\Domains\Contract\Services;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractMilestone;
+use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\RecurringInvoice;
-use App\Models\Client;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 /**
  * ContractAnalyticsService
- * 
+ *
  * Comprehensive analytics service for contract performance monitoring,
  * revenue tracking, forecasting, and business intelligence.
  */
@@ -46,25 +44,25 @@ class ContractAnalyticsService
     public function getOverviewMetrics(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $contracts = Contract::where('company_id', $companyId);
-        
+
         // Total contract value and count
         $totalValue = $contracts->sum('contract_value');
         $totalContracts = $contracts->count();
-        
+
         // Active contracts
         $activeContracts = $contracts->where('status', 'active')->get();
         $activeValue = $activeContracts->sum('contract_value');
-        
+
         // New contracts in period
         $newContracts = $contracts->whereBetween('created_at', [$startDate, $endDate])->get();
         $newContractsValue = $newContracts->sum('contract_value');
-        
+
         // Expiring soon (next 90 days)
         $expiringSoon = $contracts->where('status', 'active')
             ->where('end_date', '<=', now()->addDays(90))
             ->where('end_date', '>=', now())
             ->get();
-        
+
         // Revenue generated from invoices linked to contracts
         $revenueGenerated = Invoice::whereHas('contract')
             ->where('company_id', $companyId)
@@ -100,13 +98,13 @@ class ContractAnalyticsService
     {
         // Monthly revenue breakdown
         $monthlyRevenue = $this->getMonthlyRevenue($companyId, $startDate, $endDate);
-        
+
         // Revenue by contract type
         $revenueByType = $this->getRevenueByContractType($companyId, $startDate, $endDate);
-        
+
         // Revenue by client
         $revenueByClient = $this->getRevenueByClient($companyId, $startDate, $endDate);
-        
+
         // Recurring vs one-time revenue
         $recurringVsOneTime = $this->getRecurringVsOneTimeRevenue($companyId, $startDate, $endDate);
 
@@ -126,27 +124,27 @@ class ContractAnalyticsService
     public function getPerformanceMetrics(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $contracts = Contract::where('company_id', $companyId)->get();
-        
+
         // Contract completion rates
         $completedContracts = $contracts->where('status', 'completed')->count();
         $terminatedContracts = $contracts->where('status', 'terminated')->count();
-        
+
         // Average contract duration
         $averageDuration = $this->calculateAverageContractDuration($companyId);
-        
+
         // Milestone performance
         $milestonePerformance = $this->getMilestonePerformance($companyId, $startDate, $endDate);
-        
+
         // Payment performance
         $paymentPerformance = $this->getPaymentPerformance($companyId, $startDate, $endDate);
-        
+
         // Renewal rates
         $renewalRates = $this->getRenewalRates($companyId, $startDate, $endDate);
 
         return [
-            'contract_completion_rate' => $contracts->count() > 0 ? 
+            'contract_completion_rate' => $contracts->count() > 0 ?
                 ($completedContracts / $contracts->count()) * 100 : 0,
-            'contract_termination_rate' => $contracts->count() > 0 ? 
+            'contract_termination_rate' => $contracts->count() > 0 ?
                 ($terminatedContracts / $contracts->count()) * 100 : 0,
             'average_contract_duration' => $averageDuration,
             'milestone_performance' => $milestonePerformance,
@@ -162,16 +160,16 @@ class ContractAnalyticsService
     public function getClientAnalytics(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $clients = Client::where('company_id', $companyId)->get();
-        
+
         // Top clients by contract value
         $topClientsByValue = $this->getTopClientsByValue($companyId, 10);
-        
+
         // Client retention
         $clientRetention = $this->getClientRetentionRate($companyId, $startDate, $endDate);
-        
+
         // New vs existing clients
         $newVsExisting = $this->getNewVsExistingClients($companyId, $startDate, $endDate);
-        
+
         // Client lifetime value
         $lifetimeValue = $this->getClientLifetimeValue($companyId);
 
@@ -197,13 +195,13 @@ class ContractAnalyticsService
 
         // Time to signature
         $timeToSignature = $this->calculateAverageTimeToSignature($contracts);
-        
+
         // Approval time
         $approvalTime = $this->calculateAverageApprovalTime($contracts);
-        
+
         // Contract stages distribution
         $stagesDistribution = $this->getContractStagesDistribution($companyId);
-        
+
         // Bottleneck analysis
         $bottlenecks = $this->identifyProcessBottlenecks($companyId, $startDate, $endDate);
 
@@ -227,7 +225,7 @@ class ContractAnalyticsService
             ->get();
 
         $monthlyRecurring = $recurringRevenue->sum(function ($recurring) {
-            return match($recurring->billing_frequency) {
+            return match ($recurring->billing_frequency) {
                 'weekly' => $recurring->amount * 4.33,
                 'bi_weekly' => $recurring->amount * 2.17,
                 'monthly' => $recurring->amount,
@@ -240,15 +238,15 @@ class ContractAnalyticsService
 
         // Get historical growth rate
         $growthRate = $this->calculateRevenueGrowthRate($companyId, now()->subYear(), now());
-        
+
         // Generate 12-month forecast
         $forecast = [];
         $baseRevenue = $monthlyRecurring;
-        
+
         for ($i = 1; $i <= 12; $i++) {
             $month = now()->addMonths($i);
             $projectedRevenue = $baseRevenue * (1 + ($growthRate / 100) * ($i / 12));
-            
+
             $forecast[] = [
                 'month' => $month->format('Y-m'),
                 'projected_revenue' => $projectedRevenue,
@@ -270,18 +268,18 @@ class ContractAnalyticsService
     public function getRiskAnalytics(int $companyId): array
     {
         $contracts = Contract::where('company_id', $companyId)->get();
-        
+
         // Contracts at risk of termination
         $atRisk = $this->getContractsAtRisk($companyId);
-        
+
         // Overdue milestones
-        $overdueMilestones = ContractMilestone::whereHas('contract', function($q) use ($companyId) {
-                $q->where('company_id', $companyId);
-            })
+        $overdueMilestones = ContractMilestone::whereHas('contract', function ($q) use ($companyId) {
+            $q->where('company_id', $companyId);
+        })
             ->where('due_date', '<', now())
             ->where('status', '!=', 'completed')
             ->count();
-        
+
         // Overdue payments
         $overduePayments = Invoice::whereHas('contract')
             ->where('company_id', $companyId)
@@ -315,7 +313,6 @@ class ContractAnalyticsService
     /**
      * Helper methods for complex calculations
      */
-
     protected function getMonthlyRevenue(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $monthlyData = Invoice::whereHas('contract')
@@ -330,7 +327,7 @@ class ContractAnalyticsService
 
         $labels = [];
         $data = [];
-        
+
         foreach ($monthlyData as $item) {
             $labels[] = Carbon::createFromDate($item->year, $item->month, 1)->format('M Y');
             $data[] = $item->total;
@@ -360,7 +357,7 @@ class ContractAnalyticsService
         $totalContracts = Contract::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
-            
+
         $activeContracts = Contract::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->whereIn('status', ['active', 'completed'])
@@ -389,16 +386,16 @@ class ContractAnalyticsService
 
     protected function getMilestonePerformance(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
-        $milestones = ContractMilestone::whereHas('contract', function($q) use ($companyId) {
-                $q->where('company_id', $companyId);
-            })
+        $milestones = ContractMilestone::whereHas('contract', function ($q) use ($companyId) {
+            $q->where('company_id', $companyId);
+        })
             ->whereBetween('created_at', [$startDate, $endDate])
             ->get();
 
         $total = $milestones->count();
         $completed = $milestones->where('status', 'completed')->count();
         $onTime = $milestones->filter(function ($milestone) {
-            return $milestone->status === 'completed' && 
+            return $milestone->status === 'completed' &&
                    $milestone->completed_at <= $milestone->due_date;
         })->count();
 
@@ -418,10 +415,10 @@ class ContractAnalyticsService
             ->where(function ($query) {
                 $query->whereHas('milestones', function ($q) {
                     $q->where('due_date', '<', now())
-                      ->where('status', '!=', 'completed');
+                        ->where('status', '!=', 'completed');
                 })->orWhereHas('invoices', function ($q) {
                     $q->where('status', 'Sent')
-                      ->where('due_date', '<', now());
+                        ->where('due_date', '<', now());
                 });
             })
             ->get();
@@ -436,40 +433,127 @@ class ContractAnalyticsService
     {
         // Simplified compliance risk calculation
         $contracts = Contract::where('company_id', $companyId)->count();
-        $nonCompliant = Contract::whereHas('complianceRequirements', function($q) {
-                $q->where('status', 'non_compliant');
-            })
+        $nonCompliant = Contract::whereHas('complianceRequirements', function ($q) {
+            $q->where('status', 'non_compliant');
+        })
             ->where('company_id', $companyId)
             ->count();
 
         $riskScore = $contracts > 0 ? (($nonCompliant / $contracts) * 100) : 0;
-        
-        return 100 - (int)$riskScore; // Convert to score out of 100 (higher is better)
+
+        return 100 - (int) $riskScore; // Convert to score out of 100 (higher is better)
     }
 
     // Additional helper methods would be implemented here...
     // For brevity, I'm including just the essential structure
-    
-    protected function getRevenueByClient(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getRecurringVsOneTimeRevenue(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function calculateRevenueGrowthRate(int $companyId, Carbon $startDate, Carbon $endDate): float { return 0; }
-    protected function getPaymentPerformance(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getRenewalRates(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getClientSatisfactionMetrics(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getTopClientsByValue(int $companyId, int $limit): array { return []; }
-    protected function getClientRetentionRate(int $companyId, Carbon $startDate, Carbon $endDate): float { return 0; }
-    protected function getNewVsExistingClients(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getClientLifetimeValue(int $companyId): float { return 0; }
-    protected function getActiveClientCount(int $companyId): int { return 0; }
-    protected function getClientAcquisitionCost(int $companyId, Carbon $startDate, Carbon $endDate): float { return 0; }
-    protected function calculateAverageTimeToSignature(Collection $contracts): float { return 0; }
-    protected function calculateAverageApprovalTime(Collection $contracts): float { return 0; }
-    protected function getContractStagesDistribution(int $companyId): array { return []; }
-    protected function identifyProcessBottlenecks(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getCycleTimeTrends(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getRenewalRiskAnalysis(int $companyId): array { return []; }
-    protected function getContractValueTrend(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getContractCountTrend(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getRevenueTrend(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
-    protected function getClientAcquisitionTrend(int $companyId, Carbon $startDate, Carbon $endDate): array { return []; }
+
+    protected function getRevenueByClient(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getRecurringVsOneTimeRevenue(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function calculateRevenueGrowthRate(int $companyId, Carbon $startDate, Carbon $endDate): float
+    {
+        return 0;
+    }
+
+    protected function getPaymentPerformance(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getRenewalRates(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getClientSatisfactionMetrics(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getTopClientsByValue(int $companyId, int $limit): array
+    {
+        return [];
+    }
+
+    protected function getClientRetentionRate(int $companyId, Carbon $startDate, Carbon $endDate): float
+    {
+        return 0;
+    }
+
+    protected function getNewVsExistingClients(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getClientLifetimeValue(int $companyId): float
+    {
+        return 0;
+    }
+
+    protected function getActiveClientCount(int $companyId): int
+    {
+        return 0;
+    }
+
+    protected function getClientAcquisitionCost(int $companyId, Carbon $startDate, Carbon $endDate): float
+    {
+        return 0;
+    }
+
+    protected function calculateAverageTimeToSignature(Collection $contracts): float
+    {
+        return 0;
+    }
+
+    protected function calculateAverageApprovalTime(Collection $contracts): float
+    {
+        return 0;
+    }
+
+    protected function getContractStagesDistribution(int $companyId): array
+    {
+        return [];
+    }
+
+    protected function identifyProcessBottlenecks(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getCycleTimeTrends(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getRenewalRiskAnalysis(int $companyId): array
+    {
+        return [];
+    }
+
+    protected function getContractValueTrend(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getContractCountTrend(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getRevenueTrend(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    protected function getClientAcquisitionTrend(int $companyId, Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
 }

@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Work Type Classification Service
- * 
+ *
  * Intelligently categorizes tickets and suggests appropriate work types
  * based on keyword analysis and pattern matching.
  */
@@ -70,7 +70,7 @@ class WorkTypeClassificationService
      */
     public function classifyTicket(Ticket $ticket): array
     {
-        $text = strtolower($ticket->subject . ' ' . $ticket->details);
+        $text = strtolower($ticket->subject.' '.$ticket->details);
         $scores = [];
 
         foreach ($this->classificationPatterns as $workType => $pattern) {
@@ -85,7 +85,7 @@ class WorkTypeClassificationService
 
         return [
             'suggested_work_type' => array_key_first($scores),
-            'confidence' => !empty($scores) ? round(reset($scores), 2) : 0,
+            'confidence' => ! empty($scores) ? round(reset($scores), 2) : 0,
             'all_scores' => $scores,
         ];
     }
@@ -140,7 +140,7 @@ class WorkTypeClassificationService
         $unique = [];
         foreach ($suggestions as $suggestion) {
             $key = $suggestion['work_type'];
-            if (!isset($unique[$key]) || $unique[$key]['confidence'] < $suggestion['confidence']) {
+            if (! isset($unique[$key]) || $unique[$key]['confidence'] < $suggestion['confidence']) {
                 $unique[$key] = $suggestion;
             }
         }
@@ -174,7 +174,7 @@ class WorkTypeClassificationService
     public function getWorkTypeStats(int $companyId, int $days = 30): array
     {
         $startDate = now()->subDays($days);
-        
+
         $stats = \DB::table('ticket_time_entries')
             ->where('company_id', $companyId)
             ->where('created_at', '>=', $startDate)
@@ -214,10 +214,10 @@ class WorkTypeClassificationService
 
         // Base score is percentage of keywords matched
         $baseScore = ($matches / $totalKeywords) * 100;
-        
+
         // Apply weight multiplier
         $weightedScore = $baseScore * $pattern['weight'];
-        
+
         // Boost for multiple keyword matches
         if ($matches > 1) {
             $weightedScore *= (1 + ($matches - 1) * 0.1);
@@ -232,7 +232,7 @@ class WorkTypeClassificationService
     public function getAvailableWorkTypes(): array
     {
         $workTypes = [];
-        
+
         foreach ($this->classificationPatterns as $type => $pattern) {
             $workTypes[$type] = [
                 'name' => ucwords(str_replace('_', ' ', $type)),
@@ -250,7 +250,7 @@ class WorkTypeClassificationService
     public function bulkClassifyTickets(Collection $tickets): array
     {
         $results = [];
-        
+
         foreach ($tickets as $ticket) {
             $classification = $this->classifyTicket($ticket);
             $results[] = [

@@ -2,17 +2,16 @@
 
 namespace App\Domains\Security\Controllers;
 
-use App\Http\Controllers\Controller;
-
-use App\Models\User;
 use App\Domains\Security\Services\RoleService;
+use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Silber\Bouncer\BouncerFacade as Bouncer;
-use Silber\Bouncer\Database\Role;
 use Silber\Bouncer\Database\Ability;
+use Silber\Bouncer\Database\Role;
 
 class PermissionController extends Controller
 {
@@ -31,7 +30,7 @@ class PermissionController extends Controller
         $this->authorize('viewAny', \App\Models\Role::class);
 
         $user = Auth::user();
-        
+
         // Get company users with their roles
         $users = User::where('company_id', $user->company_id)
             ->with(['roles', 'abilities'])
@@ -68,9 +67,9 @@ class PermissionController extends Controller
         }
 
         return view('settings.permissions.index', compact(
-            'users', 
-            'roles', 
-            'abilitiesByCategory', 
+            'users',
+            'roles',
+            'abilitiesByCategory',
             'stats',
             'recentChanges'
         ));
@@ -220,7 +219,7 @@ class PermissionController extends Controller
 
             return back()
                 ->withInput()
-                ->with('error', 'Failed to update permissions: ' . $e->getMessage());
+                ->with('error', 'Failed to update permissions: '.$e->getMessage());
         }
     }
 
@@ -240,7 +239,7 @@ class PermissionController extends Controller
         ]);
 
         $companyId = Auth::user()->company_id;
-        
+
         // Verify all users belong to the same company
         $users = User::whereIn('id', $request->user_ids)
             ->where('company_id', $companyId)
@@ -312,7 +311,7 @@ class PermissionController extends Controller
                 ], 500);
             }
 
-            return back()->with('error', 'Failed to update permissions: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update permissions: '.$e->getMessage());
         }
     }
 
@@ -447,7 +446,7 @@ class PermissionController extends Controller
 
         return response()->json($export, 200, [
             'Content-Type' => 'application/json',
-            'Content-Disposition' => 'attachment; filename="permissions-export-' . now()->format('Y-m-d') . '.json"',
+            'Content-Disposition' => 'attachment; filename="permissions-export-'.now()->format('Y-m-d').'.json"',
         ]);
     }
 
@@ -465,7 +464,7 @@ class PermissionController extends Controller
         try {
             $content = json_decode($request->file('file')->get(), true);
 
-            if (!isset($content['roles']) || !isset($content['abilities'])) {
+            if (! isset($content['roles']) || ! isset($content['abilities'])) {
                 throw new \Exception('Invalid import file format');
             }
 
@@ -522,7 +521,7 @@ class PermissionController extends Controller
                 'imported_by' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to import permissions: ' . $e->getMessage());
+            return back()->with('error', 'Failed to import permissions: '.$e->getMessage());
         }
     }
 
@@ -537,11 +536,11 @@ class PermissionController extends Controller
         foreach ($abilities as $ability) {
             $parts = explode('.', $ability->name);
             $category = ucfirst($parts[0]);
-            
-            if (!isset($categorized[$category])) {
+
+            if (! isset($categorized[$category])) {
                 $categorized[$category] = [];
             }
-            
+
             $categorized[$category][] = [
                 'name' => $ability->name,
                 'title' => $ability->title ?? $this->generateAbilityTitle($ability->name),
@@ -558,8 +557,8 @@ class PermissionController extends Controller
     private function generateAbilityTitle(string $abilityName): string
     {
         $parts = explode('.', $abilityName);
-        
-        $formatted = array_map(function($part) {
+
+        $formatted = array_map(function ($part) {
             return ucwords(str_replace(['_', '-'], ' ', $part));
         }, $parts);
 
@@ -585,7 +584,7 @@ class PermissionController extends Controller
         $action = end($parts);
         $resource = ucfirst($parts[0]);
 
-        return ($descriptions[$action] ?? ucfirst($action)) . ' ' . $resource;
+        return ($descriptions[$action] ?? ucfirst($action)).' '.$resource;
     }
 
     /**

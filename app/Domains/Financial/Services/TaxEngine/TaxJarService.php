@@ -4,7 +4,6 @@ namespace App\Domains\Financial\Services\TaxEngine;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * TaxJar Tax Calculation Service
@@ -26,7 +25,7 @@ class TaxJarService extends BaseTaxDataService
         if (empty($address['zip_code'])) {
             Log::warning('TaxJar: No zip code provided for tax calculation', [
                 'company_id' => $this->companyId,
-                'params' => $params
+                'params' => $params,
             ]);
 
             return [
@@ -52,17 +51,17 @@ class TaxJarService extends BaseTaxDataService
             'country' => $address['country'] ?? 'US',
         ];
 
-        $apiUrl = $this->apiBaseUrl . '?' . http_build_query($queryParams);
+        $apiUrl = $this->apiBaseUrl.'?'.http_build_query($queryParams);
 
         try {
             $response = Http::timeout(10)->get($apiUrl);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::error('TaxJar API request failed', [
                     'url' => $apiUrl,
                     'status' => $response->status(),
                     'response' => $response->body(),
-                    'company_id' => $this->companyId
+                    'company_id' => $this->companyId,
                 ]);
 
                 return $this->getFallbackTaxCalculation($params);
@@ -74,7 +73,7 @@ class TaxJarService extends BaseTaxDataService
             Log::info('TaxJar API Response', [
                 'url' => $apiUrl,
                 'response' => $taxData,
-                'company_id' => $this->companyId
+                'company_id' => $this->companyId,
             ]);
 
             return $this->formatTaxJarResponse($params, $taxData);
@@ -83,7 +82,7 @@ class TaxJarService extends BaseTaxDataService
             Log::error('TaxJar API exception', [
                 'url' => $apiUrl,
                 'error' => $e->getMessage(),
-                'company_id' => $this->companyId
+                'company_id' => $this->companyId,
             ]);
 
             return $this->getFallbackTaxCalculation($params);
@@ -115,7 +114,7 @@ class TaxJarService extends BaseTaxDataService
 
         if ($stateTax > 0) {
             $taxBreakdown[] = [
-                'tax_name' => $rateData['state'] . ' State Sales Tax',
+                'tax_name' => $rateData['state'].' State Sales Tax',
                 'tax_type' => 'state_sales_tax',
                 'rate_type' => 'percentage',
                 'rate' => $stateRate,
@@ -128,7 +127,7 @@ class TaxJarService extends BaseTaxDataService
 
         if ($countyTax > 0) {
             $taxBreakdown[] = [
-                'tax_name' => $rateData['county'] . ' County Sales Tax',
+                'tax_name' => $rateData['county'].' County Sales Tax',
                 'tax_type' => 'county_sales_tax',
                 'rate_type' => 'percentage',
                 'rate' => $countyRate,
@@ -141,7 +140,7 @@ class TaxJarService extends BaseTaxDataService
 
         if ($cityTax > 0) {
             $taxBreakdown[] = [
-                'tax_name' => $rateData['city'] . ' City Sales Tax',
+                'tax_name' => $rateData['city'].' City Sales Tax',
                 'tax_type' => 'city_sales_tax',
                 'rate_type' => 'percentage',
                 'rate' => $cityRate,
@@ -173,8 +172,8 @@ class TaxJarService extends BaseTaxDataService
                 [
                     'id' => 1,
                     'name' => $taxData['state'] ?? 'Unknown State',
-                    'jurisdiction_type' => 'state'
-                ]
+                    'jurisdiction_type' => 'state',
+                ],
             ],
             'final_amount' => round($baseAmount + $totalTax, 2),
             'calculation_date' => now()->toISOString(),
@@ -201,7 +200,7 @@ class TaxJarService extends BaseTaxDataService
         Log::info('TaxJar: Using fallback tax calculation', [
             'base_amount' => $baseAmount,
             'fallback_rate' => $fallbackRate,
-            'company_id' => $this->companyId
+            'company_id' => $this->companyId,
         ]);
 
         return [
@@ -217,7 +216,7 @@ class TaxJarService extends BaseTaxDataService
                     'tax_amount' => round($totalTax, 2),
                     'authority' => 'Fallback Calculation',
                     'jurisdiction' => 'Unknown',
-                ]
+                ],
             ],
             'jurisdictions' => [],
             'final_amount' => round($baseAmount + $totalTax, 2),
@@ -246,7 +245,7 @@ class TaxJarService extends BaseTaxDataService
     /**
      * Download address data (not needed for TaxJar)
      */
-    public function downloadAddressData(string $jurisdictionCode = null): array
+    public function downloadAddressData(?string $jurisdictionCode = null): array
     {
         return [
             'success' => true,
@@ -294,13 +293,13 @@ class TaxJarService extends BaseTaxDataService
     /**
      * List available files (not applicable for TaxJar)
      */
-    public function listAvailableFiles(string $quarter = null): array
+    public function listAvailableFiles(?string $quarter = null): array
     {
         return [
             'success' => true,
             'files' => [],
             'count' => 0,
-            'message' => 'TaxJar uses on-demand calculation, no file listing needed'
+            'message' => 'TaxJar uses on-demand calculation, no file listing needed',
         ];
     }
 
@@ -312,7 +311,7 @@ class TaxJarService extends BaseTaxDataService
         return [
             'success' => false,
             'error' => 'TaxJar does not support file downloads',
-            'content' => null
+            'content' => null,
         ];
     }
 }

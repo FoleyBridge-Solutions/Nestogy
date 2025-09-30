@@ -2,12 +2,11 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
+use App\Models\Company;
 use App\Models\User;
 use App\Models\UserSetting;
-use App\Models\Company;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class UserSeeder extends Seeder
 {
@@ -51,7 +50,7 @@ class UserSeeder extends Seeder
         );
         $superAdmin->assign('super-admin');
         $this->createUserSettings($superAdmin, User::ROLE_SUPER_ADMIN);
-        $this->command->info("    ✓ Created super admin: super@nestogy.com");
+        $this->command->info('    ✓ Created super admin: super@nestogy.com');
 
         // Regular Admin
         $admin = User::updateOrCreate(
@@ -66,7 +65,7 @@ class UserSeeder extends Seeder
         );
         $admin->assign('admin');
         $this->createUserSettings($admin, User::ROLE_ADMIN);
-        $this->command->info("    ✓ Created admin: admin@nestogy.com");
+        $this->command->info('    ✓ Created admin: admin@nestogy.com');
     }
 
     /**
@@ -79,11 +78,11 @@ class UserSeeder extends Seeder
 
         // Extract domain from company email
         $emailDomain = str_replace(['info@', 'www.', 'dave@', 'support@'], '', $company->email);
-        
+
         $userCount = 0;
-        
+
         // Determine user counts based on company size
-        switch($companySize) {
+        switch ($companySize) {
             case 'solo':
                 $adminCount = 1;
                 $techCount = 0;
@@ -92,7 +91,7 @@ class UserSeeder extends Seeder
                 $marketingCount = 0;
                 $pmCount = 0;
                 break;
-                
+
             case 'small': // 2-10 employees
                 $totalEmployees = $company->employee_count ?? 5;
                 $adminCount = 1;
@@ -102,7 +101,7 @@ class UserSeeder extends Seeder
                 $marketingCount = 0;
                 $pmCount = 0;
                 break;
-                
+
             case 'medium': // 20-40 employees (realistic mid-market)
                 $totalEmployees = $company->employee_count ?? 30;
                 $adminCount = rand(1, 2);
@@ -112,7 +111,7 @@ class UserSeeder extends Seeder
                 $marketingCount = rand(0, 1);
                 $pmCount = rand(1, 2);
                 break;
-                
+
             case 'medium-large': // 40-60 employees
                 $totalEmployees = $company->employee_count ?? 50;
                 $adminCount = rand(2, 3);
@@ -122,7 +121,7 @@ class UserSeeder extends Seeder
                 $marketingCount = 1;
                 $pmCount = rand(2, 3);
                 break;
-                
+
             case 'large': // 60-100 employees (aspirational target)
                 $totalEmployees = $company->employee_count ?? 75;
                 $adminCount = rand(3, 4);
@@ -132,7 +131,7 @@ class UserSeeder extends Seeder
                 $marketingCount = rand(1, 2);
                 $pmCount = rand(3, 4);
                 break;
-                
+
             default:
                 // Default to medium for any unspecified size
                 $adminCount = rand(1, 2);
@@ -143,7 +142,7 @@ class UserSeeder extends Seeder
                 $pmCount = rand(1, 2);
                 break;
         }
-        
+
         // Create Admin users
         for ($i = 1; $i <= $adminCount; $i++) {
             $email = $i == 1 ? "admin@{$emailDomain}" : "admin{$i}@{$emailDomain}";
@@ -151,7 +150,7 @@ class UserSeeder extends Seeder
                 ['email' => $email],
                 [
                     'company_id' => $company->id,
-                    'name' => fake()->name() . " (Admin)",
+                    'name' => fake()->name().' (Admin)',
                     'password' => Hash::make('password123'),
                     'status' => true,
                     'email_verified_at' => now(),
@@ -180,7 +179,7 @@ class UserSeeder extends Seeder
                     ['email' => $email],
                     [
                         'company_id' => $company->id,
-                        'name' => fake()->name() . " ({$level})",
+                        'name' => fake()->name()." ({$level})",
                         'password' => Hash::make('password123'),
                         'status' => fake()->randomElement([true, true, true, true, false]), // 80% active
                         'email_verified_at' => now(),
@@ -208,7 +207,7 @@ class UserSeeder extends Seeder
                     ['email' => $email],
                     [
                         'company_id' => $company->id,
-                        'name' => fake()->name() . " ({$title})",
+                        'name' => fake()->name()." ({$title})",
                         'password' => Hash::make('password123'),
                         'status' => true,
                         'email_verified_at' => now(),
@@ -236,7 +235,7 @@ class UserSeeder extends Seeder
                     ['email' => $email],
                     [
                         'company_id' => $company->id,
-                        'name' => fake()->name() . " ({$title})",
+                        'name' => fake()->name()." ({$title})",
                         'password' => Hash::make('password123'),
                         'status' => true,
                         'email_verified_at' => now(),
@@ -264,7 +263,7 @@ class UserSeeder extends Seeder
                     ['email' => $email],
                     [
                         'company_id' => $company->id,
-                        'name' => fake()->name() . " ({$title})",
+                        'name' => fake()->name()." ({$title})",
                         'password' => Hash::make('password123'),
                         'status' => true,
                         'email_verified_at' => now(),
@@ -281,7 +280,7 @@ class UserSeeder extends Seeder
             }
             $this->command->info("    ✓ Created {$marketingCount} marketing staff");
         }
-        
+
         // Create Project Managers
         if ($pmCount > 0) {
             for ($i = 1; $i <= $pmCount; $i++) {
@@ -290,7 +289,7 @@ class UserSeeder extends Seeder
                     ['email' => $email],
                     [
                         'company_id' => $company->id,
-                        'name' => fake()->name() . " (Project Manager)",
+                        'name' => fake()->name().' (Project Manager)',
                         'password' => Hash::make('password123'),
                         'status' => true,
                         'email_verified_at' => now(),
@@ -307,7 +306,7 @@ class UserSeeder extends Seeder
             }
             $this->command->info("    ✓ Created {$pmCount} project managers");
         }
-        
+
         $this->command->info("    ✓ Total users created for {$company->name}: {$userCount}");
     }
 

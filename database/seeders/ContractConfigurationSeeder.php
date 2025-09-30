@@ -2,14 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
+use App\Models\Company;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Contract Configuration Seeder
- * 
+ *
  * Seeds default contract configurations for companies
  */
 class ContractConfigurationSeeder extends Seeder
@@ -33,6 +33,7 @@ class ContractConfigurationSeeder extends Seeder
 
         if ($companies->isEmpty()) {
             $this->command->info('All companies already have contract configurations.');
+
             return;
         }
 
@@ -87,7 +88,7 @@ class ContractConfigurationSeeder extends Seeder
         // $this->seedFormSections($company);
         // $this->seedViewConfigurations($company);
         // $this->seedDashboardWidgets($company);
-        
+
         $this->command->info("Basic configuration seeded for company: {$company->name}");
     }
 
@@ -151,7 +152,7 @@ class ContractConfigurationSeeder extends Seeder
 
         // Add industry-specific types based on company profile
         $industry = $company->industry ?? 'general';
-        
+
         switch ($industry) {
             case 'telecommunications':
             case 'voip':
@@ -166,7 +167,7 @@ class ContractConfigurationSeeder extends Seeder
                     'auto_renewal' => true,
                 ];
                 break;
-                
+
             case 'compliance':
             case 'security':
                 $baseTypes['compliance_services'] = [
@@ -213,7 +214,7 @@ class ContractConfigurationSeeder extends Seeder
                 'transitions' => ['under_negotiation', 'approved', 'draft'],
                 'permissions' => ['review-contract'],
                 'auto_transitions' => [
-                    'timeout' => ['days' => 7, 'to_status' => 'draft', 'notify' => true]
+                    'timeout' => ['days' => 7, 'to_status' => 'draft', 'notify' => true],
                 ],
                 'notifications' => ['review_request', 'review_reminder'],
             ],
@@ -239,7 +240,7 @@ class ContractConfigurationSeeder extends Seeder
                 'transitions' => ['pending_signature', 'signed'],
                 'permissions' => ['approve-contract'],
                 'auto_transitions' => [
-                    'immediate' => ['to_status' => 'pending_signature', 'condition' => 'requires_signature']
+                    'immediate' => ['to_status' => 'pending_signature', 'condition' => 'requires_signature'],
                 ],
                 'notifications' => ['approval_notification'],
             ],
@@ -253,7 +254,7 @@ class ContractConfigurationSeeder extends Seeder
                 'transitions' => ['signed', 'under_negotiation'],
                 'permissions' => ['send-for-signature'],
                 'auto_transitions' => [
-                    'timeout' => ['days' => 30, 'to_status' => 'expired', 'notify' => true]
+                    'timeout' => ['days' => 30, 'to_status' => 'expired', 'notify' => true],
                 ],
                 'notifications' => ['signature_request', 'signature_reminder'],
             ],
@@ -267,7 +268,7 @@ class ContractConfigurationSeeder extends Seeder
                 'transitions' => ['active', 'cancelled'],
                 'permissions' => ['activate-contract'],
                 'auto_transitions' => [
-                    'immediate' => ['to_status' => 'active', 'condition' => 'auto_activate']
+                    'immediate' => ['to_status' => 'active', 'condition' => 'auto_activate'],
                 ],
                 'notifications' => ['signature_complete'],
             ],
@@ -281,7 +282,7 @@ class ContractConfigurationSeeder extends Seeder
                 'transitions' => ['suspended', 'terminated', 'expired'],
                 'permissions' => ['manage-contract'],
                 'auto_transitions' => [
-                    'expiration' => ['condition' => 'end_date_passed', 'to_status' => 'expired']
+                    'expiration' => ['condition' => 'end_date_passed', 'to_status' => 'expired'],
                 ],
                 'notifications' => ['activation_notice', 'renewal_reminder'],
             ],
@@ -445,7 +446,7 @@ class ContractConfigurationSeeder extends Seeder
             'email' => ['name' => 'Email', 'component' => 'email'],
             'percentage' => ['name' => 'Percentage', 'component' => 'percentage'],
             'json' => ['name' => 'JSON Data', 'component' => 'json'],
-            
+
             // Advanced field types
             'client_selector' => ['name' => 'Client Selector', 'component' => 'client-selector'],
             'user_selector' => ['name' => 'User Selector', 'component' => 'user-selector'],
@@ -772,8 +773,8 @@ class ContractConfigurationSeeder extends Seeder
             DB::table('contract_form_configurations')->insert([
                 'company_id' => $company->id,
                 'contract_type' => $slug,
-                'name' => $config['name'] . ' Form',
-                'description' => 'Default form for ' . $config['name'],
+                'name' => $config['name'].' Form',
+                'description' => 'Default form for '.$config['name'],
                 'configuration' => json_encode($formConfig),
                 'is_active' => true,
                 'version' => '1.0',
@@ -846,8 +847,8 @@ class ContractConfigurationSeeder extends Seeder
             DB::table('contract_view_configurations')->insert([
                 'company_id' => $company->id,
                 'contract_type' => $slug,
-                'name' => $config['name'] . ' View',
-                'description' => 'Default view for ' . $config['name'],
+                'name' => $config['name'].' View',
+                'description' => 'Default view for '.$config['name'],
                 'configuration' => json_encode($viewConfig),
                 'is_active' => true,
                 'version' => '1.0',

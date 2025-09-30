@@ -2,11 +2,11 @@
 
 namespace App\Domains\Client\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\ClientITDocumentation;
 use App\Domains\Client\Services\ClientITDocumentationService;
-use App\Domains\Client\Services\DocumentationTemplateService;
 use App\Domains\Client\Services\ComplianceEngineService;
+use App\Domains\Client\Services\DocumentationTemplateService;
+use App\Http\Controllers\Controller;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Storage;
 class ITDocumentationController extends Controller
 {
     protected ClientITDocumentationService $service;
+
     protected DocumentationTemplateService $templateService;
+
     protected ComplianceEngineService $complianceService;
 
     public function __construct(
@@ -34,20 +36,20 @@ class ITDocumentationController extends Controller
     {
         $filters = $request->only(['search', 'client_id', 'it_category', 'access_level', 'needs_review', 'active']);
         $filters['active'] = $filters['active'] ?? true; // Default to active documents
-        
+
         $documentation = $this->service->searchDocumentation($filters);
-        
+
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $categories = ClientITDocumentation::getITCategories();
         $accessLevels = ClientITDocumentation::getAccessLevels();
 
         return view('clients.it-documentation.index', compact(
-            'documentation', 
-            'clients', 
-            'categories', 
+            'documentation',
+            'clients',
+            'categories',
             'accessLevels',
             'filters'
         ));
@@ -62,18 +64,18 @@ class ITDocumentationController extends Controller
             'client_id' => $client->id,
             'active' => true,
         ]);
-        
+
         $documentation = $this->service->searchDocumentation($filters);
         $statistics = $this->service->getClientStatistics($client->id);
-        
+
         $categories = ClientITDocumentation::getITCategories();
         $accessLevels = ClientITDocumentation::getAccessLevels();
 
         return view('clients.it-documentation.client-index', compact(
             'client',
-            'documentation', 
+            'documentation',
             'statistics',
-            'categories', 
+            'categories',
             'accessLevels',
             'filters'
         ));
@@ -85,23 +87,23 @@ class ITDocumentationController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $categories = ClientITDocumentation::getITCategories();
         $accessLevels = ClientITDocumentation::getAccessLevels();
         $reviewSchedules = ClientITDocumentation::getReviewSchedules();
-        
+
         // Get template data
         $templates = $this->templateService->getTemplates();
         $availableTabs = $this->templateService->getAvailableTabs();
         $complianceFrameworks = $this->complianceService->getComplianceFrameworks();
 
         return view('clients.it-documentation.create', compact(
-            'clients', 
-            'selectedClientId', 
-            'categories', 
+            'clients',
+            'selectedClientId',
+            'categories',
             'accessLevels',
             'reviewSchedules',
             'templates',
@@ -119,9 +121,9 @@ class ITDocumentationController extends Controller
             'client_id' => 'required|exists:clients,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'it_category' => 'required|in:' . implode(',', array_keys(ClientITDocumentation::getITCategories())),
-            'access_level' => 'required|in:' . implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
-            'review_schedule' => 'required|in:' . implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
+            'it_category' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getITCategories())),
+            'access_level' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
+            'review_schedule' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
             'system_references' => 'nullable|array',
             'ip_addresses' => 'nullable|array',
             'software_versions' => 'nullable|array',
@@ -131,11 +133,11 @@ class ITDocumentationController extends Controller
             'related_entities' => 'nullable|array',
             'tags' => 'nullable|string',
             'file' => 'nullable|file|max:51200', // 50MB max
-            
+
             // New tab configuration fields
             'enabled_tabs' => 'nullable|array',
             'template_used' => 'nullable|string',
-            
+
             // Additional comprehensive fields
             'status' => 'nullable|string|in:draft,review,approved,published',
             'effective_date' => 'nullable|date',
@@ -180,12 +182,12 @@ class ITDocumentationController extends Controller
         }
 
         // Process network diagram JSON
-        if (!empty($validated['network_diagram'])) {
+        if (! empty($validated['network_diagram'])) {
             $validated['network_diagram'] = json_decode($validated['network_diagram'], true);
         }
-        
+
         // Process procedure diagram JSON
-        if (!empty($validated['procedure_diagram'])) {
+        if (! empty($validated['procedure_diagram'])) {
             $validated['procedure_diagram'] = json_decode($validated['procedure_diagram'], true);
         }
 
@@ -196,13 +198,13 @@ class ITDocumentationController extends Controller
 
         $file = $request->file('file');
         $documentation = $this->service->createITDocumentation($validated, $file);
-        
+
         // Calculate initial completeness
         $documentation->documentation_completeness = $this->templateService->calculateCompleteness($documentation);
         $documentation->save();
 
         return redirect()->route('clients.it-documentation.show', $documentation)
-                        ->with('success', 'IT documentation created successfully.');
+            ->with('success', 'IT documentation created successfully.');
     }
 
     /**
@@ -213,7 +215,7 @@ class ITDocumentationController extends Controller
         $this->authorize('view', $itDocumentation);
 
         $itDocumentation->load(['client', 'author', 'versions', 'parentDocument']);
-        
+
         // Mark as accessed
         $this->service->markAsAccessed($itDocumentation);
 
@@ -231,8 +233,8 @@ class ITDocumentationController extends Controller
         $this->authorize('update', $itDocumentation);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $categories = ClientITDocumentation::getITCategories();
         $accessLevels = ClientITDocumentation::getAccessLevels();
@@ -240,8 +242,8 @@ class ITDocumentationController extends Controller
 
         return view('clients.it-documentation.edit', compact(
             'itDocumentation',
-            'clients', 
-            'categories', 
+            'clients',
+            'categories',
             'accessLevels',
             'reviewSchedules'
         ));
@@ -258,9 +260,9 @@ class ITDocumentationController extends Controller
             'client_id' => 'required|exists:clients,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'it_category' => 'required|in:' . implode(',', array_keys(ClientITDocumentation::getITCategories())),
-            'access_level' => 'required|in:' . implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
-            'review_schedule' => 'required|in:' . implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
+            'it_category' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getITCategories())),
+            'access_level' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
+            'review_schedule' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
             'system_references' => 'nullable|array',
             'ip_addresses' => 'nullable|array',
             'software_versions' => 'nullable|array',
@@ -281,7 +283,7 @@ class ITDocumentationController extends Controller
         $documentation = $this->service->updateITDocumentation($itDocumentation, $validated, $file);
 
         return redirect()->route('clients.it-documentation.show', $documentation)
-                        ->with('success', 'IT documentation updated successfully.');
+            ->with('success', 'IT documentation updated successfully.');
     }
 
     /**
@@ -295,7 +297,7 @@ class ITDocumentationController extends Controller
         $itDocumentation->delete();
 
         return redirect()->route('clients.it-documentation.client-index', $clientId)
-                        ->with('success', 'IT documentation deleted successfully.');
+            ->with('success', 'IT documentation deleted successfully.');
     }
 
     /**
@@ -305,7 +307,7 @@ class ITDocumentationController extends Controller
     {
         $this->authorize('view', $itDocumentation);
 
-        if (!$itDocumentation->hasFile() || !$itDocumentation->fileExists()) {
+        if (! $itDocumentation->hasFile() || ! $itDocumentation->fileExists()) {
             abort(404, 'File not found');
         }
 
@@ -331,15 +333,15 @@ class ITDocumentationController extends Controller
 
         // Add version notes to description if provided
         if ($request->version_notes) {
-            $validated['description'] = ($validated['description'] ?? $itDocumentation->description) . 
-                                      "\n\nVersion Notes: " . $request->version_notes;
+            $validated['description'] = ($validated['description'] ?? $itDocumentation->description).
+                                      "\n\nVersion Notes: ".$request->version_notes;
         }
 
         $file = $request->file('file');
         $newVersion = $this->service->generateNewVersion($itDocumentation, $validated, $file);
 
         return redirect()->route('clients.it-documentation.show', $newVersion)
-                        ->with('success', 'New version created successfully.');
+            ->with('success', 'New version created successfully.');
     }
 
     /**
@@ -356,7 +358,7 @@ class ITDocumentationController extends Controller
         $duplicated = $this->service->duplicateForClient($itDocumentation, $validated['client_id']);
 
         return redirect()->route('clients.it-documentation.edit', $duplicated)
-                        ->with('success', 'Documentation duplicated successfully. You can now customize it for the new client.');
+            ->with('success', 'Documentation duplicated successfully. You can now customize it for the new client.');
     }
 
     /**
@@ -367,20 +369,20 @@ class ITDocumentationController extends Controller
         $filters = $request->only(['search', 'client_id', 'it_category', 'access_level', 'needs_review', 'active']);
         $data = $this->service->exportData($filters);
 
-        $filename = 'it_documentation_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'it_documentation_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($data) {
+        $callback = function () use ($data) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Name',
-                'Description', 
+                'Description',
                 'Category',
                 'Client',
                 'Access Level',
@@ -389,14 +391,14 @@ class ITDocumentationController extends Controller
                 'Created At',
                 'Last Reviewed',
                 'Next Review',
-                'Tags'
+                'Tags',
             ]);
 
             // CSV data
             foreach ($data as $row) {
                 fputcsv($file, $row);
             }
-            
+
             fclose($file);
         };
 
@@ -422,11 +424,11 @@ class ITDocumentationController extends Controller
         $validated = $request->validate([
             'documentation_ids' => 'required|array',
             'documentation_ids.*' => 'exists:client_it_documentation,id',
-            'access_level' => 'required|in:' . implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
+            'access_level' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
         ]);
 
         $updated = $this->service->bulkUpdateAccessLevel(
-            $validated['documentation_ids'], 
+            $validated['documentation_ids'],
             $validated['access_level']
         );
 
@@ -446,6 +448,6 @@ class ITDocumentationController extends Controller
         $this->service->scheduleReview($itDocumentation, $itDocumentation->review_schedule);
 
         return redirect()->back()
-                        ->with('success', 'Review completed and next review scheduled.');
+            ->with('success', 'Review completed and next review scheduled.');
     }
 }

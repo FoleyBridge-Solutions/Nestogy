@@ -2,20 +2,24 @@
 
 namespace App\Livewire;
 
+use App\Domains\Core\Services\NavigationService;
+use App\Models\Client;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Client;
-use App\Domains\Core\Services\NavigationService;
-use Illuminate\Support\Facades\Auth;
 
 class ClientsList extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $selectedClient = null;
+
     public $isLeadsView = false;
+
     public $switchingClient = false;
+
     public $selectedClientId = null;
 
     protected $queryString = [
@@ -37,39 +41,39 @@ class ClientsList extends Component
     public function selectAndViewClient($clientId)
     {
         $client = Client::find($clientId);
-        
+
         if ($client && $client->company_id === auth()->user()->company_id) {
             // Set client in session using NavigationService - pass ID not object
             NavigationService::setSelectedClient($client->id);
-            
+
             // Update client access timestamp
             $client->accessed_at = now();
             $client->save();
-            
+
             // Refresh the page to show the selected client's details
             // The dynamicIndex method will detect the selected client and show the detail view
             return redirect()->route('clients.index');
         }
     }
-    
+
     public function selectClient($clientId)
     {
         $client = Client::find($clientId);
-        
+
         if ($client && $client->company_id === auth()->user()->company_id) {
             // Set client in session using NavigationService - pass ID not object
             NavigationService::setSelectedClient($client->id);
-            
+
             // Update client access timestamp
             $client->accessed_at = now();
             $client->save();
-            
+
             // Set a property to track the selected row
             $this->selectedClientId = $clientId;
-            
+
             // Dispatch browser event for animation with client ID in detail
             $this->dispatch('client-selected', ['clientId' => $clientId]);
-            
+
             // Note: The actual redirect happens in JavaScript after animation
         }
     }
@@ -86,7 +90,7 @@ class ClientsList extends Component
     {
         $client = Client::where('company_id', Auth::user()->company_id)
             ->find($clientId);
-        
+
         if ($client && Auth::user()->can('delete', $client)) {
             $client->delete();
             $this->dispatch('client-deleted', clientName: $client->name);
@@ -113,7 +117,7 @@ class ClientsList extends Component
             ->paginate(25);
 
         return view('livewire.clients-list', [
-            'clients' => $clients
+            'clients' => $clients,
         ]);
     }
 }

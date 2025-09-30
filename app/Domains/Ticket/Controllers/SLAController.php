@@ -2,17 +2,17 @@
 
 namespace App\Domains\Ticket\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Ticket\Models\SLA;
 use App\Domains\Ticket\Services\SLAService;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\SLARequest;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
  * SLA Controller for Domain-Driven Design
- * 
+ *
  * Handles SLA management including CRUD operations and client assignments.
  */
 class SLAController extends Controller
@@ -22,7 +22,7 @@ class SLAController extends Controller
     public function __construct(SLAService $slaService)
     {
         $this->slaService = $slaService;
-        
+
         // Apply middleware for permissions
         $this->middleware('auth');
         $this->middleware('can:manage_slas');
@@ -34,9 +34,9 @@ class SLAController extends Controller
     public function index(Request $request): View
     {
         $companyId = auth()->user()->company_id;
-        
+
         $slas = $this->slaService->getActiveSLAs($companyId);
-        
+
         return view('settings.slas.index', [
             'slas' => $slas,
             'defaultSLA' => $this->slaService->getDefaultSLA($companyId),
@@ -62,26 +62,26 @@ class SLAController extends Controller
     public function store(SLARequest $request): RedirectResponse
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Validate SLA data
         $validationErrors = $this->slaService->validateSLAData($request->validated());
-        
-        if (!empty($validationErrors)) {
+
+        if (! empty($validationErrors)) {
             return back()
                 ->withErrors($validationErrors)
                 ->withInput();
         }
-        
+
         try {
             $sla = $this->slaService->create($companyId, $request->validated());
-            
+
             return redirect()
                 ->route('settings.slas.index')
                 ->with('success', 'SLA created successfully.');
-                
+
         } catch (\Exception $e) {
             return back()
-                ->withError('Failed to create SLA: ' . $e->getMessage())
+                ->withError('Failed to create SLA: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -92,7 +92,7 @@ class SLAController extends Controller
     public function show(SLA $sla): View
     {
         $this->authorize('view', $sla);
-        
+
         return view('settings.slas.show', [
             'sla' => $sla,
             'clientsCount' => $sla->clients()->count(),
@@ -110,12 +110,12 @@ class SLAController extends Controller
     public function edit(SLA $sla, Request $request)
     {
         $this->authorize('update', $sla);
-        
+
         // If AJAX request, return JSON data for modal
         if ($request->ajax()) {
             return response()->json($sla->toArray());
         }
-        
+
         return view('settings.slas.edit', [
             'sla' => $sla,
             'priorityLevels' => SLA::getPriorityLevels(),
@@ -131,26 +131,26 @@ class SLAController extends Controller
     public function update(SLARequest $request, SLA $sla): RedirectResponse
     {
         $this->authorize('update', $sla);
-        
+
         // Validate SLA data
         $validationErrors = $this->slaService->validateSLAData($request->validated());
-        
-        if (!empty($validationErrors)) {
+
+        if (! empty($validationErrors)) {
             return back()
                 ->withErrors($validationErrors)
                 ->withInput();
         }
-        
+
         try {
             $this->slaService->update($sla, $request->validated());
-            
+
             return redirect()
                 ->route('settings.slas.index')
                 ->with('success', 'SLA updated successfully.');
-                
+
         } catch (\Exception $e) {
             return back()
-                ->withError('Failed to update SLA: ' . $e->getMessage())
+                ->withError('Failed to update SLA: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -161,17 +161,17 @@ class SLAController extends Controller
     public function destroy(SLA $sla): RedirectResponse
     {
         $this->authorize('delete', $sla);
-        
+
         try {
             $this->slaService->delete($sla);
-            
+
             return redirect()
                 ->route('settings.slas.index')
                 ->with('success', 'SLA deleted successfully. Affected clients have been reassigned to the default SLA.');
-                
+
         } catch (\Exception $e) {
             return back()
-                ->withError('Failed to delete SLA: ' . $e->getMessage());
+                ->withError('Failed to delete SLA: '.$e->getMessage());
         }
     }
 
@@ -181,18 +181,18 @@ class SLAController extends Controller
     public function toggleActive(SLA $sla): RedirectResponse
     {
         $this->authorize('update', $sla);
-        
+
         try {
-            $sla->update(['is_active' => !$sla->is_active]);
-            
+            $sla->update(['is_active' => ! $sla->is_active]);
+
             $status = $sla->is_active ? 'activated' : 'deactivated';
-            
+
             return back()
                 ->with('success', "SLA {$status} successfully.");
-                
+
         } catch (\Exception $e) {
             return back()
-                ->withError('Failed to toggle SLA status: ' . $e->getMessage());
+                ->withError('Failed to toggle SLA status: '.$e->getMessage());
         }
     }
 
@@ -202,16 +202,16 @@ class SLAController extends Controller
     public function setDefault(SLA $sla): RedirectResponse
     {
         $this->authorize('update', $sla);
-        
+
         try {
             $this->slaService->update($sla, ['is_default' => true]);
-            
+
             return back()
                 ->with('success', 'SLA set as default successfully.');
-                
+
         } catch (\Exception $e) {
             return back()
-                ->withError('Failed to set default SLA: ' . $e->getMessage());
+                ->withError('Failed to set default SLA: '.$e->getMessage());
         }
     }
 
@@ -221,12 +221,12 @@ class SLAController extends Controller
     public function api(Request $request)
     {
         $companyId = auth()->user()->company_id;
-        
+
         $slas = SLA::where('company_id', $companyId)
-                   ->active()
-                   ->effectiveOn()
-                   ->get(['id', 'name', 'description', 'is_default']);
-                   
+            ->active()
+            ->effectiveOn()
+            ->get(['id', 'name', 'description', 'is_default']);
+
         return response()->json($slas);
     }
 
@@ -236,14 +236,14 @@ class SLAController extends Controller
     public function clientAssignments(): View
     {
         $companyId = auth()->user()->company_id;
-        
+
         $clients = Client::where('company_id', $companyId)
-                         ->with('sla')
-                         ->paginate(20);
-                         
+            ->with('sla')
+            ->paginate(20);
+
         $slas = $this->slaService->getActiveSLAs($companyId);
         $defaultSLA = $this->slaService->getDefaultSLA($companyId);
-        
+
         return view('settings.slas.client-assignments', [
             'clients' => $clients,
             'slas' => $slas,

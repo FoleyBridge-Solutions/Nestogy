@@ -2,23 +2,22 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Domains\Core\Services\ConfigurationValidationService;
 use App\Domains\Core\Services\NavigationService;
 use App\Domains\Financial\Services\VoIPTaxService;
-use App\Domains\Product\Services\VoIPUsageService;
 use App\Domains\Product\Services\VoIPTieredPricingService;
-use App\Domains\Contract\Services\ContractConfigurationRegistry;
-use App\Http\ViewComposers\NavigationComposer;
+use App\Domains\Product\Services\VoIPUsageService;
 use App\Http\ViewComposers\ClientViewComposer;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Event;
-use Silber\Bouncer\BouncerFacade as Bouncer;
-use Illuminate\Support\Facades\Blade;
+use App\Http\ViewComposers\NavigationComposer;
 use App\Models\Company;
 use App\Observers\CompanyObserver;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
+use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,52 +28,59 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register the configuration validation service
         $this->app->singleton(ConfigurationValidationService::class, function ($app) {
-            return new ConfigurationValidationService();
+            return new ConfigurationValidationService;
         });
 
         // Register the navigation service
         $this->app->singleton(NavigationService::class, function ($app) {
-            return new NavigationService();
+            return new NavigationService;
         });
 
         // Register VoIP services with proper dependency injection
         $this->app->bind(VoIPTaxService::class, function ($app) {
-            $service = new VoIPTaxService();
+            $service = new VoIPTaxService;
             if (Auth::check() && Auth::user()->company_id) {
                 $service->setCompanyId(Auth::user()->company_id);
             }
+
             return $service;
         });
 
         $this->app->bind(VoIPUsageService::class, function ($app) {
-            return new VoIPUsageService();
+            return new VoIPUsageService;
         });
 
         $this->app->bind(VoIPTieredPricingService::class, function ($app) {
-            return new VoIPTieredPricingService();
+            return new VoIPTieredPricingService;
         });
-
 
         // Register Tax Profile Service with company context
         $this->app->bind(\App\Services\TaxEngine\TaxProfileService::class, function ($app) {
-            $service = new \App\Services\TaxEngine\TaxProfileService();
+            $service = new \App\Services\TaxEngine\TaxProfileService;
             if (Auth::check() && Auth::user()->company_id) {
                 $service->setCompanyId(Auth::user()->company_id);
             }
+
             return $service;
         });
 
         // Register Tax Engine Router with company context
         $this->app->bind(\App\Services\TaxEngine\TaxEngineRouter::class, function ($app) {
-            $service = new \App\Services\TaxEngine\TaxEngineRouter();
+            $service = new \App\Services\TaxEngine\TaxEngineRouter;
             if (Auth::check() && Auth::user()->company_id) {
                 $service->setCompanyId(Auth::user()->company_id);
             }
+
             return $service;
         });
 
-        // Contract Configuration Registry is now created with company context when needed
-        // No singleton registration as it requires company-specific initialization
+        // Contract Configuration Registry with company context
+        $this->app->bind('contract.config.registry', function ($app) {
+            $companyId = Auth::check() && Auth::user()->company_id 
+                ? Auth::user()->company_id 
+                : 1;
+            return new \App\Domains\Contract\Services\ContractConfigurationRegistry($companyId);
+        });
     }
 
     /**
@@ -84,7 +90,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register model observers
         Company::observe(CompanyObserver::class);
-        
+
         // Force HTTPS in production
         if ($this->app->environment('production')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
@@ -105,10 +111,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Register view composers
         $this->registerViewComposers();
-        
+
         // Register event listeners
         $this->registerEventListeners();
-        
+
         // Configure Bouncer
         $this->configureBouncer();
     }
@@ -122,10 +128,10 @@ class AppServiceProvider extends ServiceProvider
             $validator = $this->app->make(ConfigurationValidationService::class);
             $isValid = $validator->validate();
 
-            if (!$isValid) {
+            if (! $isValid) {
                 $errors = $validator->getErrors();
                 Log::error('Configuration validation failed during boot', ['errors' => $errors]);
-                
+
                 // In console, show errors
                 if ($this->app->runningInConsole()) {
                     foreach ($errors as $error) {
@@ -145,7 +151,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Inject navigation data into the main app layout
         View::composer('layouts.app', NavigationComposer::class);
-        
+
         // Inject selected client data into client views
         View::composer('clients.*', ClientViewComposer::class);
     }
@@ -156,11 +162,11 @@ class AppServiceProvider extends ServiceProvider
     protected function configureUploadDirectories(): void
     {
         $uploadPaths = config('uploads.paths', []);
-        
+
         foreach ($uploadPaths as $key => $path) {
-            $fullPath = storage_path('app/' . $path);
-            
-            if (!file_exists($fullPath)) {
+            $fullPath = storage_path('app/'.$path);
+
+            if (! file_exists($fullPath)) {
                 try {
                     mkdir($fullPath, 0755, true);
                 } catch (\Exception $e) {
@@ -169,7 +175,7 @@ class AppServiceProvider extends ServiceProvider
             }
         }
     }
-    
+
     /**
      * Register event listeners
      */
@@ -196,17 +202,17 @@ class AppServiceProvider extends ServiceProvider
         // Set custom table names
         \Bouncer::tables([
             'abilities' => 'bouncer_abilities',
-            'assigned_roles' => 'bouncer_assigned_roles', 
+            'assigned_roles' => 'bouncer_assigned_roles',
             'permissions' => 'bouncer_permissions',
             'roles' => 'bouncer_roles',
         ]);
-        
+
         // Note: Bouncer scope is set per-request via SetBouncerScope middleware
-        
+
         // Register custom Blade directives for enhanced permissions
         $this->registerPermissionDirectives();
     }
-    
+
     /**
      * Register custom Blade directives for permission checking
      */
@@ -216,17 +222,17 @@ class AppServiceProvider extends ServiceProvider
         Blade::if('permission', function ($permission) {
             return auth()->check() && auth()->user()->hasPermission($permission);
         });
-        
+
         // Check any of multiple permissions
         Blade::if('anyPermission', function (...$permissions) {
             return auth()->check() && auth()->user()->hasAnyPermission($permissions);
         });
-        
+
         // Check all permissions
         Blade::if('allPermissions', function (...$permissions) {
             return auth()->check() && auth()->user()->hasAllPermissions($permissions);
         });
-        
+
         // Check resource-level permission
         Blade::if('canAccess', function ($permission, $resource) {
             return auth()->check() && auth()->user()->canAccessResource($permission, $resource);

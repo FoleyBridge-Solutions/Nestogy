@@ -7,7 +7,7 @@ return [
     | SaaS Platform Configuration
     |--------------------------------------------------------------------------
     |
-    | This configuration file contains settings specific to the SaaS 
+    | This configuration file contains settings specific to the SaaS
     | functionality of the Nestogy platform.
     |
     */

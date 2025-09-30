@@ -2,33 +2,36 @@
 
 namespace App\Domains\Financial\Controllers;
 
-use App\Http\Controllers\Controller;
-
 use App\Domains\Financial\Services\CollectionAnalyticsService;
 use App\Domains\Financial\Services\CollectionManagementService;
 use App\Domains\Financial\Services\DunningAutomationService;
 use App\Domains\Financial\Services\PaymentPlanService;
 use App\Domains\Security\Services\ComplianceService;
+use App\Http\Controllers\Controller;
+use App\Models\AccountHold;
 use App\Models\Client;
 use App\Models\DunningCampaign;
 use App\Models\PaymentPlan;
-use App\Models\AccountHold;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Collection Dashboard Controller
- * 
+ *
  * Handles the main collection dashboard interface and API endpoints
  * for dunning management system with real-time data and analytics.
  */
 class CollectionDashboardController extends Controller
 {
     protected CollectionAnalyticsService $analyticsService;
+
     protected CollectionManagementService $collectionService;
+
     protected DunningAutomationService $dunningService;
+
     protected PaymentPlanService $paymentPlanService;
+
     protected ComplianceService $complianceService;
 
     public function __construct(
@@ -51,17 +54,17 @@ class CollectionDashboardController extends Controller
     public function index(Request $request)
     {
         $dateRange = $this->getDateRange($request);
-        
+
         // Get dashboard data
         $dashboardData = $this->analyticsService->generateDashboard([
             'start_date' => $dateRange['start'],
-            'end_date' => $dateRange['end']
+            'end_date' => $dateRange['end'],
         ]);
 
         return view('collections.dashboard', [
             'dashboard' => $dashboardData,
             'dateRange' => $dateRange,
-            'title' => 'Collection Dashboard'
+            'title' => 'Collection Dashboard',
         ]);
     }
 
@@ -71,16 +74,16 @@ class CollectionDashboardController extends Controller
     public function getDashboardData(Request $request): JsonResponse
     {
         $dateRange = $this->getDateRange($request);
-        
+
         $data = $this->analyticsService->generateDashboard([
             'start_date' => $dateRange['start'],
-            'end_date' => $dateRange['end']
+            'end_date' => $dateRange['end'],
         ]);
 
         return response()->json([
             'success' => true,
             'data' => $data,
-            'generated_at' => Carbon::now()->toISOString()
+            'generated_at' => Carbon::now()->toISOString(),
         ]);
     }
 
@@ -90,16 +93,16 @@ class CollectionDashboardController extends Controller
     public function getTrendsData(Request $request): JsonResponse
     {
         $dateRange = $this->getDateRange($request);
-        
+
         $dashboard = $this->analyticsService->generateDashboard([
             'start_date' => $dateRange['start'],
-            'end_date' => $dateRange['end']
+            'end_date' => $dateRange['end'],
         ]);
 
         return response()->json([
             'success' => true,
             'trends' => $dashboard['collection_trends'],
-            'kpis' => $dashboard['kpi_metrics']
+            'kpis' => $dashboard['kpi_metrics'],
         ]);
     }
 
@@ -123,8 +126,8 @@ class CollectionDashboardController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('email', 'LIKE', "%{$search}%")
-                  ->orWhere('account_number', 'LIKE', "%{$search}%");
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('account_number', 'LIKE', "%{$search}%");
             });
         }
 
@@ -138,7 +141,7 @@ class CollectionDashboardController extends Controller
         return view('collections.clients', [
             'clients' => $clients,
             'filters' => $request->only(['risk_level', 'search']),
-            'title' => 'Client Collection Status'
+            'title' => 'Client Collection Status',
         ]);
     }
 
@@ -163,7 +166,7 @@ class CollectionDashboardController extends Controller
             'riskAssessment' => $riskAssessment,
             'paymentPlanRecommendations' => $paymentPlanRecommendations,
             'complianceCheck' => $complianceCheck,
-            'title' => "Client Details - {$client->name}"
+            'title' => "Client Details - {$client->name}",
         ]);
     }
 
@@ -183,7 +186,7 @@ class CollectionDashboardController extends Controller
 
         return view('collections.campaigns', [
             'campaigns' => $campaigns,
-            'title' => 'Dunning Campaigns'
+            'title' => 'Dunning Campaigns',
         ]);
     }
 
@@ -193,7 +196,7 @@ class CollectionDashboardController extends Controller
     public function createCampaign()
     {
         return view('collections.create-campaign', [
-            'title' => 'Create Dunning Campaign'
+            'title' => 'Create Dunning Campaign',
         ]);
     }
 
@@ -207,7 +210,7 @@ class CollectionDashboardController extends Controller
             'description' => 'nullable|string',
             'trigger_criteria' => 'required|array',
             'risk_strategy' => 'required|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
         ]);
 
         $campaign = DunningCampaign::create([
@@ -216,7 +219,7 @@ class CollectionDashboardController extends Controller
             'trigger_criteria' => $validated['trigger_criteria'],
             'risk_strategy' => $validated['risk_strategy'],
             'is_active' => $validated['is_active'] ?? true,
-            'created_by' => auth()->id()
+            'created_by' => auth()->id(),
         ]);
 
         return redirect()->route('collections.campaigns')
@@ -245,7 +248,7 @@ class CollectionDashboardController extends Controller
         return view('collections.payment-plans', [
             'paymentPlans' => $paymentPlans,
             'filters' => $request->only(['status']),
-            'title' => 'Payment Plans'
+            'title' => 'Payment Plans',
         ]);
     }
 
@@ -260,7 +263,7 @@ class CollectionDashboardController extends Controller
 
         return view('collections.account-holds', [
             'holds' => $holds,
-            'title' => 'Account Holds'
+            'title' => 'Account Holds',
         ]);
     }
 
@@ -270,16 +273,16 @@ class CollectionDashboardController extends Controller
     public function analytics(Request $request)
     {
         $dateRange = $this->getDateRange($request);
-        
+
         $executiveSummary = $this->analyticsService->generateExecutiveSummary([
             'start_date' => $dateRange['start'],
-            'end_date' => $dateRange['end']
+            'end_date' => $dateRange['end'],
         ]);
 
         return view('collections.analytics', [
             'executiveSummary' => $executiveSummary,
             'dateRange' => $dateRange,
-            'title' => 'Collection Analytics'
+            'title' => 'Collection Analytics',
         ]);
     }
 
@@ -290,12 +293,12 @@ class CollectionDashboardController extends Controller
     {
         $complianceReport = $this->complianceService->generateComplianceReport([
             'start_date' => $request->input('start_date', Carbon::now()->subMonth()->toDateString()),
-            'end_date' => $request->input('end_date', Carbon::now()->toDateString())
+            'end_date' => $request->input('end_date', Carbon::now()->toDateString()),
         ]);
 
         return view('collections.compliance', [
             'complianceReport' => $complianceReport,
-            'title' => 'Compliance Dashboard'
+            'title' => 'Compliance Dashboard',
         ]);
     }
 
@@ -307,7 +310,7 @@ class CollectionDashboardController extends Controller
         $validated = $request->validate([
             'client_ids' => 'required|array|min:1',
             'client_ids.*' => 'exists:clients,id',
-            'campaign_id' => 'required|exists:dunning_campaigns,id'
+            'campaign_id' => 'required|exists:dunning_campaigns,id',
         ]);
 
         try {
@@ -319,13 +322,13 @@ class CollectionDashboardController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Batch dunning processed successfully',
-                'results' => $results
+                'results' => $results,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to process batch dunning: ' . $e->getMessage()
+                'message' => 'Failed to process batch dunning: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -338,7 +341,7 @@ class CollectionDashboardController extends Controller
         $validated = $request->validate([
             'reason' => 'required|string',
             'scheduled_date' => 'nullable|date',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         try {
@@ -347,20 +350,20 @@ class CollectionDashboardController extends Controller
                 $validated['reason'],
                 [
                     'scheduled_date' => $validated['scheduled_date'] ? Carbon::parse($validated['scheduled_date']) : null,
-                    'notes' => $validated['notes']
+                    'notes' => $validated['notes'],
                 ]
             );
 
             return response()->json([
                 'success' => true,
                 'message' => 'Service suspension initiated',
-                'hold_id' => $hold->id
+                'hold_id' => $hold->id,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to suspend services: ' . $e->getMessage()
+                'message' => 'Failed to suspend services: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -376,7 +379,7 @@ class CollectionDashboardController extends Controller
             'down_payment_percent' => 'nullable|numeric|min:0|max:50',
             'notes' => 'nullable|string',
             'invoice_ids' => 'required|array|min:1',
-            'invoice_ids.*' => 'exists:invoices,id'
+            'invoice_ids.*' => 'exists:invoices,id',
         ]);
 
         try {
@@ -386,7 +389,7 @@ class CollectionDashboardController extends Controller
                 $validated['total_amount'],
                 [
                     'custom_duration' => $validated['duration_months'],
-                    'down_payment_percent' => $validated['down_payment_percent'] ?? 15
+                    'down_payment_percent' => $validated['down_payment_percent'] ?? 15,
                 ]
             );
 
@@ -402,13 +405,13 @@ class CollectionDashboardController extends Controller
                 'success' => true,
                 'message' => 'Payment plan created successfully',
                 'payment_plan_id' => $paymentPlan->id,
-                'plan_details' => $planDetails
+                'plan_details' => $planDetails,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create payment plan: ' . $e->getMessage()
+                'message' => 'Failed to create payment plan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -423,7 +426,7 @@ class CollectionDashboardController extends Controller
 
         $data = $this->analyticsService->generateDashboard([
             'start_date' => $dateRange['start'],
-            'end_date' => $dateRange['end']
+            'end_date' => $dateRange['end'],
         ]);
 
         $filename = "collection_analytics_{$dateRange['start']}_to_{$dateRange['end']}.{$format}";
@@ -446,7 +449,7 @@ class CollectionDashboardController extends Controller
     {
         return [
             'start' => $request->input('start_date', Carbon::now()->subDays(30)->toDateString()),
-            'end' => $request->input('end_date', Carbon::now()->toDateString())
+            'end' => $request->input('end_date', Carbon::now()->toDateString()),
         ];
     }
 
@@ -463,7 +466,7 @@ class CollectionDashboardController extends Controller
             'total_actions' => $totalActions,
             'successful_actions' => $successfulActions,
             'success_rate' => $totalActions > 0 ? ($successfulActions / $totalActions) * 100 : 0,
-            'avg_response_time' => $this->calculateAvgResponseTime($actions)
+            'avg_response_time' => $this->calculateAvgResponseTime($actions),
         ];
     }
 
@@ -473,7 +476,7 @@ class CollectionDashboardController extends Controller
     protected function calculateAvgResponseTime($actions): float
     {
         $responseTimes = [];
-        
+
         foreach ($actions as $action) {
             if ($action->responded_at && $action->created_at) {
                 $responseTimes[] = Carbon::parse($action->responded_at)
@@ -496,15 +499,15 @@ class CollectionDashboardController extends Controller
 
         $callback = function () use ($data) {
             $file = fopen('php://output', 'w');
-            
+
             // Write summary data
             fputcsv($file, ['Metric', 'Value']);
             foreach ($data['summary'] as $key => $value) {
                 fputcsv($file, [ucfirst(str_replace('_', ' ', $key)), $value]);
             }
-            
+
             fputcsv($file, []); // Empty row
-            
+
             // Write KPI data
             fputcsv($file, ['KPI', 'Value', 'Target', 'Status']);
             foreach ($data['kpi_metrics'] as $kpi => $metrics) {
@@ -512,10 +515,10 @@ class CollectionDashboardController extends Controller
                     ucfirst(str_replace('_', ' ', $kpi)),
                     $metrics['value'],
                     $metrics['target'],
-                    $metrics['status']
+                    $metrics['status'],
                 ]);
             }
-            
+
             fclose($file);
         };
 

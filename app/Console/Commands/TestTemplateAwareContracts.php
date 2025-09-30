@@ -2,13 +2,13 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Domains\Core\Services\TemplateVariableMapper;
-use App\Domains\Core\Services\TemplateContentGenerator;
-use App\Domains\Core\Services\DefinitionRegistry;
-use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractTemplate;
+use App\Domains\Core\Services\DefinitionRegistry;
+use App\Domains\Core\Services\TemplateContentGenerator;
+use App\Domains\Core\Services\TemplateVariableMapper;
 use App\Models\Client;
+use Illuminate\Console\Command;
 
 /**
  * Test Template-Aware Contract Generation
@@ -25,10 +25,13 @@ class TestTemplateAwareContracts extends Command
     private const DEFAULT_PAGE_SIZE = 50;
 
     protected $signature = 'test:template-contracts {--template-type=} {--category=} {--details}';
+
     protected $description = 'Test template-aware contract generation across all template types';
 
     protected $variableMapper;
+
     protected $contentGenerator;
+
     protected $definitionRegistry;
 
     public function __construct(
@@ -50,12 +53,14 @@ class TestTemplateAwareContracts extends Command
         // Test specific template type if provided
         if ($templateType = $this->option('template-type')) {
             $this->testSpecificTemplateType($templateType);
+
             return;
         }
 
         // Test specific category if provided
         if ($category = $this->option('category')) {
             $this->testTemplateCategory($category);
+
             return;
         }
 
@@ -73,7 +78,7 @@ class TestTemplateAwareContracts extends Command
             'voip' => 'VoIP Templates (8 types)',
             'var' => 'VAR Templates (6 types)',
             'compliance' => 'Compliance Templates (4 types)',
-            'general' => 'General Templates (4 types)'
+            'general' => 'General Templates (4 types)',
         ];
 
         foreach ($categories as $category => $description) {
@@ -90,10 +95,11 @@ class TestTemplateAwareContracts extends Command
 
         if (empty($templateTypes)) {
             $this->warn("No template types found for category: {$category}");
+
             return;
         }
 
-        $this->line("Found " . count($templateTypes) . " template types for {$category} category");
+        $this->line('Found '.count($templateTypes)." template types for {$category} category");
 
         foreach ($templateTypes as $templateType) {
             $result = $this->testTemplateType($templateType, $category);
@@ -137,7 +143,7 @@ class TestTemplateAwareContracts extends Command
             if ($detectedCategory !== $expectedCategory) {
                 return [
                     'success' => false,
-                    'error' => "Category mismatch: expected {$expectedCategory}, got {$detectedCategory}"
+                    'error' => "Category mismatch: expected {$expectedCategory}, got {$detectedCategory}",
                 ];
             }
 
@@ -147,7 +153,7 @@ class TestTemplateAwareContracts extends Command
             if (empty($serviceContent)) {
                 return [
                     'success' => false,
-                    'error' => "No service content generated"
+                    'error' => 'No service content generated',
                 ];
             }
 
@@ -158,7 +164,7 @@ class TestTemplateAwareContracts extends Command
             if ($this->hasLegacySectionReferences($serviceContent)) {
                 return [
                     'success' => false,
-                    'error' => "Legacy Section A/B/C references found in generated content"
+                    'error' => 'Legacy Section A/B/C references found in generated content',
                 ];
             }
 
@@ -171,13 +177,13 @@ class TestTemplateAwareContracts extends Command
                 'content_length' => strlen($serviceContent),
                 'variables' => $variables,
                 'content' => $serviceContent,
-                'definitions' => array_keys($definitions)
+                'definitions' => array_keys($definitions),
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'error' => "Exception: " . $e->getMessage()
+                'error' => 'Exception: '.$e->getMessage(),
             ];
         }
     }
@@ -187,7 +193,7 @@ class TestTemplateAwareContracts extends Command
         // Create mock contract template
         $template = new ContractTemplate([
             'template_type' => $templateType,
-            'name' => ucwords(str_replace('_', ' ', $templateType)) . ' Template',
+            'name' => ucwords(str_replace('_', ' ', $templateType)).' Template',
             'category' => $this->getCategoryForTemplateType($templateType),
         ]);
 
@@ -241,14 +247,14 @@ class TestTemplateAwareContracts extends Command
                         'serviceTier' => 'gold',
                         'responseTimeHours' => 2,
                         'resolutionTimeHours' => 12,
-                        'uptimePercentage' => 99.9
+                        'uptimePercentage' => 99.9,
                     ],
                     'coverageRules' => [
                         'businessHours' => '24x7',
                         'includeRemoteSupport' => true,
-                        'includeOnsiteSupport' => true
-                    ]
-                ]
+                        'includeOnsiteSupport' => true,
+                    ],
+                ],
             ],
             (object) [
                 'schedule_type' => 'pricing',
@@ -256,10 +262,10 @@ class TestTemplateAwareContracts extends Command
                     'billingModel' => 'per_asset',
                     'basePricing' => [
                         'monthlyBase' => '$2500',
-                        'hourlyRate' => '$150'
-                    ]
-                ]
-            ]
+                        'hourlyRate' => '$150',
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -276,15 +282,15 @@ class TestTemplateAwareContracts extends Command
                         'meanOpinionScore' => '4.2',
                         'jitterMs' => self::DEFAULT_TIMEOUT,
                         'packetLossPercent' => 0.1,
-                        'latencyMs' => 80
+                        'latencyMs' => 80,
                     ],
                     'compliance' => [
                         'fccCompliant' => true,
                         'karisLaw' => true,
-                        'rayBaums' => true
-                    ]
-                ]
-            ]
+                        'rayBaums' => true,
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -300,15 +306,15 @@ class TestTemplateAwareContracts extends Command
                     'services' => [
                         'basicInstallation' => true,
                         'basicConfiguration' => true,
-                        'projectManagement' => true
+                        'projectManagement' => true,
                     ],
                     'warranty' => [
                         'hardwarePeriod' => '3_year',
                         'supportPeriod' => '3_year',
-                        'onSiteSupport' => true
-                    ]
-                ]
-            ]
+                        'onSiteSupport' => true,
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -324,14 +330,14 @@ class TestTemplateAwareContracts extends Command
                     'audits' => [
                         'internal' => true,
                         'external' => true,
-                        'penetrationTesting' => true
+                        'penetrationTesting' => true,
                     ],
                     'frequency' => [
                         'comprehensive' => 'annually',
-                        'interim' => 'quarterly'
-                    ]
-                ]
-            ]
+                        'interim' => 'quarterly',
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -342,9 +348,9 @@ class TestTemplateAwareContracts extends Command
                 'schedule_type' => 'general',
                 'schedule_data' => [
                     'billingModel' => 'consumption_based',
-                    'serviceDescription' => 'Flexible services model'
-                ]
-            ]
+                    'serviceDescription' => 'Flexible services model',
+                ],
+            ],
         ];
     }
 
@@ -354,21 +360,21 @@ class TestTemplateAwareContracts extends Command
             'msp' => [
                 'managed_services', 'cybersecurity_services', 'backup_dr', 'cloud_migration',
                 'm365_management', 'break_fix', 'enterprise_managed', 'mdr_services',
-                'support_contract', 'maintenance_agreement', 'sla_contract'
+                'support_contract', 'maintenance_agreement', 'sla_contract',
             ],
             'voip' => [
                 'hosted_pbx', 'sip_trunking', 'unified_communications', 'international_calling',
-                'contact_center', 'e911_services', 'number_porting', 'service_agreement'
+                'contact_center', 'e911_services', 'number_porting', 'service_agreement',
             ],
             'var' => [
                 'hardware_procurement', 'software_licensing', 'vendor_partner',
-                'solution_integration', 'equipment_lease', 'installation_contract'
+                'solution_integration', 'equipment_lease', 'installation_contract',
             ],
             'compliance' => [
-                'business_associate', 'professional_services', 'data_processing', 'master_service'
+                'business_associate', 'professional_services', 'data_processing', 'master_service',
             ],
             'general' => [
-                'consumption_based', 'international_service'
+                'consumption_based', 'international_service',
             ],
             default => []
         };
@@ -386,7 +392,7 @@ class TestTemplateAwareContracts extends Command
 
     protected function showDetailedResults(array $result)
     {
-        $this->line("📊 Detailed Results:");
+        $this->line('📊 Detailed Results:');
         $this->line("  Template Type: {$result['template_type']}");
         $this->line("  Category: {$result['category']}");
         $this->line("  Variables Generated: {$result['variables_count']}");
@@ -395,21 +401,21 @@ class TestTemplateAwareContracts extends Command
 
         if ($this->option('details')) {
             $this->newLine();
-            $this->line("🔧 Generated Variables:");
+            $this->line('🔧 Generated Variables:');
             foreach ($result['variables'] as $key => $value) {
                 $displayValue = is_array($value) ? '[array]' : (is_bool($value) ? ($value ? 'true' : 'false') : substr($value, 0, self::DEFAULT_PAGE_SIZE));
                 $this->line("  {$key}: {$displayValue}");
             }
 
             $this->newLine();
-            $this->line("📖 Available Definitions:");
+            $this->line('📖 Available Definitions:');
             foreach ($result['definitions'] as $definition) {
                 $this->line("  - {$definition}");
             }
 
             $this->newLine();
-            $this->line("📄 Generated Content Preview:");
-            $this->line(substr($result['content'], 0, 300) . '...');
+            $this->line('📄 Generated Content Preview:');
+            $this->line(substr($result['content'], 0, 300).'...');
         }
     }
 }

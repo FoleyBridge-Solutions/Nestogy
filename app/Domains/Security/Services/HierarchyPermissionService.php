@@ -2,19 +2,19 @@
 
 namespace App\Domains\Security\Services;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use App\Domains\Core\Services\BaseService;
 use App\Models\Company;
 use App\Models\CompanyHierarchy;
-use App\Models\SubsidiaryPermission;
 use App\Models\CrossCompanyUser;
+use App\Models\SubsidiaryPermission;
 use App\Models\User;
-use App\Domains\Core\Services\BaseService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * HierarchyPermissionService
- * 
+ *
  * Manages complex permission operations across company hierarchies including
  * permission inheritance, delegation, cross-company access, and bulk operations.
  */
@@ -35,10 +35,10 @@ class HierarchyPermissionService extends BaseService
         return DB::transaction(function () use ($permissionData) {
             $granterCompanyId = $permissionData['granter_company_id'];
             $granteeCompanyId = $permissionData['grantee_company_id'];
-            
+
             // Validate permission grant
             $this->validatePermissionGrant($granterCompanyId, $granteeCompanyId, $permissionData);
-            
+
             // Check if permission already exists
             $existingPermission = SubsidiaryPermission::where([
                 'granter_company_id' => $granterCompanyId,
@@ -52,7 +52,7 @@ class HierarchyPermissionService extends BaseService
                 if ($existingPermission->is_active) {
                     throw new \InvalidArgumentException('Permission already exists and is active.');
                 }
-                
+
                 // Reactivate existing permission
                 $existingPermission->update([
                     'is_active' => true,
@@ -62,7 +62,7 @@ class HierarchyPermissionService extends BaseService
                     'notes' => $permissionData['notes'] ?? $existingPermission->notes,
                     'can_delegate' => $permissionData['can_delegate'] ?? false,
                 ]);
-                
+
                 $permission = $existingPermission;
             } else {
                 // Create new permission
@@ -98,14 +98,14 @@ class HierarchyPermissionService extends BaseService
     /**
      * Revoke a specific permission.
      */
-    public function revokePermission(int $permissionId, string $reason = null): bool
+    public function revokePermission(int $permissionId, ?string $reason = null): bool
     {
         return DB::transaction(function () use ($permissionId, $reason) {
             $permission = SubsidiaryPermission::findOrFail($permissionId);
-            
+
             // Validate revocation rights
             $this->validatePermissionRevocation($permission);
-            
+
             $permission->update([
                 'is_active' => false,
                 'revoked_at' => now(),
@@ -138,14 +138,14 @@ class HierarchyPermissionService extends BaseService
         return DB::transaction(function () use ($subsidiaryId) {
             $subsidiary = Company::findOrFail($subsidiaryId);
             $parentCompanyId = $subsidiary->parent_company_id;
-            
-            if (!$parentCompanyId) {
+
+            if (! $parentCompanyId) {
                 throw new \InvalidArgumentException('Company has no parent to inherit from.');
             }
 
             $inheritedCount = 0;
             $skippedCount = 0;
-            
+
             // Get parent's received permissions that can be inherited
             $parentPermissions = SubsidiaryPermission::where('grantee_company_id', $parentCompanyId)
                 ->where('is_active', true)
@@ -164,6 +164,7 @@ class HierarchyPermissionService extends BaseService
 
                 if ($existingPermission && $existingPermission->is_active) {
                     $skippedCount++;
+
                     continue;
                 }
 
@@ -209,10 +210,10 @@ class HierarchyPermissionService extends BaseService
         return DB::transaction(function () use ($accessData) {
             $userId = $accessData['user_id'];
             $companyId = $accessData['company_id'];
-            
+
             // Validate user access grant
             $this->validateUserAccessGrant($userId, $companyId, $accessData);
-            
+
             // Check if access already exists
             $existingAccess = CrossCompanyUser::where([
                 'user_id' => $userId,
@@ -223,7 +224,7 @@ class HierarchyPermissionService extends BaseService
                 if ($existingAccess->is_active) {
                     throw new \InvalidArgumentException('User already has access to this company.');
                 }
-                
+
                 // Reactivate existing access
                 $existingAccess->update([
                     'is_active' => true,
@@ -233,7 +234,7 @@ class HierarchyPermissionService extends BaseService
                     'access_granted_at' => now(),
                     'access_expires_at' => $accessData['expires_at'] ?? null,
                 ]);
-                
+
                 $crossCompanyUser = $existingAccess;
             } else {
                 // Create new access
@@ -269,13 +270,13 @@ class HierarchyPermissionService extends BaseService
         return DB::transaction(function () use ($companyIds, $permissionData) {
             $results = [];
             $granterCompanyId = $permissionData['granter_company_id'];
-            
+
             foreach ($companyIds as $granteeCompanyId) {
                 try {
                     $permission = $this->grantPermission(array_merge($permissionData, [
-                        'grantee_company_id' => $granteeCompanyId
+                        'grantee_company_id' => $granteeCompanyId,
                     ]));
-                    
+
                     $results[] = [
                         'company_id' => $granteeCompanyId,
                         'status' => 'success',
@@ -305,10 +306,10 @@ class HierarchyPermissionService extends BaseService
             ->get();
 
         $permissions = [];
-        
+
         foreach ($directPermissions as $permission) {
-            $key = $permission->resource_type . ':' . $permission->permission_type . ':' . $permission->scope;
-            
+            $key = $permission->resource_type.':'.$permission->permission_type.':'.$permission->scope;
+
             $permissions[$key] = [
                 'resource_type' => $permission->resource_type,
                 'permission_type' => $permission->permission_type,
@@ -348,10 +349,10 @@ class HierarchyPermissionService extends BaseService
             ->get();
 
         $hierarchy = [];
-        
+
         foreach ($companies as $relation) {
             $company = $relation->descendant;
-            
+
             $hierarchy[] = [
                 'company_id' => $company->id,
                 'company_name' => $company->name,
@@ -393,31 +394,31 @@ class HierarchyPermissionService extends BaseService
 
         // Check if granter company exists and has the right to grant permissions
         $granterCompany = Company::find($granterCompanyId);
-        if (!$granterCompany) {
+        if (! $granterCompany) {
             throw new \InvalidArgumentException('Granter company not found.');
         }
 
         // Check if grantee company exists
         $granteeCompany = Company::find($granteeCompanyId);
-        if (!$granteeCompany) {
+        if (! $granteeCompany) {
             throw new \InvalidArgumentException('Grantee company not found.');
         }
 
         // Validate user has permission to grant on behalf of granter company
         $user = Auth::user();
-        if ($user->company_id !== $granterCompanyId && 
-            !CrossCompanyUser::canUserManageCompany($user->id, $granterCompanyId)) {
+        if ($user->company_id !== $granterCompanyId &&
+            ! CrossCompanyUser::canUserManageCompany($user->id, $granterCompanyId)) {
             throw new \InvalidArgumentException('User does not have permission to grant permissions for this company.');
         }
 
         // Validate resource type and permission type
         $validResourceTypes = ['*', 'users', 'clients', 'tickets', 'assets', 'invoices', 'contracts'];
-        if (!in_array($permissionData['resource_type'], $validResourceTypes)) {
+        if (! in_array($permissionData['resource_type'], $validResourceTypes)) {
             throw new \InvalidArgumentException('Invalid resource type.');
         }
 
         $validPermissionTypes = ['view', 'create', 'edit', 'delete', 'manage'];
-        if (!in_array($permissionData['permission_type'], $validPermissionTypes)) {
+        if (! in_array($permissionData['permission_type'], $validPermissionTypes)) {
             throw new \InvalidArgumentException('Invalid permission type.');
         }
     }
@@ -428,14 +429,14 @@ class HierarchyPermissionService extends BaseService
     protected function validatePermissionRevocation(SubsidiaryPermission $permission): void
     {
         $user = Auth::user();
-        
+
         // User must be from granter company or have management access to it
-        if ($user->company_id !== $permission->granter_company_id && 
-            !CrossCompanyUser::canUserManageCompany($user->id, $permission->granter_company_id)) {
+        if ($user->company_id !== $permission->granter_company_id &&
+            ! CrossCompanyUser::canUserManageCompany($user->id, $permission->granter_company_id)) {
             throw new \InvalidArgumentException('User does not have permission to revoke this permission.');
         }
 
-        if (!$permission->is_active) {
+        if (! $permission->is_active) {
             throw new \InvalidArgumentException('Permission is already inactive.');
         }
     }
@@ -446,20 +447,20 @@ class HierarchyPermissionService extends BaseService
     protected function validateUserAccessGrant(int $userId, int $companyId, array $accessData): void
     {
         $user = User::find($userId);
-        if (!$user) {
+        if (! $user) {
             throw new \InvalidArgumentException('User not found.');
         }
 
         $company = Company::find($companyId);
-        if (!$company) {
+        if (! $company) {
             throw new \InvalidArgumentException('Company not found.');
         }
 
         $authUser = Auth::user();
-        
+
         // User must have management permissions for the target company
-        if ($authUser->company_id !== $companyId && 
-            !CrossCompanyUser::canUserManageCompany($authUser->id, $companyId)) {
+        if ($authUser->company_id !== $companyId &&
+            ! CrossCompanyUser::canUserManageCompany($authUser->id, $companyId)) {
             throw new \InvalidArgumentException('You do not have permission to grant access to this company.');
         }
 
@@ -475,7 +476,7 @@ class HierarchyPermissionService extends BaseService
     protected function revokeDelegatedPermissions(SubsidiaryPermission $parentPermission): int
     {
         $revokedCount = 0;
-        
+
         $delegatedPermissions = SubsidiaryPermission::where('parent_permission_id', $parentPermission->id)
             ->where('is_active', true)
             ->get();
@@ -487,9 +488,9 @@ class HierarchyPermissionService extends BaseService
                 'revoked_by' => Auth::id(),
                 'revocation_reason' => 'Parent permission revoked',
             ]);
-            
+
             $revokedCount++;
-            
+
             // Recursively revoke further delegated permissions
             $revokedCount += $this->revokeDelegatedPermissions($delegatedPermission);
         }

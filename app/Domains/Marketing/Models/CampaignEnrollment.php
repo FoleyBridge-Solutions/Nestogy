@@ -47,10 +47,15 @@ class CampaignEnrollment extends Model
 
     // Enrollment status constants
     const STATUS_ENROLLED = 'enrolled';
+
     const STATUS_ACTIVE = 'active';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_PAUSED = 'paused';
+
     const STATUS_UNSUBSCRIBED = 'unsubscribed';
+
     const STATUS_BOUNCED = 'bounced';
 
     /**
@@ -91,6 +96,7 @@ class CampaignEnrollment extends Model
     public function getRecipientEmailAttribute(): ?string
     {
         $recipient = $this->recipient;
+
         return $recipient ? $recipient->email : null;
     }
 
@@ -102,7 +108,7 @@ class CampaignEnrollment extends Model
         if ($this->lead) {
             return $this->lead->full_name;
         }
-        
+
         if ($this->contact) {
             return $this->contact->name;
         }
@@ -206,11 +212,11 @@ class CampaignEnrollment extends Model
      */
     public function isReadyForNextEmail(): bool
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return false;
         }
 
-        if (!$this->next_send_at) {
+        if (! $this->next_send_at) {
             return true;
         }
 
@@ -231,10 +237,10 @@ class CampaignEnrollment extends Model
     public function scopeReadyForEmail($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
-                    ->where(function($q) {
-                        $q->whereNull('next_send_at')
-                          ->orWhere('next_send_at', '<=', now());
-                    });
+            ->where(function ($q) {
+                $q->whereNull('next_send_at')
+                    ->orWhere('next_send_at', '<=', now());
+            });
     }
 
     /**
@@ -306,7 +312,7 @@ class CampaignEnrollment extends Model
     {
         $campaign = $this->campaign;
         $nextStep = $this->current_step + 1;
-        
+
         // Check if there are more steps
         $hasNextStep = $campaign->sequences()
             ->where('step_number', $nextStep)
@@ -402,8 +408,8 @@ class CampaignEnrollment extends Model
         }
 
         // Adjust for preferred send days
-        if ($sequence->send_days && !empty($sequence->send_days)) {
-            while (!$sequence->canSendOnDay($nextSend->dayOfWeek)) {
+        if ($sequence->send_days && ! empty($sequence->send_days)) {
+            while (! $sequence->canSendOnDay($nextSend->dayOfWeek)) {
                 $nextSend->addDay();
             }
         }

@@ -8,32 +8,27 @@ use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class SettingsService
 {
     /**
      * Update company and settings data
-     * 
-     * @param Company $company
-     * @param array $data
-     * @return bool
      */
     public function updateSettings(Company $company, array $data): bool
     {
         try {
             DB::beginTransaction();
-            
+
             // Update company fields
             $company->update([
                 'name' => $data['company_name'],
                 'currency' => $data['currency'],
             ]);
-            
+
             // Update or create settings
             $setting = $company->setting;
-            
-            if (!$setting) {
+
+            if (! $setting) {
                 // Create settings if they don't exist
                 $setting = Setting::create([
                     'company_id' => $company->id,
@@ -50,28 +45,26 @@ class SettingsService
                     'date_format' => $data['date_format'],
                 ]);
             }
-            
+
             DB::commit();
-            
+
             return true;
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update settings: ' . $e->getMessage());
+            Log::error('Failed to update settings: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Get current settings for a company
-     * 
-     * @param Company $company
-     * @return array
      */
     public function getSettings(Company $company): array
     {
         $setting = $company->setting;
-        
+
         return [
             'company_name' => $company->name,
             'currency' => $company->currency ?? 'USD',
@@ -79,11 +72,9 @@ class SettingsService
             'date_format' => $setting?->date_format ?? 'Y-m-d',
         ];
     }
-    
+
     /**
      * Get available date formats
-     * 
-     * @return array
      */
     public static function getDateFormats(): array
     {
@@ -95,11 +86,9 @@ class SettingsService
             'd M Y' => 'DD Mon YYYY (31 Dec 2024)',
         ];
     }
-    
+
     /**
      * Get available timezones
-     * 
-     * @return array
      */
     public static function getTimezones(): array
     {
@@ -125,11 +114,9 @@ class SettingsService
             'Pacific/Auckland' => 'Auckland',
         ];
     }
-    
+
     /**
      * Get available currencies
-     * 
-     * @return array
      */
     public static function getCurrencies(): array
     {
@@ -156,47 +143,40 @@ class SettingsService
             'HUF' => 'Hungarian Forint',
         ];
     }
-    
+
     /**
      * Export settings to JSON
-     * 
-     * @param Company $company
-     * @return string
      */
     public function exportSettings(Company $company): string
     {
         $settings = $this->getComprehensiveSettings($company);
-        
+
         $exportData = [
             'company_name' => $company->name,
             'export_date' => now()->toISOString(),
             'version' => '1.0',
             'settings' => $settings,
         ];
-        
+
         return json_encode($exportData, JSON_PRETTY_PRINT);
     }
-    
+
     /**
      * Import settings from JSON
-     * 
-     * @param Company $company
-     * @param string $jsonData
-     * @return bool
      */
     public function importSettings(Company $company, string $jsonData): bool
     {
         try {
             $data = json_decode($jsonData, true);
-            
-            if (!$data || !isset($data['settings'])) {
+
+            if (! $data || ! isset($data['settings'])) {
                 throw new \Exception('Invalid settings data format');
             }
-            
+
             DB::beginTransaction();
-            
+
             $setting = $company->setting;
-            if (!$setting) {
+            if (! $setting) {
                 $setting = Setting::create([
                     'company_id' => $company->id,
                     'current_database_version' => '1.0.0',
@@ -205,29 +185,27 @@ class SettingsService
                     'timezone' => 'UTC',
                 ]);
             }
-            
+
             // Update settings based on imported data
             $importedSettings = $data['settings'];
             $this->updateGeneralSettings($setting, $importedSettings);
             $this->updateSecuritySettings($setting, $importedSettings);
             $this->updateEmailSettings($setting, $importedSettings);
             $this->updateBillingFinancialSettings($setting, $importedSettings);
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to import settings: ' . $e->getMessage());
+            Log::error('Failed to import settings: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Get settings template for MSP type
-     * 
-     * @param string $mspType
-     * @return array
      */
     public function getSettingsTemplate(string $mspType): array
     {
@@ -247,7 +225,7 @@ class SettingsService
                     'audit_retention_days' => 365,
                     'password_min_length' => 8,
                     'two_factor_enabled' => false,
-                ]
+                ],
             ],
             'medium_msp' => [
                 'name' => 'Medium MSP (50-500 endpoints)',
@@ -264,7 +242,7 @@ class SettingsService
                     'audit_retention_days' => 1095,
                     'password_min_length' => 10,
                     'two_factor_enabled' => true,
-                ]
+                ],
             ],
             'large_msp' => [
                 'name' => 'Large MSP (500+ endpoints)',
@@ -281,7 +259,7 @@ class SettingsService
                     'audit_retention_days' => 2555,
                     'password_min_length' => 12,
                     'two_factor_enabled' => true,
-                ]
+                ],
             ],
             'healthcare_msp' => [
                 'name' => 'Healthcare MSP',
@@ -300,7 +278,7 @@ class SettingsService
                     'two_factor_enabled' => true,
                     'force_single_session' => true,
                     'audit_logging_enabled' => true,
-                ]
+                ],
             ],
             'financial_msp' => [
                 'name' => 'Financial Services MSP',
@@ -320,27 +298,23 @@ class SettingsService
                     'force_single_session' => true,
                     'audit_logging_enabled' => true,
                     'geo_blocking_enabled' => true,
-                ]
-            ]
+                ],
+            ],
         ];
-        
+
         return $templates[$mspType] ?? $templates['small_msp'];
     }
-    
+
     /**
      * Apply settings template
-     * 
-     * @param Company $company
-     * @param string $templateType
-     * @return bool
      */
     public function applySettingsTemplate(Company $company, string $templateType): bool
     {
         try {
             $template = $this->getSettingsTemplate($templateType);
             $setting = $company->setting;
-            
-            if (!$setting) {
+
+            if (! $setting) {
                 $setting = Setting::create([
                     'company_id' => $company->id,
                     'current_database_version' => '1.0.0',
@@ -349,22 +323,19 @@ class SettingsService
                     'timezone' => 'UTC',
                 ]);
             }
-            
+
             $setting->update($template['settings']);
-            
+
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to apply settings template: ' . $e->getMessage());
+            Log::error('Failed to apply settings template: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Update security settings
-     * 
-     * @param Setting $setting
-     * @param array $data
-     * @return bool
      */
     public function updateSecuritySettings(Setting $setting, array $data): bool
     {
@@ -375,27 +346,24 @@ class SettingsService
                 'login_key_required' => $data['login_key_required'] ?? false,
                 'destructive_deletes_enable' => $data['destructive_deletes_enable'] ?? false,
             ];
-            
+
             // Only update login_key_secret if provided
-            if (!empty($data['login_key_secret'])) {
+            if (! empty($data['login_key_secret'])) {
                 $updateData['login_key_secret'] = bcrypt($data['login_key_secret']);
             }
-            
+
             $setting->update($updateData);
-            
+
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to update security settings: ' . $e->getMessage());
+            Log::error('Failed to update security settings: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Update email settings
-     * 
-     * @param Setting $setting
-     * @param array $data
-     * @return bool
      */
     public function updateEmailSettings(Setting $setting, array $data): bool
     {
@@ -416,37 +384,34 @@ class SettingsService
                 'ticket_email_parse' => $data['ticket_email_parse'] ?? false,
                 'ticket_new_ticket_notification_email' => $data['ticket_new_ticket_notification_email'] ?? null,
             ];
-            
+
             // Only update passwords if provided
-            if (!empty($data['smtp_password'])) {
+            if (! empty($data['smtp_password'])) {
                 $updateData['smtp_password'] = encrypt($data['smtp_password']);
             }
-            
-            if (!empty($data['imap_password'])) {
+
+            if (! empty($data['imap_password'])) {
                 $updateData['imap_password'] = encrypt($data['imap_password']);
             }
-            
+
             $setting->update($updateData);
-            
+
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to update email settings: ' . $e->getMessage());
+            Log::error('Failed to update email settings: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Update integrations settings
-     * 
-     * @param Setting $setting
-     * @param array $data
-     * @return bool
      */
     public function updateIntegrationsSettings(Setting $setting, array $data): bool
     {
         try {
             DB::beginTransaction();
-            
+
             $updateData = [
                 'module_enable_itdoc' => $data['module_enable_itdoc'] ?? false,
                 'module_enable_accounting' => $data['module_enable_accounting'] ?? false,
@@ -458,43 +423,40 @@ class SettingsService
                 'ticket_autoclose' => $data['ticket_autoclose'] ?? false,
                 'ticket_autoclose_hours' => $data['ticket_autoclose_hours'] ?? 72,
             ];
-            
+
             // Generate cron key if cron is enabled and no key exists
             if ($updateData['enable_cron'] && empty($setting->cron_key)) {
                 $updateData['cron_key'] = bin2hex(random_bytes(32));
             }
-            
+
             $setting->update($updateData);
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update integrations settings: ' . $e->getMessage());
+            Log::error('Failed to update integrations settings: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Update general settings
-     * 
-     * @param Setting $setting
-     * @param array $data
-     * @return bool
      */
     public function updateGeneralSettings(Setting $setting, array $data): bool
     {
         try {
             DB::beginTransaction();
-            
+
             // Update company information
             $company = $setting->company;
             $companyData = [
                 'name' => $data['company_name'],
                 'currency' => $data['company_currency'] ?? 'USD',
             ];
-            
+
             // Add company address and contact fields if they exist in the data
             if (isset($data['business_address'])) {
                 $companyData['address'] = $data['business_address'];
@@ -511,9 +473,9 @@ class SettingsService
             if (isset($data['company_logo'])) {
                 $companyData['logo'] = $data['company_logo'];
             }
-            
+
             $company->update($companyData);
-            
+
             $updateData = [
                 'company_logo' => $data['company_logo'] ?? null,
                 'company_colors' => $data['company_colors'] ?? null,
@@ -532,11 +494,11 @@ class SettingsService
                 'theme' => $data['theme'],
                 'start_page' => $data['start_page'] ?? 'dashboard',
             ];
-            
+
             $setting->update($updateData);
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -545,30 +507,27 @@ class SettingsService
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-                'data' => $data
+                'data' => $data,
             ]);
+
             return false;
         }
     }
-    
+
     /**
      * Update billing and financial settings
-     * 
-     * @param Setting $setting
-     * @param array $data
-     * @return bool
      */
     public function updateBillingFinancialSettings(Setting $setting, array $data): bool
     {
         try {
             DB::beginTransaction();
-            
+
             Log::info('SettingsService: Starting updateBillingFinancialSettings', [
                 'setting_id' => $setting->id,
                 'company_id' => $setting->company_id,
-                'incoming_data' => $data
+                'incoming_data' => $data,
             ]);
-            
+
             // Build payment gateway settings from individual form fields
             $paypalSettings = null;
             if (isset($data['paypal_enabled']) || isset($data['paypal_client_id']) || isset($data['paypal_client_secret'])) {
@@ -576,7 +535,7 @@ class SettingsService
                     'enabled' => filter_var($data['paypal_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
                     'client_id' => $data['paypal_client_id'] ?? null,
                 ];
-                if (!empty($data['paypal_client_secret'])) {
+                if (! empty($data['paypal_client_secret'])) {
                     $paypalSettings['client_secret'] = $data['paypal_client_secret'];
                 }
             }
@@ -587,7 +546,7 @@ class SettingsService
                     'enabled' => filter_var($data['stripe_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
                     'publishable_key' => $data['stripe_publishable_key'] ?? null,
                 ];
-                if (!empty($data['stripe_secret_key'])) {
+                if (! empty($data['stripe_secret_key'])) {
                     $stripeSettings['secret_key'] = $data['stripe_secret_key'];
                 }
             }
@@ -673,29 +632,30 @@ class SettingsService
                 'send_invoice_reminders' => $data['send_invoice_reminders'] ?? true,
                 'invoice_overdue_reminders' => $data['invoice_overdue_reminders'] ?? null,
             ];
-            
+
             Log::info('SettingsService: About to update setting', [
                 'setting_id' => $setting->id,
-                'update_data' => $updateData
+                'update_data' => $updateData,
             ]);
-            
+
             $updateResult = $setting->update($updateData);
-            
+
             Log::info('SettingsService: Update result', [
                 'update_result' => $updateResult,
-                'setting_id' => $setting->id
+                'setting_id' => $setting->id,
             ]);
-            
-            if (!$updateResult) {
+
+            if (! $updateResult) {
                 DB::rollBack();
                 Log::error('Failed to update billing/financial settings: update returned false', [
                     'setting_id' => $setting->id,
                     'company_id' => $setting->company_id,
-                    'data_keys' => array_keys($data)
+                    'data_keys' => array_keys($data),
                 ]);
+
                 return false;
             }
-            
+
             // Verify the data was actually saved
             $setting->refresh();
             Log::info('SettingsService: Post-save verification', [
@@ -707,38 +667,35 @@ class SettingsService
                 'paypal_enabled' => $setting->paypal_enabled,
                 'ach_enabled' => $setting->ach_enabled,
                 'wire_enabled' => $setting->wire_enabled,
-                'check_enabled' => $setting->check_enabled
+                'check_enabled' => $setting->check_enabled,
             ]);
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update billing/financial settings: ' . $e->getMessage(), [
+            Log::error('Failed to update billing/financial settings: '.$e->getMessage(), [
                 'exception' => get_class($e),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'setting_id' => $setting->id ?? null,
                 'company_id' => $setting->company_id ?? null,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
-    
+
     /**
      * Update RMM and monitoring settings
-     * 
-     * @param Setting $setting
-     * @param array $data
-     * @return bool
      */
     public function updateRmmMonitoringSettings(Setting $setting, array $data): bool
     {
         try {
             DB::beginTransaction();
-            
+
             $updateData = [
                 'connectwise_automate_settings' => $data['connectwise_automate_settings'] ?? null,
                 'datto_rmm_settings' => $data['datto_rmm_settings'] ?? null,
@@ -755,31 +712,28 @@ class SettingsService
                 'auto_create_tickets_from_alerts' => $data['auto_create_tickets_from_alerts'] ?? false,
                 'alert_to_ticket_mapping' => $data['alert_to_ticket_mapping'] ?? null,
             ];
-            
+
             $setting->update($updateData);
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update RMM/monitoring settings: ' . $e->getMessage());
+            Log::error('Failed to update RMM/monitoring settings: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Update ticketing and service desk settings
-     * 
-     * @param Setting $setting
-     * @param array $data
-     * @return bool
      */
     public function updateTicketingServiceDeskSettings(Setting $setting, array $data): bool
     {
         try {
             DB::beginTransaction();
-            
+
             $updateData = [
                 'ticket_prefix' => $data['ticket_prefix'] ?? null,
                 'ticket_next_number' => $data['ticket_next_number'] ?? 1,
@@ -806,31 +760,28 @@ class SettingsService
                 'multichannel_settings' => $data['multichannel_settings'] ?? null,
                 'queue_management_settings' => $data['queue_management_settings'] ?? null,
             ];
-            
+
             $setting->update($updateData);
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update ticketing/service desk settings: ' . $e->getMessage());
+            Log::error('Failed to update ticketing/service desk settings: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Update compliance and audit settings
-     * 
-     * @param Setting $setting
-     * @param array $data
-     * @return bool
      */
     public function updateComplianceAuditSettings(Setting $setting, array $data): bool
     {
         try {
             DB::beginTransaction();
-            
+
             $updateData = [
                 'soc2_compliance_enabled' => $data['soc2_compliance_enabled'] ?? false,
                 'soc2_settings' => $data['soc2_settings'] ?? null,
@@ -849,31 +800,28 @@ class SettingsService
                 'audit_logging_enabled' => $data['audit_logging_enabled'] ?? true,
                 'audit_retention_days' => $data['audit_retention_days'] ?? 365,
             ];
-            
+
             $setting->update($updateData);
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update compliance/audit settings: ' . $e->getMessage());
+            Log::error('Failed to update compliance/audit settings: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Update user management settings
-     * 
-     * @param Setting $setting
-     * @param array $data
-     * @return bool
      */
     public function updateUserManagementSettings(Setting $setting, array $data): bool
     {
         try {
             DB::beginTransaction();
-            
+
             // Note: User management settings might be stored in a separate table
             // For now, we'll store them in JSON fields in the settings table
             $updateData = [
@@ -898,34 +846,32 @@ class SettingsService
                     'emergency_settings' => $data['emergency_settings'] ?? null,
                 ],
             ];
-            
+
             $setting->update($updateData);
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update user management settings: ' . $e->getMessage());
+            Log::error('Failed to update user management settings: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Get comprehensive settings for a company
-     * 
-     * @param Company $company
-     * @return array
      */
     public function getComprehensiveSettings(Company $company): array
     {
         $setting = $company->setting;
-        
-        if (!$setting) {
+
+        if (! $setting) {
             // Return default settings if none exist
             return $this->getDefaultSettings();
         }
-        
+
         return [
             // General & Company
             'company_name' => $company->name,
@@ -954,7 +900,7 @@ class SettingsService
             'date_format' => $setting->date_format ?? 'Y-m-d',
             'theme' => $setting->theme ?? 'blue',
             'start_page' => $setting->start_page ?? 'dashboard',
-            
+
             // Security
             'password_min_length' => $setting->password_min_length ?? 8,
             'password_require_special' => $setting->password_require_special ?? true,
@@ -977,7 +923,7 @@ class SettingsService
             'audit_retention_days' => $setting->audit_retention_days ?? 365,
             'login_message' => $setting->login_message,
             'login_key_required' => $setting->login_key_required ?? false,
-            
+
             // Add other categories...
             'multi_currency_enabled' => $setting->multi_currency_enabled ?? false,
             'recurring_billing_enabled' => $setting->recurring_billing_enabled ?? true,
@@ -985,13 +931,13 @@ class SettingsService
             'customer_satisfaction_enabled' => $setting->customer_satisfaction_enabled ?? false,
             'client_portal_enable' => $setting->client_portal_enable ?? true,
             'auto_create_tickets_from_alerts' => $setting->auto_create_tickets_from_alerts ?? false,
-            
+
             // Compliance
             'soc2_compliance_enabled' => $setting->soc2_compliance_enabled ?? false,
             'hipaa_compliance_enabled' => $setting->hipaa_compliance_enabled ?? false,
             'pci_compliance_enabled' => $setting->pci_compliance_enabled ?? false,
             'gdpr_compliance_enabled' => $setting->gdpr_compliance_enabled ?? false,
-            
+
             // System
             'enable_cron' => $setting->enable_cron ?? false,
             'enable_alert_domain_expire' => $setting->enable_alert_domain_expire ?? true,
@@ -1002,11 +948,9 @@ class SettingsService
             'module_enable_ticketing' => $setting->module_enable_ticketing ?? true,
         ];
     }
-    
+
     /**
      * Get default settings
-     * 
-     * @return array
      */
     private function getDefaultSettings(): array
     {
@@ -1052,12 +996,9 @@ class SettingsService
             'module_enable_ticketing' => true,
         ];
     }
-    
+
     /**
      * Get or create company customization
-     * 
-     * @param Company $company
-     * @return CompanyCustomization
      */
     public function getCompanyCustomization(Company $company): CompanyCustomization
     {
@@ -1075,84 +1016,73 @@ class SettingsService
             }
         );
     }
-    
+
     /**
      * Update company colors
-     * 
-     * @param Company $company
-     * @param array $colors
-     * @return bool
      */
     public function updateCompanyColors(Company $company, array $colors): bool
     {
         try {
             DB::beginTransaction();
-            
+
             $customization = $this->getCompanyCustomization($company);
             $customization->setColors($colors);
             $customization->save();
-            
+
             // Clear cache
             Cache::forget("company_customization_{$company->id}");
             Cache::forget("company_css_{$company->id}");
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to update company colors: ' . $e->getMessage());
+            Log::error('Failed to update company colors: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Apply color preset to company
-     * 
-     * @param Company $company
-     * @param string $preset
-     * @return bool
      */
     public function applyColorPreset(Company $company, string $preset): bool
     {
         try {
             DB::beginTransaction();
-            
+
             $customization = $this->getCompanyCustomization($company);
             $customization->applyColorPreset($preset);
             $customization->save();
-            
+
             // Clear cache
             Cache::forget("company_customization_{$company->id}");
             Cache::forget("company_css_{$company->id}");
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to apply color preset: ' . $e->getMessage());
+            Log::error('Failed to apply color preset: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Get company colors
-     * 
-     * @param Company $company
-     * @return array
      */
     public function getCompanyColors(Company $company): array
     {
         $customization = $this->getCompanyCustomization($company);
+
         return $customization->getColors();
     }
-    
+
     /**
      * Generate CSS custom properties for company
-     * 
-     * @param Company $company
-     * @return string
      */
     public function generateCompanyCss(Company $company): string
     {
@@ -1161,44 +1091,41 @@ class SettingsService
             now()->addHours(24),
             function () use ($company) {
                 $customization = $this->getCompanyCustomization($company);
-                return ":root {\n  " . $customization->getCssCustomProperties() . "\n}";
+
+                return ":root {\n  ".$customization->getCssCustomProperties()."\n}";
             }
         );
     }
-    
+
     /**
      * Reset company colors to default
-     * 
-     * @param Company $company
-     * @return bool
      */
     public function resetCompanyColors(Company $company): bool
     {
         try {
             DB::beginTransaction();
-            
+
             $customization = $this->getCompanyCustomization($company);
             $customization->resetColors();
             $customization->save();
-            
+
             // Clear cache
             Cache::forget("company_customization_{$company->id}");
             Cache::forget("company_css_{$company->id}");
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to reset company colors: ' . $e->getMessage());
+            Log::error('Failed to reset company colors: '.$e->getMessage());
+
             return false;
         }
     }
-    
+
     /**
      * Get available color presets
-     * 
-     * @return array
      */
     public function getColorPresets(): array
     {

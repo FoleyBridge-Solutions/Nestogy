@@ -2,29 +2,31 @@
 
 namespace App\Domains\Contract\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractTypeDefinition;
-use App\Domains\Contract\Services\DynamicContractFormBuilder;
-use App\Domains\Contract\Services\DynamicContractViewBuilder;
-use App\Domains\Contract\Services\DynamicContractNavigationService;
 use App\Domains\Contract\Services\ContractService;
+use App\Domains\Contract\Services\DynamicContractFormBuilder;
+use App\Domains\Contract\Services\DynamicContractNavigationService;
+use App\Domains\Contract\Services\DynamicContractViewBuilder;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
  * DynamicContractController
- * 
+ *
  * Universal controller that handles all contract types dynamically.
  * Replaces hardcoded controllers with configuration-driven approach.
  */
 class DynamicContractController extends Controller
 {
     protected $formBuilder;
+
     protected $viewBuilder;
+
     protected $navigationService;
+
     protected $contractService;
 
     public function __construct(
@@ -37,7 +39,7 @@ class DynamicContractController extends Controller
         $this->viewBuilder = $viewBuilder;
         $this->navigationService = $navigationService;
         $this->contractService = $contractService;
-        
+
         $this->middleware('auth');
     }
 
@@ -50,14 +52,14 @@ class DynamicContractController extends Controller
 
         // Validate contract type
         $typeDefinition = $this->getContractTypeDefinition($contractType);
-        
+
         // Get view configuration
         $viewConfig = $this->viewBuilder->buildIndexView($contractType);
-        
+
         // Get filters from request
         $filters = $request->only([
-            'status', 'client_id', 'start_date_from', 'start_date_to', 
-            'end_date_from', 'end_date_to', 'search'
+            'status', 'client_id', 'start_date_from', 'start_date_to',
+            'end_date_from', 'end_date_to', 'search',
         ]);
         $filters['contract_type'] = $contractType;
 
@@ -74,7 +76,7 @@ class DynamicContractController extends Controller
                 'data' => [
                     'contracts' => $contracts,
                     'view_config' => $viewConfig,
-                ]
+                ],
             ]);
         }
 
@@ -92,15 +94,15 @@ class DynamicContractController extends Controller
 
         // Validate contract type
         $typeDefinition = $this->getContractTypeDefinition($contractType);
-        
+
         // Check permissions
-        if (!$typeDefinition->hasCreatePermission(Auth::user())) {
+        if (! $typeDefinition->hasCreatePermission(Auth::user())) {
             abort(403, 'You do not have permission to create this contract type');
         }
 
         // Build form configuration
         $formConfig = $this->formBuilder->buildCreateForm($contractType);
-        
+
         // Get breadcrumbs
         $breadcrumbs = $this->navigationService->getBreadcrumbs($contractType, 'create');
 
@@ -128,15 +130,15 @@ class DynamicContractController extends Controller
             // Validate form data
             $formConfig = $this->formBuilder->buildCreateForm($contractType);
             $validationResult = $this->formBuilder->validateFormData($contractType, $request->all());
-            
-            if (!$validationResult['valid']) {
+
+            if (! $validationResult['valid']) {
                 if ($request->wantsJson()) {
                     return response()->json([
                         'success' => false,
                         'errors' => $validationResult['errors'],
                     ], 422);
                 }
-                
+
                 return back()->withInput()->withErrors($validationResult['errors']);
             }
 
@@ -149,7 +151,7 @@ class DynamicContractController extends Controller
             // Apply default values from type definition
             $defaultValues = $typeDefinition->getDefaultValues();
             foreach ($defaultValues as $field => $value) {
-                if (!isset($data[$field]) || $data[$field] === '') {
+                if (! isset($data[$field]) || $data[$field] === '') {
                     $data[$field] = $value;
                 }
             }
@@ -171,7 +173,7 @@ class DynamicContractController extends Controller
                     'data' => [
                         'contract' => $contract->load(['client']),
                         'redirect_url' => route("contracts.{$contractType}.show", $contract),
-                    ]
+                    ],
                 ], 201);
             }
 
@@ -184,17 +186,17 @@ class DynamicContractController extends Controller
                 'contract_type' => $contractType,
                 'error' => $e->getMessage(),
                 'user_id' => Auth::id(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create contract: ' . $e->getMessage()
+                    'message' => 'Failed to create contract: '.$e->getMessage(),
                 ], 422);
             }
 
-            return back()->withInput()->with('error', 'Failed to create contract: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create contract: '.$e->getMessage());
         }
     }
 
@@ -212,10 +214,10 @@ class DynamicContractController extends Controller
 
         // Build view configuration
         $viewConfig = $this->viewBuilder->buildDetailView($contract);
-        
+
         // Get breadcrumbs
         $breadcrumbs = $this->navigationService->getBreadcrumbs($contractType, 'show', $contract);
-        
+
         // Get action buttons
         $actions = $this->navigationService->getActionButtons($contract);
 
@@ -225,7 +227,7 @@ class DynamicContractController extends Controller
                 'data' => [
                     'contract' => $contract,
                     'view_config' => $viewConfig,
-                ]
+                ],
             ]);
         }
 
@@ -247,13 +249,13 @@ class DynamicContractController extends Controller
         }
 
         // Check if contract can be edited
-        if (!$contract->canBeEdited()) {
+        if (! $contract->canBeEdited()) {
             return back()->with('error', 'This contract cannot be edited in its current state');
         }
 
         // Build form configuration
         $formConfig = $this->formBuilder->buildEditForm($contract);
-        
+
         // Get breadcrumbs
         $breadcrumbs = $this->navigationService->getBreadcrumbs($contractType, 'edit', $contract);
 
@@ -277,24 +279,24 @@ class DynamicContractController extends Controller
         try {
             // Validate form data
             $validationResult = $this->formBuilder->validateFormData($contractType, $request->all());
-            
-            if (!$validationResult['valid']) {
+
+            if (! $validationResult['valid']) {
                 if ($request->wantsJson()) {
                     return response()->json([
                         'success' => false,
                         'errors' => $validationResult['errors'],
                     ], 422);
                 }
-                
+
                 return back()->withInput()->withErrors($validationResult['errors']);
             }
 
             // Update contract
             $data = $request->all();
             unset($data['contract_type']); // Don't allow changing contract type
-            
+
             $contract = $this->contractService->updateContract($contract, $data);
-            
+
             Log::info('Dynamic contract updated', [
                 'contract_id' => $contract->id,
                 'contract_type' => $contractType,
@@ -308,7 +310,7 @@ class DynamicContractController extends Controller
                     'message' => 'Contract updated successfully',
                     'data' => [
                         'contract' => $contract->load(['client']),
-                    ]
+                    ],
                 ]);
             }
 
@@ -321,17 +323,17 @@ class DynamicContractController extends Controller
                 'contract_id' => $contract->id,
                 'contract_type' => $contractType,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update contract: ' . $e->getMessage()
+                    'message' => 'Failed to update contract: '.$e->getMessage(),
                 ], 422);
             }
 
-            return back()->withInput()->with('error', 'Failed to update contract: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update contract: '.$e->getMessage());
         }
     }
 
@@ -350,7 +352,7 @@ class DynamicContractController extends Controller
         try {
             $contractNumber = $contract->contract_number;
             $this->contractService->deleteContract($contract);
-            
+
             Log::warning('Dynamic contract deleted', [
                 'contract_id' => $contract->id,
                 'contract_type' => $contractType,
@@ -361,7 +363,7 @@ class DynamicContractController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Contract deleted successfully'
+                    'message' => 'Contract deleted successfully',
                 ]);
             }
 
@@ -374,17 +376,17 @@ class DynamicContractController extends Controller
                 'contract_id' => $contract->id,
                 'contract_type' => $contractType,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to delete contract: ' . $e->getMessage()
+                    'message' => 'Failed to delete contract: '.$e->getMessage(),
                 ], 422);
             }
 
-            return back()->with('error', 'Failed to delete contract: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete contract: '.$e->getMessage());
         }
     }
 
@@ -414,7 +416,7 @@ class DynamicContractController extends Controller
 
             // For now, simple status update
             $contract->update(['status' => $newStatus]);
-            
+
             Log::info('Dynamic contract status updated', [
                 'contract_id' => $contract->id,
                 'contract_type' => $contractType,
@@ -430,7 +432,7 @@ class DynamicContractController extends Controller
                     'message' => "Contract status updated to {$newStatus}",
                     'data' => [
                         'contract' => $contract->fresh()->load(['client']),
-                    ]
+                    ],
                 ]);
             }
 
@@ -443,17 +445,17 @@ class DynamicContractController extends Controller
                 'contract_id' => $contract->id,
                 'contract_type' => $contractType,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update contract status: ' . $e->getMessage()
+                    'message' => 'Failed to update contract status: '.$e->getMessage(),
                 ], 422);
             }
 
-            return back()->with('error', 'Failed to update contract status: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update contract status: '.$e->getMessage());
         }
     }
 
@@ -472,11 +474,11 @@ class DynamicContractController extends Controller
         try {
             // This would integrate with the contract generation service
             // For now, return a placeholder response
-            
+
             Log::info('Dynamic contract PDF requested', [
                 'contract_id' => $contract->id,
                 'contract_type' => $contractType,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Placeholder - would generate actual PDF
@@ -491,10 +493,10 @@ class DynamicContractController extends Controller
                 'contract_id' => $contract->id,
                 'contract_type' => $contractType,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to generate PDF: ' . $e->getMessage());
+            return back()->with('error', 'Failed to generate PDF: '.$e->getMessage());
         }
     }
 
@@ -508,7 +510,7 @@ class DynamicContractController extends Controller
             ->where('is_active', true)
             ->first();
 
-        if (!$typeDefinition) {
+        if (! $typeDefinition) {
             abort(404, "Contract type '{$contractType}' not found or inactive");
         }
 

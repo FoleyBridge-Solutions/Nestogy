@@ -2,16 +2,16 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuditLog;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\AuditLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * AuditLogMiddleware
- * 
+ *
  * Logs all user actions, data changes, and security events.
  * Tracks request/response details for comprehensive auditing.
  */
@@ -72,7 +72,7 @@ class AuditLogMiddleware
     protected function shouldLog(Request $request): bool
     {
         // Don't log if user is not authenticated (unless it's a security event)
-        if (!Auth::check() && !$this->isSecurityEvent($request)) {
+        if (! Auth::check() && ! $this->isSecurityEvent($request)) {
             return false;
         }
 
@@ -101,8 +101,9 @@ class AuditLogMiddleware
     {
         $path = $request->path();
         $staticExtensions = ['js', 'css', 'jpg', 'jpeg', 'png', 'gif', 'svg', 'ico', 'woff', 'woff2', 'ttf', 'eot'];
-        
+
         $extension = pathinfo($path, PATHINFO_EXTENSION);
+
         return in_array(strtolower($extension), $staticExtensions);
     }
 
@@ -113,7 +114,7 @@ class AuditLogMiddleware
     {
         $securityRoutes = ['login', 'logout', 'password.*', 'verification.*'];
         $routeName = Route::currentRouteName();
-        
+
         if ($routeName) {
             foreach ($securityRoutes as $pattern) {
                 if (fnmatch($pattern, $routeName)) {
@@ -159,10 +160,10 @@ class AuditLogMiddleware
     {
         $executionTime = microtime(true) - $startTime;
         $routeName = Route::currentRouteName() ?? $request->path();
-        
+
         // Determine event type
         $eventType = $this->determineEventType($request);
-        
+
         // Prepare request data
         $requestData = [
             'user_id' => Auth::id(),
@@ -201,9 +202,15 @@ class AuditLogMiddleware
 
         // Check for specific routes
         if ($routeName) {
-            if (str_contains($routeName, 'login')) return AuditLog::EVENT_LOGIN;
-            if (str_contains($routeName, 'logout')) return AuditLog::EVENT_LOGOUT;
-            if (str_contains($routeName, 'api.')) return AuditLog::EVENT_API;
+            if (str_contains($routeName, 'login')) {
+                return AuditLog::EVENT_LOGIN;
+            }
+            if (str_contains($routeName, 'logout')) {
+                return AuditLog::EVENT_LOGOUT;
+            }
+            if (str_contains($routeName, 'api.')) {
+                return AuditLog::EVENT_API;
+            }
         }
 
         // Check for suspicious activity
@@ -212,7 +219,7 @@ class AuditLogMiddleware
         }
 
         // Determine by HTTP method
-        return match($method) {
+        return match ($method) {
             'POST' => AuditLog::EVENT_CREATE,
             'PUT', 'PATCH' => AuditLog::EVENT_UPDATE,
             'DELETE' => AuditLog::EVENT_DELETE,
@@ -232,7 +239,8 @@ class AuditLogMiddleware
 
         $method = $request->method();
         $path = $request->path();
-        return strtolower($method) . ' ' . $path;
+
+        return strtolower($method).' '.$path;
     }
 
     /**
@@ -262,6 +270,7 @@ class AuditLogMiddleware
     protected function getFilteredRequestBody(Request $request): array
     {
         $data = $request->all();
+
         return $this->filterSensitiveData($data);
     }
 
@@ -291,6 +300,7 @@ class AuditLogMiddleware
                 return true;
             }
         }
+
         return false;
     }
 
@@ -351,7 +361,7 @@ class AuditLogMiddleware
     protected function getAffectedModel(Request $request)
     {
         $route = Route::current();
-        if (!$route) {
+        if (! $route) {
             return null;
         }
 

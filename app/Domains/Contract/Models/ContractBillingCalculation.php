@@ -2,28 +2,24 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Domains\Contract\Models\Contract;
-use App\Domains\Contract\Models\ContractAssetAssignment;
-use App\Domains\Contract\Models\ContractContactAssignment;
 use App\Models\Company;
-use App\Models\User;
 use App\Models\Invoice;
+use App\Models\User;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * Contract Billing Calculation Model
- * 
+ *
  * Represents automated billing calculations for programmable contracts,
  * including asset-based, contact-based, and usage-based billing.
  */
 class ContractBillingCalculation extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -172,27 +168,39 @@ class ContractBillingCalculation extends Model
      * Status constants
      */
     const STATUS_DRAFT = 'draft';
+
     const STATUS_CALCULATED = 'calculated';
+
     const STATUS_REVIEWED = 'reviewed';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_INVOICED = 'invoiced';
+
     const STATUS_DISPUTED = 'disputed';
 
     /**
      * Billing type constants
      */
     const BILLING_TYPE_MONTHLY = 'monthly';
+
     const BILLING_TYPE_QUARTERLY = 'quarterly';
+
     const BILLING_TYPE_ANNUALLY = 'annually';
+
     const BILLING_TYPE_CUSTOM = 'custom';
+
     const BILLING_TYPE_ONE_TIME = 'one_time';
 
     /**
      * Calculation method constants
      */
     const CALCULATION_METHOD_MANUAL = 'manual';
+
     const CALCULATION_METHOD_AUTOMATIC = 'automatic';
+
     const CALCULATION_METHOD_SCHEDULED = 'scheduled';
+
     const CALCULATION_METHOD_TRIGGERED = 'triggered';
 
     /**
@@ -234,14 +242,14 @@ class ContractBillingCalculation extends Model
     public function assetAssignments(): HasMany
     {
         return $this->contract->hasMany(ContractAssetAssignment::class)
-                    ->whereBetween('start_date', [$this->billing_period_start, $this->billing_period_end])
-                    ->orWhere(function($query) {
-                        $query->where('start_date', '<=', $this->billing_period_start)
-                              ->where(function($q) {
-                                  $q->whereNull('end_date')
-                                    ->orWhere('end_date', '>=', $this->billing_period_end);
-                              });
+            ->whereBetween('start_date', [$this->billing_period_start, $this->billing_period_end])
+            ->orWhere(function ($query) {
+                $query->where('start_date', '<=', $this->billing_period_start)
+                    ->where(function ($q) {
+                        $q->whereNull('end_date')
+                            ->orWhere('end_date', '>=', $this->billing_period_end);
                     });
+            });
     }
 
     /**
@@ -250,14 +258,14 @@ class ContractBillingCalculation extends Model
     public function contactAssignments(): HasMany
     {
         return $this->contract->hasMany(ContractContactAssignment::class)
-                    ->whereBetween('start_date', [$this->billing_period_start, $this->billing_period_end])
-                    ->orWhere(function($query) {
-                        $query->where('start_date', '<=', $this->billing_period_start)
-                              ->where(function($q) {
-                                  $q->whereNull('end_date')
-                                    ->orWhere('end_date', '>=', $this->billing_period_end);
-                              });
+            ->whereBetween('start_date', [$this->billing_period_start, $this->billing_period_end])
+            ->orWhere(function ($query) {
+                $query->where('start_date', '<=', $this->billing_period_start)
+                    ->where(function ($q) {
+                        $q->whereNull('end_date')
+                            ->orWhere('end_date', '>=', $this->billing_period_end);
                     });
+            });
     }
 
     /**
@@ -266,7 +274,7 @@ class ContractBillingCalculation extends Model
     public function scopeForPeriod($query, $start, $end)
     {
         return $query->where('billing_period_start', '>=', $start)
-                    ->where('billing_period_end', '<=', $end);
+            ->where('billing_period_end', '<=', $end);
     }
 
     public function scopeByStatus($query, $status)
@@ -292,8 +300,8 @@ class ContractBillingCalculation extends Model
     public function scopeReadyForInvoicing($query)
     {
         return $query->where('status', self::STATUS_APPROVED)
-                    ->where('auto_invoice', true)
-                    ->whereNull('invoice_id');
+            ->where('auto_invoice', true)
+            ->whereNull('invoice_id');
     }
 
     /**
@@ -380,7 +388,7 @@ class ContractBillingCalculation extends Model
             return $this->period_description;
         }
 
-        return $this->billing_period_start->format('M Y') . ' - ' . $this->billing_period_end->format('M Y');
+        return $this->billing_period_start->format('M Y').' - '.$this->billing_period_end->format('M Y');
     }
 
     /**
@@ -388,10 +396,10 @@ class ContractBillingCalculation extends Model
      */
     public function isReadyForInvoicing(): bool
     {
-        return $this->status === self::STATUS_APPROVED && 
-               $this->auto_invoice && 
-               !$this->invoice_id &&
-               !$this->has_disputes;
+        return $this->status === self::STATUS_APPROVED &&
+               $this->auto_invoice &&
+               ! $this->invoice_id &&
+               ! $this->has_disputes;
     }
 
     /**
@@ -399,9 +407,9 @@ class ContractBillingCalculation extends Model
      */
     public function getTotalServiceCharges(): float
     {
-        return $this->monitoring_charges + 
-               $this->backup_charges + 
-               $this->security_charges + 
+        return $this->monitoring_charges +
+               $this->backup_charges +
+               $this->security_charges +
                $this->maintenance_charges;
     }
 
@@ -420,7 +428,7 @@ class ContractBillingCalculation extends Model
             'discounts' => -$this->discounts_applied,
             'surcharges' => $this->surcharges_applied,
             'tax' => $this->tax_amount,
-            'total' => $this->total_amount
+            'total' => $this->total_amount,
         ];
     }
 
@@ -433,7 +441,7 @@ class ContractBillingCalculation extends Model
         $log[] = [
             'step' => $step,
             'data' => $data,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
         $this->calculation_log = $log;
     }

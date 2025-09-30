@@ -2,20 +2,23 @@
 
 namespace App\Livewire\Financial;
 
-use Livewire\Component;
 use App\Traits\QuotePricingCalculations;
+use Livewire\Component;
 
 class QuotePricingSummary extends Component
 {
     use QuotePricingCalculations;
 
     public $pricing = [];
+
     public $currency_code = 'USD';
+
     public $showBreakdown = false;
+
     public $taxBreakdown = [];
 
     protected $listeners = [
-        'pricingUpdated' => 'updatePricing'
+        'pricingUpdated' => 'updatePricing',
     ];
 
     public function mount($pricing = [], $currency_code = 'USD')
@@ -26,9 +29,9 @@ class QuotePricingSummary extends Component
             'tax' => 0,
             'total' => 0,
             'savings' => 0,
-            'recurring' => ['monthly' => 0, 'annual' => 0]
+            'recurring' => ['monthly' => 0, 'annual' => 0],
         ];
-        
+
         $this->currency_code = $currency_code;
         $this->calculateTaxBreakdown();
     }
@@ -41,7 +44,7 @@ class QuotePricingSummary extends Component
 
     public function toggleBreakdown()
     {
-        $this->showBreakdown = !$this->showBreakdown;
+        $this->showBreakdown = ! $this->showBreakdown;
     }
 
     protected function calculateTaxBreakdown()
@@ -52,18 +55,18 @@ class QuotePricingSummary extends Component
                     [
                         'name' => 'State Tax',
                         'rate' => 6.25,
-                        'amount' => ($this->pricing['tax'] ?? 0) * 0.8
+                        'amount' => ($this->pricing['tax'] ?? 0) * 0.8,
                     ],
                     [
                         'name' => 'Local Tax',
                         'rate' => 2.0,
-                        'amount' => ($this->pricing['tax'] ?? 0) * 0.2
-                    ]
+                        'amount' => ($this->pricing['tax'] ?? 0) * 0.2,
+                    ],
                 ],
                 'total_tax' => $this->pricing['tax'] ?? 0,
-                'effective_rate' => ($this->pricing['subtotal'] ?? 0) > 0 
-                    ? (($this->pricing['tax'] ?? 0) / ($this->pricing['subtotal'] ?? 0)) * 100 
-                    : 0
+                'effective_rate' => ($this->pricing['subtotal'] ?? 0) > 0
+                    ? (($this->pricing['tax'] ?? 0) / ($this->pricing['subtotal'] ?? 0)) * 100
+                    : 0,
             ];
         } else {
             $this->taxBreakdown = [];
@@ -108,7 +111,7 @@ class QuotePricingSummary extends Component
 
     public function getHasRecurringProperty()
     {
-        return ($this->pricing['recurring']['monthly'] ?? 0) > 0 || 
+        return ($this->pricing['recurring']['monthly'] ?? 0) > 0 ||
                ($this->pricing['recurring']['annual'] ?? 0) > 0;
     }
 
@@ -131,29 +134,30 @@ class QuotePricingSummary extends Component
     {
         $subtotal = $this->pricing['subtotal'] ?? 0;
         $tax = $this->pricing['tax'] ?? 0;
-        
+
         if ($subtotal > 0) {
-            return number_format(($tax / $subtotal) * 100, 2) . '%';
+            return number_format(($tax / $subtotal) * 100, 2).'%';
         }
-        
+
         return '0%';
     }
 
     protected function formatCurrency($amount, $currencyCode = null)
     {
         $currency = $currencyCode ?? $this->currency_code;
-        
+
         $symbols = [
             'USD' => '$',
             'EUR' => '€',
             'GBP' => '£',
             'CAD' => 'C$',
             'AUD' => 'A$',
-            'JPY' => '¥'
+            'JPY' => '¥',
         ];
 
         $symbol = $symbols[$currency] ?? $currency;
-        return $symbol . number_format($amount, 2);
+
+        return $symbol.number_format($amount, 2);
     }
 
     public function render()

@@ -2,21 +2,21 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Traits\BelongsToCompany;
 use App\Domains\Contract\Traits\HasConditionalLogic;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * ContractTypeFormMapping Model
- * 
+ *
  * Maps form sections to contract types with specific configurations.
  * Allows different contract types to have different form layouts.
  */
 class ContractTypeFormMapping extends Model
 {
-    use HasFactory, BelongsToCompany, HasConditionalLogic;
+    use BelongsToCompany, HasConditionalLogic, HasFactory;
 
     protected $table = 'contract_type_form_mappings';
 
@@ -71,7 +71,7 @@ class ContractTypeFormMapping extends Model
         $overrides = $this->getFieldOverrides();
         $fieldSlug = $field->field_slug;
 
-        if (!isset($overrides[$fieldSlug])) {
+        if (! isset($overrides[$fieldSlug])) {
             return $field->toArray();
         }
 

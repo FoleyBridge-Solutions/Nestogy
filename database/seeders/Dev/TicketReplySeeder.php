@@ -2,10 +2,10 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
-use App\Models\TicketReply;
 use App\Domains\Ticket\Models\Ticket;
+use App\Models\TicketReply;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class TicketReplySeeder extends Seeder
 {
@@ -20,10 +20,10 @@ class TicketReplySeeder extends Seeder
         foreach ($tickets as $ticket) {
             // Generate 2-10 replies per ticket
             $replyCount = rand(2, 10);
-            
+
             for ($i = 0; $i < $replyCount; $i++) {
                 $isTechReply = fake()->boolean(70); // 70% tech replies
-                $user = $isTechReply 
+                $user = $isTechReply
                     ? $users->where('company_id', $ticket->company_id)->random()
                     : $users->random();
 
@@ -44,7 +44,7 @@ class TicketReplySeeder extends Seeder
                 }
 
                 // Add sentiment for customer replies
-                if (!$isTechReply && fake()->boolean(60)) {
+                if (! $isTechReply && fake()->boolean(60)) {
                     if (fake()->boolean(70)) {
                         TicketReply::factory()
                             ->positiveSentiment()

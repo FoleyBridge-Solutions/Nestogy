@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Ticket;
 use App\Models\Client;
 use App\Models\Company;
+use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -26,7 +26,7 @@ class TicketFactory extends Factory
     public function definition(): array
     {
         $createdAt = $this->faker->dateTimeBetween('-6 months', 'now');
-        
+
         return [
             'company_id' => Company::factory(),
             'client_id' => Client::factory(),
@@ -94,7 +94,7 @@ class TicketFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $resolvedAt = $this->faker->dateTimeBetween($attributes['created_at'], 'now');
-            
+
             return [
                 'status' => 'resolved',
                 'assigned_to' => User::factory(),
@@ -113,7 +113,7 @@ class TicketFactory extends Factory
         return $this->state(function (array $attributes) {
             $resolvedAt = $this->faker->dateTimeBetween($attributes['created_at'], 'now');
             $closedAt = $this->faker->dateTimeBetween($resolvedAt, 'now');
-            
+
             return [
                 'status' => 'closed',
                 'assigned_to' => User::factory(),
@@ -225,7 +225,7 @@ class TicketFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $dueDate = $this->faker->dateTimeBetween('-30 days', '-1 day');
-            
+
             return [
                 'due_date' => $dueDate,
                 'status' => $this->faker->randomElement(['open', 'in_progress', 'pending']),
@@ -262,7 +262,7 @@ class TicketFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $createdAt = $this->faker->dateTimeBetween('-7 days', 'now');
-            
+
             return [
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
@@ -273,7 +273,7 @@ class TicketFactory extends Factory
     /**
      * Set as scheduled.
      */
-    public function scheduled(\DateTime $scheduledAt = null): static
+    public function scheduled(?\DateTime $scheduledAt = null): static
     {
         return $this->state(fn (array $attributes) => [
             'scheduled_at' => $scheduledAt ?? $this->faker->dateTimeBetween('now', '+7 days'),

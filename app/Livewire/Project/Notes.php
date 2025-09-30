@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Project;
 
-use Livewire\Component;
 use App\Domains\Project\Models\Project;
+use Livewire\Component;
 
 class Notes extends Component
 {

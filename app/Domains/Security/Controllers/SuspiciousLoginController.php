@@ -2,9 +2,9 @@
 
 namespace App\Domains\Security\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Domains\Security\Services\SuspiciousLoginService;
 use App\Domains\Security\Models\SuspiciousLoginAttempt;
+use App\Domains\Security\Services\SuspiciousLoginService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -24,7 +24,7 @@ class SuspiciousLoginController extends Controller
             ->pending()
             ->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return view('security.suspicious-login.invalid-token', [
                 'title' => 'Invalid or Expired Verification',
                 'message' => 'This verification link has expired or is invalid.',
@@ -33,7 +33,7 @@ class SuspiciousLoginController extends Controller
 
         if ($request->isMethod('POST')) {
             $trustLocation = $request->boolean('trust_location');
-            
+
             if ($trustLocation) {
                 $attempt->trusted_location_requested = true;
                 $attempt->save();
@@ -43,7 +43,7 @@ class SuspiciousLoginController extends Controller
 
             if ($success) {
                 Session::put('suspicious_login_approved', $attempt->verification_token);
-                
+
                 return view('security.suspicious-login.approved', [
                     'title' => 'Login Approved',
                     'message' => 'Your login has been approved successfully.',
@@ -70,7 +70,7 @@ class SuspiciousLoginController extends Controller
             ->pending()
             ->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return view('security.suspicious-login.invalid-token', [
                 'title' => 'Invalid or Expired Verification',
                 'message' => 'This verification link has expired or is invalid.',
@@ -105,7 +105,7 @@ class SuspiciousLoginController extends Controller
     {
         $attempt = SuspiciousLoginAttempt::where('verification_token', $token)->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return response()->json(['error' => 'Invalid token'], 404);
         }
 
@@ -121,14 +121,14 @@ class SuspiciousLoginController extends Controller
     public function checkApproval(Request $request)
     {
         $token = $request->input('token');
-        
-        if (!$token) {
+
+        if (! $token) {
             return response()->json(['approved' => false], 400);
         }
 
         $attempt = SuspiciousLoginAttempt::where('verification_token', $token)->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return response()->json(['approved' => false, 'error' => 'Invalid token'], 404);
         }
 
@@ -137,7 +137,7 @@ class SuspiciousLoginController extends Controller
 
         if ($approved) {
             $response['redirect_url'] = route('dashboard');
-            
+
             if ($attempt->user) {
                 Auth::login($attempt->user, true);
                 $response['authenticated'] = true;

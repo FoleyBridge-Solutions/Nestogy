@@ -11,7 +11,7 @@ trait HasPostGridIntegration
      */
     public function syncWithPostGrid(): void
     {
-        if (!$this->postgrid_id) {
+        if (! $this->postgrid_id) {
             $client = app(PostGridClient::class);
             $response = $client->create($this->getPostGridResource(), $this->toPostGridArray());
             $this->update(['postgrid_id' => $response['id']]);

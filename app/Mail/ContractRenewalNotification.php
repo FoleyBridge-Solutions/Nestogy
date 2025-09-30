@@ -29,9 +29,6 @@ class ContractRenewalNotification extends Mailable
 
     /**
      * Create a new message instance.
-     *
-     * @param Contract $contract
-     * @param int $daysBeforeExpiry
      */
     public function __construct(Contract $contract, int $daysBeforeExpiry)
     {
@@ -44,7 +41,7 @@ class ContractRenewalNotification extends Mailable
      */
     public function envelope(): Envelope
     {
-        $subject = match($this->daysBeforeExpiry) {
+        $subject = match ($this->daysBeforeExpiry) {
             90 => 'Contract Renewal Notice - 90 Days',
             60 => 'Contract Renewal Reminder - 60 Days',
             30 => 'Urgent: Contract Expires in 30 Days',
@@ -77,12 +74,11 @@ class ContractRenewalNotification extends Mailable
 
     /**
      * Calculate renewal value with escalation
-     *
-     * @return float
      */
     protected function calculateRenewalValue(): float
     {
         $escalationRate = $this->contract->escalation_rate ?? 3.0;
+
         return round($this->contract->value * (1 + ($escalationRate / 100)), 2);
     }
 

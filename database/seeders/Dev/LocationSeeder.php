@@ -2,9 +2,9 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
-use App\Models\Location;
 use App\Models\Client;
+use App\Models\Location;
+use Illuminate\Database\Seeder;
 
 class LocationSeeder extends Seeder
 {
@@ -14,19 +14,19 @@ class LocationSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('Creating locations for clients...');
-        
+
         $clients = Client::all();
-        
+
         foreach ($clients as $client) {
             // Each client gets 1-3 locations
             $numLocations = rand(1, 3);
-            
+
             // First location is always primary
             Location::factory()
                 ->forClient($client)
                 ->primary()
                 ->create();
-            
+
             // Additional locations if needed
             if ($numLocations > 1) {
                 Location::factory()
@@ -34,10 +34,10 @@ class LocationSeeder extends Seeder
                     ->forClient($client)
                     ->create();
             }
-            
+
             $this->command->info("    ✓ Created {$numLocations} location(s) for {$client->name}");
         }
-        
+
         $this->command->info('Locations created successfully.');
     }
 }

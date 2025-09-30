@@ -3,25 +3,26 @@
 namespace App\Domains\Financial\Services\TaxEngine;
 
 use App\Models\TaxApiQueryCache;
-use Exception;
 use Carbon\Carbon;
+use Exception;
 
 /**
  * FCC API Client
- * 
+ *
  * Free API for accessing FCC telecommunications data including:
  * - USF contribution factors
  * - PSAP (911) registry
  * - Area and Census Block data
  * - License information
- * 
+ *
  * API Documentation: https://www.fcc.gov/reports-research/developers
  */
 class FccApiClient extends BaseApiClient
 {
     protected string $baseUrl = 'https://api.fcc.gov';
+
     protected string $areaApiUrl = 'https://geo.fcc.gov/api/census';
-    
+
     // Current USF rates (updated quarterly)
     protected array $currentUsfRates = [
         '2025-Q1' => 0.360, // 36.0%
@@ -58,31 +59,31 @@ class FccApiClient extends BaseApiClient
 
     /**
      * Get current USF contribution factor
-     * 
-     * @param string|null $quarter Quarter to get rate for (e.g., '2025-Q1')
+     *
+     * @param  string|null  $quarter  Quarter to get rate for (e.g., '2025-Q1')
      * @return array USF rate information
      */
     public function getUsfRate(?string $quarter = null): array
     {
         $quarter = $quarter ?? $this->getCurrentQuarter();
         $parameters = ['quarter' => $quarter];
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_USF_RATES,
             $parameters,
             function () use ($quarter) {
                 // For now, use hardcoded rates as FCC doesn't have a direct API
                 // In production, this would scrape or fetch from FCC announcements
-                
+
                 $rate = $this->currentUsfRates[$quarter] ?? null;
-                
+
                 if ($rate === null) {
                     // Try to get the most recent rate
                     $quarters = array_keys($this->currentUsfRates);
                     rsort($quarters); // Sort in descending order
                     $latestQuarter = $quarters[0] ?? null;
                     $rate = $this->currentUsfRates[$latestQuarter] ?? 0.344; // Fallback
-                    
+
                     return [
                         'found' => false,
                         'quarter' => $quarter,
@@ -112,9 +113,9 @@ class FccApiClient extends BaseApiClient
 
     /**
      * Get area information by coordinates
-     * 
-     * @param float $latitude Latitude
-     * @param float $longitude Longitude
+     *
+     * @param  float  $latitude  Latitude
+     * @param  float  $longitude  Longitude
      * @return array Area information including market data
      */
     public function getAreaInfo(float $latitude, float $longitude): array
@@ -124,7 +125,7 @@ class FccApiClient extends BaseApiClient
             'lon' => $longitude,
             'format' => 'json',
         ];
-        
+
         return $this->makeRequest(
             'area_api',
             $parameters,
@@ -132,14 +133,14 @@ class FccApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->get("{$this->areaApiUrl}/area", $parameters);
 
-                if (!$response->successful()) {
-                    throw new Exception("FCC Area API failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('FCC Area API failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 return [
-                    'found' => !empty($data['results']),
+                    'found' => ! empty($data['results']),
                     'coordinates' => [
                         'latitude' => $parameters['lat'],
                         'longitude' => $parameters['lon'],
@@ -159,9 +160,9 @@ class FccApiClient extends BaseApiClient
 
     /**
      * Get Census Block information by coordinates
-     * 
-     * @param float $latitude Latitude
-     * @param float $longitude Longitude
+     *
+     * @param  float  $latitude  Latitude
+     * @param  float  $longitude  Longitude
      * @return array Census block information
      */
     public function getCensusBlock(float $latitude, float $longitude): array
@@ -172,7 +173,7 @@ class FccApiClient extends BaseApiClient
             'censusYear' => 2020,
             'format' => 'json',
         ];
-        
+
         return $this->makeRequest(
             'census_block',
             $parameters,
@@ -180,14 +181,14 @@ class FccApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->get("{$this->areaApiUrl}/block/find", $parameters);
 
-                if (!$response->successful()) {
-                    throw new Exception("FCC Census Block API failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('FCC Census Block API failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 return [
-                    'found' => !empty($data['Block']),
+                    'found' => ! empty($data['Block']),
                     'coordinates' => [
                         'latitude' => $parameters['lat'],
                         'longitude' => $parameters['lon'],
@@ -205,28 +206,28 @@ class FccApiClient extends BaseApiClient
 
     /**
      * Calculate federal excise tax
-     * 
-     * @param float $amount Service amount
+     *
+     * @param  float  $amount  Service amount
      * @return array Federal excise tax calculation
      */
     public function calculateFederalExciseTax(float $amount): array
     {
         $rate = 0.03; // 3% federal excise tax
         $threshold = 0.20; // $0.20 minimum threshold
-        
+
         $parameters = [
             'amount' => $amount,
             'rate' => $rate,
             'threshold' => $threshold,
         ];
-        
+
         return $this->makeRequest(
             'federal_excise_tax',
             $parameters,
             function () use ($amount, $rate, $threshold) {
                 $taxableAmount = max(0, $amount - $threshold);
                 $taxAmount = $taxableAmount * $rate;
-                
+
                 return [
                     'base_amount' => $amount,
                     'threshold' => $threshold,
@@ -246,27 +247,27 @@ class FccApiClient extends BaseApiClient
 
     /**
      * Calculate USF contribution
-     * 
-     * @param float $amount Interstate revenue amount
-     * @param string|null $quarter Quarter for USF rate
+     *
+     * @param  float  $amount  Interstate revenue amount
+     * @param  string|null  $quarter  Quarter for USF rate
      * @return array USF calculation
      */
     public function calculateUsfContribution(float $amount, ?string $quarter = null): array
     {
         $usfData = $this->getUsfRate($quarter);
         $rate = $usfData['rate'];
-        
+
         $parameters = [
             'amount' => $amount,
             'quarter' => $quarter ?? $this->getCurrentQuarter(),
         ];
-        
+
         return $this->makeRequest(
             'usf_calculation',
             $parameters,
             function () use ($amount, $rate, $usfData) {
                 $contributionAmount = $amount * $rate;
-                
+
                 return [
                     'interstate_revenue' => $amount,
                     'usf_rate' => $rate,
@@ -284,9 +285,9 @@ class FccApiClient extends BaseApiClient
 
     /**
      * Get E911 fee information (estimated - actual rates vary by state/locality)
-     * 
-     * @param string $stateCode State code
-     * @param int $lineCount Number of lines
+     *
+     * @param  string  $stateCode  State code
+     * @param  int  $lineCount  Number of lines
      * @return array E911 fee calculation
      */
     public function calculateE911Fee(string $stateCode, int $lineCount = 1): array
@@ -305,12 +306,12 @@ class FccApiClient extends BaseApiClient
             'MI' => 0.19,  // Michigan
             // Add more states as needed
         ];
-        
+
         $parameters = [
             'state_code' => strtoupper($stateCode),
             'line_count' => $lineCount,
         ];
-        
+
         return $this->makeRequest(
             'e911_calculation',
             $parameters,
@@ -318,15 +319,15 @@ class FccApiClient extends BaseApiClient
                 $stateCode = strtoupper($stateCode);
                 $feePerLine = $e911Rates[$stateCode] ?? 0.75; // Default rate
                 $totalFee = $feePerLine * $lineCount;
-                
+
                 return [
                     'state_code' => $stateCode,
                     'line_count' => $lineCount,
                     'fee_per_line' => $feePerLine,
                     'total_fee' => round($totalFee, 2),
                     'rate_available' => isset($e911Rates[$stateCode]),
-                    'note' => isset($e911Rates[$stateCode]) 
-                        ? 'Estimated rate for ' . $stateCode 
+                    'note' => isset($e911Rates[$stateCode])
+                        ? 'Estimated rate for '.$stateCode
                         : 'Using default rate - actual rate may vary',
                     'calculation_date' => now()->toISOString(),
                     'source' => 'fcc_estimated',
@@ -338,30 +339,30 @@ class FccApiClient extends BaseApiClient
 
     /**
      * Get comprehensive telecom tax calculation
-     * 
-     * @param float $localAmount Local service amount
-     * @param float $longDistanceAmount Long distance amount
-     * @param string $stateCode State code for E911
-     * @param int $lineCount Number of lines
+     *
+     * @param  float  $localAmount  Local service amount
+     * @param  float  $longDistanceAmount  Long distance amount
+     * @param  string  $stateCode  State code for E911
+     * @param  int  $lineCount  Number of lines
      * @return array Complete telecom tax breakdown
      */
     public function calculateTelecomTaxes(
-        float $localAmount, 
-        float $longDistanceAmount, 
-        string $stateCode, 
+        float $localAmount,
+        float $longDistanceAmount,
+        string $stateCode,
         int $lineCount = 1
     ): array {
         $totalAmount = $localAmount + $longDistanceAmount;
-        
+
         // Calculate each tax component
         $federalExcise = $this->calculateFederalExciseTax($totalAmount);
         $usfContribution = $this->calculateUsfContribution($totalAmount);
         $e911Fee = $this->calculateE911Fee($stateCode, $lineCount);
-        
-        $totalTax = $federalExcise['tax_amount'] + 
-                   $usfContribution['contribution_amount'] + 
+
+        $totalTax = $federalExcise['tax_amount'] +
+                   $usfContribution['contribution_amount'] +
                    $e911Fee['total_fee'];
-        
+
         return [
             'service_amounts' => [
                 'local_service' => $localAmount,
@@ -393,7 +394,8 @@ class FccApiClient extends BaseApiClient
     {
         $now = now();
         $quarter = ceil($now->month / 3);
-        return $now->year . '-Q' . $quarter;
+
+        return $now->year.'-Q'.$quarter;
     }
 
     /**
@@ -404,7 +406,7 @@ class FccApiClient extends BaseApiClient
         [$year, $q] = explode('-Q', $quarter);
         $quarterNum = (int) $q;
         $month = ($quarterNum - 1) * 3 + 1;
-        
+
         return Carbon::create($year, $month, 1);
     }
 
@@ -414,19 +416,20 @@ class FccApiClient extends BaseApiClient
     private function getNextQuarterStartDate(string $quarter): Carbon
     {
         $currentQuarterStart = $this->getQuarterStartDate($quarter);
+
         return $currentQuarterStart->addMonths(3);
     }
 
     /**
      * Update USF rates (manual method for when new rates are announced)
-     * 
-     * @param string $quarter Quarter (e.g., '2025-Q2')
-     * @param float $rate USF rate as decimal (e.g., 0.360 for 36.0%)
+     *
+     * @param  string  $quarter  Quarter (e.g., '2025-Q2')
+     * @param  float  $rate  USF rate as decimal (e.g., 0.360 for 36.0%)
      */
     public function updateUsfRate(string $quarter, float $rate): void
     {
         $this->currentUsfRates[$quarter] = $rate;
-        
+
         // Clear cache for USF rates
         TaxApiQueryCache::where('company_id', $this->companyId)
             ->where('api_provider', TaxApiQueryCache::PROVIDER_FCC)

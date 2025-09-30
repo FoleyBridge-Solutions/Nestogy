@@ -2,8 +2,8 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToCompany;
 use App\Models\User;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,13 +12,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Ticket Template Model
- * 
+ *
  * Represents reusable templates for creating tickets with predefined
  * subject, body, priority, and other settings.
  */
 class TicketTemplate extends Model
 {
-    use HasFactory, BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -84,8 +84,8 @@ class TicketTemplate extends Model
 
         // Replace variables in format {{variable_name}}
         foreach ($allVariables as $key => $value) {
-            $subject = str_replace('{{' . $key . '}}', $value, $subject);
-            $body = str_replace('{{' . $key . '}}', $value, $body);
+            $subject = str_replace('{{'.$key.'}}', $value, $subject);
+            $body = str_replace('{{'.$key.'}}', $value, $body);
         }
 
         return [
@@ -137,10 +137,10 @@ class TicketTemplate extends Model
     /**
      * Duplicate this template
      */
-    public function duplicate(string $newName = null): self
+    public function duplicate(?string $newName = null): self
     {
         $copy = $this->replicate();
-        $copy->name = $newName ?? ($this->name . ' (Copy)');
+        $copy->name = $newName ?? ($this->name.' (Copy)');
         $copy->is_active = false; // New templates start as inactive
         $copy->save();
 
@@ -190,11 +190,11 @@ class TicketTemplate extends Model
     public function getAvailableVariablesAttribute(): array
     {
         $variables = [];
-        
+
         // Extract variables from subject and body templates
-        preg_match_all('/\{\{(\w+)\}\}/', $this->subject_template . ' ' . $this->body_template, $matches);
-        
-        if (!empty($matches[1])) {
+        preg_match_all('/\{\{(\w+)\}\}/', $this->subject_template.' '.$this->body_template, $matches);
+
+        if (! empty($matches[1])) {
             $variables = array_unique($matches[1]);
         }
 
@@ -249,10 +249,10 @@ class TicketTemplate extends Model
             // Check for balanced template variables
             $subject = $template->subject_template;
             $body = $template->body_template;
-            
-            $openCount = substr_count($subject . $body, '{{');
-            $closeCount = substr_count($subject . $body, '}}');
-            
+
+            $openCount = substr_count($subject.$body, '{{');
+            $closeCount = substr_count($subject.$body, '}}');
+
             if ($openCount !== $closeCount) {
                 throw new \InvalidArgumentException('Template variables are not properly balanced. Check {{ and }} syntax.');
             }

@@ -16,8 +16,8 @@ class ExportController extends Controller
                 'quotes' => 'Quotes',
                 'payments' => 'Payments',
                 'expenses' => 'Expenses',
-                'reports' => 'Financial Reports'
-            ]
+                'reports' => 'Financial Reports',
+            ],
         ]);
     }
 

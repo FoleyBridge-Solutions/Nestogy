@@ -2,17 +2,16 @@
 
 namespace App\Domains\Asset\Models;
 
+use App\Models\Asset;
+use App\Models\Vendor;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Asset;
-use App\Models\Vendor;
-use Carbon\Carbon;
 
 class AssetWarranty extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'asset_warranties';
 
@@ -115,7 +114,7 @@ class AssetWarranty extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active')
-                     ->where('warranty_end_date', '>', now());
+            ->where('warranty_end_date', '>', now());
     }
 
     /**
@@ -124,7 +123,7 @@ class AssetWarranty extends Model
     public function scopeExpired($query)
     {
         return $query->where('warranty_end_date', '<', now())
-                     ->orWhere('status', 'expired');
+            ->orWhere('status', 'expired');
     }
 
     /**
@@ -133,7 +132,7 @@ class AssetWarranty extends Model
     public function scopeExpiringSoon($query, $days = 30)
     {
         return $query->where('status', 'active')
-                     ->whereBetween('warranty_end_date', [now(), now()->addDays($days)]);
+            ->whereBetween('warranty_end_date', [now(), now()->addDays($days)]);
     }
 
     /**
@@ -173,8 +172,8 @@ class AssetWarranty extends Model
      */
     public function isExpiringSoon($days = 30)
     {
-        return $this->warranty_end_date <= now()->addDays($days) && 
-               $this->warranty_end_date > now() && 
+        return $this->warranty_end_date <= now()->addDays($days) &&
+               $this->warranty_end_date > now() &&
                $this->status === 'active';
     }
 
@@ -231,7 +230,7 @@ class AssetWarranty extends Model
      */
     public function getFormattedCostAttribute()
     {
-        return $this->cost ? '$' . number_format($this->cost, 2) : null;
+        return $this->cost ? '$'.number_format($this->cost, 2) : null;
     }
 
     /**
@@ -239,7 +238,7 @@ class AssetWarranty extends Model
      */
     public function getFormattedRenewalCostAttribute()
     {
-        return $this->renewal_cost ? '$' . number_format($this->renewal_cost, 2) : null;
+        return $this->renewal_cost ? '$'.number_format($this->renewal_cost, 2) : null;
     }
 
     /**
@@ -247,7 +246,7 @@ class AssetWarranty extends Model
      */
     public function getDurationInDaysAttribute()
     {
-        if (!$this->warranty_start_date || !$this->warranty_end_date) {
+        if (! $this->warranty_start_date || ! $this->warranty_end_date) {
             return null;
         }
 
@@ -259,7 +258,7 @@ class AssetWarranty extends Model
      */
     public function getDurationInMonthsAttribute()
     {
-        if (!$this->warranty_start_date || !$this->warranty_end_date) {
+        if (! $this->warranty_start_date || ! $this->warranty_end_date) {
             return null;
         }
 
@@ -283,7 +282,7 @@ class AssetWarranty extends Model
      */
     public function getCoverageUsedPercentageAttribute()
     {
-        if (!$this->warranty_start_date || !$this->warranty_end_date) {
+        if (! $this->warranty_start_date || ! $this->warranty_end_date) {
             return 0;
         }
 
@@ -310,8 +309,8 @@ class AssetWarranty extends Model
      */
     public function needsRenewalReminder($reminderDays = 30)
     {
-        return $this->isExpiringSoon($reminderDays) && 
-               !$this->renewal_reminder_sent &&
+        return $this->isExpiringSoon($reminderDays) &&
+               ! $this->renewal_reminder_sent &&
                $this->status === 'active';
     }
 
@@ -400,9 +399,9 @@ class AssetWarranty extends Model
     public static function getExpiringWarranties($days = 30)
     {
         return self::expiringSoon($days)
-                   ->with(['asset.client'])
-                   ->orderBy('warranty_end_date')
-                   ->get();
+            ->with(['asset.client'])
+            ->orderBy('warranty_end_date')
+            ->get();
     }
 
     /**
@@ -411,8 +410,8 @@ class AssetWarranty extends Model
     public static function getExpiredWarranties()
     {
         return self::expired()
-                   ->with(['asset.client'])
-                   ->orderBy('warranty_end_date', 'desc')
-                   ->get();
+            ->with(['asset.client'])
+            ->orderBy('warranty_end_date', 'desc')
+            ->get();
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class MicrosoftGraphProvider implements EmailProviderInterface
 {
     protected Company $company;
+
     protected array $config;
 
     public function __construct(Company $company)
@@ -30,7 +31,7 @@ class MicrosoftGraphProvider implements EmailProviderInterface
 
         $tenantId = $this->config['tenant_id'] ?? 'common';
 
-        return "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/authorize?" . http_build_query($params);
+        return "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/authorize?".http_build_query($params);
     }
 
     public function exchangeCodeForTokens(string $code): array
@@ -122,8 +123,8 @@ class MicrosoftGraphProvider implements EmailProviderInterface
 
     public function validateConfig(): bool
     {
-        return !empty($this->config['client_id']) &&
-               !empty($this->config['client_secret']);
+        return ! empty($this->config['client_id']) &&
+               ! empty($this->config['client_secret']);
     }
 
     protected function getTenantId(): string

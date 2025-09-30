@@ -2,15 +2,14 @@
 
 namespace App\Domains\Client\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\BelongsToCompany;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientTrip extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'client_id',
@@ -57,7 +56,7 @@ class ClientTrip extends Model
         'created_by',
         'completed_at',
         'cancelled_at',
-        'cancellation_reason'
+        'cancellation_reason',
     ];
 
     protected $casts = [
@@ -82,7 +81,7 @@ class ClientTrip extends Model
         'expense_breakdown' => 'array',
         'receipts' => 'array',
         'attendees' => 'array',
-        'metadata' => 'array'
+        'metadata' => 'array',
     ];
 
     protected $dates = [
@@ -93,7 +92,7 @@ class ClientTrip extends Model
         'approved_at',
         'reimbursement_date',
         'completed_at',
-        'cancelled_at'
+        'cancelled_at',
     ];
 
     /**
@@ -126,7 +125,7 @@ class ClientTrip extends Model
     public function scopeUpcoming($query)
     {
         return $query->where('start_date', '>=', now()->toDate())
-                    ->where('status', '!=', 'cancelled');
+            ->where('status', '!=', 'cancelled');
     }
 
     /**
@@ -135,8 +134,8 @@ class ClientTrip extends Model
     public function scopeCurrent($query)
     {
         return $query->where('start_date', '<=', now()->toDate())
-                    ->where('end_date', '>=', now()->toDate())
-                    ->where('status', 'in_progress');
+            ->where('end_date', '>=', now()->toDate())
+            ->where('status', 'in_progress');
     }
 
     /**
@@ -161,7 +160,7 @@ class ClientTrip extends Model
     public function scopePendingApproval($query)
     {
         return $query->where('approval_required', true)
-                    ->whereNull('approved_at');
+            ->whereNull('approved_at');
     }
 
     /**
@@ -170,7 +169,7 @@ class ClientTrip extends Model
     public function scopeFollowUpRequired($query)
     {
         return $query->where('follow_up_required', true)
-                    ->where('status', 'completed');
+            ->where('status', 'completed');
     }
 
     /**
@@ -200,7 +199,7 @@ class ClientTrip extends Model
             'in_progress' => 'In Progress',
             'completed' => 'Completed',
             'cancelled' => 'Cancelled',
-            'postponed' => 'Postponed'
+            'postponed' => 'Postponed',
         ];
     }
 
@@ -219,7 +218,7 @@ class ClientTrip extends Model
             'installation' => 'Installation',
             'maintenance' => 'Maintenance',
             'emergency' => 'Emergency Call',
-            'other' => 'Other'
+            'other' => 'Other',
         ];
     }
 
@@ -238,7 +237,7 @@ class ClientTrip extends Model
             'taxi' => 'Taxi/Rideshare',
             'public_transport' => 'Public Transport',
             'walking' => 'Walking',
-            'other' => 'Other'
+            'other' => 'Other',
         ];
     }
 
@@ -255,7 +254,7 @@ class ClientTrip extends Model
             'AUD' => 'Australian Dollar (A$)',
             'JPY' => 'Japanese Yen (¥)',
             'CNY' => 'Chinese Yuan (¥)',
-            'INR' => 'Indian Rupee (₹)'
+            'INR' => 'Indian Rupee (₹)',
         ];
     }
 
@@ -273,7 +272,7 @@ class ClientTrip extends Model
     public function isCurrent()
     {
         return $this->start_date && $this->end_date &&
-               $this->start_date->lte(now()->toDate()) && 
+               $this->start_date->lte(now()->toDate()) &&
                $this->end_date->gte(now()->toDate()) &&
                $this->status === 'in_progress';
     }
@@ -299,7 +298,7 @@ class ClientTrip extends Model
      */
     public function requiresApproval()
     {
-        return $this->approval_required && !$this->approved_at;
+        return $this->approval_required && ! $this->approved_at;
     }
 
     /**
@@ -315,10 +314,10 @@ class ClientTrip extends Model
      */
     public function getDurationInDaysAttribute()
     {
-        if (!$this->start_date || !$this->end_date) {
+        if (! $this->start_date || ! $this->end_date) {
             return 0;
         }
-        
+
         return $this->start_date->diffInDays($this->end_date) + 1;
     }
 
@@ -330,9 +329,9 @@ class ClientTrip extends Model
         $parts = array_filter([
             $this->destination_city,
             $this->destination_state,
-            $this->destination_country
+            $this->destination_country,
         ]);
-        
+
         return implode(', ', $parts);
     }
 
@@ -345,9 +344,9 @@ class ClientTrip extends Model
             $this->destination_address,
             $this->destination_city,
             $this->destination_state,
-            $this->destination_country
+            $this->destination_country,
         ]);
-        
+
         return implode(', ', $parts);
     }
 
@@ -357,7 +356,8 @@ class ClientTrip extends Model
     public function getFormattedEstimatedExpensesAttribute()
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($this->estimated_expenses ?? 0, 2);
+
+        return $symbol.number_format($this->estimated_expenses ?? 0, 2);
     }
 
     /**
@@ -366,7 +366,8 @@ class ClientTrip extends Model
     public function getFormattedActualExpensesAttribute()
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($this->actual_expenses ?? 0, 2);
+
+        return $symbol.number_format($this->actual_expenses ?? 0, 2);
     }
 
     /**
@@ -374,10 +375,10 @@ class ClientTrip extends Model
      */
     public function getExpenseVarianceAttribute()
     {
-        if (!$this->estimated_expenses || !$this->actual_expenses) {
+        if (! $this->estimated_expenses || ! $this->actual_expenses) {
             return null;
         }
-        
+
         return $this->actual_expenses - $this->estimated_expenses;
     }
 
@@ -390,14 +391,14 @@ class ClientTrip extends Model
         if ($variance === null) {
             return null;
         }
-        
+
         $symbol = $this->getCurrencySymbol();
-        $formatted = $symbol . number_format(abs($variance), 2);
-        
+        $formatted = $symbol.number_format(abs($variance), 2);
+
         if ($variance > 0) {
-            return '+' . $formatted . ' (Over Budget)';
+            return '+'.$formatted.' (Over Budget)';
         } elseif ($variance < 0) {
-            return '-' . $formatted . ' (Under Budget)';
+            return '-'.$formatted.' (Under Budget)';
         } else {
             return 'On Budget';
         }
@@ -416,7 +417,7 @@ class ClientTrip extends Model
             'AUD' => 'A$',
             'JPY' => '¥',
             'CNY' => '¥',
-            'INR' => '₹'
+            'INR' => '₹',
         ];
 
         return $symbols[$this->currency] ?? $this->currency;
@@ -427,10 +428,10 @@ class ClientTrip extends Model
      */
     public function getDaysUntilTripAttribute()
     {
-        if (!$this->start_date) {
+        if (! $this->start_date) {
             return null;
         }
-        
+
         return now()->diffInDays($this->start_date, false);
     }
 
@@ -439,20 +440,20 @@ class ClientTrip extends Model
      */
     public function getTimeUntilTripAttribute()
     {
-        if (!$this->start_date) {
+        if (! $this->start_date) {
             return 'No start date';
         }
-        
+
         $days = $this->days_until_trip;
-        
+
         if ($days < 0) {
-            return abs($days) . ' days ago';
+            return abs($days).' days ago';
         } elseif ($days == 0) {
             return 'Today';
         } elseif ($days == 1) {
             return 'Tomorrow';
         } else {
-            return $days . ' days';
+            return $days.' days';
         }
     }
 
@@ -463,19 +464,19 @@ class ClientTrip extends Model
     {
         $year = now()->format('Y');
         $month = now()->format('m');
-        
+
         $lastTrip = static::where('trip_number', 'like', "{$prefix}-{$year}{$month}-%")
-                         ->orderBy('trip_number', 'desc')
-                         ->first();
-        
+            ->orderBy('trip_number', 'desc')
+            ->first();
+
         if ($lastTrip) {
             $lastNumber = (int) substr($lastTrip->trip_number, -4);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
-        
-        return $prefix . '-' . $year . $month . '-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.'-'.$year.$month.'-'.str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -487,7 +488,7 @@ class ClientTrip extends Model
         $this->approved_at = now();
         $this->status = 'approved';
         $this->save();
-        
+
         return true;
     }
 
@@ -499,10 +500,10 @@ class ClientTrip extends Model
         if (in_array($this->status, ['planned', 'approved'])) {
             $this->status = 'in_progress';
             $this->save();
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -514,28 +515,28 @@ class ClientTrip extends Model
         if ($this->status === 'in_progress') {
             $this->status = 'completed';
             $this->completed_at = now();
-            
+
             if (isset($completionData['actual_expenses'])) {
                 $this->actual_expenses = $completionData['actual_expenses'];
             }
-            
+
             if (isset($completionData['client_feedback'])) {
                 $this->client_feedback = $completionData['client_feedback'];
             }
-            
+
             if (isset($completionData['internal_rating'])) {
                 $this->internal_rating = $completionData['internal_rating'];
             }
-            
+
             if (isset($completionData['follow_up_required'])) {
                 $this->follow_up_required = $completionData['follow_up_required'];
             }
-            
+
             $this->save();
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -544,15 +545,15 @@ class ClientTrip extends Model
      */
     public function cancel($reason = null)
     {
-        if (!in_array($this->status, ['completed', 'cancelled'])) {
+        if (! in_array($this->status, ['completed', 'cancelled'])) {
             $this->status = 'cancelled';
             $this->cancelled_at = now();
             $this->cancellation_reason = $reason;
             $this->save();
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -565,10 +566,10 @@ class ClientTrip extends Model
             $this->submitted_for_reimbursement = true;
             $this->reimbursement_amount = $amount ?: $this->actual_expenses;
             $this->save();
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -577,15 +578,15 @@ class ClientTrip extends Model
      */
     public function calculateTotalExpenses()
     {
-        if (!$this->expense_breakdown || !is_array($this->expense_breakdown)) {
+        if (! $this->expense_breakdown || ! is_array($this->expense_breakdown)) {
             return 0;
         }
-        
+
         $total = 0;
         foreach ($this->expense_breakdown as $expense) {
             $total += $expense['amount'] ?? 0;
         }
-        
+
         return $total;
     }
 }

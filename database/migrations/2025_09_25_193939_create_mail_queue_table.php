@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('client_id')->nullable();
             $table->unsignedBigInteger('contact_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable()->comment('User who initiated the email');
-            
+
             // Email details
             $table->string('from_email')->nullable();
             $table->string('from_name')->nullable();
@@ -32,11 +32,11 @@ return new class extends Migration
             $table->longText('text_body')->nullable();
             $table->json('attachments')->nullable();
             $table->json('headers')->nullable();
-            
+
             // Template information
             $table->string('template')->nullable()->comment('Template name if using template');
             $table->json('template_data')->nullable()->comment('Data passed to template');
-            
+
             // Queue management
             $table->enum('status', ['pending', 'processing', 'sent', 'failed', 'bounced', 'complained', 'cancelled'])->default('pending');
             $table->enum('priority', ['low', 'normal', 'high', 'critical'])->default('normal');
@@ -46,17 +46,17 @@ return new class extends Migration
             $table->timestamp('sent_at')->nullable();
             $table->timestamp('failed_at')->nullable();
             $table->timestamp('next_retry_at')->nullable();
-            
+
             // Error tracking
             $table->text('last_error')->nullable();
             $table->json('error_log')->nullable()->comment('History of all errors');
             $table->string('failure_reason')->nullable()->comment('Categorized failure reason');
-            
+
             // Provider information
             $table->string('mailer')->default('smtp')->comment('Mail driver used (smtp, ses, mailgun, etc)');
             $table->string('message_id')->nullable()->comment('Provider message ID');
             $table->json('provider_response')->nullable();
-            
+
             // Tracking
             $table->string('tracking_token')->nullable()->unique();
             $table->timestamp('opened_at')->nullable();
@@ -64,16 +64,16 @@ return new class extends Migration
             $table->json('opens')->nullable()->comment('History of all opens');
             $table->integer('click_count')->default(0);
             $table->json('clicks')->nullable()->comment('History of all clicks');
-            
+
             // Categorization
             $table->string('category')->nullable()->comment('Email category (invoice, notification, marketing, etc)');
             $table->string('related_type')->nullable()->comment('Related model type');
             $table->unsignedBigInteger('related_id')->nullable()->comment('Related model ID');
             $table->json('tags')->nullable();
             $table->json('metadata')->nullable();
-            
+
             $table->timestamps();
-            
+
             // Indexes for performance
             $table->index('uuid');
             $table->index(['company_id', 'status', 'scheduled_at']);
@@ -85,14 +85,14 @@ return new class extends Migration
             $table->index(['related_type', 'related_id']);
             $table->index('category');
             $table->index('created_at');
-            
+
             // Foreign keys
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('set null');
             $table->foreign('contact_id')->references('id')->on('contacts')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
-        
+
         // Create table for email templates
         Schema::create('mail_templates', function (Blueprint $table) {
             $table->id();
@@ -109,10 +109,10 @@ return new class extends Migration
             $table->boolean('is_system')->default(false)->comment('System templates cannot be deleted');
             $table->json('settings')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'category', 'is_active']);
             $table->index('name');
-            
+
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
     }

@@ -6,23 +6,22 @@ use App\Models\Invoice;
 use App\Models\Quote;
 use App\Models\TaxExemption;
 use App\Models\TaxExemptionUsage;
-use App\Models\VoIPTaxRate;
 use App\Models\TaxJurisdiction;
 use App\Models\TaxRateHistory;
-use App\Models\Client;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use App\Models\VoIPTaxRate;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * VoIP Tax Compliance Service
- * 
+ *
  * Handles compliance reporting, audit trails, and regulatory requirements
  * for VoIP telecommunications taxation.
  */
 class VoIPTaxComplianceService
 {
     protected int $companyId;
+
     protected array $config;
 
     public function __construct(int $companyId, array $config = [])
@@ -52,7 +51,7 @@ class VoIPTaxComplianceService
             'rate_changes' => [],
             'invoices_processed' => [],
             'quotes_processed' => [],
-            'summary' => []
+            'summary' => [],
         ];
 
         // Get all invoices with VoIP services in the period
@@ -190,11 +189,11 @@ class VoIPTaxComplianceService
             'jurisdictions' => [],
             'summary_by_service_type' => [],
             'summary_by_tax_type' => [],
-            'total_summary' => []
+            'total_summary' => [],
         ];
 
         // Get target jurisdictions
-        $targetJurisdictions = empty($jurisdictions) 
+        $targetJurisdictions = empty($jurisdictions)
             ? TaxJurisdiction::where('company_id', $this->companyId)->active()->get()
             : TaxJurisdiction::whereIn('id', $jurisdictions)->get();
 
@@ -211,7 +210,7 @@ class VoIPTaxComplianceService
                     'tax_amount' => 0,
                     'exemptions_amount' => 0,
                     'net_tax_amount' => 0,
-                ]
+                ],
             ];
 
             // Get all invoices with taxes for this jurisdiction
@@ -225,7 +224,7 @@ class VoIPTaxComplianceService
 
             foreach ($invoices as $invoice) {
                 foreach ($invoice->voipItems as $item) {
-                    if ($item->voip_tax_data && !empty($item->voip_tax_data['tax_breakdown'])) {
+                    if ($item->voip_tax_data && ! empty($item->voip_tax_data['tax_breakdown'])) {
                         foreach ($item->voip_tax_data['tax_breakdown'] as $tax) {
                             if (isset($tax['jurisdiction']) && $tax['jurisdiction'] === $jurisdiction->name) {
                                 $jurisdictionData['tax_calculations'][] = [
@@ -254,12 +253,12 @@ class VoIPTaxComplianceService
                 ->whereBetween('used_at', [$startDate, $endDate])
                 ->whereHas('taxExemption', function ($query) use ($jurisdiction) {
                     $query->where('tax_jurisdiction_id', $jurisdiction->id)
-                          ->orWhere('is_blanket_exemption', true);
+                        ->orWhere('is_blanket_exemption', true);
                 })
                 ->sum('exempted_amount');
 
             $jurisdictionData['totals']['exemptions_amount'] = $exemptions;
-            $jurisdictionData['totals']['net_tax_amount'] = 
+            $jurisdictionData['totals']['net_tax_amount'] =
                 $jurisdictionData['totals']['tax_amount'] - $exemptions;
 
             $report['jurisdictions'][] = $jurisdictionData;
@@ -301,7 +300,7 @@ class VoIPTaxComplianceService
                     'exemption_name' => $exemption->exemption_name,
                     'certificate_number' => $exemption->certificate_number,
                     'expiry_date' => $exemption->expiry_date?->toDateString(),
-                    'days_until_expiry' => $exemption->expiry_date ? 
+                    'days_until_expiry' => $exemption->expiry_date ?
                         now()->diffInDays($exemption->expiry_date) : null,
                 ];
             } elseif ($exemption->verification_status === TaxExemption::VERIFICATION_PENDING) {
@@ -404,7 +403,7 @@ class VoIPTaxComplianceService
         // Check 1: Tax rate coverage
         $jurisdictions = TaxJurisdiction::where('company_id', $this->companyId)->active()->get();
         $ratesCount = VoIPTaxRate::where('company_id', $this->companyId)->active()->count();
-        
+
         if ($ratesCount === 0) {
             $status['issues'][] = 'No active tax rates configured';
             $status['overall_status'] = 'non_compliant';
@@ -416,18 +415,18 @@ class VoIPTaxComplianceService
 
         // Check 2: Exemption certificate validity
         $exemptionValidation = $this->validateExemptionCertificates();
-        
+
         if (count($exemptionValidation['expired']) > 0) {
-            $status['issues'][] = count($exemptionValidation['expired']) . ' expired exemption certificates';
+            $status['issues'][] = count($exemptionValidation['expired']).' expired exemption certificates';
             $status['overall_status'] = 'non_compliant';
         }
 
         if (count($exemptionValidation['expiring_soon']) > 0) {
-            $status['warnings'][] = count($exemptionValidation['expiring_soon']) . ' exemption certificates expiring within 30 days';
+            $status['warnings'][] = count($exemptionValidation['expiring_soon']).' exemption certificates expiring within 30 days';
         }
 
         if (count($exemptionValidation['needs_verification']) > 0) {
-            $status['warnings'][] = count($exemptionValidation['needs_verification']) . ' exemption certificates need verification';
+            $status['warnings'][] = count($exemptionValidation['needs_verification']).' exemption certificates need verification';
         }
 
         $status['checks_performed'][] = 'Exemption certificate validity';
@@ -438,7 +437,7 @@ class VoIPTaxComplianceService
             ->first();
 
         if ($oldestRecord && $oldestRecord->created_at->lt(now()->subYears($this->config['retention_years']))) {
-            $status['recommendations'][] = 'Consider archiving records older than ' . $this->config['retention_years'] . ' years';
+            $status['recommendations'][] = 'Consider archiving records older than '.$this->config['retention_years'].' years';
         }
 
         $status['checks_performed'][] = 'Data retention compliance';
@@ -471,6 +470,7 @@ class VoIPTaxComplianceService
                 $total += $item->tax;
             }
         }
+
         return round($total, 2);
     }
 
@@ -481,14 +481,14 @@ class VoIPTaxComplianceService
     {
         $csv = "Export Date,Company ID,Period Start,Period End\n";
         $csv .= "{$data['export_metadata']['export_date']},{$data['export_metadata']['company_id']},{$data['export_metadata']['period']['start_date']},{$data['export_metadata']['period']['end_date']}\n\n";
-        
+
         $csv .= "Invoice Number,Client Name,Date,Service Type,Base Amount,Tax Amount\n";
         foreach ($data['audit_trail']['invoices_processed'] as $invoice) {
             foreach ($invoice['voip_items'] as $item) {
                 $csv .= "\"{$invoice['invoice_number']}\",\"{$invoice['client_name']}\",\"{$invoice['date']}\",\"{$item['service_type']}\",{$item['base_amount']},{$item['tax_amount']}\n";
             }
         }
-        
+
         return $csv;
     }
 
@@ -499,6 +499,7 @@ class VoIPTaxComplianceService
     {
         $xml = new \SimpleXMLElement('<VoIPTaxComplianceExport/>');
         $this->arrayToXML($data, $xml);
+
         return $xml->asXML();
     }
 

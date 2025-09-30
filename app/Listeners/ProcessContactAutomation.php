@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Events\ContactCreated;
 use App\Domains\Contract\Services\ContractAutomationService;
+use App\Events\ContactCreated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +32,7 @@ class ProcessContactAutomation implements ShouldQueue
         } catch (\Exception $e) {
             Log::error('Failed to process contact automation', [
                 'contact_id' => $event->contact->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }

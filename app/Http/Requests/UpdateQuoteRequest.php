@@ -2,14 +2,14 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Support\Facades\Auth;
-use App\Models\Quote;
-use App\Models\Client;
 use App\Models\Category;
+use App\Models\Client;
+use App\Models\Quote;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * UpdateQuoteRequest
- * 
+ *
  * Validation rules for updating existing quotes with enterprise features
  * and VoIP-specific configurations.
  */
@@ -29,11 +29,11 @@ class UpdateQuoteRequest extends BaseQuoteRequest
     public function rules(): array
     {
         $user = Auth::user();
-        
+
         return array_merge($this->getCommonRules(), [
             // Update-specific fields
             'change_reason' => 'nullable|string|max:500',
-            
+
             // Enhanced relationship validation for updates
             'category_id' => [
                 'required',
@@ -89,8 +89,9 @@ class UpdateQuoteRequest extends BaseQuoteRequest
             $quote = $this->route('quote');
 
             // Validate quote can be edited
-            if ($quote && !$quote->isDraft() && $quote->approval_status !== Quote::APPROVAL_REJECTED) {
+            if ($quote && ! $quote->isDraft() && $quote->approval_status !== Quote::APPROVAL_REJECTED) {
                 $validator->errors()->add('quote', 'Only draft or rejected quotes can be edited.');
+
                 return;
             }
 
@@ -104,12 +105,11 @@ class UpdateQuoteRequest extends BaseQuoteRequest
                 if ($this->expire_date && now()->gt($this->expire_date)) {
                     $validator->errors()->add('expire_date', 'Expiration date cannot be in the past for sent quotes.');
                 }
-                
+
                 if ($this->valid_until && now()->gt($this->valid_until)) {
                     $validator->errors()->add('valid_until', 'Valid until date cannot be in the past for sent quotes.');
                 }
             }
-
 
             // Validate status transitions
             if ($quote && $this->status !== $quote->status) {
@@ -134,9 +134,9 @@ class UpdateQuoteRequest extends BaseQuoteRequest
             Quote::STATUS_CANCELLED => [], // No transitions allowed from cancelled
         ];
 
-        if (!isset($allowedTransitions[$currentStatus]) || 
-            !in_array($newStatus, $allowedTransitions[$currentStatus])) {
-            $validator->errors()->add('status', 
+        if (! isset($allowedTransitions[$currentStatus]) ||
+            ! in_array($newStatus, $allowedTransitions[$currentStatus])) {
+            $validator->errors()->add('status',
                 "Cannot change status from {$currentStatus} to {$newStatus}.");
         }
     }

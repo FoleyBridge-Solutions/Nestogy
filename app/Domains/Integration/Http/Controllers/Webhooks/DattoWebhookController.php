@@ -4,13 +4,13 @@ namespace App\Domains\Integration\Http\Controllers\Webhooks;
 
 use App\Domains\Integration\Services\WebhookService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Datto RMM Webhook Controller
- * 
+ *
  * Handles webhooks from Datto RMM system.
  * Processes device alerts, backup status, and monitoring data.
  */
@@ -34,7 +34,7 @@ class DattoWebhookController extends Controller
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'content_type' => $request->header('Content-Type'),
-                'signature_present' => !empty($request->header('X-Datto-Signature')),
+                'signature_present' => ! empty($request->header('X-Datto-Signature')),
                 'payload_size' => strlen($request->getContent()),
             ]);
 
@@ -113,7 +113,7 @@ class DattoWebhookController extends Controller
                 'headers' => [
                     'content_type' => $request->header('Content-Type'),
                     'user_agent' => $request->userAgent(),
-                    'signature_present' => !empty($request->header('X-Datto-Signature')),
+                    'signature_present' => ! empty($request->header('X-Datto-Signature')),
                 ],
                 'payload_preview' => $this->getPayloadPreview($request->all()),
             ];
@@ -139,7 +139,7 @@ class DattoWebhookController extends Controller
     protected function getPayloadPreview(array $payload): array
     {
         $preview = [];
-        
+
         // Show key fields without sensitive data
         $safeFields = [
             'uid',
@@ -151,15 +151,15 @@ class DattoWebhookController extends Controller
             'timestamp',
             'status',
         ];
-        
+
         foreach ($safeFields as $field) {
             if (isset($payload[$field])) {
                 $preview[$field] = $payload[$field];
             }
         }
-        
+
         $preview['total_fields'] = count($payload);
-        
+
         return $preview;
     }
 }

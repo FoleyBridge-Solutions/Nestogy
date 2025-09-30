@@ -2,13 +2,13 @@
 
 namespace App\Domains\Product\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\PricingRule;
-use App\Models\Product;
-use App\Models\Client;
 use App\Domains\Product\Requests\StorePricingRuleRequest;
 use App\Domains\Product\Requests\UpdatePricingRuleRequest;
 use App\Domains\Product\Services\PricingRuleService;
+use App\Http\Controllers\Controller;
+use App\Models\Client;
+use App\Models\PricingRule;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class PricingRuleController extends Controller
@@ -29,12 +29,12 @@ class PricingRuleController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhereHas('product', function ($productQuery) use ($search) {
-                      $productQuery->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('client', function ($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('product', function ($productQuery) use ($search) {
+                        $productQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 

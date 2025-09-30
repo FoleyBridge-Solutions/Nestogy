@@ -3,9 +3,7 @@
 namespace App\Domains\Email\Services;
 
 use App\Domains\Email\Models\EmailAccount;
-use App\Domains\Email\Services\EmailProviderService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class OAuthTokenManager
 {
@@ -25,7 +23,7 @@ class OAuthTokenManager
             return true; // Not OAuth, so tokens are "valid"
         }
 
-        if (!$this->hasValidTokens($account)) {
+        if (! $this->hasValidTokens($account)) {
             return $this->refreshTokens($account);
         }
 
@@ -37,7 +35,7 @@ class OAuthTokenManager
      */
     public function hasValidTokens(EmailAccount $account): bool
     {
-        if (!$account->oauth_access_token || !$account->oauth_expires_at) {
+        if (! $account->oauth_access_token || ! $account->oauth_expires_at) {
             return false;
         }
 
@@ -50,10 +48,11 @@ class OAuthTokenManager
      */
     public function refreshTokens(EmailAccount $account): bool
     {
-        if (!$account->oauth_refresh_token) {
+        if (! $account->oauth_refresh_token) {
             Log::warning('Cannot refresh OAuth tokens: no refresh token available', [
                 'account_id' => $account->id,
             ]);
+
             return false;
         }
 
@@ -75,7 +74,7 @@ class OAuthTokenManager
 
             // Mark account as having sync error
             $account->update([
-                'sync_error' => 'OAuth token refresh failed: ' . $e->getMessage(),
+                'sync_error' => 'OAuth token refresh failed: '.$e->getMessage(),
             ]);
 
             return false;
@@ -87,7 +86,7 @@ class OAuthTokenManager
      */
     public function getValidAccessToken(EmailAccount $account): ?string
     {
-        if (!$this->ensureValidTokens($account)) {
+        if (! $this->ensureValidTokens($account)) {
             return null;
         }
 
@@ -125,6 +124,7 @@ class OAuthTokenManager
                 'account_id' => $account->id,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -145,7 +145,7 @@ class OAuthTokenManager
             ->whereNotNull('oauth_refresh_token')
             ->where(function ($query) {
                 $query->whereNull('oauth_expires_at')
-                      ->orWhere('oauth_expires_at', '<=', now()->addMinutes(10));
+                    ->orWhere('oauth_expires_at', '<=', now()->addMinutes(10));
             })
             ->get();
 
@@ -178,7 +178,7 @@ class OAuthTokenManager
      */
     public function getTokenExpiryInfo(EmailAccount $account): array
     {
-        if (!$account->oauth_expires_at) {
+        if (! $account->oauth_expires_at) {
             return [
                 'has_tokens' => false,
                 'expires_at' => null,

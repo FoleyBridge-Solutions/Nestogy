@@ -64,16 +64,16 @@ class CampaignSequence extends Model
         }
 
         $parts = [];
-        
+
         if ($this->delay_days > 0) {
-            $parts[] = $this->delay_days . ' day' . ($this->delay_days > 1 ? 's' : '');
-        }
-        
-        if ($this->delay_hours > 0) {
-            $parts[] = $this->delay_hours . ' hour' . ($this->delay_hours > 1 ? 's' : '');
+            $parts[] = $this->delay_days.' day'.($this->delay_days > 1 ? 's' : '');
         }
 
-        return implode(' and ', $parts) . ' after previous step';
+        if ($this->delay_hours > 0) {
+            $parts[] = $this->delay_hours.' hour'.($this->delay_hours > 1 ? 's' : '');
+        }
+
+        return implode(' and ', $parts).' after previous step';
     }
 
     /**
@@ -89,21 +89,21 @@ class CampaignSequence extends Model
      */
     public function getSendDaysDescriptionAttribute(): string
     {
-        if (!$this->send_days || empty($this->send_days)) {
+        if (! $this->send_days || empty($this->send_days)) {
             return 'Any day';
         }
 
         $dayNames = [
             1 => 'Monday',
-            2 => 'Tuesday', 
+            2 => 'Tuesday',
             3 => 'Wednesday',
             4 => 'Thursday',
             5 => 'Friday',
             6 => 'Saturday',
-            7 => 'Sunday'
+            7 => 'Sunday',
         ];
 
-        $selectedDays = array_map(function($day) use ($dayNames) {
+        $selectedDays = array_map(function ($day) use ($dayNames) {
             return $dayNames[$day] ?? $day;
         }, $this->send_days);
 
@@ -115,7 +115,7 @@ class CampaignSequence extends Model
      */
     public function canSendOnDay(int $dayOfWeek): bool
     {
-        if (!$this->send_days || empty($this->send_days)) {
+        if (! $this->send_days || empty($this->send_days)) {
             return true;
         }
 
@@ -127,7 +127,7 @@ class CampaignSequence extends Model
      */
     public function checkSendConditions(array $recipientData): bool
     {
-        if (!$this->send_conditions || empty($this->send_conditions)) {
+        if (! $this->send_conditions || empty($this->send_conditions)) {
             return true;
         }
 
@@ -141,7 +141,7 @@ class CampaignSequence extends Model
      */
     public function checkSkipConditions(array $recipientData): bool
     {
-        if (!$this->skip_conditions || empty($this->skip_conditions)) {
+        if (! $this->skip_conditions || empty($this->skip_conditions)) {
             return false;
         }
 
@@ -228,7 +228,7 @@ class CampaignSequence extends Model
         $template = $this->email_template;
 
         foreach ($variables as $key => $value) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
+            $template = str_replace('{{'.$key.'}}', $value, $template);
         }
 
         return $template;
@@ -242,7 +242,7 @@ class CampaignSequence extends Model
         $subject = $this->subject_line;
 
         foreach ($variables as $key => $value) {
-            $subject = str_replace('{{' . $key . '}}', $value, $subject);
+            $subject = str_replace('{{'.$key.'}}', $value, $subject);
         }
 
         return $subject;

@@ -2,19 +2,19 @@
 
 namespace App\Domains\Report\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Core\Services\DashboardDataService;
 use App\Domains\Financial\Services\TaxEngine\SentimentAnalysisService;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\TicketReply;
+use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\TicketReply;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 /**
  * Sentiment Analytics Dashboard Controller
- * 
+ *
  * Provides comprehensive sentiment analysis reporting and visualization
  * for tickets and customer interactions. Includes trends, client health scores,
  * and actionable insights for customer satisfaction management.
@@ -27,13 +27,13 @@ class SentimentAnalyticsController extends Controller
     public function index(Request $request)
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Get date range from request or default to last 30 days
-        $startDate = $request->has('start_date') 
-            ? Carbon::parse($request->start_date) 
+        $startDate = $request->has('start_date')
+            ? Carbon::parse($request->start_date)
             : now()->subDays(30);
-        $endDate = $request->has('end_date') 
-            ? Carbon::parse($request->end_date) 
+        $endDate = $request->has('end_date')
+            ? Carbon::parse($request->end_date)
             : now();
 
         // Get comprehensive sentiment data
@@ -44,7 +44,7 @@ class SentimentAnalyticsController extends Controller
             'period' => [
                 'start' => $startDate->toDateString(),
                 'end' => $endDate->toDateString(),
-                'label' => $startDate->format('M j') . ' - ' . $endDate->format('M j, Y'),
+                'label' => $startDate->format('M j').' - '.$endDate->format('M j, Y'),
             ],
             'overview_metrics' => $this->getOverviewMetrics($companyId, $startDate, $endDate),
             'sentiment_trends' => $this->getSentimentTrends($companyId, $startDate, $endDate),
@@ -82,7 +82,7 @@ class SentimentAnalyticsController extends Controller
         $totalInteractions = $totalTickets + $totalReplies;
 
         // Sentiment distribution
-        $sentimentStats = DB::select("
+        $sentimentStats = DB::select('
             SELECT 
                 sentiment_label,
                 COUNT(*) as count,
@@ -105,14 +105,16 @@ class SentimentAnalyticsController extends Controller
             ) as combined_sentiment
             WHERE sentiment_label IS NOT NULL
             GROUP BY sentiment_label
-        ", [$companyId, $startDate, $endDate, $companyId, $startDate, $endDate]);
+        ', [$companyId, $startDate, $endDate, $companyId, $startDate, $endDate]);
 
         $sentimentCounts = collect($sentimentStats)->keyBy('sentiment_label');
 
         // Calculate overall averages
         $totalCount = $sentimentCounts->sum('count');
-        $overallAvgScore = $totalCount > 0 
-            ? $sentimentCounts->sum(function($stat) { return $stat->avg_score * $stat->count; }) / $totalCount 
+        $overallAvgScore = $totalCount > 0
+            ? $sentimentCounts->sum(function ($stat) {
+                return $stat->avg_score * $stat->count;
+            }) / $totalCount
             : 0;
 
         // Count high-confidence negative tickets
@@ -130,41 +132,41 @@ class SentimentAnalyticsController extends Controller
         $previousTotal = Ticket::where('company_id', $companyId)
             ->whereNotNull('sentiment_analyzed_at')
             ->whereBetween('created_at', [$previousStart, $previousEnd])
-            ->count() + 
+            ->count() +
             TicketReply::where('company_id', $companyId)
-            ->whereNotNull('sentiment_analyzed_at')
-            ->whereBetween('created_at', [$previousStart, $previousEnd])
-            ->count();
+                ->whereNotNull('sentiment_analyzed_at')
+                ->whereBetween('created_at', [$previousStart, $previousEnd])
+                ->count();
 
         return [
             'total_interactions' => [
                 'value' => $totalInteractions,
                 'previous' => $previousTotal,
-                'change' => $previousTotal > 0 ? round((($totalInteractions - $previousTotal) / $previousTotal) * 100, 1) : 0
+                'change' => $previousTotal > 0 ? round((($totalInteractions - $previousTotal) / $previousTotal) * 100, 1) : 0,
             ],
             'overall_sentiment_score' => [
                 'value' => round($overallAvgScore, 2),
                 'label' => $this->getSentimentLabel($overallAvgScore),
-                'color' => $this->getSentimentColor($overallAvgScore)
+                'color' => $this->getSentimentColor($overallAvgScore),
             ],
             'positive_rate' => [
                 'value' => $totalCount > 0 ? round((
-                    ($sentimentCounts->get('POSITIVE')->count ?? 0) + 
+                    ($sentimentCounts->get('POSITIVE')->count ?? 0) +
                     ($sentimentCounts->get('WEAK_POSITIVE')->count ?? 0)
-                ) / $totalCount * 100, 1) : 0
+                ) / $totalCount * 100, 1) : 0,
             ],
             'negative_rate' => [
                 'value' => $totalCount > 0 ? round((
-                    ($sentimentCounts->get('NEGATIVE')->count ?? 0) + 
+                    ($sentimentCounts->get('NEGATIVE')->count ?? 0) +
                     ($sentimentCounts->get('WEAK_NEGATIVE')->count ?? 0)
-                ) / $totalCount * 100, 1) : 0
+                ) / $totalCount * 100, 1) : 0,
             ],
             'neutral_rate' => [
-                'value' => $totalCount > 0 ? round(($sentimentCounts->get('NEUTRAL')->count ?? 0) / $totalCount * 100, 1) : 0
+                'value' => $totalCount > 0 ? round(($sentimentCounts->get('NEUTRAL')->count ?? 0) / $totalCount * 100, 1) : 0,
             ],
             'tickets_needing_attention' => [
                 'value' => $negativeTicketsNeedingAttention,
-                'color' => $negativeTicketsNeedingAttention > 0 ? '#ef4444' : '#10b981'
+                'color' => $negativeTicketsNeedingAttention > 0 ? '#ef4444' : '#10b981',
             ],
             'sentiment_distribution' => [
                 'positive' => $sentimentCounts->get('POSITIVE')->count ?? 0,
@@ -172,7 +174,7 @@ class SentimentAnalyticsController extends Controller
                 'neutral' => $sentimentCounts->get('NEUTRAL')->count ?? 0,
                 'weak_negative' => $sentimentCounts->get('WEAK_NEGATIVE')->count ?? 0,
                 'negative' => $sentimentCounts->get('NEGATIVE')->count ?? 0,
-            ]
+            ],
         ];
     }
 
@@ -183,7 +185,7 @@ class SentimentAnalyticsController extends Controller
     {
         $days = $startDate->diffInDays($endDate);
         $groupBy = $days > 30 ? 'week' : 'day';
-        
+
         if ($groupBy === 'week') {
             $period = \Carbon\CarbonPeriod::create($startDate->copy()->startOfWeek(), '1 week', $endDate);
             $dateFormat = 'Y-\WW';
@@ -197,7 +199,7 @@ class SentimentAnalyticsController extends Controller
             if ($groupBy === 'week') {
                 $periodStart = $date->copy()->startOfWeek();
                 $periodEnd = $date->copy()->endOfWeek();
-                $label = 'Week of ' . $date->format('M j');
+                $label = 'Week of '.$date->format('M j');
             } else {
                 $periodStart = $date->copy()->startOfDay();
                 $periodEnd = $date->copy()->endOfDay();
@@ -277,7 +279,7 @@ class SentimentAnalyticsController extends Controller
             LIMIT 20
         ", [$companyId, $startDate, $endDate, $companyId]);
 
-        return collect($clientHealth)->map(function($client) {
+        return collect($clientHealth)->map(function ($client) {
             $healthScore = $this->calculateClientHealthScore(
                 $client->avg_sentiment_score,
                 $client->positive_count,
@@ -331,35 +333,35 @@ class SentimentAnalyticsController extends Controller
                 'score' => round($score, 1),
                 'label' => 'Excellent',
                 'color' => '#10b981',
-                'risk_level' => 'Low'
+                'risk_level' => 'Low',
             ];
         } elseif ($score >= 60) {
             return [
                 'score' => round($score, 1),
                 'label' => 'Good',
                 'color' => '#84cc16',
-                'risk_level' => 'Low'
+                'risk_level' => 'Low',
             ];
         } elseif ($score >= 40) {
             return [
                 'score' => round($score, 1),
                 'label' => 'Fair',
                 'color' => '#f59e0b',
-                'risk_level' => 'Medium'
+                'risk_level' => 'Medium',
             ];
         } elseif ($score >= 20) {
             return [
                 'score' => round($score, 1),
                 'label' => 'Poor',
                 'color' => '#f97316',
-                'risk_level' => 'High'
+                'risk_level' => 'High',
             ];
         } else {
             return [
                 'score' => round($score, 1),
                 'label' => 'Critical',
                 'color' => '#ef4444',
-                'risk_level' => 'Critical'
+                'risk_level' => 'Critical',
             ];
         }
     }
@@ -378,7 +380,7 @@ class SentimentAnalyticsController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
-            ->map(function($ticket) {
+            ->map(function ($ticket) {
                 return [
                     'id' => $ticket->id,
                     'subject' => $ticket->subject,
@@ -483,7 +485,7 @@ class SentimentAnalyticsController extends Controller
      */
     private function getResolutionTimeVsSentiment(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
-        return DB::select("
+        return DB::select('
             SELECT 
                 t.sentiment_label,
                 COUNT(*) as ticket_count,
@@ -496,7 +498,7 @@ class SentimentAnalyticsController extends Controller
             AND t.created_at BETWEEN ? AND ?
             GROUP BY t.sentiment_label
             ORDER BY avg_sentiment_score DESC
-        ", [$companyId, $startDate, $endDate]);
+        ', [$companyId, $startDate, $endDate]);
     }
 
     /**
@@ -504,19 +506,37 @@ class SentimentAnalyticsController extends Controller
      */
     private function getSentimentLabel(float $score): string
     {
-        if ($score > 0.5) return 'Very Positive';
-        if ($score > 0.1) return 'Positive';
-        if ($score > -0.1) return 'Neutral';
-        if ($score > -0.5) return 'Negative';
+        if ($score > 0.5) {
+            return 'Very Positive';
+        }
+        if ($score > 0.1) {
+            return 'Positive';
+        }
+        if ($score > -0.1) {
+            return 'Neutral';
+        }
+        if ($score > -0.5) {
+            return 'Negative';
+        }
+
         return 'Very Negative';
     }
 
     private function getSentimentColor(float $score): string
     {
-        if ($score > 0.5) return '#10b981';
-        if ($score > 0.1) return '#84cc16';
-        if ($score > -0.1) return '#64748b';
-        if ($score > -0.5) return '#f97316';
+        if ($score > 0.5) {
+            return '#10b981';
+        }
+        if ($score > 0.1) {
+            return '#84cc16';
+        }
+        if ($score > -0.1) {
+            return '#64748b';
+        }
+        if ($score > -0.5) {
+            return '#f97316';
+        }
+
         return '#ef4444';
     }
 }

@@ -3,10 +3,10 @@
 namespace App\Exports;
 
 use App\Models\Client;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Support\Facades\Auth;
 
 class ClientsExport implements FromQuery, WithHeadings, WithMapping
 {

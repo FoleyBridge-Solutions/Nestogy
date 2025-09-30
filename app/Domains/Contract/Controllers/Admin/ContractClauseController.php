@@ -2,14 +2,12 @@
 
 namespace App\Domains\Contract\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
 use App\Domains\Contract\Models\ContractClause;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class ContractClauseController extends Controller
 {
@@ -72,18 +70,18 @@ class ContractClauseController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Contract clause created successfully',
-                'data' => $clause
+                'data' => $clause,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to create contract clause', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
-                'company_id' => auth()->user()->company_id
+                'company_id' => auth()->user()->company_id,
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create contract clause: ' . $e->getMessage()
+                'message' => 'Failed to create contract clause: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -97,7 +95,7 @@ class ContractClauseController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $clause
+            'data' => $clause,
         ]);
     }
 
@@ -138,12 +136,12 @@ class ContractClauseController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Contract clause updated successfully',
-                'data' => $clause
+                'data' => $clause,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update contract clause'
+                'message' => 'Failed to update contract clause',
             ], 500);
         }
     }
@@ -160,12 +158,12 @@ class ContractClauseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Contract clause deleted successfully'
+                'message' => 'Contract clause deleted successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete contract clause'
+                'message' => 'Failed to delete contract clause',
             ], 500);
         }
     }
@@ -186,12 +184,12 @@ class ContractClauseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Contract clause approved successfully'
+                'message' => 'Contract clause approved successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to approve contract clause'
+                'message' => 'Failed to approve contract clause',
             ], 500);
         }
     }
@@ -208,13 +206,13 @@ class ContractClauseController extends Controller
             foreach ($defaultClauses as $clauseData) {
                 $clauseData['company_id'] = auth()->user()->company_id;
                 $clauseData['legal_review_status'] = 'approved'; // Pre-approved standard clauses
-                
+
                 // Check if clause already exists
                 $exists = ContractClause::where('company_id', auth()->user()->company_id)
                     ->where('title', $clauseData['title'])
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     ContractClause::create($clauseData);
                     $created++;
                 }
@@ -222,12 +220,12 @@ class ContractClauseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Successfully created {$created} MSP contract clauses"
+                'message' => "Successfully created {$created} MSP contract clauses",
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create MSP clauses'
+                'message' => 'Failed to create MSP clauses',
             ], 500);
         }
     }
@@ -243,13 +241,13 @@ class ContractClauseController extends Controller
 
             foreach ($standardLibrary as $clauseData) {
                 $clauseData['company_id'] = auth()->user()->company_id;
-                
+
                 // Check if clause already exists
                 $exists = ContractClause::where('company_id', auth()->user()->company_id)
                     ->where('title', $clauseData['title'])
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     ContractClause::create($clauseData);
                     $imported++;
                 }
@@ -257,12 +255,12 @@ class ContractClauseController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Successfully imported {$imported} standard contract clauses"
+                'message' => "Successfully imported {$imported} standard contract clauses",
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to import standard library'
+                'message' => 'Failed to import standard library',
             ], 500);
         }
     }
@@ -273,7 +271,7 @@ class ContractClauseController extends Controller
     protected function getStatistics(): array
     {
         $companyId = auth()->user()->company_id;
-        
+
         $totalClauses = ContractClause::where('company_id', $companyId)->count();
         $approvedClauses = ContractClause::where('company_id', $companyId)->where('legal_review_status', 'approved')->count();
 
@@ -298,7 +296,7 @@ class ContractClauseController extends Controller
                     'type' => 'legal',
                     'content' => '<h4>Force Majeure</h4>
                     <p>Neither party shall be liable for any failure or delay in performance under this Agreement which is due to fire, flood, earthquake, elements of nature or acts of God, acts of war, terrorism, riots, civil disorders, rebellions or revolutions, or any other similar cause beyond the reasonable control of such party.</p>',
-                    'legal_review_status' => 'approved'
+                    'legal_review_status' => 'approved',
                 ],
                 [
                     'title' => 'Governing Law',
@@ -307,9 +305,9 @@ class ContractClauseController extends Controller
                     'content' => '<h4>Governing Law</h4>
                     <p>This Agreement shall be governed by and construed in accordance with the laws of {{company.state}}, without regard to its conflict of law provisions. Any disputes arising under this Agreement shall be subject to the exclusive jurisdiction of the courts of {{company.state}}.</p>',
                     'variables' => [
-                        'company.state' => 'Company State/Province'
+                        'company.state' => 'Company State/Province',
                     ],
-                    'legal_review_status' => 'approved'
+                    'legal_review_status' => 'approved',
                 ],
                 [
                     'title' => 'Entire Agreement',
@@ -317,7 +315,7 @@ class ContractClauseController extends Controller
                     'type' => 'legal',
                     'content' => '<h4>Entire Agreement</h4>
                     <p>This Agreement constitutes the entire agreement between the parties and supersedes all prior or contemporaneous understandings, agreements, negotiations, representations and warranties, and communications, both written and oral, with respect to the subject matter of this Agreement.</p>',
-                    'legal_review_status' => 'approved'
+                    'legal_review_status' => 'approved',
                 ],
                 [
                     'title' => 'HIPAA Compliance',
@@ -332,9 +330,9 @@ class ContractClauseController extends Controller
                         <li>Execute a Business Associate Agreement if required</li>
                     </ul>',
                     'conditions' => [
-                        ['field' => 'client.industry', 'operator' => 'in', 'value' => ['healthcare', 'medical']]
+                        ['field' => 'client.industry', 'operator' => 'in', 'value' => ['healthcare', 'medical']],
                     ],
-                    'legal_review_status' => 'approved'
+                    'legal_review_status' => 'approved',
                 ],
                 [
                     'title' => 'PCI DSS Compliance',
@@ -343,9 +341,9 @@ class ContractClauseController extends Controller
                     'content' => '<h4>PCI DSS Compliance</h4>
                     <p>For clients processing credit card transactions, Service Provider will maintain PCI DSS compliance and ensure all systems handling cardholder data meet PCI DSS requirements.</p>',
                     'conditions' => [
-                        ['field' => 'services', 'operator' => 'contains', 'value' => 'payment processing']
+                        ['field' => 'services', 'operator' => 'contains', 'value' => 'payment processing'],
                     ],
-                    'legal_review_status' => 'approved'
+                    'legal_review_status' => 'approved',
                 ],
                 [
                     'title' => 'Remote Access Policy',
@@ -359,7 +357,7 @@ class ContractClauseController extends Controller
                         <li>Limited to the minimum necessary for service delivery</li>
                         <li>Terminated immediately after service completion</li>
                     </ul>',
-                    'legal_review_status' => 'approved'
+                    'legal_review_status' => 'approved',
                 ],
                 [
                     'title' => 'Business Continuity',
@@ -375,10 +373,10 @@ class ContractClauseController extends Controller
                     </ul>',
                     'variables' => [
                         'recovery.rto' => 'Recovery Time Objective (hours)',
-                        'communication.frequency' => 'Communication Frequency (hours)'
+                        'communication.frequency' => 'Communication Frequency (hours)',
                     ],
-                    'legal_review_status' => 'approved'
-                ]
+                    'legal_review_status' => 'approved',
+                ],
             ]
         );
     }

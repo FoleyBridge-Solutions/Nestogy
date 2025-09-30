@@ -6,14 +6,13 @@ use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Address Model
- * 
+ *
  * Represents client addresses from the client_addresses table.
  * Each address belongs to a client and company.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -30,7 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Address extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -66,8 +65,11 @@ class Address extends Model
      * Address types
      */
     const TYPE_BILLING = 'billing';
+
     const TYPE_SHIPPING = 'shipping';
+
     const TYPE_SERVICE = 'service';
+
     const TYPE_OTHER = 'other';
 
     /**
@@ -86,7 +88,7 @@ class Address extends Model
         $parts = array_filter([
             $this->address,
             $this->address2,
-            $this->city . ', ' . $this->state . ' ' . $this->zip,
+            $this->city.', '.$this->state.' '.$this->zip,
             $this->country !== 'US' ? $this->country : null,
         ]);
 
@@ -98,8 +100,8 @@ class Address extends Model
      */
     public function getDisplayNameAttribute(): string
     {
-        $name = ucfirst($this->type) . ' Address';
-        
+        $name = ucfirst($this->type).' Address';
+
         if ($this->is_primary) {
             $name .= ' (Primary)';
         }

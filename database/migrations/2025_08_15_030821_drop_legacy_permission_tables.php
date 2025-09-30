@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Drop legacy permission system tables now that we've migrated to Bouncer.
      * This migration should only be run after confirming all data has been
      * successfully migrated to Bouncer tables.
@@ -16,8 +16,9 @@ return new class extends Migration
     public function up(): void
     {
         // Only run if Bouncer tables exist, otherwise skip this migration
-        if (!Schema::hasTable('bouncer_abilities') || !Schema::hasTable('bouncer_roles')) {
+        if (! Schema::hasTable('bouncer_abilities') || ! Schema::hasTable('bouncer_roles')) {
             echo "Bouncer tables not found yet. Skipping legacy permission table cleanup.\n";
+
             return;
         }
 
@@ -93,7 +94,7 @@ return new class extends Migration
             $table->foreignId('role_id')->constrained()->onDelete('cascade');
             $table->foreignId('permission_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            
+
             $table->unique(['role_id', 'permission_id']);
         });
 
@@ -103,7 +104,7 @@ return new class extends Migration
             $table->foreignId('role_id')->constrained()->onDelete('cascade');
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'role_id', 'company_id']);
         });
 
@@ -114,7 +115,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->boolean('granted')->default(true);
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'permission_id', 'company_id']);
         });
 

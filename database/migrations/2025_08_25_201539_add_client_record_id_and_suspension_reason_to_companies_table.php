@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('companies', function (Blueprint $table) {
             $table->unsignedBigInteger('client_record_id')->nullable()->after('currency');
             $table->string('suspension_reason')->nullable()->after('suspended_at');
-            
+
             // Add foreign key if clients table exists
             if (Schema::hasTable('clients')) {
                 $table->foreign('client_record_id')->references('id')->on('clients')->onDelete('set null');

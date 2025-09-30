@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Clients;
 
-use App\Models\Contact;
 use App\Domains\Core\Services\NavigationService;
+use App\Models\Contact;
 use Livewire\Component;
 
 class CreateContact extends Component
@@ -44,9 +44,9 @@ class CreateContact extends Component
     public bool $has_portal_access = false;
 
     public string $auth_method = 'password';
-    
+
     public string $portal_access_method = 'manual_password';
-    
+
     public bool $send_invitation = false;
 
     public string $password = '';
@@ -251,14 +251,14 @@ class CreateContact extends Component
         }
 
         $contact = Contact::create($contactData);
-        
+
         // Send invitation if requested
         if ($this->send_invitation && $this->has_portal_access) {
             $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
             $result = $invitationService->sendInvitation($contact, auth()->user());
-            
-            if (!$result['success']) {
-                session()->flash('warning', 'Contact created but invitation failed: ' . $result['message']);
+
+            if (! $result['success']) {
+                session()->flash('warning', 'Contact created but invitation failed: '.$result['message']);
             } else {
                 session()->flash('success', 'Contact created and invitation sent successfully.');
             }
@@ -270,9 +270,9 @@ class CreateContact extends Component
                 ->where('id', '!=', $contact->id)
                 ->update(['primary' => false]);
         }
-        
+
         // Only show the default success message if we haven't already shown a more specific one
-        if (!session()->has('success') && !session()->has('warning')) {
+        if (! session()->has('success') && ! session()->has('warning')) {
             session()->flash('success', 'Contact created successfully.');
         }
 

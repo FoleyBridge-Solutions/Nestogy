@@ -5,7 +5,6 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientCalendarEvent;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +13,7 @@ use Illuminate\Validation\Rule;
 class CalendarEventController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of calendar events for the selected client
      */
@@ -21,7 +21,7 @@ class CalendarEventController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -29,14 +29,14 @@ class CalendarEventController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -68,8 +68,8 @@ class CalendarEventController extends Controller
         }
 
         $events = $query->orderBy('start_datetime', 'asc')
-                        ->paginate(20)
-                        ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $types = ClientCalendarEvent::getTypes();
         $statuses = ClientCalendarEvent::getStatuses();
@@ -84,8 +84,8 @@ class CalendarEventController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $types = ClientCalendarEvent::getTypes();
@@ -111,22 +111,22 @@ class CalendarEventController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'event_type' => 'required|in:' . implode(',', array_keys(ClientCalendarEvent::getTypes())),
+            'event_type' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getTypes())),
             'location' => 'nullable|string|max:255',
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after:start_datetime',
             'all_day' => 'boolean',
-            'status' => 'required|in:' . implode(',', array_keys(ClientCalendarEvent::getStatuses())),
-            'priority' => 'required|in:' . implode(',', array_keys(ClientCalendarEvent::getPriorities())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getStatuses())),
+            'priority' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getPriorities())),
             'attendees' => 'nullable|string',
-            'reminder_minutes' => 'nullable|in:' . implode(',', array_keys(ClientCalendarEvent::getReminderOptions())),
+            'reminder_minutes' => 'nullable|in:'.implode(',', array_keys(ClientCalendarEvent::getReminderOptions())),
             'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process attendees
@@ -152,12 +152,12 @@ class CalendarEventController extends Controller
             'notes' => $request->notes,
             'created_by' => auth()->id(),
         ]);
-        
+
         $event->company_id = auth()->user()->company_id;
         $event->save();
 
         return redirect()->route('clients.calendar-events.standalone.index')
-                        ->with('success', 'Calendar event created successfully.');
+            ->with('success', 'Calendar event created successfully.');
     }
 
     /**
@@ -168,7 +168,7 @@ class CalendarEventController extends Controller
         $this->authorize('view', $calendarEvent);
 
         $calendarEvent->load('client', 'creator');
-        
+
         // Update access timestamp
         $calendarEvent->update(['accessed_at' => now()]);
 
@@ -183,8 +183,8 @@ class CalendarEventController extends Controller
         $this->authorize('update', $calendarEvent);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $types = ClientCalendarEvent::getTypes();
         $statuses = ClientCalendarEvent::getStatuses();
@@ -211,22 +211,22 @@ class CalendarEventController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'event_type' => 'required|in:' . implode(',', array_keys(ClientCalendarEvent::getTypes())),
+            'event_type' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getTypes())),
             'location' => 'nullable|string|max:255',
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after:start_datetime',
             'all_day' => 'boolean',
-            'status' => 'required|in:' . implode(',', array_keys(ClientCalendarEvent::getStatuses())),
-            'priority' => 'required|in:' . implode(',', array_keys(ClientCalendarEvent::getPriorities())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getStatuses())),
+            'priority' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getPriorities())),
             'attendees' => 'nullable|string',
-            'reminder_minutes' => 'nullable|in:' . implode(',', array_keys(ClientCalendarEvent::getReminderOptions())),
+            'reminder_minutes' => 'nullable|in:'.implode(',', array_keys(ClientCalendarEvent::getReminderOptions())),
             'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process attendees
@@ -255,7 +255,7 @@ class CalendarEventController extends Controller
         $calendarEvent->save();
 
         return redirect()->route('clients.calendar-events.standalone.index')
-                        ->with('success', 'Calendar event updated successfully.');
+            ->with('success', 'Calendar event updated successfully.');
     }
 
     /**
@@ -268,7 +268,7 @@ class CalendarEventController extends Controller
         $calendarEvent->delete();
 
         return redirect()->route('clients.calendar-events.standalone.index')
-                        ->with('success', 'Calendar event deleted successfully.');
+            ->with('success', 'Calendar event deleted successfully.');
     }
 
     /**
@@ -277,16 +277,16 @@ class CalendarEventController extends Controller
     public function export(Request $request)
     {
         $query = ClientCalendarEvent::with(['client', 'creator'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%");
             });
         }
 
@@ -304,16 +304,16 @@ class CalendarEventController extends Controller
 
         $events = $query->orderBy('start_datetime', 'asc')->get();
 
-        $filename = 'calendar_events_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'calendar_events_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($events) {
+        $callback = function () use ($events) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Event Title',
@@ -329,7 +329,7 @@ class CalendarEventController extends Controller
                 'All Day',
                 'Reminder',
                 'Created By',
-                'Created At'
+                'Created At',
             ]);
 
             // CSV data
@@ -351,7 +351,7 @@ class CalendarEventController extends Controller
                     $event->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 

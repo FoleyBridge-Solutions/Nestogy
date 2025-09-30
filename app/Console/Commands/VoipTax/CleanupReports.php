@@ -47,9 +47,10 @@ class CleanupReports extends Command
                 $this->warn('DRY RUN MODE - No files will be actually deleted');
             }
 
-            if (!$force && !$dryRun) {
-                if (!$this->confirm("Are you sure you want to delete reports older than {$retentionDays} days?")) {
+            if (! $force && ! $dryRun) {
+                if (! $this->confirm("Are you sure you want to delete reports older than {$retentionDays} days?")) {
                     $this->info('Cleanup cancelled by user.');
+
                     return Command::SUCCESS;
                 }
             }
@@ -60,6 +61,7 @@ class CleanupReports extends Command
 
             if ($dryRun) {
                 $this->info('Would cleanup old reports based on retention policy.');
+
                 return Command::SUCCESS;
             }
 
@@ -71,7 +73,8 @@ class CleanupReports extends Command
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('Failed to cleanup reports: ' . $e->getMessage());
+            $this->error('Failed to cleanup reports: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -84,7 +87,7 @@ class CleanupReports extends Command
         $this->line('');
         $this->info('Cleanup Results:');
         $this->line("Files deleted: {$results['files_deleted']}");
-        $this->line('Total size freed: ' . $this->formatBytes($results['total_size_freed']));
+        $this->line('Total size freed: '.$this->formatBytes($results['total_size_freed']));
 
         if ($results['files_deleted'] > 0) {
             $this->line('');
@@ -116,6 +119,6 @@ class CleanupReports extends Command
             $bytes /= 1024;
         }
 
-        return round($bytes, $precision) . ' ' . $units[$i];
+        return round($bytes, $precision).' '.$units[$i];
     }
 }

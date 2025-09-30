@@ -13,7 +13,7 @@ trait HasArchive
     {
         // Add global scope to exclude archived records by default
         static::addGlobalScope('archived', function (Builder $builder) {
-            $builder->whereNull($builder->getModel()->getTable() . '.archived_at');
+            $builder->whereNull($builder->getModel()->getTable().'.archived_at');
         });
     }
 
@@ -24,7 +24,7 @@ trait HasArchive
     {
         $this->archived_at = now();
         $this->save();
-        
+
         return $this;
     }
 
@@ -35,7 +35,7 @@ trait HasArchive
     {
         $this->archived_at = null;
         $this->save();
-        
+
         return $this;
     }
 
@@ -44,7 +44,7 @@ trait HasArchive
      */
     public function isArchived()
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**

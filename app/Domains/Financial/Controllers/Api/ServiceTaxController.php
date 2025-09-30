@@ -2,12 +2,12 @@
 
 namespace App\Domains\Financial\Controllers\Api;
 
+use App\Domains\Financial\Services\ServiceTaxCalculator;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\TaxJurisdiction;
-use App\Domains\Financial\Services\ServiceTaxCalculator;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ServiceTaxController extends Controller
@@ -16,10 +16,11 @@ class ServiceTaxController extends Controller
 
     protected function getTaxCalculator(): ServiceTaxCalculator
     {
-        if (!$this->taxCalculator) {
+        if (! $this->taxCalculator) {
             $companyId = auth()->user()->company_id ?? 1;
             $this->taxCalculator = new ServiceTaxCalculator($companyId);
         }
+
         return $this->taxCalculator;
     }
 
@@ -45,7 +46,7 @@ class ServiceTaxController extends Controller
             $price = $request->input('price');
             $quantity = $request->input('quantity', 1);
             $subtotal = $price * $quantity;
-            
+
             // Get address from customer or use provided address
             $address = null;
             if ($request->filled('customer_id')) {
@@ -63,7 +64,7 @@ class ServiceTaxController extends Controller
             }
 
             // If no address is provided, return zero tax
-            if (!$address || !isset($address['state'])) {
+            if (! $address || ! isset($address['state'])) {
                 return response()->json([
                     'subtotal' => $subtotal,
                     'tax_amount' => 0,
@@ -71,36 +72,36 @@ class ServiceTaxController extends Controller
                     'tax_breakdown' => [],
                     'total' => $subtotal,
                     'jurisdiction' => null,
-                    'message' => 'No address provided for tax calculation'
+                    'message' => 'No address provided for tax calculation',
                 ]);
             }
 
             // Find applicable tax jurisdiction
             $jurisdiction = $this->findJurisdiction($address);
-            
+
             // Prepare items for tax calculation
             $items = collect([
-                (object)[
-                    'id' => 'temp_' . uniqid(),
+                (object) [
+                    'id' => 'temp_'.uniqid(),
                     'name' => 'Service',
                     'price' => $price,
                     'quantity' => $quantity,
                     'subtotal' => $subtotal,
                     'service_type' => $request->input('service_type', 'general'),
                     'category_id' => $request->input('category_id'),
-                ]
+                ],
             ]);
 
             // Calculate taxes
             $serviceType = $request->input('service_type', 'general');
             $calculations = $this->getTaxCalculator()->calculate($items, $serviceType, $address);
-            
+
             // Get summary
             $summary = $this->getTaxCalculator()->getTaxSummary($calculations);
-            
+
             // Extract first (and only) item's calculation
             $calculation = $calculations[0] ?? null;
-            
+
             return response()->json([
                 'subtotal' => $subtotal,
                 'tax_amount' => $calculation['total_tax_amount'] ?? 0,
@@ -121,7 +122,7 @@ class ServiceTaxController extends Controller
             Log::error('Tax calculation error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -159,7 +160,7 @@ class ServiceTaxController extends Controller
             $items = $request->input('items');
             $customerId = $request->input('customer_id');
             $providedAddress = $request->input('address');
-            
+
             // Get address from customer or use provided address
             $address = null;
             if ($customerId) {
@@ -189,7 +190,7 @@ class ServiceTaxController extends Controller
 
             $taxEngineRouter = app(\App\Services\TaxEngine\TaxEngineRouter::class);
             $taxEngineRouter->setCompanyId(auth()->user()->company_id);
-            
+
             foreach ($items as $index => $item) {
                 $price = $item['price'];
                 $quantity = $item['quantity'] ?? 1;
@@ -200,7 +201,7 @@ class ServiceTaxController extends Controller
                 $results['totals']['subtotal'] += $subtotal;
 
                 // If no address provided, return zero tax for this item
-                if (!$address || !isset($address['state'])) {
+                if (! $address || ! isset($address['state'])) {
                     $results['items'][] = [
                         'index' => $index,
                         'name' => $item['name'],
@@ -210,9 +211,10 @@ class ServiceTaxController extends Controller
                         'tax_breakdown' => [],
                         'total' => $subtotal,
                         'service_type' => $serviceType,
-                        'message' => 'No address provided for tax calculation'
+                        'message' => 'No address provided for tax calculation',
                     ];
                     $results['totals']['total_amount'] += $subtotal;
+
                     continue;
                 }
 
@@ -249,7 +251,7 @@ class ServiceTaxController extends Controller
                 // Aggregate tax breakdown for summary
                 foreach ($taxBreakdown as $tax) {
                     $taxName = $tax['tax_name'] ?? 'Unknown Tax';
-                    if (!isset($results['tax_summary'][$taxName])) {
+                    if (! isset($results['tax_summary'][$taxName])) {
                         $results['tax_summary'][$taxName] = [
                             'tax_name' => $taxName,
                             'tax_type' => $tax['tax_type'] ?? 'unknown',
@@ -272,7 +274,7 @@ class ServiceTaxController extends Controller
             Log::error('Quote tax calculation error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -303,7 +305,7 @@ class ServiceTaxController extends Controller
                 'id' => $customer->id,
                 'name' => $customer->name,
                 'company_name' => $customer->company_name,
-            ]
+            ],
         ]);
     }
 
@@ -313,48 +315,48 @@ class ServiceTaxController extends Controller
     protected function findJurisdiction(array $address): ?TaxJurisdiction
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Try to find most specific jurisdiction first
         $query = TaxJurisdiction::where('company_id', $companyId)
             ->where('is_active', true);
 
         // Try ZIP code first (most specific)
-        if (!empty($address['zip'])) {
+        if (! empty($address['zip'])) {
             $jurisdiction = (clone $query)
                 ->where(function ($q) use ($address) {
                     $q->where('zip_code', $address['zip'])
-                      ->orWhereJsonContains('zip_codes', $address['zip']);
+                        ->orWhereJsonContains('zip_codes', $address['zip']);
                 })
                 ->first();
-            
+
             if ($jurisdiction) {
                 return $jurisdiction;
             }
         }
 
         // Try city + state
-        if (!empty($address['city']) && !empty($address['state'])) {
+        if (! empty($address['city']) && ! empty($address['state'])) {
             $jurisdiction = (clone $query)
                 ->where('jurisdiction_type', 'city')
                 ->where('state_code', $address['state'])
                 ->where(function ($q) use ($address) {
-                    $q->where('name', 'like', $address['city'] . '%')
-                      ->orWhere('city_name', $address['city']);
+                    $q->where('name', 'like', $address['city'].'%')
+                        ->orWhere('city_name', $address['city']);
                 })
                 ->first();
-            
+
             if ($jurisdiction) {
                 return $jurisdiction;
             }
         }
 
         // Try state
-        if (!empty($address['state'])) {
+        if (! empty($address['state'])) {
             $jurisdiction = (clone $query)
                 ->where('jurisdiction_type', 'state')
                 ->where('state_code', $address['state'])
                 ->first();
-            
+
             if ($jurisdiction) {
                 return $jurisdiction;
             }

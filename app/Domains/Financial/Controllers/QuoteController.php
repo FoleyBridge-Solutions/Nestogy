@@ -2,46 +2,47 @@
 
 namespace App\Domains\Financial\Controllers;
 
+use App\Domains\Contract\Services\ContractGenerationService;
+use App\Domains\Core\Services\PdfService;
+use App\Domains\Email\Services\EmailService;
+use App\Domains\Financial\Exceptions\FinancialException;
+use App\Domains\Financial\Exceptions\QuoteExceptionHandler;
+use App\Domains\Financial\Services\QuoteInvoiceConversionService;
+use App\Domains\Financial\Services\QuoteService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Models\Quote;
-use App\Models\QuoteApproval;
-use App\Models\QuoteTemplate;
-use App\Models\InvoiceItem;
-use App\Models\Client;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\Tax;
+use App\Http\Requests\ApproveQuoteRequest;
 use App\Http\Requests\StoreQuoteRequest;
 use App\Http\Requests\UpdateQuoteRequest;
-use App\Http\Requests\ApproveQuoteRequest;
-use App\Domains\Financial\Services\QuoteService;
-use App\Domains\Financial\Exceptions\QuoteExceptionHandler;
-use App\Domains\Financial\Exceptions\FinancialException;
-use App\Http\Resources\Financial\QuoteResource;
-use App\Http\Resources\Financial\QuoteCollection;
 use App\Http\Resources\ApiResponse;
-use App\Domains\Email\Services\EmailService;
-use App\Domains\Core\Services\PdfService;
-use App\Domains\Financial\Services\QuoteInvoiceConversionService;
-use App\Domains\Contract\Services\ContractGenerationService;
-use App\Domains\Contract\Models\Contract;
+use App\Http\Resources\Financial\QuoteCollection;
+use App\Http\Resources\Financial\QuoteResource;
+use App\Models\Category;
+use App\Models\Client;
+use App\Models\InvoiceItem;
+use App\Models\Product;
+use App\Models\Quote;
+use App\Models\QuoteTemplate;
+use App\Models\Tax;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * QuoteController
- * 
+ *
  * Enterprise-grade quote management controller with full CRUD operations,
  * approval workflows, versioning, and VoIP-specific features.
  */
 class QuoteController extends Controller
 {
     protected $quoteService;
+
     protected $emailService;
+
     protected $pdfService;
+
     protected $conversionService;
+
     protected $contractGenerationService;
 
     public function __construct(
@@ -102,6 +103,7 @@ class QuoteController extends Controller
             return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
             $exception = QuoteExceptionHandler::normalize($e);
+
             return QuoteExceptionHandler::handle($exception, $request);
         }
     }
@@ -112,38 +114,38 @@ class QuoteController extends Controller
     public function create(Request $request)
     {
         $user = Auth::user();
-        
+
         // Get all clients for dropdown (optimized for Livewire)
         $clients = Client::where('company_id', $user->company_id)
-                        ->orderBy('name')
-                        ->select(['id', 'name', 'company_name', 'email'])
-                        ->get();
-        
+            ->orderBy('name')
+            ->select(['id', 'name', 'company_name', 'email'])
+            ->get();
+
         // Get all categories for dropdown
         $categories = Category::where('company_id', $user->company_id)
-                            ->where('type', 'quote')
-                            ->orderBy('name')
-                            ->select(['id', 'name'])
-                            ->get();
+            ->where('type', 'quote')
+            ->orderBy('name')
+            ->select(['id', 'name'])
+            ->get();
 
         // Get active quote templates (optimized for Livewire)
         $templates = QuoteTemplate::where('company_id', $user->company_id)
-                                ->where('is_active', true)
-                                ->orderBy('name')
-                                ->select(['id', 'name', 'description', 'items'])
-                                ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->select(['id', 'name', 'description', 'items'])
+            ->get();
 
         // Get products for item selection
         $products = Product::where('company_id', $user->company_id)
-                          ->where('is_active', true)
-                          ->orderBy('name')
-                          ->select(['id', 'name', 'description', 'price', 'category'])
-                          ->limit(50) // Initial load limit for performance
-                          ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->select(['id', 'name', 'description', 'price', 'category'])
+            ->limit(50) // Initial load limit for performance
+            ->get();
 
         // Get tax rates
         $taxes = Tax::orderBy('name')->get();
-        
+
         // Handle copy functionality
         $copyData = null;
         $copyFromQuote = null;
@@ -152,24 +154,24 @@ class QuoteController extends Controller
             if ($copyData) {
                 // Clear the session data after retrieving
                 session()->forget('quote_copy_data');
-                
+
                 // Get source quote for reference
                 $copyFromQuote = Quote::find($request->get('copy_from'));
-                
+
                 Log::info('Quote create form loaded with copy data', [
                     'copy_from_quote_id' => $request->get('copy_from'),
                     'items_count' => count($copyData['items'] ?? []),
-                    'user_id' => Auth::id()
+                    'user_id' => Auth::id(),
                 ]);
             }
         }
-        
+
         // Handle pre-selected client or template
         $clientId = $request->get('client_id');
         $selectedClient = $clientId ? Client::findOrFail($clientId) : null;
-        
+
         // If no query parameter, check session for selected client
-        if (!$selectedClient) {
+        if (! $selectedClient) {
             $sessionClient = \App\Domains\Core\Services\NavigationService::getSelectedClient();
             if ($sessionClient) {
                 $selectedClient = $sessionClient;
@@ -177,14 +179,14 @@ class QuoteController extends Controller
         }
         $templateId = $request->get('template_id');
         $selectedTemplate = $templateId ? QuoteTemplate::findOrFail($templateId) : null;
-        
+
         return view('financial.quotes.create', compact(
-            'clients', 
-            'categories', 
+            'clients',
+            'categories',
             'templates',
             'products',
             'taxes',
-            'selectedClient', 
+            'selectedClient',
             'selectedTemplate',
             'copyData',
             'copyFromQuote'
@@ -201,7 +203,7 @@ class QuoteController extends Controller
             Log::info('Quote creation attempt', [
                 'data' => $request->all(),
                 'user_id' => Auth::id(),
-                'company_id' => Auth::user()->company_id
+                'company_id' => Auth::user()->company_id,
             ]);
 
             $quote = $this->quoteService->createQuote($request->validated());
@@ -222,34 +224,34 @@ class QuoteController extends Controller
             Log::error('Quote creation failed (FinancialException)', [
                 'error' => $e->getMessage(),
                 'data' => $request->all(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
-            
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => $e->getMessage(),
-                    'errors' => []
+                    'errors' => [],
                 ], 422);
             }
-            
+
             return back()->withInput()->withErrors(['error' => $e->getMessage()]);
         } catch (\Exception $e) {
             Log::error('Quote creation failed (Exception)', [
                 'error' => $e->getMessage(),
                 'data' => $request->all(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
-            
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create quote: ' . $e->getMessage(),
-                    'errors' => []
+                    'message' => 'Failed to create quote: '.$e->getMessage(),
+                    'errors' => [],
                 ], 422);
             }
-            
-            return back()->withInput()->withErrors(['error' => 'Failed to create quote: ' . $e->getMessage()]);
+
+            return back()->withInput()->withErrors(['error' => 'Failed to create quote: '.$e->getMessage()]);
         }
     }
 
@@ -262,9 +264,9 @@ class QuoteController extends Controller
             $this->authorize('view', $quote);
 
             $quote = $this->quoteService->findQuote($quote->id);
-            
+
             // Load tax calculations for detailed breakdown
-            $quote->load(['taxCalculations' => function($query) {
+            $quote->load(['taxCalculations' => function ($query) {
                 $query->where('status', '!=', 'voided')->latest();
             }]);
 
@@ -286,7 +288,7 @@ class QuoteController extends Controller
             // Add VoIP breakdown if this quote has VoIP services
             if ($quote->hasVoIPServices()) {
                 $voipBreakdown = $quote->getVoIPTaxBreakdown();
-                if (!empty($voipBreakdown)) {
+                if (! empty($voipBreakdown)) {
                     $totals['voip_breakdown'] = [
                         'setup_fees' => 0, // You may need to calculate this
                         'monthly_recurring' => 0, // You may need to calculate this
@@ -301,6 +303,7 @@ class QuoteController extends Controller
             return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
             $exception = QuoteExceptionHandler::normalize($e);
+
             return QuoteExceptionHandler::handle($exception, $request);
         }
     }
@@ -311,51 +314,51 @@ class QuoteController extends Controller
     public function edit(Quote $quote)
     {
         $this->authorize('update', $quote);
-        
+
         // Only allow editing of draft quotes or those not yet approved
-        if (!$quote->isDraft() && $quote->approval_status !== Quote::APPROVAL_REJECTED) {
+        if (! $quote->isDraft() && $quote->approval_status !== Quote::APPROVAL_REJECTED) {
             return back()->with('error', 'Only draft or rejected quotes can be edited');
         }
-        
+
         $user = Auth::user();
-        
+
         // Get all clients for dropdown (optimized for Livewire)
         $clients = Client::where('company_id', $user->company_id)
-                        ->orderBy('name')
-                        ->select(['id', 'name', 'company_name', 'email'])
-                        ->get();
-        
+            ->orderBy('name')
+            ->select(['id', 'name', 'company_name', 'email'])
+            ->get();
+
         // Get all categories for dropdown
         $categories = Category::where('company_id', $user->company_id)
-                            ->where('type', 'quote')
-                            ->orderBy('name')
-                            ->select(['id', 'name'])
-                            ->get();
+            ->where('type', 'quote')
+            ->orderBy('name')
+            ->select(['id', 'name'])
+            ->get();
 
         // Get active quote templates (optimized for Livewire)
         $templates = QuoteTemplate::where('company_id', $user->company_id)
-                                ->where('is_active', true)
-                                ->orderBy('name')
-                                ->select(['id', 'name', 'description', 'items'])
-                                ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->select(['id', 'name', 'description', 'items'])
+            ->get();
 
         // Get products for item selection
         $products = Product::where('company_id', $user->company_id)
-                          ->where('is_active', true)
-                          ->orderBy('name')
-                          ->select(['id', 'name', 'description', 'price', 'category'])
-                          ->limit(50) // Initial load limit for performance
-                          ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->select(['id', 'name', 'description', 'price', 'category'])
+            ->limit(50) // Initial load limit for performance
+            ->get();
 
         // Get tax rates
         $taxes = Tax::orderBy('name')->get();
-        
+
         // Load quote relationships
         $quote->load('client', 'category', 'items');
-        
+
         return view('financial.quotes.edit', compact(
-            'quote', 
-            'clients', 
+            'quote',
+            'clients',
             'categories',
             'templates',
             'products',
@@ -388,6 +391,7 @@ class QuoteController extends Controller
             return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
             $exception = QuoteExceptionHandler::normalize($e);
+
             return QuoteExceptionHandler::handle($exception, $request);
         }
     }
@@ -406,23 +410,23 @@ class QuoteController extends Controller
             'price' => 'required|numeric|min:0',
             'tax_id' => 'nullable|exists:taxes,id',
             'category_id' => 'nullable|exists:categories,id',
-            'discount' => 'nullable|numeric|min:0'
+            'discount' => 'nullable|numeric|min:0',
         ]);
 
         try {
             $item = $this->quoteService->addQuoteItem($quote, $request->all());
-            
+
             Log::info('Quote item added', [
                 'quote_id' => $quote->id,
                 'item_id' => $item->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Item added successfully',
-                    'item' => $item
+                    'item' => $item,
                 ]);
             }
 
@@ -434,10 +438,10 @@ class QuoteController extends Controller
             Log::error('Quote item addition failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to add item: ' . $e->getMessage());
+            return back()->with('error', 'Failed to add item: '.$e->getMessage());
         }
     }
 
@@ -455,23 +459,23 @@ class QuoteController extends Controller
             'price' => 'required|numeric|min:0',
             'tax_id' => 'nullable|exists:taxes,id',
             'category_id' => 'nullable|exists:categories,id',
-            'discount' => 'nullable|numeric|min:0'
+            'discount' => 'nullable|numeric|min:0',
         ]);
 
         try {
             $updatedItem = $this->quoteService->updateQuoteItem($item, $request->all());
-            
+
             Log::info('Quote item updated', [
                 'quote_id' => $quote->id,
                 'item_id' => $item->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Item updated successfully',
-                    'item' => $updatedItem
+                    'item' => $updatedItem,
                 ]);
             }
 
@@ -484,10 +488,10 @@ class QuoteController extends Controller
                 'quote_id' => $quote->id,
                 'item_id' => $item->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to update item: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update item: '.$e->getMessage());
         }
     }
 
@@ -500,17 +504,17 @@ class QuoteController extends Controller
 
         try {
             $this->quoteService->deleteQuoteItem($item);
-            
+
             Log::info('Quote item deleted', [
                 'quote_id' => $quote->id,
                 'item_id' => $item->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Item deleted successfully'
+                    'message' => 'Item deleted successfully',
                 ]);
             }
 
@@ -523,10 +527,10 @@ class QuoteController extends Controller
                 'quote_id' => $quote->id,
                 'item_id' => $item->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to delete item: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete item: '.$e->getMessage());
         }
     }
 
@@ -542,13 +546,13 @@ class QuoteController extends Controller
 
             Log::info('Quote submitted for approval', [
                 'quote_id' => $quote->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Quote submitted for approval successfully'
+                    'message' => 'Quote submitted for approval successfully',
                 ]);
             }
 
@@ -560,10 +564,10 @@ class QuoteController extends Controller
             Log::error('Quote approval submission failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to submit for approval: ' . $e->getMessage());
+            return back()->with('error', 'Failed to submit for approval: '.$e->getMessage());
         }
     }
 
@@ -576,7 +580,7 @@ class QuoteController extends Controller
 
         try {
             $validated = $request->validated();
-            
+
             $this->quoteService->processApproval(
                 $quote,
                 $validated['level'],
@@ -591,13 +595,13 @@ class QuoteController extends Controller
                 'quote_id' => $quote->id,
                 'action' => $action,
                 'level' => $level,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => "Quote {$action}ed at {$level} level successfully"
+                    'message' => "Quote {$action}ed at {$level} level successfully",
                 ]);
             }
 
@@ -609,10 +613,10 @@ class QuoteController extends Controller
             Log::error('Quote approval processing failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to process approval: ' . $e->getMessage());
+            return back()->with('error', 'Failed to process approval: '.$e->getMessage());
         }
     }
 
@@ -623,22 +627,22 @@ class QuoteController extends Controller
     {
         $this->authorize('send', $quote);
 
-        if (!$quote->isFullyApproved() && $quote->approval_status !== Quote::APPROVAL_NOT_REQUIRED) {
+        if (! $quote->isFullyApproved() && $quote->approval_status !== Quote::APPROVAL_NOT_REQUIRED) {
             return back()->with('error', 'Quote must be approved before sending');
         }
 
         try {
             $this->quoteService->sendQuote($quote);
-            
+
             Log::info('Quote emailed', [
                 'quote_id' => $quote->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Quote sent successfully'
+                    'message' => 'Quote sent successfully',
                 ]);
             }
 
@@ -650,10 +654,10 @@ class QuoteController extends Controller
             Log::error('Quote email failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to send quote: ' . $e->getMessage());
+            return back()->with('error', 'Failed to send quote: '.$e->getMessage());
         }
     }
 
@@ -666,12 +670,12 @@ class QuoteController extends Controller
 
         try {
             $quote->load(['client', 'items', 'category']);
-            
+
             $filename = $this->pdfService->generateFilename('quote', $quote->getFullNumber());
-            
+
             Log::info('Quote PDF generated', [
                 'quote_id' => $quote->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return $this->pdfService->download(
@@ -685,10 +689,10 @@ class QuoteController extends Controller
             Log::error('Quote PDF generation failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to generate PDF: ' . $e->getMessage());
+            return back()->with('error', 'Failed to generate PDF: '.$e->getMessage());
         }
     }
 
@@ -699,24 +703,24 @@ class QuoteController extends Controller
     {
         $this->authorize('convert', $quote);
 
-        if (!$quote->isAccepted()) {
+        if (! $quote->isAccepted()) {
             return back()->with('error', 'Quote must be accepted before converting to invoice');
         }
 
         try {
             $invoice = $this->quoteService->convertToInvoice($quote);
-            
+
             Log::info('Quote converted to invoice', [
                 'quote_id' => $quote->id,
                 'invoice_id' => $invoice->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Quote converted to invoice successfully',
-                    'invoice' => $invoice
+                    'invoice' => $invoice,
                 ]);
             }
 
@@ -728,10 +732,10 @@ class QuoteController extends Controller
             Log::error('Quote to invoice conversion failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to convert to invoice: ' . $e->getMessage());
+            return back()->with('error', 'Failed to convert to invoice: '.$e->getMessage());
         }
     }
 
@@ -742,7 +746,7 @@ class QuoteController extends Controller
     {
         $this->authorize('convert-quotes-to-recurring');
 
-        if (!$quote->isAccepted()) {
+        if (! $quote->isAccepted()) {
             return back()->with('error', 'Quote must be accepted before converting to recurring billing');
         }
 
@@ -781,20 +785,20 @@ class QuoteController extends Controller
             // Update quote status to indicate conversion
             $quote->update([
                 'converted_to_recurring' => true,
-                'recurring_id' => $recurring->id
+                'recurring_id' => $recurring->id,
             ]);
 
             Log::info('Quote converted to recurring billing', [
                 'quote_id' => $quote->id,
                 'recurring_id' => $recurring->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Quote converted to recurring billing successfully',
-                    'recurring' => $recurring
+                    'recurring' => $recurring,
                 ]);
             }
 
@@ -806,10 +810,10 @@ class QuoteController extends Controller
             Log::error('Quote to recurring billing conversion failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to convert to recurring billing: ' . $e->getMessage());
+            return back()->with('error', 'Failed to convert to recurring billing: '.$e->getMessage());
         }
     }
 
@@ -830,14 +834,14 @@ class QuoteController extends Controller
                 'monthly' => $quote->total_amount * 12,
                 'quarterly' => $quote->total_amount * 4,
                 'semi-annually' => $quote->total_amount * 2,
-                'annually' => $quote->total_amount
+                'annually' => $quote->total_amount,
             ],
             'available_voip_services' => [
                 'hosted_pbx' => 'Hosted PBX',
                 'sip_trunking' => 'SIP Trunking',
                 'voip_lines' => 'VoIP Lines',
-                'unified_communications' => 'Unified Communications'
-            ]
+                'unified_communications' => 'Unified Communications',
+            ],
         ];
 
         if ($request->wantsJson()) {
@@ -877,6 +881,7 @@ class QuoteController extends Controller
             return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
             $exception = QuoteExceptionHandler::normalize($e);
+
             return QuoteExceptionHandler::handle($exception, $request);
         }
     }
@@ -902,7 +907,7 @@ class QuoteController extends Controller
             Log::info('Quote copy initiated', [
                 'source_quote_id' => $quote->id,
                 'source_quote_number' => $quote->getFullNumber(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
@@ -910,7 +915,7 @@ class QuoteController extends Controller
                     'success' => true,
                     'message' => 'Quote prepared for copying',
                     'redirect_url' => route('financial.quotes.create', $queryParams),
-                    'copy_data' => $copyData
+                    'copy_data' => $copyData,
                 ]);
             }
 
@@ -927,19 +932,19 @@ class QuoteController extends Controller
             Log::error('Quote copy failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to copy quote: ' . $e->getMessage()
+                    'message' => 'Failed to copy quote: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()
                 ->back()
-                ->with('error', 'Failed to copy quote: ' . $e->getMessage());
+                ->with('error', 'Failed to copy quote: '.$e->getMessage());
         }
     }
 
@@ -951,23 +956,23 @@ class QuoteController extends Controller
         $this->authorize('update', $quote);
 
         $request->validate([
-            'reason' => 'nullable|string|max:500'
+            'reason' => 'nullable|string|max:500',
         ]);
 
         try {
             $revision = $this->quoteService->createRevision($quote, [], $request->get('reason'));
-            
+
             Log::info('Quote revision created', [
                 'original_quote_id' => $quote->id,
                 'revision_quote_id' => $revision->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Quote revision created successfully',
-                    'quote' => $revision
+                    'quote' => $revision,
                 ]);
             }
 
@@ -979,10 +984,10 @@ class QuoteController extends Controller
             Log::error('Quote revision creation failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to create revision: ' . $e->getMessage());
+            return back()->with('error', 'Failed to create revision: '.$e->getMessage());
         }
     }
 
@@ -995,27 +1000,27 @@ class QuoteController extends Controller
 
         $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'customizations' => 'nullable|array'
+            'customizations' => 'nullable|array',
         ]);
 
         try {
             $client = Client::findOrFail($request->get('client_id'));
             $customizations = $request->get('customizations', []);
-            
+
             $quote = $this->quoteService->createFromTemplate($template, $client, $customizations);
-            
+
             Log::info('Quote created from template', [
                 'template_id' => $template->id,
                 'quote_id' => $quote->id,
                 'client_id' => $client->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Quote created from template successfully',
-                    'quote' => $quote
+                    'quote' => $quote,
                 ]);
             }
 
@@ -1027,10 +1032,10 @@ class QuoteController extends Controller
             Log::error('Quote creation from template failed', [
                 'template_id' => $template->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to create quote from template: ' . $e->getMessage());
+            return back()->with('error', 'Failed to create quote from template: '.$e->getMessage());
         }
     }
 
@@ -1056,6 +1061,7 @@ class QuoteController extends Controller
             return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
             $exception = QuoteExceptionHandler::normalize($e);
+
             return QuoteExceptionHandler::handle($exception, $request);
         }
     }
@@ -1083,7 +1089,7 @@ class QuoteController extends Controller
                 'quote_id' => $quote->id,
                 'quote_number' => $quote->getFullNumber(),
                 'previous_status' => $quote->getOriginal('status'),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             if ($request->wantsJson()) {
@@ -1093,8 +1099,8 @@ class QuoteController extends Controller
                     'quote' => [
                         'id' => $quote->id,
                         'status' => $quote->status,
-                        'number' => $quote->getFullNumber()
-                    ]
+                        'number' => $quote->getFullNumber(),
+                    ],
                 ]);
             }
 
@@ -1106,6 +1112,7 @@ class QuoteController extends Controller
             return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
             $exception = QuoteExceptionHandler::normalize($e);
+
             return QuoteExceptionHandler::handle($exception, $request);
         }
     }
@@ -1117,7 +1124,7 @@ class QuoteController extends Controller
     {
         $user = Auth::user();
         $clientId = $request->get('client_id');
-        
+
         $query = Quote::with('client')
             ->where('company_id', $user->company_id);
 
@@ -1126,8 +1133,8 @@ class QuoteController extends Controller
         }
 
         $quotes = $query->orderBy('number')->get();
-        $filename = 'quotes-' . now()->format('Y-m-d') . '.csv';
-        
+        $filename = 'quotes-'.now()->format('Y-m-d').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
@@ -1135,7 +1142,7 @@ class QuoteController extends Controller
 
         $callback = function () use ($quotes) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Quote Number',
@@ -1146,31 +1153,31 @@ class QuoteController extends Controller
                 'Date',
                 'Expires',
                 'Status',
-                'Approval Status'
+                'Approval Status',
             ]);
 
             // CSV data
             foreach ($quotes as $quote) {
                 fputcsv($file, [
                     $quote->getFullNumber(),
-                    'v' . $quote->version,
+                    'v'.$quote->version,
                     $quote->client->name ?? '',
                     $quote->scope,
                     $quote->amount,
                     $quote->date->format('Y-m-d'),
                     $quote->expire_date ? $quote->expire_date->format('Y-m-d') : '',
                     $quote->status,
-                    $quote->approval_status
+                    $quote->approval_status,
                 ]);
             }
-            
+
             fclose($file);
         };
 
         Log::info('Quotes exported to CSV', [
             'count' => $quotes->count(),
             'client_id' => $clientId,
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         return response()->stream($callback, 200, $headers);
@@ -1189,13 +1196,11 @@ class QuoteController extends Controller
             'items',
             'approvals' => function ($query) {
                 $query->with('user')->orderBy('approval_level');
-            }
+            },
         ]);
 
         return view('financial.quotes.approve', compact('quote'));
     }
-
-
 
     /**
      * Convert quote with invoice generation
@@ -1204,7 +1209,7 @@ class QuoteController extends Controller
     {
         $this->authorize('convert', $quote);
 
-        if (!$quote->isAccepted()) {
+        if (! $quote->isAccepted()) {
             return back()->with('error', 'Quote must be accepted before conversion');
         }
 
@@ -1224,14 +1229,14 @@ class QuoteController extends Controller
                 'contract_id' => $result['contract']->id ?? null,
                 'invoice_id' => $result['invoice']->id ?? null,
                 'recurring_id' => $result['recurring']->id ?? null,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Quote conversion completed successfully',
-                    'result' => $result
+                    'result' => $result,
                 ]);
             }
 
@@ -1244,7 +1249,7 @@ class QuoteController extends Controller
             }
 
             if (isset($result['recurring'])) {
-                $successMessage .= " Recurring billing schedule created.";
+                $successMessage .= ' Recurring billing schedule created.';
             }
 
             return redirect()
@@ -1255,10 +1260,10 @@ class QuoteController extends Controller
             Log::error('Quote conversion with options failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
-            return back()->with('error', 'Failed to complete conversion: ' . $e->getMessage());
+            return back()->with('error', 'Failed to complete conversion: '.$e->getMessage());
         }
     }
 
@@ -1270,9 +1275,9 @@ class QuoteController extends Controller
         $this->authorize('view', $quote);
 
         $status = [
-            'can_convert_to_invoice' => $quote->isAccepted() && !$quote->converted_to_invoice,
-            'can_convert_to_contract' => $quote->isAccepted() && !$quote->converted_to_contract,
-            'can_convert_to_recurring' => $quote->isAccepted() && !$quote->converted_to_recurring,
+            'can_convert_to_invoice' => $quote->isAccepted() && ! $quote->converted_to_invoice,
+            'can_convert_to_contract' => $quote->isAccepted() && ! $quote->converted_to_contract,
+            'can_convert_to_recurring' => $quote->isAccepted() && ! $quote->converted_to_recurring,
             'existing_conversions' => [
                 'invoice' => $quote->invoice ?? null,
                 'contract' => $quote->contract ?? null,
@@ -1291,7 +1296,7 @@ class QuoteController extends Controller
     {
         $request->validate([
             'quote_id' => 'nullable|exists:quotes,id',
-            'document' => 'required|array'
+            'document' => 'required|array',
         ]);
 
         try {
@@ -1303,6 +1308,7 @@ class QuoteController extends Controller
             return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
             $exception = QuoteExceptionHandler::normalize($e);
+
             return QuoteExceptionHandler::handle($exception, $request);
         }
     }
@@ -1314,18 +1320,18 @@ class QuoteController extends Controller
     {
         $request->validate([
             'document' => 'required|array',
-            'preview' => 'boolean'
+            'preview' => 'boolean',
         ]);
 
         try {
             $data = $request->input('document');
-            
+
             // Create temporary quote object for preview
             $quote = new Quote($data);
             $quote->items = collect($data['items'] ?? [])->map(function ($item) {
                 return (object) $item;
             });
-            
+
             // Generate preview URL (implement based on your PDF service)
             $previewUrl = $this->pdfService->generatePreviewUrl('quote', $data);
             $downloadUrl = $this->pdfService->generateDownloadUrl('quote', $data);
@@ -1333,18 +1339,18 @@ class QuoteController extends Controller
             return response()->json([
                 'success' => true,
                 'preview_url' => $previewUrl,
-                'download_url' => $downloadUrl
+                'download_url' => $downloadUrl,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Quote PDF preview failed', [
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'PDF preview generation failed'
+                'message' => 'PDF preview generation failed',
             ], 500);
         }
     }
@@ -1359,12 +1365,12 @@ class QuoteController extends Controller
             'recipient_email' => 'required|email',
             'subject' => 'nullable|string|max:255',
             'message' => 'nullable|string',
-            'cc_self' => 'boolean'
+            'cc_self' => 'boolean',
         ]);
 
         try {
             $data = $request->input('document');
-            
+
             // Create temporary quote object for emailing
             $quote = new Quote($data);
             $quote->items = collect($data['items'] ?? [])->map(function ($item) {
@@ -1375,25 +1381,25 @@ class QuoteController extends Controller
             $this->emailService->sendQuotePdf(
                 $quote,
                 $request->input('recipient_email'),
-                $request->input('subject', 'Quote from ' . config('app.name')),
+                $request->input('subject', 'Quote from '.config('app.name')),
                 $request->input('message', ''),
                 $request->boolean('cc_self', false)
             );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Quote emailed successfully'
+                'message' => 'Quote emailed successfully',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Quote email failed', [
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Email sending failed'
+                'message' => 'Email sending failed',
             ], 500);
         }
     }
@@ -1406,7 +1412,7 @@ class QuoteController extends Controller
         $request->validate([
             'quote_ids' => 'required|array|min:1',
             'quote_ids.*' => 'integer|exists:quotes,id',
-            'status' => 'required|string|in:draft,sent,accepted,rejected,expired'
+            'status' => 'required|string|in:draft,sent,accepted,rejected,expired',
         ]);
 
         try {
@@ -1419,7 +1425,7 @@ class QuoteController extends Controller
 
             if ($request->wantsJson()) {
                 return ApiResponse::success([
-                    'updated_count' => $updated
+                    'updated_count' => $updated,
                 ], "Successfully updated {$updated} quotes");
             }
 
@@ -1429,6 +1435,7 @@ class QuoteController extends Controller
             return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
             $exception = QuoteExceptionHandler::normalize($e);
+
             return QuoteExceptionHandler::handle($exception, $request);
         }
     }
@@ -1452,6 +1459,7 @@ class QuoteController extends Controller
             return QuoteExceptionHandler::handle($e, $request);
         } catch (\Exception $e) {
             $exception = QuoteExceptionHandler::normalize($e);
+
             return QuoteExceptionHandler::handle($exception, $request);
         }
     }
@@ -1462,10 +1470,10 @@ class QuoteController extends Controller
     public function searchProducts(Request $request)
     {
         $searchService = app(\App\Domains\Financial\Services\ProductSearchService::class);
-        
+
         $filters = $request->only([
             'search', 'category', 'billing_model', 'type',
-            'min_price', 'max_price', 'sort_by', 'sort_order'
+            'min_price', 'max_price', 'sort_by', 'sort_order',
         ]);
 
         $client = null;
@@ -1475,32 +1483,35 @@ class QuoteController extends Controller
         }
 
         $type = $request->get('type', 'products'); // Default to products
-        
+
         // Get the appropriate data based on the requested type
         switch ($type) {
             case 'services':
                 $items = $searchService->searchServices($filters, $client);
+
                 return response()->json([
                     'success' => true,
                     'services' => $items->toArray(),
-                    'total' => $items->count()
+                    'total' => $items->count(),
                 ]);
-                
+
             case 'bundles':
                 $items = $searchService->searchBundles($filters, $client);
+
                 return response()->json([
                     'success' => true,
                     'bundles' => $items->toArray(),
-                    'total' => $items->count()
+                    'total' => $items->count(),
                 ]);
-                
+
             case 'products':
             default:
                 $items = $searchService->searchProducts($filters, $client);
+
                 return response()->json([
                     'success' => true,
                     'products' => $items->toArray(),
-                    'total' => $items->count()
+                    'total' => $items->count(),
                 ]);
         }
     }
@@ -1511,15 +1522,15 @@ class QuoteController extends Controller
     public function searchClients(Request $request)
     {
         $clientService = app(\App\Domains\Client\Services\ClientService::class);
-        
+
         $query = $request->get('q', '');
         $limit = $request->get('limit', 10);
-        
+
         $clients = $clientService->searchClients($query, $limit);
 
         return response()->json([
             'success' => true,
-            'clients' => $clients
+            'clients' => $clients,
         ]);
     }
 
@@ -1540,13 +1551,13 @@ class QuoteController extends Controller
             ->map(function ($category) {
                 return [
                     'id' => $category->id,
-                    'name' => $category->name
+                    'name' => $category->name,
                 ];
             });
 
         return response()->json([
             'success' => true,
-            'categories' => $categories
+            'categories' => $categories,
         ]);
     }
 
@@ -1559,13 +1570,13 @@ class QuoteController extends Controller
         if ($product->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found'
+                'message' => 'Product not found',
             ], 404);
         }
 
         try {
             $product->load(['service', 'category']);
-            
+
             // For now, return basic product details
             // Can be enhanced later with compatible products, pricing tiers, etc.
             return response()->json([
@@ -1580,16 +1591,16 @@ class QuoteController extends Controller
                     'billing_cycle' => $product->billing_cycle,
                     'features' => $product->features ?? [],
                     'pricing_tiers' => [],
-                    'availability' => ['status' => 'available']
+                    'availability' => ['status' => 'available'],
                 ],
                 'compatible_products' => [],
                 'pricing_tiers' => [],
-                'availability' => ['status' => 'available']
+                'availability' => ['status' => 'available'],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading product details'
+                'message' => 'Error loading product details',
             ], 500);
         }
     }
@@ -1603,33 +1614,33 @@ class QuoteController extends Controller
             [
                 'key' => 'ctrl+s',
                 'action' => 'save',
-                'description' => 'Save quote'
+                'description' => 'Save quote',
             ],
             [
                 'key' => 'ctrl+n',
                 'action' => 'new',
-                'description' => 'New quote'
+                'description' => 'New quote',
             ],
             [
                 'key' => '/',
                 'action' => 'search',
-                'description' => 'Focus search'
+                'description' => 'Focus search',
             ],
             [
                 'key' => 'ctrl+d',
                 'action' => 'duplicate',
-                'description' => 'Duplicate quote'
+                'description' => 'Duplicate quote',
             ],
             [
                 'key' => 'escape',
                 'action' => 'cancel',
-                'description' => 'Cancel/Close'
-            ]
+                'description' => 'Cancel/Close',
+            ],
         ];
 
         return response()->json([
             'shortcuts' => $shortcuts,
-            'enabled' => true
+            'enabled' => true,
         ]);
     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('api_key')->nullable()->after('driver');
             $table->text('api_secret')->nullable()->after('api_key');
             $table->string('api_domain')->nullable()->after('api_secret');
-            
+
             // Add simplified reply_to field
             $table->string('reply_to')->nullable()->after('from_name');
         });

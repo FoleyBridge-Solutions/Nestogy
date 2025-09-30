@@ -15,7 +15,7 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         $productId = $this->route('product')->id;
-        
+
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -25,7 +25,7 @@ class UpdateProductRequest extends FormRequest
                 'max:255',
                 Rule::unique('products', 'sku')
                     ->ignore($productId)
-                    ->where('company_id', auth()->user()->company_id)
+                    ->where('company_id', auth()->user()->company_id),
             ],
             'type' => 'required|in:product,service',
             'category_id' => 'nullable|exists:categories,id',

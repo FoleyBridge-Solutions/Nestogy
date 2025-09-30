@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientNetwork extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -123,14 +123,14 @@ class ClientNetwork extends Model
      */
     public function getStatusAttribute()
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return 'inactive';
         }
-        
+
         if ($this->monitoring_enabled) {
             return 'monitored';
         }
-        
+
         return 'active';
     }
 
@@ -173,10 +173,10 @@ class ClientNetwork extends Model
      */
     public function needsAudit($months = 6)
     {
-        if (!$this->last_audit_date) {
+        if (! $this->last_audit_date) {
             return true;
         }
-        
+
         return $this->last_audit_date->addMonths($months)->isPast();
     }
 
@@ -193,16 +193,16 @@ class ClientNetwork extends Model
      */
     public function getNetworkSizeAttribute()
     {
-        if (!$this->subnet_mask) {
+        if (! $this->subnet_mask) {
             return null;
         }
-        
+
         // Convert subnet mask to CIDR and calculate host count
         $cidr = $this->subnetMaskToCidr($this->subnet_mask);
         if ($cidr) {
             return pow(2, 32 - $cidr) - 2; // -2 for network and broadcast
         }
-        
+
         return null;
     }
 
@@ -213,11 +213,11 @@ class ClientNetwork extends Model
     {
         $cidr = 0;
         $octets = explode('.', $mask);
-        
+
         foreach ($octets as $octet) {
             $cidr += substr_count(decbin($octet), '1');
         }
-        
+
         return $cidr;
     }
 

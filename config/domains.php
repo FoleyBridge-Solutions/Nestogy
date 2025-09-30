@@ -2,7 +2,7 @@
 
 // Domain Route Configuration
 // This file defines how each domain's routes should be registered
-// 
+//
 // IMPORTANT: Set 'apply_grouping' => false when the domain's routes.php file
 // already defines its own middleware, prefix, or name to avoid double application
 

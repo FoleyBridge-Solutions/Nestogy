@@ -3,16 +3,15 @@
 namespace App\Domains\Financial\Services\TaxEngine;
 
 use App\Models\TaxCalculation;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Bundle Tax Allocator
- * 
+ *
  * Handles complex tax allocation for MSP service bundles where different
  * services in a bundle may have different tax treatments, rates, and jurisdictions.
- * 
+ *
  * Common MSP Bundle Scenarios:
  * - Mixed taxable/non-taxable services
  * - Different tax rates by service type (VoIP vs Cloud vs Equipment)
@@ -23,6 +22,7 @@ use Exception;
 class BundleTaxAllocator
 {
     protected TaxEngineRouter $taxRouter;
+
     protected int $companyId;
 
     public function __construct(int $companyId)
@@ -35,9 +35,13 @@ class BundleTaxAllocator
      * Allocation method constants
      */
     const METHOD_PROPORTIONAL = 'proportional';
+
     const METHOD_PRIORITY_BASED = 'priority_based';
+
     const METHOD_SERVICE_TYPE = 'service_type';
+
     const METHOD_TAX_CLASS = 'tax_class';
+
     const METHOD_JURISDICTION = 'jurisdiction';
 
     /**
@@ -58,38 +62,38 @@ class BundleTaxAllocator
 
     /**
      * Allocate taxes across bundle items
-     * 
-     * @param array $bundleItems Array of bundle items with pricing and service details
-     * @param array $customerInfo Customer address, VAT number, etc.
-     * @param array $options Allocation options and preferences
+     *
+     * @param  array  $bundleItems  Array of bundle items with pricing and service details
+     * @param  array  $customerInfo  Customer address, VAT number, etc.
+     * @param  array  $options  Allocation options and preferences
      * @return array Detailed tax allocation results
      */
     public function allocateBundleTaxes(array $bundleItems, array $customerInfo = [], array $options = []): array
     {
         $startTime = microtime(true);
-        
+
         try {
             // Validate and normalize bundle items
             $normalizedItems = $this->normalizeBundleItems($bundleItems);
-            
+
             // Determine allocation method
             $allocationMethod = $options['method'] ?? $this->determineOptimalAllocationMethod($normalizedItems);
-            
+
             // Calculate individual tax rates for each service type
             $serviceTaxRates = $this->calculateServiceTaxRates($normalizedItems, $customerInfo);
-            
+
             // Perform tax allocation based on method
             $allocation = $this->performAllocation($normalizedItems, $serviceTaxRates, $allocationMethod, $options);
-            
+
             // Calculate bundle totals
             $bundleTotals = $this->calculateBundleTotals($allocation);
-            
+
             // Generate allocation report
             $report = $this->generateAllocationReport($allocation, $bundleTotals, $allocationMethod);
-            
+
             // Create audit trail
             $this->createBundleAuditTrail($bundleItems, $allocation, $customerInfo, $options);
-            
+
             return [
                 'success' => true,
                 'allocation_method' => $allocationMethod,
@@ -101,14 +105,14 @@ class BundleTaxAllocator
                 'service_type_summary' => $report['service_type_summary'],
                 'allocation_details' => $report['allocation_details'],
             ];
-            
+
         } catch (Exception $e) {
             Log::error('Bundle tax allocation failed', [
                 'error' => $e->getMessage(),
                 'company_id' => $this->companyId,
                 'bundle_items' => $bundleItems,
             ]);
-            
+
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -123,7 +127,7 @@ class BundleTaxAllocator
     protected function normalizeBundleItems(array $bundleItems): array
     {
         $normalized = [];
-        
+
         foreach ($bundleItems as $index => $item) {
             $normalized[] = [
                 'id' => $item['id'] ?? "bundle_item_{$index}",
@@ -144,7 +148,7 @@ class BundleTaxAllocator
                 'allocation_weight' => $item['allocation_weight'] ?? null, // Custom weighting
             ];
         }
-        
+
         return $normalized;
     }
 
@@ -158,48 +162,48 @@ class BundleTaxAllocator
             'hardware' => 'equipment',
             'devices' => 'equipment',
             'server' => 'equipment',
-            
+
             'software' => 'software',
             'license' => 'software',
             'application' => 'software',
-            
+
             'voip' => 'voip',
             'phone' => 'voip',
             'telecommunications' => 'voip',
             'pbx' => 'voip',
-            
+
             'cloud' => 'cloud_services',
             'hosting' => 'cloud_services',
             'saas' => 'cloud_services',
             'storage' => 'cloud_services',
-            
+
             'monitoring' => 'monitoring',
             'surveillance' => 'monitoring',
             'alerting' => 'monitoring',
-            
+
             'managed' => 'managed_services',
             'management' => 'managed_services',
             'maintenance' => 'managed_services',
-            
+
             'support' => 'support',
             'help_desk' => 'support',
             'technical_support' => 'support',
-            
+
             'consulting' => 'consulting',
             'professional' => 'consulting',
             'advisory' => 'consulting',
-            
+
             'installation' => 'installation',
             'setup' => 'installation',
             'deployment' => 'installation',
-            
+
             'internet' => 'internet',
             'broadband' => 'internet',
             'connectivity' => 'internet',
         ];
-        
+
         $normalized = strtolower(str_replace([' ', '-'], '_', $serviceType));
-        
+
         return $mappings[$normalized] ?? 'managed_services';
     }
 
@@ -220,7 +224,7 @@ class BundleTaxAllocator
             'consulting' => 'professional_services',
             'installation' => 'professional_services',
         ];
-        
+
         return $taxClasses[$serviceType] ?? 'professional_services';
     }
 
@@ -241,22 +245,22 @@ class BundleTaxAllocator
         $serviceTypes = array_column($items, 'service_type');
         $uniqueTypes = array_unique($serviceTypes);
         $taxClasses = array_unique(array_column($items, 'tax_class'));
-        
+
         // If all items have same tax treatment, use proportional
         if (count($uniqueTypes) === 1 && count($taxClasses) === 1) {
             return self::METHOD_PROPORTIONAL;
         }
-        
+
         // If mix of equipment and services, use priority-based
         if (in_array('equipment', $serviceTypes) && count($uniqueTypes) > 1) {
             return self::METHOD_PRIORITY_BASED;
         }
-        
+
         // If multiple service types with different tax treatments
         if (count($uniqueTypes) > 2) {
             return self::METHOD_SERVICE_TYPE;
         }
-        
+
         // Default to proportional allocation
         return self::METHOD_PROPORTIONAL;
     }
@@ -268,11 +272,11 @@ class BundleTaxAllocator
     {
         $rates = [];
         $uniqueServiceTypes = array_unique(array_column($items, 'service_type'));
-        
+
         foreach ($uniqueServiceTypes as $serviceType) {
             try {
-                $sampleItem = array_filter($items, fn($item) => $item['service_type'] === $serviceType)[0];
-                
+                $sampleItem = array_filter($items, fn ($item) => $item['service_type'] === $serviceType)[0];
+
                 $taxParams = [
                     'base_price' => 100, // Standardized amount for rate calculation
                     'quantity' => 1,
@@ -282,21 +286,21 @@ class BundleTaxAllocator
                     'customer_country' => $customerInfo['country'] ?? null,
                     'tax_data' => $sampleItem['tax_data'],
                 ];
-                
+
                 $taxResult = $this->taxRouter->calculateTaxes($taxParams, null, TaxCalculation::TYPE_PREVIEW);
-                
+
                 $rates[$serviceType] = [
                     'effective_rate' => $taxResult['effective_tax_rate'] ?? 0,
                     'tax_breakdown' => $taxResult['tax_breakdown'] ?? [],
                     'jurisdictions' => $taxResult['jurisdictions'] ?? [],
                     'engine_used' => $taxResult['engine_used'] ?? 'general',
                 ];
-                
+
             } catch (Exception $e) {
                 Log::warning("Failed to calculate tax rate for service type: {$serviceType}", [
                     'error' => $e->getMessage(),
                 ]);
-                
+
                 $rates[$serviceType] = [
                     'effective_rate' => 0,
                     'tax_breakdown' => [],
@@ -306,7 +310,7 @@ class BundleTaxAllocator
                 ];
             }
         }
-        
+
         return $rates;
     }
 
@@ -318,19 +322,19 @@ class BundleTaxAllocator
         switch ($method) {
             case self::METHOD_PROPORTIONAL:
                 return $this->allocateProportional($items, $serviceTaxRates);
-                
+
             case self::METHOD_PRIORITY_BASED:
                 return $this->allocatePriorityBased($items, $serviceTaxRates);
-                
+
             case self::METHOD_SERVICE_TYPE:
                 return $this->allocateByServiceType($items, $serviceTaxRates);
-                
+
             case self::METHOD_TAX_CLASS:
                 return $this->allocateByTaxClass($items, $serviceTaxRates);
-                
+
             case self::METHOD_JURISDICTION:
                 return $this->allocateByJurisdiction($items, $serviceTaxRates, $options);
-                
+
             default:
                 return $this->allocateProportional($items, $serviceTaxRates);
         }
@@ -343,13 +347,13 @@ class BundleTaxAllocator
     {
         $bundleSubtotal = array_sum(array_column($items, 'subtotal'));
         $allocation = [];
-        
+
         foreach ($items as $item) {
             $proportion = $bundleSubtotal > 0 ? $item['subtotal'] / $bundleSubtotal : 0;
             $serviceRate = $serviceTaxRates[$item['service_type']]['effective_rate'] ?? 0;
-            
+
             $itemTaxAmount = $item['subtotal'] * ($serviceRate / 100);
-            
+
             $allocation[] = [
                 'item' => $item,
                 'proportion' => $proportion,
@@ -361,7 +365,7 @@ class BundleTaxAllocator
                 'jurisdictions' => $serviceTaxRates[$item['service_type']]['jurisdictions'] ?? [],
             ];
         }
-        
+
         return $allocation;
     }
 
@@ -371,21 +375,21 @@ class BundleTaxAllocator
     protected function allocatePriorityBased(array $items, array $serviceTaxRates): array
     {
         // Sort items by tax priority (highest first)
-        usort($items, fn($a, $b) => $b['priority'] <=> $a['priority']);
-        
+        usort($items, fn ($a, $b) => $b['priority'] <=> $a['priority']);
+
         $allocation = [];
         $bundleSubtotal = array_sum(array_column($items, 'subtotal'));
-        
+
         foreach ($items as $item) {
             $serviceRate = $serviceTaxRates[$item['service_type']]['effective_rate'] ?? 0;
-            
+
             // Higher priority items get full tax rate
             // Lower priority items get reduced rate based on bundle composition
             $priorityWeight = $this->calculatePriorityWeight($item, $items);
             $adjustedRate = $serviceRate * $priorityWeight;
-            
+
             $itemTaxAmount = $item['subtotal'] * ($adjustedRate / 100);
-            
+
             $allocation[] = [
                 'item' => $item,
                 'priority' => $item['priority'],
@@ -399,7 +403,7 @@ class BundleTaxAllocator
                 'jurisdictions' => $serviceTaxRates[$item['service_type']]['jurisdictions'] ?? [],
             ];
         }
-        
+
         return $allocation;
     }
 
@@ -409,11 +413,11 @@ class BundleTaxAllocator
     protected function allocateByServiceType(array $items, array $serviceTaxRates): array
     {
         $allocation = [];
-        
+
         foreach ($items as $item) {
             $serviceRate = $serviceTaxRates[$item['service_type']]['effective_rate'] ?? 0;
             $itemTaxAmount = $item['subtotal'] * ($serviceRate / 100);
-            
+
             $allocation[] = [
                 'item' => $item,
                 'service_type' => $item['service_type'],
@@ -425,7 +429,7 @@ class BundleTaxAllocator
                 'jurisdictions' => $serviceTaxRates[$item['service_type']]['jurisdictions'] ?? [],
             ];
         }
-        
+
         return $allocation;
     }
 
@@ -435,16 +439,16 @@ class BundleTaxAllocator
     protected function allocateByTaxClass(array $items, array $serviceTaxRates): array
     {
         $allocation = [];
-        
+
         foreach ($items as $item) {
             $serviceRate = $serviceTaxRates[$item['service_type']]['effective_rate'] ?? 0;
-            
+
             // Apply class-specific adjustments
             $classAdjustment = $this->getTaxClassAdjustment($item['tax_class']);
             $adjustedRate = $serviceRate * $classAdjustment;
-            
+
             $itemTaxAmount = $item['subtotal'] * ($adjustedRate / 100);
-            
+
             $allocation[] = [
                 'item' => $item,
                 'tax_class' => $item['tax_class'],
@@ -458,7 +462,7 @@ class BundleTaxAllocator
                 'jurisdictions' => $serviceTaxRates[$item['service_type']]['jurisdictions'] ?? [],
             ];
         }
-        
+
         return $allocation;
     }
 
@@ -468,19 +472,19 @@ class BundleTaxAllocator
     protected function allocateByJurisdiction(array $items, array $serviceTaxRates, array $options): array
     {
         $allocation = [];
-        
+
         foreach ($items as $item) {
             $serviceAddress = $item['service_address'] ?? $options['default_service_address'] ?? [];
-            
+
             // Calculate jurisdiction-specific rates if service address differs
-            if (!empty($serviceAddress)) {
+            if (! empty($serviceAddress)) {
                 $jurisdictionRate = $this->calculateJurisdictionRate($item, $serviceAddress);
             } else {
                 $jurisdictionRate = $serviceTaxRates[$item['service_type']]['effective_rate'] ?? 0;
             }
-            
+
             $itemTaxAmount = $item['subtotal'] * ($jurisdictionRate / 100);
-            
+
             $allocation[] = [
                 'item' => $item,
                 'service_address' => $serviceAddress,
@@ -492,7 +496,7 @@ class BundleTaxAllocator
                 'jurisdictions' => $serviceTaxRates[$item['service_type']]['jurisdictions'] ?? [],
             ];
         }
-        
+
         return $allocation;
     }
 
@@ -503,11 +507,11 @@ class BundleTaxAllocator
     {
         $maxPriority = max(array_column($allItems, 'priority'));
         $minPriority = min(array_column($allItems, 'priority'));
-        
+
         if ($maxPriority === $minPriority) {
             return 1.0;
         }
-        
+
         // Higher priority items get weight closer to 1.0
         return 0.3 + (0.7 * (($item['priority'] - $minPriority) / ($maxPriority - $minPriority)));
     }
@@ -524,7 +528,7 @@ class BundleTaxAllocator
             'digital_services' => 0.9,      // Often reduced rate
             'professional_services' => 0.8,  // Often lower or exempt
         ];
-        
+
         return $adjustments[$taxClass] ?? 1.0;
     }
 
@@ -541,18 +545,18 @@ class BundleTaxAllocator
                 'customer_address' => $serviceAddress,
                 'tax_data' => $item['tax_data'],
             ];
-            
+
             $taxResult = $this->taxRouter->calculateTaxes($taxParams, null, TaxCalculation::TYPE_PREVIEW);
-            
+
             return $taxResult['effective_tax_rate'] ?? 0;
-            
+
         } catch (Exception $e) {
             Log::warning('Failed to calculate jurisdiction rate', [
                 'error' => $e->getMessage(),
                 'item' => $item,
                 'service_address' => $serviceAddress,
             ]);
-            
+
             return 0;
         }
     }
@@ -565,7 +569,7 @@ class BundleTaxAllocator
         $subtotal = array_sum(array_column(array_column($allocation, 'item'), 'subtotal'));
         $totalTax = array_sum(array_column($allocation, 'tax_amount'));
         $grandTotal = $subtotal + $totalTax;
-        
+
         return [
             'subtotal' => round($subtotal, 2),
             'total_tax' => round($totalTax, 2),
@@ -584,7 +588,7 @@ class BundleTaxAllocator
         $taxBreakdown = [];
         foreach ($allocation as $item) {
             foreach ($item['tax_breakdown'] as $taxType => $taxData) {
-                if (!isset($taxBreakdown[$taxType])) {
+                if (! isset($taxBreakdown[$taxType])) {
                     $taxBreakdown[$taxType] = [
                         'description' => $taxData['description'] ?? $taxType,
                         'total_amount' => 0,
@@ -592,19 +596,19 @@ class BundleTaxAllocator
                         'sources' => [],
                     ];
                 }
-                
+
                 $taxBreakdown[$taxType]['total_amount'] += $taxData['amount'] ?? 0;
                 $taxBreakdown[$taxType]['rate_range'][] = $taxData['rate'] ?? 0;
                 $taxBreakdown[$taxType]['sources'][] = $taxData['source'] ?? 'unknown';
             }
         }
-        
+
         // Service type summary
         $serviceTypeSummary = [];
         foreach ($allocation as $item) {
             $serviceType = $item['item']['service_type'];
-            
-            if (!isset($serviceTypeSummary[$serviceType])) {
+
+            if (! isset($serviceTypeSummary[$serviceType])) {
                 $serviceTypeSummary[$serviceType] = [
                     'item_count' => 0,
                     'subtotal' => 0,
@@ -612,20 +616,20 @@ class BundleTaxAllocator
                     'tax_rate' => 0,
                 ];
             }
-            
+
             $serviceTypeSummary[$serviceType]['item_count']++;
             $serviceTypeSummary[$serviceType]['subtotal'] += $item['item']['subtotal'];
             $serviceTypeSummary[$serviceType]['tax_amount'] += $item['tax_amount'];
             $serviceTypeSummary[$serviceType]['tax_rate'] = $item['tax_rate'] ?? 0;
         }
-        
+
         // Jurisdiction summary
         $jurisdictionSummary = [];
         foreach ($allocation as $item) {
             foreach ($item['jurisdictions'] as $jurisdiction) {
                 $name = $jurisdiction['name'] ?? 'Unknown';
-                
-                if (!isset($jurisdictionSummary[$name])) {
+
+                if (! isset($jurisdictionSummary[$name])) {
                     $jurisdictionSummary[$name] = [
                         'type' => $jurisdiction['type'] ?? 'unknown',
                         'code' => $jurisdiction['code'] ?? null,
@@ -633,12 +637,12 @@ class BundleTaxAllocator
                         'items_affected' => 0,
                     ];
                 }
-                
+
                 $jurisdictionSummary[$name]['tax_amount'] += $jurisdiction['tax_amount'] ?? 0;
                 $jurisdictionSummary[$name]['items_affected']++;
             }
         }
-        
+
         return [
             'tax_breakdown' => $taxBreakdown,
             'service_type_summary' => $serviceTypeSummary,
@@ -646,8 +650,8 @@ class BundleTaxAllocator
             'allocation_details' => [
                 'method' => $method,
                 'total_items' => count($allocation),
-                'taxable_items' => count(array_filter($allocation, fn($item) => $item['tax_amount'] > 0)),
-                'tax_exempt_items' => count(array_filter($allocation, fn($item) => $item['tax_amount'] == 0)),
+                'taxable_items' => count(array_filter($allocation, fn ($item) => $item['tax_amount'] > 0)),
+                'tax_exempt_items' => count(array_filter($allocation, fn ($item) => $item['tax_amount'] == 0)),
             ],
         ];
     }
@@ -659,9 +663,9 @@ class BundleTaxAllocator
     {
         $bundleSubtotal = array_sum(array_column($bundleItems, 'price'));
         $fallbackRate = 8.5; // Default rate
-        
+
         $taxAmount = $bundleSubtotal * ($fallbackRate / 100);
-        
+
         return [
             'subtotal' => round($bundleSubtotal, 2),
             'tax_rate' => $fallbackRate,
@@ -678,7 +682,7 @@ class BundleTaxAllocator
     {
         try {
             $bundleTotals = $this->calculateBundleTotals($allocation);
-            
+
             // Create a summary calculation record
             $summaryParams = [
                 'base_price' => $bundleTotals['subtotal'],
@@ -693,7 +697,7 @@ class BundleTaxAllocator
                     'item_count' => count($bundleItems),
                 ],
             ];
-            
+
             $summaryResult = [
                 'base_amount' => $bundleTotals['subtotal'],
                 'total_tax_amount' => $bundleTotals['total_tax'],
@@ -703,7 +707,7 @@ class BundleTaxAllocator
                 'tax_breakdown' => ['bundle_allocation' => ['amount' => $bundleTotals['total_tax']]],
                 'bundle_allocation' => $allocation,
             ];
-            
+
             TaxCalculation::createCalculation(
                 $this->companyId,
                 null, // No specific calculable for bundle preview
@@ -711,7 +715,7 @@ class BundleTaxAllocator
                 $summaryParams,
                 TaxCalculation::TYPE_PREVIEW
             );
-            
+
         } catch (Exception $e) {
             Log::warning('Failed to create bundle tax audit trail', [
                 'error' => $e->getMessage(),
@@ -726,14 +730,14 @@ class BundleTaxAllocator
     public function getRecommendations(array $bundleItems, array $customerInfo = []): array
     {
         $normalizedItems = $this->normalizeBundleItems($bundleItems);
-        
+
         $recommendations = [
             'optimal_method' => $this->determineOptimalAllocationMethod($normalizedItems),
             'complexity_score' => $this->calculateComplexityScore($normalizedItems),
             'risk_factors' => $this->identifyRiskFactors($normalizedItems, $customerInfo),
             'optimization_suggestions' => $this->getOptimizationSuggestions($normalizedItems),
         ];
-        
+
         return $recommendations;
     }
 
@@ -743,17 +747,17 @@ class BundleTaxAllocator
     protected function calculateComplexityScore(array $items): int
     {
         $score = 0;
-        
+
         $uniqueServiceTypes = count(array_unique(array_column($items, 'service_type')));
         $uniqueTaxClasses = count(array_unique(array_column($items, 'tax_class')));
-        $hasMultipleAddresses = count(array_filter($items, fn($item) => !empty($item['service_address']))) > 1;
-        $hasExemptions = count(array_filter($items, fn($item) => $item['tax_exempt'])) > 0;
-        
+        $hasMultipleAddresses = count(array_filter($items, fn ($item) => ! empty($item['service_address']))) > 1;
+        $hasExemptions = count(array_filter($items, fn ($item) => $item['tax_exempt'])) > 0;
+
         $score += $uniqueServiceTypes * 2;
         $score += $uniqueTaxClasses * 3;
         $score += $hasMultipleAddresses ? 5 : 0;
         $score += $hasExemptions ? 3 : 0;
-        
+
         return min($score, 10); // Cap at 10
     }
 
@@ -763,23 +767,23 @@ class BundleTaxAllocator
     protected function identifyRiskFactors(array $items, array $customerInfo): array
     {
         $risks = [];
-        
+
         if (count(array_unique(array_column($items, 'service_type'))) > 3) {
             $risks[] = 'high_service_type_diversity';
         }
-        
+
         if (in_array('equipment', array_column($items, 'service_type'))) {
             $risks[] = 'tangible_goods_included';
         }
-        
-        if (!empty($customerInfo['vat_number'])) {
+
+        if (! empty($customerInfo['vat_number'])) {
             $risks[] = 'international_vat_applicable';
         }
-        
-        if (count(array_filter($items, fn($item) => !empty($item['service_address']))) > 0) {
+
+        if (count(array_filter($items, fn ($item) => ! empty($item['service_address']))) > 0) {
             $risks[] = 'multiple_service_locations';
         }
-        
+
         return $risks;
     }
 
@@ -789,22 +793,22 @@ class BundleTaxAllocator
     protected function getOptimizationSuggestions(array $items): array
     {
         $suggestions = [];
-        
+
         $serviceTypes = array_column($items, 'service_type');
-        
+
         if (in_array('equipment', $serviceTypes) && in_array('consulting', $serviceTypes)) {
             $suggestions[] = 'consider_separating_tangible_and_professional_services';
         }
-        
+
         if (count(array_unique($serviceTypes)) > 4) {
             $suggestions[] = 'consider_grouping_similar_services';
         }
-        
-        $hasCustomWeights = count(array_filter($items, fn($item) => $item['allocation_weight'] !== null)) > 0;
-        if (!$hasCustomWeights) {
+
+        $hasCustomWeights = count(array_filter($items, fn ($item) => $item['allocation_weight'] !== null)) > 0;
+        if (! $hasCustomWeights) {
             $suggestions[] = 'consider_custom_allocation_weights';
         }
-        
+
         return $suggestions;
     }
 }

@@ -3,15 +3,15 @@
 namespace App\Exports;
 
 use App\Models\Asset;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use Illuminate\Support\Facades\Auth;
 
-class AssetsExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
+class AssetsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     protected $clientId;
 
@@ -60,7 +60,7 @@ class AssetsExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
             'Install Date',
             'Notes',
             'Created At',
-            'Updated At'
+            'Updated At',
         ];
     }
 
@@ -80,7 +80,7 @@ class AssetsExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
             $asset->location->name ?? '',
             $asset->contact->name ?? '',
             $asset->vendor->name ?? '',
-            $asset->network ? $asset->network->name . ' (' . $asset->network->network . ')' : '',
+            $asset->network ? $asset->network->name.' ('.$asset->network->network.')' : '',
             $asset->ip,
             $asset->nat_ip,
             $asset->mac,
@@ -91,7 +91,7 @@ class AssetsExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
             $asset->install_date?->format('Y-m-d'),
             $asset->notes,
             $asset->created_at->format('Y-m-d H:i:s'),
-            $asset->updated_at->format('Y-m-d H:i:s')
+            $asset->updated_at->format('Y-m-d H:i:s'),
         ];
     }
 

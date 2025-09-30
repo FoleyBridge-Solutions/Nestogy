@@ -2,11 +2,11 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
-use App\Models\Product;
-use App\Models\Company;
 use App\Models\Category;
+use App\Models\Company;
+use App\Models\Product;
 use App\Models\Vendor;
+use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
 {
@@ -16,39 +16,39 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('Creating products and services catalog...');
-        
+
         $companies = Company::where('id', '>', 1)->get();
-        
+
         foreach ($companies as $company) {
             $this->command->info("  Creating products for {$company->name}...");
-            
+
             // Get or create product categories
             $categories = Category::where('company_id', $company->id)
                 ->where('type', 'income')
                 ->get();
-            
+
             if ($categories->isEmpty()) {
                 // Create default categories if none exist
                 $defaultCategories = [
                     'Managed Services',
-                    'Professional Services', 
+                    'Professional Services',
                     'Hardware',
                     'Software Licenses',
-                    'Cloud Services'
+                    'Cloud Services',
                 ];
-                
+
                 foreach ($defaultCategories as $catName) {
                     $categories->push(Category::create([
                         'company_id' => $company->id,
                         'name' => $catName,
                         'type' => 'income',
-                        'color' => fake()->hexColor()
+                        'color' => fake()->hexColor(),
                     ]));
                 }
             }
-            
+
             $vendors = Vendor::where('company_id', $company->id)->get();
-            
+
             // Define product templates
             $productTemplates = [
                 // Managed Services
@@ -61,7 +61,7 @@ class ProductSeeder extends Seeder
                         ['name' => '24/7 Monitoring', 'price' => 149, 'type' => 'service', 'recurring' => 'monthly'],
                         ['name' => 'Backup Management', 'price' => 89, 'type' => 'service', 'recurring' => 'monthly'],
                         ['name' => 'Security Management', 'price' => 179, 'type' => 'service', 'recurring' => 'monthly'],
-                    ]
+                    ],
                 ],
                 // Professional Services
                 [
@@ -74,7 +74,7 @@ class ProductSeeder extends Seeder
                         ['name' => 'Network Assessment', 'price' => 1500, 'type' => 'service', 'recurring' => null],
                         ['name' => 'Security Audit', 'price' => 2500, 'type' => 'service', 'recurring' => null],
                         ['name' => 'IT Consultation', 'price' => 200, 'type' => 'service', 'recurring' => null],
-                    ]
+                    ],
                 ],
                 // Hardware
                 [
@@ -88,7 +88,7 @@ class ProductSeeder extends Seeder
                         ['name' => 'Network Switch - 24 Port', 'price' => 499, 'type' => 'product', 'recurring' => null],
                         ['name' => 'Firewall Appliance', 'price' => 899, 'type' => 'product', 'recurring' => null],
                         ['name' => 'UPS Battery Backup', 'price' => 299, 'type' => 'product', 'recurring' => null],
-                    ]
+                    ],
                 ],
                 // Software Licenses
                 [
@@ -101,7 +101,7 @@ class ProductSeeder extends Seeder
                         ['name' => 'Antivirus Pro', 'price' => 4.99, 'type' => 'license', 'recurring' => 'monthly'],
                         ['name' => 'Backup Software License', 'price' => 9.99, 'type' => 'license', 'recurring' => 'monthly'],
                         ['name' => 'Remote Desktop License', 'price' => 14.99, 'type' => 'license', 'recurring' => 'monthly'],
-                    ]
+                    ],
                 ],
                 // Cloud Services
                 [
@@ -115,22 +115,22 @@ class ProductSeeder extends Seeder
                         ['name' => 'Virtual Server - Small', 'price' => 49, 'type' => 'service', 'recurring' => 'monthly'],
                         ['name' => 'Virtual Server - Medium', 'price' => 99, 'type' => 'service', 'recurring' => 'monthly'],
                         ['name' => 'Virtual Server - Large', 'price' => 199, 'type' => 'service', 'recurring' => 'monthly'],
-                    ]
+                    ],
                 ],
             ];
-            
+
             $totalProducts = 0;
-            
+
             foreach ($productTemplates as $template) {
                 $category = $categories->firstWhere('name', $template['category']);
-                if (!$category) {
+                if (! $category) {
                     $category = $categories->first();
                 }
-                
+
                 foreach ($template['products'] as $productData) {
                     // Add some variation to base prices
                     $price = $productData['price'] * fake()->randomFloat(2, 0.9, 1.2);
-                    
+
                     Product::create([
                         'company_id' => $company->id,
                         'name' => $productData['name'],
@@ -149,14 +149,14 @@ class ProductSeeder extends Seeder
                         'created_at' => fake()->dateTimeBetween('-1 year', 'now'),
                         'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
                     ]);
-                    
+
                     $totalProducts++;
                 }
             }
-            
+
             $this->command->info("    ✓ Created {$totalProducts} products and services");
         }
-        
+
         $this->command->info('Product catalog created successfully.');
     }
 }

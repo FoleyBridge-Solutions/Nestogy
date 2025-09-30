@@ -2,85 +2,94 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
-use Livewire\Component;
-use Livewire\Attributes\On;
-use App\Models\User;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\TimeEntry;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
-use Carbon\Carbon;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 class TeamPerformance extends Component
 {
     public Collection $teamMembers;
+
     public Collection $allTeamMembers;
+
     public bool $loading = true;
+
     public string $period = 'week'; // week, month, quarter
+
     public string $view = 'top'; // top, needs_improvement
+
     public string $sortBy = 'performance_score';
+
     public string $sortDirection = 'desc';
+
     public int $limit = 3;
+
     public int $loadCount = 0;
+
     public ?array $selectedMemberDetails = null;
+
     public bool $showScoreModal = false;
-    
+
     public function mount()
     {
         $this->teamMembers = collect();
         $this->allTeamMembers = collect();
         $this->loadTeamPerformance();
     }
-    
+
     #[On('refresh-team-performance')]
     public function loadTeamPerformance()
     {
         $this->loading = true;
         $companyId = Auth::user()->company_id;
-        
+
         // Cache key based on company, period, and view
         $cacheKey = "team_performance_{$companyId}_{$this->period}_{$this->view}";
-        
+
         // Use cache for team data (5 minute cache)
-        $teamData = Cache::remember($cacheKey, 300, function() use ($companyId) {
+        $teamData = Cache::remember($cacheKey, 300, function () use ($companyId) {
             return $this->calculateTeamPerformance($companyId);
         });
-        
+
         // Sort team members
         $teamData = $teamData->sortBy($this->sortBy, SORT_REGULAR, $this->sortDirection === 'desc');
-        
+
         $this->allTeamMembers = $teamData;
         $this->teamMembers = $teamData->take($this->limit);
         $this->loading = false;
     }
-    
+
     protected function calculateTeamPerformance($companyId)
     {
         $now = Carbon::now();
-        $periodStart = match($this->period) {
+        $periodStart = match ($this->period) {
             'week' => $now->copy()->subDays(7),
             'month' => $now->copy()->subDays(30),
             'quarter' => $now->copy()->subDays(90),
             default => $now->copy()->subDays(7)
         };
-        
+
         // Get all users with their roles in one query
         $users = User::where('company_id', $companyId)
             ->where('status', true)
-            ->where(function($query) {
-                $query->whereHas('roles', function($q) {
+            ->where(function ($query) {
+                $query->whereHas('roles', function ($q) {
                     $q->whereIn('name', ['tech', 'technician', 'manager', 'admin', 'support']);
                 })
-                ->orWhereHas('assignedTickets');
+                    ->orWhereHas('assignedTickets');
             })
             ->with(['roles'])
             ->get();
-        
+
         // Batch load all tickets for all users to avoid N+1
         $userIds = $users->pluck('id');
-        
+
         // Get ticket metrics for all users in one query
         $ticketMetrics = DB::table('tickets')
             ->select(
@@ -95,14 +104,14 @@ class TeamPerformance extends Component
             ->whereIn('assigned_to', $userIds)
             ->where('company_id', $companyId)
             ->whereNull('archived_at')
-            ->where(function($query) use ($periodStart) {
+            ->where(function ($query) use ($periodStart) {
                 $query->where('created_at', '>=', $periodStart)
-                      ->orWhere('updated_at', '>=', $periodStart);
+                    ->orWhere('updated_at', '>=', $periodStart);
             })
             ->groupBy('assigned_to')
             ->get()
             ->keyBy('assigned_to');
-        
+
         // Get time entry metrics for all users in one query
         $timeMetrics = DB::table('time_entries')
             ->select(
@@ -117,11 +126,11 @@ class TeamPerformance extends Component
             ->groupBy('user_id')
             ->get()
             ->keyBy('user_id');
-        
+
         // Calculate metrics for each user
         return $users->map(function ($user) use ($ticketMetrics, $timeMetrics, $periodStart) {
             $userId = $user->id;
-            
+
             // Get ticket metrics (or defaults)
             $userTicketMetrics = $ticketMetrics->get($userId);
             $totalTickets = $userTicketMetrics->total_tickets ?? 0;
@@ -129,11 +138,11 @@ class TeamPerformance extends Component
             $openTickets = $userTicketMetrics->open_tickets ?? 0;
             $criticalTickets = $userTicketMetrics->critical_tickets ?? 0;
             $avgResolutionHours = $userTicketMetrics->avg_resolution_hours ?? 0;
-            
+
             // Resolution rate
-            $resolutionRate = $totalTickets > 0 ? 
+            $resolutionRate = $totalTickets > 0 ?
                 min(100, round(($resolvedTickets / $totalTickets) * 100, 1)) : 0;
-            
+
             // Get time metrics (or estimate)
             $userTimeMetrics = $timeMetrics->get($userId);
             if ($userTimeMetrics) {
@@ -145,37 +154,37 @@ class TeamPerformance extends Component
                 $totalHours = $estimatedHours['total_hours'];
                 $billableHours = $estimatedHours['billable_hours'];
             }
-            
+
             $utilizationRate = $totalHours > 0 ?
                 round(($billableHours / $totalHours) * 100, 1) : 0;
-            
+
             // Calculate revenue (simplified)
             $revenueGenerated = $this->calculateRevenue($billableHours, $user->roles->pluck('name')->first());
-            
+
             // Customer satisfaction (simplified)
             $customerSat = $this->estimateCustomerSatisfaction($resolvedTickets, $avgResolutionHours, $userId);
-            
+
             // Calculate performance score
             $performanceScore = $this->calculatePerformanceScore(
-                $resolutionRate, 
-                $utilizationRate, 
-                $avgResolutionHours, 
-                $customerSat, 
-                $totalHours, 
+                $resolutionRate,
+                $utilizationRate,
+                $avgResolutionHours,
+                $customerSat,
+                $totalHours,
                 $totalTickets,
                 $openTickets,
                 $resolvedTickets,
                 $userId
             );
-            
+
             // Determine performance level
-            $performanceLevel = match(true) {
+            $performanceLevel = match (true) {
                 $performanceScore >= 85 => 'excellent',
                 $performanceScore >= 70 => 'good',
                 $performanceScore >= 55 => 'average',
                 default => 'needs_improvement'
             };
-            
+
             return [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -200,14 +209,14 @@ class TeamPerformance extends Component
             ];
         });
     }
-    
+
     protected function estimateHours($totalTickets, $openTickets, $periodStart, $userId)
     {
         $periodDays = max(1, $periodStart->diffInDays(now()));
-        
+
         // Estimate based on ticket workload
         $estimatedHours = ($totalTickets * 3) + ($openTickets * 2);
-        
+
         // Add baseline hours if user has tickets
         if ($totalTickets > 0) {
             $userFactor = 1 + (($userId % 7) / 10); // 1.0-1.6 variance
@@ -218,23 +227,23 @@ class TeamPerformance extends Component
             $minimalBase = 10 + ($userId % 15); // 10-24 hours
             $totalHours = $minimalBase;
         }
-        
+
         // Utilization rate
         $baseUtilization = $totalTickets > 5 ? 0.75 : 0.55;
         $utilizationVariance = (($userId % 8) / 20);
         $utilizationRate = min(0.95, $baseUtilization + $utilizationVariance);
         $billableHours = $totalHours * $utilizationRate;
-        
+
         return [
             'total_hours' => round($totalHours, 1),
-            'billable_hours' => round($billableHours, 1)
+            'billable_hours' => round($billableHours, 1),
         ];
     }
-    
+
     protected function calculateRevenue($billableHours, $role)
     {
         $role = strtolower($role ?? 'tech');
-        $hourlyRate = match(true) {
+        $hourlyRate = match (true) {
             str_contains($role, 'admin') => 95,
             str_contains($role, 'manager') => 85,
             str_contains($role, 'lead') => 80,
@@ -243,19 +252,19 @@ class TeamPerformance extends Component
             str_contains($role, 'junior') || str_contains($role, 'jr') => 60,
             default => 65
         };
-        
+
         return round($billableHours * $hourlyRate, 2);
     }
-    
+
     protected function estimateCustomerSatisfaction($resolvedTickets, $avgResolutionHours, $userId)
     {
         if ($resolvedTickets == 0) {
             return 3.0; // Neutral score
         }
-        
+
         // Base score varies by user for diversity
         $baseScore = 4.0 + (($userId % 10) * 0.1); // 4.0 to 4.9
-        
+
         // Adjust based on resolution time
         if ($avgResolutionHours > 48) {
             $baseScore -= 0.8;
@@ -264,18 +273,18 @@ class TeamPerformance extends Component
         } elseif ($avgResolutionHours <= 4) {
             $baseScore += 0.5;
         }
-        
+
         // Add small variation
         $variation = (($userId + $resolvedTickets) % 5) * 0.1 - 0.2;
-        
+
         return round(max(2.0, min(5.0, $baseScore + $variation)), 1);
     }
-    
+
     protected function calculatePerformanceScore(
-        $resolutionRate, 
-        $utilizationRate, 
-        $avgResolutionHours, 
-        $customerSat, 
+        $resolutionRate,
+        $utilizationRate,
+        $avgResolutionHours,
+        $customerSat,
         $totalHours,
         $totalTickets,
         $openTickets,
@@ -284,65 +293,65 @@ class TeamPerformance extends Component
     ) {
         $performanceScore = 0;
         $userVarianceFactor = 0.9 + (($userId % 11) / 50); // 0.9-1.12 variance
-        
+
         $hasActiveWork = $openTickets > 0 || $totalTickets > 0;
         $hasResolvedWork = $resolvedTickets > 0;
-        
-        if ($hasActiveWork && !$hasResolvedWork) {
+
+        if ($hasActiveWork && ! $hasResolvedWork) {
             // For users with work in progress but nothing resolved yet
             $periodDays = $this->getPeriodDays();
             $engagementScore = min(100, ($totalTickets / max(1, $periodDays)) * 100);
             $performanceScore += $engagementScore * 0.4 * $userVarianceFactor;
-            
+
             $workloadScore = $openTickets <= 5 ? 100 : max(0, 100 - (($openTickets - 5) * 10));
             $performanceScore += $workloadScore * 0.3 * $userVarianceFactor;
-            
+
             $performanceScore += $utilizationRate * 0.2 * $userVarianceFactor;
-            
+
             $baseSat = ($customerSat > 0 ? $customerSat : (2.5 + ($userId % 5) * 0.3));
             $performanceScore += $baseSat / 5 * 100 * 0.1 * $userVarianceFactor;
         } else {
             // Standard scoring
             $performanceScore += $resolutionRate * 0.3 * $userVarianceFactor;
             $performanceScore += $utilizationRate * 0.25 * $userVarianceFactor;
-            
-            $responseScore = $avgResolutionHours > 0 ? 
+
+            $responseScore = $avgResolutionHours > 0 ?
                 max(0, 100 - ($avgResolutionHours / 24 * 50)) : (80 + ($userId % 20));
             $performanceScore += $responseScore * 0.2 * $userVarianceFactor;
-            
+
             $performanceScore += ($customerSat / 5) * 100 * 0.15 * $userVarianceFactor;
-            
+
             $expectedHours = $this->getPeriodDays() * (5 + ($userId % 3));
             $activityScore = min(100, ($totalHours / max(1, $expectedHours)) * 100);
             $performanceScore += $activityScore * 0.1 * $userVarianceFactor;
         }
-        
+
         // Final adjustment
         $finalAdjustment = ($userId % 13) - 6;
         $performanceScore = max(0, min(100, $performanceScore + $finalAdjustment));
-        
+
         return round($performanceScore, 1);
     }
-    
+
     protected function getPeriodDays()
     {
-        return match($this->period) {
+        return match ($this->period) {
             'week' => 7,
             'month' => 30,
             'quarter' => 90,
             default => 7
         };
     }
-    
+
     public function updatedPeriod($value)
     {
         if (in_array($value, ['week', 'month', 'quarter'])) {
             // Clear cache when period changes
-            Cache::forget("team_performance_" . Auth::user()->company_id . "_*");
+            Cache::forget('team_performance_'.Auth::user()->company_id.'_*');
             $this->loadTeamPerformance();
         }
     }
-    
+
     public function updatedView($value)
     {
         if (in_array($value, ['top', 'needs_improvement'])) {
@@ -350,7 +359,7 @@ class TeamPerformance extends Component
             $this->loadTeamPerformance();
         }
     }
-    
+
     public function sort($field)
     {
         if ($field === 'performance_score') {
@@ -363,15 +372,15 @@ class TeamPerformance extends Component
                 $this->sortDirection = 'desc';
             }
         }
-        
+
         $this->sortBy = $field;
         $this->loadTeamPerformance();
     }
-    
+
     public function loadMore()
     {
         $this->loadCount++;
-        
+
         if ($this->loadCount === 1) {
             $this->limit = 10;
         } elseif ($this->loadCount === 2) {
@@ -379,10 +388,10 @@ class TeamPerformance extends Component
         } else {
             $this->limit += 10;
         }
-        
+
         $this->loadTeamPerformance();
     }
-    
+
     public function showScoreDetails($memberId)
     {
         $member = $this->allTeamMembers->firstWhere('id', $memberId);
@@ -391,13 +400,13 @@ class TeamPerformance extends Component
             $this->showScoreModal = true;
         }
     }
-    
+
     public function closeScoreModal()
     {
         $this->showScoreModal = false;
         $this->selectedMemberDetails = null;
     }
-    
+
     protected function getDetailedScoreBreakdown($memberData)
     {
         $breakdown = [
@@ -418,15 +427,15 @@ class TeamPerformance extends Component
                 'billable_hours' => $memberData['billable_hours'],
                 'utilization_rate' => $memberData['utilization_rate'],
                 'customer_satisfaction' => $memberData['customer_satisfaction'],
-            ]
+            ],
         ];
-        
+
         $hasActiveWork = $memberData['open_tickets'] > 0 || $memberData['total_tickets'] > 0;
         $hasResolvedWork = $memberData['resolved_tickets'] > 0;
-        
-        if ($hasActiveWork && !$hasResolvedWork) {
+
+        if ($hasActiveWork && ! $hasResolvedWork) {
             $breakdown['scoring_mode'] = 'in_progress';
-            
+
             $engagementScore = min(100, ($memberData['total_tickets'] / max(1, $this->getPeriodDays())) * 100);
             $breakdown['components'][] = [
                 'name' => 'Activity & Engagement',
@@ -435,9 +444,9 @@ class TeamPerformance extends Component
                 'raw_score' => round($engagementScore, 1),
                 'weighted_score' => round($engagementScore * 0.4, 1),
                 'icon' => 'lightning-bolt',
-                'color' => $engagementScore >= 70 ? 'green' : ($engagementScore >= 40 ? 'yellow' : 'red')
+                'color' => $engagementScore >= 70 ? 'green' : ($engagementScore >= 40 ? 'yellow' : 'red'),
             ];
-            
+
             $workloadScore = $memberData['open_tickets'] <= 5 ? 100 : max(0, 100 - (($memberData['open_tickets'] - 5) * 10));
             $breakdown['components'][] = [
                 'name' => 'Workload Management',
@@ -446,9 +455,9 @@ class TeamPerformance extends Component
                 'raw_score' => round($workloadScore, 1),
                 'weighted_score' => round($workloadScore * 0.3, 1),
                 'icon' => 'briefcase',
-                'color' => $workloadScore >= 70 ? 'green' : ($workloadScore >= 40 ? 'yellow' : 'red')
+                'color' => $workloadScore >= 70 ? 'green' : ($workloadScore >= 40 ? 'yellow' : 'red'),
             ];
-            
+
             $breakdown['components'][] = [
                 'name' => 'Time Utilization',
                 'description' => 'Billable hours vs total hours',
@@ -456,9 +465,9 @@ class TeamPerformance extends Component
                 'raw_score' => $memberData['utilization_rate'],
                 'weighted_score' => round($memberData['utilization_rate'] * 0.2, 1),
                 'icon' => 'clock',
-                'color' => $memberData['utilization_rate'] >= 70 ? 'green' : ($memberData['utilization_rate'] >= 50 ? 'yellow' : 'red')
+                'color' => $memberData['utilization_rate'] >= 70 ? 'green' : ($memberData['utilization_rate'] >= 50 ? 'yellow' : 'red'),
             ];
-            
+
             $satScore = ($memberData['customer_satisfaction'] > 0 ? $memberData['customer_satisfaction'] : 3.0) / 5 * 100;
             $breakdown['components'][] = [
                 'name' => 'Customer Satisfaction',
@@ -467,11 +476,11 @@ class TeamPerformance extends Component
                 'raw_score' => round($satScore, 1),
                 'weighted_score' => round($satScore * 0.1, 1),
                 'icon' => 'star',
-                'color' => $satScore >= 80 ? 'green' : ($satScore >= 60 ? 'yellow' : 'red')
+                'color' => $satScore >= 80 ? 'green' : ($satScore >= 60 ? 'yellow' : 'red'),
             ];
         } else {
             $breakdown['scoring_mode'] = 'standard';
-            
+
             $cappedResolutionRate = min(100, $memberData['resolution_rate']);
             $breakdown['components'][] = [
                 'name' => 'Resolution Rate',
@@ -480,9 +489,9 @@ class TeamPerformance extends Component
                 'raw_score' => $cappedResolutionRate,
                 'weighted_score' => round($cappedResolutionRate * 0.3, 1),
                 'icon' => 'check-circle',
-                'color' => $cappedResolutionRate >= 80 ? 'green' : ($cappedResolutionRate >= 60 ? 'yellow' : 'red')
+                'color' => $cappedResolutionRate >= 80 ? 'green' : ($cappedResolutionRate >= 60 ? 'yellow' : 'red'),
             ];
-            
+
             $breakdown['components'][] = [
                 'name' => 'Utilization Rate',
                 'description' => 'Billable hours efficiency',
@@ -490,10 +499,10 @@ class TeamPerformance extends Component
                 'raw_score' => $memberData['utilization_rate'],
                 'weighted_score' => round($memberData['utilization_rate'] * 0.25, 1),
                 'icon' => 'trending-up',
-                'color' => $memberData['utilization_rate'] >= 70 ? 'green' : ($memberData['utilization_rate'] >= 50 ? 'yellow' : 'red')
+                'color' => $memberData['utilization_rate'] >= 70 ? 'green' : ($memberData['utilization_rate'] >= 50 ? 'yellow' : 'red'),
             ];
-            
-            $responseScore = $memberData['avg_resolution_time'] > 0 ? 
+
+            $responseScore = $memberData['avg_resolution_time'] > 0 ?
                 max(0, 100 - ($memberData['avg_resolution_time'] / 24 * 50)) : 100;
             $breakdown['components'][] = [
                 'name' => 'Response Time',
@@ -502,9 +511,9 @@ class TeamPerformance extends Component
                 'raw_score' => round($responseScore, 1),
                 'weighted_score' => round($responseScore * 0.2, 1),
                 'icon' => 'clock',
-                'color' => $responseScore >= 70 ? 'green' : ($responseScore >= 40 ? 'yellow' : 'red')
+                'color' => $responseScore >= 70 ? 'green' : ($responseScore >= 40 ? 'yellow' : 'red'),
             ];
-            
+
             $satScore = ($memberData['customer_satisfaction'] / 5) * 100;
             $breakdown['components'][] = [
                 'name' => 'Customer Satisfaction',
@@ -513,9 +522,9 @@ class TeamPerformance extends Component
                 'raw_score' => round($satScore, 1),
                 'weighted_score' => round($satScore * 0.15, 1),
                 'icon' => 'star',
-                'color' => $satScore >= 80 ? 'green' : ($satScore >= 60 ? 'yellow' : 'red')
+                'color' => $satScore >= 80 ? 'green' : ($satScore >= 60 ? 'yellow' : 'red'),
             ];
-            
+
             $expectedHours = $this->getPeriodDays() * 6;
             $activityScore = min(100, ($memberData['total_hours'] / max(1, $expectedHours)) * 100);
             $breakdown['components'][] = [
@@ -525,12 +534,12 @@ class TeamPerformance extends Component
                 'raw_score' => round($activityScore, 1),
                 'weighted_score' => round($activityScore * 0.1, 1),
                 'icon' => 'activity',
-                'color' => $activityScore >= 70 ? 'green' : ($activityScore >= 40 ? 'yellow' : 'red')
+                'color' => $activityScore >= 70 ? 'green' : ($activityScore >= 40 ? 'yellow' : 'red'),
             ];
         }
-        
+
         $breakdown['total_calculated'] = $memberData['performance_score'];
-        
+
         return $breakdown;
     }
 

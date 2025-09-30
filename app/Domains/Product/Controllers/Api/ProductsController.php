@@ -26,7 +26,7 @@ class ProductsController extends Controller
                     'description' => $product->description ?? '',
                     'features' => [],
                     'pricing_tiers' => [],
-                    'created_at' => $product->created_at
+                    'created_at' => $product->created_at,
                 ];
             });
 

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Models\ContractClause;
+use App\Domains\Contract\Models\ContractTemplate;
 use Illuminate\Database\Seeder;
 
 class ContractTemplateSeeder extends Seeder
@@ -51,12 +51,12 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['server' => 150, 'workstation' => 45, 'network_device' => 75],
                     'minimum_monthly' => 2500,
-                    'included_hours' => 40
+                    'included_hours' => 40,
                 ],
                 'default_sla_terms' => [
                     'response_times' => ['critical' => '1 hour', 'high' => '4 hours', 'normal' => '24 hours'],
                     'uptime_guarantee' => '99.9%',
-                    'resolution_targets' => ['critical' => '4 hours', 'high' => '8 hours', 'normal' => '48 hours']
+                    'resolution_targets' => ['critical' => '4 hours', 'high' => '8 hours', 'normal' => '48 hours'],
                 ],
                 'variable_fields' => [
                     // Client Information
@@ -64,32 +64,32 @@ class ContractTemplateSeeder extends Seeder
                     'client_address' => ['type' => 'text', 'required' => true, 'label' => 'Client Address', 'description' => 'Client principal place of business address'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Name', 'description' => 'Name of person signing for client'],
                     'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title', 'description' => 'Title of person signing for client'],
-                    
+
                     // Service Provider Information
                     'service_provider_name' => ['type' => 'text', 'required' => true, 'default_value' => 'FoleyBridge Solutions, LLC', 'label' => 'Service Provider Name'],
                     'service_provider_short_name' => ['type' => 'text', 'required' => true, 'default_value' => 'FoleyBridge', 'label' => 'Service Provider Short Name'],
                     'service_provider_address' => ['type' => 'text', 'required' => true, 'default_value' => '17422 O\'Connor Rd, STE 300, San Antonio, TX 78247', 'label' => 'Service Provider Address'],
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'Andrew Malsbury', 'label' => 'Service Provider Signatory Name'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Managing Partner', 'label' => 'Service Provider Signatory Title'],
-                    
+
                     // Contract Terms
                     'effective_date' => ['type' => 'date', 'required' => true, 'default_value' => date('Y-m-d'), 'label' => 'Contract Effective Date'],
                     'initial_term' => ['type' => 'select', 'required' => true, 'options' => ['one (1) year', 'two (2) years', 'three (3) years'], 'default_value' => 'one (1) year', 'label' => 'Initial Contract Term'],
                     'renewal_term' => ['type' => 'select', 'required' => true, 'options' => ['one (1) year', 'two (2) years'], 'default_value' => 'one (1) year', 'label' => 'Automatic Renewal Term'],
                     'termination_notice_days' => ['type' => 'number', 'required' => true, 'default_value' => 60, 'label' => 'Termination Notice Period (Days)'],
-                    
+
                     // Service Configuration
                     'service_tier' => ['type' => 'select', 'required' => true, 'options' => ['Bronze', 'Silver', 'Gold', 'Platinum'], 'default_value' => 'Silver', 'label' => 'Service Tier Level'],
                     'business_hours' => ['type' => 'text', 'required' => true, 'default_value' => 'Monday through Friday, 9:00 AM to 5:00 PM Central Time', 'label' => 'Business Hours Definition'],
                     'billing_frequency' => ['type' => 'select', 'required' => true, 'options' => ['Monthly', 'Quarterly', 'Annual'], 'default_value' => 'Monthly', 'label' => 'Billing Frequency'],
-                    
+
                     // Modern Asset-Based Service Configuration (replaces legacy service sections)
                     'supported_asset_types' => ['type' => 'multiselect', 'required' => true, 'default_value' => ['server', 'workstation'], 'label' => 'Supported Asset Types', 'options' => ['server', 'hypervisor_node', 'workstation', 'network_device', 'mobile_device', 'storage', 'security_device', 'printer']],
-                    
+
                     // Legal Terms
                     'governing_state' => ['type' => 'select', 'required' => true, 'options' => ['Texas', 'California', 'New York', 'Florida'], 'default_value' => 'Texas', 'label' => 'Governing State Law'],
-                    'arbitration_location' => ['type' => 'text', 'required' => true, 'default_value' => 'San Antonio, Bexar County, Texas', 'label' => 'Arbitration Location']
-                ]
+                    'arbitration_location' => ['type' => 'text', 'required' => true, 'default_value' => 'San Antonio, Bexar County, Texas', 'label' => 'Arbitration Location'],
+                ],
             ],
             [
                 'name' => 'Comprehensive Managed Services Agreement',
@@ -101,12 +101,12 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['server' => 150, 'workstation' => 45, 'network_device' => 75],
                     'minimum_monthly' => 2500,
-                    'included_hours' => 40
+                    'included_hours' => 40,
                 ],
                 'default_sla_terms' => [
                     'response_times' => ['critical' => '1 hour', 'high' => '4 hours', 'normal' => '24 hours'],
                     'uptime_guarantee' => '99.9%',
-                    'resolution_targets' => ['critical' => '4 hours', 'high' => '8 hours', 'normal' => '48 hours']
+                    'resolution_targets' => ['critical' => '4 hours', 'high' => '8 hours', 'normal' => '48 hours'],
                 ],
                 'variable_fields' => [
                     // Client Information
@@ -115,39 +115,39 @@ class ContractTemplateSeeder extends Seeder
                     'client_address' => ['type' => 'text', 'required' => true, 'label' => 'Client Address'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Name'],
                     'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title'],
-                    
+
                     // Service Provider Information
                     'service_provider_name' => ['type' => 'text', 'required' => true, 'default_value' => 'TechServices Pro, LLC', 'label' => 'Service Provider Name'],
                     'service_provider_entity_type' => ['type' => 'select', 'required' => true, 'options' => ['corporation', 'LLC', 'partnership'], 'default_value' => 'LLC', 'label' => 'Service Provider Entity Type'],
                     'service_provider_address' => ['type' => 'text', 'required' => true, 'default_value' => '123 Tech Street, Suite 100, Austin, TX 78701', 'label' => 'Service Provider Address'],
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'John Smith', 'label' => 'Service Provider Signatory Name'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Executive Officer', 'label' => 'Service Provider Signatory Title'],
-                    
+
                     // Contract Terms
                     'effective_date' => ['type' => 'date', 'required' => true, 'default_value' => date('Y-m-d'), 'label' => 'Contract Effective Date'],
                     'initial_term' => ['type' => 'select', 'required' => true, 'options' => ['one (1) year', 'two (2) years', 'three (3) years'], 'default_value' => 'one (1) year', 'label' => 'Initial Term'],
                     'renewal_term' => ['type' => 'select', 'required' => true, 'options' => ['one (1) year', 'six (6) months'], 'default_value' => 'one (1) year', 'label' => 'Renewal Term'],
                     'termination_notice' => ['type' => 'number', 'required' => true, 'default_value' => 30, 'label' => 'Termination Notice (Days)'],
-                    
+
                     // Service Configuration
                     'asset_count' => ['type' => 'number', 'required' => true, 'default_value' => 50, 'label' => 'Number of Managed Assets'],
                     'service_hours' => ['type' => 'select', 'required' => true, 'options' => ['24x7x365', 'Business Hours (8AM-6PM)', 'Extended Hours (7AM-9PM)'], 'default_value' => 'Business Hours (8AM-6PM)', 'label' => 'Support Hours'],
                     'included_hours' => ['type' => 'number', 'required' => true, 'default_value' => 40, 'label' => 'Included Support Hours per Month'],
-                    
+
                     // SLA Terms
                     'critical_response_time' => ['type' => 'select', 'required' => true, 'options' => ['15 minutes', '30 minutes', '1 hour', '2 hours'], 'default_value' => '1 hour', 'label' => 'Critical Issue Response Time'],
                     'high_priority_response_time' => ['type' => 'select', 'required' => true, 'options' => ['2 hours', '4 hours', '8 hours'], 'default_value' => '4 hours', 'label' => 'High Priority Response Time'],
                     'normal_response_time' => ['type' => 'select', 'required' => true, 'options' => ['8 hours', '24 hours', '48 hours'], 'default_value' => '24 hours', 'label' => 'Normal Priority Response Time'],
                     'uptime_guarantee' => ['type' => 'select', 'required' => true, 'options' => ['99.9', '99.5', '99.0'], 'default_value' => '99.9', 'label' => 'Uptime Guarantee (%)'],
-                    
+
                     // Pricing
                     'monthly_rate' => ['type' => 'currency', 'required' => true, 'default_value' => 2500, 'label' => 'Monthly Service Fee'],
                     'hourly_rate' => ['type' => 'currency', 'required' => true, 'default_value' => 150, 'label' => 'Additional Hourly Rate'],
                     'payment_terms' => ['type' => 'select', 'required' => true, 'options' => ['15', '30', '45'], 'default_value' => '30', 'label' => 'Payment Terms (Net Days)'],
-                    
+
                     // Legal Terms
-                    'governing_state' => ['type' => 'select', 'required' => true, 'options' => ['Texas', 'California', 'New York', 'Florida'], 'default_value' => 'Texas', 'label' => 'Governing State Law']
-                ]
+                    'governing_state' => ['type' => 'select', 'required' => true, 'options' => ['Texas', 'California', 'New York', 'Florida'], 'default_value' => 'Texas', 'label' => 'Governing State Law'],
+                ],
             ],
             [
                 'name' => 'Cybersecurity Services Agreement',
@@ -159,7 +159,7 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['basic_user' => 25, 'admin_user' => 45, 'executive_user' => 65],
                     'security_stack_fee' => 1500,
-                    'incident_response_retainer' => 5000
+                    'incident_response_retainer' => 5000,
                 ],
                 'variable_fields' => [
                     'client_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Name'],
@@ -177,8 +177,8 @@ class ContractTemplateSeeder extends Seeder
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'Jane Smith', 'label' => 'Service Provider Signatory'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Security Officer', 'label' => 'Service Provider Title'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Name'],
-                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title']
-                ]
+                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title'],
+                ],
             ],
             [
                 'name' => 'Backup and Disaster Recovery Services',
@@ -191,9 +191,9 @@ class ContractTemplateSeeder extends Seeder
                     'tiers' => [
                         'basic' => ['storage_gb' => 500, 'monthly_rate' => 299],
                         'standard' => ['storage_gb' => 2000, 'monthly_rate' => 899],
-                        'premium' => ['storage_gb' => 10000, 'monthly_rate' => 2499]
+                        'premium' => ['storage_gb' => 10000, 'monthly_rate' => 2499],
                     ],
-                    'overage_rate' => 0.50
+                    'overage_rate' => 0.50,
                 ],
                 'variable_fields' => [
                     'client_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Name'],
@@ -221,8 +221,8 @@ class ContractTemplateSeeder extends Seeder
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'Michael Johnson', 'label' => 'Service Provider Signatory'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Technology Officer', 'label' => 'Service Provider Title'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Name'],
-                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title']
-                ]
+                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title'],
+                ],
             ],
             [
                 'name' => 'Cloud Migration Services Contract',
@@ -236,9 +236,9 @@ class ContractTemplateSeeder extends Seeder
                         'assessment' => 15000,
                         'migration' => 45000,
                         'optimization' => 25000,
-                        'training' => 8000
+                        'training' => 8000,
                     ],
-                    'ongoing_management' => ['billing_model' => 'per_user', 'rate' => 35]
+                    'ongoing_management' => ['billing_model' => 'per_user', 'rate' => 35],
                 ],
                 'variable_fields' => [
                     'client_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Name'],
@@ -276,8 +276,8 @@ class ContractTemplateSeeder extends Seeder
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'Sarah Wilson'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Solutions Officer'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true],
-                    'client_signatory_title' => ['type' => 'text', 'required' => true]
-                ]
+                    'client_signatory_title' => ['type' => 'text', 'required' => true],
+                ],
             ],
             [
                 'name' => 'Microsoft 365 Management Services',
@@ -289,7 +289,7 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['basic_user' => 15, 'business_premium' => 25, 'e5_user' => 35],
                     'migration_fee' => 75,
-                    'security_baseline' => 2000
+                    'security_baseline' => 2000,
                 ],
                 'variable_fields' => [
                     'client_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Name'],
@@ -313,8 +313,8 @@ class ContractTemplateSeeder extends Seeder
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'David Chen', 'label' => 'Service Provider Signatory'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'M365 Practice Lead', 'label' => 'Service Provider Title'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Name'],
-                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title']
-                ]
+                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title'],
+                ],
             ],
             [
                 'name' => 'Break-Fix Services Agreement',
@@ -328,10 +328,10 @@ class ContractTemplateSeeder extends Seeder
                         'technician' => 125,
                         'engineer' => 175,
                         'architect' => 225,
-                        'emergency_after_hours' => 250
+                        'emergency_after_hours' => 250,
                     ],
                     'minimum_billing' => 1,
-                    'travel_rate' => 65
+                    'travel_rate' => 65,
                 ],
                 'variable_fields' => [
                     'client_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Name'],
@@ -366,8 +366,8 @@ class ContractTemplateSeeder extends Seeder
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'Robert Taylor'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Service Manager'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true],
-                    'client_signatory_title' => ['type' => 'text', 'required' => true]
-                ]
+                    'client_signatory_title' => ['type' => 'text', 'required' => true],
+                ],
             ],
             [
                 'name' => 'Enterprise Managed Services Agreement',
@@ -380,7 +380,7 @@ class ContractTemplateSeeder extends Seeder
                     'dedicated_engineer' => 12000,
                     'per_asset_rate' => 85,
                     'project_pool_hours' => 100,
-                    'executive_reporting' => 2500
+                    'executive_reporting' => 2500,
                 ],
                 'variable_fields' => [
                     'client_name' => ['type' => 'text', 'required' => true],
@@ -411,8 +411,8 @@ class ContractTemplateSeeder extends Seeder
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'Jennifer Anderson'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'VP of Enterprise Services'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true],
-                    'client_signatory_title' => ['type' => 'text', 'required' => true]
-                ]
+                    'client_signatory_title' => ['type' => 'text', 'required' => true],
+                ],
             ],
             [
                 'name' => 'Managed Detection & Response Services',
@@ -424,7 +424,7 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['endpoint' => 12, 'server' => 25, 'network_device' => 18],
                     'soc_retainer' => 5000,
-                    'incident_response_hours' => 250
+                    'incident_response_hours' => 250,
                 ],
                 'variable_fields' => [
                     'client_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Name'],
@@ -455,9 +455,9 @@ class ContractTemplateSeeder extends Seeder
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'Alex Rodriguez', 'label' => 'Service Provider Signatory'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Security Officer', 'label' => 'Service Provider Title'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Name'],
-                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title']
-                ]
-            ]
+                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title'],
+                ],
+            ],
         ];
 
         foreach ($templates as $template) {
@@ -481,14 +481,14 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['basic_extension' => 25, 'premium_extension' => 35, 'executive_extension' => 45],
                     'setup_fee' => 150,
-                    'auto_attendant' => 50
+                    'auto_attendant' => 50,
                 ],
                 'variable_fields' => [
                     'extension_count' => ['type' => 'number', 'required' => true, 'default_value' => 25],
                     'extension_type' => ['type' => 'select', 'required' => true, 'options' => ['Basic', 'Premium', 'Executive'], 'default_value' => 'Basic'],
                     'auto_attendant_included' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
-                    'voicemail_to_email' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes']
-                ]
+                    'voicemail_to_email' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
+                ],
             ],
             [
                 'name' => 'SIP Trunking Services Agreement',
@@ -500,7 +500,7 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['per_channel' => 15, 'unlimited_local' => 25, 'international_addon' => 10],
                     'did_numbers' => 3,
-                    'setup_fee' => 200
+                    'setup_fee' => 200,
                 ],
                 'variable_fields' => [
                     'effective_date' => ['type' => 'date', 'required' => true, 'default_value' => ''],
@@ -520,8 +520,8 @@ class ContractTemplateSeeder extends Seeder
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => ''],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => ''],
                     'client_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => ''],
-                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => '']
-                ]
+                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => ''],
+                ],
             ],
             [
                 'name' => 'Unified Communications Platform',
@@ -533,14 +533,14 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['essentials' => 15, 'standard' => 25, 'premium' => 40],
                     'video_conferencing' => 8,
-                    'team_messaging' => 5
+                    'team_messaging' => 5,
                 ],
                 'variable_fields' => [
                     'uc_tier' => ['type' => 'select', 'required' => true, 'options' => ['Essentials', 'Standard', 'Premium'], 'default_value' => 'Standard'],
                     'video_conferencing_included' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
                     'team_messaging_included' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
-                    'mobile_app_access' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes']
-                ]
+                    'mobile_app_access' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
+                ],
             ],
             [
                 'name' => 'International Calling Services',
@@ -552,14 +552,14 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['tier1_countries' => 0.02, 'tier2_countries' => 0.05, 'tier3_countries' => 0.15],
                     'monthly_minimum' => 100,
-                    'fraud_protection' => 25
+                    'fraud_protection' => 25,
                 ],
                 'variable_fields' => [
                     'calling_regions' => ['type' => 'select', 'required' => true, 'options' => ['North America Only', 'Global Tier 1', 'Global Tier 1 & 2', 'Worldwide'], 'default_value' => 'Global Tier 1'],
                     'monthly_minimum' => ['type' => 'currency', 'required' => true, 'default_value' => 100],
                     'fraud_protection_level' => ['type' => 'select', 'required' => true, 'options' => ['Basic', 'Advanced'], 'default_value' => 'Advanced'],
-                    'real_time_reporting' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes']
-                ]
+                    'real_time_reporting' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
+                ],
             ],
             [
                 'name' => 'Contact Center Solutions Agreement',
@@ -571,14 +571,14 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['agent_seat' => 65, 'supervisor_seat' => 85, 'admin_seat' => 45],
                     'ivr_ports' => 25,
-                    'recording_storage' => 0.10
+                    'recording_storage' => 0.10,
                 ],
                 'variable_fields' => [
                     'agent_seats' => ['type' => 'number', 'required' => true, 'default_value' => 10],
                     'supervisor_seats' => ['type' => 'number', 'required' => true, 'default_value' => 2],
                     'ivr_complexity' => ['type' => 'select', 'required' => true, 'options' => ['Basic', 'Advanced', 'Complex'], 'default_value' => 'Basic'],
-                    'call_recording' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes']
-                ]
+                    'call_recording' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
+                ],
             ],
             [
                 'name' => 'E911 Emergency Services Agreement',
@@ -590,14 +590,14 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['e911_service' => 2.50, 'dispatchable_location' => 1.00],
                     'setup_fee' => 50,
-                    'compliance_reporting' => 25
+                    'compliance_reporting' => 25,
                 ],
                 'variable_fields' => [
                     'locations_count' => ['type' => 'number', 'required' => true, 'default_value' => 5],
                     'dispatchable_locations' => ['type' => 'number', 'required' => true, 'default_value' => 3],
                     'compliance_level' => ['type' => 'select', 'required' => true, 'options' => ['Basic', 'Enhanced'], 'default_value' => 'Enhanced'],
-                    'notification_method' => ['type' => 'select', 'required' => true, 'options' => ['Email', 'SMS', 'Both'], 'default_value' => 'Both']
-                ]
+                    'notification_method' => ['type' => 'select', 'required' => true, 'options' => ['Email', 'SMS', 'Both'], 'default_value' => 'Both'],
+                ],
             ],
             [
                 'name' => 'Number Porting Services Agreement',
@@ -609,15 +609,15 @@ class ContractTemplateSeeder extends Seeder
                 'default_pricing_structure' => [
                     'rates' => ['local_number_port' => 15, 'toll_free_port' => 25, 'complex_port' => 50],
                     'expedited_port' => 100,
-                    'project_management' => 500
+                    'project_management' => 500,
                 ],
                 'variable_fields' => [
                     'numbers_to_port' => ['type' => 'number', 'required' => true, 'default_value' => 10],
                     'port_type' => ['type' => 'select', 'required' => true, 'options' => ['Local Numbers', 'Toll-Free', 'Mixed'], 'default_value' => 'Local Numbers'],
                     'expedited_service' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'No'],
-                    'project_management' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes']
-                ]
-            ]
+                    'project_management' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
+                ],
+            ],
         ];
 
         foreach ($templates as $template) {
@@ -642,7 +642,7 @@ class ContractTemplateSeeder extends Seeder
                     'markup_percentage' => 15,
                     'installation_rate' => 150,
                     'configuration_rate' => 175,
-                    'project_management' => 2500
+                    'project_management' => 2500,
                 ],
                 'variable_fields' => [
                     // Basic Contract Information
@@ -653,7 +653,7 @@ class ContractTemplateSeeder extends Seeder
                     'service_provider_name' => ['type' => 'text', 'required' => true, 'default_value' => 'TechProcurement Solutions LLC', 'label' => 'Service Provider Name'],
                     'service_provider_entity_type' => ['type' => 'select', 'required' => true, 'options' => ['corporation', 'LLC', 'partnership'], 'default_value' => 'LLC', 'label' => 'Service Provider Entity Type'],
                     'service_provider_address' => ['type' => 'text', 'required' => true, 'default_value' => '123 Technology Drive, Suite 100, Austin, TX 78701', 'label' => 'Service Provider Address'],
-                    
+
                     // Hardware Specifications
                     'hardware_type' => ['type' => 'select', 'required' => true, 'options' => ['Servers', 'Networking', 'Workstations', 'Storage', 'Mixed Infrastructure'], 'default_value' => 'Servers', 'label' => 'Hardware Type'],
                     'hardware_categories' => ['type' => 'text', 'required' => true, 'default_value' => 'Enterprise Servers, Network Infrastructure', 'label' => 'Hardware Categories'],
@@ -661,14 +661,14 @@ class ContractTemplateSeeder extends Seeder
                     'compatibility_standards' => ['type' => 'text', 'required' => true, 'default_value' => 'Industry Standard Rack Mount, VMware Compatible', 'label' => 'Compatibility Standards'],
                     'environmental_specs' => ['type' => 'text', 'required' => true, 'default_value' => 'Data Center Environment, Redundant Power', 'label' => 'Environmental Specifications'],
                     'redundancy_level' => ['type' => 'select', 'required' => true, 'options' => ['Basic', 'Standard', 'High Availability', 'Fault Tolerant'], 'default_value' => 'Standard', 'label' => 'Redundancy Level'],
-                    
+
                     // Service Configuration
                     'installation_required' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes', 'label' => 'Installation Required'],
                     'configuration_complexity' => ['type' => 'select', 'required' => true, 'options' => ['Basic', 'Standard', 'Complex', 'Enterprise'], 'default_value' => 'Standard', 'label' => 'Configuration Complexity'],
                     'warranty_extension' => ['type' => 'select', 'required' => true, 'options' => ['1 Year', '2 Years', '3 Years', '5 Years'], 'default_value' => '1 Year', 'label' => 'Warranty Extension'],
                     'inspection_period' => ['type' => 'number', 'required' => true, 'default_value' => 5, 'label' => 'Inspection Period (Business Days)'],
                     'training_hours' => ['type' => 'number', 'required' => true, 'default_value' => 8, 'label' => 'Training Hours Included'],
-                    
+
                     // Warranty and Support Terms
                     'hardware_warranty_period' => ['type' => 'select', 'required' => true, 'options' => ['1 Year', '2 Years', '3 Years'], 'default_value' => '1 Year', 'label' => 'Hardware Warranty Period'],
                     'installation_warranty' => ['type' => 'select', 'required' => true, 'options' => ['90 days', '6 months', '1 year'], 'default_value' => '90 days', 'label' => 'Installation Warranty'],
@@ -677,7 +677,7 @@ class ContractTemplateSeeder extends Seeder
                     'normal_priority_response_time' => ['type' => 'select', 'required' => true, 'options' => ['24 hours', '48 hours', '72 hours'], 'default_value' => '24 hours', 'label' => 'Normal Priority Response Time'],
                     'onsite_support_hours' => ['type' => 'text', 'required' => true, 'default_value' => 'Business Hours (8AM-6PM)', 'label' => 'On-site Support Hours'],
                     'remote_support_availability' => ['type' => 'select', 'required' => true, 'options' => ['24x7', 'Business Hours', 'Extended Hours'], 'default_value' => 'Business Hours', 'label' => 'Remote Support Availability'],
-                    
+
                     // Project Timeline
                     'procurement_timeline' => ['type' => 'number', 'required' => true, 'default_value' => 14, 'label' => 'Procurement Timeline (Business Days)'],
                     'delivery_timeline' => ['type' => 'number', 'required' => true, 'default_value' => 7, 'label' => 'Delivery Timeline (Business Days)'],
@@ -685,7 +685,7 @@ class ContractTemplateSeeder extends Seeder
                     'configuration_timeline' => ['type' => 'number', 'required' => true, 'default_value' => 3, 'label' => 'Configuration Timeline (Business Days)'],
                     'training_timeline' => ['type' => 'number', 'required' => true, 'default_value' => 2, 'label' => 'Training Timeline (Business Days)'],
                     'total_project_timeline' => ['type' => 'number', 'required' => true, 'default_value' => 31, 'label' => 'Total Project Timeline (Business Days)'],
-                    
+
                     // Pricing and Payment
                     'markup_percentage' => ['type' => 'number', 'required' => true, 'default_value' => 15, 'label' => 'Hardware Markup Percentage'],
                     'installation_rate' => ['type' => 'currency', 'required' => true, 'default_value' => 150, 'label' => 'Installation Rate (Per Hour)'],
@@ -694,7 +694,7 @@ class ContractTemplateSeeder extends Seeder
                     'travel_radius' => ['type' => 'number', 'required' => true, 'default_value' => 50, 'label' => 'Travel Radius (Miles)'],
                     'payment_terms' => ['type' => 'select', 'required' => true, 'options' => ['15', '30', '45'], 'default_value' => '30', 'label' => 'Payment Terms (Net Days)'],
                     'late_payment_rate' => ['type' => 'number', 'required' => true, 'default_value' => 1.5, 'label' => 'Late Payment Rate (% per month)'],
-                    
+
                     // Compliance and Legal
                     'compliance_requirements' => ['type' => 'text', 'required' => true, 'default_value' => 'SOC 2, ISO 27001, NIST Framework', 'label' => 'Compliance Requirements'],
                     'general_liability_amount' => ['type' => 'currency', 'required' => true, 'default_value' => 1000000, 'label' => 'General Liability Insurance'],
@@ -703,13 +703,13 @@ class ContractTemplateSeeder extends Seeder
                     'termination_notice_days' => ['type' => 'number', 'required' => true, 'default_value' => 30, 'label' => 'Termination Notice (Days)'],
                     'governing_state' => ['type' => 'select', 'required' => true, 'options' => ['Texas', 'California', 'New York', 'Florida'], 'default_value' => 'Texas', 'label' => 'Governing State Law'],
                     'arbitration_location' => ['type' => 'text', 'required' => true, 'default_value' => 'Austin, Texas', 'label' => 'Arbitration Location'],
-                    
+
                     // Signatory Information
                     'service_provider_signatory_name' => ['type' => 'text', 'required' => true, 'default_value' => 'John Smith', 'label' => 'Service Provider Signatory Name'],
                     'service_provider_signatory_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Executive Officer', 'label' => 'Service Provider Signatory Title'],
                     'client_signatory_name' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Name'],
-                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title']
-                ]
+                    'client_signatory_title' => ['type' => 'text', 'required' => true, 'label' => 'Client Signatory Title'],
+                ],
             ],
             [
                 'name' => 'Software Licensing Agreement',
@@ -722,14 +722,14 @@ class ContractTemplateSeeder extends Seeder
                     'markup_percentage' => 12,
                     'deployment_fee' => 125,
                     'training_rate' => 200,
-                    'license_management' => 25
+                    'license_management' => 25,
                 ],
                 'variable_fields' => [
                     'software_type' => ['type' => 'select', 'required' => true, 'options' => ['Productivity', 'Security', 'Business', 'Development'], 'default_value' => 'Productivity'],
                     'license_count' => ['type' => 'number', 'required' => true, 'default_value' => 25],
                     'deployment_support' => ['type' => 'select', 'required' => true, 'options' => ['Basic', 'Full Service'], 'default_value' => 'Basic'],
-                    'training_included' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'No']
-                ]
+                    'training_included' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'No'],
+                ],
             ],
             [
                 'name' => 'Vendor Partner Agreement',
@@ -743,16 +743,16 @@ class ContractTemplateSeeder extends Seeder
                         'bronze' => 8,
                         'silver' => 12,
                         'gold' => 18,
-                        'platinum' => 25
+                        'platinum' => 25,
                     ],
-                    'volume_bonuses' => true
+                    'volume_bonuses' => true,
                 ],
                 'variable_fields' => [
                     'partner_tier' => ['type' => 'select', 'required' => true, 'options' => ['Bronze', 'Silver', 'Gold', 'Platinum'], 'default_value' => 'Silver'],
                     'product_categories' => ['type' => 'select', 'required' => true, 'options' => ['Hardware Only', 'Software Only', 'Both'], 'default_value' => 'Both'],
                     'volume_commitment' => ['type' => 'currency', 'required' => true, 'default_value' => 50000],
-                    'exclusive_territory' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'No']
-                ]
+                    'exclusive_territory' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'No'],
+                ],
             ],
             [
                 'name' => 'Solution Integration Services',
@@ -767,15 +767,15 @@ class ContractTemplateSeeder extends Seeder
                         'design' => 15000,
                         'implementation' => 35000,
                         'testing' => 12000,
-                        'training' => 8000
-                    ]
+                        'training' => 8000,
+                    ],
                 ],
                 'variable_fields' => [
                     'solution_complexity' => ['type' => 'select', 'required' => true, 'options' => ['Simple', 'Standard', 'Complex', 'Enterprise'], 'default_value' => 'Standard'],
                     'integration_points' => ['type' => 'number', 'required' => true, 'default_value' => 5],
                     'testing_scope' => ['type' => 'select', 'required' => true, 'options' => ['Basic', 'Comprehensive'], 'default_value' => 'Comprehensive'],
-                    'training_required' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes']
-                ]
+                    'training_required' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
+                ],
             ],
             [
                 'name' => 'IT Procurement Consulting Agreement',
@@ -788,17 +788,17 @@ class ContractTemplateSeeder extends Seeder
                     'rates' => [
                         'senior_consultant' => 225,
                         'consultant' => 175,
-                        'analyst' => 125
+                        'analyst' => 125,
                     ],
-                    'retainer_minimum' => 5000
+                    'retainer_minimum' => 5000,
                 ],
                 'variable_fields' => [
                     'project_scope' => ['type' => 'select', 'required' => true, 'options' => ['Small', 'Medium', 'Large', 'Enterprise'], 'default_value' => 'Medium'],
                     'consultant_level' => ['type' => 'select', 'required' => true, 'options' => ['Analyst', 'Consultant', 'Senior Consultant'], 'default_value' => 'Consultant'],
                     'retainer_model' => ['type' => 'select', 'required' => true, 'options' => ['Monthly Retainer', 'Project Based'], 'default_value' => 'Monthly Retainer'],
-                    'vendor_management' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes']
-                ]
-            ]
+                    'vendor_management' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'Yes'],
+                ],
+            ],
         ];
 
         foreach ($templates as $template) {
@@ -821,7 +821,7 @@ class ContractTemplateSeeder extends Seeder
                 'billing_model' => 'fixed',
                 'default_pricing_structure' => [
                     'rates' => ['monthly_compliance_fee' => 2500, 'setup_fee' => 5000, 'audit_support_hourly' => 250],
-                    'minimum_term_months' => 12
+                    'minimum_term_months' => 12,
                 ],
                 'variable_fields' => [
                     // Entity Information
@@ -831,41 +831,41 @@ class ContractTemplateSeeder extends Seeder
                     'business_associate_name' => ['type' => 'text', 'required' => true, 'label' => 'Business Associate Name'],
                     'business_associate_type' => ['type' => 'select', 'required' => true, 'options' => ['Corporation', 'LLC', 'Partnership'], 'default_value' => 'Corporation', 'label' => 'Business Associate Type'],
                     'business_associate_address' => ['type' => 'textarea', 'required' => true, 'label' => 'Business Associate Address'],
-                    
+
                     // Agreement Details
                     'effective_date' => ['type' => 'date', 'required' => true, 'label' => 'Effective Date'],
                     'services_description' => ['type' => 'textarea', 'required' => true, 'default_value' => 'IT managed services, technical support, and data processing services', 'label' => 'Services Description'],
                     'underlying_agreement_reference' => ['type' => 'text', 'required' => true, 'default_value' => 'the Master Services Agreement dated [DATE]', 'label' => 'Underlying Agreement Reference'],
-                    
+
                     // Technical Requirements
                     'data_aggregation_services' => ['type' => 'select', 'required' => true, 'options' => ['Yes', 'No'], 'default_value' => 'No', 'label' => 'Data Aggregation Services Provided'],
                     'security_officer_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Information Security Officer', 'label' => 'Security Officer Title'],
                     'encryption_requirements' => ['type' => 'text', 'required' => true, 'default_value' => 'open networks using TLS 1.2 or higher', 'label' => 'Encryption Requirements'],
-                    
+
                     // Timeframes and Procedures
                     'breach_notification_timeframe' => ['type' => 'select', 'required' => true, 'options' => ['24 hours', '48 hours', '72 hours'], 'default_value' => '24 hours', 'label' => 'Breach Notification Timeframe'],
                     'access_request_timeframe' => ['type' => 'select', 'required' => true, 'options' => ['10 days', '15 days', '30 days'], 'default_value' => '15 days', 'label' => 'Access Request Response Time'],
                     'amendment_timeframe' => ['type' => 'select', 'required' => true, 'options' => ['5 days', '10 days', '15 days'], 'default_value' => '10 days', 'label' => 'Amendment Processing Time'],
                     'accounting_timeframe' => ['type' => 'select', 'required' => true, 'options' => ['30 days', '45 days', '60 days'], 'default_value' => '45 days', 'label' => 'Accounting Request Response Time'],
-                    
+
                     // Training and Compliance
                     'compliance_assessment_frequency' => ['type' => 'select', 'required' => true, 'options' => ['Quarterly', 'Semi-Annual', 'Annual'], 'default_value' => 'Annual', 'label' => 'Compliance Assessment Frequency'],
                     'training_timeframe' => ['type' => 'select', 'required' => true, 'options' => ['30 days', '60 days', '90 days'], 'default_value' => '30 days', 'label' => 'Initial Training Timeframe'],
                     'training_renewal_frequency' => ['type' => 'select', 'required' => true, 'options' => ['Annually', 'Bi-annually'], 'default_value' => 'Annually', 'label' => 'Training Renewal Frequency'],
-                    
+
                     // Audit and Legal
                     'audit_notice_period' => ['type' => 'select', 'required' => true, 'options' => ['30 days', '45 days', '60 days'], 'default_value' => '30 days', 'label' => 'Audit Notice Period'],
                     'insurance_amount' => ['type' => 'currency', 'required' => true, 'default_value' => 2000000, 'label' => 'Professional Liability Insurance Amount'],
                     'cyber_insurance_amount' => ['type' => 'currency', 'required' => true, 'default_value' => 5000000, 'label' => 'Cyber Liability Insurance Amount'],
                     'governing_state' => ['type' => 'select', 'required' => true, 'options' => ['Texas', 'California', 'New York', 'Florida'], 'default_value' => 'Texas', 'label' => 'Governing State Law'],
                     'amendment_notice_period' => ['type' => 'select', 'required' => true, 'options' => ['30 days', '60 days', '90 days'], 'default_value' => '60 days', 'label' => 'Amendment Notice Period'],
-                    
+
                     // Signatory Information
                     'covered_entity_signatory' => ['type' => 'text', 'required' => true, 'label' => 'Covered Entity Signatory Name'],
                     'covered_entity_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Executive Officer', 'label' => 'Covered Entity Signatory Title'],
                     'business_associate_signatory' => ['type' => 'text', 'required' => true, 'label' => 'Business Associate Signatory Name'],
-                    'business_associate_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Executive Officer', 'label' => 'Business Associate Signatory Title']
-                ]
+                    'business_associate_title' => ['type' => 'text', 'required' => true, 'default_value' => 'Chief Executive Officer', 'label' => 'Business Associate Signatory Title'],
+                ],
             ],
             [
                 'name' => 'SOX Compliance Services Agreement',
@@ -907,11 +907,11 @@ class ContractTemplateSeeder extends Seeder
                         'compute_hours' => 0.15,
                         'storage_gb' => 0.08,
                         'network_gb' => 0.05,
-                        'support_hours' => 175
+                        'support_hours' => 175,
                     ],
-                    'monthly_minimum' => 500
-                ]
-            ]
+                    'monthly_minimum' => 500,
+                ],
+            ],
         ];
 
         foreach ($templates as $template) {
@@ -1005,11 +1005,11 @@ Title: {{client_signatory_title}}";
 
     private function getCybersecurityTemplate(): string
     {
-        return "CYBERSECURITY SERVICES AGREEMENT
+        return 'CYBERSECURITY SERVICES AGREEMENT
 
 Date: {{effective_date|date}}
 
-This Cybersecurity Services Agreement (\"Agreement\") is entered into between {{client_name}} (\"Client\") and {{service_provider_name}} (\"Service Provider\") for the provision of comprehensive cybersecurity protection services.
+This Cybersecurity Services Agreement ("Agreement") is entered into between {{client_name}} ("Client") and {{service_provider_name}} ("Service Provider") for the provision of comprehensive cybersecurity protection services.
 
 1. CYBERSECURITY SERVICES
 Service Provider shall provide the following cybersecurity services:
@@ -1046,7 +1046,7 @@ IN WITNESS WHEREOF, the parties execute this Agreement on {{effective_date|date}
 
 _________________________         _________________________
 {{service_provider_signatory_name}}   {{client_signatory_name}}
-{{service_provider_signatory_title}}  {{client_signatory_title}}";
+{{service_provider_signatory_title}}  {{client_signatory_title}}';
     }
 
     private function getBackupDRTemplate(): string
@@ -1246,11 +1246,11 @@ Title: {{client_signatory_title}}";
 
     private function getM365Template(): string
     {
-        return "MICROSOFT 365 MANAGEMENT SERVICES AGREEMENT
+        return 'MICROSOFT 365 MANAGEMENT SERVICES AGREEMENT
 
 Date: {{effective_date|date}}
 
-This Microsoft 365 Management Services Agreement is entered into between {{client_name}} (\"Client\") and {{service_provider_name}} (\"Service Provider\").
+This Microsoft 365 Management Services Agreement is entered into between {{client_name}} ("Client") and {{service_provider_name}} ("Service Provider").
 
 1. MICROSOFT 365 SERVICES
 Service Provider will provide comprehensive M365 management including:
@@ -1291,16 +1291,16 @@ IN WITNESS WHEREOF, the parties execute this Agreement on {{effective_date|date}
 {{service_provider_name}}                {{client_name}}
 _________________________               _________________________
 {{service_provider_signatory_name}}      {{client_signatory_name}}
-{{service_provider_signatory_title}}     {{client_signatory_title}}";
+{{service_provider_signatory_title}}     {{client_signatory_title}}';
     }
 
     private function getBreakFixTemplate(): string
     {
-        return "BREAK-FIX SERVICES AGREEMENT
+        return 'BREAK-FIX SERVICES AGREEMENT
 
 Date: {{effective_date|date}}
 
-This Break-Fix Services Agreement (\"Agreement\") is entered into between {{client_name}}, a {{client_entity_type}} (\"Client\") and {{service_provider_name}}, a {{service_provider_entity_type}} (\"Service Provider\").
+This Break-Fix Services Agreement ("Agreement") is entered into between {{client_name}}, a {{client_entity_type}} ("Client") and {{service_provider_name}}, a {{service_provider_entity_type}} ("Service Provider").
 
 RECITALS:
 WHEREAS, Client requires on-demand IT support services; and
@@ -1382,16 +1382,16 @@ Title: {{service_provider_signatory_title}}
 
 By: _________________________
 Name: {{client_signatory_name}}
-Title: {{client_signatory_title}}";
+Title: {{client_signatory_title}}';
     }
 
     private function getEnterpriseTemplate(): string
     {
-        return "ENTERPRISE MANAGED SERVICES AGREEMENT
+        return 'ENTERPRISE MANAGED SERVICES AGREEMENT
 
 Date: {{effective_date|date}}
 
-This Enterprise Managed Services Agreement is entered into between {{client_name}} (\"Client\") and {{service_provider_name}} (\"Service Provider\").
+This Enterprise Managed Services Agreement is entered into between {{client_name}} ("Client") and {{service_provider_name}} ("Service Provider").
 
 1. ENTERPRISE SERVICES
 Service Provider will provide dedicated enterprise-grade managed services:
@@ -1440,7 +1440,7 @@ IN WITNESS WHEREOF, the parties execute this Agreement.
 {{service_provider_name}}                {{client_name}}
 _________________________               _________________________
 {{service_provider_signatory_name}}      {{client_signatory_name}}
-{{service_provider_signatory_title}}     {{client_signatory_title}}";
+{{service_provider_signatory_title}}     {{client_signatory_title}}';
     }
 
     private function getMDRTemplate(): string
@@ -4315,11 +4315,11 @@ Date: ___________________               Date: ___________________";
 
     private function getSecurityAuditTemplate(): string
     {
-        return "SECURITY AUDIT SERVICES AGREEMENT
+        return 'SECURITY AUDIT SERVICES AGREEMENT
 
 Effective Date: {{effective_date|date}}
 
-This Security Audit Services Agreement (\"Agreement\") is entered into on {{effective_date|date}} between {{client_company_name}}, a {{client_entity_type}} having its principal place of business at {{client_address}} (\"Client\") and {{security_provider_name}}, a cybersecurity firm having its principal place of business at {{security_provider_address}} (\"Security Provider\").
+This Security Audit Services Agreement ("Agreement") is entered into on {{effective_date|date}} between {{client_company_name}}, a {{client_entity_type}} having its principal place of business at {{client_address}} ("Client") and {{security_provider_name}}, a cybersecurity firm having its principal place of business at {{security_provider_address}} ("Security Provider").
 
 RECITALS:
 
@@ -4502,7 +4502,7 @@ CLIENT:                                   SECURITY PROVIDER:
 By: _________________________           By: _________________________
 Name: {{client_signatory_name}}          Name: {{security_provider_signatory_name}}
 Title: {{client_signatory_title}}        Title: {{security_provider_signatory_title}}
-Date: ___________________               Date: ___________________";
+Date: ___________________               Date: ___________________';
     }
 
     private function getConsumptionTemplate(): string
@@ -4719,7 +4719,7 @@ EOD;
     private function createStandardClauses(): void
     {
         $clauses = ContractClause::getDefaultMSPClauses();
-        
+
         foreach ($clauses as $clauseData) {
             $clauseData['company_id'] = 1; // Default company for seeding
             $clauseData['status'] = 'active';
@@ -4729,7 +4729,7 @@ EOD;
             $clauseData['updated_by'] = 1;
             ContractClause::create($clauseData);
         }
-        
+
         $this->command->info('Created standard contract clauses');
     }
 }

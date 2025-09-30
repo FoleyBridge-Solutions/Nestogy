@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Process RMM Alert Job
- * 
+ *
  * Asynchronously processes RMM alerts, creating tickets and handling notifications.
  * Implements retry logic and error handling for reliable alert processing.
  */
@@ -56,7 +56,7 @@ class ProcessRMMAlert implements ShouldQueue
     public function handle(RMMIntegrationService $rmmService): void
     {
         $startTime = microtime(true);
-        
+
         try {
             Log::info('Processing RMM alert', [
                 'alert_id' => $this->alert->id,
@@ -71,6 +71,7 @@ class ProcessRMMAlert implements ShouldQueue
                 Log::info('RMM alert already processed, skipping', [
                     'alert_id' => $this->alert->id,
                 ]);
+
                 return;
             }
 
@@ -80,6 +81,7 @@ class ProcessRMMAlert implements ShouldQueue
                 Log::info('RMM alert marked as duplicate, skipping ticket creation', [
                     'alert_id' => $this->alert->id,
                 ]);
+
                 return;
             }
 
@@ -108,12 +110,12 @@ class ProcessRMMAlert implements ShouldQueue
             Log::info('RMM alert processing completed', [
                 'alert_id' => $this->alert->id,
                 'processing_time_ms' => $processingTime,
-                'ticket_created' => !is_null($ticket),
+                'ticket_created' => ! is_null($ticket),
             ]);
 
         } catch (\Exception $e) {
             $processingTime = round((microtime(true) - $startTime) * 1000, 2);
-            
+
             Log::error('RMM alert processing failed', [
                 'alert_id' => $this->alert->id,
                 'attempt' => $this->attempts(),
@@ -187,6 +189,7 @@ class ProcessRMMAlert implements ShouldQueue
     protected function shouldNotifyClient(): bool
     {
         $alertRules = $this->alert->integration->alert_rules ?? [];
+
         return data_get($alertRules, 'notify_client', false);
     }
 
@@ -196,6 +199,7 @@ class ProcessRMMAlert implements ShouldQueue
     protected function shouldAutoAssign(): bool
     {
         $alertRules = $this->alert->integration->alert_rules ?? [];
+
         return data_get($alertRules, 'auto_assign_technician', false);
     }
 
@@ -219,9 +223,9 @@ class ProcessRMMAlert implements ShouldQueue
     {
         return [
             'rmm-alert',
-            'integration:' . $this->alert->integration_id,
-            'severity:' . $this->alert->severity,
-            'external_id:' . $this->alert->external_alert_id,
+            'integration:'.$this->alert->integration_id,
+            'severity:'.$this->alert->severity,
+            'external_id:'.$this->alert->external_alert_id,
         ];
     }
 }

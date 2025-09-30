@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Webhook Service
- * 
+ *
  * Handles secure webhook receiving, authentication, rate limiting,
  * and payload validation for RMM integrations.
  */
@@ -29,40 +29,40 @@ class WebhookService
     public function processWebhook(Request $request, string $provider, string $integrationUuid): array
     {
         $startTime = microtime(true);
-        
+
         try {
             // Rate limiting
             $this->checkRateLimit($request, $integrationUuid);
-            
+
             // Find integration
             $integration = $this->findIntegration($integrationUuid, $provider);
-            
+
             // Authenticate request
             $this->authenticateWebhook($request, $integration);
-            
+
             // Validate payload
             $payload = $this->validatePayload($request, $provider);
-            
+
             // Process with RMM service
             $result = $this->rmmService->processWebhookPayload($integration, $payload);
-            
+
             $processingTime = round((microtime(true) - $startTime) * 1000, 2);
-            
+
             Log::info('Webhook processed successfully', [
                 'integration_uuid' => $integrationUuid,
                 'provider' => $provider,
                 'processing_time_ms' => $processingTime,
                 'result' => $result,
             ]);
-            
+
             return array_merge($result, [
                 'processing_time_ms' => $processingTime,
                 'timestamp' => now()->toISOString(),
             ]);
-            
+
         } catch (\Exception $e) {
             $processingTime = round((microtime(true) - $startTime) * 1000, 2);
-            
+
             Log::error('Webhook processing failed', [
                 'integration_uuid' => $integrationUuid,
                 'provider' => $provider,
@@ -70,7 +70,7 @@ class WebhookService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             throw $e;
         }
     }
@@ -83,19 +83,19 @@ class WebhookService
         $key = "webhook:{$integrationUuid}:{$request->ip()}";
         $maxAttempts = 1000; // 1000 requests per minute
         $decayMinutes = 1;
-        
+
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $seconds = RateLimiter::availableIn($key);
-            
+
             Log::warning('Webhook rate limit exceeded', [
                 'integration_uuid' => $integrationUuid,
                 'ip' => $request->ip(),
                 'retry_after' => $seconds,
             ]);
-            
+
             throw new \Exception("Rate limit exceeded. Retry after {$seconds} seconds.", 429);
         }
-        
+
         RateLimiter::hit($key, $decayMinutes * 60);
     }
 
@@ -108,11 +108,11 @@ class WebhookService
             ->where('provider', $provider)
             ->where('is_active', true)
             ->first();
-            
-        if (!$integration) {
+
+        if (! $integration) {
             throw new \Exception("Integration not found or inactive: {$uuid}", 404);
         }
-        
+
         return $integration;
     }
 
@@ -123,25 +123,25 @@ class WebhookService
     {
         $provider = $integration->provider;
         $credentials = $integration->getCredentials();
-        
+
         try {
             switch ($provider) {
                 case Integration::PROVIDER_CONNECTWISE:
                     $this->authenticateConnectWise($request, $credentials);
                     break;
-                    
+
                 case Integration::PROVIDER_DATTO:
                     $this->authenticateDatto($request, $credentials);
                     break;
-                    
+
                 case Integration::PROVIDER_NINJA:
                     $this->authenticateNinja($request, $credentials);
                     break;
-                    
+
                 case Integration::PROVIDER_GENERIC:
                     $this->authenticateGeneric($request, $credentials);
                     break;
-                    
+
                 default:
                     throw new \Exception("Unsupported provider: {$provider}", 400);
             }
@@ -152,7 +152,7 @@ class WebhookService
                 'ip' => $request->ip(),
                 'error' => $e->getMessage(),
             ]);
-            
+
             throw new \Exception('Authentication failed', 401);
         }
     }
@@ -163,15 +163,15 @@ class WebhookService
     protected function authenticateConnectWise(Request $request, array $credentials): void
     {
         $apiKey = data_get($credentials, 'api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             throw new \Exception('API key not configured');
         }
-        
-        $providedKey = $request->header('X-CW-API-Key') 
+
+        $providedKey = $request->header('X-CW-API-Key')
                     ?: $request->header('Authorization')
                     ?: $request->input('api_key');
-                    
-        if (!$providedKey || !hash_equals($apiKey, $providedKey)) {
+
+        if (! $providedKey || ! hash_equals($apiKey, $providedKey)) {
             throw new \Exception('Invalid API key');
         }
     }
@@ -182,19 +182,19 @@ class WebhookService
     protected function authenticateDatto(Request $request, array $credentials): void
     {
         $sharedSecret = data_get($credentials, 'shared_secret');
-        if (!$sharedSecret) {
+        if (! $sharedSecret) {
             throw new \Exception('Shared secret not configured');
         }
-        
+
         $providedSignature = $request->header('X-Datto-Signature');
-        if (!$providedSignature) {
+        if (! $providedSignature) {
             throw new \Exception('Missing signature header');
         }
-        
+
         $payload = $request->getContent();
         $expectedSignature = hash_hmac('sha256', $payload, $sharedSecret);
-        
-        if (!hash_equals($expectedSignature, $providedSignature)) {
+
+        if (! hash_equals($expectedSignature, $providedSignature)) {
             throw new \Exception('Invalid signature');
         }
     }
@@ -205,18 +205,18 @@ class WebhookService
     protected function authenticateNinja(Request $request, array $credentials): void
     {
         $bearerToken = data_get($credentials, 'bearer_token');
-        if (!$bearerToken) {
+        if (! $bearerToken) {
             throw new \Exception('Bearer token not configured');
         }
-        
+
         $authHeader = $request->header('Authorization');
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+        if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
             throw new \Exception('Missing or invalid authorization header');
         }
-        
+
         $providedToken = substr($authHeader, 7); // Remove 'Bearer '
-        
-        if (!hash_equals($bearerToken, $providedToken)) {
+
+        if (! hash_equals($bearerToken, $providedToken)) {
             throw new \Exception('Invalid bearer token');
         }
     }
@@ -227,46 +227,46 @@ class WebhookService
     protected function authenticateGeneric(Request $request, array $credentials): void
     {
         $authMethod = data_get($credentials, 'auth_method', 'api_key');
-        
+
         switch ($authMethod) {
             case 'api_key':
                 $apiKey = data_get($credentials, 'api_key');
-                if (!$apiKey) {
+                if (! $apiKey) {
                     throw new \Exception('API key not configured');
                 }
-                
+
                 $providedKey = $request->header('X-API-Key')
                             ?: $request->header('Authorization')
                             ?: $request->input('api_key');
-                            
-                if (!$providedKey || !hash_equals($apiKey, $providedKey)) {
+
+                if (! $providedKey || ! hash_equals($apiKey, $providedKey)) {
                     throw new \Exception('Invalid API key');
                 }
                 break;
-                
+
             case 'hmac':
                 $secret = data_get($credentials, 'hmac_secret');
-                if (!$secret) {
+                if (! $secret) {
                     throw new \Exception('HMAC secret not configured');
                 }
-                
+
                 $signature = $request->header('X-Signature');
-                if (!$signature) {
+                if (! $signature) {
                     throw new \Exception('Missing signature header');
                 }
-                
+
                 $payload = $request->getContent();
                 $expected = hash_hmac('sha256', $payload, $secret);
-                
-                if (!hash_equals($expected, $signature)) {
+
+                if (! hash_equals($expected, $signature)) {
                     throw new \Exception('Invalid HMAC signature');
                 }
                 break;
-                
+
             case 'none':
                 // No authentication required
                 break;
-                
+
             default:
                 throw new \Exception("Unsupported auth method: {$authMethod}");
         }
@@ -278,7 +278,7 @@ class WebhookService
     protected function validatePayload(Request $request, string $provider): array
     {
         $contentType = $request->header('Content-Type', '');
-        
+
         // Handle different content types
         if (str_contains($contentType, 'application/json')) {
             $payload = $request->json()->all();
@@ -297,14 +297,14 @@ class WebhookService
                 $payload = $request->all();
             }
         }
-        
+
         if (empty($payload)) {
             throw new ValidationException('Empty payload received');
         }
-        
+
         // Provider-specific validation
         $this->validateProviderPayload($payload, $provider);
-        
+
         return $payload;
     }
 
@@ -315,9 +315,11 @@ class WebhookService
     {
         try {
             $xmlObject = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+
             return json_decode(json_encode($xmlObject), true);
         } catch (\Exception $e) {
             Log::warning('Failed to parse XML payload', ['error' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -331,18 +333,18 @@ class WebhookService
             case Integration::PROVIDER_CONNECTWISE:
                 $this->validateConnectWisePayload($payload);
                 break;
-                
+
             case Integration::PROVIDER_DATTO:
                 $this->validateDattoPayload($payload);
                 break;
-                
+
             case Integration::PROVIDER_NINJA:
                 $this->validateNinjaPayload($payload);
                 break;
-                
+
             case Integration::PROVIDER_GENERIC:
                 // Generic validation - just ensure we have some basic fields
-                if (!isset($payload['device_id']) && !isset($payload['alert_id'])) {
+                if (! isset($payload['device_id']) && ! isset($payload['alert_id'])) {
                     throw new ValidationException('Missing required fields for generic webhook');
                 }
                 break;
@@ -356,7 +358,7 @@ class WebhookService
     {
         $required = ['ComputerID', 'AlertID'];
         foreach ($required as $field) {
-            if (!array_key_exists($field, $payload)) {
+            if (! array_key_exists($field, $payload)) {
                 throw new ValidationException("Missing required ConnectWise field: {$field}");
             }
         }
@@ -369,7 +371,7 @@ class WebhookService
     {
         $required = ['uid', 'alert_uid'];
         foreach ($required as $field) {
-            if (!array_key_exists($field, $payload)) {
+            if (! array_key_exists($field, $payload)) {
                 throw new ValidationException("Missing required Datto field: {$field}");
             }
         }
@@ -382,7 +384,7 @@ class WebhookService
     {
         $required = ['deviceId', 'alertId'];
         foreach ($required as $field) {
-            if (!array_key_exists($field, $payload)) {
+            if (! array_key_exists($field, $payload)) {
                 throw new ValidationException("Missing required NinjaOne field: {$field}");
             }
         }
@@ -396,15 +398,15 @@ class WebhookService
         $integration = Integration::where('uuid', $integrationUuid)
             ->where('is_active', true)
             ->first();
-            
-        if (!$integration) {
+
+        if (! $integration) {
             return [
                 'status' => 'not_found',
                 'message' => 'Integration not found or inactive',
                 'timestamp' => now()->toISOString(),
             ];
         }
-        
+
         return [
             'status' => 'ok',
             'integration_name' => $integration->name,

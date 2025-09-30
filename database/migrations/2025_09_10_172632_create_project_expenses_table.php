@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
             $table->index(['project_id', 'date']);
             $table->index('status');
         });

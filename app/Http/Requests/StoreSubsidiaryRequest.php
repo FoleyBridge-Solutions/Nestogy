@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * StoreSubsidiaryRequest
- * 
+ *
  * Validates data for creating a new subsidiary company.
  */
 class StoreSubsidiaryRequest extends BaseSubsidiaryRequest
@@ -16,14 +16,15 @@ class StoreSubsidiaryRequest extends BaseSubsidiaryRequest
      */
     public function authorize(): bool
     {
-        if (!$this->canManageSubsidiaries()) {
+        if (! $this->canManageSubsidiaries()) {
             return false;
         }
 
         $user = Auth::user();
+
         // Company must allow subsidiary creation
-        return $user->company->canCreateSubsidiaries() && 
-               !$user->company->hasReachedMaxSubsidiaryDepth();
+        return $user->company->canCreateSubsidiaries() &&
+               ! $user->company->hasReachedMaxSubsidiaryDepth();
     }
 
     /**
@@ -37,7 +38,7 @@ class StoreSubsidiaryRequest extends BaseSubsidiaryRequest
             'admin_name' => 'required_if:create_admin,true|string|max:255',
             'admin_email' => 'required_if:create_admin,true|email|max:255|unique:users,email',
             'admin_password' => 'required_if:create_admin,true|string|min:8|confirmed',
-            
+
             // Initial permissions
             'inherit_permissions' => 'boolean',
             'initial_permissions' => 'array',
@@ -77,7 +78,7 @@ class StoreSubsidiaryRequest extends BaseSubsidiaryRequest
     protected function prepareForValidation(): void
     {
         $user = Auth::user();
-        
+
         // Set defaults
         $this->merge([
             'currency' => $this->currency ?? $user->company->currency ?? 'USD',
@@ -85,7 +86,7 @@ class StoreSubsidiaryRequest extends BaseSubsidiaryRequest
             'can_create_subsidiaries' => $this->boolean('can_create_subsidiaries', false),
             'inherit_permissions' => $this->boolean('inherit_permissions', true),
             'create_admin' => $this->boolean('create_admin', false),
-            'max_subsidiary_depth' => $this->max_subsidiary_depth ?? 
+            'max_subsidiary_depth' => $this->max_subsidiary_depth ??
                 ($user->company->max_subsidiary_depth - 1),
         ]);
 
@@ -100,10 +101,10 @@ class StoreSubsidiaryRequest extends BaseSubsidiaryRequest
     {
         $validator->after(function ($validator) {
             $parentCompany = Auth::user()->company;
-            
+
             // Check if parent company has reached its subsidiary limit
             if ($parentCompany->hasReachedMaxSubsidiaryDepth()) {
-                $validator->errors()->add('general', 
+                $validator->errors()->add('general',
                     'Cannot create subsidiary: Maximum organizational depth reached.');
             }
 
@@ -116,8 +117,8 @@ class StoreSubsidiaryRequest extends BaseSubsidiaryRequest
             // Validate max subsidiary depth
             if ($this->max_subsidiary_depth >= $parentCompany->max_subsidiary_depth) {
                 $validator->errors()->add('max_subsidiary_depth',
-                    'Maximum subsidiary depth must be less than parent company depth (' . 
-                    $parentCompany->max_subsidiary_depth . ').');
+                    'Maximum subsidiary depth must be less than parent company depth ('.
+                    $parentCompany->max_subsidiary_depth.').');
             }
 
             // Validate currency compatibility with billing type

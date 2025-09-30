@@ -7,7 +7,7 @@ use Illuminate\Support\ServiceProvider;
 
 /**
  * RMM Service Provider
- * 
+ *
  * Registers RMM integration services and bindings.
  */
 class RmmServiceProvider extends ServiceProvider
@@ -19,7 +19,7 @@ class RmmServiceProvider extends ServiceProvider
     {
         // Register the RMM factory as a singleton
         $this->app->singleton('rmm.factory', function () {
-            return new RmmServiceFactory();
+            return new RmmServiceFactory;
         });
 
         // Register factory binding for dependency injection

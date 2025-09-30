@@ -210,7 +210,7 @@ return [
         // Non-billable ticket types
         'non_billable_ticket_types' => [
             'warranty',
-            'internal', 
+            'internal',
             'training',
             'maintenance',
         ],
@@ -218,7 +218,7 @@ return [
         // Auto-detection settings
         'auto_detect_emergency' => env('NESTOGY_AUTO_DETECT_EMERGENCY', true),
         'emergency_keywords' => ['urgent', 'critical', 'down', 'outage', 'emergency'],
-        
+
         // Time entry approval settings
         'require_approval' => env('NESTOGY_REQUIRE_TIME_APPROVAL', false),
         'approval_threshold_hours' => env('NESTOGY_APPROVAL_THRESHOLD', 8.0),

@@ -2,12 +2,11 @@
 
 namespace App\Domains\Email\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Email\Models\EmailAccount;
-use App\Domains\Email\Models\EmailFolder;
 use App\Domains\Email\Models\EmailMessage;
 use App\Domains\Email\Services\EmailService;
 use App\Domains\Email\Services\ImapService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,7 +20,7 @@ class InboxController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // Get user's email accounts
         $accounts = EmailAccount::forUser($user->id)
             ->active()
@@ -38,7 +37,7 @@ class InboxController extends Controller
         $selectedAccountId = $request->get('account_id', $accounts->first()->id);
         $selectedAccount = $accounts->find($selectedAccountId);
 
-        if (!$selectedAccount) {
+        if (! $selectedAccount) {
             $selectedAccount = $accounts->first();
             $selectedAccountId = $selectedAccount->id;
         }
@@ -51,7 +50,7 @@ class InboxController extends Controller
             $selectedFolder = $selectedAccount->folders()->find($selectedFolderId);
         }
 
-        if (!$selectedFolder) {
+        if (! $selectedFolder) {
             $selectedFolder = $selectedAccount->folders()
                 ->where('type', 'inbox')
                 ->first() ?: $selectedAccount->folders()->first();
@@ -59,7 +58,7 @@ class InboxController extends Controller
 
         // Get messages with filters
         $messagesQuery = $selectedFolder ? $selectedFolder->messages() : $selectedAccount->messages();
-        
+
         // Apply filters
         if ($request->filled('search')) {
             $messagesQuery->search($request->search);
@@ -98,12 +97,12 @@ class InboxController extends Controller
         // Get selected message for preview
         $selectedMessage = null;
         $selectedMessageId = $request->get('message_id');
-        
+
         if ($selectedMessageId) {
             $selectedMessage = $messages->where('id', $selectedMessageId)->first();
-            
+
             // Mark as read if not already
-            if ($selectedMessage && !$selectedMessage->is_read) {
+            if ($selectedMessage && ! $selectedMessage->is_read) {
                 $this->emailService->markAsRead($selectedMessage);
             }
         }
@@ -135,15 +134,15 @@ class InboxController extends Controller
         $this->authorize('view', $message);
 
         // Mark as read
-        if (!$message->is_read) {
+        if (! $message->is_read) {
             $this->emailService->markAsRead($message);
         }
 
         $message->load(['attachments', 'replies', 'replyToMessage']);
-        
+
         // Get thread messages if part of a thread
-        $threadMessages = $message->thread_id ? 
-            $message->getThreadMessages() : 
+        $threadMessages = $message->thread_id ?
+            $message->getThreadMessages() :
             collect([$message]);
 
         return view('email.inbox.show', compact('message', 'threadMessages'));
@@ -152,7 +151,7 @@ class InboxController extends Controller
     public function markAsRead(Request $request)
     {
         $messageIds = $request->input('message_ids', []);
-        
+
         if (empty($messageIds)) {
             return response()->json(['success' => false, 'message' => 'No messages selected']);
         }
@@ -169,14 +168,14 @@ class InboxController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Messages marked as read',
-            'count' => $messages->count()
+            'count' => $messages->count(),
         ]);
     }
 
     public function markAsUnread(Request $request)
     {
         $messageIds = $request->input('message_ids', []);
-        
+
         if (empty($messageIds)) {
             return response()->json(['success' => false, 'message' => 'No messages selected']);
         }
@@ -193,14 +192,14 @@ class InboxController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Messages marked as unread',
-            'count' => $messages->count()
+            'count' => $messages->count(),
         ]);
     }
 
     public function flag(Request $request)
     {
         $messageIds = $request->input('message_ids', []);
-        
+
         if (empty($messageIds)) {
             return response()->json(['success' => false, 'message' => 'No messages selected']);
         }
@@ -217,14 +216,14 @@ class InboxController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Messages flagged',
-            'count' => $messages->count()
+            'count' => $messages->count(),
         ]);
     }
 
     public function unflag(Request $request)
     {
         $messageIds = $request->input('message_ids', []);
-        
+
         if (empty($messageIds)) {
             return response()->json(['success' => false, 'message' => 'No messages selected']);
         }
@@ -241,14 +240,14 @@ class InboxController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Messages unflagged',
-            'count' => $messages->count()
+            'count' => $messages->count(),
         ]);
     }
 
     public function delete(Request $request)
     {
         $messageIds = $request->input('message_ids', []);
-        
+
         if (empty($messageIds)) {
             return response()->json(['success' => false, 'message' => 'No messages selected']);
         }
@@ -265,15 +264,15 @@ class InboxController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Messages deleted',
-            'count' => $messages->count()
+            'count' => $messages->count(),
         ]);
     }
 
     public function refresh(Request $request)
     {
         $accountId = $request->input('account_id');
-        
-        if (!$accountId) {
+
+        if (! $accountId) {
             return response()->json(['success' => false, 'message' => 'Account ID required']);
         }
 
@@ -281,17 +280,17 @@ class InboxController extends Controller
 
         try {
             $result = $this->imapService->syncAccount($account);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => "Refreshed! {$result['messages_synced']} new messages found.",
                 'messages_synced' => $result['messages_synced'],
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Refresh failed: ' . $e->getMessage(),
+                'message' => 'Refresh failed: '.$e->getMessage(),
             ], 500);
         }
     }

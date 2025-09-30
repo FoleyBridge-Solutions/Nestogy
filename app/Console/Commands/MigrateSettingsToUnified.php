@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Company;
 use App\Models\CompanyMailSettings;
 use App\Models\SettingsConfiguration;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -31,35 +31,36 @@ class MigrateSettingsToUnified extends Command
     public function handle()
     {
         $this->info('Starting settings migration to unified structure...');
-        
+
         $companyOption = $this->option('company');
-        
+
         if ($companyOption === 'all') {
             $companies = Company::all();
         } else {
             $companies = Company::where('id', $companyOption)->get();
         }
-        
+
         if ($companies->isEmpty()) {
             $this->error('No companies found to migrate.');
+
             return 1;
         }
-        
+
         $this->info("Found {$companies->count()} companies to migrate.");
-        
+
         $bar = $this->output->createProgressBar($companies->count());
         $bar->start();
-        
+
         foreach ($companies as $company) {
             $this->migrateCompanySettings($company);
             $bar->advance();
         }
-        
+
         $bar->finish();
         $this->newLine();
-        
+
         $this->info('Settings migration completed successfully!');
-        
+
         return 0;
     }
 
@@ -69,26 +70,26 @@ class MigrateSettingsToUnified extends Command
     private function migrateCompanySettings(Company $company)
     {
         DB::beginTransaction();
-        
+
         try {
             // Migrate email settings from CompanyMailSettings
             $this->migrateEmailSettings($company);
-            
+
             // Migrate company general settings
             $this->migrateCompanyGeneralSettings($company);
-            
+
             // Set default settings for other domains
             $this->setDefaultSettings($company);
-            
+
             DB::commit();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to migrate settings for company', [
                 'company_id' => $company->id,
                 'error' => $e->getMessage(),
             ]);
-            $this->error("Failed to migrate settings for company {$company->name}: " . $e->getMessage());
+            $this->error("Failed to migrate settings for company {$company->name}: ".$e->getMessage());
         }
     }
 
@@ -98,45 +99,45 @@ class MigrateSettingsToUnified extends Command
     private function migrateEmailSettings(Company $company)
     {
         $mailSettings = CompanyMailSettings::where('company_id', $company->id)->first();
-        
-        if (!$mailSettings) {
+
+        if (! $mailSettings) {
             return;
         }
-        
+
         $settings = [
             'driver' => $mailSettings->driver ?? 'smtp',
             'from_email' => $mailSettings->from_email,
             'from_name' => $mailSettings->from_name,
             'reply_to' => $mailSettings->reply_to ?? $mailSettings->reply_to_email,
-            
+
             // SMTP settings
             'smtp_host' => $mailSettings->smtp_host,
             'smtp_port' => $mailSettings->smtp_port,
             'smtp_username' => $mailSettings->smtp_username,
             'smtp_password' => $mailSettings->smtp_password,
             'smtp_encryption' => $mailSettings->smtp_encryption,
-            
+
             // API settings
-            'api_key' => $mailSettings->api_key 
-                ?? $mailSettings->mailgun_secret 
-                ?? $mailSettings->sendgrid_api_key 
+            'api_key' => $mailSettings->api_key
+                ?? $mailSettings->mailgun_secret
+                ?? $mailSettings->sendgrid_api_key
                 ?? $mailSettings->postmark_token,
-            'api_domain' => $mailSettings->api_domain 
-                ?? $mailSettings->mailgun_domain 
+            'api_domain' => $mailSettings->api_domain
+                ?? $mailSettings->mailgun_domain
                 ?? $mailSettings->ses_region,
-            
+
             // Features
             'track_opens' => $mailSettings->track_opens ?? true,
             'track_clicks' => $mailSettings->track_clicks ?? true,
             'auto_retry_failed' => $mailSettings->auto_retry_failed ?? true,
             'max_retry_attempts' => $mailSettings->max_retry_attempts ?? 3,
         ];
-        
+
         // Remove null values
         $settings = array_filter($settings, function ($value) {
-            return !is_null($value);
+            return ! is_null($value);
         });
-        
+
         SettingsConfiguration::updateOrCreate(
             [
                 'company_id' => $company->id,
@@ -170,12 +171,12 @@ class MigrateSettingsToUnified extends Command
             'postal_code' => $company->postal_code,
             'country' => $company->country,
         ];
-        
+
         // Remove null values
         $settings = array_filter($settings, function ($value) {
-            return !is_null($value);
+            return ! is_null($value);
         });
-        
+
         SettingsConfiguration::updateOrCreate(
             [
                 'company_id' => $company->id,
@@ -218,7 +219,7 @@ class MigrateSettingsToUnified extends Command
                 'is_active' => true,
             ]
         );
-        
+
         // Default branding settings
         SettingsConfiguration::firstOrCreate(
             [
@@ -235,7 +236,7 @@ class MigrateSettingsToUnified extends Command
                 'is_active' => true,
             ]
         );
-        
+
         // Default billing settings
         SettingsConfiguration::firstOrCreate(
             [

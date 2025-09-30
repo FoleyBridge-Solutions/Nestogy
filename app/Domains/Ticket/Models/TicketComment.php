@@ -2,8 +2,8 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToCompany;
 use App\Models\User;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,13 +12,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * TicketComment Model
- * 
+ *
  * Unified comment system for tickets, replacing the fragmented TicketReply system.
  * Supports public/internal visibility, various sources, and sentiment analysis.
  */
 class TicketComment extends Model
 {
-    use HasFactory, BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'ticket_id',
@@ -58,32 +58,44 @@ class TicketComment extends Model
      * Visibility constants
      */
     const VISIBILITY_PUBLIC = 'public';
+
     const VISIBILITY_INTERNAL = 'internal';
 
     /**
      * Source constants
      */
     const SOURCE_MANUAL = 'manual';
+
     const SOURCE_WORKFLOW = 'workflow';
+
     const SOURCE_SYSTEM = 'system';
+
     const SOURCE_API = 'api';
+
     const SOURCE_EMAIL = 'email';
 
     /**
      * Author type constants
      */
     const AUTHOR_USER = 'user';
+
     const AUTHOR_SYSTEM = 'system';
+
     const AUTHOR_WORKFLOW = 'workflow';
+
     const AUTHOR_CUSTOMER = 'customer';
 
     /**
      * Sentiment constants
      */
     const SENTIMENT_POSITIVE = 'POSITIVE';
+
     const SENTIMENT_WEAK_POSITIVE = 'WEAK_POSITIVE';
+
     const SENTIMENT_NEUTRAL = 'NEUTRAL';
+
     const SENTIMENT_WEAK_NEGATIVE = 'WEAK_NEGATIVE';
+
     const SENTIMENT_NEGATIVE = 'NEGATIVE';
 
     // ===========================================
@@ -137,13 +149,13 @@ class TicketComment extends Model
 
     /**
      * Add an attachment from uploaded file data
-     * @param string $filename The filename to save as
-     * @param string $originalFilename The original filename uploaded
-     * @param string $mimeType The MIME type of the file
-     * @param string $content The base64 encoded content
-     * @param int $size The file size in bytes
-     * @param int|null $uploadedBy The user ID who uploaded it
-     * @return TicketCommentAttachment
+     *
+     * @param  string  $filename  The filename to save as
+     * @param  string  $originalFilename  The original filename uploaded
+     * @param  string  $mimeType  The MIME type of the file
+     * @param  string  $content  The base64 encoded content
+     * @param  int  $size  The file size in bytes
+     * @param  int|null  $uploadedBy  The user ID who uploaded it
      */
     public function addAttachment(
         string $filename,
@@ -201,7 +213,7 @@ class TicketComment extends Model
      */
     public function hasTimeTracked(): bool
     {
-        return !is_null($this->time_entry_id);
+        return ! is_null($this->time_entry_id);
     }
 
     /**
@@ -210,8 +222,9 @@ class TicketComment extends Model
     public function getExcerpt(int $length = 100): string
     {
         $plainContent = strip_tags($this->content);
-        return strlen($plainContent) > $length 
-            ? substr($plainContent, 0, $length) . '...'
+
+        return strlen($plainContent) > $length
+            ? substr($plainContent, 0, $length).'...'
             : $plainContent;
     }
 
@@ -220,7 +233,7 @@ class TicketComment extends Model
      */
     public function getVisibilityLabel(): string
     {
-        return match($this->visibility) {
+        return match ($this->visibility) {
             self::VISIBILITY_PUBLIC => 'Public',
             self::VISIBILITY_INTERNAL => 'Internal',
             default => 'Unknown',
@@ -232,7 +245,7 @@ class TicketComment extends Model
      */
     public function getVisibilityColor(): string
     {
-        return match($this->visibility) {
+        return match ($this->visibility) {
             self::VISIBILITY_PUBLIC => 'green',
             self::VISIBILITY_INTERNAL => 'amber',
             default => 'zinc',
@@ -244,7 +257,7 @@ class TicketComment extends Model
      */
     public function getVisibilityIcon(): string
     {
-        return match($this->visibility) {
+        return match ($this->visibility) {
             self::VISIBILITY_PUBLIC => 'eye',
             self::VISIBILITY_INTERNAL => 'lock-closed',
             default => 'question-mark-circle',
@@ -256,7 +269,7 @@ class TicketComment extends Model
      */
     public function getSourceLabel(): string
     {
-        return match($this->source) {
+        return match ($this->source) {
             self::SOURCE_MANUAL => 'Manual',
             self::SOURCE_WORKFLOW => 'Workflow',
             self::SOURCE_SYSTEM => 'System',
@@ -325,7 +338,7 @@ class TicketComment extends Model
      */
     public function hasSentimentAnalysis(): bool
     {
-        return !is_null($this->sentiment_score) && !is_null($this->sentiment_analyzed_at);
+        return ! is_null($this->sentiment_score) && ! is_null($this->sentiment_analyzed_at);
     }
 
     /**
@@ -357,11 +370,11 @@ class TicketComment extends Model
      */
     public function getSentimentColor(): string
     {
-        if (!$this->hasSentimentAnalysis()) {
+        if (! $this->hasSentimentAnalysis()) {
             return 'zinc';
         }
 
-        return match($this->sentiment_label) {
+        return match ($this->sentiment_label) {
             self::SENTIMENT_POSITIVE => 'emerald',
             self::SENTIMENT_WEAK_POSITIVE => 'lime',
             self::SENTIMENT_NEUTRAL => 'slate',
@@ -444,7 +457,7 @@ class TicketComment extends Model
     public function scopeSentimentNeedsAttention($query)
     {
         return $query->whereIn('sentiment_label', [self::SENTIMENT_NEGATIVE, self::SENTIMENT_WEAK_NEGATIVE])
-                     ->where('sentiment_confidence', '>', 0.6);
+            ->where('sentiment_confidence', '>', 0.6);
     }
 
     // ===========================================
@@ -498,11 +511,11 @@ class TicketComment extends Model
             if (empty($comment->visibility)) {
                 $comment->visibility = self::VISIBILITY_PUBLIC;
             }
-            
+
             if (empty($comment->source)) {
                 $comment->source = self::SOURCE_MANUAL;
             }
-            
+
             if (empty($comment->author_type)) {
                 $comment->author_type = self::AUTHOR_USER;
             }

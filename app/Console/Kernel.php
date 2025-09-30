@@ -2,16 +2,15 @@
 
 namespace App\Console;
 
+use App\Domains\Core\Services\DistributedSchedulerService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Domains\Core\Services\DistributedSchedulerService;
 
 class Kernel extends ConsoleKernel
 {
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
@@ -43,20 +42,20 @@ class Kernel extends ConsoleKernel
             ->at('02:00')
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/ticket-auto-close.log'));
-        
+
         // Update expired portal invitations
         $schedule->command('portal:update-expired-invitations')
             ->hourly()
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/portal-invitations.log'));
-        
+
         // Process mail queue
         $schedule->command('mail:process-queue --limit=50')
             ->everyMinute()
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/mail-queue.log'));
-        
+
         // Retry failed emails
         $schedule->command('mail:process-queue --retry --limit=20')
             ->everyFifteenMinutes()
@@ -272,7 +271,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             $scheduler = app(DistributedSchedulerService::class);
             $scheduler->executeIfNotRunning('check-trial-expirations-daily', function () {
-                dispatch(new \App\Jobs\CheckTrialExpirations());
+                dispatch(new \App\Jobs\CheckTrialExpirations);
             });
         })
             ->daily()
@@ -283,7 +282,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             $scheduler = app(DistributedSchedulerService::class);
             $scheduler->executeIfNotRunning('sync-stripe-subscriptions-hourly', function () {
-                dispatch(new \App\Jobs\SyncStripeSubscriptions());
+                dispatch(new \App\Jobs\SyncStripeSubscriptions);
             });
         })
             ->hourly()

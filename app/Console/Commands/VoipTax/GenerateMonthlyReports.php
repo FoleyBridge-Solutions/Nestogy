@@ -3,8 +3,8 @@
 namespace App\Console\Commands\VoipTax;
 
 use App\Domains\Financial\Services\VoIPTaxScheduledReportService;
-use Illuminate\Console\Command;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 /**
  * Generate Monthly VoIP Tax Reports
@@ -56,10 +56,11 @@ class GenerateMonthlyReports extends Command
                 $this->info("Filtering to company ID: {$companyId}");
             }
 
-            $reportService = new VoIPTaxScheduledReportService();
+            $reportService = new VoIPTaxScheduledReportService;
 
             if ($dryRun) {
                 $this->info('Would generate monthly reports for specified period.');
+
                 return Command::SUCCESS;
             }
 
@@ -68,13 +69,13 @@ class GenerateMonthlyReports extends Command
 
             // Filter results if specific company requested
             if ($companyId) {
-                $results = array_filter($results, fn($key) => $key == $companyId, ARRAY_FILTER_USE_KEY);
+                $results = array_filter($results, fn ($key) => $key == $companyId, ARRAY_FILTER_USE_KEY);
             }
 
             // Display results
             $this->displayResults($results, $month);
 
-            $successCount = count(array_filter($results, fn($result) => $result['success'] ?? false));
+            $successCount = count(array_filter($results, fn ($result) => $result['success'] ?? false));
             $totalCount = count($results);
 
             $this->info("Completed: {$successCount}/{$totalCount} reports generated successfully");
@@ -82,8 +83,9 @@ class GenerateMonthlyReports extends Command
             return $successCount === $totalCount ? Command::SUCCESS : Command::FAILURE;
 
         } catch (\Exception $e) {
-            $this->error('Failed to generate monthly reports: ' . $e->getMessage());
-            $this->error('Stack trace: ' . $e->getTraceAsString());
+            $this->error('Failed to generate monthly reports: '.$e->getMessage());
+            $this->error('Stack trace: '.$e->getTraceAsString());
+
             return Command::FAILURE;
         }
     }
@@ -95,6 +97,7 @@ class GenerateMonthlyReports extends Command
     {
         if (empty($results)) {
             $this->warn('No results to display');
+
             return;
         }
 
@@ -104,9 +107,9 @@ class GenerateMonthlyReports extends Command
                 $tableData[] = [
                     'Company ID' => $companyId,
                     'Status' => '✅ Success',
-                    'Tax Collected' => '$' . number_format($result['report_summary']['total_tax_collected'], 2),
+                    'Tax Collected' => '$'.number_format($result['report_summary']['total_tax_collected'], 2),
                     'Invoices' => $result['report_summary']['invoice_count'],
-                    'Compliance Score' => $result['report_summary']['compliance_score'] . '%',
+                    'Compliance Score' => $result['report_summary']['compliance_score'].'%',
                     'Action Items' => $result['report_summary']['action_items_count'],
                     'File' => $result['filename'],
                 ];
@@ -118,14 +121,14 @@ class GenerateMonthlyReports extends Command
                     'Invoices' => 'N/A',
                     'Compliance Score' => 'N/A',
                     'Action Items' => 'N/A',
-                    'File' => 'Error: ' . ($result['error'] ?? 'Unknown'),
+                    'File' => 'Error: '.($result['error'] ?? 'Unknown'),
                 ];
             }
         }
 
         $this->table([
             'Company ID', 'Status', 'Tax Collected', 'Invoices',
-            'Compliance Score', 'Action Items', 'File'
+            'Compliance Score', 'Action Items', 'File',
         ], $tableData);
     }
 }

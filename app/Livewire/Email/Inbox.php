@@ -19,20 +19,28 @@ class Inbox extends Component
 
     // Queryable state
     public $accountId;
+
     public $folderId;
+
     public $messageId;
 
     public $search = '';
+
     public $status = '';
+
     public $fromDate = '';
+
     public $toDate = '';
+
     public $sender = '';
 
     public $sortBy = 'sent_at';
+
     public $sortDirection = 'desc';
 
     // Selection state
     public array $selected = [];
+
     public bool $selectPage = false;
 
     protected $queryString = [
@@ -58,22 +66,53 @@ class Inbox extends Component
         }
 
         // Default selections
-        if (!$this->accountId && $this->accounts()->isNotEmpty()) {
+        if (! $this->accountId && $this->accounts()->isNotEmpty()) {
             $this->accountId = $this->accounts()->first()->id;
         }
-        if (!$this->folderId && $this->selectedAccount()) {
+        if (! $this->folderId && $this->selectedAccount()) {
             $inbox = $this->selectedAccount()->folders()->where('type', 'inbox')->first();
             $this->folderId = $inbox?->id ?? $this->selectedAccount()->folders()->first()?->id;
         }
     }
 
-    public function updatingSearch() { $this->resetPage(); }
-    public function updatingStatus() { $this->resetPage(); }
-    public function updatingFromDate() { $this->resetPage(); }
-    public function updatingToDate() { $this->resetPage(); }
-    public function updatingSender() { $this->resetPage(); }
-    public function updatingAccountId() { $this->resetPage(); $this->selected = []; $this->messageId = null; }
-    public function updatingFolderId() { $this->resetPage(); $this->selected = []; $this->messageId = null; }
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStatus()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFromDate()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingToDate()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSender()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingAccountId()
+    {
+        $this->resetPage();
+        $this->selected = [];
+        $this->messageId = null;
+    }
+
+    public function updatingFolderId()
+    {
+        $this->resetPage();
+        $this->selected = [];
+        $this->messageId = null;
+    }
 
     #[Computed]
     public function accounts()
@@ -84,15 +123,23 @@ class Inbox extends Component
     #[Computed]
     public function selectedAccount(): ?EmailAccount
     {
-        if (!$this->accountId) return null;
+        if (! $this->accountId) {
+            return null;
+        }
+
         return $this->accounts()->firstWhere('id', $this->accountId) ?? EmailAccount::forUser(Auth::id())->find($this->accountId);
     }
 
     #[Computed]
     public function selectedFolder(): ?EmailFolder
     {
-        if (!$this->selectedAccount()) return null;
-        if (!$this->folderId) return null;
+        if (! $this->selectedAccount()) {
+            return null;
+        }
+        if (! $this->folderId) {
+            return null;
+        }
+
         return $this->selectedAccount()->folders->firstWhere('id', $this->folderId)
             ?: $this->selectedAccount()->folders()->find($this->folderId);
     }
@@ -101,7 +148,10 @@ class Inbox extends Component
     public function folderStats()
     {
         $account = $this->selectedAccount();
-        if (!$account) return collect();
+        if (! $account) {
+            return collect();
+        }
+
         return $account->folders->map(function ($folder) {
             return [
                 'id' => $folder->id,
@@ -118,7 +168,9 @@ class Inbox extends Component
     public function messages()
     {
         $account = $this->selectedAccount();
-        if (!$account) return EmailMessage::whereRaw('1=0')->paginate(1);
+        if (! $account) {
+            return EmailMessage::whereRaw('1=0')->paginate(1);
+        }
 
         $query = $this->selectedFolder()
             ? $this->selectedFolder()->messages()
@@ -136,9 +188,15 @@ class Inbox extends Component
                 default => null,
             };
         }
-        if ($this->fromDate) { $query->fromDate($this->fromDate); }
-        if ($this->toDate) { $query->toDate($this->toDate); }
-        if ($this->sender) { $query->fromSender($this->sender); }
+        if ($this->fromDate) {
+            $query->fromDate($this->fromDate);
+        }
+        if ($this->toDate) {
+            $query->toDate($this->toDate);
+        }
+        if ($this->sender) {
+            $query->fromSender($this->sender);
+        }
 
         $query->notDeleted()->with(['attachments'])->orderBy($this->sortBy, $this->sortDirection);
 
@@ -148,9 +206,12 @@ class Inbox extends Component
     #[Computed]
     public function selectedMessage(): ?EmailMessage
     {
-        if (!$this->messageId) return null;
-        $message = $this->messages()->getCollection()->firstWhere('id', (int)$this->messageId)
+        if (! $this->messageId) {
+            return null;
+        }
+        $message = $this->messages()->getCollection()->firstWhere('id', (int) $this->messageId)
             ?: EmailMessage::with('attachments')->find($this->messageId);
+
         return $message;
     }
 
@@ -158,7 +219,7 @@ class Inbox extends Component
     {
         $this->messageId = $id;
         $message = EmailMessage::find($id);
-        if ($message && !$message->is_read) {
+        if ($message && ! $message->is_read) {
             app(EmailService::class)->markAsRead($message);
             // Refresh stats and list
             $this->dispatch('message-read');
@@ -167,9 +228,9 @@ class Inbox extends Component
 
     public function toggleSelectPage()
     {
-        $this->selectPage = !$this->selectPage;
+        $this->selectPage = ! $this->selectPage;
         if ($this->selectPage) {
-            $this->selected = $this->messages()->pluck('id')->map(fn($id) => (string)$id)->toArray();
+            $this->selected = $this->messages()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
         } else {
             $this->selected = [];
         }
@@ -177,7 +238,7 @@ class Inbox extends Component
 
     public function toggleSelect($id)
     {
-        $id = (string)$id;
+        $id = (string) $id;
         if (in_array($id, $this->selected)) {
             $this->selected = array_values(array_diff($this->selected, [$id]));
         } else {
@@ -194,7 +255,9 @@ class Inbox extends Component
     public function bulkMarkRead()
     {
         $messages = EmailMessage::whereIn('id', $this->selected)->get();
-        foreach ($messages as $m) { app(EmailService::class)->markAsRead($m); }
+        foreach ($messages as $m) {
+            app(EmailService::class)->markAsRead($m);
+        }
         $this->clearSelection();
         Flux::toast('Marked as read.');
     }
@@ -202,7 +265,9 @@ class Inbox extends Component
     public function bulkMarkUnread()
     {
         $messages = EmailMessage::whereIn('id', $this->selected)->get();
-        foreach ($messages as $m) { app(EmailService::class)->markAsUnread($m); }
+        foreach ($messages as $m) {
+            app(EmailService::class)->markAsUnread($m);
+        }
         $this->clearSelection();
         Flux::toast('Marked as unread.');
     }
@@ -224,7 +289,9 @@ class Inbox extends Component
     public function bulkDelete()
     {
         $messages = EmailMessage::whereIn('id', $this->selected)->get();
-        foreach ($messages as $m) { app(EmailService::class)->deleteEmail($m); }
+        foreach ($messages as $m) {
+            app(EmailService::class)->deleteEmail($m);
+        }
         $this->clearSelection();
         Flux::toast('Moved to trash.', variant: 'warning');
     }
@@ -232,12 +299,14 @@ class Inbox extends Component
     public function refreshInbox()
     {
         $account = $this->selectedAccount();
-        if (!$account) return;
+        if (! $account) {
+            return;
+        }
         try {
             $result = app(ImapService::class)->syncAccount($account);
-            Flux::toast('Refreshed: ' . ($result['messages_synced'] ?? 0) . ' new messages.');
+            Flux::toast('Refreshed: '.($result['messages_synced'] ?? 0).' new messages.');
         } catch (\Exception $e) {
-            Flux::toast('Refresh failed: ' . $e->getMessage(), variant: 'danger');
+            Flux::toast('Refresh failed: '.$e->getMessage(), variant: 'danger');
         }
     }
 

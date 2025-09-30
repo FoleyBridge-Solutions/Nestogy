@@ -11,8 +11,6 @@ class RequireSelectedClient
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
@@ -20,7 +18,7 @@ class RequireSelectedClient
         // Check if a client is selected in the session
         $selectedClient = NavigationService::getSelectedClient();
 
-        if (!$selectedClient) {
+        if (! $selectedClient) {
             // Store the intended URL to return to after client selection
             session(['client_selection_return_url' => $request->fullUrl()]);
 

@@ -2,15 +2,15 @@
 
 namespace App\Domains\Product\Services;
 
-use App\Models\Recurring;
 use App\Models\Client;
+use App\Models\Recurring;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * VoIPUsageService
- * 
+ *
  * Handles VoIP usage data processing, CDR imports, usage calculations,
  * and tiered pricing logic for sophisticated VoIP billing scenarios.
  */
@@ -45,13 +45,13 @@ class VoIPUsageService
             Log::info('Usage data processed successfully', [
                 'recurring_id' => $recurring->id,
                 'processed_count' => $results['processed_count'],
-                'total_usage' => $results['total_usage']
+                'total_usage' => $results['total_usage'],
             ]);
 
         } catch (\Exception $e) {
             Log::error('Usage data processing failed', [
                 'recurring_id' => $recurring->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             $results['errors'][] = $e->getMessage();
@@ -70,7 +70,7 @@ class VoIPUsageService
             ->where('status', true)
             ->first();
 
-        if (!$recurring) {
+        if (! $recurring) {
             return ['total_usage' => 0, 'services' => [], 'period' => []];
         }
 
@@ -78,6 +78,7 @@ class VoIPUsageService
         $periodUsage = collect($usageData)
             ->filter(function ($record) use ($startDate, $endDate) {
                 $usageDate = Carbon::parse($record['usage_date']);
+
                 return $usageDate->between($startDate, $endDate);
             });
 
@@ -86,9 +87,9 @@ class VoIPUsageService
             'total_cost' => $periodUsage->sum('cost'),
             'period' => [
                 'start' => $startDate->toDateString(),
-                'end' => $endDate->toDateString()
+                'end' => $endDate->toDateString(),
             ],
-            'services' => []
+            'services' => [],
         ];
 
         // Group by service type
@@ -98,7 +99,7 @@ class VoIPUsageService
                 'usage' => $records->sum('usage_amount'),
                 'cost' => $records->sum('cost'),
                 'unit' => $records->first()['usage_unit'] ?? 'minutes',
-                'record_count' => $records->count()
+                'record_count' => $records->count(),
             ];
         }
 
@@ -114,11 +115,11 @@ class VoIPUsageService
             'usage' => $usage,
             'total_cost' => 0,
             'tier_breakdown' => [],
-            'service_type' => $serviceType
+            'service_type' => $serviceType,
         ];
 
         $remainingUsage = $usage;
-        
+
         foreach ($tiers as $tierIndex => $tier) {
             if ($remainingUsage <= 0) {
                 break;
@@ -142,14 +143,14 @@ class VoIPUsageService
 
             $calculation['tier_breakdown'][] = [
                 'tier' => $tierIndex + 1,
-                'tier_name' => $tier['name'] ?? "Tier " . ($tierIndex + 1),
+                'tier_name' => $tier['name'] ?? 'Tier '.($tierIndex + 1),
                 'usage_range' => [
                     'min' => $tierMin,
-                    'max' => $tierMax
+                    'max' => $tierMax,
                 ],
                 'rate' => $tierRate,
                 'usage_in_tier' => $tierUsage,
-                'cost' => $tierCost
+                'cost' => $tierCost,
             ];
 
             $remainingUsage -= $tierUsage;
@@ -194,7 +195,7 @@ class VoIPUsageService
                     'usage' => $actualUsage,
                     'overage' => $overage,
                     'rate' => $overageRate,
-                    'charge' => $overageCharge
+                    'charge' => $overageCharge,
                 ];
             }
         }
@@ -218,7 +219,7 @@ class VoIPUsageService
                 $results['skipped']++;
                 $results['errors'][] = [
                     'cdr_id' => $cdr['id'] ?? 'unknown',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -226,7 +227,7 @@ class VoIPUsageService
         Log::info('CDR data import completed', [
             'recurring_id' => $recurring->id,
             'imported' => $results['imported'],
-            'skipped' => $results['skipped']
+            'skipped' => $results['skipped'],
         ]);
 
         return $results;
@@ -243,7 +244,7 @@ class VoIPUsageService
             if ($record['call_type'] === 'international') {
                 $destination = $this->getCountryFromNumber($record['to_number']);
                 $rate = $internationalRates[$destination] ?? $internationalRates['default'] ?? 0;
-                
+
                 $duration = $record['duration_seconds'] / 60; // Convert to minutes
                 $charge = $duration * $rate;
 
@@ -253,7 +254,7 @@ class VoIPUsageService
                     'duration_minutes' => $duration,
                     'rate' => $rate,
                     'charge' => $charge,
-                    'call_details' => $record
+                    'call_details' => $record,
                 ];
             }
         }
@@ -267,22 +268,22 @@ class VoIPUsageService
     public function generateUsageReport(Recurring $recurring, Carbon $startDate, Carbon $endDate): array
     {
         $usageData = $this->getUsageDataForPeriod($recurring, $startDate, $endDate);
-        
+
         $report = [
             'recurring_id' => $recurring->id,
             'client_name' => $recurring->client->name,
             'period' => [
                 'start' => $startDate->toDateString(),
-                'end' => $endDate->toDateString()
+                'end' => $endDate->toDateString(),
             ],
             'summary' => [
                 'total_calls' => 0,
                 'total_minutes' => 0,
-                'total_cost' => 0
+                'total_cost' => 0,
             ],
             'by_service_type' => [],
             'by_call_type' => [],
-            'by_day' => []
+            'by_day' => [],
         ];
 
         foreach ($usageData as $record) {
@@ -296,9 +297,9 @@ class VoIPUsageService
             $report['summary']['total_cost'] += $record['cost'];
 
             // By service type
-            if (!isset($report['by_service_type'][$serviceType])) {
+            if (! isset($report['by_service_type'][$serviceType])) {
                 $report['by_service_type'][$serviceType] = [
-                    'calls' => 0, 'minutes' => 0, 'cost' => 0
+                    'calls' => 0, 'minutes' => 0, 'cost' => 0,
                 ];
             }
             $report['by_service_type'][$serviceType]['calls']++;
@@ -306,9 +307,9 @@ class VoIPUsageService
             $report['by_service_type'][$serviceType]['cost'] += $record['cost'];
 
             // By call type
-            if (!isset($report['by_call_type'][$callType])) {
+            if (! isset($report['by_call_type'][$callType])) {
                 $report['by_call_type'][$callType] = [
-                    'calls' => 0, 'minutes' => 0, 'cost' => 0
+                    'calls' => 0, 'minutes' => 0, 'cost' => 0,
                 ];
             }
             $report['by_call_type'][$callType]['calls']++;
@@ -316,9 +317,9 @@ class VoIPUsageService
             $report['by_call_type'][$callType]['cost'] += $record['cost'];
 
             // By day
-            if (!isset($report['by_day'][$usageDate])) {
+            if (! isset($report['by_day'][$usageDate])) {
                 $report['by_day'][$usageDate] = [
-                    'calls' => 0, 'minutes' => 0, 'cost' => 0
+                    'calls' => 0, 'minutes' => 0, 'cost' => 0,
                 ];
             }
             $report['by_day'][$usageDate]['calls']++;
@@ -346,13 +347,13 @@ class VoIPUsageService
                 'duration_seconds' => $cdr['duration'] ?? 0,
                 'rate' => $this->getRate($recurring, $cdr),
                 'cost' => 0, // Will be calculated
-                'external_id' => $cdr['id'] ?? null
+                'external_id' => $cdr['id'] ?? null,
             ];
 
             $usageRecord['cost'] = $usageRecord['usage_amount'] * $usageRecord['rate'];
 
             $this->storeUsageRecord($recurring, $usageRecord);
-            
+
             $results['processed_count']++;
             $results['total_usage'] += $usageRecord['usage_amount'];
             $results['total_cost'] += $usageRecord['cost'];
@@ -382,11 +383,11 @@ class VoIPUsageService
                 'usage_unit' => $entry['usage_unit'] ?? 'minutes',
                 'rate' => $entry['rate'] ?? 0,
                 'cost' => $entry['cost'] ?? 0,
-                'description' => $entry['description'] ?? 'Manual entry'
+                'description' => $entry['description'] ?? 'Manual entry',
             ];
 
             $this->storeUsageRecord($recurring, $usageRecord);
-            
+
             $results['processed_count']++;
             $results['total_usage'] += $usageRecord['usage_amount'];
             $results['total_cost'] += $usageRecord['cost'];
@@ -400,12 +401,12 @@ class VoIPUsageService
     {
         $metadata = $recurring->metadata ?? [];
         $usageData = $metadata['usage_data'] ?? [];
-        
+
         $usageData[] = array_merge($usageRecord, [
             'created_at' => now()->toISOString(),
-            'id' => count($usageData) + 1
+            'id' => count($usageData) + 1,
         ]);
-        
+
         $metadata['usage_data'] = $usageData;
         $recurring->update(['metadata' => $metadata]);
     }
@@ -417,15 +418,15 @@ class VoIPUsageService
     {
         $metadata = $recurring->metadata ?? [];
         $processingSummary = $metadata['usage_processing_summary'] ?? [];
-        
+
         $processingSummary[] = [
             'processed_at' => now()->toISOString(),
             'processed_count' => $results['processed_count'],
             'total_usage' => $results['total_usage'],
             'total_cost' => $results['total_cost'],
-            'errors_count' => count($results['errors'])
+            'errors_count' => count($results['errors']),
         ];
-        
+
         $metadata['usage_processing_summary'] = $processingSummary;
         $recurring->update(['metadata' => $metadata]);
     }
@@ -457,7 +458,7 @@ class VoIPUsageService
     protected function determineCallType(array $cdr): string
     {
         $toNumber = $cdr['to_number'] ?? '';
-        
+
         if (preg_match('/^011/', $toNumber)) {
             return 'international';
         } elseif (preg_match('/^1[0-9]{10}$/', $toNumber)) {
@@ -474,13 +475,13 @@ class VoIPUsageService
     {
         $serviceTiers = $recurring->service_tiers ?? [];
         $serviceType = $this->determineServiceType($cdr);
-        
+
         foreach ($serviceTiers as $tier) {
             if ($tier['service_type'] === $serviceType) {
                 return $tier['base_rate'] ?? 0;
             }
         }
-        
+
         return 0.05; // Default rate
     }
 
@@ -492,18 +493,18 @@ class VoIPUsageService
         // Simplified country detection - in production this would use a proper lookup table
         if (preg_match('/^011(\d{1,3})/', $phoneNumber, $matches)) {
             $countryCode = $matches[1];
-            
+
             $countryCodes = [
                 '44' => 'UK',
                 '33' => 'France',
                 '49' => 'Germany',
                 '86' => 'China',
-                '81' => 'Japan'
+                '81' => 'Japan',
             ];
-            
+
             return $countryCodes[$countryCode] ?? 'Unknown';
         }
-        
+
         return 'Domestic';
     }
 
@@ -513,10 +514,11 @@ class VoIPUsageService
     protected function getUsageDataForPeriod(Recurring $recurring, Carbon $startDate, Carbon $endDate): array
     {
         $usageData = $recurring->metadata['usage_data'] ?? [];
-        
+
         return collect($usageData)
             ->filter(function ($record) use ($startDate, $endDate) {
                 $usageDate = Carbon::parse($record['usage_date']);
+
                 return $usageDate->between($startDate, $endDate);
             })
             ->toArray();
@@ -537,7 +539,7 @@ class VoIPUsageService
             'call_type' => $this->determineCallType($cdr),
             'duration_seconds' => $cdr['duration'] ?? 0,
             'external_id' => $cdr['id'] ?? $cdr['call_id'] ?? null,
-            'imported_at' => now()->toISOString()
+            'imported_at' => now()->toISOString(),
         ];
     }
 }

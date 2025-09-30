@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 /**
  * SubsidiaryPermission Model
- * 
+ *
  * Manages cross-company permissions within organizational hierarchies.
  * Allows parent companies to grant specific access to subsidiary companies
  * and vice versa with proper inheritance and delegation controls.
- * 
+ *
  * @property int $id
  * @property int $granter_company_id
  * @property int $grantee_company_id
@@ -73,9 +73,13 @@ class SubsidiaryPermission extends Model
      * Permission types enumeration
      */
     const PERMISSION_VIEW = 'view';
+
     const PERMISSION_CREATE = 'create';
+
     const PERMISSION_EDIT = 'edit';
+
     const PERMISSION_DELETE = 'delete';
+
     const PERMISSION_MANAGE = 'manage';
 
     const PERMISSION_TYPES = [
@@ -90,7 +94,9 @@ class SubsidiaryPermission extends Model
      * Scope types enumeration
      */
     const SCOPE_ALL = 'all';
+
     const SCOPE_SPECIFIC = 'specific';
+
     const SCOPE_FILTERED = 'filtered';
 
     const SCOPE_TYPES = [
@@ -155,14 +161,14 @@ class SubsidiaryPermission extends Model
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             });
 
         // Check user-specific permissions
         if ($userId) {
             $query->where(function ($q) use ($userId) {
                 $q->whereNull('user_id')
-                  ->orWhere('user_id', $userId);
+                    ->orWhere('user_id', $userId);
             });
         } else {
             $query->whereNull('user_id');
@@ -196,13 +202,13 @@ class SubsidiaryPermission extends Model
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             });
 
         if ($userId) {
             $query->where(function ($q) use ($userId) {
                 $q->whereNull('user_id')
-                  ->orWhere('user_id', $userId);
+                    ->orWhere('user_id', $userId);
             });
         } else {
             $query->whereNull('user_id');
@@ -217,7 +223,7 @@ class SubsidiaryPermission extends Model
     public static function grantPermission(array $data): static
     {
         // Validate that granter has authority
-        if (!static::canGrantPermission($data['granter_company_id'], $data['grantee_company_id'])) {
+        if (! static::canGrantPermission($data['granter_company_id'], $data['grantee_company_id'])) {
             throw new \InvalidArgumentException('Granter company cannot grant permission to grantee company.');
         }
 
@@ -235,7 +241,7 @@ class SubsidiaryPermission extends Model
     {
         $this->is_active = false;
         $this->updated_by = Auth::id();
-        
+
         return $this->save();
     }
 
@@ -275,7 +281,7 @@ class SubsidiaryPermission extends Model
                     ->where('user_id', $permission->user_id)
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     static::create([
                         'granter_company_id' => $permission->granter_company_id,
                         'grantee_company_id' => $companyId,
@@ -292,7 +298,7 @@ class SubsidiaryPermission extends Model
                         'priority' => $permission->priority - 10, // Lower priority for inherited
                         'is_active' => true,
                         'expires_at' => $permission->expires_at,
-                        'notes' => 'Inherited from company: ' . $permission->granterCompany->name,
+                        'notes' => 'Inherited from company: '.$permission->granterCompany->name,
                         'created_by' => null,
                         'updated_by' => null,
                     ]);
@@ -320,7 +326,7 @@ class SubsidiaryPermission extends Model
 
         // Simple condition matching - can be extended for complex rules
         foreach ($this->conditions as $key => $value) {
-            if (!isset($context[$key]) || $context[$key] != $value) {
+            if (! isset($context[$key]) || $context[$key] != $value) {
                 return false;
             }
         }
@@ -341,7 +347,7 @@ class SubsidiaryPermission extends Model
      */
     public function isValid(): bool
     {
-        return $this->is_active && !$this->hasExpired();
+        return $this->is_active && ! $this->hasExpired();
     }
 
     /**
@@ -352,7 +358,7 @@ class SubsidiaryPermission extends Model
         return $query->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             });
     }
 
@@ -396,7 +402,7 @@ class SubsidiaryPermission extends Model
         if ($userId) {
             return $query->where(function ($q) use ($userId) {
                 $q->whereNull('user_id')
-                  ->orWhere('user_id', $userId);
+                    ->orWhere('user_id', $userId);
             });
         }
 

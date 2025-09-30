@@ -12,7 +12,7 @@ class PricingController extends Controller
     {
         $pricingRules = collect(); // TODO: Load from pricing_rules table
         $pricingTiers = collect(); // TODO: Load pricing tiers
-        
+
         return view('financial.pricing.index', compact('pricingRules', 'pricingTiers'));
     }
 
@@ -21,7 +21,7 @@ class PricingController extends Controller
         $products = collect(); // TODO: Load products
         $services = collect(); // TODO: Load services
         $clients = collect(); // TODO: Load clients for client-specific pricing
-        
+
         return view('financial.pricing.create', compact('products', 'services', 'clients'));
     }
 
@@ -40,11 +40,11 @@ class PricingController extends Controller
             'discount_value' => 'required|numeric|min:0',
             'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date|after:valid_from',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
         ]);
 
         // TODO: Create pricing rule
-        
+
         return redirect()->route('financial.pricing.index')
             ->with('success', 'Pricing rule created successfully');
     }
@@ -55,7 +55,7 @@ class PricingController extends Controller
         $pricingRule = null;
         $affectedItems = collect();
         $usageStats = [];
-        
+
         return view('financial.pricing.show', compact('pricingRule', 'affectedItems', 'usageStats'));
     }
 
@@ -66,7 +66,7 @@ class PricingController extends Controller
         $products = collect();
         $services = collect();
         $clients = collect();
-        
+
         return view('financial.pricing.edit', compact('pricingRule', 'products', 'services', 'clients'));
     }
 
@@ -85,11 +85,11 @@ class PricingController extends Controller
             'discount_value' => 'required|numeric|min:0',
             'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date|after:valid_from',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
         ]);
 
         // TODO: Update pricing rule
-        
+
         return redirect()->route('financial.pricing.show', $id)
             ->with('success', 'Pricing rule updated successfully');
     }
@@ -97,7 +97,7 @@ class PricingController extends Controller
     public function destroy($id)
     {
         // TODO: Delete pricing rule
-        
+
         return redirect()->route('financial.pricing.index')
             ->with('success', 'Pricing rule deleted successfully');
     }

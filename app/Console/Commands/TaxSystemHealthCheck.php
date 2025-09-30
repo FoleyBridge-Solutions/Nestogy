@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
 use App\Models\ServiceTaxRate;
 use App\Models\TaxProfile;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Tax System Health Check Command
@@ -21,9 +21,11 @@ class TaxSystemHealthCheck extends Command
 
     // Class constants to reduce duplication
     private const MSG_HEALTH_CHECK_START = '🏥 Starting Tax System Health Check...';
+
     private const MSG_DB_OK = '✅ Database connectivity: OK';
+
     private const MSG_DB_FAIL = '❌ Database connectivity: FAILED';
-    
+
     /**
      * The name and signature of the console command.
      */
@@ -74,7 +76,7 @@ class TaxSystemHealthCheck extends Command
         $issues = array_merge($issues, $this->testTaxCalculations($companyId));
 
         // Attempt fixes if requested
-        if ($autoFix && !empty($issues)) {
+        if ($autoFix && ! empty($issues)) {
             $this->attemptFixes($issues);
         }
 
@@ -103,11 +105,11 @@ class TaxSystemHealthCheck extends Command
                 'service_tax_rates',
                 'tax_jurisdictions',
                 'tax_calculations',
-                'tax_categories'
+                'tax_categories',
             ];
 
             foreach ($requiredTables as $table) {
-                if (!DB::getSchemaBuilder()->hasTable($table)) {
+                if (! DB::getSchemaBuilder()->hasTable($table)) {
                     $issues[] = [
                         'type' => 'database',
                         'severity' => 'critical',
@@ -125,7 +127,7 @@ class TaxSystemHealthCheck extends Command
             $issues[] = [
                 'type' => 'database',
                 'severity' => 'critical',
-                'message' => 'Database connection failed: ' . $e->getMessage(),
+                'message' => 'Database connection failed: '.$e->getMessage(),
                 'fixable' => false,
             ];
         }
@@ -226,10 +228,10 @@ class TaxSystemHealthCheck extends Command
             ->where(function ($q) {
                 $q->where(function ($subQ) {
                     $subQ->where('rate_type', 'percentage')
-                         ->where('percentage_rate', '<=', 0);
+                        ->where('percentage_rate', '<=', 0);
                 })->orWhere(function ($subQ) {
                     $subQ->where('rate_type', 'fixed')
-                         ->where('fixed_amount', '<=', 0);
+                        ->where('fixed_amount', '<=', 0);
                 });
             })->count();
 
@@ -254,7 +256,7 @@ class TaxSystemHealthCheck extends Command
 
         try {
             // Test cache functionality
-            $testKey = 'tax_health_check_' . time();
+            $testKey = 'tax_health_check_'.time();
             Cache::put($testKey, 'test_value', 60);
             $cachedValue = Cache::get($testKey);
             Cache::forget($testKey);
@@ -279,7 +281,7 @@ class TaxSystemHealthCheck extends Command
             $warnings[] = [
                 'type' => 'cache',
                 'severity' => 'warning',
-                'message' => 'Cache error: ' . $e->getMessage(),
+                'message' => 'Cache error: '.$e->getMessage(),
             ];
         }
 
@@ -353,7 +355,7 @@ class TaxSystemHealthCheck extends Command
         // Check for critical error patterns in cache
         $alertKeys = Cache::store()->getKeys('tax_alert:*') ?? [];
         $recentAlerts = collect($alertKeys)
-            ->map(fn($key) => Cache::get($key))
+            ->map(fn ($key) => Cache::get($key))
             ->filter()
             ->filter(function ($alert) {
                 return isset($alert['timestamp']) &&
@@ -416,7 +418,7 @@ class TaxSystemHealthCheck extends Command
 
             $calculationTime = ($endTime - $startTime) * 1000;
 
-            if (!isset($result['final_amount'])) {
+            if (! isset($result['final_amount'])) {
                 $issues[] = [
                     'type' => 'calculation',
                     'severity' => 'critical',
@@ -438,7 +440,7 @@ class TaxSystemHealthCheck extends Command
             $issues[] = [
                 'type' => 'calculation',
                 'severity' => 'critical',
-                'message' => 'Tax calculation test failed: ' . $e->getMessage(),
+                'message' => 'Tax calculation test failed: '.$e->getMessage(),
                 'fixable' => false,
             ];
         }
@@ -454,7 +456,7 @@ class TaxSystemHealthCheck extends Command
         $this->info('🔧 Attempting to fix issues automatically...');
 
         foreach ($issues as $issue) {
-            if (!($issue['fixable'] ?? false)) {
+            if (! ($issue['fixable'] ?? false)) {
                 continue;
             }
 
@@ -471,9 +473,9 @@ class TaxSystemHealthCheck extends Command
                     $this->initializeDefaultRates();
                     break;
                 default:
-        // No action needed
-        break;
-}
+                    // No action needed
+                    break;
+            }
         }
     }
 
@@ -527,10 +529,11 @@ class TaxSystemHealthCheck extends Command
 
         if (empty($issues) && empty($warnings)) {
             $this->info('🎉 Tax system health check completed successfully - no issues found!');
+
             return;
         }
 
-        if (!empty($issues)) {
+        if (! empty($issues)) {
             $this->error('❌ Issues found:');
             foreach ($issues as $issue) {
                 $severity = $issue['severity'] === 'critical' ? '🔴' : '🟡';
@@ -544,7 +547,7 @@ class TaxSystemHealthCheck extends Command
             $this->newLine();
         }
 
-        if (!empty($warnings)) {
+        if (! empty($warnings)) {
             $this->warn('⚠️  Warnings:');
             foreach ($warnings as $warning) {
                 $this->line("  🟡 {$warning['message']}");

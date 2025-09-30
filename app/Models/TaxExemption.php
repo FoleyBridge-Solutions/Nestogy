@@ -3,19 +3,19 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * Tax Exemption Model
- * 
+ *
  * Stores client-specific tax exemptions and certificates.
  * Handles various types of tax exemptions for VoIP services.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -51,7 +51,7 @@ use Carbon\Carbon;
  */
 class TaxExemption extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -124,36 +124,57 @@ class TaxExemption extends Model
      * Exemption type enumeration
      */
     const TYPE_RESALE = 'resale';
+
     const TYPE_NON_PROFIT = 'non_profit';
+
     const TYPE_GOVERNMENT = 'government';
+
     const TYPE_EDUCATIONAL = 'educational';
+
     const TYPE_RELIGIOUS = 'religious';
+
     const TYPE_AGRICULTURAL = 'agricultural';
+
     const TYPE_MANUFACTURING = 'manufacturing';
+
     const TYPE_MEDICAL = 'medical';
+
     const TYPE_DISABILITY = 'disability';
+
     const TYPE_INTERSTATE = 'interstate';
+
     const TYPE_INTERNATIONAL = 'international';
+
     const TYPE_WHOLESALE = 'wholesale';
+
     const TYPE_CARRIER_ACCESS = 'carrier_access';
+
     const TYPE_CUSTOM = 'custom';
 
     /**
      * Status enumeration
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_EXPIRED = 'expired';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_REVOKED = 'revoked';
+
     const STATUS_PENDING = 'pending';
 
     /**
      * Verification status enumeration
      */
     const VERIFICATION_PENDING = 'pending';
+
     const VERIFICATION_VERIFIED = 'verified';
+
     const VERIFICATION_REJECTED = 'rejected';
+
     const VERIFICATION_EXPIRED = 'expired';
+
     const VERIFICATION_NEEDS_RENEWAL = 'needs_renewal';
 
     /**
@@ -237,12 +258,13 @@ class TaxExemption extends Model
      */
     public function isExpiringSoon(int $days = 30): bool
     {
-        if (!$this->expiry_date) {
+        if (! $this->expiry_date) {
             return false;
         }
 
         $warningDate = Carbon::now()->addDays($days);
-        return $this->expiry_date->lte($warningDate) && !$this->isExpired();
+
+        return $this->expiry_date->lte($warningDate) && ! $this->isExpired();
     }
 
     /**
@@ -282,7 +304,7 @@ class TaxExemption extends Model
      */
     public function appliesToJurisdiction(int $jurisdictionId): bool
     {
-        if ($this->is_blanket_exemption && !$this->tax_jurisdiction_id) {
+        if ($this->is_blanket_exemption && ! $this->tax_jurisdiction_id) {
             return true;
         }
 
@@ -294,12 +316,12 @@ class TaxExemption extends Model
      */
     public function calculateExemptionAmount(float $taxAmount, array $context = []): float
     {
-        if (!$this->isValid()) {
+        if (! $this->isValid()) {
             return 0.0;
         }
 
         // Check if conditions are met
-        if (!$this->meetsConditions($context)) {
+        if (! $this->meetsConditions($context)) {
             return 0.0;
         }
 
@@ -337,14 +359,14 @@ class TaxExemption extends Model
             switch ($conditionType) {
                 case 'minimum_amount':
                     $amount = $context['amount'] ?? 0;
-                    if (!$this->compareValues($amount, $conditionValue, $operator)) {
+                    if (! $this->compareValues($amount, $conditionValue, $operator)) {
                         return false;
                     }
                     break;
 
                 case 'service_type':
                     $serviceType = $context['service_type'] ?? '';
-                    if (!in_array($serviceType, (array)$conditionValue)) {
+                    if (! in_array($serviceType, (array) $conditionValue)) {
                         return false;
                     }
                     break;
@@ -357,7 +379,7 @@ class TaxExemption extends Model
                     break;
 
                 case 'date_range':
-                    if (!$this->isWithinDateRange($condition)) {
+                    if (! $this->isWithinDateRange($condition)) {
                         return false;
                     }
                     break;
@@ -417,9 +439,9 @@ class TaxExemption extends Model
     protected function getCurrentMonthUsage(): int
     {
         return $this->usageRecords()
-                   ->whereYear('created_at', Carbon::now()->year)
-                   ->whereMonth('created_at', Carbon::now()->month)
-                   ->count();
+            ->whereYear('created_at', Carbon::now()->year)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->count();
     }
 
     /**
@@ -436,7 +458,7 @@ class TaxExemption extends Model
     /**
      * Mark exemption as verified.
      */
-    public function markAsVerified(int $verifiedBy, string $notes = null): void
+    public function markAsVerified(int $verifiedBy, ?string $notes = null): void
     {
         $this->update([
             'verification_status' => self::VERIFICATION_VERIFIED,
@@ -536,11 +558,11 @@ class TaxExemption extends Model
     public function scopeValid($query)
     {
         return $query->active()
-                    ->verified()
-                    ->where(function ($q) {
-                        $q->whereNull('expiry_date')
-                          ->orWhere('expiry_date', '>', Carbon::now());
-                    });
+            ->verified()
+            ->where(function ($q) {
+                $q->whereNull('expiry_date')
+                    ->orWhere('expiry_date', '>', Carbon::now());
+            });
     }
 
     /**
@@ -557,7 +579,7 @@ class TaxExemption extends Model
     public function scopeExpiringSoon($query, int $days = 30)
     {
         $warningDate = Carbon::now()->addDays($days);
-        
+
         return $query->whereBetween('expiry_date', [Carbon::now(), $warningDate]);
     }
 
@@ -576,7 +598,7 @@ class TaxExemption extends Model
     {
         return $query->where(function ($q) use ($jurisdictionId) {
             $q->where('tax_jurisdiction_id', $jurisdictionId)
-              ->orWhere('is_blanket_exemption', true);
+                ->orWhere('is_blanket_exemption', true);
         });
     }
 
@@ -668,11 +690,11 @@ class TaxExemption extends Model
         parent::boot();
 
         static::creating(function ($exemption) {
-            if (!isset($exemption->priority)) {
+            if (! isset($exemption->priority)) {
                 $exemption->priority = 100;
             }
 
-            if (!isset($exemption->created_by)) {
+            if (! isset($exemption->created_by)) {
                 $exemption->created_by = auth()->id();
             }
         });

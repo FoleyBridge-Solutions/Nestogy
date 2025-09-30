@@ -21,31 +21,31 @@ class SLARequest extends FormRequest
     public function rules(): array
     {
         $slaId = $this->route('sla')?->id;
-        
+
         return [
             // Basic Information
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('slas')->where('company_id', auth()->user()->company_id)->ignore($slaId)
+                Rule::unique('slas')->where('company_id', auth()->user()->company_id)->ignore($slaId),
             ],
             'description' => 'nullable|string|max:1000',
             'is_default' => 'boolean',
             'is_active' => 'boolean',
-            
+
             // Response Times (in minutes)
             'critical_response_minutes' => 'required|integer|min:5|max:1440',
             'high_response_minutes' => 'required|integer|min:15|max:2880',
             'medium_response_minutes' => 'required|integer|min:30|max:4320',
             'low_response_minutes' => 'required|integer|min:60|max:10080',
-            
+
             // Resolution Times (in minutes)
             'critical_resolution_minutes' => 'required|integer|min:30|max:2880',
             'high_resolution_minutes' => 'required|integer|min:120|max:4320',
             'medium_resolution_minutes' => 'required|integer|min:480|max:10080',
             'low_resolution_minutes' => 'required|integer|min:1440|max:20160',
-            
+
             // Business Hours & Coverage
             'business_hours_start' => 'required|date_format:H:i',
             'business_hours_end' => 'required|date_format:H:i|after:business_hours_start',
@@ -55,7 +55,7 @@ class SLARequest extends FormRequest
             'coverage_type' => 'required|in:24/7,business_hours,custom',
             'holiday_coverage' => 'boolean',
             'exclude_weekends' => 'boolean',
-            
+
             // Escalation Settings
             'escalation_enabled' => 'boolean',
             'escalation_levels' => 'nullable|array',
@@ -64,18 +64,18 @@ class SLARequest extends FormRequest
             'escalation_levels.*.notification_channels' => 'nullable|array',
             'escalation_levels.*.notification_channels.*' => 'string|in:email,sms,slack,teams,webhook',
             'breach_warning_percentage' => 'required|integer|min:50|max:95',
-            
+
             // Performance Targets
             'uptime_percentage' => 'required|numeric|min:90|max:100',
             'first_call_resolution_target' => 'required|numeric|min:10|max:100',
             'customer_satisfaction_target' => 'required|numeric|min:50|max:100',
-            
+
             // Notifications
             'notify_on_breach' => 'boolean',
             'notify_on_warning' => 'boolean',
             'notification_emails' => 'nullable|array',
             'notification_emails.*' => 'email',
-            
+
             // Validity Period
             'effective_from' => 'required|date',
             'effective_to' => 'nullable|date|after:effective_from',
@@ -139,11 +139,11 @@ class SLARequest extends FormRequest
         $validator->after(function ($validator) {
             // Validate response times are less than resolution times
             $priorities = ['critical', 'high', 'medium', 'low'];
-            
+
             foreach ($priorities as $priority) {
-                $responseField = $priority . '_response_minutes';
-                $resolutionField = $priority . '_resolution_minutes';
-                
+                $responseField = $priority.'_response_minutes';
+                $resolutionField = $priority.'_resolution_minutes';
+
                 if ($this->has($responseField) && $this->has($resolutionField)) {
                     if ($this->$responseField >= $this->$resolutionField) {
                         $validator->errors()->add(
@@ -153,7 +153,7 @@ class SLARequest extends FormRequest
                     }
                 }
             }
-            
+
             // Validate escalation levels if provided
             if ($this->escalation_enabled && $this->escalation_levels) {
                 $percentages = collect($this->escalation_levels)
@@ -161,7 +161,7 @@ class SLARequest extends FormRequest
                     ->filter()
                     ->sort()
                     ->values();
-                
+
                 // Check for duplicate percentages
                 if ($percentages->count() !== $percentages->unique()->count()) {
                     $validator->errors()->add(
@@ -169,7 +169,7 @@ class SLARequest extends FormRequest
                         'Escalation percentages must be unique.'
                     );
                 }
-                
+
                 // Check for logical progression
                 for ($i = 1; $i < $percentages->count(); $i++) {
                     if ($percentages[$i] <= $percentages[$i - 1]) {
@@ -199,21 +199,21 @@ class SLARequest extends FormRequest
             'notify_on_breach' => true,
             'notify_on_warning' => true,
         ]);
-        
+
         // Ensure business_days is always an array
-        if ($this->has('business_days') && !is_array($this->business_days)) {
+        if ($this->has('business_days') && ! is_array($this->business_days)) {
             $this->merge([
-                'business_days' => explode(',', $this->business_days)
+                'business_days' => explode(',', $this->business_days),
             ]);
         }
-        
+
         // Convert times to proper format if needed
         if ($this->has('business_hours_start') && strlen($this->business_hours_start) === 5) {
-            $this->merge(['business_hours_start' => $this->business_hours_start . ':00']);
+            $this->merge(['business_hours_start' => $this->business_hours_start.':00']);
         }
-        
+
         if ($this->has('business_hours_end') && strlen($this->business_hours_end) === 5) {
-            $this->merge(['business_hours_end' => $this->business_hours_end . ':00']);
+            $this->merge(['business_hours_end' => $this->business_hours_end.':00']);
         }
     }
 }

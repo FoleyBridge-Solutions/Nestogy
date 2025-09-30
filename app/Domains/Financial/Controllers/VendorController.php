@@ -11,10 +11,10 @@ class VendorController extends Controller
     public function index(Request $request): View
     {
         $vendors = collect(); // TODO: Load from vendors table
-        
+
         $activeVendors = $vendors->where('is_active', true);
         $totalSpend = 0; // TODO: Calculate total vendor spend
-        
+
         return view('financial.vendors.index', compact('vendors', 'activeVendors', 'totalSpend'));
     }
 
@@ -22,7 +22,7 @@ class VendorController extends Controller
     {
         $vendorTypes = ['supplier', 'contractor', 'service_provider', 'consultant'];
         $paymentTerms = ['net_15', 'net_30', 'net_45', 'net_60', 'due_on_receipt'];
-        
+
         return view('financial.vendors.create', compact('vendorTypes', 'paymentTerms'));
     }
 
@@ -40,11 +40,11 @@ class VendorController extends Controller
             'payment_terms' => 'required|in:net_15,net_30,net_45,net_60,due_on_receipt',
             'bank_account' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
         ]);
 
         // TODO: Create vendor
-        
+
         return redirect()->route('financial.vendors.index')
             ->with('success', 'Vendor created successfully');
     }
@@ -56,7 +56,7 @@ class VendorController extends Controller
         $purchases = collect();
         $openPOs = collect();
         $paymentHistory = collect();
-        
+
         return view('financial.vendors.show', compact('vendor', 'purchases', 'openPOs', 'paymentHistory'));
     }
 
@@ -66,7 +66,7 @@ class VendorController extends Controller
         $vendor = null;
         $vendorTypes = ['supplier', 'contractor', 'service_provider', 'consultant'];
         $paymentTerms = ['net_15', 'net_30', 'net_45', 'net_60', 'due_on_receipt'];
-        
+
         return view('financial.vendors.edit', compact('vendor', 'vendorTypes', 'paymentTerms'));
     }
 
@@ -74,7 +74,7 @@ class VendorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'vendor_code' => 'required|string|max:50|unique:vendors,vendor_code,' . $id,
+            'vendor_code' => 'required|string|max:50|unique:vendors,vendor_code,'.$id,
             'type' => 'required|in:supplier,contractor,service_provider,consultant',
             'contact_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -84,11 +84,11 @@ class VendorController extends Controller
             'payment_terms' => 'required|in:net_15,net_30,net_45,net_60,due_on_receipt',
             'bank_account' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
         ]);
 
         // TODO: Update vendor
-        
+
         return redirect()->route('financial.vendors.show', $id)
             ->with('success', 'Vendor updated successfully');
     }
@@ -97,7 +97,7 @@ class VendorController extends Controller
     {
         // TODO: Check if vendor has active POs or unpaid bills
         // TODO: Soft delete vendor
-        
+
         return redirect()->route('financial.vendors.index')
             ->with('success', 'Vendor deleted successfully');
     }

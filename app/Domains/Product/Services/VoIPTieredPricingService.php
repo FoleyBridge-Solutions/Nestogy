@@ -3,12 +3,12 @@
 namespace App\Domains\Product\Services;
 
 use App\Models\Recurring;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * VoIPTieredPricingService
- * 
+ *
  * Handles complex tiered pricing calculations for VoIP services including
  * usage-based billing, progressive tiers, volume discounts, and hybrid pricing models.
  */
@@ -21,7 +21,7 @@ class VoIPTieredPricingService
     {
         $billingDate = $billingDate ?? now();
         $pricingModel = $recurring->pricing_model ?? 'flat';
-        
+
         $calculation = [
             'recurring_id' => $recurring->id,
             'billing_date' => $billingDate->toDateString(),
@@ -32,7 +32,7 @@ class VoIPTieredPricingService
             'tier_breakdown' => [],
             'service_breakdown' => [],
             'discounts_applied' => [],
-            'taxes_applicable' => false
+            'taxes_applicable' => false,
         ];
 
         // Calculate base recurring charges
@@ -71,7 +71,7 @@ class VoIPTieredPricingService
         Log::info('Tiered pricing calculated', [
             'recurring_id' => $recurring->id,
             'total_charges' => $calculation['total_charges'],
-            'pricing_model' => $pricingModel
+            'pricing_model' => $pricingModel,
         ]);
 
         return $calculation;
@@ -86,7 +86,7 @@ class VoIPTieredPricingService
             'total_usage' => $usage,
             'total_cost' => 0,
             'tiers_used' => [],
-            'remaining_usage' => $usage
+            'remaining_usage' => $usage,
         ];
 
         foreach ($tiers as $tierIndex => $tier) {
@@ -97,7 +97,7 @@ class VoIPTieredPricingService
             $tierMin = $tier['min_usage'] ?? 0;
             $tierMax = $tier['max_usage'] ?? null;
             $tierRate = $tier['rate'] ?? 0;
-            $tierName = $tier['name'] ?? "Tier " . ($tierIndex + 1);
+            $tierName = $tier['name'] ?? 'Tier '.($tierIndex + 1);
 
             // Calculate usage that falls within this tier
             $usageInTier = 0;
@@ -118,12 +118,12 @@ class VoIPTieredPricingService
                 'tier_name' => $tierName,
                 'tier_range' => [
                     'min' => $tierMin,
-                    'max' => $tierMax
+                    'max' => $tierMax,
                 ],
                 'rate' => $tierRate,
                 'usage_in_tier' => $usageInTier,
                 'tier_cost' => $tierCost,
-                'cumulative_cost' => $calculation['total_cost']
+                'cumulative_cost' => $calculation['total_cost'],
             ];
 
             $calculation['remaining_usage'] -= $usageInTier;
@@ -173,7 +173,7 @@ class VoIPTieredPricingService
                     'discount_type' => $discountType,
                     'discount_value' => $discountValue,
                     'applied_to' => $appliedTo,
-                    'discount_amount' => $discountAmount
+                    'discount_amount' => $discountAmount,
                 ];
             }
         }
@@ -208,7 +208,7 @@ class VoIPTieredPricingService
                     'usage' => $actualUsage,
                     'overage' => $overage,
                     'rate' => $overageRate,
-                    'charge' => $overageCharge
+                    'charge' => $overageCharge,
                 ];
             }
         }
@@ -226,7 +226,7 @@ class VoIPTieredPricingService
             'bundle_total' => 0,
             'bundle_savings' => 0,
             'services_included' => [],
-            'bundle_applied' => false
+            'bundle_applied' => false,
         ];
 
         $bundles = $recurring->service_bundles ?? [];
@@ -236,13 +236,13 @@ class VoIPTieredPricingService
         foreach ($bundles as $bundle) {
             $bundleServices = $bundle['included_services'] ?? [];
             $bundlePrice = $bundle['bundle_price'] ?? 0;
-            
+
             // Check if all required services are selected
             $allIncluded = true;
             $individualTotal = 0;
-            
+
             foreach ($bundleServices as $serviceType) {
-                if (!isset($selectedServices[$serviceType])) {
+                if (! isset($selectedServices[$serviceType])) {
                     $allIncluded = false;
                     break;
                 }
@@ -279,7 +279,7 @@ class VoIPTieredPricingService
             'total_minutes' => 0,
             'calls_processed' => 0,
             'by_destination' => [],
-            'by_rate_class' => []
+            'by_rate_class' => [],
         ];
 
         foreach ($callData as $call) {
@@ -291,15 +291,15 @@ class VoIPTieredPricingService
             $rateClass = $this->getRateClass($destination, $internationalRates);
             $rate = $internationalRates[$rateClass]['rate'] ?? 0;
             $duration = $call['duration_seconds'] / 60; // Convert to minutes
-            
+
             // Apply minimum duration if specified
             $minDuration = $internationalRates[$rateClass]['min_duration'] ?? 0;
             $billableDuration = max($duration, $minDuration);
-            
+
             // Apply rounding rules
             $roundingRule = $internationalRates[$rateClass]['rounding'] ?? 'none';
             $billableDuration = $this->applyRoundingRule($billableDuration, $roundingRule);
-            
+
             $callCost = $billableDuration * $rate;
 
             // Update totals
@@ -308,9 +308,9 @@ class VoIPTieredPricingService
             $charges['calls_processed']++;
 
             // Update by destination
-            if (!isset($charges['by_destination'][$destination])) {
+            if (! isset($charges['by_destination'][$destination])) {
                 $charges['by_destination'][$destination] = [
-                    'calls' => 0, 'minutes' => 0, 'charges' => 0
+                    'calls' => 0, 'minutes' => 0, 'charges' => 0,
                 ];
             }
             $charges['by_destination'][$destination]['calls']++;
@@ -318,9 +318,9 @@ class VoIPTieredPricingService
             $charges['by_destination'][$destination]['charges'] += $callCost;
 
             // Update by rate class
-            if (!isset($charges['by_rate_class'][$rateClass])) {
+            if (! isset($charges['by_rate_class'][$rateClass])) {
                 $charges['by_rate_class'][$rateClass] = [
-                    'calls' => 0, 'minutes' => 0, 'charges' => 0, 'rate' => $rate
+                    'calls' => 0, 'minutes' => 0, 'charges' => 0, 'rate' => $rate,
                 ];
             }
             $charges['by_rate_class'][$rateClass]['calls']++;
@@ -341,23 +341,23 @@ class VoIPTieredPricingService
             'peak_charges' => 0,
             'off_peak_charges' => 0,
             'weekend_charges' => 0,
-            'by_time_period' => []
+            'by_time_period' => [],
         ];
 
         foreach ($callData as $call) {
             $callTime = Carbon::parse($call['call_time']);
             $duration = $call['duration_seconds'] / 60;
-            
+
             $timePeriod = $this->getTimePeriod($callTime, $timeRates);
             $rate = $timeRates[$timePeriod]['rate'] ?? 0;
             $callCost = $duration * $rate;
 
             $charges['total_charges'] += $callCost;
-            $charges[$timePeriod . '_charges'] += $callCost;
+            $charges[$timePeriod.'_charges'] += $callCost;
 
-            if (!isset($charges['by_time_period'][$timePeriod])) {
+            if (! isset($charges['by_time_period'][$timePeriod])) {
                 $charges['by_time_period'][$timePeriod] = [
-                    'calls' => 0, 'minutes' => 0, 'charges' => 0, 'rate' => $rate
+                    'calls' => 0, 'minutes' => 0, 'charges' => 0, 'rate' => $rate,
                 ];
             }
             $charges['by_time_period'][$timePeriod]['calls']++;
@@ -374,7 +374,7 @@ class VoIPTieredPricingService
     protected function calculateBaseCharges(Recurring $recurring, Carbon $billingDate): float
     {
         $baseCharges = $recurring->amount ?? 0;
-        
+
         // Apply proration if mid-cycle changes
         if ($this->requiresProration($recurring, $billingDate)) {
             $baseCharges = $this->calculateProratedAmount($recurring, $baseCharges, $billingDate);
@@ -410,7 +410,7 @@ class VoIPTieredPricingService
         foreach ($serviceTiers as $tier) {
             $serviceType = $tier['service_type'];
             $usage = $usageData[$serviceType] ?? 0;
-            
+
             if ($usage > 0 && isset($tier['tier_structure'])) {
                 $tierCalculation = $this->calculateProgressiveTierPricing($tier['tier_structure'], $usage);
                 $totalCharges += $tierCalculation['total_cost'];
@@ -452,11 +452,11 @@ class VoIPTieredPricingService
     {
         // First calculate normal usage charges
         $baseUsageCharges = $this->calculateUsageBasedCharges($recurring, $usageData);
-        
+
         // Then apply volume discounts
         $totalUsage = array_sum($usageData);
         $discounts = $this->calculateVolumeDiscounts($recurring, $totalUsage, $baseUsageCharges);
-        
+
         return max(0, $baseUsageCharges - $discounts['total_discount']);
     }
 
@@ -467,11 +467,11 @@ class VoIPTieredPricingService
     {
         $totalUsage = array_sum($usageData);
         $discounts = $this->calculateVolumeDiscounts($recurring, $totalUsage, $calculation['total_charges']);
-        
+
         if ($discounts['total_discount'] > 0) {
             $calculation['usage_charges'] -= $discounts['total_discount'];
             $calculation['discounts_applied'] = array_merge(
-                $calculation['discounts_applied'], 
+                $calculation['discounts_applied'],
                 $discounts['applied_discounts']
             );
         }
@@ -485,20 +485,20 @@ class VoIPTieredPricingService
     protected function applyContractEscalations(Recurring $recurring, array $calculation, Carbon $billingDate): array
     {
         $escalations = $recurring->metadata['contract_escalations'] ?? [];
-        
+
         foreach ($escalations as $escalation) {
             $effectiveDate = Carbon::parse($escalation['effective_date']);
             if ($billingDate->gte($effectiveDate)) {
                 $escalationPercent = $escalation['percentage'] ?? 0;
                 $escalationAmount = $calculation['base_charges'] * ($escalationPercent / 100);
-                
+
                 $calculation['base_charges'] += $escalationAmount;
                 $calculation['discounts_applied'][] = [
                     'name' => 'Contract Escalation',
                     'type' => 'escalation',
                     'percentage' => $escalationPercent,
                     'amount' => $escalationAmount,
-                    'effective_date' => $effectiveDate->toDateString()
+                    'effective_date' => $effectiveDate->toDateString(),
                 ];
             }
         }
@@ -519,7 +519,7 @@ class VoIPTieredPricingService
             $calculation['discounts_applied'][] = [
                 'name' => 'Minimum Charge Adjustment',
                 'type' => 'minimum_adjustment',
-                'amount' => $adjustment
+                'amount' => $adjustment,
             ];
         }
 
@@ -554,6 +554,7 @@ class VoIPTieredPricingService
                 return $tier['base_rate'] ?? 0;
             }
         }
+
         return 0;
     }
 
@@ -583,18 +584,18 @@ class VoIPTieredPricingService
         // Simplified destination detection
         if (preg_match('/^011(\d{1,3})/', $phoneNumber, $matches)) {
             $countryCode = $matches[1];
-            
+
             $countries = [
                 '44' => 'United Kingdom',
                 '33' => 'France',
                 '49' => 'Germany',
                 '86' => 'China',
-                '81' => 'Japan'
+                '81' => 'Japan',
             ];
-            
+
             return $countries[$countryCode] ?? 'Other International';
         }
-        
+
         return 'Unknown';
     }
 
@@ -608,6 +609,7 @@ class VoIPTieredPricingService
                 return $class;
             }
         }
+
         return 'standard';
     }
 

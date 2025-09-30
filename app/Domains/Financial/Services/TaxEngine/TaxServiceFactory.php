@@ -2,9 +2,9 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 /**
  * Tax Service Factory
@@ -87,29 +87,32 @@ class TaxServiceFactory
         $stateCode = strtoupper($stateCode);
 
         // Check if service is available
-        if (!isset(self::$availableServices[$stateCode])) {
+        if (! isset(self::$availableServices[$stateCode])) {
             Log::warning("Tax service not available for state: {$stateCode}");
+
             return null;
         }
 
         // Check company configuration
         $config = self::getCompanyTaxConfig($companyId, $stateCode);
-        if (!$config || !$config->is_enabled) {
+        if (! $config || ! $config->is_enabled) {
             Log::info("Tax service not enabled for company {$companyId} in state {$stateCode}");
+
             return null;
         }
 
         try {
             $serviceClass = self::$availableServices[$stateCode];
-            $service = new $serviceClass();
+            $service = new $serviceClass;
             $service->setCompanyId($companyId);
 
             return $service;
         } catch (Exception $e) {
             Log::error("Failed to instantiate tax service for {$stateCode}", [
                 'company_id' => $companyId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -143,11 +146,12 @@ class TaxServiceFactory
     {
         $stateCode = $address['state_code'] ?? $address['state'] ?? null;
 
-        if (!$stateCode) {
-            Log::warning("No state code found in address for tax service lookup", [
+        if (! $stateCode) {
+            Log::warning('No state code found in address for tax service lookup', [
                 'address' => $address,
-                'company_id' => $companyId
+                'company_id' => $companyId,
             ]);
+
             return null;
         }
 
@@ -178,11 +182,12 @@ class TaxServiceFactory
 
             return true;
         } catch (Exception $e) {
-            Log::error("Failed to configure tax service", [
+            Log::error('Failed to configure tax service', [
                 'company_id' => $companyId,
                 'state_code' => $stateCode,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -198,18 +203,19 @@ class TaxServiceFactory
                 ->where('state_code', strtoupper($stateCode))
                 ->update([
                     'is_enabled' => $enabled,
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]);
 
-            Log::info("Tax service " . ($enabled ? 'enabled' : 'disabled') . " for company {$companyId} in state {$stateCode}");
+            Log::info('Tax service '.($enabled ? 'enabled' : 'disabled')." for company {$companyId} in state {$stateCode}");
 
             return true;
         } catch (Exception $e) {
-            Log::error("Failed to " . ($enabled ? 'enable' : 'disable') . " tax service", [
+            Log::error('Failed to '.($enabled ? 'enable' : 'disable').' tax service', [
                 'company_id' => $companyId,
                 'state_code' => $stateCode,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -299,11 +305,11 @@ class TaxServiceFactory
      */
     public static function registerService(string $stateCode, string $serviceClass): void
     {
-        if (!class_exists($serviceClass)) {
+        if (! class_exists($serviceClass)) {
             throw new Exception("Service class {$serviceClass} does not exist");
         }
 
-        if (!is_subclass_of($serviceClass, TaxDataServiceInterface::class)) {
+        if (! is_subclass_of($serviceClass, TaxDataServiceInterface::class)) {
             throw new Exception("Service class {$serviceClass} must implement TaxDataServiceInterface");
         }
 

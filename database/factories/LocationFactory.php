@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Location;
 use App\Models\Client;
 use App\Models\Company;
+use App\Models\Location;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -27,7 +27,7 @@ class LocationFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'client_id' => Client::factory(),
-            'name' => $this->faker->company() . ' - ' . $this->faker->randomElement(['Main Office', 'Branch', 'Warehouse', 'Data Center']),
+            'name' => $this->faker->company().' - '.$this->faker->randomElement(['Main Office', 'Branch', 'Warehouse', 'Data Center']),
             'description' => $this->faker->optional()->sentence(),
             'address' => $this->faker->streetAddress(),
             'city' => $this->faker->city(),

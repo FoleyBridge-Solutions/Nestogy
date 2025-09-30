@@ -5,7 +5,6 @@ namespace App\Domains\Financial\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Carbon\Carbon;
 
 class ForecastController extends Controller
 {
@@ -13,11 +12,11 @@ class ForecastController extends Controller
     {
         $forecastPeriod = $request->get('period', 'quarter');
         $forecastHorizon = $request->get('horizon', 12); // months
-        
+
         $revenueForecasts = $this->generateRevenueForecasts($forecastHorizon);
         $expenseForecasts = $this->generateExpenseForecasts($forecastHorizon);
         $cashFlowForecasts = $this->generateCashFlowForecasts($forecastHorizon);
-        
+
         return view('financial.forecasts.index', compact(
             'revenueForecasts',
             'expenseForecasts',
@@ -31,11 +30,11 @@ class ForecastController extends Controller
     {
         $method = $request->get('method', 'linear'); // linear, seasonal, ml
         $horizon = $request->get('horizon', 12);
-        
+
         $historicalRevenue = $this->getHistoricalRevenue();
         $forecastedRevenue = $this->forecastRevenue($method, $horizon);
         $confidenceIntervals = $this->calculateConfidenceIntervals($forecastedRevenue);
-        
+
         return view('financial.forecasts.revenue', compact(
             'historicalRevenue',
             'forecastedRevenue',
@@ -48,15 +47,15 @@ class ForecastController extends Controller
     public function cashFlow(Request $request): View
     {
         $horizon = $request->get('horizon', 12);
-        
+
         $inflowForecasts = $this->forecastCashInflows($horizon);
         $outflowForecasts = $this->forecastCashOutflows($horizon);
-        $netCashForecasts = array_map(function($in, $out) {
+        $netCashForecasts = array_map(function ($in, $out) {
             return $in - $out;
         }, $inflowForecasts, $outflowForecasts);
-        
+
         $criticalPoints = $this->identifyCriticalCashPoints($netCashForecasts);
-        
+
         return view('financial.forecasts.cash-flow', compact(
             'inflowForecasts',
             'outflowForecasts',
@@ -70,10 +69,10 @@ class ForecastController extends Controller
     {
         $scenarios = ['conservative', 'moderate', 'aggressive'];
         $selectedScenario = $request->get('scenario', 'moderate');
-        
+
         $growthProjections = $this->generateGrowthProjections($selectedScenario);
         $kpiForecasts = $this->forecastKeyMetrics($selectedScenario);
-        
+
         return view('financial.forecasts.growth', compact(
             'growthProjections',
             'kpiForecasts',
@@ -87,11 +86,11 @@ class ForecastController extends Controller
         $baseScenario = $this->generateBaseScenario();
         $bestCase = $this->generateBestCaseScenario();
         $worstCase = $this->generateWorstCaseScenario();
-        
-        $whatIfAnalysis = $request->has('variables') 
+
+        $whatIfAnalysis = $request->has('variables')
             ? $this->runWhatIfAnalysis($request->get('variables'))
             : null;
-        
+
         return view('financial.forecasts.scenarios', compact(
             'baseScenario',
             'bestCase',
@@ -133,10 +132,10 @@ class ForecastController extends Controller
     private function calculateConfidenceIntervals($forecasts): array
     {
         // TODO: Calculate statistical confidence intervals
-        return array_map(function($value) {
+        return array_map(function ($value) {
             return [
                 'lower' => $value * 0.8,
-                'upper' => $value * 1.2
+                'upper' => $value * 1.2,
             ];
         }, $forecasts);
     }

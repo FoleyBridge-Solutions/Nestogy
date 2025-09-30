@@ -2,17 +2,17 @@
 
 namespace Foleybridge\Nestogy\Domains\Report\Models;
 
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
-use Carbon\Carbon;
 
 /**
  * Report Model
- * 
+ *
  * Represents saved reports with scheduling, sharing, and template capabilities
  * for comprehensive business intelligence and recurring report generation.
  */
@@ -36,7 +36,7 @@ class Report extends Model
         'recipients',
         'export_format',
         'status',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -50,44 +50,61 @@ class Report extends Model
         'next_generation_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     /**
      * Report type constants
      */
     const TYPE_FINANCIAL = 'financial';
+
     const TYPE_TICKETS = 'tickets';
+
     const TYPE_ASSETS = 'assets';
+
     const TYPE_CLIENTS = 'clients';
+
     const TYPE_PROJECTS = 'projects';
+
     const TYPE_USERS = 'users';
+
     const TYPE_CUSTOM = 'custom';
+
     const TYPE_DASHBOARD = 'dashboard';
 
     /**
      * Schedule type constants
      */
     const SCHEDULE_DAILY = 'daily';
+
     const SCHEDULE_WEEKLY = 'weekly';
+
     const SCHEDULE_MONTHLY = 'monthly';
+
     const SCHEDULE_QUARTERLY = 'quarterly';
+
     const SCHEDULE_ANNUALLY = 'annually';
 
     /**
      * Status constants
      */
     const STATUS_DRAFT = 'draft';
+
     const STATUS_ACTIVE = 'active';
+
     const STATUS_PAUSED = 'paused';
+
     const STATUS_ARCHIVED = 'archived';
 
     /**
      * Export format constants
      */
     const FORMAT_PDF = 'pdf';
+
     const FORMAT_CSV = 'csv';
+
     const FORMAT_XLSX = 'xlsx';
+
     const FORMAT_JSON = 'json';
 
     /**
@@ -143,8 +160,8 @@ class Report extends Model
      */
     public function isOverdue(): bool
     {
-        return $this->isScheduled() && 
-               $this->next_generation_at && 
+        return $this->isScheduled() &&
+               $this->next_generation_at &&
                $this->next_generation_at->isPast();
     }
 
@@ -153,13 +170,13 @@ class Report extends Model
      */
     public function calculateNextGeneration(): ?Carbon
     {
-        if (!$this->isScheduled()) {
+        if (! $this->isScheduled()) {
             return null;
         }
 
         $lastGeneration = $this->last_generated_at ?: now();
-        
-        return match($this->schedule_type) {
+
+        return match ($this->schedule_type) {
             self::SCHEDULE_DAILY => $lastGeneration->addDay(),
             self::SCHEDULE_WEEKLY => $lastGeneration->addWeek(),
             self::SCHEDULE_MONTHLY => $lastGeneration->addMonth(),
@@ -176,7 +193,7 @@ class Report extends Model
     {
         $this->update([
             'last_generated_at' => now(),
-            'next_generation_at' => $this->calculateNextGeneration()
+            'next_generation_at' => $this->calculateNextGeneration(),
         ]);
     }
 
@@ -193,7 +210,7 @@ class Report extends Model
             'chart_type' => 'bar',
             'show_charts' => true,
             'show_tables' => true,
-            'show_summary' => true
+            'show_summary' => true,
         ], $this->report_config ?? []);
     }
 
@@ -208,7 +225,7 @@ class Report extends Model
             'day_of_week' => 1, // Monday
             'day_of_month' => 1,
             'send_email' => true,
-            'attach_file' => true
+            'attach_file' => true,
         ], $this->schedule_config ?? []);
     }
 
@@ -217,15 +234,15 @@ class Report extends Model
      */
     public function getScheduleDescriptionAttribute(): string
     {
-        if (!$this->isScheduled()) {
+        if (! $this->isScheduled()) {
             return 'Not scheduled';
         }
 
         $config = $this->getScheduleConfigurationAttribute();
-        
-        return match($this->schedule_type) {
+
+        return match ($this->schedule_type) {
             self::SCHEDULE_DAILY => "Daily at {$config['time']}",
-            self::SCHEDULE_WEEKLY => "Weekly on " . Carbon::create()->dayOfWeek($config['day_of_week'])->format('l') . " at {$config['time']}",
+            self::SCHEDULE_WEEKLY => 'Weekly on '.Carbon::create()->dayOfWeek($config['day_of_week'])->format('l')." at {$config['time']}",
             self::SCHEDULE_MONTHLY => "Monthly on day {$config['day_of_month']} at {$config['time']}",
             self::SCHEDULE_QUARTERLY => "Quarterly at {$config['time']}",
             self::SCHEDULE_ANNUALLY => "Annually at {$config['time']}",
@@ -236,16 +253,16 @@ class Report extends Model
     /**
      * Clone report with new name
      */
-    public function duplicate(string $newName = null): self
+    public function duplicate(?string $newName = null): self
     {
         $data = $this->toArray();
         unset($data['id'], $data['created_at'], $data['updated_at'], $data['deleted_at']);
-        
-        $data['name'] = $newName ?: $this->name . ' (Copy)';
+
+        $data['name'] = $newName ?: $this->name.' (Copy)';
         $data['status'] = self::STATUS_DRAFT;
         $data['last_generated_at'] = null;
         $data['next_generation_at'] = null;
-        
+
         return self::create($data);
     }
 
@@ -271,7 +288,7 @@ class Report extends Model
     public function scopeOverdue($query)
     {
         return $query->scheduled()
-                    ->where('next_generation_at', '<', now());
+            ->where('next_generation_at', '<', now());
     }
 
     /**
@@ -311,7 +328,7 @@ class Report extends Model
             self::TYPE_PROJECTS => 'Project Reports',
             self::TYPE_USERS => 'User Reports',
             self::TYPE_CUSTOM => 'Custom Reports',
-            self::TYPE_DASHBOARD => 'Dashboard Reports'
+            self::TYPE_DASHBOARD => 'Dashboard Reports',
         ];
     }
 
@@ -325,7 +342,7 @@ class Report extends Model
             self::SCHEDULE_WEEKLY => 'Weekly',
             self::SCHEDULE_MONTHLY => 'Monthly',
             self::SCHEDULE_QUARTERLY => 'Quarterly',
-            self::SCHEDULE_ANNUALLY => 'Annually'
+            self::SCHEDULE_ANNUALLY => 'Annually',
         ];
     }
 
@@ -338,7 +355,7 @@ class Report extends Model
             self::FORMAT_PDF => 'PDF',
             self::FORMAT_CSV => 'CSV',
             self::FORMAT_XLSX => 'Excel',
-            self::FORMAT_JSON => 'JSON'
+            self::FORMAT_JSON => 'JSON',
         ];
     }
 
@@ -350,17 +367,17 @@ class Report extends Model
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'report_type' => 'required|in:' . implode(',', array_keys(self::getAvailableTypes())),
+            'report_type' => 'required|in:'.implode(',', array_keys(self::getAvailableTypes())),
             'report_config' => 'required|array',
             'template_id' => 'nullable|exists:report_templates,id',
             'is_public' => 'boolean',
             'is_scheduled' => 'boolean',
-            'schedule_type' => 'nullable|required_if:is_scheduled,true|in:' . implode(',', array_keys(self::getScheduleTypes())),
+            'schedule_type' => 'nullable|required_if:is_scheduled,true|in:'.implode(',', array_keys(self::getScheduleTypes())),
             'schedule_config' => 'nullable|required_if:is_scheduled,true|array',
             'recipients' => 'nullable|array',
             'recipients.*' => 'email',
-            'export_format' => 'required|in:' . implode(',', array_keys(self::getExportFormats())),
-            'status' => 'required|in:draft,active,paused,archived'
+            'export_format' => 'required|in:'.implode(',', array_keys(self::getExportFormats())),
+            'status' => 'required|in:draft,active,paused,archived',
         ];
     }
 
@@ -372,11 +389,11 @@ class Report extends Model
         parent::boot();
 
         static::creating(function ($report) {
-            if (!$report->created_by) {
+            if (! $report->created_by) {
                 $report->created_by = auth()->id();
             }
 
-            if ($report->isScheduled() && !$report->next_generation_at) {
+            if ($report->isScheduled() && ! $report->next_generation_at) {
                 $report->next_generation_at = $report->calculateNextGeneration();
             }
         });

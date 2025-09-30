@@ -8,11 +8,13 @@ use Illuminate\Console\Command;
 
 class SetupRmmIntegration extends Command
 {
-
     // Class constants to reduce duplication
     private const PROVIDER_CONNECTWISE = 'connectwise';
+
     private const PROVIDER_DATTO = 'datto';
+
     private const PROVIDER_NINJA = 'ninja';
+
     private const MSG_SETUP_START = 'Setting up RMM integration...';
 
     /**
@@ -45,8 +47,9 @@ class SetupRmmIntegration extends Command
 
         // Validate company exists
         $company = Company::find($companyId);
-        if (!$company) {
+        if (! $company) {
             $this->error("Company with ID {$companyId} not found.");
+
             return 1;
         }
 
@@ -54,12 +57,13 @@ class SetupRmmIntegration extends Command
 
         // Check if integration already exists
         $existingIntegration = RmmIntegration::where('company_id', $companyId)
-                                           ->where('rmm_type', $rmmType)
-                                           ->first();
+            ->where('rmm_type', $rmmType)
+            ->first();
 
         if ($existingIntegration) {
-            if (!$this->confirm("An integration of type {$rmmType} already exists for this company. Do you want to update it?")) {
+            if (! $this->confirm("An integration of type {$rmmType} already exists for this company. Do you want to update it?")) {
                 $this->info('Setup cancelled.');
+
                 return 0;
             }
         }
@@ -70,14 +74,16 @@ class SetupRmmIntegration extends Command
         $apiKey = $this->option('api-key') ?: $this->secret('Enter the API key for authentication');
 
         // Validate inputs
-        if (!$apiUrl || !$apiKey) {
+        if (! $apiUrl || ! $apiKey) {
             $this->error('API URL and API key are required.');
+
             return 1;
         }
 
         // Validate URL format
-        if (!filter_var($apiUrl, FILTER_VALIDATE_URL)) {
+        if (! filter_var($apiUrl, FILTER_VALIDATE_URL)) {
             $this->error('Invalid API URL format.');
+
             return 1;
         }
 
@@ -113,7 +119,7 @@ class SetupRmmIntegration extends Command
             $this->line("Type: {$integration->getRmmTypeLabel()}");
             $this->line("Name: {$integration->name}");
             $this->line("API URL: {$apiUrl}");
-            $this->line("Status: " . ($integration->is_active ? 'Active' : 'Inactive'));
+            $this->line('Status: '.($integration->is_active ? 'Active' : 'Inactive'));
 
             // Test connection if requested
             if ($this->option('test') || $this->confirm('Do you want to test the connection?', true)) {
@@ -130,6 +136,7 @@ class SetupRmmIntegration extends Command
                 } else {
                     $this->line('<error>✗ Connection test failed!</error>');
                     $this->line("Error: {$connectionTest['message']}");
+
                     return 1;
                 }
             }
@@ -140,14 +147,15 @@ class SetupRmmIntegration extends Command
             // Show next steps
             $this->line('');
             $this->line('<comment>Next steps:</comment>');
-            $this->line('1. Run agent sync: php artisan rmm:sync-agents ' . $integration->id);
-            $this->line('2. Run alert sync: php artisan rmm:sync-alerts ' . $integration->id);
+            $this->line('1. Run agent sync: php artisan rmm:sync-agents '.$integration->id);
+            $this->line('2. Run alert sync: php artisan rmm:sync-alerts '.$integration->id);
             $this->line('3. Set up scheduled jobs for automatic synchronization');
 
             return 0;
 
         } catch (\Exception $e) {
-            $this->error('Failed to set up integration: ' . $e->getMessage());
+            $this->error('Failed to set up integration: '.$e->getMessage());
+
             return 1;
         }
     }

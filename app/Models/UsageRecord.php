@@ -3,19 +3,18 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * UsageRecord Model
- * 
+ *
  * Individual usage transaction tracking for VoIP services including calls, data, messages.
  * Designed for high-volume CDR ingestion with optimized performance and real-time processing.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -43,7 +42,7 @@ use Carbon\Carbon;
  */
 class UsageRecord extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -177,51 +176,77 @@ class UsageRecord extends Model
      * Usage type constants
      */
     const USAGE_TYPE_VOICE = 'voice';
+
     const USAGE_TYPE_DATA = 'data';
+
     const USAGE_TYPE_SMS = 'sms';
+
     const USAGE_TYPE_MMS = 'mms';
+
     const USAGE_TYPE_FEATURE = 'feature';
+
     const USAGE_TYPE_EQUIPMENT = 'equipment';
+
     const USAGE_TYPE_API = 'api';
 
     /**
      * Service type constants
      */
     const SERVICE_TYPE_LOCAL = 'local';
+
     const SERVICE_TYPE_LONG_DISTANCE = 'long_distance';
+
     const SERVICE_TYPE_INTERNATIONAL = 'international';
+
     const SERVICE_TYPE_HOSTED_PBX = 'hosted_pbx';
+
     const SERVICE_TYPE_SIP_TRUNKING = 'sip_trunking';
+
     const SERVICE_TYPE_DATA = 'data';
+
     const SERVICE_TYPE_INTERNET = 'internet';
+
     const SERVICE_TYPE_VOIP_FIXED = 'voip_fixed';
+
     const SERVICE_TYPE_VOIP_NOMADIC = 'voip_nomadic';
 
     /**
      * Processing status constants
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_PROCESSED = 'processed';
+
     const STATUS_BILLED = 'billed';
+
     const STATUS_DISPUTED = 'disputed';
+
     const STATUS_FAILED = 'failed';
 
     /**
      * Unit type constants
      */
     const UNIT_TYPE_MINUTE = 'minute';
+
     const UNIT_TYPE_MB = 'mb';
+
     const UNIT_TYPE_GB = 'gb';
+
     const UNIT_TYPE_MESSAGE = 'message';
+
     const UNIT_TYPE_CALL = 'call';
+
     const UNIT_TYPE_LINE = 'line';
+
     const UNIT_TYPE_API_CALL = 'api_call';
 
     /**
      * Completion status constants
      */
     const COMPLETION_COMPLETED = 'completed';
+
     const COMPLETION_FAILED = 'failed';
+
     const COMPLETION_PARTIAL = 'partial';
 
     /**
@@ -333,13 +358,13 @@ class UsageRecord extends Model
      */
     public function getFormattedDuration(): string
     {
-        if (!$this->duration_seconds) {
+        if (! $this->duration_seconds) {
             return '0:00';
         }
 
         $minutes = floor($this->duration_seconds / 60);
         $seconds = $this->duration_seconds % 60;
-        
+
         return sprintf('%d:%02d', $minutes, $seconds);
     }
 
@@ -348,7 +373,7 @@ class UsageRecord extends Model
      */
     public function getFormattedCost(): string
     {
-        return '$' . number_format($this->total_cost, 4);
+        return '$'.number_format($this->total_cost, 4);
     }
 
     /**
@@ -356,7 +381,7 @@ class UsageRecord extends Model
      */
     public function getQualityDescription(): string
     {
-        if (!$this->quality_score) {
+        if (! $this->quality_score) {
             return 'Unknown';
         }
 
@@ -408,7 +433,7 @@ class UsageRecord extends Model
     /**
      * Flag record as disputed.
      */
-    public function flagAsDisputed(string $reason = null): void
+    public function flagAsDisputed(?string $reason = null): void
     {
         $this->update([
             'processing_status' => self::STATUS_DISPUTED,
@@ -574,25 +599,25 @@ class UsageRecord extends Model
 
         // Auto-calculate duration and set usage date
         static::creating(function ($record) {
-            if (!$record->transaction_id) {
-                $record->transaction_id = 'TXN-' . uniqid() . '-' . time();
+            if (! $record->transaction_id) {
+                $record->transaction_id = 'TXN-'.uniqid().'-'.time();
             }
-            
+
             if ($record->usage_start_time) {
                 $record->usage_date = $record->usage_start_time->toDateString();
                 $record->usage_hour = $record->usage_start_time->hour;
-                
+
                 // Set time-based flags
                 $record->is_peak_time = $record->usage_start_time->hour >= 8 && $record->usage_start_time->hour < 18;
                 $record->is_weekend = $record->usage_start_time->isWeekend();
             }
-            
-            if ($record->usage_start_time && $record->usage_end_time && !$record->duration_seconds) {
+
+            if ($record->usage_start_time && $record->usage_end_time && ! $record->duration_seconds) {
                 $record->duration_seconds = $record->usage_end_time->diffInSeconds($record->usage_start_time);
             }
 
             // Set billing period if not provided
-            if (!$record->billing_period) {
+            if (! $record->billing_period) {
                 $record->billing_period = now()->format('Y-m');
             }
         });

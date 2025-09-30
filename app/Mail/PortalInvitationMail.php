@@ -27,7 +27,7 @@ class PortalInvitationMail extends Mailable
     public function envelope(): Envelope
     {
         $companyName = $this->contact->client->company->name ?? 'Nestogy';
-        
+
         return new Envelope(
             subject: "You're invited to access your {$companyName} Client Portal",
         );

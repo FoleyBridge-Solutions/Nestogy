@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\Client;
 use App\Domains\Core\Services\NotificationService;
+use App\Models\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * CheckTrialExpirations
- * 
+ *
  * Background job that checks for trial expirations and sends notifications
  * to customers approaching trial end dates.
  */
@@ -28,7 +28,7 @@ class CheckTrialExpirations implements ShouldQueue
     public function handle(NotificationService $notificationService)
     {
         $now = Carbon::now();
-        
+
         Log::info('Starting trial expiration check', ['timestamp' => $now]);
 
         // Find trials ending in 3 days (warning notification)
@@ -38,7 +38,7 @@ class CheckTrialExpirations implements ShouldQueue
             ->whereNotNull('trial_ends_at')
             ->whereBetween('trial_ends_at', [
                 $now->copy()->addDays(3)->startOfDay(),
-                $now->copy()->addDays(3)->endOfDay()
+                $now->copy()->addDays(3)->endOfDay(),
             ])
             ->with(['linkedCompany', 'subscriptionPlan'])
             ->get();
@@ -50,7 +50,7 @@ class CheckTrialExpirations implements ShouldQueue
             } catch (\Exception $e) {
                 Log::error('Failed to send trial warning notification', [
                     'client_id' => $client->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -62,7 +62,7 @@ class CheckTrialExpirations implements ShouldQueue
             ->whereNotNull('trial_ends_at')
             ->whereBetween('trial_ends_at', [
                 $now->copy()->addDay()->startOfDay(),
-                $now->copy()->addDay()->endOfDay()
+                $now->copy()->addDay()->endOfDay(),
             ])
             ->with(['linkedCompany', 'subscriptionPlan'])
             ->get();
@@ -74,7 +74,7 @@ class CheckTrialExpirations implements ShouldQueue
             } catch (\Exception $e) {
                 Log::error('Failed to send trial final notice', [
                     'client_id' => $client->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -95,7 +95,7 @@ class CheckTrialExpirations implements ShouldQueue
             } catch (\Exception $e) {
                 Log::error('Failed to handle trial expiration', [
                     'client_id' => $client->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -103,7 +103,7 @@ class CheckTrialExpirations implements ShouldQueue
         Log::info('Trial expiration check completed', [
             'warnings_sent' => $trialsEndingIn3Days->count(),
             'final_notices_sent' => $trialsEndingTomorrow->count(),
-            'expirations_handled' => $expiredTrials->count()
+            'expirations_handled' => $expiredTrials->count(),
         ]);
     }
 
@@ -170,8 +170,9 @@ class CheckTrialExpirations implements ShouldQueue
         if ($client->stripe_subscription_id && $client->paymentMethods()->active()->exists()) {
             Log::info('Trial expired with payment method available', [
                 'client_id' => $client->id,
-                'subscription_id' => $client->stripe_subscription_id
+                'subscription_id' => $client->stripe_subscription_id,
             ]);
+
             return;
         }
 
@@ -198,7 +199,7 @@ class CheckTrialExpirations implements ShouldQueue
 
         Log::warning('Trial expired and account suspended', [
             'client_id' => $client->id,
-            'company_id' => $client->linkedCompany?->id
+            'company_id' => $client->linkedCompany?->id,
         ]);
     }
 }

@@ -14,8 +14,9 @@ class DevDatabaseSeeder extends Seeder
     public function run(): void
     {
         // Only run in development or local environment
-        if (!App::environment(['local', 'development', 'testing'])) {
+        if (! App::environment(['local', 'development', 'testing'])) {
             $this->command->error('Development seeders can only run in local/development/testing environments!');
+
             return;
         }
 
@@ -34,12 +35,12 @@ class DevDatabaseSeeder extends Seeder
             $this->callWithProgressBar('Users (20-40 per company)', UserSeeder::class);
             $this->callWithProgressBar('Categories', CategorySeeder::class);
             $this->callWithProgressBar('Vendors (20-30)', VendorSeeder::class);
-            
+
             // SLA must be before Clients as clients reference SLAs
             if (class_exists(SLASeeder::class)) {
                 $this->callWithProgressBar('SLA Levels', SLASeeder::class);
             }
-            
+
             $this->callWithProgressBar('Clients (30-80 per MSP)', ClientSeeder::class);
             $this->callWithProgressBar('Locations (1-3 per client)', LocationSeeder::class);
             $this->callWithProgressBar('Contacts (2-5 per client)', ContactSeeder::class);
@@ -128,8 +129,8 @@ class DevDatabaseSeeder extends Seeder
 
         } catch (\Exception $e) {
             // DB::rollBack();
-            $this->command->error('Seeding failed: ' . $e->getMessage());
-            $this->command->error('Stack trace: ' . $e->getTraceAsString());
+            $this->command->error('Seeding failed: '.$e->getMessage());
+            $this->command->error('Stack trace: '.$e->getTraceAsString());
             throw $e;
         }
     }
@@ -173,13 +174,13 @@ class DevDatabaseSeeder extends Seeder
                 ['Tax Jurisdictions', \App\Models\TaxJurisdiction::count() ?? 0],
             ]
         );
-        
+
         // Display date range of data
         $oldestTicket = \App\Models\Ticket::oldest('created_at')->first();
         $newestTicket = \App\Models\Ticket::latest('created_at')->first();
         $oldestInvoice = \App\Models\Invoice::oldest('date')->first();
         $newestInvoice = \App\Models\Invoice::latest('date')->first();
-        
+
         $this->command->newLine();
         $this->command->info('Data Date Ranges:');
         if ($oldestTicket) {

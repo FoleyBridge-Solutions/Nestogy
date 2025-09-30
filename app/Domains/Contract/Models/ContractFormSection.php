@@ -2,22 +2,21 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Traits\BelongsToCompany;
 use App\Domains\Contract\Traits\HasConditionalLogic;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 /**
  * ContractFormSection Model
- * 
+ *
  * Defines form sections that group related fields together.
  * Supports conditional logic and flexible layouts.
  */
 class ContractFormSection extends Model
 {
-    use HasFactory, BelongsToCompany, HasConditionalLogic;
+    use BelongsToCompany, HasConditionalLogic, HasFactory;
 
     protected $table = 'contract_form_sections';
 
@@ -56,7 +55,7 @@ class ContractFormSection extends Model
         }
 
         $fieldSlugs = $this->fields_order;
-        
+
         return ContractFieldDefinition::where('company_id', $this->company_id)
             ->whereIn('field_slug', $fieldSlugs)
             ->active()

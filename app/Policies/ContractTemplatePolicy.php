@@ -24,7 +24,7 @@ class ContractTemplatePolicy
     public function view(User $user, ContractTemplate $template): bool
     {
         // User must have permission and template must belong to their company
-        return ($user->can('contract-templates.manage') || $user->isAdmin()) && 
+        return ($user->can('contract-templates.manage') || $user->isAdmin()) &&
                $template->company_id === $user->company_id;
     }
 
@@ -42,7 +42,7 @@ class ContractTemplatePolicy
     public function update(User $user, ContractTemplate $template): bool
     {
         // User must have permission and template must belong to their company
-        return ($user->can('contract-templates.manage') || $user->isAdmin()) && 
+        return ($user->can('contract-templates.manage') || $user->isAdmin()) &&
                $template->company_id === $user->company_id;
     }
 
@@ -52,9 +52,9 @@ class ContractTemplatePolicy
     public function delete(User $user, ContractTemplate $template): bool
     {
         // User must have permission and template must belong to their company
-        return ($user->can('contract-templates.manage') || $user->isAdmin()) && 
+        return ($user->can('contract-templates.manage') || $user->isAdmin()) &&
                $template->company_id === $user->company_id &&
-               !$template->is_default; // Cannot delete default templates
+               ! $template->is_default; // Cannot delete default templates
     }
 
     /**
@@ -62,7 +62,7 @@ class ContractTemplatePolicy
      */
     public function restore(User $user, ContractTemplate $template): bool
     {
-        return $user->can('contract-templates.manage') && 
+        return $user->can('contract-templates.manage') &&
                $template->company_id === $user->company_id;
     }
 
@@ -72,7 +72,7 @@ class ContractTemplatePolicy
     public function forceDelete(User $user, ContractTemplate $template): bool
     {
         // Only super admins can force delete
-        return $user->hasRole('super-admin') && 
+        return $user->hasRole('super-admin') &&
                $template->company_id === $user->company_id;
     }
 
@@ -81,7 +81,7 @@ class ContractTemplatePolicy
      */
     public function duplicate(User $user, ContractTemplate $template): bool
     {
-        return $user->can('contract-templates.manage') && 
+        return $user->can('contract-templates.manage') &&
                $template->company_id === $user->company_id;
     }
 

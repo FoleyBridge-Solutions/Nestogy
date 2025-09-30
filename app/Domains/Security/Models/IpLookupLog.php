@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class IpLookupLog extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -52,12 +52,17 @@ class IpLookupLog extends Model
     ];
 
     const THREAT_LEVEL_LOW = 'low';
+
     const THREAT_LEVEL_MEDIUM = 'medium';
+
     const THREAT_LEVEL_HIGH = 'high';
+
     const THREAT_LEVEL_CRITICAL = 'critical';
 
     const LOOKUP_SOURCE_API_NINJAS = 'api_ninjas';
+
     const LOOKUP_SOURCE_IPAPI = 'ipapi';
+
     const LOOKUP_SOURCE_MAXMIND = 'maxmind';
 
     public function company(): BelongsTo
@@ -72,18 +77,24 @@ class IpLookupLog extends Model
 
     public function isSuspicious(): bool
     {
-        return $this->is_vpn || $this->is_proxy || $this->is_tor || 
+        return $this->is_vpn || $this->is_proxy || $this->is_tor ||
                in_array($this->threat_level, [self::THREAT_LEVEL_HIGH, self::THREAT_LEVEL_CRITICAL]);
     }
 
     public function getThreatScore(): int
     {
         $score = 0;
-        
-        if ($this->is_vpn) $score += 30;
-        if ($this->is_proxy) $score += 25;
-        if ($this->is_tor) $score += 50;
-        
+
+        if ($this->is_vpn) {
+            $score += 30;
+        }
+        if ($this->is_proxy) {
+            $score += 25;
+        }
+        if ($this->is_tor) {
+            $score += 50;
+        }
+
         switch ($this->threat_level) {
             case self::THREAT_LEVEL_CRITICAL:
                 $score += 100;
@@ -98,13 +109,14 @@ class IpLookupLog extends Model
                 $score += 10;
                 break;
         }
-        
+
         return min($score, 100);
     }
 
     public function getLocationString(): string
     {
         $parts = array_filter([$this->city, $this->region, $this->country]);
+
         return implode(', ', $parts);
     }
 
@@ -113,16 +125,16 @@ class IpLookupLog extends Model
         if ($suspicious) {
             return $query->where(function ($q) {
                 $q->where('is_vpn', true)
-                  ->orWhere('is_proxy', true)
-                  ->orWhere('is_tor', true)
-                  ->orWhereIn('threat_level', [self::THREAT_LEVEL_HIGH, self::THREAT_LEVEL_CRITICAL]);
+                    ->orWhere('is_proxy', true)
+                    ->orWhere('is_tor', true)
+                    ->orWhereIn('threat_level', [self::THREAT_LEVEL_HIGH, self::THREAT_LEVEL_CRITICAL]);
             });
         }
-        
+
         return $query->where('is_vpn', false)
-                    ->where('is_proxy', false)
-                    ->where('is_tor', false)
-                    ->whereNotIn('threat_level', [self::THREAT_LEVEL_HIGH, self::THREAT_LEVEL_CRITICAL]);
+            ->where('is_proxy', false)
+            ->where('is_tor', false)
+            ->whereNotIn('threat_level', [self::THREAT_LEVEL_HIGH, self::THREAT_LEVEL_CRITICAL]);
     }
 
     public function scopeByCountry($query, string $countryCode)

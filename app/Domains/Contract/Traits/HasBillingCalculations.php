@@ -6,7 +6,7 @@ use App\Domains\Contract\Services\ContractConfigurationRegistry;
 
 /**
  * HasBillingCalculations Trait
- * 
+ *
  * Provides common billing calculation methods for contract templates.
  * Eliminates duplication of billing calculation logic.
  */
@@ -21,14 +21,14 @@ trait HasBillingCalculations
         $registry = new ContractConfigurationRegistry($companyId);
         $billingModels = $registry->getBillingModels();
         $supportedKeys = [];
-        
+
         foreach ($billingModels as $key => $name) {
-            if (str_contains(strtolower($name), strtolower($feature)) || 
+            if (str_contains(strtolower($name), strtolower($feature)) ||
                 str_contains(strtolower($name), 'hybrid')) {
                 $supportedKeys[] = $key;
             }
         }
-        
+
         return in_array($this->billing_model, $supportedKeys);
     }
 
@@ -61,8 +61,8 @@ trait HasBillingCalculations
     protected function calculateAssetCharges(array $assets): float
     {
         return $this->calculateChargesForType(
-            $assets, 
-            $this->asset_billing_rules ?? [], 
+            $assets,
+            $this->asset_billing_rules ?? [],
             $this->default_per_asset_rate
         );
     }
@@ -73,8 +73,8 @@ trait HasBillingCalculations
     protected function calculateContactCharges(array $contacts): float
     {
         return $this->calculateChargesForType(
-            $contacts, 
-            $this->contact_billing_rules ?? [], 
+            $contacts,
+            $this->contact_billing_rules ?? [],
             $this->default_per_contact_rate
         );
     }

@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * ContractNavigationItem Model
- * 
+ *
  * Represents configurable navigation items for contract management.
  * Fully company-scoped and supports hierarchical navigation.
  */
 class ContractNavigationItem extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'contract_navigation_items';
 

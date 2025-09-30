@@ -2,33 +2,33 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToCompany;
-use App\Traits\HasArchive;
+use App\Models\Asset;
 use App\Models\Client;
 use App\Models\Contact;
-use App\Models\Location;
-use App\Models\Asset;
-use App\Models\Vendor;
-use App\Models\Project;
 use App\Models\Invoice;
-use App\Models\User;
+use App\Models\Location;
+use App\Models\Project;
 use App\Models\TicketReply;
+use App\Models\User;
+use App\Models\Vendor;
+use App\Traits\BelongsToCompany;
+use App\Traits\HasArchive;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Carbon\Carbon;
 
 /**
  * Enhanced Ticket Model for Domain-Based Architecture
- * 
+ *
  * Represents support tickets with comprehensive functionality including
  * templates, recurring tickets, workflows, time tracking, and calendar integration.
  */
 class Ticket extends Model
 {
-    use HasFactory, BelongsToCompany, HasArchive;
+    use BelongsToCompany, HasArchive, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -115,20 +115,30 @@ class Ticket extends Model
      * Priority constants
      */
     const PRIORITY_LOW = 'Low';
+
     const PRIORITY_MEDIUM = 'Medium';
+
     const PRIORITY_HIGH = 'High';
+
     const PRIORITY_CRITICAL = 'Critical';
 
     /**
      * Status constants
      */
     const STATUS_OPEN = 'Open';
+
     const STATUS_IN_PROGRESS = 'In Progress';
+
     const STATUS_CLOSED = 'Closed';
+
     const STATUS_ON_HOLD = 'On Hold';
+
     const STATUS_WAITING = 'Waiting';
+
     const STATUS_RESOLVED = 'Resolved';
+
     const STATUS_CANCELLED = 'Cancelled';
+
     const STATUS_CANCELED = 'Canceled'; // Alternate spelling
 
     /**
@@ -139,32 +149,40 @@ class Ticket extends Model
         'in-progress', 'In-Progress', 'In Progress',
         'in_progress', 'In_progress',
         'waiting', 'Waiting',
-        'on-hold', 'On-Hold', 'On Hold'
+        'on-hold', 'On-Hold', 'On Hold',
     ];
 
     const HISTORICAL_STATUSES = [
         'resolved', 'Resolved',
         'closed', 'Closed',
         'cancelled', 'Cancelled',
-        'canceled', 'Canceled'
+        'canceled', 'Canceled',
     ];
 
     /**
      * Source constants
      */
     const SOURCE_EMAIL = 'Email';
+
     const SOURCE_PHONE = 'Phone';
+
     const SOURCE_PORTAL = 'Portal';
+
     const SOURCE_WALK_IN = 'Walk-in';
+
     const SOURCE_INTERNAL = 'Internal';
 
     /**
      * Sentiment constants
      */
     const SENTIMENT_POSITIVE = 'POSITIVE';
+
     const SENTIMENT_WEAK_POSITIVE = 'WEAK_POSITIVE';
+
     const SENTIMENT_NEUTRAL = 'NEUTRAL';
+
     const SENTIMENT_WEAK_NEGATIVE = 'WEAK_NEGATIVE';
+
     const SENTIMENT_NEGATIVE = 'NEGATIVE';
 
     // ===========================================
@@ -330,7 +348,7 @@ class Ticket extends Model
      */
     public function canBeReopenedBy(User $user): bool
     {
-        if (!$this->is_resolved) {
+        if (! $this->is_resolved) {
             return false;
         }
 
@@ -362,7 +380,7 @@ class Ticket extends Model
      */
     public function reopen(User $user, ?string $reason = null): void
     {
-        if (!$this->canBeReopenedBy($user)) {
+        if (! $this->canBeReopenedBy($user)) {
             throw new \Exception('You do not have permission to reopen this ticket');
         }
 
@@ -457,18 +475,18 @@ class Ticket extends Model
     public function getSentimentAnalysisText(): string
     {
         $text = '';
-        
-        if (!empty($this->subject)) {
+
+        if (! empty($this->subject)) {
             $text .= $this->subject;
         }
-        
-        if (!empty($this->details)) {
-            if (!empty($text)) {
+
+        if (! empty($this->details)) {
+            if (! empty($text)) {
                 $text .= '. ';
             }
             $text .= $this->details;
         }
-        
+
         return trim($text);
     }
 
@@ -477,7 +495,7 @@ class Ticket extends Model
      */
     public function hasSentimentAnalysis(): bool
     {
-        return !is_null($this->sentiment_score) && !is_null($this->sentiment_analyzed_at);
+        return ! is_null($this->sentiment_score) && ! is_null($this->sentiment_analyzed_at);
     }
 
     /**
@@ -485,11 +503,11 @@ class Ticket extends Model
      */
     public function getSentimentInterpretation(): array
     {
-        if (!$this->hasSentimentAnalysis()) {
+        if (! $this->hasSentimentAnalysis()) {
             return [
                 'interpretation' => 'Not Analyzed',
                 'color' => '#94a3b8', // slate-400
-                'confidence_level' => 'N/A'
+                'confidence_level' => 'N/A',
             ];
         }
 
@@ -505,7 +523,7 @@ class Ticket extends Model
     }
 
     /**
-     * Check if ticket sentiment is positive  
+     * Check if ticket sentiment is positive
      */
     public function hasPositiveSentiment(): bool
     {
@@ -525,13 +543,13 @@ class Ticket extends Model
      */
     public function getSentimentColor(): string
     {
-        if (!$this->hasSentimentAnalysis()) {
+        if (! $this->hasSentimentAnalysis()) {
             return '#94a3b8'; // slate-400
         }
 
-        return match($this->sentiment_label) {
+        return match ($this->sentiment_label) {
             self::SENTIMENT_POSITIVE => '#10b981', // emerald-500
-            self::SENTIMENT_WEAK_POSITIVE => '#84cc16', // lime-500  
+            self::SENTIMENT_WEAK_POSITIVE => '#84cc16', // lime-500
             self::SENTIMENT_NEUTRAL => '#64748b', // slate-500
             self::SENTIMENT_WEAK_NEGATIVE => '#f97316', // orange-500
             self::SENTIMENT_NEGATIVE => '#ef4444', // red-500
@@ -544,11 +562,11 @@ class Ticket extends Model
      */
     public function getSentimentIcon(): string
     {
-        if (!$this->hasSentimentAnalysis()) {
+        if (! $this->hasSentimentAnalysis()) {
             return 'fas fa-question-circle';
         }
 
-        return match($this->sentiment_label) {
+        return match ($this->sentiment_label) {
             self::SENTIMENT_POSITIVE => 'fas fa-smile',
             self::SENTIMENT_WEAK_POSITIVE => 'fas fa-smile-wink',
             self::SENTIMENT_NEUTRAL => 'fas fa-meh',
@@ -564,21 +582,21 @@ class Ticket extends Model
     public function calculatePriorityScoreWithSentiment(): float
     {
         $score = $this->calculatePriorityScore();
-        
+
         // Add sentiment factor to priority calculation
         if ($this->hasSentimentAnalysis()) {
             $sentimentFactor = 0;
-            
+
             // Negative sentiment increases priority
             if ($this->sentiment_label === self::SENTIMENT_NEGATIVE) {
                 $sentimentFactor = 2 * ($this->sentiment_confidence ?? 0.5);
             } elseif ($this->sentiment_label === self::SENTIMENT_WEAK_NEGATIVE) {
                 $sentimentFactor = 1 * ($this->sentiment_confidence ?? 0.5);
             }
-            
+
             $score += $sentimentFactor;
         }
-        
+
         return round($score, 2);
     }
 
@@ -588,7 +606,7 @@ class Ticket extends Model
     public function canTransitionTo(string $status): bool
     {
         // If no workflow is assigned, allow any transition
-        if (!$this->workflow_id) {
+        if (! $this->workflow_id) {
             return in_array($status, self::getAvailableStatuses());
         }
 
@@ -599,14 +617,14 @@ class Ticket extends Model
             ->where('is_active', true)
             ->first();
 
-        if (!$transitions) {
+        if (! $transitions) {
             return false;
         }
 
         // Check role requirements
         if ($transitions->required_role) {
             $user = auth()->user();
-            if (!$user || !$user->hasRole($transitions->required_role)) {
+            if (! $user || ! $user->hasRole($transitions->required_role)) {
                 return false;
             }
         }
@@ -648,11 +666,11 @@ class Ticket extends Model
      */
     public function isOverdue(): bool
     {
-        if (!$this->priorityQueue || !$this->priorityQueue->sla_deadline) {
+        if (! $this->priorityQueue || ! $this->priorityQueue->sla_deadline) {
             return false;
         }
 
-        return now()->gt($this->priorityQueue->sla_deadline) && !$this->isClosed();
+        return now()->gt($this->priorityQueue->sla_deadline) && ! $this->isClosed();
     }
 
     /**
@@ -668,7 +686,7 @@ class Ticket extends Model
      */
     public function isOpen(): bool
     {
-        return !$this->isClosed();
+        return ! $this->isClosed();
     }
 
     /**
@@ -717,7 +735,7 @@ class Ticket extends Model
         $this->timeEntries()->with('user')->orderBy('created_at', 'desc')->limit($limit)->get()->each(function ($entry) use ($activities) {
             $activities->push([
                 'type' => 'time_entry',
-                'description' => 'Time logged: ' . $entry->hours_worked . ' hours',
+                'description' => 'Time logged: '.$entry->hours_worked.' hours',
                 'user' => $entry->user,
                 'created_at' => $entry->created_at,
                 'data' => $entry,
@@ -726,10 +744,10 @@ class Ticket extends Model
 
         // Add assignments
         $this->assignments()->with(['assignedTo', 'assignedBy'])->orderBy('assigned_at', 'desc')->limit($limit)->get()->each(function ($assignment) use ($activities) {
-            $description = $assignment->assigned_to 
-                ? 'Assigned to ' . $assignment->assignedTo->name
+            $description = $assignment->assigned_to
+                ? 'Assigned to '.$assignment->assignedTo->name
                 : 'Unassigned';
-            
+
             $activities->push([
                 'type' => 'assignment',
                 'description' => $description,
@@ -743,7 +761,7 @@ class Ticket extends Model
         $this->calendarEvents()->orderBy('created_at', 'desc')->limit($limit)->get()->each(function ($event) use ($activities) {
             $activities->push([
                 'type' => 'calendar_event',
-                'description' => 'Event scheduled: ' . $event->title,
+                'description' => 'Event scheduled: '.$event->title,
                 'user' => null, // Events don't have a specific user
                 'created_at' => $event->created_at,
                 'data' => $event,
@@ -759,7 +777,7 @@ class Ticket extends Model
      */
     public function getAvailableTransitions(): \Illuminate\Support\Collection
     {
-        if (!$this->workflow) {
+        if (! $this->workflow) {
             return collect();
         }
 
@@ -781,9 +799,9 @@ class Ticket extends Model
      */
     public function getPriorityColor(): string
     {
-        return match(strtolower($this->priority)) {
+        return match (strtolower($this->priority)) {
             'low' => 'success',
-            'medium' => 'warning', 
+            'medium' => 'warning',
             'high' => 'danger',
             'critical' => 'dark',
             default => 'secondary',
@@ -795,7 +813,7 @@ class Ticket extends Model
      */
     public function getStatusColor(): string
     {
-        return match(strtolower($this->status)) {
+        return match (strtolower($this->status)) {
             'new' => 'primary',
             'open' => 'info',
             'in_progress', 'in progress' => 'warning',
@@ -811,7 +829,7 @@ class Ticket extends Model
      */
     public function getPriorityIcon(): string
     {
-        return match(strtolower($this->priority)) {
+        return match (strtolower($this->priority)) {
             'low' => 'fas fa-arrow-down',
             'medium' => 'fas fa-minus',
             'high' => 'fas fa-arrow-up',
@@ -825,7 +843,7 @@ class Ticket extends Model
      */
     public function getStatusIcon(): string
     {
-        return match(strtolower($this->status)) {
+        return match (strtolower($this->status)) {
             'new' => 'fas fa-plus-circle',
             'open' => 'fas fa-folder-open',
             'in_progress', 'in progress' => 'fas fa-spinner',
@@ -843,7 +861,7 @@ class Ticket extends Model
     public function scopeOpen($query)
     {
         return $query->where('status', '!=', self::STATUS_CLOSED)
-                     ->where('is_resolved', false);
+            ->where('is_resolved', false);
     }
 
     public function scopeClosed($query)
@@ -864,7 +882,7 @@ class Ticket extends Model
     public function scopeActive($query)
     {
         return $query->where('is_resolved', false)
-                     ->where('status', '!=', self::STATUS_CLOSED);
+            ->where('status', '!=', self::STATUS_CLOSED);
     }
 
     public function scopeByStatus($query, string $status)
@@ -950,7 +968,7 @@ class Ticket extends Model
     public function scopeSentimentNeedsAttention($query)
     {
         return $query->whereIn('sentiment_label', [self::SENTIMENT_NEGATIVE, self::SENTIMENT_WEAK_NEGATIVE])
-                    ->where('sentiment_confidence', '>', 0.6);
+            ->where('sentiment_confidence', '>', 0.6);
     }
 
     public function scopeSentimentScoreBetween($query, float $min, float $max)
@@ -1015,7 +1033,7 @@ class Ticket extends Model
 
         // Auto-increment ticket number for new tickets
         static::creating(function ($ticket) {
-            if (!$ticket->number) {
+            if (! $ticket->number) {
                 $lastTicket = static::where('company_id', $ticket->company_id)
                     ->where('prefix', $ticket->prefix)
                     ->orderBy('number', 'desc')
@@ -1028,17 +1046,17 @@ class Ticket extends Model
             if (empty($ticket->priority)) {
                 $ticket->priority = self::PRIORITY_MEDIUM;
             }
-            
+
             if (empty($ticket->status)) {
                 $ticket->status = self::STATUS_OPEN;
             }
         });
-        
+
         // Create priority queue entry with SLA deadline after ticket is created
         static::created(function ($ticket) {
             // Calculate SLA deadlines based on priority
             $priority = strtolower($ticket->priority);
-            
+
             // Default SLA times in hours
             $slaHours = [
                 'critical' => 4,
@@ -1046,10 +1064,10 @@ class Ticket extends Model
                 'medium' => 24,
                 'low' => 48,
             ];
-            
+
             $deadlineHours = $slaHours[$priority] ?? 24;
             $slaDeadline = $ticket->created_at->addHours($deadlineHours);
-            
+
             // Create priority queue entry
             \App\Domains\Ticket\Models\TicketPriorityQueue::create([
                 'ticket_id' => $ticket->id,

@@ -5,11 +5,10 @@ namespace App\Domains\Report\Models;
 use App\Models\BaseModel;
 use App\Models\Company;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Report Schedule Model
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $name
@@ -58,12 +57,17 @@ class ReportSchedule extends BaseModel
     ];
 
     const FREQUENCY_DAILY = 'daily';
+
     const FREQUENCY_WEEKLY = 'weekly';
+
     const FREQUENCY_MONTHLY = 'monthly';
+
     const FREQUENCY_QUARTERLY = 'quarterly';
 
     const FORMAT_PDF = 'pdf';
+
     const FORMAT_EXCEL = 'excel';
+
     const FORMAT_CSV = 'csv';
 
     /**
@@ -178,7 +182,7 @@ class ReportSchedule extends BaseModel
      */
     public function getStatusColorAttribute(): string
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return 'gray';
         }
 

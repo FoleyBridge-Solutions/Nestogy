@@ -26,7 +26,7 @@ return new class extends Migration
             $table->boolean('is_technical')->default(false);
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'email']);
             $table->index(['company_id', 'is_primary']);
@@ -45,7 +45,7 @@ return new class extends Migration
             $table->string('country', 2)->default('US');
             $table->boolean('is_primary')->default(false);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'type']);
         });
@@ -63,7 +63,7 @@ return new class extends Migration
             $table->json('tags')->nullable();
             $table->boolean('is_confidential')->default(false);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'type']);
         });
@@ -81,7 +81,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'category']);
         });
@@ -100,7 +100,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'expired', 'cancelled'])->default('active');
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'expiry_date']);
             $table->index(['company_id', 'status']);
@@ -118,7 +118,7 @@ return new class extends Migration
             $table->json('additional_fields')->nullable();
             $table->boolean('is_shared')->default(false);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'service_name']);
         });
@@ -137,7 +137,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->enum('type', ['lan', 'wan', 'dmz', 'guest', 'management'])->default('lan');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'type']);
         });
@@ -155,7 +155,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->json('configuration')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'type']);
             $table->index(['company_id', 'status']);
@@ -174,7 +174,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->enum('relationship', ['vendor', 'supplier', 'partner', 'contractor'])->default('vendor');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'relationship']);
         });
@@ -261,7 +261,7 @@ return new class extends Migration
             $table->string('template_category')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'it_category']);
             $table->index(['company_id', 'status']);
@@ -285,7 +285,7 @@ return new class extends Migration
             $table->text('instructions')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'category']);
         });
@@ -304,7 +304,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'paused', 'completed'])->default('active');
             $table->json('configuration')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'next_run']);
             $table->index(['company_id', 'status']);
@@ -320,7 +320,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'sort_order']);
         });
@@ -334,7 +334,7 @@ return new class extends Migration
             $table->boolean('requires_approval')->default(false);
             $table->json('allowed_roles')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'from_status']);
             $table->unique(['company_id', 'from_status', 'to_status'], 'ticket_status_unique');
         });
@@ -352,7 +352,7 @@ return new class extends Migration
             $table->boolean('is_billable')->default(true);
             $table->boolean('is_billed')->default(false);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'ticket_id']);
             $table->index(['company_id', 'user_id']);
             $table->index(['company_id', 'is_billable']);
@@ -367,7 +367,7 @@ return new class extends Migration
             $table->json('scoring_factors');
             $table->boolean('is_escalated')->default(false);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'priority_score']);
             $table->index(['company_id', 'queue_time']);
             $table->unique(['company_id', 'ticket_id']);
@@ -385,7 +385,7 @@ return new class extends Migration
             $table->json('attendees')->nullable();
             $table->string('location')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'ticket_id']);
             $table->index(['company_id', 'start_time']);
         });

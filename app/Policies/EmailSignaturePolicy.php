@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Domains\Email\Models\EmailSignature;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class EmailSignaturePolicy
 {

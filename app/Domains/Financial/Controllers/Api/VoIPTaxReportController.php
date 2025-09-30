@@ -2,18 +2,18 @@
 
 namespace App\Domains\Financial\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Financial\Services\VoIPTaxReportingService;
+use App\Http\Controllers\Controller;
 use App\Models\TaxJurisdiction;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 /**
  * VoIP Tax Report Controller
- * 
+ *
  * RESTful API endpoints for VoIP tax reporting and analytics.
  */
 class VoIPTaxReportController extends Controller
@@ -26,15 +26,13 @@ class VoIPTaxReportController extends Controller
         $this->middleware(function ($request, $next) {
             $companyId = Auth::user()->company_id ?? 1;
             $this->reportingService = new VoIPTaxReportingService($companyId);
+
             return $next($request);
         });
     }
 
     /**
      * Generate tax summary report.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function taxSummary(Request $request): JsonResponse
     {
@@ -49,7 +47,7 @@ class VoIPTaxReportController extends Controller
 
             $startDate = Carbon::parse($validated['start_date']);
             $endDate = Carbon::parse($validated['end_date']);
-            
+
             // Validate date range (max 1 year)
             if ($startDate->diffInDays($endDate) > 365) {
                 return response()->json([
@@ -95,10 +93,6 @@ class VoIPTaxReportController extends Controller
 
     /**
      * Generate jurisdiction-specific report.
-     *
-     * @param Request $request
-     * @param int $jurisdictionId
-     * @return JsonResponse
      */
     public function jurisdictionReport(Request $request, int $jurisdictionId): JsonResponse
     {
@@ -113,7 +107,7 @@ class VoIPTaxReportController extends Controller
                 ->where('company_id', Auth::user()->company_id ?? 1)
                 ->first();
 
-            if (!$jurisdiction) {
+            if (! $jurisdiction) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Jurisdiction not found or access denied',
@@ -154,9 +148,6 @@ class VoIPTaxReportController extends Controller
 
     /**
      * Generate service type analysis report.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function serviceTypeAnalysis(Request $request): JsonResponse
     {
@@ -199,9 +190,6 @@ class VoIPTaxReportController extends Controller
 
     /**
      * Generate exemption usage report.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function exemptionReport(Request $request): JsonResponse
     {
@@ -259,9 +247,6 @@ class VoIPTaxReportController extends Controller
 
     /**
      * Generate tax rate effectiveness report.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function rateEffectiveness(Request $request): JsonResponse
     {
@@ -304,9 +289,6 @@ class VoIPTaxReportController extends Controller
 
     /**
      * Get dashboard data.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function dashboard(Request $request): JsonResponse
     {
@@ -356,9 +338,6 @@ class VoIPTaxReportController extends Controller
 
     /**
      * Export report data.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function exportReport(Request $request): JsonResponse
     {
@@ -431,14 +410,12 @@ class VoIPTaxReportController extends Controller
 
     /**
      * Get available jurisdictions for reporting.
-     *
-     * @return JsonResponse
      */
     public function availableJurisdictions(): JsonResponse
     {
         try {
             $companyId = Auth::user()->company_id ?? 1;
-            
+
             $jurisdictions = TaxJurisdiction::where('company_id', $companyId)
                 ->active()
                 ->select(['id', 'name', 'jurisdiction_type', 'authority_name'])
@@ -467,8 +444,6 @@ class VoIPTaxReportController extends Controller
 
     /**
      * Get report parameters and metadata.
-     *
-     * @return JsonResponse
      */
     public function reportMetadata(): JsonResponse
     {
@@ -531,9 +506,6 @@ class VoIPTaxReportController extends Controller
 
     /**
      * Get date range for a given period.
-     *
-     * @param string $period
-     * @return array
      */
     protected function getDateRangeForPeriod(string $period): array
     {

@@ -109,7 +109,7 @@ class PhysicalMailLetter extends Model
      */
     public function hasExtraService(): bool
     {
-        return !empty($this->extra_service);
+        return ! empty($this->extra_service);
     }
 
     /**
@@ -155,7 +155,7 @@ class PhysicalMailLetter extends Model
             $data['extraService'] = $this->extra_service;
         }
 
-        if (!empty($this->merge_variables)) {
+        if (! empty($this->merge_variables)) {
             $data['mergeVariables'] = $this->merge_variables;
         }
 

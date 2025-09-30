@@ -126,7 +126,7 @@ class UpdateTicketRequest extends FormRequest
         // Clean vendor ticket number
         if ($this->has('vendor_ticket_number')) {
             $this->merge([
-                'vendor_ticket_number' => trim($this->vendor_ticket_number)
+                'vendor_ticket_number' => trim($this->vendor_ticket_number),
             ]);
         }
     }
@@ -186,7 +186,7 @@ class UpdateTicketRequest extends FormRequest
                 if ($assignedUser) {
                     if ($assignedUser->company_id !== $user->company_id) {
                         $validator->errors()->add('assigned_to', 'The selected user is invalid.');
-                    } elseif (!$assignedUser->settings || $assignedUser->settings->role < 2) {
+                    } elseif (! $assignedUser->settings || $assignedUser->settings->role < 2) {
                         $validator->errors()->add('assigned_to', 'The selected user does not have technician privileges.');
                     }
                 }
@@ -201,7 +201,7 @@ class UpdateTicketRequest extends FormRequest
             }
 
             // If scheduling, ensure assigned user is set
-            if ($this->filled('scheduled_at') && !$this->filled('assigned_to')) {
+            if ($this->filled('scheduled_at') && ! $this->filled('assigned_to')) {
                 $validator->errors()->add('assigned_to', 'An assigned technician is required when scheduling a ticket.');
             }
 
@@ -217,10 +217,10 @@ class UpdateTicketRequest extends FormRequest
             if ($this->filled('status') && $ticket) {
                 $currentStatus = $ticket->status;
                 $newStatus = $this->status;
-                
+
                 // Prevent reopening closed tickets without proper permissions
                 if ($currentStatus === 'Closed' && $newStatus !== 'Closed') {
-                    if (!$user->settings || $user->settings->role < 3) { // Manager level required
+                    if (! $user->settings || $user->settings->role < 3) { // Manager level required
                         $validator->errors()->add('status', 'Only managers can reopen closed tickets.');
                     }
                 }

@@ -3,18 +3,17 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractMilestone;
 use App\Models\Invoice;
 use App\Models\RecurringInvoice;
-use App\Domains\Contract\Models\ContractMilestone;
-use App\Domains\Financial\Services\InvoiceService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * RecurringInvoiceService
- * 
+ *
  * Manages automated recurring invoice generation based on active contracts,
  * handles various billing frequencies, milestone-based invoicing, and contract compliance.
  */
@@ -35,21 +34,21 @@ class RecurringInvoiceService
         return DB::transaction(function () use ($contract, $scheduleData) {
             Log::info('Creating recurring invoice schedule from contract', [
                 'contract_id' => $contract->id,
-                'schedule_data' => $scheduleData
+                'schedule_data' => $scheduleData,
             ]);
 
             $recurringInvoice = RecurringInvoice::create([
                 'company_id' => $contract->company_id,
                 'client_id' => $contract->client_id,
                 'contract_id' => $contract->id,
-                'title' => $scheduleData['title'] ?? $contract->title . ' - Recurring Billing',
+                'title' => $scheduleData['title'] ?? $contract->title.' - Recurring Billing',
                 'description' => $scheduleData['description'] ?? 'Automated recurring invoice from contract',
                 'billing_frequency' => $scheduleData['billing_frequency'], // monthly, quarterly, annually, etc.
                 'amount' => $scheduleData['amount'] ?? $contract->contract_value,
                 'start_date' => Carbon::parse($scheduleData['start_date']),
                 'end_date' => isset($scheduleData['end_date']) ? Carbon::parse($scheduleData['end_date']) : $contract->end_date,
                 'next_invoice_date' => $this->calculateNextInvoiceDate(
-                    Carbon::parse($scheduleData['start_date']), 
+                    Carbon::parse($scheduleData['start_date']),
                     $scheduleData['billing_frequency']
                 ),
                 'invoice_due_days' => $scheduleData['invoice_due_days'] ?? 30,
@@ -88,7 +87,7 @@ class RecurringInvoiceService
 
             Log::info('Recurring invoice schedule created', [
                 'recurring_invoice_id' => $recurringInvoice->id,
-                'contract_id' => $contract->id
+                'contract_id' => $contract->id,
             ]);
 
             return $recurringInvoice;
@@ -109,13 +108,13 @@ class RecurringInvoiceService
             ->where('next_invoice_date', '<=', $asOfDate)
             ->where(function ($query) use ($asOfDate) {
                 $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', $asOfDate);
+                    ->orWhere('end_date', '>=', $asOfDate);
             })
             ->get();
 
         Log::info('Processing due recurring invoices', [
             'count' => $dueRecurringInvoices->count(),
-            'as_of_date' => $asOfDate->toDateString()
+            'as_of_date' => $asOfDate->toDateString(),
         ]);
 
         foreach ($dueRecurringInvoices as $recurring) {
@@ -127,7 +126,7 @@ class RecurringInvoiceService
             } catch (\Exception $e) {
                 Log::error('Failed to generate recurring invoice', [
                     'recurring_invoice_id' => $recurring->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -144,18 +143,19 @@ class RecurringInvoiceService
 
         return DB::transaction(function () use ($recurring, $invoiceDate) {
             // Validate contract is still active
-            if (!$recurring->contract->isActive()) {
+            if (! $recurring->contract->isActive()) {
                 Log::warning('Skipping recurring invoice generation - contract not active', [
                     'recurring_invoice_id' => $recurring->id,
                     'contract_id' => $recurring->contract_id,
-                    'contract_status' => $recurring->contract->status
+                    'contract_status' => $recurring->contract->status,
                 ]);
+
                 return null;
             }
 
             // Calculate billing period
             $billingPeriod = $this->calculateBillingPeriod($recurring, $invoiceDate);
-            
+
             // Check for proration if needed
             $amount = $this->calculateInvoiceAmount($recurring, $billingPeriod, $invoiceDate);
 
@@ -202,7 +202,7 @@ class RecurringInvoiceService
                 'invoice_id' => $invoice->id,
                 'recurring_invoice_id' => $recurring->id,
                 'amount' => $amount,
-                'billing_period' => $billingPeriod
+                'billing_period' => $billingPeriod,
             ]);
 
             return $invoice;
@@ -214,13 +214,13 @@ class RecurringInvoiceService
      */
     public function generateMilestoneInvoice(ContractMilestone $milestone): ?Invoice
     {
-        if (!$milestone->is_billable || $milestone->status !== 'completed') {
+        if (! $milestone->is_billable || $milestone->status !== 'completed') {
             return null;
         }
 
         return DB::transaction(function () use ($milestone) {
             $contract = $milestone->contract;
-            
+
             $invoiceData = [
                 'client_id' => $contract->client_id,
                 'contract_id' => $contract->id,
@@ -249,7 +249,7 @@ class RecurringInvoiceService
             Log::info('Milestone-based invoice generated', [
                 'invoice_id' => $invoice->id,
                 'milestone_id' => $milestone->id,
-                'amount' => $milestone->amount
+                'amount' => $milestone->amount,
             ]);
 
             return $invoice;
@@ -269,7 +269,7 @@ class RecurringInvoiceService
 
         Log::info('Recurring invoice schedule paused', [
             'recurring_invoice_id' => $recurring->id,
-            'reason' => $reason
+            'reason' => $reason,
         ]);
 
         return true;
@@ -295,7 +295,7 @@ class RecurringInvoiceService
 
         Log::info('Recurring invoice schedule resumed', [
             'recurring_invoice_id' => $recurring->id,
-            'next_invoice_date' => $nextDate->toDateString()
+            'next_invoice_date' => $nextDate->toDateString(),
         ]);
 
         return true;
@@ -310,7 +310,7 @@ class RecurringInvoiceService
             'contracts_processed' => 0,
             'invoices_generated' => 0,
             'errors' => [],
-            'summary' => []
+            'summary' => [],
         ];
 
         // Get contracts with active recurring billing
@@ -320,7 +320,7 @@ class RecurringInvoiceService
             ->get();
 
         Log::info('Processing contract recurring billing', [
-            'active_contracts_count' => $activeContracts->count()
+            'active_contracts_count' => $activeContracts->count(),
         ]);
 
         foreach ($activeContracts as $contract) {
@@ -332,12 +332,12 @@ class RecurringInvoiceService
             } catch (\Exception $e) {
                 $results['errors'][] = [
                     'contract_id' => $contract->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
-                
+
                 Log::error('Contract recurring billing processing failed', [
                     'contract_id' => $contract->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -383,7 +383,6 @@ class RecurringInvoiceService
     /**
      * Helper methods
      */
-
     protected function calculateNextInvoiceDate(Carbon $baseDate, string $frequency): Carbon
     {
         $nextDate = $baseDate->copy();
@@ -438,18 +437,18 @@ class RecurringInvoiceService
 
     protected function applyEscalationIfDue(RecurringInvoice $recurring, float $amount, Carbon $invoiceDate): float
     {
-        if (!$recurring->escalation_percentage || $recurring->escalation_percentage <= 0) {
+        if (! $recurring->escalation_percentage || $recurring->escalation_percentage <= 0) {
             return $amount;
         }
 
         $escalationDue = false;
         $lastEscalation = $recurring->last_escalation_date;
 
-        if (!$lastEscalation) {
+        if (! $lastEscalation) {
             // First escalation check
             $contractStart = $recurring->start_date;
             $monthsSinceStart = $contractStart->diffInMonths($invoiceDate);
-            
+
             if ($recurring->escalation_frequency === 'annual' && $monthsSinceStart >= 12) {
                 $escalationDue = true;
             } elseif ($recurring->escalation_frequency === 'biennial' && $monthsSinceStart >= 24) {
@@ -458,7 +457,7 @@ class RecurringInvoiceService
         } else {
             // Check since last escalation
             $monthsSinceEscalation = $lastEscalation->diffInMonths($invoiceDate);
-            
+
             if ($recurring->escalation_frequency === 'annual' && $monthsSinceEscalation >= 12) {
                 $escalationDue = true;
             } elseif ($recurring->escalation_frequency === 'biennial' && $monthsSinceEscalation >= 24) {
@@ -468,7 +467,7 @@ class RecurringInvoiceService
 
         if ($escalationDue) {
             $escalatedAmount = $amount * (1 + $recurring->escalation_percentage / 100);
-            
+
             // Update recurring schedule with new base amount and escalation date
             $recurring->update([
                 'amount' => $escalatedAmount,
@@ -479,7 +478,7 @@ class RecurringInvoiceService
                 'recurring_invoice_id' => $recurring->id,
                 'old_amount' => $amount,
                 'new_amount' => $escalatedAmount,
-                'escalation_percentage' => $recurring->escalation_percentage
+                'escalation_percentage' => $recurring->escalation_percentage,
             ]);
 
             return round($escalatedAmount, 2);
@@ -491,12 +490,12 @@ class RecurringInvoiceService
     protected function generateInvoiceDescription(RecurringInvoice $recurring, array $billingPeriod): string
     {
         $description = $recurring->description;
-        
-        $description .= "\nBilling Period: " . $billingPeriod['start']->format('M d, Y') . 
-                       " - " . $billingPeriod['end']->format('M d, Y');
+
+        $description .= "\nBilling Period: ".$billingPeriod['start']->format('M d, Y').
+                       ' - '.$billingPeriod['end']->format('M d, Y');
 
         if ($recurring->contract) {
-            $description .= "\nContract: " . $recurring->contract->contract_number;
+            $description .= "\nContract: ".$recurring->contract->contract_number;
         }
 
         return $description;

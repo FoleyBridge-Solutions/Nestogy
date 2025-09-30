@@ -2,16 +2,16 @@
 
 namespace Foleybridge\Nestogy\Domains\Report\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
 
 /**
  * Report Template Model
- * 
+ *
  * Defines reusable report configurations and templates for consistent
  * reporting across the organization with predefined metrics and layouts.
  */
@@ -34,7 +34,7 @@ class ReportTemplate extends Model
         'is_system',
         'version',
         'tags',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -50,17 +50,22 @@ class ReportTemplate extends Model
         'version' => 'float',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     /**
      * Template categories
      */
     const CATEGORY_FINANCIAL = 'financial';
+
     const CATEGORY_OPERATIONAL = 'operational';
+
     const CATEGORY_PERFORMANCE = 'performance';
+
     const CATEGORY_COMPLIANCE = 'compliance';
+
     const CATEGORY_EXECUTIVE = 'executive';
+
     const CATEGORY_CUSTOM = 'custom';
 
     /**
@@ -90,17 +95,17 @@ class ReportTemplate extends Model
             'header_config' => [
                 'show_logo' => true,
                 'show_company_info' => true,
-                'show_date_range' => true
+                'show_date_range' => true,
             ],
             'footer_config' => [
                 'show_page_numbers' => true,
-                'show_generation_info' => true
+                'show_generation_info' => true,
             ],
             'styling' => [
                 'color_scheme' => 'default',
                 'font_family' => 'system',
-                'font_size' => 'normal'
-            ]
+                'font_size' => 'normal',
+            ],
         ], $this->template_config ?? []);
     }
 
@@ -115,7 +120,7 @@ class ReportTemplate extends Model
             'show_legend' => true,
             'show_grid' => true,
             'animation_enabled' => true,
-            'responsive' => true
+            'responsive' => true,
         ], $this->chart_config ?? []);
     }
 
@@ -129,12 +134,12 @@ class ReportTemplate extends Model
                 'summary' => ['enabled' => true, 'order' => 1],
                 'charts' => ['enabled' => true, 'order' => 2],
                 'tables' => ['enabled' => true, 'order' => 3],
-                'details' => ['enabled' => false, 'order' => 4]
+                'details' => ['enabled' => false, 'order' => 4],
             ],
             'columns' => 2,
             'spacing' => 'normal',
             'page_size' => 'a4',
-            'orientation' => 'portrait'
+            'orientation' => 'portrait',
         ], $this->layout_config ?? []);
     }
 
@@ -151,7 +156,7 @@ class ReportTemplate extends Model
             'report_config' => array_merge_recursive(
                 $this->getConfigurationAttribute(),
                 $customConfig
-            )
+            ),
         ], $customConfig);
 
         return Report::create($reportData);
@@ -160,22 +165,22 @@ class ReportTemplate extends Model
     /**
      * Clone template with new name
      */
-    public function duplicate(string $newName = null): self
+    public function duplicate(?string $newName = null): self
     {
         $data = $this->toArray();
         unset($data['id'], $data['created_at'], $data['updated_at'], $data['deleted_at']);
-        
-        $data['name'] = $newName ?: $this->name . ' (Copy)';
+
+        $data['name'] = $newName ?: $this->name.' (Copy)';
         $data['is_system'] = false;
         $data['version'] = 1.0;
-        
+
         return self::create($data);
     }
 
     /**
      * Update template version
      */
-    public function updateVersion(float $newVersion = null): void
+    public function updateVersion(?float $newVersion = null): void
     {
         $version = $newVersion ?: ($this->version + 0.1);
         $this->update(['version' => $version]);
@@ -193,7 +198,7 @@ class ReportTemplate extends Model
             'most_recent_generation' => $this->reports()
                 ->whereNotNull('last_generated_at')
                 ->orderBy('last_generated_at', 'desc')
-                ->first()?->last_generated_at
+                ->first()?->last_generated_at,
         ];
     }
 
@@ -212,13 +217,13 @@ class ReportTemplate extends Model
 
         // Validate chart configuration
         $chartConfig = $this->getChartConfigurationAttribute();
-        if (!in_array($chartConfig['default_chart_type'], ['bar', 'line', 'pie', 'doughnut', 'area'])) {
+        if (! in_array($chartConfig['default_chart_type'], ['bar', 'line', 'pie', 'doughnut', 'area'])) {
             $errors[] = 'Invalid default chart type';
         }
 
         // Validate layout sections
         $layoutConfig = $this->getLayoutConfigurationAttribute();
-        if (empty(array_filter($layoutConfig['sections'], fn($section) => $section['enabled']))) {
+        if (empty(array_filter($layoutConfig['sections'], fn ($section) => $section['enabled']))) {
             $errors[] = 'At least one layout section must be enabled';
         }
 
@@ -276,7 +281,7 @@ class ReportTemplate extends Model
             self::CATEGORY_PERFORMANCE => 'Performance',
             self::CATEGORY_COMPLIANCE => 'Compliance',
             self::CATEGORY_EXECUTIVE => 'Executive',
-            self::CATEGORY_CUSTOM => 'Custom'
+            self::CATEGORY_CUSTOM => 'Custom',
         ];
     }
 
@@ -297,15 +302,15 @@ class ReportTemplate extends Model
                         'executive_summary' => true,
                         'revenue_analysis' => true,
                         'expense_breakdown' => true,
-                        'profit_trends' => true
-                    ]
+                        'profit_trends' => true,
+                    ],
                 ],
                 'chart_config' => [
                     'default_chart_type' => 'line',
-                    'color_palette' => ['#10B981', '#EF4444', '#3B82F6']
+                    'color_palette' => ['#10B981', '#EF4444', '#3B82F6'],
                 ],
                 'is_system' => true,
-                'is_public' => true
+                'is_public' => true,
             ],
             [
                 'name' => 'Ticket Performance Dashboard',
@@ -318,15 +323,15 @@ class ReportTemplate extends Model
                         'kpi_summary' => true,
                         'sla_analysis' => true,
                         'workload_distribution' => true,
-                        'trend_analysis' => true
-                    ]
+                        'trend_analysis' => true,
+                    ],
                 ],
                 'chart_config' => [
                     'default_chart_type' => 'bar',
-                    'color_palette' => ['#3B82F6', '#10B981', '#F59E0B', '#EF4444']
+                    'color_palette' => ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
                 ],
                 'is_system' => true,
-                'is_public' => true
+                'is_public' => true,
             ],
             [
                 'name' => 'Executive Summary',
@@ -338,16 +343,16 @@ class ReportTemplate extends Model
                     'sections' => [
                         'kpi_cards' => true,
                         'trend_charts' => true,
-                        'performance_indicators' => true
-                    ]
+                        'performance_indicators' => true,
+                    ],
                 ],
                 'chart_config' => [
                     'default_chart_type' => 'area',
-                    'color_palette' => ['#8B5CF6', '#10B981', '#F59E0B']
+                    'color_palette' => ['#8B5CF6', '#10B981', '#F59E0B'],
                 ],
                 'is_system' => true,
-                'is_public' => true
-            ]
+                'is_public' => true,
+            ],
         ];
     }
 
@@ -360,11 +365,11 @@ class ReportTemplate extends Model
             self::updateOrCreate(
                 [
                     'name' => $templateData['name'],
-                    'is_system' => true
+                    'is_system' => true,
                 ],
                 array_merge($templateData, [
                     'version' => 1.0,
-                    'created_by' => null
+                    'created_by' => null,
                 ])
             );
         }
@@ -378,7 +383,7 @@ class ReportTemplate extends Model
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category' => 'required|in:' . implode(',', array_keys(self::getAvailableCategories())),
+            'category' => 'required|in:'.implode(',', array_keys(self::getAvailableCategories())),
             'report_type' => 'required|in:financial,tickets,assets,clients,projects,users,custom,dashboard',
             'template_config' => 'required|array',
             'default_filters' => 'nullable|array',
@@ -387,7 +392,7 @@ class ReportTemplate extends Model
             'layout_config' => 'nullable|array',
             'is_public' => 'boolean',
             'tags' => 'nullable|array',
-            'tags.*' => 'string|max:50'
+            'tags.*' => 'string|max:50',
         ];
     }
 
@@ -399,11 +404,11 @@ class ReportTemplate extends Model
         parent::boot();
 
         static::creating(function ($template) {
-            if (!$template->created_by && !$template->is_system) {
+            if (! $template->created_by && ! $template->is_system) {
                 $template->created_by = auth()->id();
             }
 
-            if (!$template->version) {
+            if (! $template->version) {
                 $template->version = 1.0;
             }
         });

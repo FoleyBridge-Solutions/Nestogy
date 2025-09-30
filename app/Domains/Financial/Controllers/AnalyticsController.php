@@ -3,7 +3,6 @@
 namespace App\Domains\Financial\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class AnalyticsController extends Controller
 {

@@ -2,15 +2,14 @@
 
 namespace App\Domains\Client\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\BelongsToCompany;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientQuote extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'client_id',
@@ -51,7 +50,7 @@ class ClientQuote extends Model
         'approved_at',
         'sent_at',
         'viewed_at',
-        'last_reminder_sent'
+        'last_reminder_sent',
     ];
 
     protected $casts = [
@@ -75,7 +74,7 @@ class ClientQuote extends Model
         'line_items' => 'array',
         'attachments' => 'array',
         'competitor_quotes' => 'array',
-        'metadata' => 'array'
+        'metadata' => 'array',
     ];
 
     protected $dates = [
@@ -89,7 +88,7 @@ class ClientQuote extends Model
         'approved_at',
         'sent_at',
         'viewed_at',
-        'last_reminder_sent'
+        'last_reminder_sent',
     ];
 
     /**
@@ -186,8 +185,8 @@ class ClientQuote extends Model
     public function scopeExpiringSoon($query, $days = 7)
     {
         return $query->whereIn('status', ['sent', 'pending'])
-                    ->where('valid_until', '>=', now()->toDate())
-                    ->where('valid_until', '<=', now()->addDays($days)->toDate());
+            ->where('valid_until', '>=', now()->toDate())
+            ->where('valid_until', '<=', now()->addDays($days)->toDate());
     }
 
     /**
@@ -196,7 +195,7 @@ class ClientQuote extends Model
     public function scopeOverdue($query)
     {
         return $query->whereIn('status', ['sent', 'pending'])
-                    ->where('valid_until', '<', now()->toDate());
+            ->where('valid_until', '<', now()->toDate());
     }
 
     /**
@@ -205,7 +204,7 @@ class ClientQuote extends Model
     public function scopeFollowUpDue($query)
     {
         return $query->whereIn('status', ['sent', 'pending'])
-                    ->where('follow_up_date', '<=', now()->toDate());
+            ->where('follow_up_date', '<=', now()->toDate());
     }
 
     /**
@@ -222,7 +221,7 @@ class ClientQuote extends Model
             'declined' => 'Declined',
             'expired' => 'Expired',
             'converted' => 'Converted to Invoice',
-            'cancelled' => 'Cancelled'
+            'cancelled' => 'Cancelled',
         ];
     }
 
@@ -239,7 +238,7 @@ class ClientQuote extends Model
             'AUD' => 'Australian Dollar (A$)',
             'JPY' => 'Japanese Yen (¥)',
             'CNY' => 'Chinese Yuan (¥)',
-            'INR' => 'Indian Rupee (₹)'
+            'INR' => 'Indian Rupee (₹)',
         ];
     }
 
@@ -250,7 +249,7 @@ class ClientQuote extends Model
     {
         return [
             'percentage' => 'Percentage',
-            'fixed' => 'Fixed Amount'
+            'fixed' => 'Fixed Amount',
         ];
     }
 
@@ -299,7 +298,7 @@ class ClientQuote extends Model
      */
     public function isExpired()
     {
-        return $this->status === 'expired' || 
+        return $this->status === 'expired' ||
                ($this->valid_until && $this->valid_until->lt(now()->toDate()));
     }
 
@@ -316,8 +315,8 @@ class ClientQuote extends Model
      */
     public function isExpiringSoon($days = 7)
     {
-        return $this->valid_until && 
-               $this->valid_until->gte(now()->toDate()) && 
+        return $this->valid_until &&
+               $this->valid_until->gte(now()->toDate()) &&
                $this->valid_until->lte(now()->addDays($days)->toDate()) &&
                in_array($this->status, ['sent', 'pending']);
     }
@@ -327,7 +326,7 @@ class ClientQuote extends Model
      */
     public function needsFollowUp()
     {
-        return $this->follow_up_date && 
+        return $this->follow_up_date &&
                $this->follow_up_date->lte(now()->toDate()) &&
                in_array($this->status, ['sent', 'pending']);
     }
@@ -338,7 +337,8 @@ class ClientQuote extends Model
     public function getFormattedAmountAttribute()
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($this->amount, 2);
+
+        return $symbol.number_format($this->amount, 2);
     }
 
     /**
@@ -347,7 +347,8 @@ class ClientQuote extends Model
     public function getFormattedTotalAmountAttribute()
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($this->total_amount, 2);
+
+        return $symbol.number_format($this->total_amount, 2);
     }
 
     /**
@@ -356,11 +357,12 @@ class ClientQuote extends Model
     public function getFormattedDiscountAmountAttribute()
     {
         if ($this->discount_type === 'percentage') {
-            return $this->discount_amount . '%';
+            return $this->discount_amount.'%';
         }
-        
+
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($this->discount_amount, 2);
+
+        return $symbol.number_format($this->discount_amount, 2);
     }
 
     /**
@@ -376,7 +378,7 @@ class ClientQuote extends Model
             'AUD' => 'A$',
             'JPY' => '¥',
             'CNY' => '¥',
-            'INR' => '₹'
+            'INR' => '₹',
         ];
 
         return $symbols[$this->currency] ?? $this->currency;
@@ -387,10 +389,10 @@ class ClientQuote extends Model
      */
     public function getDaysUntilExpiryAttribute()
     {
-        if (!$this->valid_until) {
+        if (! $this->valid_until) {
             return null;
         }
-        
+
         return now()->diffInDays($this->valid_until, false);
     }
 
@@ -399,20 +401,20 @@ class ClientQuote extends Model
      */
     public function getExpiryStatusAttribute()
     {
-        if (!$this->valid_until) {
+        if (! $this->valid_until) {
             return 'No expiry date';
         }
-        
+
         $days = $this->days_until_expiry;
-        
+
         if ($days < 0) {
-            return 'Expired ' . abs($days) . ' days ago';
+            return 'Expired '.abs($days).' days ago';
         } elseif ($days == 0) {
             return 'Expires today';
         } elseif ($days == 1) {
             return 'Expires tomorrow';
         } else {
-            return 'Expires in ' . $days . ' days';
+            return 'Expires in '.$days.' days';
         }
     }
 
@@ -431,19 +433,19 @@ class ClientQuote extends Model
     {
         $year = now()->format('Y');
         $month = now()->format('m');
-        
+
         $lastQuote = static::where('quote_number', 'like', "{$prefix}-{$year}{$month}-%")
-                          ->orderBy('quote_number', 'desc')
-                          ->first();
-        
+            ->orderBy('quote_number', 'desc')
+            ->first();
+
         if ($lastQuote) {
             $lastNumber = (int) substr($lastQuote->quote_number, -4);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
-        
-        return $prefix . '-' . $year . $month . '-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.'-'.$year.$month.'-'.str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -452,16 +454,16 @@ class ClientQuote extends Model
     public function calculateTotals()
     {
         $subtotal = 0;
-        
+
         if ($this->line_items && is_array($this->line_items)) {
             foreach ($this->line_items as $item) {
                 $itemTotal = ($item['quantity'] ?? 1) * ($item['unit_price'] ?? 0);
                 $subtotal += $itemTotal;
             }
         }
-        
+
         $this->amount = $subtotal;
-        
+
         // Calculate discount
         $discountAmount = 0;
         if ($this->discount_amount > 0) {
@@ -471,18 +473,18 @@ class ClientQuote extends Model
                 $discountAmount = $this->discount_amount;
             }
         }
-        
+
         $afterDiscount = $subtotal - $discountAmount;
-        
+
         // Calculate tax
         $taxAmount = 0;
         if ($this->tax_rate > 0) {
             $taxAmount = ($afterDiscount * $this->tax_rate) / 100;
         }
-        
+
         $this->tax_amount = $taxAmount;
         $this->total_amount = $afterDiscount + $taxAmount;
-        
+
         return $this;
     }
 
@@ -495,10 +497,10 @@ class ClientQuote extends Model
             $this->status = 'sent';
             $this->sent_at = now();
             $this->save();
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -511,10 +513,10 @@ class ClientQuote extends Model
             $this->status = 'viewed';
             $this->viewed_at = now();
             $this->save();
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -526,18 +528,18 @@ class ClientQuote extends Model
         if (in_array($this->status, ['sent', 'viewed'])) {
             $this->status = 'accepted';
             $this->accepted_date = now()->toDate();
-            
+
             if ($signatureData) {
                 $this->client_signature = $signatureData['signature'] ?? null;
                 $this->signature_date = now();
                 $this->signature_ip = $signatureData['ip'] ?? null;
             }
-            
+
             $this->save();
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -549,16 +551,16 @@ class ClientQuote extends Model
         if (in_array($this->status, ['sent', 'viewed'])) {
             $this->status = 'declined';
             $this->declined_date = now()->toDate();
-            
+
             if ($reason) {
                 $this->win_loss_reason = $reason;
             }
-            
+
             $this->save();
-            
+
             return true;
         }
-        
+
         return false;
     }
 
@@ -587,7 +589,7 @@ class ClientQuote extends Model
                 'notes' => $this->notes,
                 'payment_terms' => $this->payment_terms,
                 'line_items' => $this->line_items,
-                'company_id' => $this->company_id
+                'company_id' => $this->company_id,
             ];
 
             $invoice = ClientInvoice::create($invoiceData);
@@ -600,7 +602,7 @@ class ClientQuote extends Model
 
             return $invoice;
         }
-        
+
         return false;
     }
 
@@ -610,7 +612,7 @@ class ClientQuote extends Model
     public static function updateExpiredQuotes()
     {
         return static::whereIn('status', ['sent', 'viewed'])
-                    ->where('valid_until', '<', now()->toDate())
-                    ->update(['status' => 'expired']);
+            ->where('valid_until', '<', now()->toDate())
+            ->update(['status' => 'expired']);
     }
 }

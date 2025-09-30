@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\BelongsToCompany;
-use Carbon\Carbon;
 
 /**
  * Dunning Sequence Model
- * 
+ *
  * Represents individual steps in a dunning campaign with detailed
  * configuration for timing, actions, and escalation logic.
- * 
+ *
  * @property int $id
  * @property int $campaign_id
  * @property string $name
@@ -66,7 +66,7 @@ use Carbon\Carbon;
  */
 class DunningSequence extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'dunning_sequences';
 
@@ -84,7 +84,7 @@ class DunningSequence extends Model
         'max_retry_attempts', 'retry_interval_hours', 'times_executed',
         'success_rate', 'average_response_time', 'performance_metrics',
         'pause_sequence_on_contact', 'pause_sequence_on_payment', 'pause_sequence_on_dispute',
-        'sequence_timeout_days', 'created_by', 'updated_by'
+        'sequence_timeout_days', 'created_by', 'updated_by',
     ];
 
     protected $casts = [
@@ -129,31 +129,46 @@ class DunningSequence extends Model
         'updated_by' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Status constants
     const STATUS_ACTIVE = 'active';
+
     const STATUS_INACTIVE = 'inactive';
+
     const STATUS_DRAFT = 'draft';
 
     // Action type constants
     const ACTION_EMAIL = 'email';
+
     const ACTION_SMS = 'sms';
+
     const ACTION_PHONE_CALL = 'phone_call';
+
     const ACTION_LETTER = 'letter';
+
     const ACTION_PORTAL_NOTIFICATION = 'portal_notification';
+
     const ACTION_SERVICE_SUSPENSION = 'service_suspension';
+
     const ACTION_SERVICE_RESTORATION = 'service_restoration';
+
     const ACTION_LEGAL_HANDOFF = 'legal_handoff';
+
     const ACTION_COLLECTION_AGENCY = 'collection_agency';
+
     const ACTION_PAYMENT_PLAN_OFFER = 'payment_plan_offer';
+
     const ACTION_SETTLEMENT_OFFER = 'settlement_offer';
 
     // Escalation severity constants
     const ESCALATION_LOW = 'low';
+
     const ESCALATION_MEDIUM = 'medium';
+
     const ESCALATION_HIGH = 'high';
+
     const ESCALATION_CRITICAL = 'critical';
 
     /**
@@ -206,7 +221,7 @@ class DunningSequence extends Model
             self::ACTION_SMS,
             self::ACTION_PHONE_CALL,
             self::ACTION_LETTER,
-            self::ACTION_PORTAL_NOTIFICATION
+            self::ACTION_PORTAL_NOTIFICATION,
         ]);
     }
 
@@ -217,7 +232,7 @@ class DunningSequence extends Model
     {
         return in_array($this->action_type, [
             self::ACTION_SERVICE_SUSPENSION,
-            self::ACTION_SERVICE_RESTORATION
+            self::ACTION_SERVICE_RESTORATION,
         ]);
     }
 
@@ -228,14 +243,14 @@ class DunningSequence extends Model
     {
         return in_array($this->action_type, [
             self::ACTION_LEGAL_HANDOFF,
-            self::ACTION_COLLECTION_AGENCY
+            self::ACTION_COLLECTION_AGENCY,
         ]);
     }
 
     /**
      * Calculate when this sequence step should execute.
      */
-    public function calculateExecutionTime(Carbon $triggerDate, Carbon $previousStepDate = null): Carbon
+    public function calculateExecutionTime(Carbon $triggerDate, ?Carbon $previousStepDate = null): Carbon
     {
         if ($this->days_after_trigger !== null) {
             $executionDate = $triggerDate->copy()->addDays($this->days_after_trigger);
@@ -256,7 +271,7 @@ class DunningSequence extends Model
         }
 
         // Use campaign's contact hours if available
-        if ($this->campaign && !$this->campaign->isWithinContactHours($executionDate)) {
+        if ($this->campaign && ! $this->campaign->isWithinContactHours($executionDate)) {
             $executionDate = $this->campaign->getNextAvailableContactTime($executionDate);
         }
 
@@ -268,14 +283,14 @@ class DunningSequence extends Model
      */
     public function isExcludedDay(Carbon $date): bool
     {
-        if (!$this->excluded_days) {
+        if (! $this->excluded_days) {
             return false;
         }
 
         $dayOfWeek = $date->dayOfWeek; // 0 = Sunday, 6 = Saturday
         $dateString = $date->format('Y-m-d');
 
-        return in_array($dayOfWeek, $this->excluded_days) || 
+        return in_array($dayOfWeek, $this->excluded_days) ||
                in_array($dateString, $this->excluded_days);
     }
 
@@ -286,7 +301,7 @@ class DunningSequence extends Model
     {
         $message = $this->custom_message ?: '';
 
-        if (!$this->personalization_tokens) {
+        if (! $this->personalization_tokens) {
             return $message;
         }
 
@@ -305,14 +320,14 @@ class DunningSequence extends Model
         // Add late fees if applicable
         if ($this->late_fee_amount) {
             $lateFees = $this->calculateLateFees($invoice);
-            $tokens['{{late_fees}}'] = '$' . number_format($lateFees, 2);
-            $tokens['{{total_with_fees}}'] = '$' . number_format($invoice->getBalance() + $lateFees, 2);
+            $tokens['{{late_fees}}'] = '$'.number_format($lateFees, 2);
+            $tokens['{{total_with_fees}}'] = '$'.number_format($invoice->getBalance() + $lateFees, 2);
         }
 
         // Add settlement offer if applicable
         if ($this->settlement_percentage) {
             $settlementAmount = $invoice->getBalance() * ($this->settlement_percentage / 100);
-            $tokens['{{settlement_amount}}'] = '$' . number_format($settlementAmount, 2);
+            $tokens['{{settlement_amount}}'] = '$'.number_format($settlementAmount, 2);
             $tokens['{{settlement_deadline}}'] = Carbon::now()->addDays($this->settlement_deadline_days ?: 10)->format('M d, Y');
         }
 
@@ -324,15 +339,16 @@ class DunningSequence extends Model
      */
     public function calculateLateFees(Invoice $invoice): float
     {
-        if (!$this->late_fee_amount) {
+        if (! $this->late_fee_amount) {
             return 0;
         }
 
         $daysOverdue = Carbon::now()->diffInDays($invoice->due_date);
-        
+
         if ($this->compound_late_fees) {
             // Compound late fees monthly
             $months = ceil($daysOverdue / 30);
+
             return $this->late_fee_amount * $months;
         }
 
@@ -371,7 +387,7 @@ class DunningSequence extends Model
         $totalActions = $recentActions->count();
         $successfulActions = $recentActions->where('resulted_in_payment', true)->count();
         $avgResponseTime = $recentActions->where('responded_at')->avg(function ($action) {
-            return $action->responded_at ? 
+            return $action->responded_at ?
                 Carbon::parse($action->attempted_at)->diffInHours($action->responded_at) : null;
         });
 
@@ -455,7 +471,7 @@ class DunningSequence extends Model
         parent::boot();
 
         static::creating(function ($sequence) {
-            if (!$sequence->created_by) {
+            if (! $sequence->created_by) {
                 $sequence->created_by = auth()->id() ?? 1;
             }
         });

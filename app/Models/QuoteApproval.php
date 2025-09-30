@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * QuoteApproval Model
- * 
+ *
  * Tracks approval workflow for quotes with multi-tier approval process.
  * Supports manager and executive approval levels with comments and timestamps.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $quote_id
@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class QuoteApproval extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -73,14 +73,18 @@ class QuoteApproval extends Model
      * Approval level enumeration
      */
     const LEVEL_MANAGER = 'manager';
+
     const LEVEL_EXECUTIVE = 'executive';
+
     const LEVEL_FINANCE = 'finance';
 
     /**
      * Approval status enumeration
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
 
     /**
@@ -126,7 +130,7 @@ class QuoteApproval extends Model
     /**
      * Approve the quote at this level.
      */
-    public function approve(string $comments = null): void
+    public function approve(?string $comments = null): void
     {
         $this->update([
             'status' => self::STATUS_APPROVED,

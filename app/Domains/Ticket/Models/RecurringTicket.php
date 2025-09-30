@@ -2,8 +2,8 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToCompany;
 use App\Models\Client;
+use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,13 +13,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Recurring Ticket Model
- * 
+ *
  * Represents automated ticket creation schedules based on templates
  * with flexible frequency configurations and occurrence limits.
  */
 class RecurringTicket extends Model
 {
-    use HasFactory, BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -58,8 +58,11 @@ class RecurringTicket extends Model
     // ===========================================
 
     const FREQUENCY_DAILY = 'daily';
+
     const FREQUENCY_WEEKLY = 'weekly';
+
     const FREQUENCY_MONTHLY = 'monthly';
+
     const FREQUENCY_YEARLY = 'yearly';
 
     // ===========================================
@@ -90,7 +93,7 @@ class RecurringTicket extends Model
      */
     public function shouldRun(): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -145,12 +148,14 @@ class RecurringTicket extends Model
         if (isset($config['day_of_month'])) {
             $nextMonth = $base->copy()->addMonths($interval);
             $dayOfMonth = min($config['day_of_month'], $nextMonth->daysInMonth);
+
             return $nextMonth->day($dayOfMonth);
         }
 
         // If specific week and weekday (e.g., "second Tuesday")
         if (isset($config['week']) && isset($config['weekday'])) {
             $nextMonth = $base->copy()->addMonths($interval)->startOfMonth();
+
             return $this->getNthWeekdayOfMonth($nextMonth, $config['week'], $config['weekday']);
         }
 
@@ -165,7 +170,7 @@ class RecurringTicket extends Model
     {
         $firstDay = $month->copy()->startOfMonth();
         $firstWeekday = $firstDay->copy()->next($weekday);
-        
+
         return $firstWeekday->addWeeks($week - 1);
     }
 
@@ -174,7 +179,7 @@ class RecurringTicket extends Model
      */
     public function generateTicket(): Ticket
     {
-        if (!$this->shouldRun()) {
+        if (! $this->shouldRun()) {
             throw new \Exception('Recurring ticket is not scheduled to run.');
         }
 
@@ -236,13 +241,13 @@ class RecurringTicket extends Model
             if ($this->end_date && $currentDate->gt($this->end_date)) {
                 break;
             }
-            
+
             if ($this->max_occurrences && $occurrences >= $this->max_occurrences) {
                 break;
             }
 
             $dates[] = $currentDate->toDateString();
-            
+
             // Calculate next date
             switch ($this->frequency) {
                 case self::FREQUENCY_DAILY:
@@ -258,7 +263,7 @@ class RecurringTicket extends Model
                     $currentDate->addYears($this->interval_value);
                     break;
             }
-            
+
             $occurrences++;
         }
 
@@ -287,7 +292,7 @@ class RecurringTicket extends Model
     public function getScheduleSummary(): string
     {
         $summary = "Every {$this->interval_value} ";
-        
+
         switch ($this->frequency) {
             case self::FREQUENCY_DAILY:
                 $summary .= $this->interval_value === 1 ? 'day' : 'days';
@@ -309,13 +314,13 @@ class RecurringTicket extends Model
             $remaining = $this->max_occurrences - $this->occurrences_count;
             $conditions[] = "{$remaining} occurrences remaining";
         }
-        
+
         if ($this->end_date) {
             $conditions[] = "until {$this->end_date->format('M j, Y')}";
         }
 
-        if (!empty($conditions)) {
-            $summary .= ' (' . implode(', ', $conditions) . ')';
+        if (! empty($conditions)) {
+            $summary .= ' ('.implode(', ', $conditions).')';
         }
 
         return $summary;
@@ -336,11 +341,11 @@ class RecurringTicket extends Model
             ->where('next_run_date', '<=', now()->toDateString())
             ->where(function ($q) {
                 $q->whereNull('end_date')
-                  ->orWhere('end_date', '>=', now()->toDateString());
+                    ->orWhere('end_date', '>=', now()->toDateString());
             })
             ->where(function ($q) {
                 $q->whereNull('max_occurrences')
-                  ->orWhereRaw('occurrences_count < max_occurrences');
+                    ->orWhereRaw('occurrences_count < max_occurrences');
             });
     }
 

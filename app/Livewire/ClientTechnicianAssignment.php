@@ -2,26 +2,35 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 
 class ClientTechnicianAssignment extends Component
 {
     public $clientId;
+
     public $client;
+
     public $technicians = [];
+
     public $availableTechnicians = [];
+
     public $selectedTechnicianId;
+
     public $accessLevel = 'view';
+
     public $isPrimary = false;
+
     public $expiresAt;
+
     public $notes;
+
     public $showAddForm = false;
-    
+
     protected $rules = [
         'selectedTechnicianId' => 'required|exists:users,id',
         'accessLevel' => 'required|in:view,manage,admin',
@@ -29,7 +38,7 @@ class ClientTechnicianAssignment extends Component
         'expiresAt' => 'nullable|date|after:today',
         'notes' => 'nullable|string|max:500',
     ];
-    
+
     public function mount($clientId)
     {
         $this->clientId = $clientId;
@@ -37,17 +46,17 @@ class ClientTechnicianAssignment extends Component
         $this->loadTechnicians();
         $this->loadAvailableTechnicians();
     }
-    
+
     public function loadClient()
     {
         $this->client = Client::findOrFail($this->clientId);
-        
+
         // Check permissions
-        if (!Auth::user()->isA('admin') && !Auth::user()->isA('super-admin')) {
+        if (! Auth::user()->isA('admin') && ! Auth::user()->isA('super-admin')) {
             abort(403, 'Unauthorized');
         }
     }
-    
+
     public function loadTechnicians()
     {
         $this->technicians = $this->client->assignedTechnicians()
@@ -67,14 +76,14 @@ class ClientTechnicianAssignment extends Component
             })
             ->toArray();
     }
-    
+
     public function loadAvailableTechnicians()
     {
         $user = Auth::user();
-        
+
         // Get users who are technicians but not yet assigned to this client
         $assignedIds = collect($this->technicians)->pluck('id')->toArray();
-        
+
         $this->availableTechnicians = User::where('company_id', $user->company_id)
             ->whereNotIn('id', $assignedIds)
             ->whereHas('roles', function ($query) {
@@ -84,16 +93,16 @@ class ClientTechnicianAssignment extends Component
             ->get(['id', 'name', 'email'])
             ->toArray();
     }
-    
+
     public function toggleAddForm()
     {
-        $this->showAddForm = !$this->showAddForm;
-        
+        $this->showAddForm = ! $this->showAddForm;
+
         if ($this->showAddForm) {
             $this->resetForm();
         }
     }
-    
+
     public function resetForm()
     {
         $this->selectedTechnicianId = null;
@@ -103,21 +112,21 @@ class ClientTechnicianAssignment extends Component
         $this->notes = null;
         $this->resetValidation();
     }
-    
+
     public function assignTechnician()
     {
         $this->validate();
-        
+
         try {
             DB::beginTransaction();
-            
+
             // If setting as primary, remove primary flag from others
             if ($this->isPrimary) {
                 DB::table('user_clients')
                     ->where('client_id', $this->clientId)
                     ->update(['is_primary' => false]);
             }
-            
+
             // Assign the technician
             $this->client->assignTechnician(
                 User::find($this->selectedTechnicianId),
@@ -128,39 +137,39 @@ class ClientTechnicianAssignment extends Component
                     'notes' => $this->notes,
                 ]
             );
-            
+
             DB::commit();
-            
+
             // Reload data
             $this->loadTechnicians();
             $this->loadAvailableTechnicians();
             $this->showAddForm = false;
             $this->resetForm();
-            
+
             $this->dispatch('technician-assigned', [
-                'message' => 'Technician assigned successfully'
+                'message' => 'Technician assigned successfully',
             ]);
-            
+
             Log::info('Technician assigned to client', [
                 'client_id' => $this->clientId,
                 'technician_id' => $this->selectedTechnicianId,
                 'assigned_by' => Auth::id(),
             ]);
-            
+
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             Log::error('Failed to assign technician', [
                 'client_id' => $this->clientId,
                 'error' => $e->getMessage(),
             ]);
-            
+
             $this->dispatch('assignment-failed', [
-                'message' => 'Failed to assign technician: ' . $e->getMessage()
+                'message' => 'Failed to assign technician: '.$e->getMessage(),
             ]);
         }
     }
-    
+
     public function updateAccessLevel($technicianId, $newLevel)
     {
         try {
@@ -168,96 +177,96 @@ class ClientTechnicianAssignment extends Component
                 ->where('client_id', $this->clientId)
                 ->where('user_id', $technicianId)
                 ->update(['access_level' => $newLevel]);
-            
+
             $this->loadTechnicians();
-            
+
             $this->dispatch('access-updated', [
-                'message' => 'Access level updated successfully'
+                'message' => 'Access level updated successfully',
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to update access level', [
                 'client_id' => $this->clientId,
                 'technician_id' => $technicianId,
                 'error' => $e->getMessage(),
             ]);
-            
+
             $this->dispatch('update-failed', [
-                'message' => 'Failed to update access level'
+                'message' => 'Failed to update access level',
             ]);
         }
     }
-    
+
     public function setPrimary($technicianId)
     {
         try {
             DB::beginTransaction();
-            
+
             // Remove primary flag from all technicians for this client
             DB::table('user_clients')
                 ->where('client_id', $this->clientId)
                 ->update(['is_primary' => false]);
-            
+
             // Set the new primary technician
             DB::table('user_clients')
                 ->where('client_id', $this->clientId)
                 ->where('user_id', $technicianId)
                 ->update(['is_primary' => true]);
-            
+
             DB::commit();
-            
+
             $this->loadTechnicians();
-            
+
             $this->dispatch('primary-updated', [
-                'message' => 'Primary technician updated successfully'
+                'message' => 'Primary technician updated successfully',
             ]);
-            
+
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             Log::error('Failed to set primary technician', [
                 'client_id' => $this->clientId,
                 'technician_id' => $technicianId,
                 'error' => $e->getMessage(),
             ]);
-            
+
             $this->dispatch('update-failed', [
-                'message' => 'Failed to set primary technician'
+                'message' => 'Failed to set primary technician',
             ]);
         }
     }
-    
+
     public function removeTechnician($technicianId)
     {
         try {
             $this->client->removeTechnician(User::find($technicianId));
-            
+
             $this->loadTechnicians();
             $this->loadAvailableTechnicians();
-            
+
             $this->dispatch('technician-removed', [
-                'message' => 'Technician removed successfully'
+                'message' => 'Technician removed successfully',
             ]);
-            
+
             Log::info('Technician removed from client', [
                 'client_id' => $this->clientId,
                 'technician_id' => $technicianId,
                 'removed_by' => Auth::id(),
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to remove technician', [
                 'client_id' => $this->clientId,
                 'technician_id' => $technicianId,
                 'error' => $e->getMessage(),
             ]);
-            
+
             $this->dispatch('removal-failed', [
-                'message' => 'Failed to remove technician'
+                'message' => 'Failed to remove technician',
             ]);
         }
     }
-    
+
     public function render()
     {
         return view('livewire.client-technician-assignment');

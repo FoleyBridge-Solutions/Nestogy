@@ -16,13 +16,13 @@ return new class extends Migration
             $table->index(['client_id', 'name'], 'locations_client_search_name_index');
             $table->index(['client_id', 'city'], 'locations_client_search_city_index');
             $table->index(['client_id', 'state'], 'locations_client_search_state_index');
-            
+
             // Add composite index for filtering
             $table->index(['client_id', 'state', 'country'], 'locations_client_filter_index');
-            
+
             // Add index for ordering
             $table->index(['client_id', 'primary', 'name'], 'locations_client_order_index');
-            
+
             // Add index for address search (since it's the most commonly searched field)
             $table->index(['client_id', 'address'], 'locations_client_address_index');
         });

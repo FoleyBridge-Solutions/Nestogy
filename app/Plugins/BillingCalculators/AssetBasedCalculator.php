@@ -4,8 +4,8 @@ namespace App\Plugins\BillingCalculators;
 
 use App\Contracts\BillingCalculatorInterface;
 use App\Domains\Contract\Models\Contract;
-use Money\Money;
 use Money\Currency;
+use Money\Money;
 
 /**
  * Asset-based billing calculator
@@ -51,7 +51,7 @@ class AssetBasedCalculator implements BillingCalculatorInterface
                     'min_assets' => ['type' => 'integer', 'minimum' => 0],
                     'max_assets' => ['type' => 'integer', 'minimum' => 0],
                     'price_per_asset' => ['type' => 'number', 'minimum' => 0],
-                ]
+                ],
             ],
             'asset_type_multipliers' => [
                 'type' => 'object',
@@ -61,7 +61,7 @@ class AssetBasedCalculator implements BillingCalculatorInterface
                     'workstation' => ['type' => 'number', 'default' => 1.0],
                     'network_device' => ['type' => 'number', 'default' => 2.0],
                     'mobile_device' => ['type' => 'number', 'default' => 0.5],
-                ]
+                ],
             ],
             'minimum_charge' => [
                 'type' => 'number',
@@ -80,16 +80,16 @@ class AssetBasedCalculator implements BillingCalculatorInterface
     {
         $errors = [];
 
-        if (!isset($config['base_price']) || $config['base_price'] < 0) {
+        if (! isset($config['base_price']) || $config['base_price'] < 0) {
             $errors[] = 'Base price must be a positive number';
         }
 
         if (isset($config['tier_pricing'])) {
             foreach ($config['tier_pricing'] as $index => $tier) {
-                if (!isset($tier['min_assets']) || !isset($tier['max_assets']) || !isset($tier['price_per_asset'])) {
+                if (! isset($tier['min_assets']) || ! isset($tier['max_assets']) || ! isset($tier['price_per_asset'])) {
                     $errors[] = "Tier pricing entry {$index} is missing required fields";
                 }
-                
+
                 if ($tier['min_assets'] > $tier['max_assets']) {
                     $errors[] = "Tier pricing entry {$index}: min_assets cannot be greater than max_assets";
                 }
@@ -134,7 +134,7 @@ class AssetBasedCalculator implements BillingCalculatorInterface
     {
         $monthlyAmount = $this->calculateMonthlyRecurring($contract, $context);
         $oneTimeAmount = $this->calculateOneTime($contract, $context);
-        
+
         return $monthlyAmount->add($oneTimeAmount);
     }
 
@@ -149,9 +149,9 @@ class AssetBasedCalculator implements BillingCalculatorInterface
         }
 
         $amount = $this->calculateTieredAmount($assetCount);
-        
+
         // Apply asset type multipliers
-        if (!empty($this->config['asset_type_multipliers'])) {
+        if (! empty($this->config['asset_type_multipliers'])) {
             $amount = $this->applyAssetTypeMultipliers($assets, $amount);
         }
 
@@ -171,23 +171,23 @@ class AssetBasedCalculator implements BillingCalculatorInterface
     public function calculateOneTime(Contract $contract, array $context = []): Money
     {
         $currency = new Currency($contract->currency_code ?? 'USD');
-        
+
         // One-time setup fees based on asset count
         $assets = $this->getContractAssets($contract, $context);
         $setupFee = $assets->count() * ($this->config['setup_fee_per_asset'] ?? 0);
-        
+
         return new Money($setupFee * 100, $currency);
     }
 
     public function calculateProrated(Contract $contract, \DateTime $startDate, \DateTime $endDate, array $context = []): Money
     {
         $monthlyAmount = $this->calculateMonthlyRecurring($contract, $context);
-        
+
         $totalDays = $startDate->diff($endDate)->days + 1;
         $daysInMonth = $startDate->format('t');
-        
+
         $proratedAmount = $monthlyAmount->multiply($totalDays / $daysInMonth);
-        
+
         return $proratedAmount;
     }
 
@@ -196,7 +196,7 @@ class AssetBasedCalculator implements BillingCalculatorInterface
         $assets = $this->getContractAssets($contract, $context);
         $assetCount = $assets->count();
         $baseAmount = $this->calculateTieredAmount($assetCount);
-        
+
         $breakdown = [
             'asset_count' => $assetCount,
             'base_calculation' => [
@@ -244,11 +244,11 @@ class AssetBasedCalculator implements BillingCalculatorInterface
     {
         $errors = [];
 
-        if (!$contract->client_id) {
+        if (! $contract->client_id) {
             $errors[] = 'Contract must have a client assigned';
         }
 
-        if (!$contract->currency_code) {
+        if (! $contract->currency_code) {
             $errors[] = 'Contract must have a currency code';
         }
 
@@ -269,7 +269,7 @@ class AssetBasedCalculator implements BillingCalculatorInterface
     {
         // Mock contract for preview
         $contract = new Contract($contractData);
-        
+
         return [
             'monthly_recurring' => $this->calculateMonthlyRecurring($contract, $context)->getAmount() / 100,
             'one_time' => $this->calculateOneTime($contract, $context)->getAmount() / 100,
@@ -307,7 +307,7 @@ class AssetBasedCalculator implements BillingCalculatorInterface
                         $adjustedAmount = $adjustedAmount->subtract(new Money($adjustment['value'] * 100, $currency));
                     }
                     break;
-                    
+
                 case 'surcharge':
                     if ($adjustment['is_percentage']) {
                         $adjustedAmount = $adjustedAmount->multiply(1 + ($adjustment['value'] / 100));
@@ -326,6 +326,7 @@ class AssetBasedCalculator implements BillingCalculatorInterface
     {
         // Integrate with tax service if available
         $taxRate = $context['tax_rate'] ?? 0;
+
         return $amount->multiply(1 + ($taxRate / 100));
     }
 
@@ -341,7 +342,7 @@ class AssetBasedCalculator implements BillingCalculatorInterface
 
     public function getNextBillingDate(Contract $contract): ?\DateTime
     {
-        if (!$contract->start_date) {
+        if (! $contract->start_date) {
             return null;
         }
 

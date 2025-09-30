@@ -130,5 +130,3 @@ return [
     'queue_immediately' => env('MAIL_QUEUE_IMMEDIATELY', false),
 
 ];
-
-

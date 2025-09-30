@@ -3,19 +3,19 @@
 namespace App\Domains\Contract\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * ContractSchedule Model
- * 
+ *
  * Manages contract schedules (A, B, C, etc.) that define different aspects
  * of MSP contracts like infrastructure coverage, pricing, and additional terms.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $contract_id
@@ -74,7 +74,7 @@ use Carbon\Carbon;
  */
 class ContractSchedule extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -197,26 +197,37 @@ class ContractSchedule extends Model
      * Schedule type enumeration
      */
     const TYPE_INFRASTRUCTURE = 'A'; // Infrastructure and SLA
+
     const TYPE_PRICING = 'B'; // Pricing and fees
+
     const TYPE_ADDITIONAL = 'C'; // Additional terms
+
     const TYPE_COMPLIANCE = 'D'; // Compliance requirements
+
     const TYPE_CUSTOM = 'E'; // Custom schedules
 
     /**
      * Status enumeration
      */
     const STATUS_DRAFT = 'draft';
+
     const STATUS_PENDING_APPROVAL = 'pending_approval';
+
     const STATUS_ACTIVE = 'active';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_ARCHIVED = 'archived';
 
     /**
      * Approval status enumeration
      */
     const APPROVAL_PENDING = 'pending';
+
     const APPROVAL_APPROVED = 'approved';
+
     const APPROVAL_REJECTED = 'rejected';
+
     const APPROVAL_CHANGES_REQUESTED = 'changes_requested';
 
     /**
@@ -296,12 +307,12 @@ class ContractSchedule extends Model
      */
     public function isEffective(): bool
     {
-        if (!$this->isActive() || !$this->isApproved()) {
+        if (! $this->isActive() || ! $this->isApproved()) {
             return false;
         }
 
         $now = Carbon::now();
-        
+
         if ($this->effective_date && $now->lt($this->effective_date)) {
             return false;
         }
@@ -318,7 +329,7 @@ class ContractSchedule extends Model
      */
     public function needsReview(): bool
     {
-        if (!$this->next_review_date) {
+        if (! $this->next_review_date) {
             return false;
         }
 
@@ -355,7 +366,7 @@ class ContractSchedule extends Model
     public function supportsAssetType(string $assetType): bool
     {
         $supportedTypes = $this->getSupportedAssetTypes();
-        
+
         // If no specific types defined, support all
         if (empty($supportedTypes)) {
             return true;
@@ -370,22 +381,22 @@ class ContractSchedule extends Model
     public function shouldCoverAsset(Asset $asset): bool
     {
         // Must be an infrastructure schedule to cover assets
-        if (!$this->isInfrastructureSchedule()) {
+        if (! $this->isInfrastructureSchedule()) {
             return false;
         }
 
         // Must be effective
-        if (!$this->isEffective()) {
+        if (! $this->isEffective()) {
             return false;
         }
 
         // Check asset type support
-        if (!$this->supportsAssetType($asset->type)) {
+        if (! $this->supportsAssetType($asset->type)) {
             return false;
         }
 
         // Apply inclusion rules
-        if (!$this->passesInclusionRules($asset)) {
+        if (! $this->passesInclusionRules($asset)) {
             return false;
         }
 
@@ -395,7 +406,7 @@ class ContractSchedule extends Model
         }
 
         // Check location coverage
-        if (!$this->coversLocation($asset)) {
+        if (! $this->coversLocation($asset)) {
             return false;
         }
 
@@ -408,7 +419,7 @@ class ContractSchedule extends Model
     protected function passesInclusionRules(Asset $asset): bool
     {
         $rules = $this->asset_inclusion_rules;
-        
+
         if (empty($rules)) {
             return true; // No specific inclusion rules = include all
         }
@@ -428,7 +439,7 @@ class ContractSchedule extends Model
     protected function failsExclusionRules(Asset $asset): bool
     {
         $rules = $this->asset_exclusion_rules;
-        
+
         if (empty($rules)) {
             return false; // No exclusion rules = don't exclude
         }
@@ -448,13 +459,13 @@ class ContractSchedule extends Model
     protected function coversLocation(Asset $asset): bool
     {
         $coverage = $this->location_coverage;
-        
+
         if (empty($coverage)) {
             return true; // No location restrictions = cover all locations
         }
 
         // If asset has no location, check if null locations are covered
-        if (!$asset->location_id) {
+        if (! $asset->location_id) {
             return $coverage['include_null_locations'] ?? false;
         }
 
@@ -489,7 +500,7 @@ class ContractSchedule extends Model
             '=' => $assetValue == $value,
             '!=' => $assetValue != $value,
             'in' => in_array($assetValue, (array) $value),
-            'not_in' => !in_array($assetValue, (array) $value),
+            'not_in' => ! in_array($assetValue, (array) $value),
             'contains' => str_contains((string) $assetValue, (string) $value),
             'starts_with' => str_starts_with((string) $assetValue, (string) $value),
             'ends_with' => str_ends_with((string) $assetValue, (string) $value),
@@ -528,7 +539,7 @@ class ContractSchedule extends Model
     public function getServiceLevel(string $assetType): ?array
     {
         $serviceLevels = $this->service_levels ?? [];
-        
+
         return $serviceLevels[$assetType] ?? $serviceLevels['default'] ?? null;
     }
 
@@ -538,7 +549,7 @@ class ContractSchedule extends Model
     public function getResponseTime(string $priority): ?string
     {
         $responseTimes = $this->response_times ?? [];
-        
+
         return $responseTimes[$priority] ?? null;
     }
 
@@ -549,9 +560,9 @@ class ContractSchedule extends Model
     {
         $content = $this->content;
         $variables = array_merge($this->variable_values ?? [], $additionalVariables);
-        
+
         foreach ($variables as $key => $value) {
-            $content = str_replace("{{" . $key . "}}", $value, $content);
+            $content = str_replace('{{'.$key.'}}', $value, $content);
         }
 
         return $content;
@@ -619,7 +630,7 @@ class ContractSchedule extends Model
         $majorVersion = (int) $versionParts[0];
         $minorVersion = isset($versionParts[1]) ? (int) $versionParts[1] : 0;
 
-        return $majorVersion . '.' . ($minorVersion + 1);
+        return $majorVersion.'.'.($minorVersion + 1);
     }
 
     /**
@@ -653,16 +664,16 @@ class ContractSchedule extends Model
     public function scopeEffective($query)
     {
         $now = now();
-        
+
         return $query->active()
             ->approved()
             ->where(function ($q) use ($now) {
                 $q->whereNull('effective_date')
-                  ->orWhere('effective_date', '<=', $now);
+                    ->orWhere('effective_date', '<=', $now);
             })
             ->where(function ($q) use ($now) {
                 $q->whereNull('expiration_date')
-                  ->orWhere('expiration_date', '>', $now);
+                    ->orWhere('expiration_date', '>', $now);
             });
     }
 
@@ -751,15 +762,15 @@ class ContractSchedule extends Model
 
         // Set defaults when creating
         static::creating(function ($schedule) {
-            if (!$schedule->version) {
+            if (! $schedule->version) {
                 $schedule->version = '1.0';
             }
 
-            if (!$schedule->created_by) {
+            if (! $schedule->created_by) {
                 $schedule->created_by = auth()->id();
             }
 
-            if (!$schedule->schedule_letter) {
+            if (! $schedule->schedule_letter) {
                 $schedule->schedule_letter = $schedule->schedule_type;
             }
         });

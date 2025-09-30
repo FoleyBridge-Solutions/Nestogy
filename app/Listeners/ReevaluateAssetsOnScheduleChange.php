@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Events\ContractScheduleActivated;
 use App\Domains\Asset\Services\AssetSupportService;
+use App\Events\ContractScheduleActivated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;

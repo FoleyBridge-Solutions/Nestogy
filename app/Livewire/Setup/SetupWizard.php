@@ -2,9 +2,8 @@
 
 namespace App\Livewire\Setup;
 
-use Livewire\Component;
-use App\Livewire\Setup\Traits\ValidatesSteps;
 use App\Livewire\Setup\Traits\ManagesStepData;
+use App\Livewire\Setup\Traits\ValidatesSteps;
 use App\Models\Company;
 use App\Models\Setting;
 use App\Models\User;
@@ -13,17 +12,20 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Component;
 use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class SetupWizard extends Component
 {
-    use ValidatesSteps, ManagesStepData;
-    
+    use ManagesStepData, ValidatesSteps;
+
     // Step management
     public int $currentStep = 1;
+
     public int $totalSteps = 5;
+
     public array $completedSteps = [];
-    
+
     // Livewire validation rules (required for validateOnly)
     protected $rules = [
         'company_name' => 'required|string|max:255',
@@ -37,38 +39,62 @@ class SetupWizard extends Component
         'company_country' => 'nullable|string|max:100',
         'company_website' => 'nullable|url|max:255',
     ];
-    
+
     // Step 1: Company Information
     public string $company_name = '';
+
     public string $company_email = '';
+
     public string $company_phone = '';
+
     public string $company_address = '';
+
     public string $company_city = '';
+
     public string $company_state = '';
+
     public string $company_zip = '';
+
     public string $company_country = 'United States';
+
     public string $company_website = '';
+
     public string $currency = 'USD';
-    
+
     // Step 2: Email Configuration
     public string $smtp_host = '';
+
     public string $smtp_port = '587';
+
     public string $smtp_encryption = 'tls';
+
     public string $smtp_username = '';
+
     public string $smtp_password = '';
+
     public string $mail_from_email = '';
+
     public string $mail_from_name = '';
+
     public bool $smtp_testing = false;
+
     public string $smtp_test_message = '';
+
     public bool $smtp_test_success = false;
-    
+
     // Step 3: System Preferences
     public string $timezone = 'America/New_York';
+
     public string $date_format = 'Y-m-d';
+
     public string $theme = 'blue';
+
     public string $company_language = 'en';
+
     public int $default_net_terms = 30;
+
     public float $default_hourly_rate = 150.00;
+
     public array $modules = [
         'ticketing' => true,
         'invoicing' => true,
@@ -77,54 +103,72 @@ class SetupWizard extends Component
         'contracts' => true,
         'reporting' => true,
     ];
-    
+
     // Step 4: MSP Business Settings
     public string $business_hours_start = '09:00';
+
     public string $business_hours_end = '17:00';
+
     public float $rate_standard = 150.00;
+
     public float $rate_after_hours = 225.00;
+
     public float $rate_emergency = 300.00;
+
     public float $rate_weekend = 200.00;
+
     public float $rate_holiday = 250.00;
+
     public float $minimum_billing_increment = 0.25;
+
     public string $time_rounding_method = 'nearest';
+
     public string $ticket_prefix = 'TKT-';
+
     public int $ticket_autoclose_hours = 72;
+
     public string $invoice_prefix = 'INV-';
+
     public int $invoice_starting_number = 1000;
+
     public float $invoice_late_fee_percent = 1.5;
-    
+
     // Step 5: Administrator Account
     public string $admin_name = '';
+
     public string $admin_email = '';
+
     public string $admin_password = '';
+
     public string $admin_password_confirmation = '';
+
     public bool $enable_two_factor = false;
+
     public bool $enable_audit_logging = true;
-    
+
     public function mount()
     {
         // Redirect if companies already exist
         if (Company::exists()) {
             return redirect()->route('login');
         }
-        
+
         $this->loadDefaults();
         $this->loadStepData();
     }
-    
+
     public function updated($propertyName)
     {
         // Auto-populate mail_from_email and mail_from_name if empty
         if ($propertyName === 'company_email' && empty($this->mail_from_email)) {
             $this->mail_from_email = $this->company_email;
         }
-        
+
         if ($propertyName === 'company_name' && empty($this->mail_from_name)) {
             $this->mail_from_name = $this->company_name;
         }
     }
-    
+
     public function nextStep()
     {
         try {
@@ -132,26 +176,27 @@ class SetupWizard extends Component
             if ($this->currentStep === 1) {
                 if (empty($this->company_name) || empty($this->company_email)) {
                     session()->flash('error', 'Please fill out Company Name and Company Email.');
+
                     return;
                 }
             }
-            
+
             $this->saveStepData();
-            
+
             // Mark current step as completed
-            if (!in_array($this->currentStep, $this->completedSteps)) {
+            if (! in_array($this->currentStep, $this->completedSteps)) {
                 $this->completedSteps[] = $this->currentStep;
             }
-            
+
             if ($this->currentStep < $this->totalSteps) {
                 $this->currentStep++;
                 session()->flash('success', 'Step completed successfully!');
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'An error occurred: ' . $e->getMessage());
+            session()->flash('error', 'An error occurred: '.$e->getMessage());
         }
     }
-    
+
     public function previousStep()
     {
         if ($this->currentStep > 1) {
@@ -159,7 +204,7 @@ class SetupWizard extends Component
             $this->currentStep--;
         }
     }
-    
+
     public function goToStep($step)
     {
         if ($this->canNavigateToStep($step)) {
@@ -167,13 +212,13 @@ class SetupWizard extends Component
             $this->currentStep = $step;
         }
     }
-    
+
     public function testSmtpConnection()
     {
         $this->smtp_testing = true;
         $this->smtp_test_message = '';
         $this->smtp_test_success = false;
-        
+
         try {
             // Validate required SMTP fields
             $this->validate([
@@ -181,7 +226,7 @@ class SetupWizard extends Component
                 'smtp_port' => 'required|integer',
                 'company_email' => 'required|email',
             ]);
-            
+
             // Configure mail temporarily
             config([
                 'mail.default' => 'smtp',
@@ -193,31 +238,31 @@ class SetupWizard extends Component
                 'mail.from.address' => $this->mail_from_email ?: $this->company_email,
                 'mail.from.name' => $this->mail_from_name ?: $this->company_name,
             ]);
-            
+
             // Clear mail manager cache
             app()->forgetInstance('mail.manager');
-            
+
             $testEmail = $this->mail_from_email ?: $this->company_email;
-            
+
             // Send test email
             Mail::raw(
-                "This is a test email from your Nestogy ERP setup wizard.\n\n" .
-                "If you receive this email, your SMTP configuration is working correctly!\n\n" .
-                "Company: {$this->company_name}\n" .
-                "Test sent at: " . now()->format('Y-m-d H:i:s T'),
+                "This is a test email from your Nestogy ERP setup wizard.\n\n".
+                "If you receive this email, your SMTP configuration is working correctly!\n\n".
+                "Company: {$this->company_name}\n".
+                'Test sent at: '.now()->format('Y-m-d H:i:s T'),
                 function ($message) use ($testEmail) {
                     $message->to($testEmail)
-                           ->subject("SMTP Test - {$this->company_name} ERP Setup");
+                        ->subject("SMTP Test - {$this->company_name} ERP Setup");
                 }
             );
-            
+
             $this->smtp_test_success = true;
             $this->smtp_test_message = "Test email sent successfully to {$testEmail}! Check your inbox to confirm SMTP is working.";
-            
+
         } catch (\Exception $e) {
             $this->smtp_test_success = false;
-            $this->smtp_test_message = 'SMTP test failed: ' . $e->getMessage();
-            
+            $this->smtp_test_message = 'SMTP test failed: '.$e->getMessage();
+
             Log::error('SMTP test failed during setup', [
                 'error' => $e->getMessage(),
                 'smtp_host' => $this->smtp_host,
@@ -227,60 +272,60 @@ class SetupWizard extends Component
             $this->smtp_testing = false;
         }
     }
-    
+
     public function completeSetup()
     {
         // Validate final step
-        if (!$this->validateCurrentStep()) {
+        if (! $this->validateCurrentStep()) {
             return;
         }
-        
+
         try {
             DB::beginTransaction();
-            
+
             // Create the first company
             $company = $this->createFirstCompany();
-            
+
             // Create the admin user
             $user = $this->createAdminUser($company);
-            
+
             // Assign admin role using Bouncer
             $this->assignAdminRole($user);
-            
+
             // Create company settings
             $this->createCompanySettings($company);
-            
+
             DB::commit();
-            
+
             // Clear setup session
             $this->clearSetupSession();
-            
+
             Log::info('Initial system setup completed successfully', [
                 'company_id' => $company->id,
                 'user_id' => $user->id,
                 'admin_email' => $user->email,
             ]);
-            
+
             // Log in the admin user and redirect to dashboard
             auth()->login($user);
-            
-            session()->flash('success', 
+
+            session()->flash('success',
                 'Welcome to Nestogy! Your ERP system has been successfully initialized. You can now start adding clients and managing your MSP business.');
-            
+
             return redirect()->route('dashboard');
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Initial system setup failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
-            session()->flash('error', 'Setup failed: ' . $e->getMessage());
+
+            session()->flash('error', 'Setup failed: '.$e->getMessage());
         }
     }
-    
+
     protected function createFirstCompany(): Company
     {
         return Company::create([
@@ -300,7 +345,7 @@ class SetupWizard extends Component
             'max_subsidiary_depth' => 5,
         ]);
     }
-    
+
     protected function createAdminUser(Company $company): User
     {
         $user = User::create([
@@ -310,7 +355,7 @@ class SetupWizard extends Component
             'password' => Hash::make($this->admin_password),
             'status' => true,
         ]);
-        
+
         // Create user settings
         UserSetting::create([
             'user_id' => $user->id,
@@ -320,21 +365,21 @@ class SetupWizard extends Component
             'dashboard_financial_enable' => true,
             'dashboard_technical_enable' => true,
         ]);
-        
+
         return $user;
     }
-    
+
     protected function assignAdminRole(User $user): void
     {
         Bouncer::scope()->to($user->company_id);
-        
+
         $adminRole = Bouncer::role()->firstOrCreate([
             'name' => 'admin',
             'title' => 'Administrator',
         ]);
-        
+
         $user->assign('admin');
-        
+
         // Grant comprehensive permissions
         $permissions = [
             'clients.view', 'clients.create', 'clients.edit', 'clients.delete', 'clients.manage',
@@ -356,17 +401,17 @@ class SetupWizard extends Component
             'users.manage', 'settings.manage', 'company.manage',
             'contracts.view', 'contracts.create', 'contracts.edit', 'contracts.delete',
         ];
-        
+
         foreach ($permissions as $permission) {
             Bouncer::ability()->firstOrCreate([
                 'name' => $permission,
                 'title' => ucwords(str_replace('.', ' ', $permission)),
             ]);
-            
+
             Bouncer::allow('admin')->to($permission);
         }
     }
-    
+
     protected function createCompanySettings(Company $company): void
     {
         $settingsData = [
@@ -408,13 +453,13 @@ class SetupWizard extends Component
             'default_time_rounding_method' => $this->time_rounding_method,
             'ticket_prefix' => $this->ticket_prefix,
             'ticket_next_number' => 1,
-            'ticket_autoclose' => !empty($this->ticket_autoclose_hours),
+            'ticket_autoclose' => ! empty($this->ticket_autoclose_hours),
             'ticket_autoclose_hours' => $this->ticket_autoclose_hours,
             'ticket_email_parse' => false,
             'ticket_client_general_notifications' => true,
             'invoice_prefix' => $this->invoice_prefix,
             'invoice_next_number' => $this->invoice_starting_number,
-            'invoice_late_fee_enable' => !empty($this->invoice_late_fee_percent),
+            'invoice_late_fee_enable' => ! empty($this->invoice_late_fee_percent),
             'invoice_late_fee_percent' => $this->invoice_late_fee_percent,
             'recurring_auto_send_invoice' => true,
             'send_invoice_reminders' => true,
@@ -443,22 +488,22 @@ class SetupWizard extends Component
             'portal_payment_processing' => false,
             'portal_asset_visibility' => true,
         ];
-        
+
         $existingSettings = Setting::where('company_id', $company->id)->first();
-        
+
         if ($existingSettings) {
             $existingSettings->update($settingsData);
         } else {
             Setting::create($settingsData);
         }
     }
-    
+
     public function dehydrate()
     {
         // Save progress on each request
         $this->saveStepData();
     }
-    
+
     public function render()
     {
         return view('livewire.setup.setup-wizard')

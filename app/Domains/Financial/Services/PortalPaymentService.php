@@ -2,23 +2,22 @@
 
 namespace App\Domains\Financial\Services;
 
+use App\Models\AutoPayment;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
-use App\Models\AutoPayment;
 use App\Models\PortalNotification;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Exception;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Portal Payment Service
- * 
+ *
  * Comprehensive payment processing service for client portal with support for:
  * - Multiple payment gateway integration (Stripe, PayPal, Authorize.Net, Square)
  * - Secure payment method storage and tokenization
@@ -36,6 +35,7 @@ use Exception;
 class PortalPaymentService
 {
     protected array $config;
+
     protected array $gateways = [];
 
     public function __construct()
@@ -67,13 +67,13 @@ class PortalPaymentService
     /**
      * Process a payment for an invoice
      */
-    public function processPayment(Client $client, Invoice $invoice, PaymentMethod $paymentMethod, 
-                                  array $options = []): array
+    public function processPayment(Client $client, Invoice $invoice, PaymentMethod $paymentMethod,
+        array $options = []): array
     {
         try {
             // Validate payment request
             $validation = $this->validatePaymentRequest($client, $invoice, $paymentMethod, $options);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->failResponse($validation['message']);
             }
 
@@ -81,7 +81,7 @@ class PortalPaymentService
             $currency = $options['currency'] ?? $invoice->currency_code;
 
             // Check velocity limits
-            if (!$this->checkVelocityLimits($client, $amount)) {
+            if (! $this->checkVelocityLimits($client, $amount)) {
                 return $this->failResponse('Payment limits exceeded. Please try again later.');
             }
 
@@ -95,7 +95,7 @@ class PortalPaymentService
             $fees = $this->calculateFees($amount, $paymentMethod);
 
             return DB::transaction(function () use ($client, $invoice, $paymentMethod, $amount, $currency, $fees, $options, $fraudCheck) {
-                
+
                 // Create payment record
                 $payment = $this->createPaymentRecord($client, $invoice, $paymentMethod, $amount, $currency, $fees, $options);
 
@@ -178,7 +178,7 @@ class PortalPaymentService
                 'client_id' => $client->id,
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return $this->failResponse('Payment processing temporarily unavailable');
@@ -193,16 +193,16 @@ class PortalPaymentService
         try {
             // Validate payment method data
             $validation = $this->validatePaymentMethodData($paymentData);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->failResponse($validation['message']);
             }
 
             return DB::transaction(function () use ($client, $paymentData) {
-                
+
                 // Tokenize payment method through gateway
                 $tokenizationResult = $this->tokenizePaymentMethod($paymentData);
-                
-                if (!$tokenizationResult['success']) {
+
+                if (! $tokenizationResult['success']) {
                     return $this->failResponse($tokenizationResult['error_message']);
                 }
 
@@ -217,24 +217,24 @@ class PortalPaymentService
                     'token' => $tokenizationResult['token'],
                     'name' => $paymentData['name'] ?? null,
                     'description' => $paymentData['description'] ?? null,
-                    
+
                     // Card-specific data
                     'card_brand' => $tokenizationResult['card_brand'] ?? null,
                     'card_last_four' => $tokenizationResult['card_last_four'] ?? null,
                     'card_exp_month' => $tokenizationResult['card_exp_month'] ?? null,
                     'card_exp_year' => $tokenizationResult['card_exp_year'] ?? null,
                     'card_holder_name' => $paymentData['card_holder_name'] ?? null,
-                    
+
                     // Bank account data
                     'bank_name' => $paymentData['bank_name'] ?? null,
                     'bank_account_type' => $paymentData['bank_account_type'] ?? null,
                     'bank_account_last_four' => $tokenizationResult['bank_account_last_four'] ?? null,
                     'bank_account_holder_name' => $paymentData['bank_account_holder_name'] ?? null,
-                    
+
                     // Digital wallet data
                     'wallet_type' => $paymentData['wallet_type'] ?? null,
                     'wallet_email' => $paymentData['wallet_email'] ?? null,
-                    
+
                     // Billing address
                     'billing_name' => $paymentData['billing_name'] ?? null,
                     'billing_address_line1' => $paymentData['billing_address_line1'] ?? null,
@@ -242,12 +242,12 @@ class PortalPaymentService
                     'billing_state' => $paymentData['billing_state'] ?? null,
                     'billing_postal_code' => $paymentData['billing_postal_code'] ?? null,
                     'billing_country' => $paymentData['billing_country'] ?? null,
-                    
+
                     // Security and compliance
                     'requires_3d_secure' => $tokenizationResult['requires_3d_secure'] ?? false,
                     'security_checks' => $tokenizationResult['security_checks'] ?? [],
                     'risk_assessment' => $this->assessPaymentMethodRisk($paymentData),
-                    
+
                     'created_by' => Auth::user()?->id ?? 1,
                 ]);
 
@@ -269,7 +269,7 @@ class PortalPaymentService
                 return $this->successResponse('Payment method added successfully', [
                     'payment_method_id' => $paymentMethod->id,
                     'display_name' => $paymentMethod->getDisplayName(),
-                    'requires_verification' => !$paymentMethod->verified,
+                    'requires_verification' => ! $paymentMethod->verified,
                 ]);
             });
 
@@ -277,7 +277,7 @@ class PortalPaymentService
             Log::error('Payment method addition error', [
                 'client_id' => $client->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return $this->failResponse('Unable to add payment method');
@@ -292,17 +292,17 @@ class PortalPaymentService
         try {
             // Validate auto-payment configuration
             $validation = $this->validateAutoPaymentConfig($config);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->failResponse($validation['message']);
             }
 
             // Check if payment method is active and verified
-            if (!$paymentMethod->isActive() || !$paymentMethod->isVerified()) {
+            if (! $paymentMethod->isActive() || ! $paymentMethod->isVerified()) {
                 return $this->failResponse('Payment method must be active and verified for auto-payment');
             }
 
             return DB::transaction(function () use ($client, $paymentMethod, $config) {
-                
+
                 $autoPayment = AutoPayment::create([
                     'company_id' => $client->company_id,
                     'client_id' => $client->id,
@@ -352,7 +352,7 @@ class PortalPaymentService
             Log::error('Auto-payment setup error', [
                 'client_id' => $client->id,
                 'payment_method_id' => $paymentMethod->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to setup auto-payment');
@@ -423,7 +423,7 @@ class PortalPaymentService
         } catch (Exception $e) {
             Log::error('Payment history retrieval error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to retrieve payment history');
@@ -472,7 +472,7 @@ class PortalPaymentService
 
                     Log::error('Auto-payment processing error', [
                         'auto_payment_id' => $autoPayment->id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -483,11 +483,11 @@ class PortalPaymentService
 
         } catch (Exception $e) {
             Log::error('Scheduled payment processing error', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return array_merge($results, [
-                'error' => 'Scheduled payment processing failed'
+                'error' => 'Scheduled payment processing failed',
             ]);
         }
     }
@@ -506,22 +506,25 @@ class PortalPaymentService
     {
         // Initialize gateway instances (Stripe, PayPal, etc.)
         // This would typically return configured gateway objects
-        return new class {
-            public function processPayment($payment, $paymentMethod) {
+        return new class
+        {
+            public function processPayment($payment, $paymentMethod)
+            {
                 // Mock implementation
                 return [
                     'success' => true,
-                    'transaction_id' => 'txn_' . Str::random(16),
+                    'transaction_id' => 'txn_'.Str::random(16),
                     'gateway_fee' => 0.30,
                 ];
             }
-            
-            public function tokenizePaymentMethod($data) {
+
+            public function tokenizePaymentMethod($data)
+            {
                 return [
                     'success' => true,
-                    'token' => 'pm_' . Str::random(24),
-                    'payment_method_id' => 'pm_' . Str::random(16),
-                    'customer_id' => 'cus_' . Str::random(16),
+                    'token' => 'pm_'.Str::random(24),
+                    'payment_method_id' => 'pm_'.Str::random(16),
+                    'customer_id' => 'cus_'.Str::random(16),
                 ];
             }
         };
@@ -531,15 +534,15 @@ class PortalPaymentService
     {
         $errors = [];
 
-        if (!$invoice->canBePaid()) {
+        if (! $invoice->canBePaid()) {
             $errors[] = 'Invoice cannot be paid';
         }
 
-        if (!$paymentMethod->isActive()) {
+        if (! $paymentMethod->isActive()) {
             $errors[] = 'Payment method is not active';
         }
 
-        if (!$paymentMethod->isVerified()) {
+        if (! $paymentMethod->isVerified()) {
             $errors[] = 'Payment method must be verified';
         }
 
@@ -583,7 +586,7 @@ class PortalPaymentService
 
     private function performFraudDetection(Client $client, PaymentMethod $paymentMethod, float $amount, array $options): array
     {
-        if (!$this->config['fraud_detection']) {
+        if (! $this->config['fraud_detection']) {
             return ['risk_level' => 'low', 'score' => 0];
         }
 
@@ -628,7 +631,7 @@ class PortalPaymentService
     private function calculateFees(float $amount, PaymentMethod $paymentMethod): array
     {
         $baseFee = 0;
-        
+
         switch ($this->config['fee_calculation']) {
             case 'percentage':
                 $baseFee = $amount * ($this->config['fee_percentage'] / 100);
@@ -643,7 +646,7 @@ class PortalPaymentService
 
         // Gateway-specific fees
         $gatewayFee = $this->getGatewayFee($paymentMethod->provider, $amount);
-        
+
         return [
             'base_fee' => round($baseFee, 2),
             'gateway_fee' => round($gatewayFee, 2),
@@ -651,8 +654,8 @@ class PortalPaymentService
         ];
     }
 
-    private function createPaymentRecord(Client $client, Invoice $invoice, PaymentMethod $paymentMethod, 
-                                       float $amount, string $currency, array $fees, array $options): Payment
+    private function createPaymentRecord(Client $client, Invoice $invoice, PaymentMethod $paymentMethod,
+        float $amount, string $currency, array $fees, array $options): Payment
     {
         return Payment::create([
             'company_id' => $client->company_id,
@@ -676,7 +679,7 @@ class PortalPaymentService
     private function processGatewayPayment(Payment $payment, PaymentMethod $paymentMethod, array $fraudCheck): array
     {
         $gateway = $this->gateways[$paymentMethod->provider] ?? $this->gateways[$this->config['default_gateway']];
-        
+
         try {
             return $gateway->processPayment($payment, $paymentMethod);
         } catch (Exception $e) {
@@ -691,7 +694,7 @@ class PortalPaymentService
     private function updateInvoiceAfterPayment(Invoice $invoice, Payment $payment): void
     {
         $remainingBalance = $invoice->getBalance() - $payment->amount;
-        
+
         if ($remainingBalance <= 0.01) { // Account for floating point precision
             $invoice->markAsPaid();
         }
@@ -791,7 +794,7 @@ class PortalPaymentService
     {
         $errors = [];
 
-        if (!isset($paymentData['type'])) {
+        if (! isset($paymentData['type'])) {
             $errors[] = 'Payment method type is required';
         }
 
@@ -874,7 +877,7 @@ class PortalPaymentService
     {
         // Implementation would start verification process
         Log::info('Payment method verification initiated', [
-            'payment_method_id' => $paymentMethod->id
+            'payment_method_id' => $paymentMethod->id,
         ]);
     }
 
@@ -905,7 +908,7 @@ class PortalPaymentService
     {
         return $payment->status === 'completed' &&
                $payment->created_at->gt(Carbon::now()->subDays(180)) &&
-               !$payment->refund_amount;
+               ! $payment->refund_amount;
     }
 
     private function getTotalFesPaid(Client $client): float
@@ -948,7 +951,7 @@ class PortalPaymentService
             foreach ($invoices as $invoice) {
                 $amount = $autoPayment->getPaymentAmount($invoice->getBalance());
 
-                if (!$autoPayment->isAmountWithinLimits($amount)) {
+                if (! $autoPayment->isAmountWithinLimits($amount)) {
                     continue;
                 }
 
@@ -974,7 +977,7 @@ class PortalPaymentService
         } catch (Exception $e) {
             Log::error('Auto-payment processing error', [
                 'auto_payment_id' => $autoPayment->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Auto-payment processing failed');
@@ -1028,7 +1031,7 @@ class PortalPaymentService
     {
         if ($payment->retry_count < $this->config['retry_attempts']) {
             $retryDelay = $this->config['retry_delays'][$payment->retry_count] ?? 7;
-            
+
             // Schedule retry (implementation would depend on your queue system)
             Log::info('Payment retry scheduled', [
                 'payment_id' => $payment->id,
@@ -1046,7 +1049,7 @@ class PortalPaymentService
         ], $data);
     }
 
-    private function failResponse(string $message, string $errorCode = null): array
+    private function failResponse(string $message, ?string $errorCode = null): array
     {
         $response = [
             'success' => false,

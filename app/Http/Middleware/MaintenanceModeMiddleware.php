@@ -4,14 +4,14 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * MaintenanceModeMiddleware
- * 
+ *
  * Custom maintenance mode middleware that allows admin access
  * and provides better control over maintenance mode behavior.
  */
@@ -35,7 +35,7 @@ class MaintenanceModeMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Check if maintenance mode is enabled
-        if (!$this->isMaintenanceMode()) {
+        if (! $this->isMaintenanceMode()) {
             return $next($request);
         }
 
@@ -56,7 +56,7 @@ class MaintenanceModeMiddleware
         // Check cache first for performance
         $cacheKey = 'maintenance_mode_status';
         $cached = Cache::get($cacheKey);
-        
+
         if ($cached !== null) {
             return $cached;
         }
@@ -66,19 +66,19 @@ class MaintenanceModeMiddleware
         if (file_exists($maintenanceFile)) {
             $data = json_decode(file_get_contents($maintenanceFile), true);
             Cache::put($cacheKey, true, now()->addMinutes(1));
-            
+
             // Store maintenance data in cache
             if ($data) {
                 Cache::put('maintenance_mode_data', $data, now()->addMinutes(1));
             }
-            
+
             return true;
         }
 
         // Check database/config based maintenance mode
         $configMaintenance = config('app.maintenance_mode', false);
         Cache::put($cacheKey, $configMaintenance, now()->addMinutes(1));
-        
+
         return $configMaintenance;
     }
 
@@ -115,12 +115,12 @@ class MaintenanceModeMiddleware
      */
     protected function isAdminUser(): bool
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return false;
         }
 
         $user = Auth::user();
-        
+
         // Check if user has admin role (3)
         if (method_exists($user, 'getRole')) {
             return $user->getRole() >= 3;
@@ -137,13 +137,13 @@ class MaintenanceModeMiddleware
     {
         $maintenanceData = Cache::get('maintenance_mode_data', []);
         $allowedIps = $maintenanceData['allowed_ips'] ?? config('app.maintenance_allowed_ips', []);
-        
+
         if (empty($allowedIps)) {
             return false;
         }
 
         $clientIp = $request->ip();
-        
+
         foreach ($allowedIps as $ip) {
             if ($this->ipMatches($clientIp, $ip)) {
                 return true;
@@ -165,11 +165,12 @@ class MaintenanceModeMiddleware
 
         // CIDR notation
         if (strpos($pattern, '/') !== false) {
-            list($subnet, $bits) = explode('/', $pattern);
+            [$subnet, $bits] = explode('/', $pattern);
             $ip = ip2long($clientIp);
             $subnet = ip2long($subnet);
             $mask = -1 << (32 - $bits);
             $subnet &= $mask;
+
             return ($ip & $mask) == $subnet;
         }
 
@@ -177,7 +178,8 @@ class MaintenanceModeMiddleware
         if (strpos($pattern, '*') !== false) {
             $pattern = str_replace('.', '\.', $pattern);
             $pattern = str_replace('*', '.*', $pattern);
-            return preg_match('/^' . $pattern . '$/', $clientIp) === 1;
+
+            return preg_match('/^'.$pattern.'$/', $clientIp) === 1;
         }
 
         return false;
@@ -189,15 +191,15 @@ class MaintenanceModeMiddleware
     protected function hasValidMaintenanceToken(Request $request): bool
     {
         $token = $request->input('maintenance_token') ?? $request->header('X-Maintenance-Token');
-        
-        if (!$token) {
+
+        if (! $token) {
             return false;
         }
 
         $maintenanceData = Cache::get('maintenance_mode_data', []);
         $validToken = $maintenanceData['secret'] ?? config('app.maintenance_secret');
-        
-        if (!$validToken) {
+
+        if (! $validToken) {
             return false;
         }
 
@@ -210,13 +212,13 @@ class MaintenanceModeMiddleware
     protected function isUriExcepted(Request $request): bool
     {
         $path = $request->path();
-        
+
         // Get custom exceptions from maintenance data
         $maintenanceData = Cache::get('maintenance_mode_data', []);
         $customExceptions = $maintenanceData['except'] ?? [];
-        
+
         $exceptions = array_merge($this->except, $customExceptions);
-        
+
         foreach ($exceptions as $except) {
             if ($except !== '/') {
                 $except = trim($except, '/');
@@ -236,7 +238,7 @@ class MaintenanceModeMiddleware
     protected function maintenanceResponse(Request $request): Response
     {
         $maintenanceData = Cache::get('maintenance_mode_data', []);
-        
+
         // For API requests, return JSON
         if ($request->expectsJson() || $request->is('api/*')) {
             return $this->apiMaintenanceResponse($maintenanceData);
@@ -301,7 +303,7 @@ class MaintenanceModeMiddleware
     {
         $message = $data['message'] ?? 'We are currently performing scheduled maintenance.';
         $appName = config('app.name', 'Application');
-        
+
         $retryInfo = '';
         if (isset($data['retry']) && $data['retry'] > time()) {
             $retryTime = date('g:i A', $data['retry']);

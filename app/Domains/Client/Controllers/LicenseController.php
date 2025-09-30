@@ -5,7 +5,6 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientLicense;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +13,7 @@ use Illuminate\Validation\Rule;
 class LicenseController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of licenses for the selected client
      */
@@ -21,7 +21,7 @@ class LicenseController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -29,11 +29,11 @@ class LicenseController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('license_key', 'like', "%{$search}%")
-                  ->orWhere('vendor', 'like', "%{$search}%")
-                  ->orWhere('version', 'like', "%{$search}%");
+                    ->orWhere('license_key', 'like', "%{$search}%")
+                    ->orWhere('vendor', 'like', "%{$search}%")
+                    ->orWhere('version', 'like', "%{$search}%");
             });
         }
 
@@ -66,15 +66,15 @@ class LicenseController extends Controller
         }
 
         $licenses = $query->orderBy('expiry_date')
-                         ->paginate(20)
-                         ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         // Get unique vendors for filter
         $vendors = $client->licenses()
-                   ->whereNotNull('vendor')
-                   ->distinct()
-                   ->orderBy('vendor')
-                   ->pluck('vendor');
+            ->whereNotNull('vendor')
+            ->distinct()
+            ->orderBy('vendor')
+            ->pluck('vendor');
 
         $licenseTypes = ClientLicense::getLicenseTypes();
 
@@ -87,8 +87,8 @@ class LicenseController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $licenseTypes = ClientLicense::getLicenseTypes();
@@ -112,7 +112,7 @@ class LicenseController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'license_type' => 'required|in:' . implode(',', array_keys(ClientLicense::getLicenseTypes())),
+            'license_type' => 'required|in:'.implode(',', array_keys(ClientLicense::getLicenseTypes())),
             'license_key' => 'nullable|string|max:500',
             'vendor' => 'nullable|string|max:255',
             'version' => 'nullable|string|max:100',
@@ -124,15 +124,15 @@ class LicenseController extends Controller
             'renewal_cost' => 'nullable|numeric|min:0|max:9999999.99',
             'is_active' => 'boolean',
             'auto_renewal' => 'boolean',
-            'support_level' => 'nullable|in:' . implode(',', array_keys(ClientLicense::getSupportLevels())),
+            'support_level' => 'nullable|in:'.implode(',', array_keys(ClientLicense::getSupportLevels())),
             'license_terms' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $license = new ClientLicense($request->all());
@@ -140,7 +140,7 @@ class LicenseController extends Controller
         $license->save();
 
         return redirect()->route('clients.licenses.standalone.index')
-                        ->with('success', 'License created successfully.');
+            ->with('success', 'License created successfully.');
     }
 
     /**
@@ -163,8 +163,8 @@ class LicenseController extends Controller
         $this->authorize('update', $license);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $licenseTypes = ClientLicense::getLicenseTypes();
         $supportLevels = ClientLicense::getSupportLevels();
@@ -189,7 +189,7 @@ class LicenseController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'license_type' => 'required|in:' . implode(',', array_keys(ClientLicense::getLicenseTypes())),
+            'license_type' => 'required|in:'.implode(',', array_keys(ClientLicense::getLicenseTypes())),
             'license_key' => 'nullable|string|max:500',
             'vendor' => 'nullable|string|max:255',
             'version' => 'nullable|string|max:100',
@@ -201,22 +201,22 @@ class LicenseController extends Controller
             'renewal_cost' => 'nullable|numeric|min:0|max:9999999.99',
             'is_active' => 'boolean',
             'auto_renewal' => 'boolean',
-            'support_level' => 'nullable|in:' . implode(',', array_keys(ClientLicense::getSupportLevels())),
+            'support_level' => 'nullable|in:'.implode(',', array_keys(ClientLicense::getSupportLevels())),
             'license_terms' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $license->fill($request->all());
         $license->save();
 
         return redirect()->route('clients.licenses.standalone.index')
-                        ->with('success', 'License updated successfully.');
+            ->with('success', 'License updated successfully.');
     }
 
     /**
@@ -229,7 +229,7 @@ class LicenseController extends Controller
         $license->delete();
 
         return redirect()->route('clients.licenses.standalone.index')
-                        ->with('success', 'License deleted successfully.');
+            ->with('success', 'License deleted successfully.');
     }
 
     /**
@@ -238,16 +238,16 @@ class LicenseController extends Controller
     public function export(Request $request)
     {
         $query = ClientLicense::with('client')
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('license_key', 'like', "%{$search}%")
-                  ->orWhere('vendor', 'like', "%{$search}%");
+                    ->orWhere('license_key', 'like', "%{$search}%")
+                    ->orWhere('vendor', 'like', "%{$search}%");
             });
         }
 
@@ -282,16 +282,16 @@ class LicenseController extends Controller
 
         $licenses = $query->orderBy('expiry_date')->get();
 
-        $filename = 'licenses_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'licenses_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($licenses) {
+        $callback = function () use ($licenses) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'License Name',
@@ -309,7 +309,7 @@ class LicenseController extends Controller
                 'Status',
                 'Auto Renewal',
                 'Support Level',
-                'Notes'
+                'Notes',
             ]);
 
             // CSV data
@@ -333,7 +333,7 @@ class LicenseController extends Controller
                     $license->notes,
                 ]);
             }
-            
+
             fclose($file);
         };
 

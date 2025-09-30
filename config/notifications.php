@@ -42,7 +42,7 @@ return [
         'from_name' => env('NOTIFICATION_FROM_NAME', 'Nestogy ERP'),
         'from_email' => env('NOTIFICATION_FROM_EMAIL', 'noreply@nestogy.com'),
         'reply_to_email' => env('NOTIFICATION_REPLY_TO', 'support@nestogy.com'),
-        'footer_text' => env('NOTIFICATION_FOOTER_TEXT', '© ' . date('Y') . ' Nestogy ERP. All rights reserved.'),
+        'footer_text' => env('NOTIFICATION_FOOTER_TEXT', '© '.date('Y').' Nestogy ERP. All rights reserved.'),
         'logo_url' => env('NOTIFICATION_LOGO_URL'),
         'brand_color' => env('NOTIFICATION_BRAND_COLOR', '#4F46E5'),
         'queue_notifications' => env('NOTIFICATION_QUEUE', true),
@@ -66,7 +66,7 @@ return [
         'ticket_closed' => 'emails.tickets.closed',
         'ticket_reopened' => 'emails.tickets.reopened',
         'ticket_escalated' => 'emails.tickets.escalated',
-        
+
         // Invoice notifications
         'invoice_created' => 'emails.invoices.created',
         'invoice_sent' => 'emails.invoices.sent',
@@ -74,12 +74,12 @@ return [
         'invoice_overdue' => 'emails.invoices.overdue',
         'invoice_reminder' => 'emails.invoices.reminder',
         'invoice_cancelled' => 'emails.invoices.cancelled',
-        
+
         // Payment notifications
         'payment_received' => 'emails.payments.received',
         'payment_failed' => 'emails.payments.failed',
         'payment_refunded' => 'emails.payments.refunded',
-        
+
         // User notifications
         'user_welcome' => 'emails.users.welcome',
         'user_activated' => 'emails.users.activated',
@@ -88,7 +88,7 @@ return [
         'password_changed' => 'emails.users.password-changed',
         'email_verification' => 'emails.users.email-verification',
         'two_factor_code' => 'emails.users.two-factor-code',
-        
+
         // Project notifications
         'project_created' => 'emails.projects.created',
         'project_assigned' => 'emails.projects.assigned',
@@ -96,14 +96,14 @@ return [
         'project_completed' => 'emails.projects.completed',
         'project_milestone' => 'emails.projects.milestone',
         'project_task_assigned' => 'emails.projects.task-assigned',
-        
+
         // Asset notifications
         'asset_assigned' => 'emails.assets.assigned',
         'asset_maintenance_due' => 'emails.assets.maintenance-due',
         'asset_warranty_expiring' => 'emails.assets.warranty-expiring',
         'asset_checked_in' => 'emails.assets.checked-in',
         'asset_checked_out' => 'emails.assets.checked-out',
-        
+
         // System notifications
         'backup_completed' => 'emails.system.backup-completed',
         'backup_failed' => 'emails.system.backup-failed',

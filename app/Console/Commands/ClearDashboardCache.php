@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Domains\Core\Services\DashboardLazyLoadService;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 
 class ClearDashboardCache extends Command
@@ -33,7 +33,7 @@ class ClearDashboardCache extends Command
         $widget = $this->option('widget');
         $companyId = $this->option('company');
         $clientId = $this->option('client');
-        
+
         if ($widget) {
             // Clear specific widget cache
             DashboardLazyLoadService::clearWidgetCache($widget, $companyId, $clientId);
@@ -47,7 +47,7 @@ class ClearDashboardCache extends Command
                 'ticket_chart_*',
                 'dashboard_analytics_*',
             ];
-            
+
             $totalCleared = 0;
             foreach ($patterns as $pattern) {
                 $keys = Cache::getRedis()->keys($pattern);
@@ -56,10 +56,10 @@ class ClearDashboardCache extends Command
                     $totalCleared++;
                 }
             }
-            
+
             $this->info("Dashboard cache cleared! ({$totalCleared} keys removed)");
         }
-        
+
         return Command::SUCCESS;
     }
 }

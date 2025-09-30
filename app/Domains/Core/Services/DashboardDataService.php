@@ -2,37 +2,37 @@
 
 namespace App\Domains\Core\Services;
 
-use App\Models\Invoice;
-use App\Models\Quote;
-use App\Domains\Contract\Models\Contract;
-use App\Models\Client;
-use App\Models\Payment;
-use App\Models\AnalyticsSnapshot;
-use App\Models\KpiCalculation;
-use App\Models\RevenueMetric;
-use App\Models\DashboardWidget;
-use App\Models\Setting;
 use App\Domains\Financial\Services\FinancialAnalyticsService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
+use App\Models\Client;
+use App\Models\DashboardWidget;
+use App\Models\Invoice;
+use App\Models\Payment;
+use App\Models\Quote;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * DashboardDataService
- * 
+ *
  * High-performance data aggregation service with caching strategies,
  * real-time KPI calculations, and optimized queries for dashboard widgets.
  */
 class DashboardDataService
 {
     protected int $companyId;
+
     protected FinancialAnalyticsService $analyticsService;
+
     protected int $cacheTimeout = 300; // 5 minutes default cache
+
     protected string $cachePrefix = 'dashboard_data';
+
     protected ?string $revenueRecognitionMethod = null;
-    
+
     public function __construct(int $companyId)
     {
         $this->companyId = $companyId;
@@ -46,12 +46,12 @@ class DashboardDataService
     {
         $startDate = $startDate ?? now()->startOfMonth();
         $endDate = $endDate ?? now()->endOfMonth();
-        
+
         $cacheKey = $this->getCacheKey('executive', $startDate, $endDate);
-        
+
         return Cache::remember($cacheKey, $this->cacheTimeout, function () use ($startDate, $endDate, $cacheKey) {
             $startTime = microtime(true);
-            
+
             // Parallel data fetching for performance
             $data = [
                 'period' => [
@@ -66,20 +66,20 @@ class DashboardDataService
                 'performance_alerts' => $this->getPerformanceAlerts(),
                 'quick_actions' => $this->getQuickActions(),
             ];
-            
+
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
             $data['meta'] = [
                 'execution_time_ms' => $executionTime,
                 'cache_key' => $cacheKey,
                 'generated_at' => now()->toISOString(),
             ];
-            
+
             Log::info('Executive dashboard data generated', [
                 'company_id' => $this->companyId,
                 'execution_time_ms' => $executionTime,
                 'data_points' => count($data, COUNT_RECURSIVE),
             ]);
-            
+
             return $data;
         });
     }
@@ -91,12 +91,12 @@ class DashboardDataService
     {
         $startDate = $startDate ?? now()->subMonths(11)->startOfMonth();
         $endDate = $endDate ?? now()->endOfMonth();
-        
+
         $cacheKey = $this->getCacheKey('revenue', $startDate, $endDate);
-        
+
         return Cache::remember($cacheKey, $this->cacheTimeout, function () use ($startDate, $endDate) {
             $startTime = microtime(true);
-            
+
             $data = [
                 'period' => [
                     'start' => $startDate->toDateString(),
@@ -110,13 +110,13 @@ class DashboardDataService
                 'seasonal_trends' => $this->getSeasonalTrends($startDate, $endDate),
                 'forecasting' => $this->getRevenueForecast($startDate, $endDate),
             ];
-            
+
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
             $data['meta'] = [
                 'execution_time_ms' => $executionTime,
                 'generated_at' => now()->toISOString(),
             ];
-            
+
             return $data;
         });
     }
@@ -128,9 +128,9 @@ class DashboardDataService
     {
         $startDate = $startDate ?? now()->subMonths(11)->startOfMonth();
         $endDate = $endDate ?? now()->endOfMonth();
-        
+
         $cacheKey = $this->getCacheKey('customer', $startDate, $endDate);
-        
+
         return Cache::remember($cacheKey, $this->cacheTimeout, function () use ($startDate, $endDate) {
             $data = [
                 'period' => [
@@ -145,7 +145,7 @@ class DashboardDataService
                 'satisfaction_metrics' => $this->getSatisfactionMetrics($startDate, $endDate),
                 'retention_cohorts' => $this->getRetentionCohorts($startDate, $endDate),
             ];
-            
+
             return $data;
         });
     }
@@ -157,9 +157,9 @@ class DashboardDataService
     {
         $startDate = $startDate ?? now()->subMonths(2)->startOfMonth();
         $endDate = $endDate ?? now()->endOfMonth();
-        
+
         $cacheKey = $this->getCacheKey('operations', $startDate, $endDate);
-        
+
         return Cache::remember($cacheKey, $this->cacheTimeout, function () use ($startDate, $endDate) {
             $data = [
                 'period' => [
@@ -173,7 +173,7 @@ class DashboardDataService
                 'workflow_efficiency' => $this->getWorkflowEfficiency($startDate, $endDate),
                 'system_performance' => $this->getSystemPerformanceMetrics(),
             ];
-            
+
             return $data;
         });
     }
@@ -184,7 +184,7 @@ class DashboardDataService
     public function getForecastingDashboardData(): array
     {
         $cacheKey = $this->getCacheKey('forecasting');
-        
+
         return Cache::remember($cacheKey, $this->cacheTimeout, function () {
             $data = [
                 'revenue_forecast' => $this->getRevenueForecastModels(),
@@ -194,7 +194,7 @@ class DashboardDataService
                 'confidence_intervals' => $this->getConfidenceIntervals(),
                 'risk_assessments' => $this->getRiskAssessments(),
             ];
-            
+
             return $data;
         });
     }
@@ -206,30 +206,30 @@ class DashboardDataService
     {
         $results = [];
         $uncachedKPIs = [];
-        
+
         // Check cache for each KPI first
         foreach ($kpiNames as $kpiName) {
             $cacheKey = $this->getCacheKey('kpi', null, null, $kpiName);
             $cachedValue = Cache::get($cacheKey);
-            
+
             if ($cachedValue !== null) {
                 $results[$kpiName] = $cachedValue;
             } else {
                 $uncachedKPIs[] = $kpiName;
             }
         }
-        
+
         // Calculate uncached KPIs
-        if (!empty($uncachedKPIs)) {
+        if (! empty($uncachedKPIs)) {
             $freshKPIs = $this->calculateKPIs($uncachedKPIs);
-            
+
             foreach ($freshKPIs as $kpiName => $kpiData) {
                 $cacheKey = $this->getCacheKey('kpi', null, null, $kpiName);
                 Cache::put($cacheKey, $kpiData, 60); // 1-minute cache for real-time KPIs
                 $results[$kpiName] = $kpiData;
             }
         }
-        
+
         return $results;
     }
 
@@ -240,10 +240,10 @@ class DashboardDataService
     {
         $cacheKey = $this->getCacheKey('widget', null, null, $widget->id);
         $cacheTimeout = $widget->refresh_settings['cache_duration'] ?? $this->cacheTimeout;
-        
+
         return Cache::remember($cacheKey, $cacheTimeout, function () use ($widget) {
             $startTime = microtime(true);
-            
+
             $data = match ($widget->widget_type) {
                 'revenue_chart' => $this->getRevenueChartData($widget),
                 'kpi_card' => $this->getKPICardData($widget),
@@ -251,16 +251,16 @@ class DashboardDataService
                 'cash_flow_gauge' => $this->getCashFlowGaugeData($widget),
                 'service_breakdown' => $this->getServiceBreakdownData($widget),
                 'trend_analysis' => $this->getTrendAnalysisData($widget),
-                default => ['error' => 'Unknown widget type: ' . $widget->widget_type],
+                default => ['error' => 'Unknown widget type: '.$widget->widget_type],
             };
-            
+
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
             $data['meta'] = [
                 'widget_id' => $widget->id,
                 'execution_time_ms' => $executionTime,
                 'generated_at' => now()->toISOString(),
             ];
-            
+
             return $data;
         });
     }
@@ -273,30 +273,30 @@ class DashboardDataService
         if (empty($types)) {
             $types = ['executive', 'revenue', 'customer', 'operations', 'forecasting'];
         }
-        
+
         $patterns = [];
         foreach ($types as $type) {
-            $patterns[] = $this->cachePrefix . ':' . $this->companyId . ':' . $type . ':*';
+            $patterns[] = $this->cachePrefix.':'.$this->companyId.':'.$type.':*';
         }
-        
+
         if ($widgetId) {
-            $patterns[] = $this->cachePrefix . ':' . $this->companyId . ':widget:*:' . $widgetId;
+            $patterns[] = $this->cachePrefix.':'.$this->companyId.':widget:*:'.$widgetId;
         }
-        
+
         // Simple cache invalidation - in production you might want to use cache tags
         foreach ($patterns as $pattern) {
             // For now, we'll clear specific cache keys based on the pattern
             $baseKey = str_replace(':*', '', $pattern);
             Cache::forget($baseKey);
-            
+
             // Also try to clear some common variations
-            Cache::forget($baseKey . ':executive');
-            Cache::forget($baseKey . ':revenue');
-            Cache::forget($baseKey . ':customer');
-            Cache::forget($baseKey . ':operations');
-            Cache::forget($baseKey . ':forecasting');
+            Cache::forget($baseKey.':executive');
+            Cache::forget($baseKey.':revenue');
+            Cache::forget($baseKey.':customer');
+            Cache::forget($baseKey.':operations');
+            Cache::forget($baseKey.':forecasting');
         }
-        
+
         Log::info('Dashboard cache invalidated', [
             'company_id' => $this->companyId,
             'types' => $types,
@@ -316,9 +316,9 @@ class DashboardDataService
             'customer' => $this->getCustomerAnalyticsDashboardData($startDate, $endDate),
             'operations' => $this->getOperationsDashboardData($startDate, $endDate),
             'forecasting' => $this->getForecastingDashboardData(),
-            default => throw new \InvalidArgumentException('Invalid dashboard type: ' . $dashboardType),
+            default => throw new \InvalidArgumentException('Invalid dashboard type: '.$dashboardType),
         };
-        
+
         return $this->formatDataForExport($data, $format);
     }
 
@@ -333,19 +333,19 @@ class DashboardDataService
             $this->companyId,
             $type,
         ];
-        
+
         if ($startDate) {
             $parts[] = $startDate->format('Y-m-d');
         }
-        
+
         if ($endDate) {
             $parts[] = $endDate->format('Y-m-d');
         }
-        
+
         if ($additional !== null) {
             $parts[] = $additional;
         }
-        
+
         return implode(':', $parts);
     }
 
@@ -368,11 +368,11 @@ class DashboardDataService
     {
         $period = CarbonPeriod::create($startDate->copy()->subYear(), '1 month', $endDate);
         $trends = [];
-        
+
         foreach ($period as $date) {
             $monthStart = $date->copy()->startOfMonth();
             $monthEnd = $date->copy()->endOfMonth();
-            
+
             $trends[] = [
                 'period' => $date->format('Y-m'),
                 'revenue' => $this->getTotalRevenue($monthStart, $monthEnd)['value'],
@@ -380,7 +380,7 @@ class DashboardDataService
                 'avg_invoice_value' => $this->getAverageInvoiceValue($monthStart, $monthEnd),
             ];
         }
-        
+
         return $trends;
     }
 
@@ -389,13 +389,13 @@ class DashboardDataService
         $totalInflow = $this->getTotalCashInflow($startDate, $endDate);
         $totalOutflow = $this->getTotalCashOutflow($startDate, $endDate);
         $netChange = $totalInflow - $totalOutflow;
-        
+
         // Calculate opening balance from previous paid invoices
         $openingBalance = Invoice::where('company_id', $this->companyId)
             ->where('status', Invoice::STATUS_PAID)
             ->where('date', '<', $startDate)
             ->sum('amount');
-        
+
         return [
             'opening_balance' => $openingBalance,
             'total_inflow' => $totalInflow,
@@ -442,9 +442,9 @@ class DashboardDataService
                 ->whereBetween('date', [$previousStart, $previousEnd])
                 ->sum('amount');
         }
-        
+
         $growth = $previous > 0 ? (($current - $previous) / $previous) * 100 : 0;
-        
+
         return [
             'value' => $current,
             'previous_value' => $previous,
@@ -458,7 +458,7 @@ class DashboardDataService
     {
         try {
             $mrrData = $this->analyticsService->calculateMRR();
-            
+
             return [
                 'value' => $mrrData['current_mrr']['total'],
                 'growth_percentage' => $mrrData['growth']['percentage'],
@@ -466,14 +466,14 @@ class DashboardDataService
                 'format' => 'currency',
             ];
         } catch (\Exception $e) {
-            Log::warning('MRR calculation failed, using fallback: ' . $e->getMessage());
-            
+            Log::warning('MRR calculation failed, using fallback: '.$e->getMessage());
+
             // Fallback: estimate MRR from recent invoices
             $recentInvoices = Invoice::where('company_id', $this->companyId)
                 ->where('status', Invoice::STATUS_PAID)
                 ->whereBetween('date', [now()->subMonth(), now()])
                 ->sum('amount');
-            
+
             return [
                 'value' => $recentInvoices,
                 'growth_percentage' => 0,
@@ -488,16 +488,16 @@ class DashboardDataService
         $current = Client::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
-        
+
         $previousStart = $startDate->copy()->subMonth();
         $previousEnd = $endDate->copy()->subMonth();
-        
+
         $previous = Client::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$previousStart, $previousEnd])
             ->count();
-        
+
         $growth = $previous > 0 ? (($current - $previous) / $previous) * 100 : 0;
-        
+
         return [
             'value' => $current,
             'previous_value' => $previous,
@@ -511,36 +511,36 @@ class DashboardDataService
         // Calculate churn based on clients that were archived/deleted
         $startOfPrevious = $startDate->copy()->subMonth();
         $endOfPrevious = $endDate->copy()->subMonth();
-        
+
         // Current period churned customers
         $currentChurned = Client::where('company_id', $this->companyId)
             ->onlyTrashed()
             ->whereBetween('deleted_at', [$startDate, $endDate])
             ->count();
-            
+
         // Previous period churned customers
         $previousChurned = Client::where('company_id', $this->companyId)
             ->onlyTrashed()
             ->whereBetween('deleted_at', [$startOfPrevious, $endOfPrevious])
             ->count();
-        
+
         // Total customers at start of current period
         $totalCustomersStart = Client::where('company_id', $this->companyId)
             ->where('created_at', '<', $startDate)
             ->count();
-            
+
         // Calculate churn rate as percentage
         $currentChurnRate = $totalCustomersStart > 0 ? ($currentChurned / $totalCustomersStart) * 100 : 0;
-        
+
         // Total customers at start of previous period
         $totalCustomersStartPrevious = Client::where('company_id', $this->companyId)
             ->where('created_at', '<', $startOfPrevious)
             ->count();
-            
+
         $previousChurnRate = $totalCustomersStartPrevious > 0 ? ($previousChurned / $totalCustomersStartPrevious) * 100 : 0;
-        
+
         $growth = $previousChurnRate > 0 ? (($currentChurnRate - $previousChurnRate) / $previousChurnRate) * 100 : 0;
-        
+
         return [
             'value' => round($currentChurnRate, 2),
             'previous_value' => round($previousChurnRate, 2),
@@ -553,17 +553,17 @@ class DashboardDataService
     private function calculateKPIs(array $kpiNames): array
     {
         $results = [];
-        
+
         foreach ($kpiNames as $kpiName) {
             $results[$kpiName] = match ($kpiName) {
                 'total_revenue' => $this->getTotalRevenue(now()->startOfMonth(), now()->endOfMonth()),
                 'mrr' => $this->getCurrentMRR(),
                 'new_customers' => $this->getNewCustomers(now()->startOfMonth(), now()->endOfMonth()),
                 'churn_rate' => $this->getChurnRate(now()->startOfMonth(), now()->endOfMonth()),
-                default => ['error' => 'Unknown KPI: ' . $kpiName],
+                default => ['error' => 'Unknown KPI: '.$kpiName],
             };
         }
-        
+
         return $results;
     }
 
@@ -574,33 +574,34 @@ class DashboardDataService
             'csv' => $this->convertToCSV($data),
             'excel' => $this->convertToExcel($data),
             'pdf' => $this->convertToPDF($data),
-            default => throw new \InvalidArgumentException('Invalid export format: ' . $format),
+            default => throw new \InvalidArgumentException('Invalid export format: '.$format),
         };
     }
 
     // Additional helper methods would be implemented here...
     // (getServiceRevenueBreakdown, getChurnAnalysis, etc.)
-    
+
     private function convertToCSV(array $data): array
     {
         // CSV conversion logic
         return ['format' => 'csv', 'data' => $data];
     }
-    
+
     private function convertToExcel(array $data): array
     {
         // Excel conversion logic
         return ['format' => 'excel', 'data' => $data];
     }
-    
+
     private function convertToPDF(array $data): array
     {
         // PDF conversion logic
         return ['format' => 'pdf', 'data' => $data];
     }
-    
+
     // Real data methods for additional metrics
-    private function getCashBalance(): array { 
+    private function getCashBalance(): array
+    {
         // Calculate based on revenue recognition preference
         $totalRevenue = $this->getRevenueRecognitionMethod() === 'cash'
             ? Payment::where('company_id', $this->companyId)
@@ -609,34 +610,37 @@ class DashboardDataService
             : Invoice::where('company_id', $this->companyId)
                 ->where('status', Invoice::STATUS_PAID)
                 ->sum('amount');
-            
-        return ['value' => $totalRevenue, 'format' => 'currency']; 
+
+        return ['value' => $totalRevenue, 'format' => 'currency'];
     }
-    
-    private function getOutstandingReceivables(): array { 
+
+    private function getOutstandingReceivables(): array
+    {
         $outstanding = Invoice::where('company_id', $this->companyId)
             ->whereIn('status', [Invoice::STATUS_SENT])
             ->sum('amount');
-            
-        return ['value' => $outstanding, 'format' => 'currency']; 
+
+        return ['value' => $outstanding, 'format' => 'currency'];
     }
-    
-    private function getQuoteConversionRate(Carbon $startDate, Carbon $endDate): array { 
+
+    private function getQuoteConversionRate(Carbon $startDate, Carbon $endDate): array
+    {
         $totalQuotes = Quote::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
-            
+
         $convertedQuotes = Quote::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->where('status', Quote::STATUS_CONVERTED)
             ->count();
-            
+
         $conversionRate = $totalQuotes > 0 ? ($convertedQuotes / $totalQuotes) * 100 : 0;
-        
-        return ['value' => round($conversionRate, 1), 'format' => 'percentage']; 
+
+        return ['value' => round($conversionRate, 1), 'format' => 'percentage'];
     }
-    
-    private function getAverageDealSize(Carbon $startDate, Carbon $endDate): array { 
+
+    private function getAverageDealSize(Carbon $startDate, Carbon $endDate): array
+    {
         $method = $this->getRevenueRecognitionMethod();
 
         if ($method === 'cash') {
@@ -654,44 +658,182 @@ class DashboardDataService
                 ->whereBetween('date', [$startDate, $endDate])
                 ->avg('amount');
         }
-            
-        return ['value' => round($avgDealSize ?? 0, 0), 'format' => 'currency']; 
+
+        return ['value' => round($avgDealSize ?? 0, 0), 'format' => 'currency'];
     }
-    private function getPerformanceAlerts(): array { return []; }
-    private function getQuickActions(): array { return []; }
-    private function getRevenueSummary(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getMRRAnalysis(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getARRProjection(): array { return []; }
-    private function getServiceRevenueBreakdown(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getGeographicRevenue(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getSeasonalTrends(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getRevenueForecast(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getCustomerSummary(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getChurnAnalysis(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getLTVAnalysis(): array { return []; }
-    private function getAcquisitionMetrics(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getCustomerSegmentation(): array { return []; }
-    private function getSatisfactionMetrics(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getRetentionCohorts(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getBillingMetrics(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getCollectionPerformance(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getQuotePipeline(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getTaxComplianceMetrics(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getWorkflowEfficiency(Carbon $startDate, Carbon $endDate): array { return []; }
-    private function getSystemPerformanceMetrics(): array { return []; }
-    private function getRevenueForecastModels(): array { return []; }
-    private function getCashFlowProjections(): array { return []; }
-    private function getCustomerProjections(): array { return []; }
-    private function getScenarioAnalysis(): array { return []; }
-    private function getConfidenceIntervals(): array { return []; }
-    private function getRiskAssessments(): array { return []; }
-    private function getRevenueChartData(DashboardWidget $widget): array { return []; }
-    private function getKPICardData(DashboardWidget $widget): array { return []; }
-    private function getCustomerTableData(DashboardWidget $widget): array { return []; }
-    private function getCashFlowGaugeData(DashboardWidget $widget): array { return []; }
-    private function getServiceBreakdownData(DashboardWidget $widget): array { return []; }
-    private function getTrendAnalysisData(DashboardWidget $widget): array { return []; }
-    private function getTotalCashInflow(Carbon $startDate, Carbon $endDate): float { 
+
+    private function getPerformanceAlerts(): array
+    {
+        return [];
+    }
+
+    private function getQuickActions(): array
+    {
+        return [];
+    }
+
+    private function getRevenueSummary(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getMRRAnalysis(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getARRProjection(): array
+    {
+        return [];
+    }
+
+    private function getServiceRevenueBreakdown(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getGeographicRevenue(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getSeasonalTrends(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getRevenueForecast(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getCustomerSummary(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getChurnAnalysis(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getLTVAnalysis(): array
+    {
+        return [];
+    }
+
+    private function getAcquisitionMetrics(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getCustomerSegmentation(): array
+    {
+        return [];
+    }
+
+    private function getSatisfactionMetrics(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getRetentionCohorts(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getBillingMetrics(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getCollectionPerformance(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getQuotePipeline(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getTaxComplianceMetrics(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getWorkflowEfficiency(Carbon $startDate, Carbon $endDate): array
+    {
+        return [];
+    }
+
+    private function getSystemPerformanceMetrics(): array
+    {
+        return [];
+    }
+
+    private function getRevenueForecastModels(): array
+    {
+        return [];
+    }
+
+    private function getCashFlowProjections(): array
+    {
+        return [];
+    }
+
+    private function getCustomerProjections(): array
+    {
+        return [];
+    }
+
+    private function getScenarioAnalysis(): array
+    {
+        return [];
+    }
+
+    private function getConfidenceIntervals(): array
+    {
+        return [];
+    }
+
+    private function getRiskAssessments(): array
+    {
+        return [];
+    }
+
+    private function getRevenueChartData(DashboardWidget $widget): array
+    {
+        return [];
+    }
+
+    private function getKPICardData(DashboardWidget $widget): array
+    {
+        return [];
+    }
+
+    private function getCustomerTableData(DashboardWidget $widget): array
+    {
+        return [];
+    }
+
+    private function getCashFlowGaugeData(DashboardWidget $widget): array
+    {
+        return [];
+    }
+
+    private function getServiceBreakdownData(DashboardWidget $widget): array
+    {
+        return [];
+    }
+
+    private function getTrendAnalysisData(DashboardWidget $widget): array
+    {
+        return [];
+    }
+
+    private function getTotalCashInflow(Carbon $startDate, Carbon $endDate): float
+    {
         return $this->getRevenueRecognitionMethod() === 'cash'
             ? $this->sumPaymentsBetween($startDate, $endDate)
             : Invoice::where('company_id', $this->companyId)
@@ -699,8 +841,9 @@ class DashboardDataService
                 ->whereBetween('date', [$startDate, $endDate])
                 ->sum('amount');
     }
-    
-    private function getTotalCashOutflow(Carbon $startDate, Carbon $endDate): float { 
+
+    private function getTotalCashOutflow(Carbon $startDate, Carbon $endDate): float
+    {
         // If expenses table exists, calculate from there, otherwise return 0
         try {
             if (DB::getSchemaBuilder()->hasTable('expenses')) {
@@ -710,72 +853,84 @@ class DashboardDataService
                     ->sum('amount');
             }
         } catch (\Exception $e) {
-            Log::warning('Expenses table not accessible: ' . $e->getMessage());
+            Log::warning('Expenses table not accessible: '.$e->getMessage());
         }
+
         return 0;
     }
-    
-    private function getCashProjection(int $days): float { 
+
+    private function getCashProjection(int $days): float
+    {
         // Simple projection based on average daily inflow over last 30 days
         $avgDailyInflow = $this->getTotalCashInflow(now()->subDays(30), now()) / 30;
+
         return $avgDailyInflow * $days;
     }
-    
-    private function getChurnedCustomers(Carbon $startDate, Carbon $endDate): int { 
+
+    private function getChurnedCustomers(Carbon $startDate, Carbon $endDate): int
+    {
         return Client::where('company_id', $this->companyId)
             ->onlyTrashed()
             ->whereBetween('deleted_at', [$startDate, $endDate])
             ->count();
     }
-    
-    private function getAverageCLV(): float { 
+
+    private function getAverageCLV(): float
+    {
         $avgRevenue = Invoice::where('company_id', $this->companyId)
             ->where('status', Invoice::STATUS_PAID)
             ->avg('amount');
+
         return $avgRevenue ?? 0;
     }
-    
-    private function getAverageCAC(): float { 
+
+    private function getAverageCAC(): float
+    {
         // Simple estimation: if we have marketing expenses or acquisition costs
         $totalClients = Client::where('company_id', $this->companyId)->count();
         if ($totalClients > 0) {
             // Estimate 10% of average deal size as acquisition cost
             $avgDealSize = $this->getAverageDealSize(now()->subYear(), now())['value'];
+
             return $avgDealSize * 0.1;
         }
+
         return 0;
     }
-    
-    private function getNetRevenueRetention(Carbon $startDate, Carbon $endDate): float { 
+
+    private function getNetRevenueRetention(Carbon $startDate, Carbon $endDate): float
+    {
         // Calculate based on revenue from existing customers vs new customers
         $existingCustomerRevenue = Invoice::where('company_id', $this->companyId)
             ->where('status', Invoice::STATUS_PAID)
             ->whereBetween('date', [$startDate, $endDate])
-            ->whereHas('client', function($query) use ($startDate) {
+            ->whereHas('client', function ($query) use ($startDate) {
                 $query->where('created_at', '<', $startDate);
             })
             ->sum('amount');
-            
+
         $previousPeriodRevenue = Invoice::where('company_id', $this->companyId)
             ->where('status', Invoice::STATUS_PAID)
             ->whereBetween('date', [$startDate->copy()->subYear(), $endDate->copy()->subYear()])
             ->sum('amount');
-            
+
         return $previousPeriodRevenue > 0 ? ($existingCustomerRevenue / $previousPeriodRevenue) * 100 : 100;
     }
-    
-    private function getInvoiceCount(Carbon $startDate, Carbon $endDate): int { 
+
+    private function getInvoiceCount(Carbon $startDate, Carbon $endDate): int
+    {
         return Invoice::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
     }
-    
-    private function getAverageInvoiceValue(Carbon $startDate, Carbon $endDate): float { 
+
+    private function getAverageInvoiceValue(Carbon $startDate, Carbon $endDate): float
+    {
         return Invoice::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->avg('amount') ?? 0;
     }
-    
+
     /**
      * Get sentiment analysis metrics for executive dashboard
      */
@@ -784,7 +939,7 @@ class DashboardDataService
         // Import the Ticket model
         $ticketModel = \App\Domains\Ticket\Models\Ticket::class;
         $replyModel = \App\Models\TicketReply::class;
-        
+
         // Get ticket sentiment stats
         $ticketStats = DB::table('tickets')
             ->where('company_id', $this->companyId)
@@ -800,7 +955,7 @@ class DashboardDataService
             ->get()
             ->keyBy('sentiment_label');
 
-        // Get reply sentiment stats  
+        // Get reply sentiment stats
         $replyStats = DB::table('ticket_replies')
             ->where('company_id', $this->companyId)
             ->whereNotNull('sentiment_analyzed_at')
@@ -830,19 +985,19 @@ class DashboardDataService
         // Calculate sentiment distribution
         $positiveCount = ($ticketStats->get('POSITIVE')->count ?? 0) + ($ticketStats->get('WEAK_POSITIVE')->count ?? 0) +
                         ($replyStats->get('POSITIVE')->count ?? 0) + ($replyStats->get('WEAK_POSITIVE')->count ?? 0);
-        
+
         $neutralCount = ($ticketStats->get('NEUTRAL')->count ?? 0) + ($replyStats->get('NEUTRAL')->count ?? 0);
-        
+
         $negativeCount = ($ticketStats->get('NEGATIVE')->count ?? 0) + ($ticketStats->get('WEAK_NEGATIVE')->count ?? 0) +
                         ($replyStats->get('NEGATIVE')->count ?? 0) + ($replyStats->get('WEAK_NEGATIVE')->count ?? 0);
 
         // Calculate average sentiment score
         $avgSentimentScore = 0;
         if ($totalInteractions > 0) {
-            $ticketScoreSum = $ticketStats->sum(function($stat) {
+            $ticketScoreSum = $ticketStats->sum(function ($stat) {
                 return $stat->avg_score * $stat->count;
             });
-            $replyScoreSum = $replyStats->sum(function($stat) {
+            $replyScoreSum = $replyStats->sum(function ($stat) {
                 return $stat->avg_score * $stat->count;
             });
             $avgSentimentScore = ($ticketScoreSum + $replyScoreSum) / $totalInteractions;
@@ -851,17 +1006,17 @@ class DashboardDataService
         // Get previous period for comparison
         $previousStart = $startDate->copy()->sub($startDate->diffAsCarbonInterval($endDate));
         $previousEnd = $startDate->copy()->subDay();
-        
+
         $previousTotal = DB::table('tickets')
             ->where('company_id', $this->companyId)
             ->whereNotNull('sentiment_analyzed_at')
             ->whereBetween('created_at', [$previousStart, $previousEnd])
-            ->count() + 
+            ->count() +
             DB::table('ticket_replies')
-            ->where('company_id', $this->companyId)
-            ->whereNotNull('sentiment_analyzed_at')
-            ->whereBetween('created_at', [$previousStart, $previousEnd])
-            ->count();
+                ->where('company_id', $this->companyId)
+                ->whereNotNull('sentiment_analyzed_at')
+                ->whereBetween('created_at', [$previousStart, $previousEnd])
+                ->count();
 
         $previousNegative = DB::table('tickets')
             ->where('company_id', $this->companyId)
@@ -869,10 +1024,10 @@ class DashboardDataService
             ->whereBetween('created_at', [$previousStart, $previousEnd])
             ->count() +
             DB::table('ticket_replies')
-            ->where('company_id', $this->companyId)
-            ->whereIn('sentiment_label', ['NEGATIVE', 'WEAK_NEGATIVE'])
-            ->whereBetween('created_at', [$previousStart, $previousEnd])
-            ->count();
+                ->where('company_id', $this->companyId)
+                ->whereIn('sentiment_label', ['NEGATIVE', 'WEAK_NEGATIVE'])
+                ->whereBetween('created_at', [$previousStart, $previousEnd])
+                ->count();
 
         // Calculate trends
         $totalTrend = $previousTotal > 0 ? (($totalInteractions - $previousTotal) / $previousTotal) * 100 : 0;
@@ -884,7 +1039,7 @@ class DashboardDataService
                 'label' => $this->getSentimentLabel($avgSentimentScore),
                 'color' => $this->getSentimentColor($avgSentimentScore),
                 'icon' => 'fas fa-heart-pulse',
-                'description' => 'Average sentiment across all interactions'
+                'description' => 'Average sentiment across all interactions',
             ],
             'positive_sentiment_rate' => [
                 'value' => $totalInteractions > 0 ? round(($positiveCount / $totalInteractions) * 100, 1) : 0,
@@ -892,7 +1047,7 @@ class DashboardDataService
                 'color' => '#10b981',
                 'icon' => 'fas fa-smile',
                 'description' => 'Percentage of positive interactions',
-                'trend' => $totalTrend
+                'trend' => $totalTrend,
             ],
             'negative_sentiment_alerts' => [
                 'value' => $negativeTickets,
@@ -900,7 +1055,7 @@ class DashboardDataService
                 'color' => $negativeTickets > 0 ? '#ef4444' : '#64748b',
                 'icon' => 'fas fa-exclamation-triangle',
                 'description' => 'High-confidence negative tickets requiring immediate attention',
-                'trend' => $negativeTrend
+                'trend' => $negativeTrend,
             ],
             'total_analyzed' => [
                 'value' => $totalInteractions,
@@ -908,24 +1063,24 @@ class DashboardDataService
                 'color' => '#6366f1',
                 'icon' => 'fas fa-chart-line',
                 'description' => 'Total tickets and replies analyzed for sentiment',
-                'trend' => $totalTrend
+                'trend' => $totalTrend,
             ],
             'sentiment_distribution' => [
                 'positive' => [
                     'count' => $positiveCount,
                     'percentage' => $totalInteractions > 0 ? round(($positiveCount / $totalInteractions) * 100, 1) : 0,
-                    'color' => '#10b981'
+                    'color' => '#10b981',
                 ],
                 'neutral' => [
                     'count' => $neutralCount,
                     'percentage' => $totalInteractions > 0 ? round(($neutralCount / $totalInteractions) * 100, 1) : 0,
-                    'color' => '#64748b'
+                    'color' => '#64748b',
                 ],
                 'negative' => [
                     'count' => $negativeCount,
                     'percentage' => $totalInteractions > 0 ? round(($negativeCount / $totalInteractions) * 100, 1) : 0,
-                    'color' => '#ef4444'
-                ]
+                    'color' => '#ef4444',
+                ],
             ],
             'sentiment_trends' => $this->getSentimentTrends($startDate, $endDate),
         ];
@@ -996,10 +1151,19 @@ class DashboardDataService
      */
     private function getSentimentLabel(float $score): string
     {
-        if ($score > 0.5) return 'Very Positive';
-        if ($score > 0.1) return 'Positive';
-        if ($score > -0.1) return 'Neutral';
-        if ($score > -0.5) return 'Negative';
+        if ($score > 0.5) {
+            return 'Very Positive';
+        }
+        if ($score > 0.1) {
+            return 'Positive';
+        }
+        if ($score > -0.1) {
+            return 'Neutral';
+        }
+        if ($score > -0.5) {
+            return 'Negative';
+        }
+
         return 'Very Negative';
     }
 
@@ -1008,10 +1172,19 @@ class DashboardDataService
      */
     private function getSentimentColor(float $score): string
     {
-        if ($score > 0.5) return '#10b981'; // emerald-500
-        if ($score > 0.1) return '#84cc16'; // lime-500
-        if ($score > -0.1) return '#64748b'; // slate-500
-        if ($score > -0.5) return '#f97316'; // orange-500
+        if ($score > 0.5) {
+            return '#10b981';
+        } // emerald-500
+        if ($score > 0.1) {
+            return '#84cc16';
+        } // lime-500
+        if ($score > -0.1) {
+            return '#64748b';
+        } // slate-500
+        if ($score > -0.5) {
+            return '#f97316';
+        } // orange-500
+
         return '#ef4444'; // red-500
     }
 

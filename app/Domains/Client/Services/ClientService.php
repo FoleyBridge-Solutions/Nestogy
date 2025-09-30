@@ -2,13 +2,13 @@
 
 namespace App\Domains\Client\Services;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Domains\Core\Services\BaseService;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Location;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ClientService extends BaseService
 {
@@ -24,10 +24,10 @@ class ClientService extends BaseService
     protected function applyCustomFilters($query, array $filters)
     {
         // Override default to exclude leads unless specifically requested
-        if (!isset($filters['include_leads'])) {
+        if (! isset($filters['include_leads'])) {
             $query->where('lead', false);
         }
-        
+
         return $query;
     }
 
@@ -35,7 +35,7 @@ class ClientService extends BaseService
     {
         // Create primary location if provided
         $location = null;
-        if (!empty($data['location_address']) || !empty($data['location_city']) || !empty($data['address'])) {
+        if (! empty($data['location_address']) || ! empty($data['location_city']) || ! empty($data['address'])) {
             $location = Location::create([
                 'company_id' => Auth::user()->company_id,
                 'client_id' => $model->id,
@@ -51,7 +51,7 @@ class ClientService extends BaseService
         }
 
         // Create primary contact if provided
-        if (!empty($data['contact_name']) || !empty($data['contact_email'])) {
+        if (! empty($data['contact_name']) || ! empty($data['contact_email'])) {
             Contact::create([
                 'company_id' => Auth::user()->company_id,
                 'client_id' => $model->id,
@@ -69,7 +69,7 @@ class ClientService extends BaseService
         }
 
         // Sync tags if provided
-        if (!empty($data['tags'])) {
+        if (! empty($data['tags'])) {
             $tags = is_string($data['tags']) ? json_decode($data['tags'], true) : $data['tags'];
             if (is_array($tags) && count($tags) > 0) {
                 $model->syncTagsByName($tags);
@@ -119,7 +119,7 @@ class ClientService extends BaseService
     public function createClient(array $data)
     {
         $client = $this->create($data);
-        
+
         return [
             'client_id' => $client->id,
             'name' => $client->name,
@@ -167,7 +167,7 @@ class ClientService extends BaseService
     protected function createClientWithDetails(array $data)
     {
         $user = Auth::user();
-        
+
         return DB::transaction(function () use ($data, $user) {
             // Create client
             $client = Client::create([
@@ -197,7 +197,7 @@ class ClientService extends BaseService
             ]);
 
             // Create primary location if provided
-            if (!empty($data['location_address']) || !empty($data['location_city']) || !empty($data['address'])) {
+            if (! empty($data['location_address']) || ! empty($data['location_city']) || ! empty($data['address'])) {
                 $location = Location::create([
                     'company_id' => $user->company_id,
                     'client_id' => $client->id,
@@ -213,7 +213,7 @@ class ClientService extends BaseService
             }
 
             // Create primary contact if provided
-            if (!empty($data['contact_name']) || !empty($data['contact_email'])) {
+            if (! empty($data['contact_name']) || ! empty($data['contact_email'])) {
                 $contact = Contact::create([
                     'company_id' => $user->company_id,
                     'client_id' => $client->id,
@@ -231,7 +231,7 @@ class ClientService extends BaseService
             }
 
             // Sync tags if provided
-            if (!empty($data['tags'])) {
+            if (! empty($data['tags'])) {
                 $tags = is_string($data['tags']) ? json_decode($data['tags'], true) : $data['tags'];
                 if (is_array($tags) && count($tags) > 0) {
                     $client->syncTagsByName($tags);
@@ -242,7 +242,7 @@ class ClientService extends BaseService
             Log::info('Client created via service', [
                 'client_id' => $client->id,
                 'client_name' => $client->name,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return [
@@ -255,17 +255,15 @@ class ClientService extends BaseService
         });
     }
 
-
-
     /**
      * Get client statistics with request-level caching
      */
     public function getClientStats(Client $client)
     {
         // Use request-level cache to avoid duplicate queries within the same request
-        $cacheKey = 'client_stats_' . $client->id . '_' . request()->fingerprint();
-        
-        return cache()->remember($cacheKey, 1, function() use ($client) {
+        $cacheKey = 'client_stats_'.$client->id.'_'.request()->fingerprint();
+
+        return cache()->remember($cacheKey, 1, function () use ($client) {
             // Execute all counting queries in a single database round trip using raw SQL
             $ticketStats = DB::selectOne("
                 SELECT 
@@ -275,7 +273,7 @@ class ClientService extends BaseService
                 FROM tickets 
                 WHERE client_id = ? AND company_id = ? AND archived_at IS NULL
             ", [$client->id, $client->company_id]);
-            
+
             $invoiceStats = DB::selectOne("
                 SELECT 
                     COUNT(*) as total_invoices,
@@ -287,7 +285,7 @@ class ClientService extends BaseService
                 FROM invoices 
                 WHERE client_id = ? AND archived_at IS NULL AND company_id = ?
             ", [$client->id, $client->company_id]);
-            
+
             $assetStats = DB::selectOne("
                 SELECT 
                     COUNT(*) as total_assets,
@@ -295,13 +293,13 @@ class ClientService extends BaseService
                 FROM assets 
                 WHERE client_id = ? AND archived_at IS NULL AND company_id = ?
             ", [$client->id, $client->company_id]);
-            
-            $contactLocationStats = DB::selectOne("
+
+            $contactLocationStats = DB::selectOne('
                 SELECT 
                     (SELECT COUNT(*) FROM contacts WHERE client_id = ? AND archived_at IS NULL AND company_id = ?) as total_contacts,
                     (SELECT COUNT(*) FROM locations WHERE client_id = ? AND archived_at IS NULL AND company_id = ?) as total_locations
-            ", [$client->id, $client->company_id, $client->id, $client->company_id]);
-            
+            ', [$client->id, $client->company_id, $client->id, $client->company_id]);
+
             return [
                 'total_tickets' => $ticketStats->total_tickets,
                 'open_tickets' => $ticketStats->open_tickets,
@@ -326,13 +324,13 @@ class ClientService extends BaseService
     public function searchClients(string $query, int $limit = 10)
     {
         $user = Auth::user();
-        
+
         return Client::where('company_id', $user->company_id)
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('type', 'like', "%{$query}%")
-                  ->orWhere('website', 'like', "%{$query}%");
+                    ->orWhere('type', 'like', "%{$query}%")
+                    ->orWhere('website', 'like', "%{$query}%");
             })
             ->orderBy('accessed_at', 'desc')
             ->orderBy('name')
@@ -381,7 +379,7 @@ class ClientService extends BaseService
                     'color' => $invoice->status === 'paid' ? 'green' : ($invoice->status === 'overdue' ? 'red' : 'yellow'),
                     'id' => $invoice->id,
                     'title' => "Invoice #{$invoice->number}",
-                    'description' => $invoice->scope . ' - $' . number_format($invoice->amount, 2),
+                    'description' => $invoice->scope.' - $'.number_format($invoice->amount, 2),
                     'status' => $invoice->status,
                     'amount' => $invoice->amount,
                     'date' => $invoice->created_at,
@@ -437,13 +435,14 @@ class ClientService extends BaseService
             ->get()
             ->map(function ($contract) {
                 $displayName = $contract->title ?: "Contract #{$contract->contract_number}";
+
                 return [
                     'type' => 'contract',
                     'icon' => 'document-duplicate',
                     'color' => $contract->status === 'active' ? 'green' : 'gray',
                     'id' => $contract->id,
                     'title' => $displayName,
-                    'description' => "Ends: " . ($contract->end_date ? $contract->end_date->format('M d, Y') : 'No end date'),
+                    'description' => 'Ends: '.($contract->end_date ? $contract->end_date->format('M d, Y') : 'No end date'),
                     'status' => $contract->status,
                     'date' => $contract->updated_at ?? $contract->created_at,
                     'url' => route('contracts.show', $contract->id),
@@ -480,25 +479,25 @@ class ClientService extends BaseService
     public function getClientsWithUpcomingRenewals(int $days = 30)
     {
         $user = Auth::user();
-        
+
         return Client::where('company_id', $user->company_id)
             ->whereNull('archived_at')
             ->where(function ($query) use ($days) {
                 $query->whereHas('domains', function ($q) use ($days) {
                     $q->where('expire', '<=', now()->addDays($days))
-                      ->where('expire', '>=', now());
+                        ->where('expire', '>=', now());
                 })
-                ->orWhereHas('certificates', function ($q) use ($days) {
-                    $q->where('expire', '<=', now()->addDays($days))
-                      ->where('expire', '>=', now());
-                });
+                    ->orWhereHas('certificates', function ($q) use ($days) {
+                        $q->where('expire', '<=', now()->addDays($days))
+                            ->where('expire', '>=', now());
+                    });
             })
             ->with(['domains' => function ($query) use ($days) {
                 $query->where('expire', '<=', now()->addDays($days))
-                      ->where('expire', '>=', now());
+                    ->where('expire', '>=', now());
             }, 'certificates' => function ($query) use ($days) {
                 $query->where('expire', '<=', now()->addDays($days))
-                      ->where('expire', '>=', now());
+                    ->where('expire', '>=', now());
             }])
             ->get();
     }
@@ -509,7 +508,7 @@ class ClientService extends BaseService
     public function getClientsByType(string $type)
     {
         $user = Auth::user();
-        
+
         return Client::where('company_id', $user->company_id)
             ->whereNull('archived_at')
             ->where('type', $type)
@@ -524,7 +523,7 @@ class ClientService extends BaseService
     public function getClientTypesWithCounts()
     {
         $user = Auth::user();
-        
+
         return Client::where('company_id', $user->company_id)
             ->whereNull('archived_at')
             ->where('lead', false)
@@ -541,7 +540,7 @@ class ClientService extends BaseService
     public function getClientsWithoutPrimaryContact()
     {
         $user = Auth::user();
-        
+
         return Client::where('company_id', $user->company_id)
             ->whereNull('archived_at')
             ->whereDoesntHave('contacts', function ($query) {
@@ -557,7 +556,7 @@ class ClientService extends BaseService
     public function getClientsWithoutPrimaryLocation()
     {
         $user = Auth::user();
-        
+
         return Client::where('company_id', $user->company_id)
             ->whereNull('archived_at')
             ->whereDoesntHave('locations', function ($query) {
@@ -611,7 +610,7 @@ class ClientService extends BaseService
     public function getRecentlyAccessedClients(int $limit = 10)
     {
         $user = Auth::user();
-        
+
         return Client::where('company_id', $user->company_id)
             ->whereNull('archived_at')
             ->whereNotNull('accessed_at')
@@ -627,7 +626,7 @@ class ClientService extends BaseService
     public function bulkUpdateClients(array $clientIds, array $data)
     {
         $user = Auth::user();
-        
+
         return DB::transaction(function () use ($clientIds, $data, $user) {
             $clients = Client::whereIn('id', $clientIds)
                 ->where('company_id', $user->company_id)
@@ -650,7 +649,7 @@ class ClientService extends BaseService
                 if (isset($data['net_terms'])) {
                     $client->net_terms = $data['net_terms'];
                 }
-                
+
                 if ($client->save()) {
                     $updated++;
                 }
@@ -659,7 +658,7 @@ class ClientService extends BaseService
             Log::info('Bulk client update', [
                 'client_ids' => $clientIds,
                 'updated_count' => $updated,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
 
             return $updated;

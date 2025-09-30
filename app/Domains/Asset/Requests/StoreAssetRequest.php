@@ -44,31 +44,31 @@ class StoreAssetRequest extends FormRequest
                 'nullable',
                 Rule::exists('clients', 'id')->where(function ($query) {
                     $query->where('company_id', $this->user()->company_id);
-                })
+                }),
             ],
             'vendor_id' => [
                 'nullable',
                 Rule::exists('vendors', 'id')->where(function ($query) {
                     $query->where('company_id', $this->user()->company_id);
-                })
+                }),
             ],
             'location_id' => [
                 'nullable',
                 Rule::exists('locations', 'id')->where(function ($query) {
                     $query->where('company_id', $this->user()->company_id);
-                })
+                }),
             ],
             'contact_id' => [
                 'nullable',
                 Rule::exists('contacts', 'id')->where(function ($query) {
                     $query->where('company_id', $this->user()->company_id);
-                })
+                }),
             ],
             'network_id' => [
                 'nullable',
                 Rule::exists('networks', 'id')->where(function ($query) {
                     $query->where('company_id', $this->user()->company_id);
-                })
+                }),
             ],
             'rmm_id' => ['nullable', 'string', 'max:255'],
         ];
@@ -107,8 +107,8 @@ class StoreAssetRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'type.in' => 'The selected asset type is invalid. Valid types are: ' . implode(', ', Asset::TYPES),
-            'status.in' => 'The selected status is invalid. Valid statuses are: ' . implode(', ', Asset::STATUSES),
+            'type.in' => 'The selected asset type is invalid. Valid types are: '.implode(', ', Asset::TYPES),
+            'status.in' => 'The selected status is invalid. Valid statuses are: '.implode(', ', Asset::STATUSES),
             'warranty_expire.after' => 'The warranty expiration date must be in the future.',
             'ip.ip' => 'The IP address must be a valid IP address.',
             'nat_ip.ip' => 'The NAT IP address must be a valid IP address.',
@@ -134,7 +134,7 @@ class StoreAssetRequest extends FormRequest
                 $exists = \App\Models\Asset::where('company_id', $this->user()->company_id)
                     ->where('serial', $this->serial)
                     ->exists();
-                
+
                 if ($exists) {
                     $validator->errors()->add('serial', 'An asset with this serial number already exists in your company.');
                 }

@@ -2,45 +2,33 @@
 
 namespace App\Domains\Ticket\Services;
 
-use App\Domains\Ticket\Models\Ticket;
-use App\Domains\Ticket\Models\TicketPriorityQueue;
-use App\Domains\Ticket\Models\TicketTimeEntry;
-use App\Domains\Ticket\Models\TicketAssignment;
-use App\Domains\Ticket\Models\SLA;
-use App\Domains\Ticket\Services\SLAService;
-use App\Models\User;
-use App\Models\Client;
-use App\Domains\Contract\Models\Contract;
 use App\Domains\Core\Services\NotificationService;
+use App\Domains\Ticket\Models\SLA;
+use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Ticket\Models\TicketAssignment;
+use App\Domains\Ticket\Models\TicketPriorityQueue;
+use App\Models\Client;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * TicketService - Core service for managing support tickets in the MSP platform
- * 
+ *
  * Handles SLA calculations, automated assignment, escalations, bulk operations,
  * and integration with notification systems.
  */
 class TicketService
 {
-    /**
-     * @var NotificationService
-     */
     protected NotificationService $notificationService;
 
-    /**
-     * @var SLAService
-     */
     protected SLAService $slaService;
 
     /**
      * Constructor
-     * 
-     * @param NotificationService $notificationService
-     * @param SLAService $slaService
      */
     public function __construct(NotificationService $notificationService, SLAService $slaService)
     {
@@ -50,33 +38,30 @@ class TicketService
 
     /**
      * Calculate SLA deadlines based on priority and client SLA
-     * 
-     * @param Ticket $ticket
-     * @return array
      */
     public function calculateSlaDeadlines(Ticket $ticket): array
     {
         $priority = strtolower($ticket->priority);
         $client = $ticket->client;
-        
-        if (!$client) {
+
+        if (! $client) {
             return $this->getDefaultSlaDeadlines($ticket);
         }
-        
+
         // Calculate deadlines using SLA service
         $responseDeadline = $this->slaService->calculateResponseDeadline($client, $priority, $ticket->created_at);
         $resolutionDeadline = $this->slaService->calculateResolutionDeadline($client, $priority, $ticket->created_at);
-        
+
         // Get the SLA for additional information
         $sla = $this->slaService->getClientSLA($client);
-        
-        if (!$responseDeadline || !$resolutionDeadline || !$sla) {
+
+        if (! $responseDeadline || ! $resolutionDeadline || ! $sla) {
             return $this->getDefaultSlaDeadlines($ticket);
         }
-        
+
         // Store in priority queue
         $this->updatePriorityQueue($ticket, $responseDeadline, $resolutionDeadline);
-        
+
         return [
             'response_deadline' => $responseDeadline,
             'resolution_deadline' => $resolutionDeadline,
@@ -84,20 +69,17 @@ class TicketService
             'resolution_minutes' => $sla->getResolutionTimeMinutes($priority),
             'sla_id' => $sla->id,
             'sla_name' => $sla->name,
-            'is_custom_sla' => !$sla->is_default,
+            'is_custom_sla' => ! $sla->is_default,
         ];
     }
 
     /**
      * Get default SLA deadlines when no SLA is available
-     * 
-     * @param Ticket $ticket
-     * @return array
      */
     protected function getDefaultSlaDeadlines(Ticket $ticket): array
     {
         $priority = strtolower($ticket->priority);
-        
+
         // Default fallback SLA times in minutes
         $defaultResponseTimes = [
             'critical' => 60,
@@ -105,23 +87,23 @@ class TicketService
             'medium' => 480,
             'low' => 1440,
         ];
-        
+
         $defaultResolutionTimes = [
             'critical' => 240,
             'high' => 1440,
             'medium' => 4320,
             'low' => 10080,
         ];
-        
+
         $responseMinutes = $defaultResponseTimes[$priority] ?? 1440;
         $resolutionMinutes = $defaultResolutionTimes[$priority] ?? 10080;
-        
+
         $responseDeadline = $ticket->created_at->addMinutes($responseMinutes);
         $resolutionDeadline = $ticket->created_at->addMinutes($resolutionMinutes);
-        
+
         // Store in priority queue
         $this->updatePriorityQueue($ticket, $responseDeadline, $resolutionDeadline);
-        
+
         return [
             'response_deadline' => $responseDeadline,
             'resolution_deadline' => $resolutionDeadline,
@@ -135,11 +117,6 @@ class TicketService
 
     /**
      * Update or create priority queue entry for ticket
-     * 
-     * @param Ticket $ticket
-     * @param Carbon $responseDeadline
-     * @param Carbon $resolutionDeadline
-     * @return TicketPriorityQueue
      */
     protected function updatePriorityQueue(Ticket $ticket, Carbon $responseDeadline, Carbon $resolutionDeadline): TicketPriorityQueue
     {
@@ -158,10 +135,6 @@ class TicketService
 
     /**
      * Automatically assign ticket based on technician skills and availability
-     * 
-     * @param Ticket $ticket
-     * @param array $options
-     * @return User|null
      */
     public function autoAssignTicket(Ticket $ticket, array $options = []): ?User
     {
@@ -170,18 +143,20 @@ class TicketService
 
             // Get available technicians
             $technicians = $this->getAvailableTechnicians($ticket, $options);
-            
+
             if ($technicians->isEmpty()) {
                 Log::warning('No available technicians for ticket', ['ticket_id' => $ticket->id]);
                 DB::commit();
+
                 return null;
             }
 
             // Select best technician based on scoring
             $selectedTechnician = $this->selectBestTechnician($technicians, $ticket);
-            
-            if (!$selectedTechnician) {
+
+            if (! $selectedTechnician) {
                 DB::commit();
+
                 return null;
             }
 
@@ -217,16 +192,13 @@ class TicketService
                 'ticket_id' => $ticket->id,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
 
     /**
      * Get available technicians for ticket assignment
-     * 
-     * @param Ticket $ticket
-     * @param array $options
-     * @return Collection
      */
     protected function getAvailableTechnicians(Ticket $ticket, array $options = []): Collection
     {
@@ -234,14 +206,14 @@ class TicketService
             ->where('is_active', true);
 
         // Filter by role/permissions
-        if (!isset($options['skip_permission_check']) || !$options['skip_permission_check']) {
+        if (! isset($options['skip_permission_check']) || ! $options['skip_permission_check']) {
             $query->whereHas('roles', function ($q) {
                 $q->whereIn('name', ['technician', 'admin', 'manager']);
             });
         }
 
         // Filter by category expertise if specified
-        if ($ticket->category && !empty($options['match_expertise'])) {
+        if ($ticket->category && ! empty($options['match_expertise'])) {
             $query->where(function ($q) use ($ticket) {
                 $q->whereJsonContains('skills', $ticket->category)
                     ->orWhereJsonContains('expertise_areas', $ticket->category);
@@ -249,7 +221,7 @@ class TicketService
         }
 
         // Filter by availability
-        if (!isset($options['include_busy']) || !$options['include_busy']) {
+        if (! isset($options['include_busy']) || ! $options['include_busy']) {
             $query->whereDoesntHave('tickets', function ($q) {
                 $q->whereIn('status', [Ticket::STATUS_IN_PROGRESS])
                     ->where('priority', Ticket::PRIORITY_CRITICAL);
@@ -261,31 +233,27 @@ class TicketService
 
     /**
      * Select the best technician based on scoring algorithm
-     * 
-     * @param Collection $technicians
-     * @param Ticket $ticket
-     * @return User|null
      */
     protected function selectBestTechnician(Collection $technicians, Ticket $ticket): ?User
     {
         $scores = [];
-        
+
         foreach ($technicians as $technician) {
             $score = 0;
-            
+
             // Current workload (lower is better)
             $activeTickets = Ticket::where('assigned_to', $technician->id)
                 ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
                 ->count();
             $score -= ($activeTickets * 10);
-            
+
             // Priority tickets count (penalize if already handling critical tickets)
             $criticalTickets = Ticket::where('assigned_to', $technician->id)
                 ->where('priority', Ticket::PRIORITY_CRITICAL)
                 ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
                 ->count();
             $score -= ($criticalTickets * 20);
-            
+
             // Client familiarity (bonus if worked with client before)
             if ($ticket->client_id) {
                 $previousTickets = Ticket::where('assigned_to', $technician->id)
@@ -294,7 +262,7 @@ class TicketService
                     ->count();
                 $score += min($previousTickets * 5, 25); // Cap at 25 points
             }
-            
+
             // Category expertise (bonus for matching skills)
             if ($ticket->category) {
                 $skills = is_array($technician->skills) ? $technician->skills : json_decode($technician->skills ?? '[]', true);
@@ -302,175 +270,158 @@ class TicketService
                     $score += 30;
                 }
             }
-            
+
             // Recent response time (bonus for quick responders)
             $avgResponseTime = $this->getAverageResponseTime($technician, 30); // Last 30 days
             if ($avgResponseTime && $avgResponseTime < 2) { // Less than 2 hours average
                 $score += 15;
             }
-            
+
             $scores[$technician->id] = $score;
         }
-        
+
         // Return technician with highest score
         if (empty($scores)) {
             return null;
         }
-        
+
         arsort($scores);
         $bestTechnicianId = array_key_first($scores);
-        
+
         return $technicians->firstWhere('id', $bestTechnicianId);
     }
 
     /**
      * Get average response time for technician
-     * 
-     * @param User $technician
-     * @param int $days
-     * @return float|null
      */
     protected function getAverageResponseTime(User $technician, int $days = 30): ?float
     {
         $cacheKey = "technician_avg_response_{$technician->id}_{$days}";
-        
+
         return Cache::remember($cacheKey, 3600, function () use ($technician, $days) {
             $tickets = Ticket::where('assigned_to', $technician->id)
                 ->where('created_at', '>=', now()->subDays($days))
                 ->whereNotNull('first_response_at')
                 ->get();
-            
+
             if ($tickets->isEmpty()) {
                 return null;
             }
-            
+
             $totalResponseTime = 0;
             foreach ($tickets as $ticket) {
                 $totalResponseTime += $ticket->created_at->diffInHours($ticket->first_response_at);
             }
-            
+
             return round($totalResponseTime / $tickets->count(), 2);
         });
     }
 
     /**
      * Get assignment reason for audit trail
-     * 
-     * @param User $technician
-     * @param Ticket $ticket
-     * @return string
      */
     protected function getAssignmentReason(User $technician, Ticket $ticket): string
     {
         $reasons = [];
-        
+
         // Check workload
         $activeTickets = Ticket::where('assigned_to', $technician->id)
             ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
             ->count();
-        
+
         if ($activeTickets < 5) {
             $reasons[] = 'Low current workload';
         }
-        
+
         // Check expertise
         $skills = is_array($technician->skills) ? $technician->skills : json_decode($technician->skills ?? '[]', true);
         if ($ticket->category && in_array($ticket->category, $skills)) {
             $reasons[] = "Expertise in {$ticket->category}";
         }
-        
+
         // Check client familiarity
         if ($ticket->client_id) {
             $previousTickets = Ticket::where('assigned_to', $technician->id)
                 ->where('client_id', $ticket->client_id)
                 ->count();
-            
+
             if ($previousTickets > 0) {
                 $reasons[] = 'Previous experience with client';
             }
         }
-        
-        return !empty($reasons) ? implode('; ', $reasons) : 'Best available match';
+
+        return ! empty($reasons) ? implode('; ', $reasons) : 'Best available match';
     }
 
     /**
      * Check and trigger escalations for SLA breaches
-     * 
-     * @param array $options
+     *
+     * @param  array  $options
      * @return Collection
      */
 
     /**
      * Check if ticket response SLA is breached
-     * 
-     * @param Ticket $ticket
-     * @return bool
      */
     public function isResponseSlaBreached(Ticket $ticket): bool
     {
-        if (!$ticket->client) {
+        if (! $ticket->client) {
             return false;
         }
-        
+
         $priority = strtolower($ticket->priority);
+
         return $this->slaService->isResponseBreached($ticket->client, $priority, $ticket->created_at);
     }
 
     /**
      * Check if ticket resolution SLA is breached
-     * 
-     * @param Ticket $ticket
-     * @return bool
      */
     public function isResolutionSlaBreached(Ticket $ticket): bool
     {
-        if (!$ticket->client) {
+        if (! $ticket->client) {
             return false;
         }
-        
+
         $priority = strtolower($ticket->priority);
         $resolvedAt = $ticket->status === 'Resolved' ? $ticket->updated_at : null;
-        
+
         return $this->slaService->isResolutionBreached($ticket->client, $priority, $ticket->created_at, $resolvedAt);
     }
 
     /**
      * Check if ticket SLA is approaching breach
-     * 
-     * @param Ticket $ticket
-     * @param string $type - 'response' or 'resolution'
-     * @return bool
+     *
+     * @param  string  $type  - 'response' or 'resolution'
      */
     public function isSlaApproachingBreach(Ticket $ticket, string $type = 'response'): bool
     {
-        if (!$ticket->client) {
+        if (! $ticket->client) {
             return false;
         }
-        
+
         $priority = strtolower($ticket->priority);
+
         return $this->slaService->isApproachingBreach($ticket->client, $priority, $ticket->created_at, $type);
     }
 
     /**
      * Get SLA information for a ticket
-     * 
-     * @param Ticket $ticket
-     * @return array
      */
     public function getTicketSlaInfo(Ticket $ticket): array
     {
-        if (!$ticket->client) {
+        if (! $ticket->client) {
             return [];
         }
-        
+
         $sla = $this->slaService->getClientSLA($ticket->client);
-        
-        if (!$sla) {
+
+        if (! $sla) {
             return [];
         }
-        
+
         $priority = strtolower($ticket->priority);
-        
+
         return [
             'sla' => $sla,
             'response_deadline' => $sla->calculateResponseDeadline($ticket->created_at, $priority),
@@ -485,7 +436,7 @@ class TicketService
     public function checkAndTriggerEscalations(array $options = []): Collection
     {
         $escalatedTickets = collect();
-        
+
         try {
             // Get tickets approaching or past SLA deadlines
             $ticketsToCheck = TicketPriorityQueue::with('ticket')
@@ -498,8 +449,8 @@ class TicketService
 
             foreach ($ticketsToCheck as $queueItem) {
                 $ticket = $queueItem->ticket;
-                
-                if (!$ticket || $ticket->isClosed()) {
+
+                if (! $ticket || $ticket->isClosed()) {
                     continue;
                 }
 
@@ -507,19 +458,19 @@ class TicketService
                 $escalationReason = '';
 
                 // Check response SLA breach
-                if (!$ticket->first_response_at && $queueItem->response_deadline <= now()) {
+                if (! $ticket->first_response_at && $queueItem->response_deadline <= now()) {
                     $shouldEscalate = true;
                     $escalationReason = 'Response SLA breached';
-                } elseif (!$ticket->first_response_at && $queueItem->response_deadline <= now()->addMinutes(30)) {
+                } elseif (! $ticket->first_response_at && $queueItem->response_deadline <= now()->addMinutes(30)) {
                     $shouldEscalate = true;
                     $escalationReason = 'Response SLA at risk (30 minutes remaining)';
                 }
 
                 // Check resolution SLA breach
-                if (!$ticket->isClosed() && $queueItem->sla_deadline <= now()) {
+                if (! $ticket->isClosed() && $queueItem->sla_deadline <= now()) {
                     $shouldEscalate = true;
                     $escalationReason = 'Resolution SLA breached';
-                } elseif (!$ticket->isClosed() && $queueItem->sla_deadline <= now()->addHours(1)) {
+                } elseif (! $ticket->isClosed() && $queueItem->sla_deadline <= now()->addHours(1)) {
                     $shouldEscalate = true;
                     $escalationReason = 'Resolution SLA at risk (1 hour remaining)';
                 }
@@ -527,7 +478,7 @@ class TicketService
                 if ($shouldEscalate) {
                     $this->escalateTicket($ticket, $escalationReason);
                     $escalatedTickets->push($ticket);
-                    
+
                     // Mark as escalated to avoid repeated escalations
                     $queueItem->is_escalated = true;
                     $queueItem->escalated_at = now();
@@ -553,10 +504,6 @@ class TicketService
 
     /**
      * Escalate a ticket
-     * 
-     * @param Ticket $ticket
-     * @param string $reason
-     * @return void
      */
     protected function escalateTicket(Ticket $ticket, string $reason): void
     {
@@ -576,7 +523,7 @@ class TicketService
                 if ($seniorTechnician && $seniorTechnician->id !== $ticket->assigned_to) {
                     $ticket->assigned_to = $seniorTechnician->id;
                     $ticket->save();
-                    
+
                     $this->notificationService->notifyTicketAssigned($ticket, $seniorTechnician);
                 }
             }
@@ -597,9 +544,6 @@ class TicketService
 
     /**
      * Find a senior technician for escalated tickets
-     * 
-     * @param Ticket $ticket
-     * @return User|null
      */
     protected function findSeniorTechnician(Ticket $ticket): ?User
     {
@@ -617,11 +561,6 @@ class TicketService
 
     /**
      * Bulk assign tickets to technicians
-     * 
-     * @param array $ticketIds
-     * @param int $technicianId
-     * @param array $options
-     * @return array
      */
     public function bulkAssignTickets(array $ticketIds, int $technicianId, array $options = []): array
     {
@@ -642,12 +581,14 @@ class TicketService
                     // Skip if already assigned to same technician
                     if ($ticket->assigned_to === $technicianId) {
                         $results['skipped'][] = $ticket->id;
+
                         continue;
                     }
 
                     // Skip closed tickets unless forced
-                    if ($ticket->isClosed() && !($options['force'] ?? false)) {
+                    if ($ticket->isClosed() && ! ($options['force'] ?? false)) {
                         $results['skipped'][] = $ticket->id;
+
                         continue;
                     }
 
@@ -676,7 +617,7 @@ class TicketService
             }
 
             // Send bulk notification if configured
-            if (!empty($results['success']) && !($options['skip_notification'] ?? false)) {
+            if (! empty($results['success']) && ! ($options['skip_notification'] ?? false)) {
                 $this->notificationService->notifyBulkAssignment($technician, $results['success']);
             }
 
@@ -704,11 +645,6 @@ class TicketService
 
     /**
      * Bulk update ticket status
-     * 
-     * @param array $ticketIds
-     * @param string $status
-     * @param array $options
-     * @return array
      */
     public function bulkUpdateStatus(array $ticketIds, string $status, array $options = []): array
     {
@@ -726,24 +662,25 @@ class TicketService
             foreach ($tickets as $ticket) {
                 try {
                     // Check if transition is allowed
-                    if (!$ticket->canTransitionTo($status)) {
+                    if (! $ticket->canTransitionTo($status)) {
                         $results['skipped'][] = [
                             'ticket_id' => $ticket->id,
                             'reason' => 'Status transition not allowed',
                         ];
+
                         continue;
                     }
 
                     // Update status
                     $oldStatus = $ticket->status;
                     $ticket->status = $status;
-                    
+
                     // Set closed_at timestamp if closing
                     if (in_array($status, [Ticket::STATUS_CLOSED, Ticket::STATUS_RESOLVED])) {
                         $ticket->closed_at = now();
                         $ticket->closed_by = auth()->id();
                     }
-                    
+
                     $ticket->save();
 
                     // Log status change
@@ -768,7 +705,7 @@ class TicketService
             }
 
             // Send notifications if configured
-            if (!empty($results['success']) && !($options['skip_notification'] ?? false)) {
+            if (! empty($results['success']) && ! ($options['skip_notification'] ?? false)) {
                 $this->notificationService->notifyBulkStatusUpdate($results['success'], $status);
             }
 
@@ -796,13 +733,10 @@ class TicketService
 
     /**
      * Track response time for a ticket
-     * 
-     * @param Ticket $ticket
-     * @return void
      */
     public function trackResponseTime(Ticket $ticket): void
     {
-        if (!$ticket->first_response_at) {
+        if (! $ticket->first_response_at) {
             $ticket->first_response_at = now();
             $ticket->response_time_hours = $ticket->created_at->diffInHours(now());
             $ticket->save();
@@ -824,18 +758,15 @@ class TicketService
 
     /**
      * Calculate resolution time for a closed ticket
-     * 
-     * @param Ticket $ticket
-     * @return float
      */
     public function calculateResolutionTime(Ticket $ticket): float
     {
-        if (!$ticket->closed_at) {
+        if (! $ticket->closed_at) {
             return 0;
         }
 
         $resolutionHours = $ticket->created_at->diffInHours($ticket->closed_at);
-        
+
         // Update ticket with resolution time
         $ticket->resolution_time_hours = $resolutionHours;
         $ticket->save();
@@ -858,13 +789,10 @@ class TicketService
 
     /**
      * Route ticket based on category and expertise
-     * 
-     * @param Ticket $ticket
-     * @return User|null
      */
     public function routeTicketByCategory(Ticket $ticket): ?User
     {
-        if (!$ticket->category) {
+        if (! $ticket->category) {
             return null;
         }
 
@@ -914,9 +842,6 @@ class TicketService
 
     /**
      * Get tickets requiring immediate attention
-     * 
-     * @param int $companyId
-     * @return Collection
      */
     public function getUrgentTickets(int $companyId): Collection
     {
@@ -931,18 +856,13 @@ class TicketService
 
     /**
      * Generate SLA performance report
-     * 
-     * @param int $companyId
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @return array
      */
     public function generateSlaPerformanceReport(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $tickets = TicketPriorityQueue::whereHas('ticket', function ($q) use ($companyId, $startDate, $endDate) {
-                $q->where('company_id', $companyId)
-                    ->whereBetween('created_at', [$startDate, $endDate]);
-            })
+            $q->where('company_id', $companyId)
+                ->whereBetween('created_at', [$startDate, $endDate]);
+        })
             ->with('ticket')
             ->get();
 
@@ -972,9 +892,6 @@ class TicketService
 
     /**
      * Get SLA performance by priority
-     * 
-     * @param Collection $tickets
-     * @return array
      */
     protected function getSlaByPriority(Collection $tickets): array
     {

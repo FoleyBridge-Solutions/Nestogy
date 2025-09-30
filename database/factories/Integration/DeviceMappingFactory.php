@@ -14,14 +14,14 @@ class DeviceMappingFactory extends Factory
     {
         $deviceTypes = ['Server', 'Workstation', 'Laptop', 'Router', 'Switch', 'Firewall', 'Printer', 'NAS'];
         $osTypes = ['Windows', 'Linux', 'macOS', 'Router OS', 'Printer OS'];
-        
+
         $deviceType = $this->faker->randomElement($deviceTypes);
-        $deviceName = $deviceType . '-' . $this->faker->numberBetween(1, 999);
-        
+        $deviceName = $deviceType.'-'.$this->faker->numberBetween(1, 999);
+
         return [
             'uuid' => Str::uuid(),
             'integration_id' => 1, // Will be overridden in tests
-            'rmm_device_id' => 'RMM-' . $this->faker->numerify('######'),
+            'rmm_device_id' => 'RMM-'.$this->faker->numerify('######'),
             'asset_id' => $this->faker->optional(0.7)->numberBetween(1, 1000),
             'client_id' => 1, // Will be overridden in tests
             'device_name' => $deviceName,
@@ -76,7 +76,7 @@ class DeviceMappingFactory extends Factory
     public function server(): static
     {
         return $this->state(fn (array $attributes) => [
-            'device_name' => 'Server-' . $this->faker->numberBetween(1, 99),
+            'device_name' => 'Server-'.$this->faker->numberBetween(1, 99),
             'sync_data' => $this->generateSyncData('Server'),
         ]);
     }
@@ -84,7 +84,7 @@ class DeviceMappingFactory extends Factory
     public function workstation(): static
     {
         return $this->state(fn (array $attributes) => [
-            'device_name' => 'Workstation-' . $this->faker->numberBetween(1, 999),
+            'device_name' => 'Workstation-'.$this->faker->numberBetween(1, 999),
             'sync_data' => $this->generateSyncData('Workstation'),
         ]);
     }
@@ -92,7 +92,7 @@ class DeviceMappingFactory extends Factory
     public function laptop(): static
     {
         return $this->state(fn (array $attributes) => [
-            'device_name' => 'Laptop-' . $this->faker->numberBetween(1, 999),
+            'device_name' => 'Laptop-'.$this->faker->numberBetween(1, 999),
             'sync_data' => $this->generateSyncData('Laptop'),
         ]);
     }
@@ -100,9 +100,9 @@ class DeviceMappingFactory extends Factory
     public function networkDevice(): static
     {
         $deviceType = $this->faker->randomElement(['Router', 'Switch', 'Firewall']);
-        
+
         return $this->state(fn (array $attributes) => [
-            'device_name' => $deviceType . '-' . $this->faker->numberBetween(1, 99),
+            'device_name' => $deviceType.'-'.$this->faker->numberBetween(1, 99),
             'sync_data' => $this->generateSyncData($deviceType),
         ]);
     }
@@ -140,7 +140,7 @@ class DeviceMappingFactory extends Factory
                     'disk_space_gb' => $this->faker->randomElement([500, 1000, 2000, 4000]),
                     'server_roles' => $this->faker->randomElements(['Domain Controller', 'File Server', 'Database', 'Web Server'], $this->faker->numberBetween(1, 3)),
                 ]);
-                
+
             case 'Workstation':
             case 'Laptop':
                 return array_merge($baseData, [
@@ -151,7 +151,7 @@ class DeviceMappingFactory extends Factory
                     'user' => $this->faker->userName,
                     'antivirus' => $this->faker->randomElement(['Windows Defender', 'Symantec', 'McAfee', 'Bitdefender']),
                 ]);
-                
+
             case 'Router':
             case 'Switch':
                 return array_merge($baseData, [
@@ -160,7 +160,7 @@ class DeviceMappingFactory extends Factory
                     'model' => $this->faker->randomElement(['Cisco 2960', 'Netgear GS724T', 'HP ProCurve 2810']),
                     'snmp_enabled' => $this->faker->boolean,
                 ]);
-                
+
             case 'Firewall':
                 return array_merge($baseData, [
                     'firmware_version' => $this->faker->numerify('##.##.##'),
@@ -168,15 +168,15 @@ class DeviceMappingFactory extends Factory
                     'vpn_enabled' => $this->faker->boolean,
                     'intrusion_prevention' => $this->faker->boolean,
                 ]);
-                
+
             case 'Printer':
                 return array_merge($baseData, [
                     'model' => $this->faker->randomElement(['HP LaserJet Pro', 'Canon imageCLASS', 'Xerox WorkCentre']),
                     'print_count' => $this->faker->numberBetween(1000, 100000),
-                    'toner_level' => $this->faker->numberBetween(10, 100) . '%',
+                    'toner_level' => $this->faker->numberBetween(10, 100).'%',
                     'duplex_enabled' => $this->faker->boolean,
                 ]);
-                
+
             default:
                 return $baseData;
         }

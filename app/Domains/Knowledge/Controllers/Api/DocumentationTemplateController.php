@@ -2,10 +2,10 @@
 
 namespace App\Domains\Knowledge\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Client\Services\DocumentationTemplateService;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class DocumentationTemplateController extends Controller
 {
@@ -22,11 +22,11 @@ class DocumentationTemplateController extends Controller
     public function getTemplate(Request $request, string $templateKey): JsonResponse
     {
         $templates = $this->templateService->getTemplates();
-        
-        if (!isset($templates[$templateKey])) {
+
+        if (! isset($templates[$templateKey])) {
             return response()->json(['error' => 'Template not found'], 404);
         }
-        
+
         return response()->json($templates[$templateKey]);
     }
 
@@ -36,6 +36,7 @@ class DocumentationTemplateController extends Controller
     public function getDefaultTabs(Request $request, string $category): JsonResponse
     {
         $tabs = $this->templateService->getDefaultTabsForCategory($category);
+
         return response()->json(['tabs' => $tabs]);
     }
 

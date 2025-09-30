@@ -16,7 +16,7 @@ class StoreProductRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'sku' => 'nullable|string|max:255|unique:products,sku,NULL,id,company_id,' . auth()->user()->company_id,
+            'sku' => 'nullable|string|max:255|unique:products,sku,NULL,id,company_id,'.auth()->user()->company_id,
             'type' => 'required|in:product,service',
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'nullable|exists:categories,id',

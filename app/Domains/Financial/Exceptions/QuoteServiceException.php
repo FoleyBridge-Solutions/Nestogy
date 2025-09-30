@@ -33,19 +33,13 @@ class QuoteServiceException extends FinancialException
 
     /**
      * Create a new quote service exception
-     *
-     * @param string $message
-     * @param string|null $operation
-     * @param array $details
-     * @param int $code
-     * @param Throwable|null $previous
      */
     public function __construct(
         string $message = 'Quote service operation failed',
         ?string $operation = null,
         array $details = [],
         int $code = 500,
-        Throwable $previous = null
+        ?Throwable $previous = null
     ) {
         $this->operation = $operation;
         $this->details = $details;
@@ -55,8 +49,6 @@ class QuoteServiceException extends FinancialException
 
     /**
      * Get the operation that failed
-     *
-     * @return string|null
      */
     public function getOperation(): ?string
     {
@@ -65,8 +57,6 @@ class QuoteServiceException extends FinancialException
 
     /**
      * Get error details
-     *
-     * @return array
      */
     public function getDetails(): array
     {
@@ -76,8 +66,6 @@ class QuoteServiceException extends FinancialException
     /**
      * Create exception for database transaction failure
      *
-     * @param string $operation
-     * @param Throwable $previous
      * @return static
      */
     public static function transactionFailed(string $operation, Throwable $previous): self
@@ -94,9 +82,6 @@ class QuoteServiceException extends FinancialException
     /**
      * Create exception for external service failure
      *
-     * @param string $service
-     * @param string $operation
-     * @param string $error
      * @return static
      */
     public static function externalServiceFailed(string $service, string $operation, string $error): self
@@ -112,8 +97,6 @@ class QuoteServiceException extends FinancialException
     /**
      * Create exception for configuration error
      *
-     * @param string $configKey
-     * @param string $operation
      * @return static
      */
     public static function configurationError(string $configKey, string $operation): self
@@ -129,8 +112,6 @@ class QuoteServiceException extends FinancialException
     /**
      * Create exception for calculation error
      *
-     * @param string $calculationType
-     * @param Throwable $previous
      * @return static
      */
     public static function calculationFailed(string $calculationType, Throwable $previous): self
@@ -147,9 +128,6 @@ class QuoteServiceException extends FinancialException
     /**
      * Create exception for file operation failure
      *
-     * @param string $operation
-     * @param string $filepath
-     * @param string $error
      * @return static
      */
     public static function fileOperationFailed(string $operation, string $filepath, string $error): self
@@ -164,8 +142,6 @@ class QuoteServiceException extends FinancialException
 
     /**
      * Convert to array format for API responses
-     *
-     * @return array
      */
     public function toArray(): array
     {
@@ -175,7 +151,7 @@ class QuoteServiceException extends FinancialException
             'details' => $this->details,
             'context' => $this->getContext(),
             'type' => $this->getErrorType(),
-            'code' => $this->getCode()
+            'code' => $this->getCode(),
         ];
     }
 }

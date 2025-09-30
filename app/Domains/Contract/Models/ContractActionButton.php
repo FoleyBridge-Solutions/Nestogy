@@ -2,13 +2,13 @@
 
 namespace App\Domains\Contract\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToCompany;
 
 class ContractActionButton extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -53,14 +53,14 @@ class ContractActionButton extends Model
      */
     public function isVisibleForContract($contract): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
         // Check visibility conditions
         if ($this->visibility_conditions) {
             foreach ($this->visibility_conditions as $condition) {
-                if (!$this->evaluateCondition($condition, $contract)) {
+                if (! $this->evaluateCondition($condition, $contract)) {
                     return false;
                 }
             }
@@ -69,7 +69,7 @@ class ContractActionButton extends Model
         // Check permissions if user is available
         if ($this->permissions && auth()->check()) {
             foreach ($this->permissions as $permission) {
-                if (!auth()->user()->can($permission, $contract)) {
+                if (! auth()->user()->can($permission, $contract)) {
                     return false;
                 }
             }
@@ -87,7 +87,7 @@ class ContractActionButton extends Model
         $operator = $condition['operator'] ?? '=';
         $value = $condition['value'] ?? null;
 
-        if (!$field) {
+        if (! $field) {
             return true;
         }
 
@@ -101,7 +101,7 @@ class ContractActionButton extends Model
             case 'in':
                 return is_array($value) && in_array($contractValue, $value);
             case 'not_in':
-                return is_array($value) && !in_array($contractValue, $value);
+                return is_array($value) && ! in_array($contractValue, $value);
             case '>':
                 return $contractValue > $value;
             case '>=':
@@ -111,7 +111,7 @@ class ContractActionButton extends Model
             case '<=':
                 return $contractValue <= $value;
             case 'exists':
-                return !empty($contractValue);
+                return ! empty($contractValue);
             case 'not_exists':
                 return empty($contractValue);
             default:
@@ -124,7 +124,7 @@ class ContractActionButton extends Model
      */
     public function generateActionUrl($contract): ?string
     {
-        if (!$this->action_config) {
+        if (! $this->action_config) {
             return null;
         }
 
@@ -132,7 +132,7 @@ class ContractActionButton extends Model
             case 'route':
                 $routeName = $this->action_config['route'] ?? null;
                 $parameters = $this->action_config['parameters'] ?? [];
-                
+
                 // Replace contract placeholders in parameters
                 foreach ($parameters as $key => $param) {
                     if (is_string($param) && str_contains($param, '{contract.')) {
@@ -199,7 +199,7 @@ class ContractActionButton extends Model
                 'action_type' => 'route',
                 'action_config' => [
                     'route' => 'contracts.show',
-                    'parameters' => ['{contract.id}']
+                    'parameters' => ['{contract.id}'],
                 ],
                 'sort_order' => 10,
             ],
@@ -211,10 +211,10 @@ class ContractActionButton extends Model
                 'action_type' => 'route',
                 'action_config' => [
                     'route' => 'contracts.edit',
-                    'parameters' => ['{contract.id}']
+                    'parameters' => ['{contract.id}'],
                 ],
                 'visibility_conditions' => [
-                    ['field' => 'status', 'operator' => 'in', 'value' => ['draft', 'pending_review']]
+                    ['field' => 'status', 'operator' => 'in', 'value' => ['draft', 'pending_review']],
                 ],
                 'permissions' => ['update'],
                 'sort_order' => 20,
@@ -227,10 +227,10 @@ class ContractActionButton extends Model
                 'action_type' => 'ajax',
                 'action_config' => [
                     'url' => '/contracts/{contract.id}/send-signature',
-                    'method' => 'POST'
+                    'method' => 'POST',
                 ],
                 'visibility_conditions' => [
-                    ['field' => 'status', 'operator' => '=', 'value' => 'pending_signature']
+                    ['field' => 'status', 'operator' => '=', 'value' => 'pending_signature'],
                 ],
                 'confirmation_message' => 'Are you sure you want to send this contract for signature?',
                 'permissions' => ['update'],
@@ -243,10 +243,10 @@ class ContractActionButton extends Model
                 'button_class' => 'btn btn-success btn-sm',
                 'action_type' => 'status_change',
                 'action_config' => [
-                    'status' => 'active'
+                    'status' => 'active',
                 ],
                 'visibility_conditions' => [
-                    ['field' => 'status', 'operator' => '=', 'value' => 'signed']
+                    ['field' => 'status', 'operator' => '=', 'value' => 'signed'],
                 ],
                 'confirmation_message' => 'Are you sure you want to activate this contract?',
                 'permissions' => ['update'],
@@ -268,19 +268,19 @@ class ContractActionButton extends Model
                                 'name' => 'termination_reason',
                                 'type' => 'textarea',
                                 'label' => 'Termination Reason',
-                                'required' => true
+                                'required' => true,
                             ],
                             [
                                 'name' => 'effective_date',
                                 'type' => 'date',
                                 'label' => 'Effective Date',
-                                'required' => true
-                            ]
-                        ]
-                    ]
+                                'required' => true,
+                            ],
+                        ],
+                    ],
                 ],
                 'visibility_conditions' => [
-                    ['field' => 'status', 'operator' => '=', 'value' => 'active']
+                    ['field' => 'status', 'operator' => '=', 'value' => 'active'],
                 ],
                 'permissions' => ['delete'],
                 'sort_order' => 50,
@@ -292,7 +292,7 @@ class ContractActionButton extends Model
                 'button_class' => 'btn btn-outline-info btn-sm',
                 'action_type' => 'download',
                 'action_config' => [
-                    'download_url' => '/contracts/{contract.id}/download'
+                    'download_url' => '/contracts/{contract.id}/download',
                 ],
                 'sort_order' => 60,
             ],

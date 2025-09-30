@@ -2,19 +2,19 @@
 
 namespace App\Jobs;
 
-use App\Models\Recurring;
 use App\Domains\Financial\Services\RecurringBillingService;
+use App\Models\Recurring;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * ProcessRecurringBilling Job
- * 
+ *
  * Automated job for processing recurring billing invoices.
  * Handles bulk invoice generation with comprehensive error handling and logging.
  */
@@ -23,14 +23,21 @@ class ProcessRecurringBilling implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 300; // 5 minutes
+
     public $tries = 3;
+
     public $maxExceptions = 3;
 
     protected $companyId;
+
     protected $billingDate;
+
     protected $dryRun;
+
     protected $batchSize;
+
     protected $recurringIds;
+
     protected $filters;
 
     /**
@@ -64,7 +71,7 @@ class ProcessRecurringBilling implements ShouldQueue
             'billing_date' => $this->billingDate->toDateString(),
             'dry_run' => $this->dryRun,
             'batch_size' => $this->batchSize,
-            'recurring_ids_count' => $this->recurringIds ? count($this->recurringIds) : 0
+            'recurring_ids_count' => $this->recurringIds ? count($this->recurringIds) : 0,
         ]);
 
         try {
@@ -74,7 +81,7 @@ class ProcessRecurringBilling implements ShouldQueue
                 'dry_run' => $this->dryRun,
                 'batch_size' => $this->batchSize,
                 'recurring_ids' => $this->recurringIds,
-                'filters' => $this->filters
+                'filters' => $this->filters,
             ]);
 
             Log::info('Recurring billing processing completed successfully', [
@@ -82,14 +89,14 @@ class ProcessRecurringBilling implements ShouldQueue
                 'processed_count' => $results['processed_count'] ?? 0,
                 'generated_count' => $results['generated_count'] ?? 0,
                 'failed_count' => $results['failed_count'] ?? 0,
-                'total_amount' => $results['total_amount'] ?? 0
+                'total_amount' => $results['total_amount'] ?? 0,
             ]);
 
             // Dispatch follow-up jobs if needed
-            if (!$this->dryRun && ($results['generated_count'] ?? 0) > 0) {
+            if (! $this->dryRun && ($results['generated_count'] ?? 0) > 0) {
                 // Dispatch email sending jobs
                 $this->dispatchEmailJobs($results['generated_invoices'] ?? []);
-                
+
                 // Dispatch tax processing jobs
                 $this->dispatchTaxProcessingJobs($results['tax_calculations'] ?? []);
             }
@@ -98,7 +105,7 @@ class ProcessRecurringBilling implements ShouldQueue
             Log::error('Recurring billing processing failed', [
                 'company_id' => $this->companyId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw $e;
@@ -114,7 +121,7 @@ class ProcessRecurringBilling implements ShouldQueue
             'company_id' => $this->companyId,
             'billing_date' => $this->billingDate->toDateString(),
             'error' => $exception->getMessage(),
-            'attempts' => $this->attempts()
+            'attempts' => $this->attempts(),
         ]);
     }
 
@@ -137,7 +144,7 @@ class ProcessRecurringBilling implements ShouldQueue
      */
     protected function dispatchTaxProcessingJobs(array $taxCalculations): void
     {
-        if (!empty($taxCalculations)) {
+        if (! empty($taxCalculations)) {
             ProcessVoIPTaxCompliance::dispatch($this->companyId, $taxCalculations)
                 ->onQueue('tax-processing')
                 ->delay(now()->addMinutes(5));
@@ -151,8 +158,8 @@ class ProcessRecurringBilling implements ShouldQueue
     {
         return [
             'recurring-billing',
-            'company:' . $this->companyId,
-            'date:' . $this->billingDate->toDateString()
+            'company:'.$this->companyId,
+            'date:'.$this->billingDate->toDateString(),
         ];
     }
 }

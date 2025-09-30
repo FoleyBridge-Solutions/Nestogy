@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * RMM Client Mapping Model
- * 
+ *
  * Maps Nestogy clients to RMM system clients for proper agent synchronization.
  * Ensures that agents from the RMM system are assigned to the correct clients
  * in the Nestogy system.
  */
 class RmmClientMapping extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -160,7 +160,7 @@ class RmmClientMapping extends Model
      */
     public function needsSync(int $hoursThreshold = 24): bool
     {
-        if (!$this->last_sync_at) {
+        if (! $this->last_sync_at) {
             return true;
         }
 

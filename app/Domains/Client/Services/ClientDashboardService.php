@@ -2,14 +2,13 @@
 
 namespace App\Domains\Client\Services;
 
-use App\Models\Client;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Invoice;
 use App\Models\Asset;
+use App\Models\Client;
 use App\Models\Project;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class ClientDashboardService
 {
@@ -55,7 +54,7 @@ class ClientDashboardService
     protected function getTicketStats(Client $client): array
     {
         $tickets = $client->tickets();
-        
+
         return [
             'total' => $tickets->count(),
             'open' => $tickets->whereIn('status', ['open', 'in_progress'])->count(),
@@ -63,7 +62,7 @@ class ClientDashboardService
             'pending' => $tickets->where('status', 'pending')->count(),
             'this_month' => $tickets->whereBetween('created_at', [
                 Carbon::now()->startOfMonth(),
-                Carbon::now()->endOfMonth()
+                Carbon::now()->endOfMonth(),
             ])->count(),
             'average_resolution_time' => $this->calculateAverageResolutionTime($client),
             'sla_compliance' => $this->calculateSLACompliance($client),
@@ -78,14 +77,14 @@ class ClientDashboardService
     {
         $invoices = $client->invoices();
         $currentYear = Carbon::now()->year;
-        
+
         return [
             'total_revenue' => $invoices->sum('total'),
             'outstanding_balance' => $invoices->where('status', 'unpaid')->sum('balance'),
             'revenue_this_year' => $invoices->whereYear('created_at', $currentYear)->sum('total'),
             'revenue_this_month' => $invoices->whereBetween('created_at', [
                 Carbon::now()->startOfMonth(),
-                Carbon::now()->endOfMonth()
+                Carbon::now()->endOfMonth(),
             ])->sum('total'),
             'total_invoices' => $invoices->count(),
             'unpaid_invoices' => $invoices->where('status', 'unpaid')->count(),
@@ -103,7 +102,7 @@ class ClientDashboardService
     protected function getAssetStats(Client $client): array
     {
         $assets = $client->assets();
-        
+
         return [
             'total_assets' => $assets->count(),
             'active_assets' => $assets->where('status', 'active')->count(),
@@ -129,7 +128,7 @@ class ClientDashboardService
     protected function getProjectStats(Client $client): array
     {
         $projects = $client->projects();
-        
+
         return [
             'total_projects' => $projects->count(),
             'active_projects' => $projects->where('status', 'active')->count(),
@@ -189,7 +188,7 @@ class ClientDashboardService
             ->map(function ($payment) {
                 return [
                     'type' => 'payment',
-                    'description' => "Payment received",
+                    'description' => 'Payment received',
                     'date' => $payment->created_at,
                     'amount' => $payment->amount,
                     'url' => $payment->invoice_id ? route('financial.invoices.show', $payment->invoice_id) : '#',
@@ -229,7 +228,7 @@ class ClientDashboardService
             ->limit(5)
             ->select('project_milestones.*', 'projects.name as project_name')
             ->get();
-        
+
         $events = $events->merge($projectMilestones);
 
         return $events->sortBy('start_date')->take(10);
@@ -372,7 +371,7 @@ class ClientDashboardService
     protected function calculateProjectCompletionRate(Client $client): float
     {
         $totalProjects = $client->projects()->count();
-        
+
         if ($totalProjects === 0) {
             return 0.0;
         }

@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Invoice;
 use App\Models\Client;
 use App\Models\Company;
+use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -26,7 +26,7 @@ class InvoiceFactory extends Factory
     {
         $date = $this->faker->dateTimeBetween('-6 months', 'now');
         $dueDate = (clone $date)->modify('+30 days');
-        
+
         $amount = $this->faker->randomFloat(2, 100, 10000);
         $discountAmount = $this->faker->optional(0.3)->randomFloat(2, 0, $amount * 0.2);
 
@@ -81,6 +81,7 @@ class InvoiceFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $sentAt = $attributes['sent_at'] ?? $attributes['date'];
+
             return [
                 'status' => 'viewed',
                 'sent_at' => $sentAt,
@@ -97,7 +98,7 @@ class InvoiceFactory extends Factory
         return $this->state(function (array $attributes) {
             $viewedAt = $attributes['viewed_at'] ?? $attributes['sent_at'] ?? $attributes['date'];
             $paidAt = $this->faker->dateTimeBetween($viewedAt, 'now');
-            
+
             return [
                 'status' => 'paid',
                 'paid_at' => $paidAt,
@@ -115,7 +116,7 @@ class InvoiceFactory extends Factory
         return $this->state(function (array $attributes) {
             $dueDate = $this->faker->dateTimeBetween('-60 days', '-1 day');
             $invoiceDate = (clone $dueDate)->modify('-30 days');
-            
+
             return [
                 'status' => 'overdue',
                 'date' => $invoiceDate,
@@ -147,7 +148,7 @@ class InvoiceFactory extends Factory
             $taxRate = $attributes['tax_rate'] ?? 0;
             $subtotal = $total / (1 + $taxRate);
             $taxAmount = $subtotal * $taxRate;
-            
+
             return [
                 'subtotal' => round($subtotal, 2),
                 'tax_amount' => round($taxAmount, 2),
@@ -194,7 +195,7 @@ class InvoiceFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($discountAmount) {
             $newTotal = $attributes['total'] - $discountAmount;
-            
+
             return [
                 'discount_amount' => $discountAmount,
                 'total' => max(0, $newTotal),
@@ -210,7 +211,7 @@ class InvoiceFactory extends Factory
         return $this->state(function (array $attributes) {
             $date = $this->faker->dateTimeBetween('-30 days', 'now');
             $dueDate = (clone $date)->modify('+30 days');
-            
+
             return [
                 'date' => $date,
                 'due_date' => $dueDate,

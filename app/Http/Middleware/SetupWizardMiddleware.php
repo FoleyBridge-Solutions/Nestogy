@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * SetupWizardMiddleware
- * 
+ *
  * Redirects users to the setup wizard if no companies exist in the system.
  * This ensures that the ERP system is properly initialized with at least one company
  * before allowing access to the main application.
@@ -29,7 +29,7 @@ class SetupWizardMiddleware
         }
 
         // Check if any companies exist
-        if (!Company::exists()) {
+        if (! Company::exists()) {
             // Redirect to setup wizard
             return redirect()->route('setup.wizard.index');
         }
@@ -51,7 +51,7 @@ class SetupWizardMiddleware
         if ($request->is('api/*')) {
             return true;
         }
-        
+
         // Skip for Livewire routes
         if ($request->is('livewire/*')) {
             return true;
@@ -70,7 +70,7 @@ class SetupWizardMiddleware
         // Skip for auth routes that don't require companies
         $authRoutes = [
             'login',
-            'logout', 
+            'logout',
             'register',
             'password.*',
             'verification.*',

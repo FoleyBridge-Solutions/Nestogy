@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\Asset;
 use App\Domains\Asset\Services\AssetMaintenanceService;
+use App\Models\Asset;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Asset Maintenance Task Job
- * 
+ *
  * Executes automated maintenance workflows for assets through RMM systems.
  */
 class AssetMaintenanceTask implements ShouldQueue
@@ -21,7 +21,9 @@ class AssetMaintenanceTask implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Asset $asset;
+
     protected string $workflowType;
+
     protected array $options;
 
     /**
@@ -70,11 +72,12 @@ class AssetMaintenanceTask implements ShouldQueue
             ]);
 
             // Check if asset supports remote management
-            if (!$this->asset->supportsRemoteManagement()) {
+            if (! $this->asset->supportsRemoteManagement()) {
                 Log::warning('Asset does not support remote management', [
                     'asset_id' => $this->asset->id,
                     'workflow_type' => $this->workflowType,
                 ]);
+
                 return;
             }
 
@@ -147,9 +150,9 @@ class AssetMaintenanceTask implements ShouldQueue
     {
         return [
             'asset-maintenance',
-            'asset:' . $this->asset->id,
-            'workflow:' . $this->workflowType,
-            'company:' . $this->asset->company_id,
+            'asset:'.$this->asset->id,
+            'workflow:'.$this->workflowType,
+            'company:'.$this->asset->company_id,
         ];
     }
 
@@ -169,20 +172,20 @@ class AssetMaintenanceTask implements ShouldQueue
             case 'weekly_maintenance':
                 $summary['tasks_completed'] = count($result['results']);
                 break;
-            
+
             case 'security_updates':
                 $summary['updates_installed'] = count($result['results']['installation']['updates'] ?? []);
                 $summary['reboot_required'] = $result['results']['installation']['reboot_required'] ?? false;
                 break;
-            
+
             case 'performance_optimization':
                 $summary['optimizations_applied'] = count($result['results']);
                 break;
-            
+
             case 'health_check':
                 $summary['health_score'] = $result['results']['health_score']['score'] ?? null;
                 break;
-            
+
             case 'cleanup':
                 $summary['space_reclaimed'] = $result['results']['space_reclaimed']['total_space_freed'] ?? '0 MB';
                 break;

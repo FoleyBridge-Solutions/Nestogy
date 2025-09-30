@@ -2,7 +2,6 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Domains\Contract\Models\Contract;
 use App\Models\Asset;
 use App\Models\User;
 use App\Traits\BelongsToCompany;
@@ -12,10 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * ContractAssetAssignment Model
- * 
+ *
  * Represents the assignment of assets to contracts for per-device billing.
  * Supports service configuration, billing rates, and automation.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $contract_id
@@ -56,7 +55,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ContractAssetAssignment extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -146,16 +145,22 @@ class ContractAssetAssignment extends Model
      * Status constants
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_TERMINATED = 'terminated';
+
     const STATUS_PENDING = 'pending';
 
     /**
      * Billing frequency constants
      */
     const FREQUENCY_MONTHLY = 'monthly';
+
     const FREQUENCY_QUARTERLY = 'quarterly';
+
     const FREQUENCY_ANNUALLY = 'annually';
+
     const FREQUENCY_ONE_TIME = 'one_time';
 
     /**
@@ -228,6 +233,7 @@ class ContractAssetAssignment extends Model
     public function getServicePricing(string $service): ?float
     {
         $pricing = $this->service_pricing ?? [];
+
         return $pricing[$service] ?? null;
     }
 
@@ -237,7 +243,7 @@ class ContractAssetAssignment extends Model
     public function calculateMonthlyCharges(): float
     {
         $total = $this->base_monthly_rate + $this->additional_service_charges;
-        
+
         // Apply pricing modifiers
         if ($modifiers = $this->pricing_modifiers) {
             if (isset($modifiers['discount'])) {
@@ -250,7 +256,7 @@ class ContractAssetAssignment extends Model
                 $total *= (1 - ($modifiers['percentage_discount'] / 100));
             }
         }
-        
+
         return max(0, $total);
     }
 
@@ -262,12 +268,12 @@ class ContractAssetAssignment extends Model
         $schedule = [];
         $startDate = $this->start_date;
         $endDate = $this->end_date ?? now()->addYear();
-        
+
         $current = $startDate->copy();
-        
+
         while ($current <= $endDate) {
             $schedule[] = $current->copy();
-            
+
             switch ($this->billing_frequency) {
                 case self::FREQUENCY_MONTHLY:
                     $current->addMonth();
@@ -282,7 +288,7 @@ class ContractAssetAssignment extends Model
                     break 2; // Exit loop for one-time billing
             }
         }
-        
+
         return $schedule;
     }
 
@@ -293,7 +299,7 @@ class ContractAssetAssignment extends Model
     {
         $history = $this->billing_history ?? [];
         $history[] = array_merge($record, ['recorded_at' => now()->toISOString()]);
-        
+
         $this->update([
             'billing_history' => $history,
             'last_billed_at' => now(),
@@ -339,11 +345,11 @@ class ContractAssetAssignment extends Model
     public function meetsSlaRequirements(): bool
     {
         $requirements = $this->getSlaRequirements();
-        
+
         if (empty($requirements)) {
             return true;
         }
-        
+
         // This would implement SLA checking logic
         // For now, assume it meets requirements
         return true;
@@ -356,7 +362,7 @@ class ContractAssetAssignment extends Model
     {
         $current = $this->usage_metrics ?? [];
         $updated = array_merge($current, $metrics);
-        
+
         $this->update([
             'usage_metrics' => $updated,
             'last_service_update' => now(),
@@ -409,7 +415,7 @@ class ContractAssetAssignment extends Model
     public function scopeDueForBilling($query)
     {
         return $query->whereNotNull('next_billing_date')
-                    ->whereDate('next_billing_date', '<=', now());
+            ->whereDate('next_billing_date', '<=', now());
     }
 
     /**
@@ -421,7 +427,7 @@ class ContractAssetAssignment extends Model
 
         // Set next billing date on creation
         static::creating(function ($assignment) {
-            if (!$assignment->next_billing_date) {
+            if (! $assignment->next_billing_date) {
                 $assignment->next_billing_date = $assignment->start_date;
             }
         });

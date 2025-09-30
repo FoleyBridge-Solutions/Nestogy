@@ -2,17 +2,17 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuditLog;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\AuditLog;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * SessionSecurityMiddleware
- * 
+ *
  * Enforces session security policies including timeout, concurrent session limits,
  * session fingerprinting, and hijacking prevention.
  */
@@ -25,7 +25,7 @@ class SessionSecurityMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $next($request);
         }
 
@@ -33,17 +33,17 @@ class SessionSecurityMiddleware
         $sessionId = Session::getId();
 
         // Check session timeout
-        if (!$this->checkSessionTimeout()) {
+        if (! $this->checkSessionTimeout()) {
             return $this->handleSessionTimeout($request);
         }
 
         // Check concurrent sessions
-        if (!$this->checkConcurrentSessions($user, $sessionId)) {
+        if (! $this->checkConcurrentSessions($user, $sessionId)) {
             return $this->handleConcurrentSessionViolation($request);
         }
 
         // Check session fingerprint
-        if (!$this->checkSessionFingerprint($request)) {
+        if (! $this->checkSessionFingerprint($request)) {
             return $this->handleSessionHijacking($request);
         }
 
@@ -62,7 +62,7 @@ class SessionSecurityMiddleware
     protected function checkSessionTimeout(): bool
     {
         $lastActivity = Session::get('last_activity');
-        if (!$lastActivity) {
+        if (! $lastActivity) {
             return true;
         }
 
@@ -96,17 +96,17 @@ class SessionSecurityMiddleware
         }
 
         // Get all active sessions for the user
-        $userSessionsKey = 'user_sessions_' . $user->id;
+        $userSessionsKey = 'user_sessions_'.$user->id;
         $activeSessions = Cache::get($userSessionsKey, []);
 
         // Remove expired sessions
         $activeSessions = array_filter($activeSessions, function ($session) {
-            return isset($session['last_activity']) && 
+            return isset($session['last_activity']) &&
                    (time() - $session['last_activity']) < config('security.session.timeout', 1800);
         });
 
         // Add current session if not exists
-        if (!isset($activeSessions[$currentSessionId])) {
+        if (! isset($activeSessions[$currentSessionId])) {
             $activeSessions[$currentSessionId] = [
                 'id' => $currentSessionId,
                 'ip' => request()->ip(),
@@ -126,7 +126,7 @@ class SessionSecurityMiddleware
             $activeSessions = array_slice($activeSessions, -$maxSessions, null, true);
 
             // Check if current session is still in the list
-            if (!isset($activeSessions[$currentSessionId])) {
+            if (! isset($activeSessions[$currentSessionId])) {
                 return false;
             }
         }
@@ -145,9 +145,10 @@ class SessionSecurityMiddleware
         $fingerprint = $this->generateFingerprint($request);
         $storedFingerprint = Session::get('session_fingerprint');
 
-        if (!$storedFingerprint) {
+        if (! $storedFingerprint) {
             // First time, store the fingerprint
             Session::put('session_fingerprint', $fingerprint);
+
             return true;
         }
 
@@ -156,6 +157,7 @@ class SessionSecurityMiddleware
             // Check if it's an allowed change (e.g., IP change for mobile users)
             if ($this->isAllowedFingerprintChange($request, $fingerprint, $storedFingerprint)) {
                 Session::put('session_fingerprint', $fingerprint);
+
                 return true;
             }
 
@@ -185,7 +187,7 @@ class SessionSecurityMiddleware
             if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                 // Use /24 subnet for IPv4
                 $parts = explode('.', $ip);
-                $components['ip_subnet'] = $parts[0] . '.' . $parts[1] . '.' . $parts[2];
+                $components['ip_subnet'] = $parts[0].'.'.$parts[1].'.'.$parts[2];
             } else {
                 // For IPv6, use first 64 bits
                 $components['ip_subnet'] = substr($ip, 0, 19);
@@ -205,9 +207,10 @@ class SessionSecurityMiddleware
             // Generate fingerprint without IP
             $fingerprintWithoutIp = $this->generateFingerprintWithoutIp($request);
             $oldFingerprintWithoutIp = Session::get('session_fingerprint_no_ip');
-            
+
             if ($fingerprintWithoutIp === $oldFingerprintWithoutIp) {
                 Session::put('session_fingerprint_no_ip', $fingerprintWithoutIp);
+
                 return true;
             }
         }
@@ -236,7 +239,7 @@ class SessionSecurityMiddleware
     {
         $userAgent = strtolower($request->userAgent());
         $mobileKeywords = ['mobile', 'android', 'iphone', 'ipad', 'windows phone', 'blackberry'];
-        
+
         foreach ($mobileKeywords as $keyword) {
             if (str_contains($userAgent, $keyword)) {
                 return true;
@@ -252,9 +255,9 @@ class SessionSecurityMiddleware
     protected function updateSessionActivity(): void
     {
         Session::put('last_activity', time());
-        
+
         // Set session start time if not set
-        if (!Session::has('session_start')) {
+        if (! Session::has('session_start')) {
             Session::put('session_start', time());
         }
 
@@ -262,9 +265,9 @@ class SessionSecurityMiddleware
         if (Auth::check()) {
             $user = Auth::user();
             $sessionId = Session::getId();
-            $userSessionsKey = 'user_sessions_' . $user->id;
+            $userSessionsKey = 'user_sessions_'.$user->id;
             $activeSessions = Cache::get($userSessionsKey, []);
-            
+
             if (isset($activeSessions[$sessionId])) {
                 $activeSessions[$sessionId]['last_activity'] = time();
                 Cache::put($userSessionsKey, $activeSessions, now()->addDay());
@@ -292,7 +295,7 @@ class SessionSecurityMiddleware
     protected function handleSessionTimeout(Request $request): Response
     {
         $user = Auth::user();
-        
+
         AuditLog::logSecurity('Session Timeout', [
             'user_id' => $user->id,
             'email' => $user->email,
@@ -314,7 +317,7 @@ class SessionSecurityMiddleware
     protected function handleConcurrentSessionViolation(Request $request): Response
     {
         $user = Auth::user();
-        
+
         AuditLog::logSecurity('Concurrent Session Limit Exceeded', [
             'user_id' => $user->id,
             'email' => $user->email,
@@ -336,7 +339,7 @@ class SessionSecurityMiddleware
     protected function handleSessionHijacking(Request $request): Response
     {
         $user = Auth::user();
-        
+
         AuditLog::logSecurity('Potential Session Hijacking', [
             'user_id' => $user->id,
             'email' => $user->email,
@@ -348,7 +351,7 @@ class SessionSecurityMiddleware
         ], AuditLog::SEVERITY_CRITICAL);
 
         // Invalidate all sessions for this user
-        $userSessionsKey = 'user_sessions_' . $user->id;
+        $userSessionsKey = 'user_sessions_'.$user->id;
         Cache::forget($userSessionsKey);
 
         Auth::logout();

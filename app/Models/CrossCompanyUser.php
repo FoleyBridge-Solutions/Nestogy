@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 /**
  * CrossCompanyUser Model
- * 
+ *
  * Manages users who have access to multiple companies within an organizational hierarchy.
  * Handles access control, session management, and audit requirements for cross-company operations.
- * 
+ *
  * @property int $id
  * @property int $user_id
  * @property int $company_id
@@ -79,7 +79,9 @@ class CrossCompanyUser extends Model
      * Access types enumeration
      */
     const ACCESS_FULL = 'full';
+
     const ACCESS_LIMITED = 'limited';
+
     const ACCESS_VIEW_ONLY = 'view_only';
 
     const ACCESS_TYPES = [
@@ -150,7 +152,7 @@ class CrossCompanyUser extends Model
     public static function grantAccess(array $data): static
     {
         // Validate that the companies are related
-        if (!CompanyHierarchy::areRelated($data['company_id'], $data['primary_company_id'])) {
+        if (! CompanyHierarchy::areRelated($data['company_id'], $data['primary_company_id'])) {
             throw new \InvalidArgumentException('Companies must be related in the organizational hierarchy.');
         }
 
@@ -169,7 +171,7 @@ class CrossCompanyUser extends Model
     {
         $this->is_active = false;
         $this->updated_by = Auth::id();
-        
+
         return $this->save();
     }
 
@@ -179,7 +181,7 @@ class CrossCompanyUser extends Model
     public function recordAccess(): bool
     {
         $this->last_accessed_at = now();
-        
+
         return $this->save();
     }
 
@@ -196,7 +198,7 @@ class CrossCompanyUser extends Model
      */
     public function isValid(): bool
     {
-        return $this->is_active && !$this->hasExpired();
+        return $this->is_active && ! $this->hasExpired();
     }
 
     /**
@@ -209,7 +211,7 @@ class CrossCompanyUser extends Model
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('access_expires_at')
-                  ->orWhere('access_expires_at', '>', now());
+                    ->orWhere('access_expires_at', '>', now());
             })
             ->get()
             ->pluck('company');
@@ -232,7 +234,7 @@ class CrossCompanyUser extends Model
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('access_expires_at')
-                  ->orWhere('access_expires_at', '>', now());
+                    ->orWhere('access_expires_at', '>', now());
             })
             ->exists();
     }
@@ -254,7 +256,7 @@ class CrossCompanyUser extends Model
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('access_expires_at')
-                  ->orWhere('access_expires_at', '>', now());
+                    ->orWhere('access_expires_at', '>', now());
             })
             ->first();
 
@@ -271,7 +273,7 @@ class CrossCompanyUser extends Model
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('access_expires_at')
-                  ->orWhere('access_expires_at', '>', now());
+                    ->orWhere('access_expires_at', '>', now());
             })
             ->get();
     }
@@ -294,6 +296,7 @@ class CrossCompanyUser extends Model
         // Limited access - check specific permissions
         if ($this->access_type === self::ACCESS_LIMITED) {
             $permissions = $this->access_permissions ?? [];
+
             return in_array($permission, $permissions);
         }
 
@@ -306,6 +309,7 @@ class CrossCompanyUser extends Model
     public function isRestricted(string $action): bool
     {
         $restrictions = $this->access_restrictions ?? [];
+
         return in_array($action, $restrictions);
     }
 
@@ -315,7 +319,7 @@ class CrossCompanyUser extends Model
     public function canAccessFeature(string $feature): bool
     {
         $allowedFeatures = $this->allowed_features ?? [];
-        
+
         // If no restrictions are set, allow all features
         if (empty($allowedFeatures)) {
             return true;
@@ -331,7 +335,7 @@ class CrossCompanyUser extends Model
     {
         $this->access_expires_at = $newExpiration;
         $this->updated_by = Auth::id();
-        
+
         return $this->save();
     }
 
@@ -359,7 +363,7 @@ class CrossCompanyUser extends Model
             'allowed_features' => $options['allowed_features'] ?? $this->allowed_features,
             'audit_actions' => true,
             'compliance_settings' => $this->compliance_settings,
-            'notes' => 'Delegated from user ID: ' . $this->user_id,
+            'notes' => 'Delegated from user ID: '.$this->user_id,
             'created_by' => Auth::id(),
             'updated_by' => Auth::id(),
         ]);
@@ -375,7 +379,7 @@ class CrossCompanyUser extends Model
         return $query->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('access_expires_at')
-                  ->orWhere('access_expires_at', '>', now());
+                    ->orWhere('access_expires_at', '>', now());
             });
     }
 

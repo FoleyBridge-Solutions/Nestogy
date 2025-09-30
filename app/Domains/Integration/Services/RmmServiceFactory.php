@@ -9,7 +9,7 @@ use InvalidArgumentException;
 
 /**
  * RMM Service Factory
- * 
+ *
  * Factory class for creating appropriate RMM service instances
  * based on the integration type. Provides a clean abstraction
  * for instantiating different RMM providers.
@@ -56,7 +56,7 @@ class RmmServiceFactory
     public function makeFromCredentials(string $rmmType, string $apiUrl, string $apiKey): RmmServiceInterface
     {
         // Create a temporary integration instance with raw credentials
-        $tempIntegration = new RmmIntegration();
+        $tempIntegration = new RmmIntegration;
         $tempIntegration->rmm_type = $rmmType;
         $tempIntegration->api_url_encrypted = Crypt::encryptString($apiUrl);
         $tempIntegration->api_key_encrypted = Crypt::encryptString($apiKey);
@@ -98,6 +98,7 @@ class RmmServiceFactory
     {
         try {
             $this->validateRmmType($rmmType);
+
             return true;
         } catch (InvalidArgumentException $e) {
             return false;
@@ -126,8 +127,8 @@ class RmmServiceFactory
     public function getRequiredFields(string $rmmType): array
     {
         $availableTypes = $this->getAvailableTypes();
-        
-        if (!isset($availableTypes[$rmmType])) {
+
+        if (! isset($availableTypes[$rmmType])) {
             throw new InvalidArgumentException(
                 "Unsupported RMM type: {$rmmType}"
             );
@@ -142,8 +143,8 @@ class RmmServiceFactory
     public function getSupportedFeatures(string $rmmType): array
     {
         $availableTypes = $this->getAvailableTypes();
-        
-        if (!isset($availableTypes[$rmmType])) {
+
+        if (! isset($availableTypes[$rmmType])) {
             throw new InvalidArgumentException(
                 "Unsupported RMM type: {$rmmType}"
             );
@@ -159,14 +160,14 @@ class RmmServiceFactory
     {
         // Validate integration has required fields
         $this->validateIntegration($integration);
-        
+
         // Create the service instance
         $service = $this->make($integration);
-        
+
         // Test connection to ensure it's working
         $connectionTest = $service->testConnection();
-        
-        if (!$connectionTest['success']) {
+
+        if (! $connectionTest['success']) {
             throw new InvalidArgumentException(
                 "Failed to connect to RMM system: {$connectionTest['message']}"
             );
@@ -207,10 +208,10 @@ class RmmServiceFactory
     public function validateRmmType(string $rmmType): void
     {
         $supportedTypes = array_keys($this->getAvailableTypes());
-        
-        if (!in_array($rmmType, $supportedTypes)) {
+
+        if (! in_array($rmmType, $supportedTypes)) {
             throw new InvalidArgumentException(
-                "Unsupported RMM type: {$rmmType}. Supported types: " . implode(', ', $supportedTypes)
+                "Unsupported RMM type: {$rmmType}. Supported types: ".implode(', ', $supportedTypes)
             );
         }
     }
@@ -240,7 +241,7 @@ class RmmServiceFactory
     public function getStatistics(): array
     {
         $types = $this->getAvailableTypes();
-        
+
         return [
             'supported_types' => count($types),
             'available_types' => array_keys($types),

@@ -2,14 +2,14 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 use App\Models\User;
 use App\Models\UserSetting;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * AuthServiceProvider
- * 
+ *
  * Handles authentication policies and gates for role-based access control.
  * Defines permissions for different user roles and system operations.
  */
@@ -50,10 +50,10 @@ class AuthServiceProvider extends ServiceProvider
 
         // Define role-based gates
         $this->defineRoleGates();
-        
+
         // Define feature-based gates
         $this->defineFeatureGates();
-        
+
         // Define administrative gates
         $this->defineAdminGates();
 
@@ -502,7 +502,7 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('approve-payments', function (User $user) {
             return $user->hasAnyPermission([
                 'financial.payments.manage',
-                'financial.expenses.approve'
+                'financial.expenses.approve',
             ]);
         });
 
@@ -518,7 +518,7 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('approve-time-entries', function (User $user) {
             return $user->hasAnyPermission([
                 'projects.manage',
-                'tickets.manage'
+                'tickets.manage',
             ]);
         });
 
@@ -535,7 +535,7 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('approve-user-access', function (User $user) {
             return $user->hasAnyPermission([
                 'users.manage',
-                'system.permissions.manage'
+                'system.permissions.manage',
             ]);
         });
     }
@@ -553,7 +553,7 @@ class AuthServiceProvider extends ServiceProvider
                 'financial.export',
                 'projects.export',
                 'reports.export',
-                'users.export'
+                'users.export',
             ]);
         });
 
@@ -561,7 +561,7 @@ class AuthServiceProvider extends ServiceProvider
             return $user->hasAnyPermission([
                 'financial.export',
                 'users.export',
-                'reports.export'
+                'reports.export',
             ]) || $user->isAdmin();
         });
 
@@ -571,7 +571,7 @@ class AuthServiceProvider extends ServiceProvider
                 'clients.export',
                 'clients.contacts.export',
                 'clients.locations.export',
-                'clients.documents.export'
+                'clients.documents.export',
             ]);
         });
 
@@ -581,7 +581,7 @@ class AuthServiceProvider extends ServiceProvider
                 'financial.payments.export',
                 'financial.expenses.export',
                 'financial.invoices.export',
-                'financial.quotes.export'
+                'financial.quotes.export',
             ]);
         });
 
@@ -590,14 +590,14 @@ class AuthServiceProvider extends ServiceProvider
                 'assets.export',
                 'assets.maintenance.export',
                 'assets.warranties.export',
-                'assets.depreciations.export'
+                'assets.depreciations.export',
             ]);
         });
 
         Gate::define('export-project-data', function (User $user) {
             return $user->hasAnyPermission([
                 'projects.export',
-                'projects.tasks.export'
+                'projects.tasks.export',
             ]);
         });
 
@@ -625,19 +625,20 @@ class AuthServiceProvider extends ServiceProvider
             if (method_exists($model, 'company_id')) {
                 return $user->company_id === $model->company_id;
             }
+
             return false;
         });
 
         Gate::define('manage-company-settings', function (User $user) {
             return $user->hasAnyPermission([
                 'system.settings.manage',
-                'users.manage'
+                'users.manage',
             ]) || $user->isAdmin();
         });
 
         // Team-based gates for projects
         Gate::define('manage-team', function (User $user, $project = null) {
-            if (!$project) {
+            if (! $project) {
                 return $user->hasPermission('projects.members.manage');
             }
 
@@ -660,7 +661,7 @@ class AuthServiceProvider extends ServiceProvider
             return $user->hasAnyPermission([
                 'financial.manage',
                 'users.manage',
-                'system.settings.manage'
+                'system.settings.manage',
             ]) || $user->isAdmin();
         });
 
@@ -686,7 +687,7 @@ class AuthServiceProvider extends ServiceProvider
             // This could be based on a specific user ID, email, or special flag
             return $user->isAdmin() && in_array($user->email, [
                 'admin@nestogy.com',
-                'support@foleybridge.com'
+                'support@foleybridge.com',
             ]);
         });
     }
@@ -704,6 +705,7 @@ class AuthServiceProvider extends ServiceProvider
             if ($resource === 'settings') {
                 return $user->isAdmin() || $user->hasPermission('settings.manage');
             }
+
             return false;
         });
 
@@ -711,6 +713,7 @@ class AuthServiceProvider extends ServiceProvider
             if ($resource === 'products') {
                 return $user->getRole() >= User::ROLE_TECH;
             }
+
             return false;
         });
 
@@ -718,6 +721,7 @@ class AuthServiceProvider extends ServiceProvider
             if ($resource === 'products') {
                 return $user->getRole() >= User::ROLE_TECH;
             }
+
             return false;
         });
 
@@ -725,6 +729,7 @@ class AuthServiceProvider extends ServiceProvider
             if ($resource === 'products') {
                 return $user->getRole() >= User::ROLE_TECH;
             }
+
             return false;
         });
 

@@ -2,16 +2,16 @@
 
 namespace App\Domains\Project\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * ProjectMember Model
- * 
+ *
  * Manages project team members with roles, permissions, and hourly rates.
- * 
+ *
  * @property int $id
  * @property int $project_id
  * @property int $user_id
@@ -31,8 +31,8 @@ use Carbon\Carbon;
  */
 class ProjectMember extends Model
 {
+    use \App\Traits\BelongsToCompany;
     use HasFactory;
-use \App\Traits\BelongsToCompany;
 
     /**
      * The table associated with the model.
@@ -81,14 +81,23 @@ use \App\Traits\BelongsToCompany;
      * Project role enumeration
      */
     const ROLE_MANAGER = 'manager';
+
     const ROLE_LEAD = 'lead';
+
     const ROLE_DEVELOPER = 'developer';
+
     const ROLE_DESIGNER = 'designer';
+
     const ROLE_TESTER = 'tester';
+
     const ROLE_ANALYST = 'analyst';
+
     const ROLE_CONSULTANT = 'consultant';
+
     const ROLE_COORDINATOR = 'coordinator';
+
     const ROLE_CLIENT = 'client';
+
     const ROLE_OBSERVER = 'observer';
 
     /**
@@ -112,7 +121,7 @@ use \App\Traits\BelongsToCompany;
      */
     public function getRoleLabel(): string
     {
-        return match($this->role) {
+        return match ($this->role) {
             self::ROLE_MANAGER => 'Project Manager',
             self::ROLE_LEAD => 'Team Lead',
             self::ROLE_DEVELOPER => 'Developer',
@@ -170,7 +179,7 @@ use \App\Traits\BelongsToCompany;
     /**
      * Get member's workload for the project.
      */
-    public function getWorkloadHours(Carbon $startDate = null, Carbon $endDate = null): float
+    public function getWorkloadHours(?Carbon $startDate = null, ?Carbon $endDate = null): float
     {
         $startDate = $startDate ?: Carbon::now()->startOfMonth();
         $endDate = $endDate ?: Carbon::now()->endOfMonth();
@@ -231,7 +240,7 @@ use \App\Traits\BelongsToCompany;
      */
     public function getTotalEarnings(): float
     {
-        if (!$this->hourly_rate) {
+        if (! $this->hourly_rate) {
             return 0;
         }
 
@@ -286,7 +295,7 @@ use \App\Traits\BelongsToCompany;
     /**
      * Deactivate member.
      */
-    public function deactivate(string $reason = null): void
+    public function deactivate(?string $reason = null): void
     {
         $this->update([
             'is_active' => false,
@@ -294,7 +303,7 @@ use \App\Traits\BelongsToCompany;
         ]);
 
         if ($reason) {
-            $this->update(['notes' => $this->notes . "\n\nDeactivated: {$reason}"]);
+            $this->update(['notes' => $this->notes."\n\nDeactivated: {$reason}"]);
         }
     }
 
@@ -317,7 +326,7 @@ use \App\Traits\BelongsToCompany;
             }
         }
 
-        if (!empty($updateData)) {
+        if (! empty($updateData)) {
             $this->update($updateData);
         }
     }
@@ -329,10 +338,10 @@ use \App\Traits\BelongsToCompany;
     {
         $attributes = $this->toArray();
         unset($attributes['id'], $attributes['project_id'], $attributes['created_at'], $attributes['updated_at'], $attributes['deleted_at']);
-        
+
         $attributes['project_id'] = $project->id;
         $attributes['joined_at'] = now();
-        
+
         return ProjectMember::create($attributes);
     }
 
@@ -367,7 +376,7 @@ use \App\Traits\BelongsToCompany;
     {
         return $query->where(function ($q) {
             $q->where('can_edit', true)
-              ->orWhere('role', self::ROLE_MANAGER);
+                ->orWhere('role', self::ROLE_MANAGER);
         });
     }
 
@@ -387,7 +396,7 @@ use \App\Traits\BelongsToCompany;
         return [
             'project_id' => 'required|integer|exists:projects,id',
             'user_id' => 'required|integer|exists:users,id',
-            'role' => 'required|in:' . implode(',', self::getAvailableRoles()),
+            'role' => 'required|in:'.implode(',', self::getAvailableRoles()),
             'hourly_rate' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'can_edit' => 'boolean',
@@ -428,7 +437,7 @@ use \App\Traits\BelongsToCompany;
 
         // Set default permissions based on role
         static::creating(function ($member) {
-            if (!$member->joined_at) {
+            if (! $member->joined_at) {
                 $member->joined_at = now();
             }
 

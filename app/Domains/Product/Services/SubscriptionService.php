@@ -2,9 +2,9 @@
 
 namespace App\Domains\Product\Services;
 
-use App\Domains\Product\Models\Subscription;
-use App\Domains\Financial\Models\Invoice;
 use App\Domains\Client\Models\Client;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Product\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -30,6 +30,7 @@ class SubscriptionService
     public function updateSubscription(Subscription $subscription, array $data): Subscription
     {
         $subscription->update($data);
+
         return $subscription->fresh();
     }
 
@@ -60,10 +61,10 @@ class SubscriptionService
         return $subscription;
     }
 
-    public function getActiveSubscriptions(Client $client = null): Collection
+    public function getActiveSubscriptions(?Client $client = null): Collection
     {
         $query = Subscription::where('status', 'active');
-        
+
         if ($client) {
             $query->where('client_id', $client->id);
         }
@@ -84,7 +85,7 @@ class SubscriptionService
         $results = [
             'processed' => 0,
             'failed' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         $subscriptions = Subscription::where('status', 'active')
@@ -100,7 +101,7 @@ class SubscriptionService
                 $results['failed']++;
                 $results['errors'][] = [
                     'subscription_id' => $subscription->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -145,6 +146,7 @@ class SubscriptionService
     public function suspendSubscription(Subscription $subscription): Subscription
     {
         $subscription->update(['status' => 'suspended']);
+
         return $subscription;
     }
 
@@ -154,6 +156,7 @@ class SubscriptionService
             'status' => 'active',
             'next_billing_date' => $this->calculateNextBillingDate($subscription->billing_cycle),
         ]);
+
         return $subscription;
     }
 
@@ -162,6 +165,7 @@ class SubscriptionService
         // This would handle plan changes with optional proration
         // Implementation depends on business logic
         $subscription->update(['product_id' => $newProductId]);
+
         return $subscription;
     }
 }

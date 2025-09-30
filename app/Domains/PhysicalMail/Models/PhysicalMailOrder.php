@@ -85,7 +85,7 @@ class PhysicalMailOrder extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
-    
+
     /**
      * Alias for createdBy relationship for backward compatibility
      */
@@ -115,7 +115,7 @@ class PhysicalMailOrder extends Model
      */
     public function hasTracking(): bool
     {
-        return !empty($this->tracking_number) || !empty($this->imb_status);
+        return ! empty($this->tracking_number) || ! empty($this->imb_status);
     }
 
     /**
@@ -123,7 +123,7 @@ class PhysicalMailOrder extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'pending' => 'Pending',
             'ready' => 'Ready to Print',
             'printing' => 'Printing',

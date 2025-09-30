@@ -12,16 +12,16 @@ trait LazyLoadable
     public function placeholder(array $params = [])
     {
         $placeholderView = $this->getPlaceholderView();
-        
+
         // Pass any component parameters to the placeholder
         $data = array_merge($params, [
             'widgetType' => $this->getWidgetType(),
             'widgetTitle' => $this->getWidgetTitle(),
         ]);
-        
+
         return view($placeholderView, $data);
     }
-    
+
     /**
      * Get the placeholder view path
      */
@@ -29,22 +29,22 @@ trait LazyLoadable
     {
         $widgetType = $this->getWidgetType();
         $specificPlaceholder = "livewire.dashboard.placeholders.skeleton-{$widgetType}";
-        
+
         // Check if specific placeholder exists, otherwise use default
         if (view()->exists($specificPlaceholder)) {
             return $specificPlaceholder;
         }
-        
+
         return 'livewire.dashboard.placeholders.skeleton-default';
     }
-    
+
     /**
      * Get widget type based on class name
      */
     protected function getWidgetType(): string
     {
         $className = class_basename(static::class);
-        
+
         // Map class names to widget types
         $typeMap = [
             'KpiGrid' => 'kpi',
@@ -69,17 +69,17 @@ trait LazyLoadable
             'CustomerSatisfaction' => 'metrics',
             'RecentSolutions' => 'list',
         ];
-        
+
         return $typeMap[$className] ?? 'default';
     }
-    
+
     /**
      * Get widget title for placeholder
      */
     protected function getWidgetTitle(): string
     {
         $className = class_basename(static::class);
-        
+
         // Map class names to titles
         $titleMap = [
             'KpiGrid' => 'Key Performance Indicators',
@@ -104,10 +104,10 @@ trait LazyLoadable
             'CustomerSatisfaction' => 'Customer Satisfaction',
             'RecentSolutions' => 'Recent Solutions',
         ];
-        
+
         return $titleMap[$className] ?? Str::headline($className);
     }
-    
+
     /**
      * Track widget load performance
      */
@@ -115,14 +115,14 @@ trait LazyLoadable
     {
         if (config('app.debug')) {
             $start = microtime(true);
-            register_shutdown_function(function() use ($start, $method) {
+            register_shutdown_function(function () use ($start, $method) {
                 $loadTime = microtime(true) - $start;
-                
+
                 logger()->channel('performance')->info('Widget loaded', [
                     'widget' => class_basename(static::class),
                     'method' => $method,
-                    'time' => round($loadTime * 1000, 2) . 'ms',
-                    'memory' => round(memory_get_peak_usage() / 1024 / 1024, 2) . 'MB',
+                    'time' => round($loadTime * 1000, 2).'ms',
+                    'memory' => round(memory_get_peak_usage() / 1024 / 1024, 2).'MB',
                 ]);
             });
         }

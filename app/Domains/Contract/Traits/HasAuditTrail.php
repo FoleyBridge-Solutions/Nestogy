@@ -4,7 +4,7 @@ namespace App\Domains\Contract\Traits;
 
 /**
  * HasAuditTrail Trait
- * 
+ *
  * Provides common audit trail functionality for contract-related models.
  * Eliminates duplication of audit trail management across models.
  */
@@ -29,14 +29,14 @@ trait HasAuditTrail
     /**
      * Update status with audit trail entry
      */
-    protected function updateStatusWithAudit(string $status, array $additionalData = [], string $auditAction = null): void
+    protected function updateStatusWithAudit(string $status, array $additionalData = [], ?string $auditAction = null): void
     {
         $updateData = array_merge(['status' => $status], $additionalData);
-        
+
         $this->update($updateData);
-        
+
         $this->addToAuditTrail(
-            $auditAction ?? ($status . '_status_set'), 
+            $auditAction ?? ($status.'_status_set'),
             array_merge($additionalData, ['new_status' => $status])
         );
     }
@@ -48,7 +48,7 @@ trait HasAuditTrail
     {
         $updateData[$timestampField] = now();
         $this->update($updateData);
-        
+
         $this->addToAuditTrail($auditAction, array_merge($auditData, $updateData));
     }
 }

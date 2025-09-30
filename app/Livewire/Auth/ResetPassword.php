@@ -10,8 +10,11 @@ use Livewire\Component;
 class ResetPassword extends Component
 {
     public string $token = '';
+
     public string $email = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
 
     public function mount($token)
@@ -39,7 +42,7 @@ class ResetPassword extends Component
             'password' => $this->password,
         ], function ($user, $password) {
             $user->forceFill([
-                'password' => bcrypt($password)
+                'password' => bcrypt($password),
             ])->setRememberToken(Str::random(60));
 
             $user->save();

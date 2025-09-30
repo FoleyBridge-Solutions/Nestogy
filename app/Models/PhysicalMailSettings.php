@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class PhysicalMailSettings extends Model
 {
@@ -86,8 +85,8 @@ class PhysicalMailSettings extends Model
     public static function forCompany(?int $companyId = null): ?self
     {
         $companyId = $companyId ?: auth()->user()?->company_id;
-        
-        if (!$companyId) {
+
+        if (! $companyId) {
             return null;
         }
 
@@ -107,7 +106,7 @@ class PhysicalMailSettings extends Model
      */
     public function isConfigured(): bool
     {
-        return !empty($this->test_key) || !empty($this->live_key);
+        return ! empty($this->test_key) || ! empty($this->live_key);
     }
 
     /**

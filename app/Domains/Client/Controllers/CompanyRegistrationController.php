@@ -2,15 +2,14 @@
 
 namespace App\Domains\Client\Controllers;
 
+use App\Domains\Core\Services\StripeSubscriptionService;
+use App\Domains\Product\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
-
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserSetting;
-use App\Domains\Core\Services\StripeSubscriptionService;
-use App\Domains\Product\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -20,7 +19,7 @@ use Illuminate\Validation\Rules\Password;
 
 /**
  * CompanyRegistrationController
- * 
+ *
  * Handles the complete signup flow for new companies including:
  * - Company creation (tenant)
  * - Client creation under Company 1 (billing)
@@ -31,6 +30,7 @@ use Illuminate\Validation\Rules\Password;
 class CompanyRegistrationController extends Controller
 {
     protected StripeSubscriptionService $stripeService;
+
     protected SubscriptionService $subscriptionService;
 
     public function __construct(StripeSubscriptionService $stripeService, SubscriptionService $subscriptionService)
@@ -45,7 +45,7 @@ class CompanyRegistrationController extends Controller
     public function showRegistrationForm()
     {
         $plans = SubscriptionPlan::active()->ordered()->get();
-        
+
         return view('auth.company-register', compact('plans'));
     }
 
@@ -61,19 +61,20 @@ class CompanyRegistrationController extends Controller
             'memory_usage' => memory_get_usage(true),
             'session_id' => session()->getId(),
         ]);
-        
+
         try {
             // Validation
             Log::info('STEP 1: Starting validation');
             $stepStartTime = microtime(true);
-            
+
             $validator = $this->validateRegistrationData($request);
-            
+
             $validationDuration = microtime(true) - $stepStartTime;
             Log::info('Validation completed', ['duration_seconds' => $validationDuration]);
-            
+
             if ($validator->fails()) {
                 Log::warning('Validation failed', ['errors' => $validator->errors()]);
+
                 return redirect()->back()->withErrors($validator)->withInput();
             }
 
@@ -89,7 +90,7 @@ class CompanyRegistrationController extends Controller
                 'plan_id' => $plan->id,
                 'plan_name' => $plan->name,
                 'price_monthly' => $plan->price_monthly,
-                'duration_seconds' => $planDuration
+                'duration_seconds' => $planDuration,
             ]);
 
             // Create tenant company
@@ -100,7 +101,7 @@ class CompanyRegistrationController extends Controller
             Log::info('Company created', [
                 'company_id' => $company->id,
                 'company_name' => $company->name,
-                'duration_seconds' => $companyDuration
+                'duration_seconds' => $companyDuration,
             ]);
 
             // Create client record
@@ -110,7 +111,7 @@ class CompanyRegistrationController extends Controller
             $clientDuration = microtime(true) - $stepStartTime;
             Log::info('Client created', [
                 'client_id' => $client->id,
-                'duration_seconds' => $clientDuration
+                'duration_seconds' => $clientDuration,
             ]);
 
             // Create admin user
@@ -121,7 +122,7 @@ class CompanyRegistrationController extends Controller
             Log::info('User created', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'duration_seconds' => $userDuration
+                'duration_seconds' => $userDuration,
             ]);
 
             // Create company subscription
@@ -131,45 +132,45 @@ class CompanyRegistrationController extends Controller
             $subscriptionDuration = microtime(true) - $stepStartTime;
             Log::info('Company subscription created', [
                 'subscription_id' => $companySubscription->id,
-                'duration_seconds' => $subscriptionDuration
+                'duration_seconds' => $subscriptionDuration,
             ]);
 
             // Stripe setup - THIS IS LIKELY WHERE THE TIMEOUT OCCURS
             if ($request->has('payment_method_id')) {
                 Log::info('STEP 8: Starting Stripe setup', [
                     'payment_method_provided' => true,
-                    'plan_price' => $plan->price_monthly
+                    'plan_price' => $plan->price_monthly,
                 ]);
-                
+
                 if ($plan->price_monthly > 0) {
                     Log::info('STRIPE: Setting up paid plan subscription');
                     $stripeStartTime = microtime(true);
-                    
+
                     $subscriptionResult = $this->setupStripeSubscription($client, $plan, $request->all());
-                    
+
                     $stripeDuration = microtime(true) - $stripeStartTime;
                     Log::info('STRIPE: Subscription setup completed', [
                         'duration_seconds' => $stripeDuration,
-                        'success' => $subscriptionResult['success']
+                        'success' => $subscriptionResult['success'],
                     ]);
-                    
-                    if (!$subscriptionResult['success']) {
-                        throw new \Exception('Payment setup failed: ' . $subscriptionResult['error']);
+
+                    if (! $subscriptionResult['success']) {
+                        throw new \Exception('Payment setup failed: '.$subscriptionResult['error']);
                     }
                 } else {
                     Log::info('STRIPE: Setting up free plan with auth');
                     $stripeStartTime = microtime(true);
-                    
+
                     $authResult = $this->setupStripeCustomerWithAuth($client, $request->all());
-                    
+
                     $stripeDuration = microtime(true) - $stripeStartTime;
                     Log::info('STRIPE: Customer auth setup completed', [
                         'duration_seconds' => $stripeDuration,
-                        'success' => $authResult['success']
+                        'success' => $authResult['success'],
                     ]);
 
-                    if (!$authResult['success']) {
-                        throw new \Exception('Identity verification failed: ' . $authResult['error']);
+                    if (! $authResult['success']) {
+                        throw new \Exception('Identity verification failed: '.$authResult['error']);
                     }
 
                     // Set free plan as active immediately
@@ -212,24 +213,24 @@ class CompanyRegistrationController extends Controller
                 'client_id' => $client->id,
                 'user_id' => $user->id,
                 'plan_id' => $plan->id,
-                'total_memory_usage' => memory_get_usage(true)
+                'total_memory_usage' => memory_get_usage(true),
             ]);
 
-            return redirect()->route('dashboard')->with('success', 
+            return redirect()->route('dashboard')->with('success',
                 'Welcome to Nestogy! Your 14-day free trial has started. You have full access to all features.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('=== SIGNUP PROCESS FAILED ===', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->except(['admin_password', 'admin_password_confirmation', 'payment_method_id']),
-                'memory_usage' => memory_get_usage(true)
+                'memory_usage' => memory_get_usage(true),
             ]);
 
             return redirect()->back()
-                ->withErrors(['registration' => 'Registration failed: ' . $e->getMessage()])
+                ->withErrors(['registration' => 'Registration failed: '.$e->getMessage()])
                 ->withInput();
         }
     }
@@ -250,16 +251,16 @@ class CompanyRegistrationController extends Controller
             'company_zip' => 'nullable|string|max:20',
             'company_country' => 'nullable|string|max:100',
             'company_website' => 'nullable|url|max:255',
-            
+
             // Admin user information
             'admin_name' => 'required|string|max:255',
             'admin_email' => 'required|email|max:255|unique:users,email',
             'admin_password' => ['required', 'confirmed', Password::defaults()],
-            
+
             // Subscription information
             'subscription_plan_id' => 'required|exists:subscription_plans,id',
             'payment_method_id' => 'nullable|string', // Stripe payment method ID
-            
+
             // Terms and conditions
             'terms_accepted' => 'accepted',
         ]);
@@ -305,7 +306,7 @@ class CompanyRegistrationController extends Controller
             'status' => 'active',
             'type' => 'saas_customer',
             'lead' => false,
-            
+
             // Subscription fields
             'company_link_id' => $tenantCompany->id,
             'subscription_plan_id' => $plan->id,
@@ -347,9 +348,9 @@ class CompanyRegistrationController extends Controller
             'plan_id' => $plan->id,
             'plan_name' => $plan->name,
             'stripe_price_id' => $plan->stripe_price_id,
-            'payment_method_id' => substr($data['payment_method_id'], 0, 20) . '...'
+            'payment_method_id' => substr($data['payment_method_id'], 0, 20).'...',
         ]);
-        
+
         try {
             $subscriptionData = [
                 'customer_data' => [
@@ -372,14 +373,14 @@ class CompanyRegistrationController extends Controller
 
             Log::info('STRIPE SUBSCRIPTION: Calling createCompleteSubscription');
             $apiStartTime = microtime(true);
-            
+
             $result = $this->stripeService->createCompleteSubscription($subscriptionData);
-            
+
             $apiDuration = microtime(true) - $apiStartTime;
             Log::info('STRIPE SUBSCRIPTION: API call completed', [
                 'duration_seconds' => $apiDuration,
                 'customer_id' => $result['customer']->id ?? 'unknown',
-                'subscription_id' => $result['subscription']->id ?? 'unknown'
+                'subscription_id' => $result['subscription']->id ?? 'unknown',
             ]);
 
             // Update client with Stripe IDs
@@ -394,6 +395,7 @@ class CompanyRegistrationController extends Controller
             $this->stripeService->storePaymentMethod($client, $result['payment_method']);
 
             Log::info('STRIPE SUBSCRIPTION: Setup completed successfully');
+
             return [
                 'success' => true,
                 'stripe_data' => $result,
@@ -403,7 +405,7 @@ class CompanyRegistrationController extends Controller
             Log::error('STRIPE SUBSCRIPTION: Setup failed', [
                 'client_id' => $client->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
@@ -420,10 +422,10 @@ class CompanyRegistrationController extends Controller
     {
         Log::info('STRIPE CUSTOMER AUTH: Starting setup', [
             'client_id' => $client->id,
-            'payment_method_id' => substr($data['payment_method_id'], 0, 20) . '...',
-            'authorization_amount' => config('saas.trial.authorization_amount', 100)
+            'payment_method_id' => substr($data['payment_method_id'], 0, 20).'...',
+            'authorization_amount' => config('saas.trial.authorization_amount', 100),
         ]);
-        
+
         try {
             $customerData = [
                 'customer_data' => [
@@ -445,13 +447,13 @@ class CompanyRegistrationController extends Controller
 
             Log::info('STRIPE CUSTOMER AUTH: Calling createCustomerWithAuth');
             $apiStartTime = microtime(true);
-            
+
             $result = $this->stripeService->createCustomerWithAuth($customerData);
-            
+
             $apiDuration = microtime(true) - $apiStartTime;
             Log::info('STRIPE CUSTOMER AUTH: API call completed', [
                 'duration_seconds' => $apiDuration,
-                'customer_id' => $result['customer']->id ?? 'unknown'
+                'customer_id' => $result['customer']->id ?? 'unknown',
             ]);
 
             // Update client with Stripe customer ID
@@ -465,6 +467,7 @@ class CompanyRegistrationController extends Controller
             $this->stripeService->storePaymentMethod($client, $result['payment_method']);
 
             Log::info('STRIPE CUSTOMER AUTH: Setup completed successfully');
+
             return [
                 'success' => true,
                 'stripe_data' => $result,
@@ -474,7 +477,7 @@ class CompanyRegistrationController extends Controller
             Log::error('STRIPE CUSTOMER AUTH: Setup failed', [
                 'client_id' => $client->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
@@ -503,7 +506,7 @@ class CompanyRegistrationController extends Controller
     public function getPlans()
     {
         $plans = SubscriptionPlan::active()->ordered()->get();
-        
+
         return response()->json([
             'plans' => $plans->map(function ($plan) {
                 return [
@@ -521,7 +524,7 @@ class CompanyRegistrationController extends Controller
                     'description' => $plan->description,
                     'features' => $plan->features,
                 ];
-            })
+            }),
         ]);
     }
 
@@ -531,7 +534,7 @@ class CompanyRegistrationController extends Controller
     public function validateStep(Request $request)
     {
         $step = $request->input('step', 1);
-        
+
         switch ($step) {
             case 1:
                 // Company information
@@ -541,7 +544,7 @@ class CompanyRegistrationController extends Controller
                     'company_phone' => 'nullable|string|max:20',
                 ]);
                 break;
-                
+
             case 2:
                 // Admin user information
                 $validator = Validator::make($request->all(), [
@@ -550,14 +553,14 @@ class CompanyRegistrationController extends Controller
                     'admin_password' => ['required', 'confirmed', Password::defaults()],
                 ]);
                 break;
-                
+
             case 3:
                 // Subscription plan
                 $validator = Validator::make($request->all(), [
                     'subscription_plan_id' => 'required|exists:subscription_plans,id',
                 ]);
                 break;
-                
+
             case 4:
                 // Payment method (required for all plans)
                 $validator = Validator::make($request->all(), [
@@ -565,7 +568,7 @@ class CompanyRegistrationController extends Controller
                     'terms_accepted' => 'accepted',
                 ]);
                 break;
-                
+
             default:
                 return response()->json(['valid' => false, 'errors' => ['Invalid step']]);
         }
@@ -573,7 +576,7 @@ class CompanyRegistrationController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'valid' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ]);
         }
 

@@ -2,9 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Invoice;
-use Illuminate\Auth\Access\Response;
+use App\Models\User;
 
 class InvoicePolicy
 {
@@ -22,7 +21,7 @@ class InvoicePolicy
     public function view(User $user, Invoice $invoice): bool
     {
         // User can view if they have permission and invoice belongs to their company
-        return $user->hasPermission('financial.invoices.view') 
+        return $user->hasPermission('financial.invoices.view')
             && $invoice->company_id === $user->company_id;
     }
 

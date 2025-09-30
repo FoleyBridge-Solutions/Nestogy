@@ -6,15 +6,13 @@ use App\Models\CreditNote;
 use App\Models\CreditNoteItem;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
-use App\Models\Client;
-use Illuminate\Support\Collection;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * VoIP Tax Service
- * 
+ *
  * Handles complex VoIP tax calculations and reversals for credit notes including:
  * - Federal, state, and local tax calculations
  * - Regulatory fee handling (E911, USF, etc.)
@@ -27,8 +25,11 @@ use Carbon\Carbon;
 class VoIPTaxReversalService
 {
     protected array $taxRates = [];
+
     protected array $jurisdictionRules = [];
+
     protected string $cachePrefix = 'voip_tax:';
+
     protected int $cacheTtl = 3600; // 1 hour
 
     public function __construct()
@@ -47,27 +48,27 @@ class VoIPTaxReversalService
             'regulatory_fee_reversal' => 0,
             'jurisdiction_reversals' => [],
             'tax_breakdown' => [],
-            'compliance_data' => []
+            'compliance_data' => [],
         ];
 
-        if (!$creditNote->invoice) {
+        if (! $creditNote->invoice) {
             return $reversals;
         }
 
         // Calculate reversals for each credit note item
         foreach ($creditNote->items as $creditItem) {
             $itemReversals = $this->calculateItemTaxReversal($creditItem);
-            
+
             $reversals['total_tax_reversal'] += $itemReversals['total_tax_reversal'];
             $reversals['voip_tax_reversal'] += $itemReversals['voip_tax_reversal'];
             $reversals['regulatory_fee_reversal'] += $itemReversals['regulatory_fee_reversal'];
-            
+
             // Merge jurisdiction reversals
             foreach ($itemReversals['jurisdiction_reversals'] as $jurisdiction => $amount) {
-                $reversals['jurisdiction_reversals'][$jurisdiction] = 
+                $reversals['jurisdiction_reversals'][$jurisdiction] =
                     ($reversals['jurisdiction_reversals'][$jurisdiction] ?? 0) + $amount;
             }
-            
+
             $reversals['tax_breakdown'][] = $itemReversals['breakdown'];
         }
 
@@ -84,10 +85,10 @@ class VoIPTaxReversalService
         string $serviceType,
         float $amount,
         string $clientState,
-        string $jurisdiction = null
+        ?string $jurisdiction = null
     ): array {
-        $cacheKey = $this->cachePrefix . "service:{$serviceType}:{$clientState}:{$jurisdiction}:" . md5((string)$amount);
-        
+        $cacheKey = $this->cachePrefix."service:{$serviceType}:{$clientState}:{$jurisdiction}:".md5((string) $amount);
+
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($serviceType, $amount, $clientState, $jurisdiction) {
             $calculation = [
                 'subtotal' => $amount,
@@ -97,7 +98,7 @@ class VoIPTaxReversalService
                 'regulatory_fees' => 0,
                 'total_tax' => 0,
                 'effective_rate' => 0,
-                'tax_details' => []
+                'tax_details' => [],
             ];
 
             // Federal taxes
@@ -123,12 +124,12 @@ class VoIPTaxReversalService
             $calculation['tax_details']['regulatory'] = $regulatoryFees;
 
             // Calculate totals
-            $calculation['total_tax'] = $calculation['federal_tax'] + 
-                                     $calculation['state_tax'] + 
-                                     $calculation['local_tax'] + 
+            $calculation['total_tax'] = $calculation['federal_tax'] +
+                                     $calculation['state_tax'] +
+                                     $calculation['local_tax'] +
                                      $calculation['regulatory_fees'];
-            
-            $calculation['effective_rate'] = $amount > 0 ? 
+
+            $calculation['effective_rate'] = $amount > 0 ?
                 ($calculation['total_tax'] / $amount) * 100 : 0;
 
             return $calculation;
@@ -142,7 +143,7 @@ class VoIPTaxReversalService
         float $amount,
         string $originCountry,
         string $destinationCountry,
-        string $serviceProvider = null
+        ?string $serviceProvider = null
     ): array {
         $calculation = [
             'base_amount' => $amount,
@@ -152,7 +153,7 @@ class VoIPTaxReversalService
             'regulatory_fees' => 0,
             'total_tax' => 0,
             'currency_adjustments' => [],
-            'compliance_notes' => []
+            'compliance_notes' => [],
         ];
 
         // Origin country taxes (e.g., US federal excise tax)
@@ -177,9 +178,9 @@ class VoIPTaxReversalService
             $amount, $originCountry, $destinationCountry
         );
 
-        $calculation['total_tax'] = $calculation['origin_tax'] + 
-                                  $calculation['destination_tax'] + 
-                                  $calculation['carrier_surcharge'] + 
+        $calculation['total_tax'] = $calculation['origin_tax'] +
+                                  $calculation['destination_tax'] +
+                                  $calculation['carrier_surcharge'] +
                                   $calculation['regulatory_fees'];
 
         return $calculation;
@@ -200,7 +201,7 @@ class VoIPTaxReversalService
             'new_rate' => $newRate,
             'effective_date' => $effectiveDate,
             'affected_services' => $affectedServices,
-            'credit_adjustments' => []
+            'credit_adjustments' => [],
         ];
 
         // Calculate retroactive adjustments if needed
@@ -229,32 +230,32 @@ class VoIPTaxReversalService
         $report = [
             'reporting_period' => [
                 'start_date' => $startDate->toDateString(),
-                'end_date' => $endDate->toDateString()
+                'end_date' => $endDate->toDateString(),
             ],
             'tax_collected' => [
                 'federal' => 0,
                 'state' => 0,
                 'local' => 0,
                 'regulatory' => 0,
-                'total' => 0
+                'total' => 0,
             ],
             'tax_refunded' => [
                 'federal' => 0,
                 'state' => 0,
                 'local' => 0,
                 'regulatory' => 0,
-                'total' => 0
+                'total' => 0,
             ],
             'net_tax_liability' => 0,
             'jurisdiction_breakdown' => [],
             'service_type_breakdown' => [],
             'compliance_issues' => [],
-            'audit_trail' => []
+            'audit_trail' => [],
         ];
 
         // Implementation would generate comprehensive compliance report
         // This is a placeholder for the actual reporting logic
-        
+
         return $report;
     }
 
@@ -268,13 +269,13 @@ class VoIPTaxReversalService
             'voip_tax_reversal' => 0,
             'regulatory_fee_reversal' => 0,
             'jurisdiction_reversals' => [],
-            'breakdown' => []
+            'breakdown' => [],
         ];
 
         // Get original tax calculation for this item
         $originalTaxData = $this->getOriginalItemTaxData($creditItem);
-        
-        if (!$originalTaxData) {
+
+        if (! $originalTaxData) {
             return $reversal;
         }
 
@@ -284,7 +285,7 @@ class VoIPTaxReversalService
         // Calculate tax reversals
         foreach ($originalTaxData as $taxType => $taxAmount) {
             $reversalAmount = $taxAmount * $reversalRatio;
-            
+
             switch ($taxType) {
                 case 'voip_tax':
                     $reversal['voip_tax_reversal'] += $reversalAmount;
@@ -296,19 +297,19 @@ class VoIPTaxReversalService
                     // Handle jurisdiction-specific taxes
                     if (strpos($taxType, 'jurisdiction_') === 0) {
                         $jurisdiction = str_replace('jurisdiction_', '', $taxType);
-                        $reversal['jurisdiction_reversals'][$jurisdiction] = 
+                        $reversal['jurisdiction_reversals'][$jurisdiction] =
                             ($reversal['jurisdiction_reversals'][$jurisdiction] ?? 0) + $reversalAmount;
                     }
                     break;
             }
-            
+
             $reversal['total_tax_reversal'] += $reversalAmount;
-            
+
             $reversal['breakdown'][] = [
                 'tax_type' => $taxType,
                 'original_amount' => $taxAmount,
                 'reversal_ratio' => $reversalRatio,
-                'reversal_amount' => $reversalAmount
+                'reversal_amount' => $reversalAmount,
             ];
         }
 
@@ -321,7 +322,7 @@ class VoIPTaxReversalService
             'local_service' => 0.00, // No federal tax on local service
             'long_distance' => 3.00, // 3% federal excise tax
             'international' => 3.00,
-            'toll_free' => 0.00
+            'toll_free' => 0.00,
         ];
 
         $rate = $federalRates[$serviceType] ?? 0.00;
@@ -331,7 +332,7 @@ class VoIPTaxReversalService
             'tax_type' => 'federal_excise',
             'rate' => $rate,
             'amount' => $taxAmount,
-            'description' => 'Federal Excise Tax on Communications'
+            'description' => 'Federal Excise Tax on Communications',
         ];
     }
 
@@ -339,7 +340,7 @@ class VoIPTaxReversalService
     {
         // This would integrate with actual state tax databases
         $stateTaxRates = $this->getStateTaxRates($state);
-        
+
         $rate = $stateTaxRates[$serviceType] ?? 0.00;
         $taxAmount = ($amount * $rate) / 100;
 
@@ -348,7 +349,7 @@ class VoIPTaxReversalService
             'state' => $state,
             'rate' => $rate,
             'amount' => $taxAmount,
-            'description' => "State tax for {$state}"
+            'description' => "State tax for {$state}",
         ];
     }
 
@@ -356,7 +357,7 @@ class VoIPTaxReversalService
     {
         // Local tax calculation logic
         $localRates = $this->getLocalTaxRates($state, $jurisdiction);
-        
+
         $rate = $localRates[$serviceType] ?? 0.00;
         $taxAmount = ($amount * $rate) / 100;
 
@@ -365,7 +366,7 @@ class VoIPTaxReversalService
             'jurisdiction' => $jurisdiction,
             'rate' => $rate,
             'amount' => $taxAmount,
-            'description' => "Local tax for {$jurisdiction}"
+            'description' => "Local tax for {$jurisdiction}",
         ];
     }
 
@@ -375,7 +376,7 @@ class VoIPTaxReversalService
             'e911_fee' => $this->calculateE911Fee($serviceType, $amount, $state),
             'usf_fee' => $this->calculateUsfFee($serviceType, $amount),
             'trs_fee' => $this->calculateTrsFee($serviceType, $amount, $state),
-            'number_pooling_fee' => $this->calculateNumberPoolingFee($serviceType, $amount)
+            'number_pooling_fee' => $this->calculateNumberPoolingFee($serviceType, $amount),
         ];
 
         $totalAmount = array_sum(array_column($fees, 'amount'));
@@ -384,7 +385,7 @@ class VoIPTaxReversalService
             'total_amount' => $totalAmount,
             'amount' => $totalAmount, // For backwards compatibility
             'fee_breakdown' => $fees,
-            'description' => 'Regulatory fees and surcharges'
+            'description' => 'Regulatory fees and surcharges',
         ];
     }
 
@@ -395,7 +396,7 @@ class VoIPTaxReversalService
             'CA' => 0.75,
             'TX' => 0.50,
             'NY' => 1.00,
-            'FL' => 0.50
+            'FL' => 0.50,
         ];
 
         $feeAmount = $e911Rates[$state] ?? 0.50; // Default rate
@@ -403,7 +404,7 @@ class VoIPTaxReversalService
         return [
             'fee_type' => 'e911',
             'amount' => $feeAmount,
-            'description' => 'Enhanced 911 Service Fee'
+            'description' => 'Enhanced 911 Service Fee',
         ];
     }
 
@@ -417,7 +418,7 @@ class VoIPTaxReversalService
             'fee_type' => 'usf',
             'rate' => $usfRate,
             'amount' => $feeAmount,
-            'description' => 'Universal Service Fund Fee'
+            'description' => 'Universal Service Fund Fee',
         ];
     }
 
@@ -427,7 +428,7 @@ class VoIPTaxReversalService
         $trsRates = [
             'CA' => 0.008,
             'TX' => 0.005,
-            'NY' => 0.010
+            'NY' => 0.010,
         ];
 
         $rate = $trsRates[$state] ?? 0.005;
@@ -437,7 +438,7 @@ class VoIPTaxReversalService
             'fee_type' => 'trs',
             'rate' => $rate,
             'amount' => $feeAmount,
-            'description' => 'Telecommunications Relay Service Fee'
+            'description' => 'Telecommunications Relay Service Fee',
         ];
     }
 
@@ -451,7 +452,7 @@ class VoIPTaxReversalService
             'fee_type' => 'number_pooling',
             'rate' => $rate,
             'amount' => $feeAmount,
-            'description' => 'Number Pooling Administration Fee'
+            'description' => 'Number Pooling Administration Fee',
         ];
     }
 
@@ -466,16 +467,16 @@ class VoIPTaxReversalService
         $countryTaxRates = [
             'CA' => ['rate' => 5.00, 'type' => 'GST'],
             'UK' => ['rate' => 20.00, 'type' => 'VAT'],
-            'DE' => ['rate' => 19.00, 'type' => 'VAT']
+            'DE' => ['rate' => 19.00, 'type' => 'VAT'],
         ];
 
         $taxInfo = $countryTaxRates[$country] ?? ['rate' => 0.00, 'type' => 'None'];
-        
+
         return [
             'amount' => ($amount * $taxInfo['rate']) / 100,
             'rate' => $taxInfo['rate'],
             'tax_type' => $taxInfo['type'],
-            'compliance_notes' => ["Tax calculated for {$country}"]
+            'compliance_notes' => ["Tax calculated for {$country}"],
         ];
     }
 
@@ -513,18 +514,19 @@ class VoIPTaxReversalService
         // Get original tax data from invoice item
         if ($creditItem->invoice_item_id) {
             $invoiceItem = InvoiceItem::find($creditItem->invoice_item_id);
+
             return $invoiceItem->tax_breakdown ?? [];
         }
-        
+
         return null;
     }
 
     private function calculateReversalRatio(CreditNoteItem $creditItem): float
     {
-        if (!$creditItem->original_quantity || $creditItem->original_quantity == 0) {
+        if (! $creditItem->original_quantity || $creditItem->original_quantity == 0) {
             return 1.0;
         }
-        
+
         return $creditItem->quantity / $creditItem->original_quantity;
     }
 
@@ -535,7 +537,7 @@ class VoIPTaxReversalService
             'reversal_date' => now()->toISOString(),
             'jurisdiction_compliance' => $this->checkJurisdictionCompliance($reversals),
             'audit_requirements' => $this->getAuditRequirements($creditNote, $reversals),
-            'regulatory_notifications' => $this->getRequiredNotifications($reversals)
+            'regulatory_notifications' => $this->getRequiredNotifications($reversals),
         ];
     }
 
@@ -560,12 +562,12 @@ class VoIPTaxReversalService
     private function loadTaxConfiguration(): void
     {
         // Load tax rates and jurisdiction rules from database/config
-        $this->taxRates = Cache::remember($this->cachePrefix . 'rates', 3600, function () {
+        $this->taxRates = Cache::remember($this->cachePrefix.'rates', 3600, function () {
             // This would load from database
             return [];
         });
-        
-        $this->jurisdictionRules = Cache::remember($this->cachePrefix . 'rules', 3600, function () {
+
+        $this->jurisdictionRules = Cache::remember($this->cachePrefix.'rules', 3600, function () {
             // This would load from database
             return [];
         });

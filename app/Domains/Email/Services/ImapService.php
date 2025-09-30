@@ -2,16 +2,18 @@
 
 namespace App\Domains\Email\Services;
 
-use Webklex\PHPIMAP\ClientManager;
+use Illuminate\Support\Collection;
 use Webklex\PHPIMAP\Client;
+use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Folder;
 use Webklex\PHPIMAP\Message;
-use Illuminate\Support\Collection;
 
 class ImapService
 {
     protected ClientManager $clientManager;
+
     protected array $config;
+
     protected ?Client $client = null;
 
     public function __construct(ClientManager $clientManager, array $config)
@@ -28,12 +30,14 @@ class ImapService
         try {
             $this->client = $this->clientManager->account($account);
             $this->client->connect();
+
             return true;
         } catch (\Exception $e) {
             logger()->error('IMAP connection failed', [
                 'account' => $account,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -54,7 +58,7 @@ class ImapService
      */
     public function getFolders(): Collection
     {
-        if (!$this->client) {
+        if (! $this->client) {
             throw new \Exception('IMAP client not connected');
         }
 
@@ -66,7 +70,7 @@ class ImapService
      */
     public function getFolder(string $name): ?Folder
     {
-        if (!$this->client) {
+        if (! $this->client) {
             throw new \Exception('IMAP client not connected');
         }
 
@@ -79,8 +83,8 @@ class ImapService
     public function getMessages(string $folderName = 'INBOX', int $limit = 50): Collection
     {
         $folder = $this->getFolder($folderName);
-        
-        if (!$folder) {
+
+        if (! $folder) {
             return collect();
         }
 
@@ -93,8 +97,8 @@ class ImapService
     public function getUnreadMessages(string $folderName = 'INBOX', int $limit = 50): Collection
     {
         $folder = $this->getFolder($folderName);
-        
-        if (!$folder) {
+
+        if (! $folder) {
             return collect();
         }
 
@@ -107,8 +111,8 @@ class ImapService
     public function searchMessages(array $criteria, string $folderName = 'INBOX'): Collection
     {
         $folder = $this->getFolder($folderName);
-        
-        if (!$folder) {
+
+        if (! $folder) {
             return collect();
         }
 
@@ -154,12 +158,14 @@ class ImapService
     {
         try {
             $message->setFlag('Seen');
+
             return true;
         } catch (\Exception $e) {
             logger()->error('Failed to mark message as read', [
                 'message_id' => $message->getMessageId(),
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -171,12 +177,14 @@ class ImapService
     {
         try {
             $message->unsetFlag('Seen');
+
             return true;
         } catch (\Exception $e) {
             logger()->error('Failed to mark message as unread', [
                 'message_id' => $message->getMessageId(),
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -188,6 +196,7 @@ class ImapService
     {
         try {
             $message->move($folderName);
+
             return true;
         } catch (\Exception $e) {
             logger()->error('Failed to move message', [
@@ -195,6 +204,7 @@ class ImapService
                 'folder' => $folderName,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -206,12 +216,14 @@ class ImapService
     {
         try {
             $message->delete();
+
             return true;
         } catch (\Exception $e) {
             logger()->error('Failed to delete message', [
                 'message_id' => $message->getMessageId(),
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -231,6 +243,7 @@ class ImapService
     {
         try {
             $attachment->save($path);
+
             return true;
         } catch (\Exception $e) {
             logger()->error('Failed to download attachment', [
@@ -238,6 +251,7 @@ class ImapService
                 'path' => $path,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -248,10 +262,10 @@ class ImapService
     public function processIncomingEmails(): array
     {
         $processed = [];
-        
+
         try {
             $messages = $this->getUnreadMessages();
-            
+
             foreach ($messages as $message) {
                 $processed[] = $this->processEmailForTicket($message);
                 $this->markAsRead($message);
@@ -292,13 +306,14 @@ class ImapService
             $client->connect();
             $folders = $client->getFolders();
             $client->disconnect();
-            
+
             return $folders->count() > 0;
         } catch (\Exception $e) {
             logger()->error('IMAP connection test failed', [
                 'account' => $account,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }

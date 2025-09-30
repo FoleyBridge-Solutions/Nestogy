@@ -2,12 +2,12 @@
 
 namespace App\Domains\Core\Services;
 
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\Client;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Centralized dashboard data caching service
@@ -16,21 +16,21 @@ use App\Models\Client;
 class DashboardCacheService
 {
     protected static array $requestCache = [];
-    
+
     /**
      * Get aggregated invoice stats for a date range with caching
      */
     public static function getInvoiceStats(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $cacheKey = "invoice_stats_{$companyId}_{$startDate->timestamp}_{$endDate->timestamp}";
-        
+
         // Check request-level cache first
         if (isset(self::$requestCache[$cacheKey])) {
             return self::$requestCache[$cacheKey];
         }
-        
+
         // Check persistent cache
-        $data = Cache::remember($cacheKey, 60, function() use ($companyId, $startDate, $endDate) {
+        $data = Cache::remember($cacheKey, 60, function () use ($companyId, $startDate, $endDate) {
             return DB::selectOne("
                 SELECT 
                     SUM(CASE WHEN status = 'Paid' THEN amount ELSE 0 END) as paid_amount,
@@ -49,27 +49,27 @@ class DashboardCacheService
                     AND archived_at IS NULL
             ", [$companyId, $startDate->toDateString(), $endDate->toDateString()]);
         });
-        
+
         // Store in request cache
         self::$requestCache[$cacheKey] = (array) $data;
-        
+
         return self::$requestCache[$cacheKey];
     }
-    
+
     /**
      * Get aggregated payment stats for a date range with caching
      */
     public static function getPaymentStats(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $cacheKey = "payment_stats_{$companyId}_{$startDate->timestamp}_{$endDate->timestamp}";
-        
+
         // Check request-level cache first
         if (isset(self::$requestCache[$cacheKey])) {
             return self::$requestCache[$cacheKey];
         }
-        
+
         // Check persistent cache
-        $data = Cache::remember($cacheKey, 60, function() use ($companyId, $startDate, $endDate) {
+        $data = Cache::remember($cacheKey, 60, function () use ($companyId, $startDate, $endDate) {
             return DB::selectOne("
                 SELECT 
                     SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as completed_amount,
@@ -87,13 +87,13 @@ class DashboardCacheService
                     AND deleted_at IS NULL
             ", [$companyId, $startDate->toDateString(), $endDate->toDateString()]);
         });
-        
+
         // Store in request cache
         self::$requestCache[$cacheKey] = (array) $data;
-        
+
         return self::$requestCache[$cacheKey];
     }
-    
+
     /**
      * Get client stats with caching
      */
@@ -101,14 +101,14 @@ class DashboardCacheService
     {
         $asOfDate = $asOfDate ?? Carbon::now();
         $cacheKey = "client_stats_{$companyId}_{$asOfDate->timestamp}";
-        
+
         // Check request-level cache first
         if (isset(self::$requestCache[$cacheKey])) {
             return self::$requestCache[$cacheKey];
         }
-        
+
         // Check persistent cache
-        $data = Cache::remember($cacheKey, 60, function() use ($companyId, $asOfDate) {
+        $data = Cache::remember($cacheKey, 60, function () use ($companyId, $asOfDate) {
             return DB::selectOne("
                 SELECT 
                     COUNT(CASE WHEN status = 'active' THEN 1 END) as active_count,
@@ -124,30 +124,30 @@ class DashboardCacheService
                 $asOfDate->copy()->startOfMonth(),
                 $asOfDate->copy()->startOfQuarter(),
                 $companyId,
-                $asOfDate
+                $asOfDate,
             ]);
         });
-        
+
         // Store in request cache
         self::$requestCache[$cacheKey] = (array) $data;
-        
+
         return self::$requestCache[$cacheKey];
     }
-    
+
     /**
      * Get daily revenue/invoice data for charts
      */
     public static function getDailyChartData(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $cacheKey = "daily_chart_{$companyId}_{$startDate->timestamp}_{$endDate->timestamp}";
-        
+
         // Check request-level cache first
         if (isset(self::$requestCache[$cacheKey])) {
             return self::$requestCache[$cacheKey];
         }
-        
+
         // Check persistent cache
-        $data = Cache::remember($cacheKey, 300, function() use ($companyId, $startDate, $endDate) {
+        $data = Cache::remember($cacheKey, 300, function () use ($companyId, $startDate, $endDate) {
             // Get invoice data
             $invoices = DB::select("
                 SELECT 
@@ -161,7 +161,7 @@ class DashboardCacheService
                     AND archived_at IS NULL
                 GROUP BY DATE(date)
             ", [$companyId, $startDate->toDateString(), $endDate->toDateString()]);
-            
+
             // Get payment data
             $payments = DB::select("
                 SELECT 
@@ -175,30 +175,30 @@ class DashboardCacheService
                     AND deleted_at IS NULL
                 GROUP BY DATE(payment_date)
             ", [$companyId, $startDate->toDateString(), $endDate->toDateString()]);
-            
+
             // Convert to keyed arrays
             $invoicesByDate = [];
             foreach ($invoices as $row) {
                 $invoicesByDate[$row->date] = $row;
             }
-            
+
             $paymentsByDate = [];
             foreach ($payments as $row) {
                 $paymentsByDate[$row->date] = $row;
             }
-            
+
             return [
                 'invoices' => $invoicesByDate,
-                'payments' => $paymentsByDate
+                'payments' => $paymentsByDate,
             ];
         });
-        
+
         // Store in request cache
         self::$requestCache[$cacheKey] = $data;
-        
+
         return self::$requestCache[$cacheKey];
     }
-    
+
     /**
      * Clear cache for a specific company
      */
@@ -207,30 +207,30 @@ class DashboardCacheService
         // Clear all cached keys for this company
         $pattern = "*_{$companyId}_*";
         $keys = Cache::getRedis()->keys($pattern);
-        
+
         foreach ($keys as $key) {
             Cache::forget($key);
         }
-        
+
         // Clear request cache
         self::$requestCache = [];
     }
-    
+
     /**
      * Get or calculate invoice metrics for multiple date ranges at once
      */
     public static function getMultiPeriodInvoiceStats(int $companyId, array $periods): array
     {
         $results = [];
-        
+
         // Build a single query for all periods
         $caseClauses = [];
         $params = [$companyId];
-        
+
         foreach ($periods as $key => $period) {
             $startDate = $period['start']->toDateString();
             $endDate = $period['end']->toDateString();
-            
+
             $caseClauses[] = "
                 SUM(CASE WHEN date BETWEEN '{$startDate}' AND '{$endDate}' AND status = 'Paid' THEN amount ELSE 0 END) as {$key}_paid,
                 SUM(CASE WHEN date BETWEEN '{$startDate}' AND '{$endDate}' THEN amount ELSE 0 END) as {$key}_total,
@@ -238,26 +238,26 @@ class DashboardCacheService
                 AVG(CASE WHEN date BETWEEN '{$startDate}' AND '{$endDate}' THEN amount END) as {$key}_avg
             ";
         }
-        
-        $query = "
-            SELECT " . implode(',', $caseClauses) . "
+
+        $query = '
+            SELECT '.implode(',', $caseClauses).'
             FROM invoices
             WHERE company_id = ?
                 AND archived_at IS NULL
-        ";
-        
+        ';
+
         $data = DB::selectOne($query, $params);
-        
+
         // Parse results
         foreach ($periods as $key => $period) {
             $results[$key] = [
-                'paid_amount' => $data->{$key . '_paid'} ?? 0,
-                'total_amount' => $data->{$key . '_total'} ?? 0,
-                'count' => $data->{$key . '_count'} ?? 0,
-                'average' => $data->{$key . '_avg'} ?? 0,
+                'paid_amount' => $data->{$key.'_paid'} ?? 0,
+                'total_amount' => $data->{$key.'_total'} ?? 0,
+                'count' => $data->{$key.'_count'} ?? 0,
+                'average' => $data->{$key.'_avg'} ?? 0,
             ];
         }
-        
+
         return $results;
     }
 }

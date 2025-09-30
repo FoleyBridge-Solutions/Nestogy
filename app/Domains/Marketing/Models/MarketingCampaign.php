@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MarketingCampaign extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -60,18 +60,28 @@ class MarketingCampaign extends Model
 
     // Campaign type constants
     const TYPE_EMAIL = 'email';
+
     const TYPE_NURTURE = 'nurture';
+
     const TYPE_DRIP = 'drip';
+
     const TYPE_EVENT = 'event';
+
     const TYPE_WEBINAR = 'webinar';
+
     const TYPE_CONTENT = 'content';
 
     // Campaign status constants
     const STATUS_DRAFT = 'draft';
+
     const STATUS_SCHEDULED = 'scheduled';
+
     const STATUS_ACTIVE = 'active';
+
     const STATUS_PAUSED = 'paused';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_ARCHIVED = 'archived';
 
     /**
@@ -202,6 +212,7 @@ class MarketingCampaign extends Model
         }
 
         $bounced = $this->total_sent - $this->total_delivered;
+
         return ($bounced / $this->total_sent) * 100;
     }
 
@@ -304,8 +315,8 @@ class MarketingCampaign extends Model
      */
     public function start(): void
     {
-        if (!$this->canBeStarted()) {
-            throw new \Exception('Campaign cannot be started in current status: ' . $this->status);
+        if (! $this->canBeStarted()) {
+            throw new \Exception('Campaign cannot be started in current status: '.$this->status);
         }
 
         $this->update([
@@ -319,8 +330,8 @@ class MarketingCampaign extends Model
      */
     public function pause(): void
     {
-        if (!$this->canBePaused()) {
-            throw new \Exception('Campaign cannot be paused in current status: ' . $this->status);
+        if (! $this->canBePaused()) {
+            throw new \Exception('Campaign cannot be paused in current status: '.$this->status);
         }
 
         $this->update(['status' => self::STATUS_PAUSED]);
@@ -395,7 +406,7 @@ class MarketingCampaign extends Model
     public function updateMetrics(): void
     {
         $enrollments = $this->enrollments();
-        
+
         $this->update([
             'total_recipients' => $enrollments->count(),
             'total_sent' => $enrollments->sum('emails_sent'),

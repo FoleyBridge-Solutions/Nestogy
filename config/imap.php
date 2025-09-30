@@ -28,33 +28,33 @@ return [
     'accounts' => [
 
         'default' => [
-            'host'          => env('IMAP_HOST', 'localhost'),
-            'port'          => env('IMAP_PORT', 993),
-            'protocol'      => env('IMAP_PROTOCOL', 'imap'),
-            'encryption'    => env('IMAP_ENCRYPTION', 'ssl'),
+            'host' => env('IMAP_HOST', 'localhost'),
+            'port' => env('IMAP_PORT', 993),
+            'protocol' => env('IMAP_PROTOCOL', 'imap'),
+            'encryption' => env('IMAP_ENCRYPTION', 'ssl'),
             'validate_cert' => env('IMAP_VALIDATE_CERT', true),
-            'username'      => env('IMAP_USERNAME', 'root@example.com'),
-            'password'      => env('IMAP_PASSWORD', ''),
+            'username' => env('IMAP_USERNAME', 'root@example.com'),
+            'password' => env('IMAP_PASSWORD', ''),
             'authentication' => env('IMAP_AUTHENTICATION', null),
         ],
 
         'gmail' => [
-            'host'          => 'imap.gmail.com',
-            'port'          => 993,
-            'encryption'    => 'ssl',
+            'host' => 'imap.gmail.com',
+            'port' => 993,
+            'encryption' => 'ssl',
             'validate_cert' => true,
-            'username'      => env('GMAIL_USERNAME'),
-            'password'      => env('GMAIL_PASSWORD'),
+            'username' => env('GMAIL_USERNAME'),
+            'password' => env('GMAIL_PASSWORD'),
             'authentication' => 'oauth',
         ],
 
         'outlook' => [
-            'host'          => 'outlook.office365.com',
-            'port'          => 993,
-            'encryption'    => 'ssl',
+            'host' => 'outlook.office365.com',
+            'port' => 993,
+            'encryption' => 'ssl',
             'validate_cert' => true,
-            'username'      => env('OUTLOOK_USERNAME'),
-            'password'      => env('OUTLOOK_PASSWORD'),
+            'username' => env('OUTLOOK_USERNAME'),
+            'password' => env('OUTLOOK_PASSWORD'),
         ],
 
     ],
@@ -102,15 +102,15 @@ return [
         'decoder' => [
             'message' => [
                 'subject' => 'utf-8',
-                'from'    => 'utf-8',
-                'to'      => 'utf-8',
-                'cc'      => 'utf-8',
-                'bcc'     => 'utf-8',
+                'from' => 'utf-8',
+                'to' => 'utf-8',
+                'cc' => 'utf-8',
+                'bcc' => 'utf-8',
             ],
             'attachment' => [
                 'name' => 'utf-8',
-            ]
-        ]
+            ],
+        ],
     ],
 
     /*
@@ -154,7 +154,7 @@ return [
 
     'masks' => [
         'message' => \Webklex\PHPIMAP\Support\Masks\MessageMask::class,
-        'attachment' => \Webklex\PHPIMAP\Support\Masks\AttachmentMask::class
-    ]
+        'attachment' => \Webklex\PHPIMAP\Support\Masks\AttachmentMask::class,
+    ],
 
 ];

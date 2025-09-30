@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\Company;
 use App\Domains\Email\Services\DynamicMailConfigService;
 use App\Domains\Email\Services\EmailService;
+use App\Models\Company;
 use Exception;
+use Illuminate\Console\Command;
 
 class SendTestEmailCommand extends Command
 {
@@ -30,6 +30,7 @@ class SendTestEmailCommand extends Command
     protected $description = 'Send a test email using a specific company\'s SMTP configuration';
 
     protected DynamicMailConfigService $mailConfigService;
+
     protected EmailService $emailService;
 
     public function __construct(DynamicMailConfigService $mailConfigService, EmailService $emailService)
@@ -46,14 +47,15 @@ class SendTestEmailCommand extends Command
     {
         $companyId = $this->argument('company_id');
         $email = $this->argument('email');
-        $subject = $this->option('subject') ?? 'Nestogy Email Test - Company #' . $companyId;
+        $subject = $this->option('subject') ?? 'Nestogy Email Test - Company #'.$companyId;
         $message = $this->option('message') ?? $this->getDefaultMessage($companyId);
 
         try {
             // Find company
             $company = Company::with('setting')->find($companyId);
-            if (!$company) {
+            if (! $company) {
                 $this->error("Company with ID {$companyId} not found.");
+
                 return Command::FAILURE;
             }
 
@@ -61,18 +63,20 @@ class SendTestEmailCommand extends Command
             $this->info("📮 Sending to: {$email}");
 
             // Check if company has email settings
-            if (!$company->setting || !$this->hasValidSmtpConfig($company->setting)) {
-                $this->error("❌ Company does not have valid SMTP configuration.");
-                $this->line("   Please configure SMTP settings in the admin panel first.");
+            if (! $company->setting || ! $this->hasValidSmtpConfig($company->setting)) {
+                $this->error('❌ Company does not have valid SMTP configuration.');
+                $this->line('   Please configure SMTP settings in the admin panel first.');
+
                 return Command::FAILURE;
             }
 
             // Configure mail for this company
-            $this->info("🔧 Configuring mail settings...");
+            $this->info('🔧 Configuring mail settings...');
             $configured = $this->mailConfigService->configureMailForCompany($company);
 
-            if (!$configured) {
-                $this->error("❌ Failed to configure mail settings for company.");
+            if (! $configured) {
+                $this->error('❌ Failed to configure mail settings for company.');
+
                 return Command::FAILURE;
             }
 
@@ -82,37 +86,41 @@ class SendTestEmailCommand extends Command
             }
 
             // Test mail configuration
-            $this->info("🔍 Testing mail configuration...");
+            $this->info('🔍 Testing mail configuration...');
             $testResult = $this->mailConfigService->testCurrentMailConfig();
 
-            if (!$testResult['success']) {
-                $this->error("❌ Mail configuration test failed:");
-                $this->line("   " . $testResult['message']);
+            if (! $testResult['success']) {
+                $this->error('❌ Mail configuration test failed:');
+                $this->line('   '.$testResult['message']);
+
                 return Command::FAILURE;
             }
 
-            $this->info("✅ Mail configuration test passed");
+            $this->info('✅ Mail configuration test passed');
 
             // Send the test email
-            $this->info("📤 Sending test email...");
+            $this->info('📤 Sending test email...');
             $result = $this->emailService->send($email, $subject, $this->formatMessage($message, $company));
 
             if ($result) {
-                $this->info("✅ Test email sent successfully!");
+                $this->info('✅ Test email sent successfully!');
                 $this->line("📧 Subject: {$subject}");
                 $this->line("📮 To: {$email}");
                 $this->line("🏢 From Company: {$company->name}");
-                $this->line("⏰ Sent at: " . now()->format('Y-m-d H:i:s'));
+                $this->line('⏰ Sent at: '.now()->format('Y-m-d H:i:s'));
+
                 return Command::SUCCESS;
             } else {
-                $this->error("❌ Failed to send test email");
+                $this->error('❌ Failed to send test email');
+
                 return Command::FAILURE;
             }
 
         } catch (Exception $e) {
-            $this->error("❌ Error occurred: " . $e->getMessage());
-            $this->line("📍 Stack trace:");
+            $this->error('❌ Error occurred: '.$e->getMessage());
+            $this->line('📍 Stack trace:');
             $this->line($e->getTraceAsString());
+
             return Command::FAILURE;
         }
     }
@@ -122,10 +130,10 @@ class SendTestEmailCommand extends Command
      */
     protected function hasValidSmtpConfig($setting): bool
     {
-        return !empty($setting->smtp_host)
-            && !empty($setting->smtp_port)
-            && !empty($setting->smtp_username)
-            && !empty($setting->smtp_password);
+        return ! empty($setting->smtp_host)
+            && ! empty($setting->smtp_port)
+            && ! empty($setting->smtp_username)
+            && ! empty($setting->smtp_password);
     }
 
     /**
@@ -135,7 +143,7 @@ class SendTestEmailCommand extends Command
     {
         $setting = $company->setting;
 
-        $this->info("📋 Mail Configuration Details:");
+        $this->info('📋 Mail Configuration Details:');
         $this->table(
             ['Setting', 'Value'],
             [
@@ -156,13 +164,13 @@ class SendTestEmailCommand extends Command
      */
     protected function getDefaultMessage(int $companyId): string
     {
-        return "This is a test email sent from the Nestogy MSP platform.\n\n" .
-               "Test Details:\n" .
-               "- Company ID: {$companyId}\n" .
-               "- Sent via: Console Command\n" .
-               "- Date: " . now()->format('Y-m-d H:i:s T') . "\n" .
-               "- Purpose: Email system verification\n\n" .
-               "If you received this email, the email configuration is working correctly!";
+        return "This is a test email sent from the Nestogy MSP platform.\n\n".
+               "Test Details:\n".
+               "- Company ID: {$companyId}\n".
+               "- Sent via: Console Command\n".
+               '- Date: '.now()->format('Y-m-d H:i:s T')."\n".
+               "- Purpose: Email system verification\n\n".
+               'If you received this email, the email configuration is working correctly!';
     }
 
     /**
@@ -175,10 +183,10 @@ class SendTestEmailCommand extends Command
             <p><strong>Company:</strong> {$company->name}</p>
             <p><strong>Test Message:</strong></p>
             <div style='background: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 10px 0;'>
-                " . nl2br(htmlspecialchars($message)) . "
+                ".nl2br(htmlspecialchars($message)).'
             </div>
             <hr>
             <p><small>This email was sent via console command for testing purposes.</small></p>
-        ";
+        ';
     }
 }

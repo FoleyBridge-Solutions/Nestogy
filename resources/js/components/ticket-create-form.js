@@ -96,7 +96,7 @@ export function ticketCreateForm() {
             this.assetId = '';
             
             try {
-                const response = await fetch(`/clients/${clientId}/assets`, {
+                const response = await fetch(`/api/clients/${clientId}/assets`, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'

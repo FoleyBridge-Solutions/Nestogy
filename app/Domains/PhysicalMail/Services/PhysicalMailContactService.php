@@ -3,7 +3,6 @@
 namespace App\Domains\PhysicalMail\Services;
 
 use App\Domains\PhysicalMail\Models\PhysicalMailContact;
-use App\Domains\PhysicalMail\Services\PostGridClient;
 
 class PhysicalMailContactService
 {
@@ -11,7 +10,7 @@ class PhysicalMailContactService
     {
         // Dependencies are injected
     }
-    
+
     /**
      * Find or create a contact
      */
@@ -19,29 +18,29 @@ class PhysicalMailContactService
     {
         // Try to find existing contact
         $query = PhysicalMailContact::query();
-        
-        if (!empty($data['email'])) {
+
+        if (! empty($data['email'])) {
             $query->where('email', $data['email']);
-        } elseif (!empty($data['addressLine1']) || !empty($data['address_line1'])) {
+        } elseif (! empty($data['addressLine1']) || ! empty($data['address_line1'])) {
             $addressLine = $data['addressLine1'] ?? $data['address_line1'];
             $query->where('address_line1', $addressLine);
-            
-            if (!empty($data['postalOrZip']) || !empty($data['postal_or_zip'])) {
+
+            if (! empty($data['postalOrZip']) || ! empty($data['postal_or_zip'])) {
                 $postal = $data['postalOrZip'] ?? $data['postal_or_zip'];
                 $query->where('postal_or_zip', $postal);
             }
         }
-        
+
         $contact = $query->first();
-        
+
         if ($contact) {
             return $contact;
         }
-        
+
         // Create new contact
         return $this->create($data);
     }
-    
+
     /**
      * Create a new contact
      */
@@ -49,12 +48,12 @@ class PhysicalMailContactService
     {
         // Normalize field names from PostGrid format
         $normalized = $this->normalizeContactData($data);
-        
+
         // Create local contact
         $contact = PhysicalMailContact::create($normalized);
-        
+
         // Sync with PostGrid if not already synced
-        if (!$contact->postgrid_id) {
+        if (! $contact->postgrid_id) {
             try {
                 $response = $this->postgrid->createContact($contact->toPostGridArray());
                 $contact->update([
@@ -68,19 +67,20 @@ class PhysicalMailContactService
                 ]);
             }
         }
-        
+
         return $contact;
     }
-    
+
     /**
      * Sync contact from PostGrid
      */
     public function syncFromPostGrid(string $postgridId): PhysicalMailContact
     {
         $response = $this->postgrid->getContact($postgridId);
+
         return PhysicalMailContact::fromPostGrid($response);
     }
-    
+
     /**
      * Update contact and sync with PostGrid
      */
@@ -88,7 +88,7 @@ class PhysicalMailContactService
     {
         $normalized = $this->normalizeContactData($data);
         $model->update($normalized);
-        
+
         // If contact has PostGrid ID, update in PostGrid
         if ($model->postgrid_id) {
             try {
@@ -101,17 +101,17 @@ class PhysicalMailContactService
                 ]);
             }
         }
-        
+
         return $model;
     }
-    
+
     /**
      * Normalize contact data from various formats
      */
     private function normalizeContactData(array $data): array
     {
         $normalized = [];
-        
+
         // Map PostGrid field names to our database field names
         $fieldMap = [
             'firstName' => 'first_name',
@@ -129,27 +129,27 @@ class PhysicalMailContactService
             'phoneNumber' => 'phone_number',
             'addressStatus' => 'address_status',
         ];
-        
+
         foreach ($data as $key => $value) {
             $normalizedKey = $fieldMap[$key] ?? $key;
             if (in_array($normalizedKey, (new PhysicalMailContact)->getFillable())) {
                 $normalized[$normalizedKey] = $value;
             }
         }
-        
+
         // Ensure country code is uppercase and 2 characters
         if (isset($normalized['country_code'])) {
             $normalized['country_code'] = strtoupper(substr($normalized['country_code'], 0, 2));
         }
-        
+
         // Set client_id if provided
         if (isset($data['client_id'])) {
             $normalized['client_id'] = $data['client_id'];
         }
-        
+
         return $normalized;
     }
-    
+
     /**
      * Verify address with PostGrid
      */

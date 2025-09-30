@@ -2,52 +2,55 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
-use Livewire\Component;
-use Livewire\Attributes\On;
 use App\Domains\Ticket\Models\Ticket;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 class SlaMonitor extends Component
 {
     public array $slaMetrics = [];
+
     public array $breachedTickets = [];
+
     public array $warningTickets = [];
+
     public bool $loading = true;
+
     public string $period = 'today'; // today, week, month
-    
+
     public function mount()
     {
         $this->loadSlaData();
     }
-    
+
     #[On('refresh-sla-monitor')]
     public function loadSlaData()
     {
         $this->loading = true;
         $companyId = Auth::user()->company_id;
-        
+
         // Get date range
-        $startDate = match($this->period) {
+        $startDate = match ($this->period) {
             'today' => Carbon::today(),
             'week' => Carbon::now()->startOfWeek(),
             'month' => Carbon::now()->startOfMonth(),
             default => Carbon::today()
         };
-        
+
         // Get ALL active tickets with priority queues to check for SLA breaches
         $activeTickets = Ticket::where('company_id', $companyId)
             ->whereNotIn('status', ['resolved', 'closed'])
             ->with(['priorityQueue', 'client'])
             ->get();
-        
+
         // Get tickets created in the selected period for statistics
         $periodTickets = Ticket::where('company_id', $companyId)
             ->where('created_at', '>=', $startDate)
             ->with(['priorityQueue', 'client'])
             ->get();
-        
+
         $totalTickets = $periodTickets->count();
         $breachedCount = 0;
         $warningCount = 0;
@@ -57,19 +60,19 @@ class SlaMonitor extends Component
             'medium' => ['total' => 0, 'met' => 0, 'target' => 24],
             'low' => ['total' => 0, 'met' => 0, 'target' => 48],
         ];
-        
+
         $breached = [];
         $warnings = [];
-        
+
         // Check ALL active tickets for current SLA breaches/warnings
         foreach ($activeTickets as $ticket) {
             $priority = strtolower($ticket->priority ?? 'medium');
-            
+
             // Check if ticket has SLA breach via priority queue
             if ($ticket->priorityQueue && $ticket->priorityQueue->sla_deadline) {
                 $deadline = $ticket->priorityQueue->sla_deadline;
                 $hoursRemaining = now()->diffInHours($deadline, false);
-                
+
                 if ($hoursRemaining < 0) { // Breached
                     $breachedCount++;
                     if (count($breached) < 5) {
@@ -95,7 +98,7 @@ class SlaMonitor extends Component
                 }
             }
         }
-        
+
         // Calculate compliance for ALL tickets (both resolved in period and currently active)
         // First, get resolved tickets that were closed in the selected period
         $resolvedInPeriod = Ticket::where('company_id', $companyId)
@@ -103,20 +106,20 @@ class SlaMonitor extends Component
             ->where('updated_at', '>=', $startDate)
             ->with(['priorityQueue'])
             ->get();
-            
+
         // Combine with active tickets for complete picture
         $allRelevantTickets = $activeTickets->merge($resolvedInPeriod);
-        
+
         foreach ($allRelevantTickets as $ticket) {
             $priority = strtolower($ticket->priority ?? 'medium');
-            
-            if (!isset($metByPriority[$priority])) {
+
+            if (! isset($metByPriority[$priority])) {
                 continue;
             }
-            
+
             $slaHours = $metByPriority[$priority]['target'];
             $metByPriority[$priority]['total']++;
-            
+
             // Check if ticket met/is meeting SLA
             if ($ticket->priorityQueue && $ticket->priorityQueue->sla_deadline) {
                 // Use the actual SLA deadline from priority queue
@@ -127,27 +130,27 @@ class SlaMonitor extends Component
                     // For open tickets, check if they're still within SLA
                     $metSla = now() <= $ticket->priorityQueue->sla_deadline;
                 }
-                
+
                 if ($metSla) {
                     $metByPriority[$priority]['met']++;
                 }
             } else {
                 // Fallback to simple time calculation if no priority queue
-                $responseTime = in_array($ticket->status, ['resolved', 'closed']) 
+                $responseTime = in_array($ticket->status, ['resolved', 'closed'])
                     ? $ticket->created_at->diffInHours($ticket->updated_at)
                     : $ticket->created_at->diffInHours(now());
-                    
+
                 if ($responseTime <= $slaHours) {
                     $metByPriority[$priority]['met']++;
                 }
             }
         }
-        
+
         // Calculate overall compliance
         $totalMeasured = array_sum(array_column($metByPriority, 'total'));
         $totalMet = array_sum(array_column($metByPriority, 'met'));
         $overallCompliance = $totalMeasured > 0 ? round(($totalMet / $totalMeasured) * 100, 1) : 100;
-        
+
         // Calculate average response times using all relevant tickets
         $avgResponseTimes = [];
         foreach (['critical', 'high', 'medium', 'low'] as $priority) {
@@ -171,7 +174,7 @@ class SlaMonitor extends Component
                 $avgResponseTimes[$priority] = 0;
             }
         }
-        
+
         $this->slaMetrics = [
             'overall_compliance' => $overallCompliance,
             'total_tickets' => $totalTickets,
@@ -180,12 +183,12 @@ class SlaMonitor extends Component
             'by_priority' => $metByPriority,
             'avg_response_times' => $avgResponseTimes,
         ];
-        
+
         $this->breachedTickets = $breached;
         $this->warningTickets = $warnings;
         $this->loading = false;
     }
-    
+
     /**
      * Livewire lifecycle hook for when period property changes
      */

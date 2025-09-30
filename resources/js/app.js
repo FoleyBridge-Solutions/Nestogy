@@ -93,6 +93,10 @@ import { layoutUtils } from './components/layout.js';
 // Import modal system
 import './modal-system.js';
 
+// Import client search field Alpine component
+import { clientSearchField } from './components/client-search-field.js';
+window.clientSearchField = clientSearchField;
+
 // Alpine components removed - using Livewire/Flux instead
 
 // Setup Wizard removed - use Livewire component instead

@@ -5,10 +5,9 @@ namespace App\Domains\Security\Services;
 use App\Domains\Core\Services\BaseService;
 use App\Domains\Security\Models\IpLookupLog;
 use App\Models\AuditLog;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class IpLookupService extends BaseService
 {
@@ -21,7 +20,7 @@ class IpLookupService extends BaseService
 
     public function lookupIp(string $ipAddress, bool $forceRefresh = false): ?IpLookupLog
     {
-        if (!$this->isValidIp($ipAddress)) {
+        if (! $this->isValidIp($ipAddress)) {
             return null;
         }
 
@@ -31,16 +30,17 @@ class IpLookupService extends BaseService
             ->where('company_id', $companyId)
             ->first();
 
-        if ($existingRecord && !$existingRecord->isExpired() && !$forceRefresh) {
+        if ($existingRecord && ! $existingRecord->isExpired() && ! $forceRefresh) {
             $existingRecord->increment('lookup_count');
             $existingRecord->update(['last_lookup_at' => now()]);
+
             return $existingRecord;
         }
 
         try {
             $lookupData = $this->performLookup($ipAddress);
-            
-            if (!$lookupData) {
+
+            if (! $lookupData) {
                 return null;
             }
 
@@ -68,9 +68,10 @@ class IpLookupService extends BaseService
     protected function performLookup(string $ipAddress): ?array
     {
         $apiKey = config('services.api_ninjas.key');
-        
-        if (!$apiKey) {
+
+        if (! $apiKey) {
             Log::warning('API Ninjas key not configured, falling back to other services');
+
             return $this->fallbackLookup($ipAddress);
         }
 
@@ -85,7 +86,7 @@ class IpLookupService extends BaseService
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 if (isset($data['is_valid']) && $data['is_valid']) {
                     return $this->normalizeApiNinjasResponse($data);
                 }
@@ -110,8 +111,8 @@ class IpLookupService extends BaseService
     protected function fallbackLookup(string $ipAddress): ?array
     {
         $services = [
-            'ipapi' => fn() => $this->lookupViaIpApi($ipAddress),
-            'ipgeolocation' => fn() => $this->lookupViaIpGeolocation($ipAddress),
+            'ipapi' => fn () => $this->lookupViaIpApi($ipAddress),
+            'ipgeolocation' => fn () => $this->lookupViaIpGeolocation($ipAddress),
         ];
 
         foreach ($services as $serviceName => $lookup) {
@@ -119,6 +120,7 @@ class IpLookupService extends BaseService
                 $result = $lookup();
                 if ($result) {
                     Log::info("IP lookup successful via {$serviceName}", ['ip' => $ipAddress]);
+
                     return $result;
                 }
             } catch (Exception $e) {
@@ -140,7 +142,7 @@ class IpLookupService extends BaseService
 
         if ($response->successful()) {
             $data = $response->json();
-            
+
             if ($data['status'] === 'success') {
                 return [
                     'is_valid' => true,
@@ -170,8 +172,8 @@ class IpLookupService extends BaseService
     protected function lookupViaIpGeolocation(string $ipAddress): ?array
     {
         $apiKey = config('services.ipgeolocation.key');
-        
-        if (!$apiKey) {
+
+        if (! $apiKey) {
             return null;
         }
 
@@ -183,7 +185,7 @@ class IpLookupService extends BaseService
 
         if ($response->successful()) {
             $data = $response->json();
-            
+
             return [
                 'is_valid' => true,
                 'country' => $data['country_name'] ?? null,
@@ -234,10 +236,10 @@ class IpLookupService extends BaseService
     protected function calculateThreatLevel(array $data): string
     {
         $threatScore = 0;
-        
+
         $riskyCountries = config('security.geo_blocking.high_risk_countries', []);
         $countryCode = $data['country_code'] ?? $data['countryCode'] ?? '';
-        
+
         if (in_array(strtoupper($countryCode), $riskyCountries)) {
             $threatScore += 30;
         }
@@ -333,8 +335,8 @@ class IpLookupService extends BaseService
     public function enrichAuditLogWithIpData(string $ipAddress): array
     {
         $lookup = $this->lookupIp($ipAddress);
-        
-        if (!$lookup) {
+
+        if (! $lookup) {
             return ['ip_enrichment' => 'failed'];
         }
 
@@ -345,8 +347,8 @@ class IpLookupService extends BaseService
             'ip_threat_level' => $lookup->threat_level,
             'ip_threat_score' => $lookup->getThreatScore(),
             'ip_is_suspicious' => $lookup->isSuspicious(),
-            'ip_coordinates' => $lookup->latitude && $lookup->longitude 
-                ? "{$lookup->latitude},{$lookup->longitude}" 
+            'ip_coordinates' => $lookup->latitude && $lookup->longitude
+                ? "{$lookup->latitude},{$lookup->longitude}"
                 : null,
         ];
     }
@@ -389,8 +391,8 @@ class IpLookupService extends BaseService
     public function isIpBlacklisted(string $ipAddress): bool
     {
         $lookup = $this->lookupIp($ipAddress);
-        
-        if (!$lookup) {
+
+        if (! $lookup) {
             return false;
         }
 
@@ -403,7 +405,7 @@ class IpLookupService extends BaseService
         }
 
         $blockedCountries = config('security.geo_blocking.blocked_countries', []);
-        if (!empty($blockedCountries) && in_array($lookup->country_code, $blockedCountries)) {
+        if (! empty($blockedCountries) && in_array($lookup->country_code, $blockedCountries)) {
             return true;
         }
 

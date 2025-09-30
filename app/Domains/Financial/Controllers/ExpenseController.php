@@ -3,10 +3,9 @@
 namespace App\Domains\Financial\Controllers;
 
 use App\Http\Controllers\Controller;
-
+use App\Models\Client;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
-use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,7 +14,7 @@ class ExpenseController extends Controller
     public function index(Request $request)
     {
         $companyId = Auth::user()->company_id;
-        
+
         $expenses = Expense::where('company_id', $companyId)
             ->when($request->get('category_id'), function ($query, $categoryId) {
                 $query->where('category_id', $categoryId);
@@ -29,8 +28,8 @@ class ExpenseController extends Controller
             ->when($request->get('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('description', 'like', "%{$search}%")
-                      ->orWhere('vendor', 'like', "%{$search}%")
-                      ->orWhere('reference_number', 'like', "%{$search}%");
+                        ->orWhere('vendor', 'like', "%{$search}%")
+                        ->orWhere('reference_number', 'like', "%{$search}%");
                 });
             })
             ->with(['category', 'user', 'client'])
@@ -38,21 +37,21 @@ class ExpenseController extends Controller
             ->paginate(20);
 
         $categories = ExpenseCategory::where('company_id', $companyId)->get();
-        
+
         $clients = Client::where('company_id', $companyId)
             ->whereNull('archived_at')
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
-            
+
         $statuses = [
             'draft' => 'Draft',
             'pending_approval' => 'Pending Approval',
             'approved' => 'Approved',
             'rejected' => 'Rejected',
-            'paid' => 'Paid'
+            'paid' => 'Paid',
         ];
-        
+
         // Calculate statistics
         $stats = [
             'total_amount' => Expense::where('company_id', $companyId)->sum('amount'),
@@ -61,7 +60,7 @@ class ExpenseController extends Controller
                 ->whereMonth('expense_date', now()->month)
                 ->whereYear('expense_date', now()->year)
                 ->sum('amount'),
-            'billable_amount' => Expense::where('company_id', $companyId)->where('is_billable', true)->sum('amount')
+            'billable_amount' => Expense::where('company_id', $companyId)->where('is_billable', true)->sum('amount'),
         ];
 
         return view('financial.expenses.index', compact('expenses', 'categories', 'clients', 'statuses', 'stats'));
@@ -70,13 +69,13 @@ class ExpenseController extends Controller
     public function create()
     {
         $categories = ExpenseCategory::where('company_id', Auth::user()->company_id)->get();
-        
+
         $clients = Client::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
-            
+
         $paymentMethods = [
             'cash' => 'Cash',
             'credit_card' => 'Credit Card',
@@ -84,7 +83,7 @@ class ExpenseController extends Controller
             'check' => 'Check',
             'bank_transfer' => 'Bank Transfer',
             'online_payment' => 'Online Payment',
-            'other' => 'Other'
+            'other' => 'Other',
         ];
 
         return view('financial.expenses.create', compact('categories', 'clients', 'paymentMethods'));
@@ -103,13 +102,13 @@ class ExpenseController extends Controller
             'is_billable' => 'boolean',
             'client_id' => 'nullable|exists:clients,id',
             'project_id' => 'nullable|exists:projects,id',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         $validated['company_id'] = Auth::user()->company_id;
         $validated['user_id'] = Auth::id();
         $validated['status'] = 'pending_approval';
-        
+
         $expense = Expense::create($validated);
 
         return redirect()->route('financial.expenses.show', $expense)
@@ -119,7 +118,7 @@ class ExpenseController extends Controller
     public function show(Expense $expense)
     {
         $this->authorize('view', $expense);
-        
+
         $expense->load(['category', 'user', 'client', 'project']);
 
         return view('financial.expenses.show', compact('expense'));
@@ -128,15 +127,15 @@ class ExpenseController extends Controller
     public function edit(Expense $expense)
     {
         $this->authorize('update', $expense);
-        
+
         $categories = ExpenseCategory::where('company_id', Auth::user()->company_id)->get();
-        
+
         $clients = Client::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
-            
+
         $paymentMethods = [
             'cash' => 'Cash',
             'credit_card' => 'Credit Card',
@@ -144,7 +143,7 @@ class ExpenseController extends Controller
             'check' => 'Check',
             'bank_transfer' => 'Bank Transfer',
             'online_payment' => 'Online Payment',
-            'other' => 'Other'
+            'other' => 'Other',
         ];
 
         return view('financial.expenses.edit', compact('expense', 'categories', 'clients', 'paymentMethods'));
@@ -165,7 +164,7 @@ class ExpenseController extends Controller
             'is_billable' => 'boolean',
             'client_id' => 'nullable|exists:clients,id',
             'project_id' => 'nullable|exists:projects,id',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         $expense->update($validated);

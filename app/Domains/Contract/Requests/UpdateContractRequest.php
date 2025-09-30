@@ -14,6 +14,7 @@ class UpdateContractRequest extends FormRequest
     public function authorize(): bool
     {
         $contract = $this->route('contract');
+
         return $this->user()->can('update', $contract);
     }
 
@@ -38,7 +39,7 @@ class UpdateContractRequest extends FormRequest
                     Contract::RENEWAL_MANUAL,
                     Contract::RENEWAL_AUTOMATIC,
                     Contract::RENEWAL_NEGOTIATED,
-                ])
+                ]),
             ],
             'renewal_notice_days' => 'sometimes|nullable|integer|min:1|max:365',
             'auto_renewal' => 'sometimes|boolean',
@@ -111,16 +112,17 @@ class UpdateContractRequest extends FormRequest
             $contract = $this->route('contract');
 
             // Only allow editing of draft and pending review contracts
-            if (!in_array($contract->status, [Contract::STATUS_DRAFT, Contract::STATUS_PENDING_REVIEW])) {
+            if (! in_array($contract->status, [Contract::STATUS_DRAFT, Contract::STATUS_PENDING_REVIEW])) {
                 $validator->errors()->add('status', 'Only draft and pending review contracts can be edited.');
+
                 return;
             }
 
             // Validate that end_date is required if term_months is not provided
             $endDate = $this->input('end_date', $contract->end_date);
             $termMonths = $this->input('term_months', $contract->term_months);
-            
-            if (!$endDate && !$termMonths) {
+
+            if (! $endDate && ! $termMonths) {
                 $validator->errors()->add('end_date', 'Either end date or term in months must be provided.');
                 $validator->errors()->add('term_months', 'Either end date or term in months must be provided.');
             }
@@ -128,18 +130,18 @@ class UpdateContractRequest extends FormRequest
             // Validate that auto_renewal requires renewal_notice_days
             $autoRenewal = $this->input('auto_renewal', $contract->auto_renewal);
             $renewalNoticeDays = $this->input('renewal_notice_days', $contract->renewal_notice_days);
-            
-            if ($autoRenewal && !$renewalNoticeDays) {
+
+            if ($autoRenewal && ! $renewalNoticeDays) {
                 $validator->errors()->add('renewal_notice_days', 'Renewal notice days is required when auto renewal is enabled.');
             }
 
             // Validate pricing structure
             if ($this->has('pricing_structure') && $this->pricing_structure) {
                 $contractValue = $this->input('contract_value', $contract->contract_value);
-                $total = ($this->input('pricing_structure.recurring_monthly', 0) * 12) + 
+                $total = ($this->input('pricing_structure.recurring_monthly', 0) * 12) +
                         $this->input('pricing_structure.one_time', 0) +
                         $this->input('pricing_structure.setup_fee', 0);
-                
+
                 if ($total > $contractValue) {
                     $validator->errors()->add('pricing_structure', 'Total pricing structure cannot exceed contract value.');
                 }
@@ -177,9 +179,9 @@ class UpdateContractRequest extends FormRequest
             // More restrictive for pending review
             $allowedFields = [
                 'title', 'description', 'payment_terms', 'terms_and_conditions',
-                'custom_clauses', 'metadata'
+                'custom_clauses', 'metadata',
             ];
-            
+
             return array_intersect_key($validated, array_flip($allowedFields));
         }
 

@@ -76,6 +76,7 @@ class ConfigHelper
     public static function getUploadPath(string $type): string
     {
         $path = Config::get("uploads.paths.{$type}", $type);
+
         return storage_path("app/{$path}");
     }
 
@@ -90,7 +91,7 @@ class ConfigHelper
     /**
      * Get allowed file extensions for a type
      */
-    public static function getAllowedFileTypes(string $type = null): array
+    public static function getAllowedFileTypes(?string $type = null): array
     {
         if ($type) {
             return Config::get("uploads.allowed_types.{$type}", []);
@@ -98,7 +99,7 @@ class ConfigHelper
 
         $allTypes = [];
         $categories = Config::get('uploads.allowed_types', []);
-        
+
         foreach ($categories as $types) {
             $allTypes = array_merge($allTypes, $types);
         }
@@ -112,6 +113,7 @@ class ConfigHelper
     public static function getMaxFileSize(): int
     {
         $sizeInKb = Config::get('uploads.max_size', 10240);
+
         return $sizeInKb * 1024; // Convert to bytes
     }
 
@@ -121,6 +123,7 @@ class ConfigHelper
     public static function getMaxFileSizeFormatted(): string
     {
         $sizeInMb = Config::get('uploads.max_size_mb', 10);
+
         return "{$sizeInMb}MB";
     }
 
@@ -144,6 +147,7 @@ class ConfigHelper
     public static function getSessionTimeout(): int
     {
         $minutes = Config::get('security.session.timeout', 480);
+
         return $minutes * 60; // Convert to seconds
     }
 
@@ -153,6 +157,7 @@ class ConfigHelper
     public static function getEnabledNotificationChannels(): array
     {
         $channels = Config::get('notifications.channels', []);
+
         return array_keys(array_filter($channels));
     }
 
@@ -171,7 +176,7 @@ class ConfigHelper
     {
         $format = self::getInvoiceNumberFormat();
         $year = $year ?: date('Y');
-        
+
         return str_replace(
             ['{YEAR}', '{NUMBER}', '{MONTH}', '{DAY}'],
             [$year, str_pad($number, 4, '0', STR_PAD_LEFT), date('m'), date('d')],
@@ -216,7 +221,7 @@ class ConfigHelper
      */
     public static function getDateTimeFormat(): string
     {
-        return self::getDateFormat() . ' ' . self::getTimeFormat();
+        return self::getDateFormat().' '.self::getTimeFormat();
     }
 
     /**
@@ -278,6 +283,7 @@ class ConfigHelper
     public static function get2FAMethods(): array
     {
         $methods = Config::get('security.two_factor.methods', []);
+
         return array_keys(array_filter($methods));
     }
 
@@ -305,7 +311,7 @@ class ConfigHelper
     /**
      * Check if a specific audit type is enabled
      */
-    public static function isAuditEnabled(string $type = null): bool
+    public static function isAuditEnabled(?string $type = null): bool
     {
         if ($type === null) {
             return (bool) Config::get('security.audit.enabled', true);
@@ -320,13 +326,14 @@ class ConfigHelper
     public static function getEmergencyRecipients(): array
     {
         $recipients = Config::get('notifications.emergency.recipients', []);
+
         return is_array($recipients) ? $recipients : [];
     }
 
     /**
      * Get ticket configuration
      */
-    public static function getTicketConfig(string $key = null, $default = null)
+    public static function getTicketConfig(?string $key = null, $default = null)
     {
         if ($key === null) {
             return Config::get('nestogy.tickets', []);
@@ -338,7 +345,7 @@ class ConfigHelper
     /**
      * Get project configuration
      */
-    public static function getProjectConfig(string $key = null, $default = null)
+    public static function getProjectConfig(?string $key = null, $default = null)
     {
         if ($key === null) {
             return Config::get('nestogy.projects', []);
@@ -350,7 +357,7 @@ class ConfigHelper
     /**
      * Get asset configuration
      */
-    public static function getAssetConfig(string $key = null, $default = null)
+    public static function getAssetConfig(?string $key = null, $default = null)
     {
         if ($key === null) {
             return Config::get('nestogy.assets', []);

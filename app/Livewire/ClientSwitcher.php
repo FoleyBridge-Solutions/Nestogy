@@ -2,9 +2,9 @@
 
 namespace App\Livewire;
 
-use App\Models\Client;
 use App\Domains\Client\Services\ClientFavoriteService;
 use App\Domains\Core\Services\NavigationService;
+use App\Models\Client;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
@@ -54,14 +54,8 @@ class ClientSwitcher extends Component
      */
     public function hydrate()
     {
-        // Ensure selected client is still valid after hydration
-        if ($this->selectedClientId && $this->user) {
-            $client = Client::find($this->selectedClientId);
-            if (! $client || $client->company_id !== $this->user->company_id) {
-                $this->selectedClientId = null;
-                NavigationService::clearSelectedClient();
-            }
-        }
+        // Skip validation here - boot() will handle user initialization
+        // and validation will happen in subsequent method calls
     }
 
     /**
@@ -105,7 +99,7 @@ class ClientSwitcher extends Component
 
         // Get recent clients from the service (uses accessed_at field)
         $recentClients = $this->favoriteService->getRecentClients($this->user, 5);
-        
+
         // If no recent clients, show the first 5 active clients as a fallback
         if ($recentClients->isEmpty() && $this->favoriteClients->isEmpty()) {
             return Client::where('company_id', $this->user->company_id)
@@ -114,11 +108,12 @@ class ClientSwitcher extends Component
                 ->limit(5)
                 ->get(['id', 'name', 'company_name', 'email', 'status']);
         }
-        
+
         // Filter out favorites from recent to avoid duplication
         $favoriteIds = $this->favoriteClients->pluck('id')->toArray();
+
         return $recentClients->filter(function ($client) use ($favoriteIds) {
-            return !in_array($client->id, $favoriteIds);
+            return ! in_array($client->id, $favoriteIds);
         });
     }
 
@@ -222,6 +217,7 @@ class ClientSwitcher extends Component
         // Check if there's a return URL from the middleware redirect
         if ($returnUrl = session('client_selection_return_url')) {
             session()->forget('client_selection_return_url');
+
             return redirect($returnUrl);
         }
 
@@ -314,22 +310,28 @@ class ClientSwitcher extends Component
      * Event listener for external client changes
      */
     #[On('client-changed')]
-    public function handleClientChange($clientId)
+    public function handleClientChange(...$params)
     {
-        $this->selectedClientId = $clientId;
-        unset($this->currentClient);
-        unset($this->recentClients);
+        $clientId = $params['clientId'] ?? $params[0] ?? null;
+        if ($clientId) {
+            $this->selectedClientId = $clientId;
+            unset($this->currentClient);
+            unset($this->recentClients);
+        }
     }
 
     /**
      * Event listener for client selection from index page
      */
     #[On('client-selected')]
-    public function handleClientSelected($clientId)
+    public function handleClientSelected(...$params)
     {
-        $this->selectedClientId = $clientId;
-        unset($this->currentClient);
-        unset($this->recentClients);
+        $clientId = $params['clientId'] ?? $params[0] ?? null;
+        if ($clientId) {
+            $this->selectedClientId = $clientId;
+            unset($this->currentClient);
+            unset($this->recentClients);
+        }
     }
 
     /**
@@ -400,8 +402,8 @@ class ClientSwitcher extends Component
 
         // Cache the favorite status check to avoid duplicate queries
         static $favoriteCache = [];
-        $cacheKey = $this->user->id . '_' . $clientId;
-        
+        $cacheKey = $this->user->id.'_'.$clientId;
+
         if (isset($favoriteCache[$cacheKey])) {
             return $favoriteCache[$cacheKey];
         }
@@ -409,12 +411,13 @@ class ClientSwitcher extends Component
         $client = Client::find($clientId);
         if (! $client) {
             $favoriteCache[$cacheKey] = false;
+
             return false;
         }
 
         $isFavorite = $this->favoriteService->isFavorite($this->user, $client);
         $favoriteCache[$cacheKey] = $isFavorite;
-        
+
         return $isFavorite;
     }
 

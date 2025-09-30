@@ -39,14 +39,14 @@ class StoreAssetRequestRefactored extends BaseFormRequest
     {
         return [
             'name', 'description', 'notes', 'status', 'type',
-            'client_id', 'vendor_id', 'location_id', 'contact_id', 'network_id'
+            'client_id', 'vendor_id', 'location_id', 'contact_id', 'network_id',
         ];
     }
 
     protected function getSpecificMessages(): array
     {
         return [
-            'type.in' => 'The selected asset type is invalid. Valid types are: ' . implode(', ', Asset::TYPES),
+            'type.in' => 'The selected asset type is invalid. Valid types are: '.implode(', ', Asset::TYPES),
             'warranty_expire.after' => 'The warranty expiration date must be in the future.',
             'ip.ip' => 'The IP address must be a valid IP address.',
             'nat_ip.ip' => 'The NAT IP address must be a valid IP address.',
@@ -86,7 +86,7 @@ class StoreAssetRequestRefactored extends BaseFormRequest
         }
 
         // Ensure status has a default
-        if (!$this->filled('status')) {
+        if (! $this->filled('status')) {
             $this->merge(['status' => 'Ready To Deploy']);
         }
     }
@@ -98,7 +98,7 @@ class StoreAssetRequestRefactored extends BaseFormRequest
             $exists = Asset::where('company_id', $this->user()->company_id)
                 ->where('serial', $this->serial)
                 ->exists();
-                
+
             if ($exists) {
                 $validator->errors()->add('serial', 'An asset with this serial number already exists in your company.');
             }
@@ -109,7 +109,7 @@ class StoreAssetRequestRefactored extends BaseFormRequest
             $exists = Asset::where('company_id', $this->user()->company_id)
                 ->where('ip', $this->ip)
                 ->exists();
-                
+
             if ($exists) {
                 $validator->errors()->add('ip', 'An asset with this IP address already exists in your company.');
             }
@@ -118,7 +118,7 @@ class StoreAssetRequestRefactored extends BaseFormRequest
         // Validate MAC address format
         if ($this->filled('mac')) {
             $macPattern = '/^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$/i';
-            if (!preg_match($macPattern, $this->mac)) {
+            if (! preg_match($macPattern, $this->mac)) {
                 $validator->errors()->add('mac', 'The MAC address format is invalid.');
             }
         }

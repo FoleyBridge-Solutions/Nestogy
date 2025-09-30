@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Domains\Knowledge\Models\KbCategory;
 use App\Domains\Knowledge\Models\KbArticle;
-use App\Domains\Knowledge\Models\KbArticleView;
 use App\Domains\Knowledge\Models\KbArticleFeedback;
+use App\Domains\Knowledge\Models\KbArticleView;
+use App\Domains\Knowledge\Models\KbCategory;
 use App\Models\User;
 use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
 
 class KnowledgeBaseSeeder extends Seeder
 {
@@ -21,11 +21,12 @@ class KnowledgeBaseSeeder extends Seeder
 
         // Get first company for seeding
         $companyId = 1;
-        
+
         // Get a sample user for authoring articles
         $author = User::where('company_id', $companyId)->first();
-        if (!$author) {
-            $this->command->warn('No users found for company ' . $companyId . '. Skipping KB seeder.');
+        if (! $author) {
+            $this->command->warn('No users found for company '.$companyId.'. Skipping KB seeder.');
+
             return;
         }
 
@@ -39,11 +40,11 @@ class KnowledgeBaseSeeder extends Seeder
                 'icon' => 'network-wired',
                 'children' => [
                     'Router Configuration',
-                    'Switch Setup', 
+                    'Switch Setup',
                     'Firewall Rules',
                     'VPN Setup',
-                    'WiFi Troubleshooting'
-                ]
+                    'WiFi Troubleshooting',
+                ],
             ],
             [
                 'name' => 'Software & Applications',
@@ -54,8 +55,8 @@ class KnowledgeBaseSeeder extends Seeder
                     'Email Configuration',
                     'Antivirus Solutions',
                     'Remote Desktop',
-                    'Software Installation'
-                ]
+                    'Software Installation',
+                ],
             ],
             [
                 'name' => 'Hardware',
@@ -66,8 +67,8 @@ class KnowledgeBaseSeeder extends Seeder
                     'Laptops',
                     'Printers & Scanners',
                     'Mobile Devices',
-                    'Server Hardware'
-                ]
+                    'Server Hardware',
+                ],
             ],
             [
                 'name' => 'Security',
@@ -78,8 +79,8 @@ class KnowledgeBaseSeeder extends Seeder
                     'Phishing Protection',
                     'Data Backup',
                     'Incident Response',
-                    'Compliance'
-                ]
+                    'Compliance',
+                ],
             ],
             [
                 'name' => 'Cloud Services',
@@ -90,13 +91,13 @@ class KnowledgeBaseSeeder extends Seeder
                     'AWS Services',
                     'Google Workspace',
                     'Cloud Storage',
-                    'Migration Guides'
-                ]
-            ]
+                    'Migration Guides',
+                ],
+            ],
         ];
 
         $createdCategories = [];
-        
+
         foreach ($categories as $categoryData) {
             $category = KbCategory::create([
                 'company_id' => $companyId,
@@ -135,7 +136,7 @@ class KnowledgeBaseSeeder extends Seeder
                 'excerpt' => 'Step-by-step guide to configure port forwarding on common router models.',
                 'tags' => ['router', 'port-forwarding', 'network', 'configuration'],
                 'visibility' => 'public',
-                'category' => 'Router Configuration'
+                'category' => 'Router Configuration',
             ],
             [
                 'title' => 'Troubleshooting WiFi Connection Issues',
@@ -143,7 +144,7 @@ class KnowledgeBaseSeeder extends Seeder
                 'excerpt' => 'Common WiFi problems and their solutions for end users.',
                 'tags' => ['wifi', 'troubleshooting', 'connectivity', 'wireless'],
                 'visibility' => 'public',
-                'category' => 'WiFi Troubleshooting'
+                'category' => 'WiFi Troubleshooting',
             ],
 
             // Software & Applications
@@ -153,7 +154,7 @@ class KnowledgeBaseSeeder extends Seeder
                 'excerpt' => 'Complete guide to configure email accounts in Microsoft Outlook.',
                 'tags' => ['outlook', 'email', 'setup', 'office365'],
                 'visibility' => 'client',
-                'category' => 'Email Configuration'
+                'category' => 'Email Configuration',
             ],
             [
                 'title' => 'Microsoft Office Installation Guide',
@@ -161,7 +162,7 @@ class KnowledgeBaseSeeder extends Seeder
                 'excerpt' => 'How to install and activate Microsoft Office on various devices.',
                 'tags' => ['office', 'installation', 'microsoft', 'activation'],
                 'visibility' => 'public',
-                'category' => 'Microsoft Office'
+                'category' => 'Microsoft Office',
             ],
 
             // Hardware
@@ -171,7 +172,7 @@ class KnowledgeBaseSeeder extends Seeder
                 'excerpt' => 'Installing printer drivers and configuring network printers.',
                 'tags' => ['printer', 'drivers', 'installation', 'network'],
                 'visibility' => 'public',
-                'category' => 'Printers & Scanners'
+                'category' => 'Printers & Scanners',
             ],
 
             // Security
@@ -181,7 +182,7 @@ class KnowledgeBaseSeeder extends Seeder
                 'excerpt' => 'Guidelines for creating and managing secure passwords.',
                 'tags' => ['password', 'security', 'best-practices', 'policy'],
                 'visibility' => 'public',
-                'category' => 'Password Policies'
+                'category' => 'Password Policies',
             ],
             [
                 'title' => 'Identifying and Avoiding Phishing Emails',
@@ -189,7 +190,7 @@ class KnowledgeBaseSeeder extends Seeder
                 'excerpt' => 'How to recognize and protect against phishing attempts.',
                 'tags' => ['phishing', 'email', 'security', 'awareness'],
                 'visibility' => 'public',
-                'category' => 'Phishing Protection'
+                'category' => 'Phishing Protection',
             ],
 
             // Cloud Services
@@ -199,7 +200,7 @@ class KnowledgeBaseSeeder extends Seeder
                 'excerpt' => 'Complete guide to setting up Office 365 for new users.',
                 'tags' => ['office365', 'setup', 'cloud', 'microsoft'],
                 'visibility' => 'internal',
-                'category' => 'Office 365'
+                'category' => 'Office 365',
             ],
         ];
 
@@ -209,7 +210,7 @@ class KnowledgeBaseSeeder extends Seeder
                 ->where('name', $articleData['category'])
                 ->first();
 
-            if (!$category) {
+            if (! $category) {
                 continue;
             }
 
@@ -268,7 +269,7 @@ class KnowledgeBaseSeeder extends Seeder
 
     private function getNetworkArticleContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h2>Overview</h2>
 <p>Port forwarding allows external devices to connect to services running on your internal network. This guide covers the most common router configurations.</p>
 
@@ -322,7 +323,7 @@ HTML;
 
     private function getWifiTroubleshootingContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h2>Common WiFi Issues and Solutions</h2>
 <p>This guide helps diagnose and resolve the most common WiFi connectivity problems.</p>
 
@@ -382,7 +383,7 @@ HTML;
 
     private function getEmailSetupContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h2>Setting Up Email in Microsoft Outlook</h2>
 <p>This guide walks you through configuring your email account in Outlook 2016, 2019, and Office 365.</p>
 
@@ -452,7 +453,7 @@ HTML;
 
     private function getOfficeInstallContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h2>Microsoft Office Installation Guide</h2>
 <p>Complete instructions for installing Microsoft Office on Windows and Mac computers.</p>
 
@@ -730,7 +731,7 @@ HTML;
 
     private function getPhishingContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h2>Identifying and Avoiding Phishing Emails</h2>
 <p>Learn to recognize phishing attempts and protect yourself from email-based attacks.</p>
 
@@ -849,7 +850,7 @@ HTML;
 
     private function getOffice365SetupContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h2>Office 365 Account Setup and Configuration</h2>
 <p>Complete guide for IT administrators to set up and configure Office 365 for new users.</p>
 

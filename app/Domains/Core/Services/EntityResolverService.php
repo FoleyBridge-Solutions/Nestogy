@@ -2,21 +2,20 @@
 
 namespace App\Domains\Core\Services;
 
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
+use App\Domains\Ticket\Models\Ticket;
+use App\Models\Asset;
 use App\Models\Client;
 use App\Models\Invoice;
-use App\Models\Quote;
-use App\Domains\Ticket\Models\Ticket;
 use App\Models\Project;
-use App\Models\Asset;
+use App\Models\Quote;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Entity Resolver Service
- * 
+ *
  * Provides intelligent entity resolution with fuzzy matching,
  * context awareness, and typo tolerance.
  */
@@ -55,12 +54,12 @@ class EntityResolverService
     {
         // Get model class
         $modelClass = static::$entityModels[$entityType] ?? null;
-        if (!$modelClass) {
+        if (! $modelClass) {
             return null;
         }
 
-        $cacheKey = "entity_resolve:{$entityType}:{$identifier}:" . md5(serialize($context));
-        
+        $cacheKey = "entity_resolve:{$entityType}:{$identifier}:".md5(serialize($context));
+
         return Cache::remember($cacheKey, 600, function () use ($modelClass, $entityType, $identifier, $context) {
             // Try direct ID lookup first
             if (is_numeric($identifier)) {
@@ -86,7 +85,7 @@ class EntityResolverService
     protected static function findById(string $modelClass, $id, array $context): ?Model
     {
         $query = $modelClass::where('id', $id);
-        
+
         // Apply company scoping if model supports it
         if (method_exists($modelClass, 'scopeCompany') || in_array('App\Traits\BelongsToCompany', class_uses_recursive($modelClass))) {
             $companyId = $context['company_id'] ?? auth()->user()->company_id;
@@ -115,10 +114,11 @@ class EntityResolverService
                 // Handle INV-123, INV123, 123
                 if (preg_match('/^(INV-?)?(\d+)$/i', $identifier, $matches)) {
                     $number = $matches[2];
+
                     return $query->where('invoice_number', $number)
-                               ->orWhere('invoice_number', "INV-{$number}")
-                               ->orWhere('invoice_number', "INV{$number}")
-                               ->first();
+                        ->orWhere('invoice_number', "INV-{$number}")
+                        ->orWhere('invoice_number', "INV{$number}")
+                        ->first();
                 }
                 break;
 
@@ -126,10 +126,11 @@ class EntityResolverService
                 // Handle QUOTE-123, QUO-123, 123
                 if (preg_match('/^(QUO(?:TE)?-?)?(\d+)$/i', $identifier, $matches)) {
                     $number = $matches[2];
+
                     return $query->where('quote_number', $number)
-                               ->orWhere('quote_number', "QUOTE-{$number}")
-                               ->orWhere('quote_number', "QUO-{$number}")
-                               ->first();
+                        ->orWhere('quote_number', "QUOTE-{$number}")
+                        ->orWhere('quote_number', "QUO-{$number}")
+                        ->first();
                 }
                 break;
 
@@ -150,7 +151,7 @@ class EntityResolverService
     protected static function findByName(string $modelClass, string $entityType, string $name, array $context): ?Model
     {
         $searchFields = static::$searchFields[$entityType] ?? ['name'];
-        
+
         $query = $modelClass::query();
 
         // Apply company scoping
@@ -292,7 +293,7 @@ class EntityResolverService
      */
     protected static function calculateRecencyBonus(Model $entity): float
     {
-        if (!$entity->updated_at) {
+        if (! $entity->updated_at) {
             return 0.0;
         }
 
@@ -313,7 +314,7 @@ class EntityResolverService
     /**
      * Search across multiple entity types
      */
-    public static function searchGlobal(string $query, array $context = [], array $entityTypes = null): array
+    public static function searchGlobal(string $query, array $context = [], ?array $entityTypes = null): array
     {
         $entityTypes = $entityTypes ?? array_keys(static::$entityModels);
         $results = [];
@@ -343,7 +344,7 @@ class EntityResolverService
     protected static function searchEntityType(string $entityType, string $query, array $context): \Illuminate\Support\Collection
     {
         $modelClass = static::$entityModels[$entityType] ?? null;
-        if (!$modelClass) {
+        if (! $modelClass) {
             return collect();
         }
 
@@ -379,7 +380,7 @@ class EntityResolverService
     protected static function calculateGlobalScore(Model $entity, string $query, string $entityType, array $context): float
     {
         $searchFields = static::$searchFields[$entityType] ?? ['name'];
-        
+
         // Base similarity score
         $maxSimilarity = 0;
         foreach ($searchFields as $field) {
@@ -391,7 +392,7 @@ class EntityResolverService
         }
 
         // Entity type priority (some types more important for general search)
-        $typePriority = match($entityType) {
+        $typePriority = match ($entityType) {
             'client' => 1.2,
             'ticket' => 1.1,
             'invoice', 'quote' => 1.0,
@@ -416,12 +417,12 @@ class EntityResolverService
     public static function getRecentEntities(string $entityType, array $context, int $limit = 5): \Illuminate\Support\Collection
     {
         $modelClass = static::$entityModels[$entityType] ?? null;
-        if (!$modelClass) {
+        if (! $modelClass) {
             return collect();
         }
 
-        $cacheKey = "recent_entities:{$entityType}:" . md5(serialize($context)) . ":{$limit}";
-        
+        $cacheKey = "recent_entities:{$entityType}:".md5(serialize($context)).":{$limit}";
+
         return Cache::remember($cacheKey, 300, function () use ($modelClass, $entityType, $context, $limit) {
             $query = $modelClass::query();
 
@@ -442,15 +443,15 @@ class EntityResolverService
             }
 
             return $query->orderBy('updated_at', 'desc')
-                        ->limit($limit)
-                        ->get();
+                ->limit($limit)
+                ->get();
         });
     }
 
     /**
      * Clear entity resolution cache
      */
-    public static function clearCache(string $entityType = null, $identifier = null): void
+    public static function clearCache(?string $entityType = null, $identifier = null): void
     {
         if ($entityType && $identifier) {
             // Clear specific entity cache
@@ -485,7 +486,7 @@ class EntityResolverService
         try {
             if (config('cache.default') === 'redis') {
                 $keys = Cache::getRedis()->keys($pattern);
-                if (!empty($keys)) {
+                if (! empty($keys)) {
                     Cache::getRedis()->del($keys);
                 }
             } else {
@@ -504,7 +505,7 @@ class EntityResolverService
     public static function getEntityType(Model $entity): ?string
     {
         $modelClass = get_class($entity);
-        
+
         foreach (static::$entityModels as $type => $class) {
             if ($class === $modelClass) {
                 return $type;

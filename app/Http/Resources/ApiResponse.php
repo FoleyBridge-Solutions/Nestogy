@@ -15,11 +15,7 @@ class ApiResponse
     /**
      * Create a success response
      *
-     * @param mixed $data
-     * @param string $message
-     * @param int $statusCode
-     * @param array $headers
-     * @return JsonResponse
+     * @param  mixed  $data
      */
     public static function success(
         $data = null,
@@ -34,8 +30,8 @@ class ApiResponse
         ];
 
         if ($data !== null) {
-            $response['data'] = $data instanceof JsonResource || $data instanceof ResourceCollection 
-                ? $data->toArray(request()) 
+            $response['data'] = $data instanceof JsonResource || $data instanceof ResourceCollection
+                ? $data->toArray(request())
                 : $data;
         }
 
@@ -44,13 +40,6 @@ class ApiResponse
 
     /**
      * Create an error response
-     *
-     * @param string $message
-     * @param int $statusCode
-     * @param array $errors
-     * @param array $context
-     * @param array $headers
-     * @return JsonResponse
      */
     public static function error(
         string $message = 'An error occurred',
@@ -65,11 +54,11 @@ class ApiResponse
             'timestamp' => now()->toISOString(),
         ];
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             $response['errors'] = $errors;
         }
 
-        if (!empty($context)) {
+        if (! empty($context)) {
             $response['context'] = $context;
         }
 
@@ -83,10 +72,6 @@ class ApiResponse
 
     /**
      * Create a validation error response
-     *
-     * @param array $errors
-     * @param string $message
-     * @return JsonResponse
      */
     public static function validationError(
         array $errors,
@@ -98,15 +83,13 @@ class ApiResponse
     /**
      * Create a not found response
      *
-     * @param string $resource
-     * @param mixed $identifier
-     * @return JsonResponse
+     * @param  mixed  $identifier
      */
     public static function notFound(
         string $resource = 'Resource',
         $identifier = null
     ): JsonResponse {
-        $message = $identifier 
+        $message = $identifier
             ? "{$resource} with identifier '{$identifier}' not found"
             : "{$resource} not found";
 
@@ -115,9 +98,6 @@ class ApiResponse
 
     /**
      * Create an unauthorized response
-     *
-     * @param string $message
-     * @return JsonResponse
      */
     public static function unauthorized(
         string $message = 'Unauthorized access'
@@ -127,9 +107,6 @@ class ApiResponse
 
     /**
      * Create a forbidden response
-     *
-     * @param string $message
-     * @return JsonResponse
      */
     public static function forbidden(
         string $message = 'Access forbidden'
@@ -139,10 +116,6 @@ class ApiResponse
 
     /**
      * Create a server error response
-     *
-     * @param string $message
-     * @param array $context
-     * @return JsonResponse
      */
     public static function serverError(
         string $message = 'Internal server error',
@@ -154,9 +127,7 @@ class ApiResponse
     /**
      * Create a created response
      *
-     * @param mixed $data
-     * @param string $message
-     * @return JsonResponse
+     * @param  mixed  $data
      */
     public static function created(
         $data = null,
@@ -168,9 +139,7 @@ class ApiResponse
     /**
      * Create an updated response
      *
-     * @param mixed $data
-     * @param string $message
-     * @return JsonResponse
+     * @param  mixed  $data
      */
     public static function updated(
         $data = null,
@@ -181,9 +150,6 @@ class ApiResponse
 
     /**
      * Create a deleted response
-     *
-     * @param string $message
-     * @return JsonResponse
      */
     public static function deleted(
         string $message = 'Resource deleted successfully'
@@ -193,8 +159,6 @@ class ApiResponse
 
     /**
      * Create a no content response
-     *
-     * @return JsonResponse
      */
     public static function noContent(): JsonResponse
     {
@@ -203,10 +167,6 @@ class ApiResponse
 
     /**
      * Create a paginated response
-     *
-     * @param ResourceCollection $collection
-     * @param string $message
-     * @return JsonResponse
      */
     public static function paginated(
         ResourceCollection $collection,
@@ -218,11 +178,7 @@ class ApiResponse
     /**
      * Create a response with custom metadata
      *
-     * @param mixed $data
-     * @param array $meta
-     * @param string $message
-     * @param int $statusCode
-     * @return JsonResponse
+     * @param  mixed  $data
      */
     public static function withMeta(
         $data,
@@ -233,8 +189,8 @@ class ApiResponse
         $response = [
             'success' => true,
             'message' => $message,
-            'data' => $data instanceof JsonResource || $data instanceof ResourceCollection 
-                ? $data->toArray(request()) 
+            'data' => $data instanceof JsonResource || $data instanceof ResourceCollection
+                ? $data->toArray(request())
                 : $data,
             'meta' => array_merge([
                 'timestamp' => now()->toISOString(),
@@ -246,10 +202,6 @@ class ApiResponse
 
     /**
      * Create a bulk operation response
-     *
-     * @param array $results
-     * @param string $operation
-     * @return JsonResponse
      */
     public static function bulk(
         array $results,
@@ -267,17 +219,12 @@ class ApiResponse
                 'successful' => $successful,
                 'failed' => $failed,
                 'operation' => $operation,
-            ]
+            ],
         ], $message);
     }
 
     /**
      * Create an async operation response
-     *
-     * @param string $jobId
-     * @param string $status
-     * @param string $message
-     * @return JsonResponse
      */
     public static function async(
         string $jobId,
@@ -289,16 +236,12 @@ class ApiResponse
                 'job_id' => $jobId,
                 'status' => $status,
                 'check_url' => route('jobs.status', $jobId),
-            ]
+            ],
         ], $message, 202);
     }
 
     /**
      * Create a rate limited response
-     *
-     * @param int $retryAfter
-     * @param string $message
-     * @return JsonResponse
      */
     public static function rateLimited(
         int $retryAfter = 60,
@@ -312,17 +255,13 @@ class ApiResponse
 
     /**
      * Create a maintenance mode response
-     *
-     * @param string $message
-     * @param string $estimatedTime
-     * @return JsonResponse
      */
     public static function maintenance(
         string $message = 'Service temporarily unavailable for maintenance',
-        string $estimatedTime = null
+        ?string $estimatedTime = null
     ): JsonResponse {
         $context = ['type' => 'maintenance_error'];
-        
+
         if ($estimatedTime) {
             $context['estimated_completion'] = $estimatedTime;
         }

@@ -3,13 +3,13 @@
 namespace App\Domains\Core\Services;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Collection;
 
 class SidebarConfigProvider
 {
     protected array $registeredSections = [];
+
     protected array $configCache = [];
-    
+
     /**
      * Get sidebar configuration for a given context
      */
@@ -18,49 +18,49 @@ class SidebarConfigProvider
         if ($customConfig) {
             return $this->mergeConfigurations($this->getDefaultConfiguration($context), $customConfig);
         }
-        
+
         // Cache configuration per context
         if (isset($this->configCache[$context])) {
             return $this->configCache[$context];
         }
-        
+
         $config = $this->loadConfiguration($context);
         $this->configCache[$context] = $config;
-        
+
         return $config;
     }
-    
+
     /**
      * Register a new sidebar section dynamically
      */
     public function registerSection(string $context, string $key, array $section): void
     {
-        if (!isset($this->registeredSections[$context])) {
+        if (! isset($this->registeredSections[$context])) {
             $this->registeredSections[$context] = [];
         }
-        
+
         $this->registeredSections[$context][$key] = $section;
-        
+
         // Clear cache for this context
         unset($this->configCache[$context]);
     }
-    
+
     /**
      * Load configuration from registered sections and built-in configs
      */
     protected function loadConfiguration(?string $context): array
     {
         // If no context, return empty configuration
-        if (!$context) {
+        if (! $context) {
             return [];
         }
-        
+
         // Map old domain names to new sidebar contexts for backward compatibility
         $context = $this->mapLegacyContext($context);
-        
+
         // Get built-in configuration for the context
         $baseConfig = $this->getBuiltInConfig($context);
-        
+
         // Merge with dynamically registered sections
         if (isset($this->registeredSections[$context])) {
             $baseConfig['sections'] = array_merge(
@@ -68,11 +68,11 @@ class SidebarConfigProvider
                 $this->registeredSections[$context]
             );
         }
-        
+
         // Apply permission filters
         return $this->filterByPermissions($baseConfig);
     }
-    
+
     /**
      * Map legacy domain names to new context names
      */
@@ -81,7 +81,7 @@ class SidebarConfigProvider
         // For now, keep the same names but this allows future remapping
         return $context;
     }
-    
+
     /**
      * Get built-in configuration for a context
      */
@@ -89,9 +89,9 @@ class SidebarConfigProvider
     {
         // Import the sidebar config from the blade template
         // This is temporary until we fully migrate to config files
-        
+
         $selectedClient = NavigationService::getSelectedClient();
-        
+
         switch ($context) {
             case 'clients':
                 return $this->getClientsConfig($selectedClient);
@@ -115,7 +115,7 @@ class SidebarConfigProvider
                 return [];
         }
     }
-    
+
     /**
      * Get clients sidebar configuration
      */
@@ -134,9 +134,9 @@ class SidebarConfigProvider
                             'icon' => 'chart-pie',
                             'key' => 'details',
                             'params' => ['client' => 'current'],
-                            'description' => 'Central hub with client health and quick actions'
-                        ]
-                    ]
+                            'description' => 'Central hub with client health and quick actions',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -151,7 +151,7 @@ class SidebarConfigProvider
                             'key' => 'open-tickets',
                             'params' => ['status' => 'open'],
                             'badge_type' => 'urgent',
-                            'show_if' => 'has_open_tickets'
+                            'show_if' => 'has_open_tickets',
                         ],
                         [
                             'name' => 'Pending Items',
@@ -160,9 +160,9 @@ class SidebarConfigProvider
                             'key' => 'pending',
                             'params' => ['client' => 'current', 'section' => 'pending'],
                             'badge_type' => 'warning',
-                            'show_if' => 'has_pending_items'
-                        ]
-                    ]
+                            'show_if' => 'has_pending_items',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -175,21 +175,21 @@ class SidebarConfigProvider
                             'route' => 'clients.contacts.index',
                             'icon' => 'users',
                             'key' => 'contacts',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Locations',
                             'route' => 'clients.locations.index',
                             'icon' => 'map-pin',
                             'key' => 'locations',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Communication Log',
                             'route' => 'clients.communications.index',
                             'icon' => 'chat-bubble-left-right',
                             'key' => 'communications',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Physical Mail',
@@ -197,9 +197,9 @@ class SidebarConfigProvider
                             'icon' => 'envelope',
                             'key' => 'physical-mail',
                             'params' => [],
-                            'description' => 'Send letters and documents'
-                        ]
-                    ]
+                            'description' => 'Send letters and documents',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -212,23 +212,23 @@ class SidebarConfigProvider
                             'route' => 'tickets.index',
                             'icon' => 'ticket',
                             'key' => 'tickets',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Assets & Equipment',
                             'route' => 'assets.index',
                             'icon' => 'computer-desktop',
                             'key' => 'assets',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Projects',
                             'route' => 'projects.index',
                             'icon' => 'folder',
                             'key' => 'projects',
-                            'params' => []
-                        ]
-                    ]
+                            'params' => [],
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -241,58 +241,58 @@ class SidebarConfigProvider
                             'route' => 'clients.it-documentation.client-index',
                             'icon' => 'document-text',
                             'key' => 'it-documentation',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Documents',
                             'route' => 'clients.documents.index',
                             'icon' => 'folder-open',
                             'key' => 'documents',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Files',
                             'route' => 'clients.files.index',
                             'icon' => 'paper-clip',
                             'key' => 'files',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Domains',
                             'route' => 'clients.domains.index',
                             'icon' => 'globe-alt',
                             'key' => 'domains',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Credentials',
                             'route' => 'clients.credentials.index',
                             'icon' => 'key',
                             'key' => 'credentials',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Licenses',
                             'route' => 'clients.licenses.index',
                             'icon' => 'identification',
                             'key' => 'licenses',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Vendors',
                             'route' => 'clients.vendors.index',
                             'icon' => 'building-office',
                             'key' => 'vendors',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Services',
                             'route' => 'clients.services.index',
                             'icon' => 'cog-6-tooth',
                             'key' => 'services',
-                            'params' => []
-                        ]
-                    ]
+                            'params' => [],
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -305,65 +305,65 @@ class SidebarConfigProvider
                             'route' => 'financial.contracts.index',
                             'icon' => 'document-check',
                             'key' => 'contracts',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Quotes',
                             'route' => 'financial.quotes.index',
                             'icon' => 'document-currency-dollar',
                             'key' => 'quotes',
-                            'params' => []
+                            'params' => [],
                         ],
                         [
                             'name' => 'Invoices',
                             'route' => 'financial.invoices.index',
                             'icon' => 'document-text',
                             'key' => 'invoices',
-                            'params' => []
-                        ]
-                    ]
-                ]
-            ]
+                            'params' => [],
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
-    
+
     /**
      * Get tickets sidebar configuration
      */
     protected function getTicketsConfig(): array
     {
         $user = auth()->user();
-        
+
         // Get real-time statistics for badges
         $activeTimersCount = 0;
         $slaViolationsCount = 0;
         $unassignedCount = 0;
         $dueTodayCount = 0;
-        
+
         if ($user && $user->company_id) {
             try {
                 // Active timers count
                 $activeTimersQuery = \App\Domains\Ticket\Models\TicketTimeEntry::runningTimers()
                     ->where('company_id', $user->company_id);
-                if (!$user->hasRole('admin')) {
+                if (! $user->hasRole('admin')) {
                     $activeTimersQuery->where('user_id', $user->id);
                 }
                 $activeTimersCount = $activeTimersQuery->count();
-                
+
                 // SLA violations count (tickets with priority queue that have breached SLA)
                 $slaViolationsCount = \App\Domains\Ticket\Models\Ticket::where('company_id', $user->company_id)
-                    ->whereHas('priorityQueue', function($q) {
+                    ->whereHas('priorityQueue', function ($q) {
                         $q->where('sla_deadline', '<', now());
                     })
                     ->whereNotIn('status', ['closed', 'resolved'])
                     ->count();
-                
+
                 // Unassigned tickets count
                 $unassignedCount = \App\Domains\Ticket\Models\Ticket::where('company_id', $user->company_id)
                     ->whereNull('assigned_to')
                     ->whereNotIn('status', ['closed', 'resolved'])
                     ->count();
-                
+
                 // Due today count
                 $dueTodayCount = \App\Domains\Ticket\Models\Ticket::where('company_id', $user->company_id)
                     ->whereDate('scheduled_at', today())
@@ -373,7 +373,7 @@ class SidebarConfigProvider
                 // Silently handle any database issues
             }
         }
-        
+
         return [
             'title' => 'Ticket Management',
             'icon' => 'ticket',
@@ -385,9 +385,9 @@ class SidebarConfigProvider
                             'name' => 'Overview',
                             'route' => 'tickets.index',
                             'icon' => 'home',
-                            'key' => 'overview'
-                        ]
-                    ]
+                            'key' => 'overview',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -399,14 +399,14 @@ class SidebarConfigProvider
                             'route' => 'tickets.index',
                             'icon' => 'user',
                             'key' => 'my-tickets',
-                            'params' => ['filter' => 'my']
+                            'params' => ['filter' => 'my'],
                         ],
                         [
                             'name' => 'Assigned to Me',
                             'route' => 'tickets.index',
                             'icon' => 'user-circle',
                             'key' => 'assigned',
-                            'params' => ['assignee' => 'me']
+                            'params' => ['assignee' => 'me'],
                         ],
                         [
                             'name' => 'Active Timers',
@@ -415,7 +415,7 @@ class SidebarConfigProvider
                             'key' => 'active-timers',
                             'badge' => $activeTimersCount > 0 ? $activeTimersCount : null,
                             'badge_type' => 'success',
-                            'description' => 'Running time trackers'
+                            'description' => 'Running time trackers',
                         ],
                         [
                             'name' => 'Due Today',
@@ -424,16 +424,16 @@ class SidebarConfigProvider
                             'key' => 'due-today',
                             'badge' => $dueTodayCount > 0 ? $dueTodayCount : null,
                             'badge_type' => 'warning',
-                            'description' => 'Tickets due today'
+                            'description' => 'Tickets due today',
                         ],
                         [
                             'name' => 'My Watched Tickets',
                             'route' => 'tickets.watched',
                             'icon' => 'eye',
                             'key' => 'watched',
-                            'description' => 'Tickets you are watching'
-                        ]
-                    ]
+                            'description' => 'Tickets you are watching',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -447,7 +447,7 @@ class SidebarConfigProvider
                             'key' => 'sla-violations',
                             'badge' => $slaViolationsCount > 0 ? $slaViolationsCount : null,
                             'badge_type' => 'danger',
-                            'description' => 'Tickets breaching SLA'
+                            'description' => 'Tickets breaching SLA',
                         ],
                         [
                             'name' => 'Unassigned Tickets',
@@ -456,23 +456,23 @@ class SidebarConfigProvider
                             'key' => 'unassigned',
                             'badge' => $unassignedCount > 0 ? $unassignedCount : null,
                             'badge_type' => 'warning',
-                            'description' => 'Tickets needing assignment'
+                            'description' => 'Tickets needing assignment',
                         ],
                         [
                             'name' => 'Priority Queue',
                             'route' => 'tickets.priority-queue.index',
                             'icon' => 'fire',
                             'key' => 'priority-queue',
-                            'description' => 'High priority tickets'
+                            'description' => 'High priority tickets',
                         ],
                         [
                             'name' => 'Escalated Tickets',
                             'route' => 'tickets.escalated',
                             'icon' => 'arrow-trending-up',
                             'key' => 'escalated',
-                            'description' => 'Escalated for review'
-                        ]
-                    ]
+                            'description' => 'Escalated for review',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -485,37 +485,37 @@ class SidebarConfigProvider
                             'route' => 'tickets.index',
                             'icon' => 'exclamation-circle',
                             'key' => 'open',
-                            'params' => ['status' => 'open']
+                            'params' => ['status' => 'open'],
                         ],
                         [
                             'name' => 'In Progress',
                             'route' => 'tickets.index',
                             'icon' => 'arrow-right',
                             'key' => 'in-progress',
-                            'params' => ['status' => 'in-progress']
+                            'params' => ['status' => 'in-progress'],
                         ],
                         [
                             'name' => 'Customer Waiting',
                             'route' => 'tickets.customer-waiting',
                             'icon' => 'pause-circle',
                             'key' => 'customer-waiting',
-                            'description' => 'Awaiting customer response'
+                            'description' => 'Awaiting customer response',
                         ],
                         [
                             'name' => 'Recurring Tickets',
                             'route' => 'tickets.recurring.index',
                             'icon' => 'arrow-path',
                             'key' => 'recurring',
-                            'description' => 'Scheduled maintenance'
+                            'description' => 'Scheduled maintenance',
                         ],
                         [
                             'name' => 'Closed Tickets',
                             'route' => 'tickets.index',
                             'icon' => 'check-circle',
                             'key' => 'closed',
-                            'params' => ['status' => 'closed']
-                        ]
-                    ]
+                            'params' => ['status' => 'closed'],
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -528,30 +528,30 @@ class SidebarConfigProvider
                             'route' => 'tickets.team-queue',
                             'icon' => 'user-group',
                             'key' => 'team-queue',
-                            'description' => 'Department tickets'
+                            'description' => 'Department tickets',
                         ],
                         [
                             'name' => 'Time & Billing',
                             'route' => 'tickets.time-billing',
                             'icon' => 'currency-dollar',
                             'key' => 'time-billing',
-                            'description' => 'Time entries & invoicing'
+                            'description' => 'Time entries & invoicing',
                         ],
                         [
                             'name' => 'Reports & Analytics',
                             'route' => 'tickets.analytics',
                             'icon' => 'chart-bar',
                             'key' => 'analytics',
-                            'description' => 'Performance metrics'
+                            'description' => 'Performance metrics',
                         ],
                         [
                             'name' => 'Calendar View',
                             'route' => 'tickets.calendar.index',
                             'icon' => 'calendar-days',
                             'key' => 'calendar',
-                            'description' => 'Schedule overview'
-                        ]
-                    ]
+                            'description' => 'Schedule overview',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -564,42 +564,42 @@ class SidebarConfigProvider
                             'route' => 'tickets.knowledge-base',
                             'icon' => 'book-open',
                             'key' => 'knowledge-base',
-                            'description' => 'Solutions & articles'
+                            'description' => 'Solutions & articles',
                         ],
                         [
                             'name' => 'Ticket Templates',
                             'route' => 'tickets.templates.index',
                             'icon' => 'document-duplicate',
                             'key' => 'templates',
-                            'description' => 'Quick ticket creation'
+                            'description' => 'Quick ticket creation',
                         ],
                         [
                             'name' => 'Automation Rules',
                             'route' => 'tickets.automation-rules',
                             'icon' => 'bolt',
                             'key' => 'automation',
-                            'description' => 'Workflow automation'
+                            'description' => 'Workflow automation',
                         ],
                         [
                             'name' => 'Merged/Related',
                             'route' => 'tickets.merged',
                             'icon' => 'link',
                             'key' => 'merged',
-                            'description' => 'Linked tickets'
+                            'description' => 'Linked tickets',
                         ],
                         [
                             'name' => 'Archive & History',
                             'route' => 'tickets.archive',
                             'icon' => 'archive-box',
                             'key' => 'archive',
-                            'description' => 'Historical data'
-                        ]
-                    ]
-                ]
-            ]
+                            'description' => 'Historical data',
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
-    
+
     /**
      * Get email sidebar configuration
      */
@@ -607,7 +607,7 @@ class SidebarConfigProvider
     {
         $user = auth()->user();
         $accountsCount = $user ? \App\Domains\Email\Models\EmailAccount::forUser($user->id)->active()->count() : 0;
-        $unreadCount = $user ? \App\Domains\Email\Models\EmailMessage::whereHas('emailAccount', function($q) use ($user) {
+        $unreadCount = $user ? \App\Domains\Email\Models\EmailMessage::whereHas('emailAccount', function ($q) use ($user) {
             $q->where('user_id', $user->id)->where('is_active', true);
         })->unread()->count() : 0;
 
@@ -624,16 +624,16 @@ class SidebarConfigProvider
                         'icon' => 'inbox',
                         'key' => 'inbox',
                         'badge' => $unreadCount > 0 ? $unreadCount : null,
-                        'badge_type' => 'info'
+                        'badge_type' => 'info',
                     ],
                     [
                         'name' => 'Compose',
                         'route' => 'email.compose.index',
                         'icon' => 'pencil',
-                        'key' => 'compose'
-                    ]
-                ]
-            ]
+                        'key' => 'compose',
+                    ],
+                ],
+            ],
         ];
 
         // Add email accounts section if user has accounts
@@ -646,10 +646,10 @@ class SidebarConfigProvider
                     'route' => 'email.inbox.index',
                     'route_params' => ['account_id' => $account->id],
                     'icon' => 'envelope',
-                    'key' => 'account-' . $account->id,
+                    'key' => 'account-'.$account->id,
                     'badge' => $accountUnreadCount > 0 ? $accountUnreadCount : null,
                     'badge_type' => 'info',
-                    'description' => $account->email_address
+                    'description' => $account->email_address,
                 ];
             }
 
@@ -658,7 +658,7 @@ class SidebarConfigProvider
                 'title' => 'ACCOUNTS',
                 'expandable' => true,
                 'default_expanded' => false,
-                'items' => $accountItems
+                'items' => $accountItems,
             ];
         }
 
@@ -670,26 +670,26 @@ class SidebarConfigProvider
                 'icon' => 'inbox',
                 'key' => 'inbox-folder',
                 'badge' => $unreadCount > 0 ? $unreadCount : null,
-                'badge_type' => 'info'
+                'badge_type' => 'info',
             ],
             [
                 'name' => 'Sent',
                 'route' => 'email.inbox.index',
                 'icon' => 'paper-airplane',
-                'key' => 'sent-folder'
+                'key' => 'sent-folder',
             ],
             [
                 'name' => 'Drafts',
                 'route' => 'email.inbox.index',
                 'icon' => 'document-text',
-                'key' => 'drafts-folder'
+                'key' => 'drafts-folder',
             ],
             [
                 'name' => 'Trash',
                 'route' => 'email.inbox.index',
                 'icon' => 'trash',
-                'key' => 'trash-folder'
-            ]
+                'key' => 'trash-folder',
+            ],
         ];
 
         // Add dynamic folders from email accounts
@@ -701,8 +701,8 @@ class SidebarConfigProvider
                     $folderName = $folder->getDisplayName();
 
                     // Add account name for non-standard folders
-                    if (!in_array($folder->type, ['inbox', 'sent', 'drafts', 'trash'])) {
-                        $folderName .= ' (' . $account->name . ')';
+                    if (! in_array($folder->type, ['inbox', 'sent', 'drafts', 'trash'])) {
+                        $folderName .= ' ('.$account->name.')';
                     }
 
                     $folderItems[] = [
@@ -710,10 +710,10 @@ class SidebarConfigProvider
                         'route' => 'email.inbox.index',
                         'route_params' => ['account_id' => $account->id, 'folder_id' => $folder->id],
                         'icon' => $folder->getIcon(),
-                        'key' => 'folder-' . $folder->id,
+                        'key' => 'folder-'.$folder->id,
                         'badge' => $folderUnreadCount > 0 ? $folderUnreadCount : null,
                         'badge_type' => 'info',
-                        'description' => $account->email_address
+                        'description' => $account->email_address,
                     ];
                 }
             }
@@ -724,7 +724,7 @@ class SidebarConfigProvider
             'title' => 'FOLDERS',
             'expandable' => true,
             'default_expanded' => false,
-            'items' => $folderItems
+            'items' => $folderItems,
         ];
 
         // Add management section
@@ -740,24 +740,24 @@ class SidebarConfigProvider
                     'icon' => 'cog',
                     'key' => 'accounts',
                     'badge' => $accountsCount > 0 ? $accountsCount : null,
-                    'badge_type' => 'success'
+                    'badge_type' => 'success',
                 ],
                 [
                     'name' => 'Signatures',
                     'route' => 'email.signatures.index',
                     'icon' => 'pencil-square',
-                    'key' => 'signatures'
-                ]
-            ]
+                    'key' => 'signatures',
+                ],
+            ],
         ];
 
         return [
             'title' => 'Email Management',
             'icon' => 'envelope',
-            'sections' => $sections
+            'sections' => $sections,
         ];
     }
-    
+
     /**
      * Get physical mail sidebar configuration
      */
@@ -765,20 +765,20 @@ class SidebarConfigProvider
     {
         $user = auth()->user();
         $selectedClient = NavigationService::getSelectedClient();
-        
+
         // Get physical mail statistics (with safe fallback)
         $totalMails = 0;
         $pendingMails = 0;
-        
+
         if ($user && $user->company_id) {
             try {
                 $query = \App\Domains\PhysicalMail\Models\PhysicalMailOrder::query();
-                
+
                 // Filter by selected client if present
                 if ($selectedClient) {
                     $query->where('client_id', $selectedClient->id);
                 }
-                
+
                 $totalMails = (clone $query)->count();
                 $pendingMails = (clone $query)->whereIn('status', ['pending', 'processing'])->count();
             } catch (\Exception $e) {
@@ -800,16 +800,16 @@ class SidebarConfigProvider
                             'route' => 'mail.index',
                             'icon' => 'chart-pie',
                             'key' => 'dashboard',
-                            'description' => 'Overview of physical mail activity'
+                            'description' => 'Overview of physical mail activity',
                         ],
                         [
                             'name' => 'Send Mail',
                             'route' => 'mail.send',
                             'icon' => 'plus-circle',
                             'key' => 'send',
-                            'description' => 'Send new physical mail'
-                        ]
-                    ]
+                            'description' => 'Send new physical mail',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -824,23 +824,23 @@ class SidebarConfigProvider
                             'key' => 'tracking',
                             'badge' => $pendingMails > 0 ? $pendingMails : null,
                             'badge_type' => 'warning',
-                            'description' => 'Track delivery status'
+                            'description' => 'Track delivery status',
                         ],
                         [
                             'name' => 'Templates',
                             'route' => 'mail.templates',
                             'icon' => 'document-text',
                             'key' => 'templates',
-                            'description' => 'Manage mail templates'
+                            'description' => 'Manage mail templates',
                         ],
                         [
                             'name' => 'Contacts',
                             'route' => 'mail.contacts',
                             'icon' => 'user-group',
                             'key' => 'contacts',
-                            'description' => 'Manage mailing addresses'
-                        ]
-                    ]
+                            'description' => 'Manage mailing addresses',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -855,14 +855,14 @@ class SidebarConfigProvider
                             'key' => 'stats-total',
                             'badge' => $totalMails,
                             'badge_type' => 'info',
-                            'description' => 'All time mail count'
-                        ]
-                    ]
-                ]
-            ]
+                            'description' => 'All time mail count',
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
-    
+
     /**
      * Get assets sidebar configuration
      */
@@ -879,15 +879,15 @@ class SidebarConfigProvider
                             'name' => 'Overview',
                             'route' => 'assets.index',
                             'icon' => 'home',
-                            'key' => 'overview'
+                            'key' => 'overview',
                         ],
                         [
                             'name' => 'Add New Asset',
                             'route' => 'assets.create',
                             'icon' => 'plus',
-                            'key' => 'create'
-                        ]
-                    ]
+                            'key' => 'create',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -900,28 +900,28 @@ class SidebarConfigProvider
                             'route' => 'assets.index',
                             'icon' => 'computer-desktop',
                             'key' => 'hardware',
-                            'params' => ['category' => 'hardware']
+                            'params' => ['category' => 'hardware'],
                         ],
                         [
                             'name' => 'Software',
                             'route' => 'assets.index',
                             'icon' => 'code-bracket',
                             'key' => 'software',
-                            'params' => ['category' => 'software']
+                            'params' => ['category' => 'software'],
                         ],
                         [
                             'name' => 'Mobile Devices',
                             'route' => 'assets.index',
                             'icon' => 'device-phone-mobile',
                             'key' => 'mobile',
-                            'params' => ['category' => 'mobile']
-                        ]
-                    ]
-                ]
-            ]
+                            'params' => ['category' => 'mobile'],
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
-    
+
     /**
      * Get financial sidebar configuration (truncated for brevity)
      */
@@ -939,9 +939,9 @@ class SidebarConfigProvider
                             'route' => 'financial.dashboard',
                             'icon' => 'chart-bar-square',
                             'key' => 'dashboard',
-                            'description' => 'Overview of financial metrics and KPIs'
-                        ]
-                    ]
+                            'description' => 'Overview of financial metrics and KPIs',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -954,23 +954,23 @@ class SidebarConfigProvider
                             'route' => 'financial.invoices.index',
                             'icon' => 'document-text',
                             'key' => 'invoices',
-                            'description' => 'Manage customer invoices'
+                            'description' => 'Manage customer invoices',
                         ],
                         [
                             'name' => 'Payments',
                             'route' => 'financial.payments.index',
                             'icon' => 'credit-card',
                             'key' => 'payments',
-                            'description' => 'Track payment history'
+                            'description' => 'Track payment history',
                         ],
                         [
                             'name' => 'Recurring Billing',
                             'route' => 'financial.recurring-invoices.index',
                             'icon' => 'arrow-path',
                             'key' => 'recurring',
-                            'description' => 'Manage subscriptions'
-                        ]
-                    ]
+                            'description' => 'Manage subscriptions',
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'section',
@@ -983,28 +983,28 @@ class SidebarConfigProvider
                             'route' => 'financial.accounts.index',
                             'icon' => 'list-bullet',
                             'key' => 'accounts',
-                            'description' => 'Manage GL accounts'
+                            'description' => 'Manage GL accounts',
                         ],
                         [
                             'name' => 'Journal Entries',
                             'route' => 'financial.journal.index',
                             'icon' => 'book-open',
                             'key' => 'journal',
-                            'description' => 'View journal entries'
+                            'description' => 'View journal entries',
                         ],
                         [
                             'name' => 'Tax Settings',
                             'route' => 'financial.tax.index',
                             'icon' => 'calculator',
                             'key' => 'tax',
-                            'description' => 'Configure tax rates'
-                        ]
-                    ]
-                ]
-            ]
+                            'description' => 'Configure tax rates',
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
-    
+
     /**
      * Get projects sidebar configuration
      */
@@ -1021,20 +1021,20 @@ class SidebarConfigProvider
                             'name' => 'Project Overview',
                             'route' => 'projects.index',
                             'icon' => 'home',
-                            'key' => 'overview'
+                            'key' => 'overview',
                         ],
                         [
                             'name' => 'Create Project',
                             'route' => 'projects.create',
                             'icon' => 'plus',
-                            'key' => 'create'
-                        ]
-                    ]
-                ]
-            ]
+                            'key' => 'create',
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
-    
+
     /**
      * Get reports sidebar configuration
      */
@@ -1051,14 +1051,14 @@ class SidebarConfigProvider
                             'name' => 'Reports Overview',
                             'route' => 'reports.index',
                             'icon' => 'home',
-                            'key' => 'overview'
-                        ]
-                    ]
-                ]
-            ]
+                            'key' => 'overview',
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
-    
+
     /**
      * Get settings sidebar configuration
      */
@@ -1169,7 +1169,7 @@ class SidebarConfigProvider
             ],
         ];
     }
-    
+
     /**
      * Filter configuration based on user permissions
      */
@@ -1178,30 +1178,30 @@ class SidebarConfigProvider
         if (empty($config['sections'])) {
             return $config;
         }
-        
+
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
-        
+
         $filteredSections = [];
-        
+
         foreach ($config['sections'] as $sectionKey => $section) {
             // Check section-level permissions
-            if (isset($section['permission']) && !$this->userHasPermission($user, $section['permission'])) {
+            if (isset($section['permission']) && ! $this->userHasPermission($user, $section['permission'])) {
                 continue;
             }
-            
+
             // Filter items within section
             if (isset($section['items'])) {
                 $filteredItems = [];
                 foreach ($section['items'] as $item) {
-                    if (!isset($item['permission']) || $this->userHasPermission($user, $item['permission'])) {
+                    if (! isset($item['permission']) || $this->userHasPermission($user, $item['permission'])) {
                         $filteredItems[] = $item;
                     }
                 }
-                
-                if (!empty($filteredItems)) {
+
+                if (! empty($filteredItems)) {
                     $section['items'] = $filteredItems;
                     $filteredSections[] = $section;
                 }
@@ -1209,11 +1209,12 @@ class SidebarConfigProvider
                 $filteredSections[] = $section;
             }
         }
-        
+
         $config['sections'] = $filteredSections;
+
         return $config;
     }
-    
+
     /**
      * Check if user has permission
      * More lenient check that doesn't require all permissions to be defined
@@ -1224,25 +1225,26 @@ class SidebarConfigProvider
         if ($user->company_id === 1 || $user->id === 1) {
             return true;
         }
-        
+
         // For settings permissions, allow access if user can access settings in general
         if (str_starts_with($permission, 'settings.')) {
             // If user can view settings, allow all settings sub-permissions
             if (method_exists($user, 'hasPermission')) {
                 return $user->hasPermission('settings.view') || $user->hasPermission($permission);
             }
+
             // Fallback to can() method
             return $user->can('settings.view') || $user->can($permission);
         }
-        
+
         // Use the appropriate permission checking method
         if (method_exists($user, 'hasPermission')) {
             return $user->hasPermission($permission);
         }
-        
+
         return $user->can($permission);
     }
-    
+
     /**
      * Merge multiple configurations
      */
@@ -1250,7 +1252,7 @@ class SidebarConfigProvider
     {
         return array_merge_recursive($base, $custom);
     }
-    
+
     /**
      * Get default configuration for a context
      */

@@ -2,16 +2,13 @@
 
 namespace App\Domains\Asset\Services;
 
-use App\Models\Asset;
-use App\Models\Client;
 use App\Domains\Integration\Services\AssetSyncService;
-use Illuminate\Support\Facades\DB;
+use App\Models\Asset;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * Asset Lifecycle Management Service
- * 
+ *
  * Provides predictive analytics, lifecycle tracking, and replacement
  * planning for assets based on RMM data and performance trends.
  */
@@ -37,7 +34,7 @@ class AssetLifecycleService
 
         // Get comprehensive device status
         $deviceStatus = $this->syncService->getDeviceStatus($asset);
-        
+
         if ($deviceStatus['success']) {
             $analysis['current_status'] = $this->analyzeCurrentStatus($asset, $deviceStatus['data']);
             $analysis['performance_trends'] = $this->analyzePerformanceTrends($asset, $deviceStatus['data']);
@@ -72,15 +69,15 @@ class AssetLifecycleService
             try {
                 $asset = Asset::findOrFail($assetId);
                 $analysis = $this->analyzeAssetLifecycle($asset);
-                
-                if (!isset($analysis['error'])) {
+
+                if (! isset($analysis['error'])) {
                     $analytics[] = $analysis;
                     $summary['analyzed']++;
-                    
+
                     // Update summary statistics
                     $stage = $analysis['lifecycle_stage']['stage'];
                     $summary['lifecycle_distribution'][$stage] = ($summary['lifecycle_distribution'][$stage] ?? 0) + 1;
-                    
+
                     if (isset($analysis['replacement_prediction']['months_until_replacement'])) {
                         $months = $analysis['replacement_prediction']['months_until_replacement'];
                         $timeframe = $this->categorizeReplacementTimeframe($months);
@@ -93,7 +90,7 @@ class AssetLifecycleService
                         'error' => $analysis['error'],
                     ]);
                 }
-                
+
             } catch (\Exception $e) {
                 $summary['errors']++;
                 Log::error('Asset lifecycle analysis error', [
@@ -117,10 +114,10 @@ class AssetLifecycleService
     {
         // This would typically query historical performance data
         // For now, simulate trend analysis
-        
+
         $deviceStatus = $this->syncService->getDeviceStatus($asset);
-        
-        if (!$deviceStatus['success']) {
+
+        if (! $deviceStatus['success']) {
             return [
                 'success' => false,
                 'error' => 'Unable to retrieve device status',
@@ -128,7 +125,7 @@ class AssetLifecycleService
         }
 
         $currentPerformance = $deviceStatus['data']['performance'] ?? [];
-        
+
         // Simulate historical trend data
         $trends = [
             'cpu_usage' => $this->generateTrendData($currentPerformance['cpu']['usage_percent'] ?? 50, $days),
@@ -154,8 +151,8 @@ class AssetLifecycleService
     public function generateCapacityPlan(Asset $asset): array
     {
         $deviceStatus = $this->syncService->getDeviceStatus($asset);
-        
-        if (!$deviceStatus['success']) {
+
+        if (! $deviceStatus['success']) {
             return [
                 'success' => false,
                 'error' => 'Unable to retrieve device status for capacity planning',
@@ -187,8 +184,8 @@ class AssetLifecycleService
     public function predictFailures(Asset $asset): array
     {
         $deviceStatus = $this->syncService->getDeviceStatus($asset);
-        
-        if (!$deviceStatus['success']) {
+
+        if (! $deviceStatus['success']) {
             return [
                 'success' => false,
                 'error' => 'Unable to retrieve device status for failure prediction',
@@ -248,7 +245,7 @@ class AssetLifecycleService
     {
         // Simulate performance trend analysis
         $performance = $deviceData['performance'] ?? [];
-        
+
         return [
             'cpu_trend' => $this->calculateTrend($performance['cpu']['usage_percent'] ?? 50),
             'memory_trend' => $this->calculateTrend($performance['memory']['usage_percent'] ?? 60),
@@ -266,7 +263,7 @@ class AssetLifecycleService
         $performance = $deviceData['performance'] ?? [];
         $cpuUsage = $performance['cpu']['usage_percent'] ?? 50;
         $memoryUsage = $performance['memory']['usage_percent'] ?? 60;
-        
+
         $scores['performance'] = max(0, 100 - ($cpuUsage * 0.5 + $memoryUsage * 0.5));
         $weights['performance'] = 0.3;
 
@@ -294,7 +291,7 @@ class AssetLifecycleService
         // Calculate weighted average
         $totalScore = 0;
         $totalWeight = 0;
-        
+
         foreach ($scores as $component => $score) {
             $weight = $weights[$component];
             $totalScore += $score * $weight;
@@ -315,7 +312,7 @@ class AssetLifecycleService
     {
         $ageInYears = $asset->age_in_years ?? 0;
         $healthScore = $analysis['health_score']['overall_score'] ?? 100;
-        
+
         if ($ageInYears < 1) {
             $stage = 'new';
         } elseif ($ageInYears < 3 && $healthScore > 80) {
@@ -469,7 +466,7 @@ class AssetLifecycleService
     }
 
     // Additional helper methods (simplified for brevity)
-    
+
     protected function generateTrendData(float $currentValue, int $days): array
     {
         // Simulate trend data with some variance
@@ -479,6 +476,7 @@ class AssetLifecycleService
             $variance = rand(-10, 10);
             $trend[$date] = max(0, min(100, $currentValue + $variance));
         }
+
         return $trend;
     }
 
@@ -524,8 +522,9 @@ class AssetLifecycleService
             'has_performance_data' => isset($analysis['performance_trends']),
             'has_age_data' => isset($analysis['lifecycle_stage']['age_years']),
         ];
-        
+
         $availableFactors = array_sum($factors);
+
         return round(($availableFactors / count($factors)) * 100, 1);
     }
 
@@ -535,7 +534,7 @@ class AssetLifecycleService
         $ageInYears = $asset->age_in_years ?? 0;
         $estimatedOriginalCost = 1000; // Would come from asset data
         $depreciationRate = 0.2; // 20% per year
-        
+
         return max(100, $estimatedOriginalCost * pow(1 - $depreciationRate, $ageInYears));
     }
 
@@ -555,6 +554,7 @@ class AssetLifecycleService
         // Lower health score = higher support costs
         $baseCost = 50;
         $healthMultiplier = (100 - $healthScore) / 100;
+
         return $baseCost * (1 + $healthMultiplier);
     }
 
@@ -569,26 +569,113 @@ class AssetLifecycleService
     }
 
     // Placeholder methods for complex analytics (would be fully implemented)
-    protected function generateDiskUsageTrend(Asset $asset, int $days): array { return []; }
-    protected function generateUptimeTrend(Asset $asset, int $days): array { return []; }
-    protected function generateErrorFrequencyTrend(Asset $asset, int $days): array { return []; }
-    protected function analyzeTrends(array $trends): array { return ['overall_trend' => 'stable']; }
-    protected function analyzeCurrentCapacity(array $performance, array $hardware): array { return []; }
-    protected function analyzeUtilizationTrends(Asset $asset): array { return []; }
-    protected function identifyBottlenecks(array $performance, array $hardware): array { return []; }
-    protected function generateCapacityRecommendations(array $plan): array { return []; }
-    protected function generateCapacityTimeline(array $plan): array { return []; }
-    protected function identifyRiskFactors(Asset $asset, array $performance, array $hardware): array { return []; }
-    protected function calculateFailureProbability(Asset $asset, array $performance, array $hardware): float { return 0.1; }
-    protected function predictSpecificFailures(Asset $asset, array $performance, array $hardware): array { return []; }
-    protected function suggestPreventiveActions(Asset $asset): array { return []; }
-    protected function generateMonitoringRecommendations(Asset $asset): array { return []; }
-    protected function getWarrantyStatus(Asset $asset): array { return ['status' => 'active', 'expires' => $asset->warranty_expire?->toDateString()]; }
-    protected function getSupportStatus(Asset $asset): array { return ['status' => 'active']; }
-    protected function analyzeWarrantyCosts(Asset $asset): array { return ['annual_cost' => 200]; }
-    protected function generateWarrantyRecommendations(Asset $asset): array { return []; }
-    protected function calculateDiskTrend(array $disks): string { return 'stable'; }
-    protected function calculateStabilityTrend(Asset $asset): string { return 'stable'; }
-    protected function calculateAverageDiskUsage(array $disks): float { return 50.0; }
-    protected function getHealthRecommendations(array $scores): array { return []; }
+    protected function generateDiskUsageTrend(Asset $asset, int $days): array
+    {
+        return [];
+    }
+
+    protected function generateUptimeTrend(Asset $asset, int $days): array
+    {
+        return [];
+    }
+
+    protected function generateErrorFrequencyTrend(Asset $asset, int $days): array
+    {
+        return [];
+    }
+
+    protected function analyzeTrends(array $trends): array
+    {
+        return ['overall_trend' => 'stable'];
+    }
+
+    protected function analyzeCurrentCapacity(array $performance, array $hardware): array
+    {
+        return [];
+    }
+
+    protected function analyzeUtilizationTrends(Asset $asset): array
+    {
+        return [];
+    }
+
+    protected function identifyBottlenecks(array $performance, array $hardware): array
+    {
+        return [];
+    }
+
+    protected function generateCapacityRecommendations(array $plan): array
+    {
+        return [];
+    }
+
+    protected function generateCapacityTimeline(array $plan): array
+    {
+        return [];
+    }
+
+    protected function identifyRiskFactors(Asset $asset, array $performance, array $hardware): array
+    {
+        return [];
+    }
+
+    protected function calculateFailureProbability(Asset $asset, array $performance, array $hardware): float
+    {
+        return 0.1;
+    }
+
+    protected function predictSpecificFailures(Asset $asset, array $performance, array $hardware): array
+    {
+        return [];
+    }
+
+    protected function suggestPreventiveActions(Asset $asset): array
+    {
+        return [];
+    }
+
+    protected function generateMonitoringRecommendations(Asset $asset): array
+    {
+        return [];
+    }
+
+    protected function getWarrantyStatus(Asset $asset): array
+    {
+        return ['status' => 'active', 'expires' => $asset->warranty_expire?->toDateString()];
+    }
+
+    protected function getSupportStatus(Asset $asset): array
+    {
+        return ['status' => 'active'];
+    }
+
+    protected function analyzeWarrantyCosts(Asset $asset): array
+    {
+        return ['annual_cost' => 200];
+    }
+
+    protected function generateWarrantyRecommendations(Asset $asset): array
+    {
+        return [];
+    }
+
+    protected function calculateDiskTrend(array $disks): string
+    {
+        return 'stable';
+    }
+
+    protected function calculateStabilityTrend(Asset $asset): string
+    {
+        return 'stable';
+    }
+
+    protected function calculateAverageDiskUsage(array $disks): float
+    {
+        return 50.0;
+    }
+
+    protected function getHealthRecommendations(array $scores): array
+    {
+        return [];
+    }
 }

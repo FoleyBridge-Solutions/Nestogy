@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Ticket Status Transition Model
- * 
+ *
  * Represents individual transition rules within a workflow,
  * defining how tickets can move from one status to another.
  */
@@ -57,12 +57,12 @@ class TicketStatusTransition extends Model
      */
     public function conditionsAreMet(Ticket $ticket, $user = null): bool
     {
-        if (!$this->conditions) {
+        if (! $this->conditions) {
             return true;
         }
 
         foreach ($this->conditions as $condition) {
-            if (!$this->evaluateCondition($condition, $ticket, $user)) {
+            if (! $this->evaluateCondition($condition, $ticket, $user)) {
                 return false;
             }
         }
@@ -78,6 +78,7 @@ class TicketStatusTransition extends Model
         switch ($condition['type']) {
             case 'ticket_age_hours':
                 $ageInHours = $ticket->getAgeInHours();
+
                 return $this->evaluateComparison($ageInHours, $condition['operator'], $condition['value']);
 
             case 'ticket_priority':
@@ -85,6 +86,7 @@ class TicketStatusTransition extends Model
 
             case 'time_worked':
                 $timeWorked = $ticket->getTotalTimeWorked();
+
                 return $this->evaluateComparison($timeWorked, $condition['operator'], $condition['value']);
 
             case 'user_role':
@@ -125,7 +127,7 @@ class TicketStatusTransition extends Model
             case 'in':
                 return in_array($actual, (array) $expected);
             case 'not_in':
-                return !in_array($actual, (array) $expected);
+                return ! in_array($actual, (array) $expected);
             default:
                 return false;
         }
@@ -156,7 +158,7 @@ class TicketStatusTransition extends Model
         }
 
         if ($this->requires_comment) {
-            $description .= " (comment required)";
+            $description .= ' (comment required)';
         }
 
         return $description;
@@ -167,11 +169,11 @@ class TicketStatusTransition extends Model
      */
     public function getActionsSummary(): string
     {
-        if (!$this->actions) {
+        if (! $this->actions) {
             return 'No actions';
         }
 
-        $actionTypes = array_map(function($action) {
+        $actionTypes = array_map(function ($action) {
             return $action['type'] ?? 'unknown';
         }, $this->actions);
 

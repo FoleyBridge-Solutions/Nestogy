@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * ServiceTaxRate Model
- * 
+ *
  * Tax rates for all service types including telecommunications, cloud services,
  * SaaS, and professional services. Supports complex tax scenarios including
  * regulatory fees (E911, USF), excise taxes, and jurisdiction-based rates.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $tax_jurisdiction_id
@@ -47,7 +47,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class ServiceTaxRate extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -112,55 +112,85 @@ class ServiceTaxRate extends Model
      * Service types
      */
     const SERVICE_VOIP = 'voip';
+
     const SERVICE_TELECOM = 'telecom';
+
     const SERVICE_CLOUD = 'cloud';
+
     const SERVICE_SAAS = 'saas';
+
     const SERVICE_HOSTING = 'hosting';
+
     const SERVICE_MANAGED = 'managed_services';
+
     const SERVICE_PROFESSIONAL = 'professional';
+
     const SERVICE_EQUIPMENT = 'equipment';
 
     /**
      * Tax types
      */
     const TAX_FEDERAL = 'federal';
+
     const TAX_STATE = 'state';
+
     const TAX_LOCAL = 'local';
+
     const TAX_MUNICIPAL = 'municipal';
+
     const TAX_COUNTY = 'county';
+
     const TAX_SPECIAL_DISTRICT = 'special_district';
+
     const TAX_REGULATORY = 'regulatory';
+
     const TAX_EXCISE = 'excise';
+
     const TAX_SALES = 'sales';
+
     const TAX_VAT = 'vat';
+
     const TAX_CUSTOM = 'custom';
 
     /**
      * Regulatory codes for special taxes
      */
     const REG_E911 = 'e911';
+
     const REG_USF = 'usf';
+
     const REG_ACCESS_RECOVERY = 'access_recovery';
+
     const REG_REGULATORY_RECOVERY = 'regulatory_recovery';
+
     const REG_STATE_USF = 'state_usf';
 
     /**
      * Rate types
      */
     const RATE_PERCENTAGE = 'percentage';
+
     const RATE_FIXED = 'fixed';
+
     const RATE_TIERED = 'tiered';
+
     const RATE_PER_LINE = 'per_line';
+
     const RATE_PER_MINUTE = 'per_minute';
+
     const RATE_PER_UNIT = 'per_unit';
 
     /**
      * Calculation methods
      */
     const CALC_STANDARD = 'standard';
+
     const CALC_COMPOUND = 'compound';
+
     const CALC_ADDITIVE = 'additive';
+
     const CALC_INCLUSIVE = 'inclusive';
+
     const CALC_EXCLUSIVE = 'exclusive';
 
     /**
@@ -184,7 +214,7 @@ class ServiceTaxRate extends Model
      */
     public function isRegulatoryFee(): bool
     {
-        return $this->tax_type === self::TAX_REGULATORY || !empty($this->regulatory_code);
+        return $this->tax_type === self::TAX_REGULATORY || ! empty($this->regulatory_code);
     }
 
     /**
@@ -203,6 +233,7 @@ class ServiceTaxRate extends Model
         if ($this->rate_type === self::RATE_PERCENTAGE) {
             return $this->percentage_rate ?? 0;
         }
+
         return 0;
     }
 
@@ -214,6 +245,7 @@ class ServiceTaxRate extends Model
         if (in_array($this->rate_type, [self::RATE_FIXED, self::RATE_PER_LINE, self::RATE_PER_MINUTE, self::RATE_PER_UNIT])) {
             return $this->fixed_amount ?? 0;
         }
+
         return 0;
     }
 
@@ -267,15 +299,15 @@ class ServiceTaxRate extends Model
             'tax_jurisdiction_id' => 'required|exists:tax_jurisdictions,id',
             'tax_category_id' => 'required|exists:tax_categories,id',
             'service_type' => 'required|string|max:50',
-            'tax_type' => 'required|in:' . implode(',', static::getTaxTypes()),
+            'tax_type' => 'required|in:'.implode(',', static::getTaxTypes()),
             'tax_name' => 'required|string|max:255',
             'authority_name' => 'required|string|max:255',
             'tax_code' => 'nullable|string|max:50',
             'regulatory_code' => 'nullable|string|max:50',
-            'rate_type' => 'required|in:' . implode(',', static::getRateTypes()),
+            'rate_type' => 'required|in:'.implode(',', static::getRateTypes()),
             'percentage_rate' => 'nullable|numeric|min:0|max:100',
             'fixed_amount' => 'nullable|numeric|min:0',
-            'calculation_method' => 'required|in:' . implode(',', static::getCalculationMethods()),
+            'calculation_method' => 'required|in:'.implode(',', static::getCalculationMethods()),
             'is_active' => 'boolean',
             'is_recoverable' => 'boolean',
             'is_compound' => 'boolean',

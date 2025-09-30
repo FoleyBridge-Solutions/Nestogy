@@ -37,10 +37,10 @@ class ClientContactService
     public function createContact(Client $client, array $data): Contact
     {
         DB::beginTransaction();
-        
+
         try {
             // If this is set as primary, unset other primary contacts
-            if (!empty($data['is_primary']) && $data['is_primary']) {
+            if (! empty($data['is_primary']) && $data['is_primary']) {
                 $client->contacts()->update(['is_primary' => false]);
             }
 
@@ -60,19 +60,19 @@ class ClientContactService
             ]);
 
             DB::commit();
-            
+
             Log::info('Contact created for client', [
                 'client_id' => $client->id,
-                'contact_id' => $contact->id
+                'contact_id' => $contact->id,
             ]);
 
             return $contact;
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create contact', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -84,10 +84,10 @@ class ClientContactService
     public function updateContact(Contact $contact, array $data): Contact
     {
         DB::beginTransaction();
-        
+
         try {
             // If setting as primary, unset other primary contacts for this client
-            if (!empty($data['is_primary']) && $data['is_primary'] && !$contact->is_primary) {
+            if (! empty($data['is_primary']) && $data['is_primary'] && ! $contact->is_primary) {
                 Contact::where('client_id', $contact->client_id)
                     ->where('id', '!=', $contact->id)
                     ->update(['is_primary' => false]);
@@ -107,16 +107,16 @@ class ClientContactService
             ]);
 
             DB::commit();
-            
+
             Log::info('Contact updated', ['contact_id' => $contact->id]);
 
             return $contact->fresh();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update contact', [
                 'contact_id' => $contact->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -133,22 +133,22 @@ class ClientContactService
                 $nextContact = Contact::where('client_id', $contact->client_id)
                     ->where('id', '!=', $contact->id)
                     ->first();
-                    
+
                 if ($nextContact) {
                     $nextContact->update(['is_primary' => true]);
                 }
             }
 
             $contact->delete();
-            
+
             Log::info('Contact deleted', ['contact_id' => $contact->id]);
-            
+
             return true;
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to delete contact', [
                 'contact_id' => $contact->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -208,37 +208,37 @@ class ClientContactService
                     $failed[] = [
                         'index' => $index,
                         'data' => $contactData,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
                 }
             }
 
             if (empty($failed)) {
                 DB::commit();
-                
+
                 Log::info('Bulk contact import completed', [
                     'client_id' => $client->id,
-                    'imported_count' => count($imported)
+                    'imported_count' => count($imported),
                 ]);
             } else {
                 DB::rollBack();
-                
+
                 Log::warning('Bulk contact import failed', [
                     'client_id' => $client->id,
-                    'failed_count' => count($failed)
+                    'failed_count' => count($failed),
                 ]);
             }
 
             return [
                 'imported' => $imported,
-                'failed' => $failed
+                'failed' => $failed,
             ];
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Bulk contact import error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -259,7 +259,7 @@ class ClientContactService
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get();
-                
+
             foreach ($tickets as $ticket) {
                 $history[] = [
                     'type' => 'ticket',
@@ -280,11 +280,11 @@ class ClientContactService
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get();
-                
+
             foreach ($invoices as $invoice) {
                 $history[] = [
                     'type' => 'invoice',
-                    'subject' => 'Invoice #' . $invoice->invoice_number,
+                    'subject' => 'Invoice #'.$invoice->invoice_number,
                     'date' => $invoice->created_at,
                     'status' => $invoice->status,
                 ];
@@ -306,12 +306,12 @@ class ClientContactService
     {
         $query = Contact::where('company_id', $companyId)
             ->where('email', $email);
-            
+
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
-        
-        return !$query->exists();
+
+        return ! $query->exists();
     }
 
     /**
@@ -320,7 +320,7 @@ class ClientContactService
     public function mergeContacts(Contact $primary, Contact $duplicate): Contact
     {
         DB::beginTransaction();
-        
+
         try {
             // Merge data (keep primary's data, fill in missing from duplicate)
             $primary->update([
@@ -328,32 +328,32 @@ class ClientContactService
                 'extension' => $primary->extension ?: $duplicate->extension,
                 'mobile' => $primary->mobile ?: $duplicate->mobile,
                 'title' => $primary->title ?: $duplicate->title,
-                'notes' => $primary->notes . ($duplicate->notes ? "\n\n" . $duplicate->notes : ''),
+                'notes' => $primary->notes.($duplicate->notes ? "\n\n".$duplicate->notes : ''),
                 'is_technical' => $primary->is_technical || $duplicate->is_technical,
                 'is_billing' => $primary->is_billing || $duplicate->is_billing,
             ]);
 
             // Update any references to the duplicate contact
             // This would need to update tickets, communications, etc.
-            
+
             // Delete the duplicate
             $duplicate->delete();
-            
+
             DB::commit();
-            
+
             Log::info('Contacts merged', [
                 'primary_id' => $primary->id,
-                'duplicate_id' => $duplicate->id
+                'duplicate_id' => $duplicate->id,
             ]);
-            
+
             return $primary->fresh();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to merge contacts', [
                 'primary_id' => $primary->id,
                 'duplicate_id' => $duplicate->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }

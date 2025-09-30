@@ -3,19 +3,19 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
  * UsageAlert Model
- * 
- * Manages usage threshold monitoring and alerting system for real-time 
+ *
+ * Manages usage threshold monitoring and alerting system for real-time
  * usage tracking with predictive analytics and automated notifications.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\Log;
  */
 class UsageAlert extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -255,51 +255,72 @@ class UsageAlert extends Model
      * Alert type constants
      */
     const ALERT_TYPE_THRESHOLD = 'threshold';
+
     const ALERT_TYPE_USAGE_PATTERN = 'usage_pattern';
+
     const ALERT_TYPE_ANOMALY = 'anomaly';
+
     const ALERT_TYPE_PREDICTIVE = 'predictive';
+
     const ALERT_TYPE_BILLING = 'billing';
 
     /**
      * Alert status constants
      */
     const STATUS_NORMAL = 'normal';
+
     const STATUS_WARNING = 'warning';
+
     const STATUS_CRITICAL = 'critical';
+
     const STATUS_TRIGGERED = 'triggered';
 
     /**
      * Threshold type constants
      */
     const THRESHOLD_TYPE_PERCENTAGE = 'percentage';
+
     const THRESHOLD_TYPE_ABSOLUTE = 'absolute';
+
     const THRESHOLD_TYPE_RATE_OF_CHANGE = 'rate_of_change';
+
     const THRESHOLD_TYPE_PREDICTIVE = 'predictive';
 
     /**
      * Monitoring scope constants
      */
     const SCOPE_CLIENT = 'client';
+
     const SCOPE_POOL = 'pool';
+
     const SCOPE_BUCKET = 'bucket';
+
     const SCOPE_SERVICE = 'service';
+
     const SCOPE_GLOBAL = 'global';
 
     /**
      * Measurement period constants
      */
     const PERIOD_DAILY = 'daily';
+
     const PERIOD_WEEKLY = 'weekly';
+
     const PERIOD_MONTHLY = 'monthly';
+
     const PERIOD_BILLING_CYCLE = 'billing_cycle';
+
     const PERIOD_REAL_TIME = 'real_time';
 
     /**
      * Severity level constants
      */
     const SEVERITY_LOW = 'low';
+
     const SEVERITY_MEDIUM = 'medium';
+
     const SEVERITY_HIGH = 'high';
+
     const SEVERITY_CRITICAL = 'critical';
 
     /**
@@ -379,7 +400,7 @@ class UsageAlert extends Model
      */
     public function shouldSendAlert(): bool
     {
-        if (!$this->enable_suppression) {
+        if (! $this->enable_suppression) {
             return true;
         }
 
@@ -401,12 +422,12 @@ class UsageAlert extends Model
         }
 
         // Check business hours if enabled
-        if ($this->respect_business_hours && !$this->isWithinBusinessHours()) {
+        if ($this->respect_business_hours && ! $this->isWithinBusinessHours()) {
             return false;
         }
 
         // Check weekend notifications
-        if (!$this->weekend_notifications && now()->isWeekend()) {
+        if (! $this->weekend_notifications && now()->isWeekend()) {
             return false;
         }
 
@@ -420,7 +441,7 @@ class UsageAlert extends Model
     {
         $recentAlerts = $this->recent_alerts ?? [];
         $cutoff = now()->subMinutes($minutes);
-        
+
         return collect($recentAlerts)->filter(function ($alert) use ($cutoff) {
             return Carbon::parse($alert['timestamp'])->gt($cutoff);
         })->count();
@@ -431,7 +452,7 @@ class UsageAlert extends Model
      */
     protected function isWithinBusinessHours(): bool
     {
-        if (!$this->business_hours_schedule) {
+        if (! $this->business_hours_schedule) {
             return true;
         }
 
@@ -440,8 +461,8 @@ class UsageAlert extends Model
         $currentTime = $now->format('H:i');
 
         $schedule = $this->business_hours_schedule[$dayOfWeek] ?? null;
-        
-        if (!$schedule || !$schedule['enabled']) {
+
+        if (! $schedule || ! $schedule['enabled']) {
             return false;
         }
 
@@ -460,11 +481,12 @@ class UsageAlert extends Model
         ]);
 
         $thresholdMet = $this->evaluateThreshold($currentUsage, $options);
-        
-        if (!$thresholdMet) {
+
+        if (! $thresholdMet) {
             if ($this->alert_status !== self::STATUS_NORMAL) {
                 $this->update(['alert_status' => self::STATUS_NORMAL]);
             }
+
             return false;
         }
 
@@ -486,6 +508,7 @@ class UsageAlert extends Model
                 $capacity = $options['capacity'] ?? 100;
                 $percentage = ($currentUsage / $capacity) * 100;
                 $this->update(['current_threshold_percentage' => $percentage]);
+
                 return $this->compareValue($percentage, $this->threshold_value);
 
             case self::THRESHOLD_TYPE_ABSOLUTE:
@@ -494,12 +517,14 @@ class UsageAlert extends Model
             case self::THRESHOLD_TYPE_RATE_OF_CHANGE:
                 $previousUsage = $options['previous_usage'] ?? 0;
                 $changeRate = $previousUsage > 0 ? (($currentUsage - $previousUsage) / $previousUsage) * 100 : 0;
+
                 return $this->compareValue($changeRate, $this->threshold_value);
 
             case self::THRESHOLD_TYPE_PREDICTIVE:
                 if ($this->enable_predictive_alerts) {
                     return $this->evaluatePredictiveThreshold($currentUsage, $options);
                 }
+
                 return false;
 
             default:
@@ -547,10 +572,10 @@ class UsageAlert extends Model
     {
         $recentAlerts = $this->recent_alerts ?? [];
         $consecutiveCount = 1; // Current period
-        
+
         // Count recent consecutive threshold breaches
         $cutoffTime = now()->subHours(24); // Look back 24 hours
-        
+
         foreach (array_reverse($recentAlerts) as $alert) {
             $alertTime = Carbon::parse($alert['timestamp']);
             if ($alertTime->gt($cutoffTime) && $alert['threshold_met']) {
@@ -559,7 +584,7 @@ class UsageAlert extends Model
                 break; // Non-consecutive breach found
             }
         }
-        
+
         return $consecutiveCount >= $this->consecutive_period_count;
     }
 
@@ -570,7 +595,7 @@ class UsageAlert extends Model
     {
         // Determine severity
         $severity = $this->determineSeverity($context);
-        
+
         // Update alert status
         $this->update([
             'alert_status' => self::STATUS_TRIGGERED,
@@ -645,7 +670,7 @@ class UsageAlert extends Model
      */
     protected function sendNotifications(array $context): void
     {
-        Log::info("Usage alert triggered", [
+        Log::info('Usage alert triggered', [
             'alert_id' => $this->id,
             'alert_name' => $this->alert_name,
             'client_id' => $this->client_id,
@@ -656,7 +681,7 @@ class UsageAlert extends Model
 
         // Here you would integrate with actual notification services
         // Email, SMS, webhooks, etc.
-        
+
         // Update suppression window
         if ($this->enable_suppression) {
             $this->update([
@@ -679,17 +704,17 @@ class UsageAlert extends Model
     protected function executeAutomatedActions(array $context): void
     {
         if ($this->auto_suspend_services) {
-            Log::info("Auto-suspending services for alert", ['alert_id' => $this->id]);
+            Log::info('Auto-suspending services for alert', ['alert_id' => $this->id]);
             // Implement service suspension logic
         }
 
         if ($this->auto_limit_usage) {
-            Log::info("Auto-limiting usage for alert", ['alert_id' => $this->id]);
+            Log::info('Auto-limiting usage for alert', ['alert_id' => $this->id]);
             // Implement usage limiting logic
         }
 
         if ($this->auto_purchase_additional_usage) {
-            Log::info("Auto-purchasing additional usage for alert", ['alert_id' => $this->id]);
+            Log::info('Auto-purchasing additional usage for alert', ['alert_id' => $this->id]);
             // Implement additional usage purchase logic
         }
     }
@@ -699,7 +724,7 @@ class UsageAlert extends Model
      */
     protected function handleEscalation(array $context): void
     {
-        if ($this->last_escalated_at && 
+        if ($this->last_escalated_at &&
             $this->last_escalated_at->addMinutes($this->escalation_delay_minutes)->gt(now())) {
             return; // Not enough time has passed for escalation
         }
@@ -709,7 +734,7 @@ class UsageAlert extends Model
             'escalation_level' => $this->escalation_level + 1,
         ]);
 
-        Log::info("Alert escalated", [
+        Log::info('Alert escalated', [
             'alert_id' => $this->id,
             'escalation_level' => $this->escalation_level,
         ]);
@@ -718,7 +743,7 @@ class UsageAlert extends Model
     /**
      * Acknowledge the alert.
      */
-    public function acknowledge(int $userId, string $notes = null): void
+    public function acknowledge(int $userId, ?string $notes = null): void
     {
         $acknowledgment = [
             'acknowledged_at' => now(),
@@ -802,11 +827,11 @@ class UsageAlert extends Model
         parent::boot();
 
         static::creating(function ($alert) {
-            if (!$alert->alert_code) {
-                $alert->alert_code = 'ALERT-' . strtoupper(uniqid());
+            if (! $alert->alert_code) {
+                $alert->alert_code = 'ALERT-'.strtoupper(uniqid());
             }
-            
-            if (!$alert->alert_created_date) {
+
+            if (! $alert->alert_created_date) {
                 $alert->alert_created_date = now();
             }
         });

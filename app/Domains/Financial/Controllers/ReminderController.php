@@ -16,8 +16,8 @@ class ReminderController extends Controller
                 'total' => 0,
                 'scheduled' => 0,
                 'sent' => 0,
-                'pending' => 0
-            ]
+                'pending' => 0,
+            ],
         ]);
     }
 

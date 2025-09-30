@@ -2,16 +2,14 @@
 
 namespace App\Domains\Contract\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
-use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Models\ContractClauseModel;
+use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class ContractTemplateController extends Controller
 {
@@ -22,6 +20,7 @@ class ContractTemplateController extends Controller
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
             $this->configRegistry = new ContractConfigurationRegistry(auth()->user()->company_id);
+
             return $next($request);
         });
     }
@@ -36,7 +35,7 @@ class ContractTemplateController extends Controller
             ->get();
 
         $contractTypes = $this->configRegistry->getContractTypes();
-        
+
         $clauses = ContractClauseModel::where('company_id', auth()->user()->company_id)
             ->where('is_active', true)
             ->orderBy('category')
@@ -64,7 +63,7 @@ class ContractTemplateController extends Controller
                 'status' => 'required|in:draft,active,archived',
                 'is_default' => 'boolean',
                 'clauses' => 'nullable|array',
-                'clauses.*' => 'exists:contract_clauses,id'
+                'clauses.*' => 'exists:contract_clauses,id',
             ]);
 
             $template = ContractTemplate::create([
@@ -91,18 +90,18 @@ class ContractTemplateController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Contract template created successfully',
-                'data' => $template
+                'data' => $template,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to create contract template', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
-                'company_id' => auth()->user()->company_id
+                'company_id' => auth()->user()->company_id,
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create contract template: ' . $e->getMessage()
+                'message' => 'Failed to create contract template: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -116,7 +115,7 @@ class ContractTemplateController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $template->load('contractClauses')
+            'data' => $template->load('contractClauses'),
         ]);
     }
 
@@ -153,12 +152,12 @@ class ContractTemplateController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Contract template updated successfully',
-                'data' => $template
+                'data' => $template,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update contract template'
+                'message' => 'Failed to update contract template',
             ], 500);
         }
     }
@@ -171,17 +170,17 @@ class ContractTemplateController extends Controller
         $this->authorize('view', $template);
 
         try {
-            $clonedTemplate = $template->cloneTemplate($template->name . ' (Copy)');
+            $clonedTemplate = $template->cloneTemplate($template->name.' (Copy)');
 
             return response()->json([
                 'success' => true,
                 'message' => 'Template cloned successfully',
-                'data' => $clonedTemplate
+                'data' => $clonedTemplate,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to clone template'
+                'message' => 'Failed to clone template',
             ], 500);
         }
     }
@@ -198,12 +197,12 @@ class ContractTemplateController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Contract template deleted successfully'
+                'message' => 'Contract template deleted successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete contract template'
+                'message' => 'Failed to delete contract template',
             ], 500);
         }
     }
@@ -222,13 +221,13 @@ class ContractTemplateController extends Controller
                 'success' => true,
                 'data' => [
                     'html' => $preview,
-                    'template' => $template
-                ]
+                    'template' => $template,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to generate preview'
+                'message' => 'Failed to generate preview',
             ], 500);
         }
     }
@@ -244,14 +243,14 @@ class ContractTemplateController extends Controller
             $exportData = [
                 'version' => '1.0',
                 'exported_at' => now()->toISOString(),
-                'template' => $template->toArray()
+                'template' => $template->toArray(),
             ];
 
             return response()->json($exportData);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to export template'
+                'message' => 'Failed to export template',
             ], 500);
         }
     }
@@ -267,13 +266,13 @@ class ContractTemplateController extends Controller
 
             foreach ($standardTemplates as $templateData) {
                 $templateData['company_id'] = auth()->user()->company_id;
-                
+
                 // Check if template already exists
                 $exists = ContractTemplate::where('company_id', auth()->user()->company_id)
                     ->where('name', $templateData['name'])
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     ContractTemplate::create($templateData);
                     $imported++;
                 }
@@ -281,12 +280,12 @@ class ContractTemplateController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Successfully imported {$imported} standard templates"
+                'message' => "Successfully imported {$imported} standard templates",
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to import standard templates'
+                'message' => 'Failed to import standard templates',
             ], 500);
         }
     }
@@ -297,7 +296,7 @@ class ContractTemplateController extends Controller
     protected function getStatistics(): array
     {
         $companyId = auth()->user()->company_id;
-        
+
         $totalTemplates = ContractTemplate::where('company_id', $companyId)->count();
         $activeTemplates = ContractTemplate::where('company_id', $companyId)->where('status', 'active')->count();
         $contractsGenerated = 0; // This would come from actual contract usage
@@ -324,7 +323,7 @@ class ContractTemplateController extends Controller
                 'category' => 'service',
                 'content' => $this->getMSPServiceAgreementTemplate(),
                 'status' => 'active',
-                'version' => '1.0'
+                'version' => '1.0',
             ],
             [
                 'name' => 'IT Support Contract',
@@ -333,7 +332,7 @@ class ContractTemplateController extends Controller
                 'category' => 'maintenance',
                 'content' => $this->getITSupportContractTemplate(),
                 'status' => 'active',
-                'version' => '1.0'
+                'version' => '1.0',
             ],
             [
                 'name' => 'Cloud Services Agreement',
@@ -342,8 +341,8 @@ class ContractTemplateController extends Controller
                 'category' => 'service',
                 'content' => $this->getCloudServicesTemplate(),
                 'status' => 'active',
-                'version' => '1.0'
-            ]
+                'version' => '1.0',
+            ],
         ];
     }
 

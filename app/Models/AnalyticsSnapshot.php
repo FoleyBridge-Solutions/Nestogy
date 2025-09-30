@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 /**
  * AnalyticsSnapshot Model
- * 
+ *
  * Stores historical analytics data for trend analysis and performance tracking.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $snapshot_type
@@ -53,7 +53,7 @@ use Carbon\Carbon;
  */
 class AnalyticsSnapshot extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'analytics_snapshots';
 
@@ -133,22 +133,33 @@ class AnalyticsSnapshot extends Model
 
     // Snapshot Types
     const TYPE_DAILY = 'daily';
+
     const TYPE_WEEKLY = 'weekly';
+
     const TYPE_MONTHLY = 'monthly';
+
     const TYPE_QUARTERLY = 'quarterly';
+
     const TYPE_ANNUAL = 'annual';
 
     // Data Categories
     const CATEGORY_REVENUE = 'revenue';
+
     const CATEGORY_CUSTOMERS = 'customers';
+
     const CATEGORY_OPERATIONS = 'operations';
+
     const CATEGORY_TAX = 'tax';
+
     const CATEGORY_CONTRACTS = 'contracts';
 
     // Calculation Status
     const STATUS_PENDING = 'pending';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_ERROR = 'error';
 
     /**
@@ -211,7 +222,7 @@ class AnalyticsSnapshot extends Model
             ->orderBy('snapshot_date', 'desc')
             ->first();
 
-        if (!$previousSnapshot) {
+        if (! $previousSnapshot) {
             return [];
         }
 
@@ -221,14 +232,14 @@ class AnalyticsSnapshot extends Model
             'active_clients', 'new_clients', 'churned_clients',
             'average_deal_size', 'customer_lifetime_value', 'customer_acquisition_cost',
             'gross_profit_margin', 'net_profit_margin', 'collection_efficiency',
-            'outstanding_receivables', 'quotes_sent', 'quotes_accepted', 'quote_conversion_rate'
+            'outstanding_receivables', 'quotes_sent', 'quotes_accepted', 'quote_conversion_rate',
         ];
 
         foreach ($numericalFields as $field) {
             if ($this->$field !== null && $previousSnapshot->$field !== null) {
                 $current = (float) $this->$field;
                 $previous = (float) $previousSnapshot->$field;
-                
+
                 if ($previous > 0) {
                     $percentageChange = (($current - $previous) / $previous) * 100;
                     $comparison[$field] = [
@@ -236,7 +247,7 @@ class AnalyticsSnapshot extends Model
                         'previous' => $previous,
                         'change' => $current - $previous,
                         'percentage_change' => round($percentageChange, 2),
-                        'trend' => $current > $previous ? 'up' : ($current < $previous ? 'down' : 'stable')
+                        'trend' => $current > $previous ? 'up' : ($current < $previous ? 'down' : 'stable'),
                     ];
                 }
             }
@@ -256,7 +267,7 @@ class AnalyticsSnapshot extends Model
     /**
      * Mark snapshot as completed
      */
-    public function markAsCompleted(int $durationMs = null): void
+    public function markAsCompleted(?int $durationMs = null): void
     {
         $this->update([
             'calculation_status' => self::STATUS_COMPLETED,
@@ -268,7 +279,7 @@ class AnalyticsSnapshot extends Model
     /**
      * Mark snapshot as error
      */
-    public function markAsError(string $notes = null): void
+    public function markAsError(?string $notes = null): void
     {
         $this->update([
             'calculation_status' => self::STATUS_ERROR,

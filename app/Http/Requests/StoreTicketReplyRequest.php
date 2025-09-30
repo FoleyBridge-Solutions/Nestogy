@@ -78,30 +78,30 @@ class StoreTicketReplyRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Map 'reply' field to 'message' for backward compatibility
-        if ($this->has('reply') && !$this->has('message')) {
+        if ($this->has('reply') && ! $this->has('message')) {
             $this->merge([
-                'message' => $this->reply
+                'message' => $this->reply,
             ]);
         }
 
         // Map 'time_worked' field to 'time_spent' for backward compatibility
-        if ($this->has('time_worked') && !$this->has('time_spent')) {
+        if ($this->has('time_worked') && ! $this->has('time_spent')) {
             $this->merge([
-                'time_spent' => $this->time_worked
+                'time_spent' => $this->time_worked,
             ]);
         }
 
         // Clean and format time spent - handle empty strings and null values
         $timeSpentValue = $this->input('time_spent');
         $timeWorkedValue = $this->input('time_worked');
-        
+
         // Use whichever field has a value, prioritizing time_spent
         $timeValue = $timeSpentValue ?? $timeWorkedValue;
-        
-        if (!empty($timeValue) && $timeValue !== '' && $timeValue !== 'null') {
+
+        if (! empty($timeValue) && $timeValue !== '' && $timeValue !== 'null') {
             $timeSpent = (float) $timeValue;
             $this->merge([
-                'time_spent' => $timeSpent > 0 ? $timeSpent : null
+                'time_spent' => $timeSpent > 0 ? $timeSpent : null,
             ]);
         } else {
             $this->merge(['time_spent' => null]);
@@ -110,14 +110,14 @@ class StoreTicketReplyRequest extends FormRequest
         // Ensure type is lowercase
         if ($this->has('type')) {
             $this->merge([
-                'type' => strtolower(trim($this->type))
+                'type' => strtolower(trim($this->type)),
             ]);
         }
 
         // Clean message content
         if ($this->has('message')) {
             $this->merge([
-                'message' => trim($this->message)
+                'message' => trim($this->message),
             ]);
         }
     }
@@ -140,17 +140,17 @@ class StoreTicketReplyRequest extends FormRequest
             if ($this->filled('status') && $ticket) {
                 $currentStatus = $ticket->status;
                 $newStatus = $this->status;
-                
+
                 // Prevent reopening closed tickets without proper permissions
                 if ($currentStatus === 'Closed' && $newStatus !== 'Closed') {
-                    if (!$user->settings || $user->settings->role < 3) { // Manager level required
+                    if (! $user->settings || $user->settings->role < 3) { // Manager level required
                         $validator->errors()->add('status', 'Only managers can reopen closed tickets.');
                     }
                 }
 
                 // Prevent closing tickets without proper permissions
                 if ($newStatus === 'Closed' && $currentStatus !== 'Closed') {
-                    if (!$user->settings || $user->settings->role < 2) { // Technician level required
+                    if (! $user->settings || $user->settings->role < 2) { // Technician level required
                         $validator->errors()->add('status', 'Only technicians and managers can close tickets.');
                     }
                 }
@@ -158,7 +158,7 @@ class StoreTicketReplyRequest extends FormRequest
 
             // Validate time tracking permissions
             if ($this->filled('time_spent')) {
-                if (!$user->settings || $user->settings->role < 2) { // Technician level required
+                if (! $user->settings || $user->settings->role < 2) { // Technician level required
                     $validator->errors()->add('time_spent', 'Only technicians and managers can log time.');
                 }
             }
@@ -170,7 +170,7 @@ class StoreTicketReplyRequest extends FormRequest
 
             // Business rule: Time can only be logged on public replies or by technicians
             if ($this->filled('time_spent') && $this->type === 'private') {
-                if (!$user->settings || $user->settings->role < 2) {
+                if (! $user->settings || $user->settings->role < 2) {
                     $validator->errors()->add('time_spent', 'Time can only be logged on public replies.');
                 }
             }

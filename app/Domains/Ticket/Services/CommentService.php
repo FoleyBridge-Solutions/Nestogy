@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Comment Service
- * 
+ *
  * Unified service for managing ticket comments, replacing the fragmented
  * reply system with a consistent interface.
  */
@@ -19,14 +19,6 @@ class CommentService
 {
     /**
      * Add a comment to a ticket
-     * 
-     * @param Ticket $ticket
-     * @param string $content
-     * @param string $visibility
-     * @param User|null $author
-     * @param string $source
-     * @param array $options
-     * @return TicketComment
      */
     public function addComment(
         Ticket $ticket,
@@ -63,7 +55,7 @@ class CommentService
             }
 
             // Queue sentiment analysis for manual comments
-            if ($source === TicketComment::SOURCE_MANUAL && !empty($content)) {
+            if ($source === TicketComment::SOURCE_MANUAL && ! empty($content)) {
                 \App\Jobs\AnalyzeTicketSentiment::dispatch($comment->company_id, $comment->id, 'comment');
             }
 
@@ -90,7 +82,7 @@ class CommentService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Failed to add comment', [
                 'ticket_id' => $ticket->id,
                 'error' => $e->getMessage(),
@@ -102,12 +94,6 @@ class CommentService
 
     /**
      * Add an internal note to a ticket
-     * 
-     * @param Ticket $ticket
-     * @param string $content
-     * @param User|null $author
-     * @param array $options
-     * @return TicketComment
      */
     public function addInternalNote(
         Ticket $ticket,
@@ -127,11 +113,6 @@ class CommentService
 
     /**
      * Add a system-generated comment
-     * 
-     * @param Ticket $ticket
-     * @param string $content
-     * @param array $metadata
-     * @return TicketComment
      */
     public function addSystemComment(
         Ticket $ticket,
@@ -150,11 +131,6 @@ class CommentService
 
     /**
      * Add a workflow-generated comment
-     * 
-     * @param Ticket $ticket
-     * @param string $content
-     * @param array $metadata
-     * @return TicketComment
      */
     public function addWorkflowComment(
         Ticket $ticket,
@@ -173,11 +149,6 @@ class CommentService
 
     /**
      * Edit a comment
-     * 
-     * @param TicketComment $comment
-     * @param string $newContent
-     * @param User $editor
-     * @return bool
      */
     public function editComment(
         TicketComment $comment,
@@ -186,7 +157,7 @@ class CommentService
     ): bool {
         try {
             // Check permissions
-            if (!$comment->canBeEditedBy($editor)) {
+            if (! $comment->canBeEditedBy($editor)) {
                 throw new \Exception('User does not have permission to edit this comment');
             }
 
@@ -224,10 +195,6 @@ class CommentService
 
     /**
      * Delete a comment
-     * 
-     * @param TicketComment $comment
-     * @param User $deleter
-     * @return bool
      */
     public function deleteComment(
         TicketComment $comment,
@@ -235,7 +202,7 @@ class CommentService
     ): bool {
         try {
             // Check permissions
-            if (!$comment->canBeDeletedBy($deleter)) {
+            if (! $comment->canBeDeletedBy($deleter)) {
                 throw new \Exception('User does not have permission to delete this comment');
             }
 
@@ -261,12 +228,6 @@ class CommentService
 
     /**
      * Create a time entry for a comment
-     * 
-     * @param Ticket $ticket
-     * @param User|null $user
-     * @param float $minutes
-     * @param array $options
-     * @return TicketTimeEntry
      */
     protected function createTimeEntry(
         Ticket $ticket,
@@ -292,10 +253,6 @@ class CommentService
 
     /**
      * Determine author type based on source and user
-     * 
-     * @param string $source
-     * @param User|null $author
-     * @return string
      */
     protected function determineAuthorType(string $source, ?User $author): string
     {
@@ -311,6 +268,7 @@ class CommentService
             if ($author->hasRole(['admin', 'manager', 'technician'])) {
                 return TicketComment::AUTHOR_USER;
             }
+
             return TicketComment::AUTHOR_CUSTOMER;
         }
 
@@ -319,14 +277,10 @@ class CommentService
 
     /**
      * Check if this is the first staff response
-     * 
-     * @param Ticket $ticket
-     * @param User|null $author
-     * @return bool
      */
     protected function isFirstStaffResponse(Ticket $ticket, ?User $author): bool
     {
-        if (!$author || !$author->hasRole(['admin', 'manager', 'technician'])) {
+        if (! $author || ! $author->hasRole(['admin', 'manager', 'technician'])) {
             return false;
         }
 
@@ -341,13 +295,10 @@ class CommentService
 
     /**
      * Track first response time
-     * 
-     * @param Ticket $ticket
-     * @return void
      */
     protected function trackFirstResponse(Ticket $ticket): void
     {
-        if (!$ticket->first_response_at) {
+        if (! $ticket->first_response_at) {
             $ticket->update([
                 'first_response_at' => now(),
                 'response_time_hours' => $ticket->created_at->diffInHours(now()),
@@ -365,11 +316,6 @@ class CommentService
 
     /**
      * Update ticket status from comment
-     * 
-     * @param Ticket $ticket
-     * @param string $newStatus
-     * @param User|null $user
-     * @return void
      */
     protected function updateTicketStatusFromComment(
         Ticket $ticket,
@@ -377,7 +323,7 @@ class CommentService
         ?User $user
     ): void {
         $oldStatus = $ticket->status;
-        
+
         if ($ticket->canTransitionTo($newStatus)) {
             $ticket->update(['status' => $newStatus]);
 
@@ -397,9 +343,7 @@ class CommentService
 
     /**
      * Get comments for client view
-     * 
-     * @param Ticket $ticket
-     * @param int $limit
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getClientVisibleComments(Ticket $ticket, int $limit = 50)
@@ -414,9 +358,7 @@ class CommentService
 
     /**
      * Get all comments for staff view
-     * 
-     * @param Ticket $ticket
-     * @param int $limit
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getStaffComments(Ticket $ticket, int $limit = 50)

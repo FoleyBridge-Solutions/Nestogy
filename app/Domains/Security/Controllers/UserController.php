@@ -2,27 +2,27 @@
 
 namespace App\Domains\Security\Controllers;
 
+use App\Domains\Product\Services\SubscriptionService;
+use App\Domains\Security\Services\RoleService;
+use App\Domains\Security\Services\UserService;
 use App\Http\Controllers\Controller;
-
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
+use App\Models\Company;
+use App\Models\User;
+use App\Models\UserSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use App\Models\User;
-use App\Models\UserSetting;
-use App\Models\Company;
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\UpdateUserRequest;
-use App\Domains\Security\Services\UserService;
-use App\Domains\Security\Services\RoleService;
-use App\Domains\Product\Services\SubscriptionService;
-use App\Exceptions\UserLimitExceededException;
 
 class UserController extends Controller
 {
     protected $userService;
+
     protected $roleService;
+
     protected $subscriptionService;
 
     public function __construct(UserService $userService, RoleService $roleService, SubscriptionService $subscriptionService)
@@ -59,7 +59,7 @@ class UserController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -78,12 +78,12 @@ class UserController extends Controller
     public function export(Request $request)
     {
         $this->authorize('viewAny', User::class);
-        
+
         $user = Auth::user();
         $query = User::query();
 
         // Company filtering for non-super-admins
-        if (!$user->canAccessCrossTenant()) {
+        if (! $user->canAccessCrossTenant()) {
             $query->where('company_id', $user->company_id);
         }
 
@@ -92,7 +92,7 @@ class UserController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -111,15 +111,15 @@ class UserController extends Controller
         // Generate CSV
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="users-' . date('Y-m-d') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="users-'.date('Y-m-d').'.csv"',
         ];
 
-        $callback = function() use ($users) {
+        $callback = function () use ($users) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, ['Name', 'Email', 'Company', 'Role', 'Status', 'Created At']);
-            
+
             // CSV data
             foreach ($users as $user) {
                 $role = $this->roleService->getUserRole($user);
@@ -129,10 +129,10 @@ class UserController extends Controller
                     $user->company->name ?? 'N/A',
                     $role['display_name'] ?? 'User',
                     $user->archived_at ? 'Archived' : 'Active',
-                    $user->created_at->format('Y-m-d H:i:s')
+                    $user->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -145,9 +145,9 @@ class UserController extends Controller
     public function create()
     {
         $this->authorize('create', User::class);
-        
+
         $user = Auth::user();
-        
+
         // Super-admins can add users to any company
         if ($user->canAccessCrossTenant()) {
             $companies = Company::where('is_active', true)->orderBy('name')->get();
@@ -159,7 +159,7 @@ class UserController extends Controller
         // Get available roles based on current user's permissions
         // Get all Bouncer roles and filter based on hierarchy
         $availableRoles = $this->getAvailableRolesForUser($user);
-        
+
         return view('users.create', compact('companies', 'availableRoles'));
     }
 
@@ -183,18 +183,18 @@ class UserController extends Controller
             $this->subscriptionService->enforceUserLimits($company);
 
             $userData = $this->userService->createUser($request->validated());
-            
+
             Log::info('User created', [
                 'user_id' => $userData['user_id'],
                 'created_by' => Auth::id(),
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'User created successfully',
-                    'user' => $userData
+                    'user' => $userData,
                 ], 201);
             }
 
@@ -205,13 +205,13 @@ class UserController extends Controller
         } catch (\Exception $e) {
             Log::error('User creation failed', [
                 'error' => $e->getMessage(),
-                'created_by' => Auth::id()
+                'created_by' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create user'
+                    'message' => 'Failed to create user',
                 ], 500);
             }
 
@@ -234,8 +234,8 @@ class UserController extends Controller
             },
             'assignedTickets' => function ($query) {
                 $query->whereIn('status', ['Open', 'In Progress', 'Waiting'])
-                      ->orderBy('created_at', 'desc');
-            }
+                    ->orderBy('created_at', 'desc');
+            },
         ]);
 
         // Get user statistics
@@ -250,7 +250,7 @@ class UserController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'user' => $user,
-                'stats' => $stats
+                'stats' => $stats,
             ]);
         }
 
@@ -263,11 +263,11 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $this->authorize('update', $user);
-        
+
         // Get available roles based on current user's permissions
         $currentUser = Auth::user();
         $availableRoles = $this->getAvailableRolesForUser($currentUser);
-        
+
         return view('users.edit', compact('user', 'availableRoles'));
     }
 
@@ -280,18 +280,18 @@ class UserController extends Controller
 
         try {
             $updatedUser = $this->userService->updateUser($user, $request->validated());
-            
+
             Log::info('User updated', [
                 'user_id' => $user->id,
                 'updated_by' => Auth::id(),
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'User updated successfully',
-                    'user' => $updatedUser
+                    'user' => $updatedUser,
                 ]);
             }
 
@@ -303,13 +303,13 @@ class UserController extends Controller
             Log::error('User update failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'updated_by' => Auth::id()
+                'updated_by' => Auth::id(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update user'
+                    'message' => 'Failed to update user',
                 ], 500);
             }
 
@@ -330,23 +330,23 @@ class UserController extends Controller
         ]);
 
         // If updating own password, verify current password
-        if ($user->id === Auth::id() && !Hash::check($request->get('current_password'), $user->password)) {
+        if ($user->id === Auth::id() && ! Hash::check($request->get('current_password'), $user->password)) {
             return back()->withErrors(['current_password' => 'Current password is incorrect']);
         }
 
         try {
             $this->userService->updateUserPassword($user, $request->get('password'));
-            
+
             Log::info('User password updated', [
                 'user_id' => $user->id,
                 'updated_by' => Auth::id(),
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Password updated successfully'
+                    'message' => 'Password updated successfully',
                 ]);
             }
 
@@ -358,7 +358,7 @@ class UserController extends Controller
             Log::error('User password update failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'updated_by' => Auth::id()
+                'updated_by' => Auth::id(),
             ]);
 
             return back()->with('error', 'Failed to update password');
@@ -379,21 +379,21 @@ class UserController extends Controller
         try {
             $oldRole = $user->userSetting->role ?? 1;
             $newRole = $request->get('role');
-            
+
             $this->userService->updateUserRole($user, $newRole);
-            
+
             Log::info('User role updated', [
                 'user_id' => $user->id,
                 'old_role' => $oldRole,
                 'new_role' => $newRole,
                 'updated_by' => Auth::id(),
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'User role updated successfully'
+                    'message' => 'User role updated successfully',
                 ]);
             }
 
@@ -405,7 +405,7 @@ class UserController extends Controller
             Log::error('User role update failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'updated_by' => Auth::id()
+                'updated_by' => Auth::id(),
             ]);
 
             return back()->with('error', 'Failed to update user role');
@@ -426,15 +426,15 @@ class UserController extends Controller
         try {
             $oldStatus = $user->status;
             $newStatus = $request->get('status');
-            
+
             $this->userService->updateUserStatus($user, $newStatus);
-            
+
             Log::info('User status updated', [
                 'user_id' => $user->id,
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus,
                 'updated_by' => Auth::id(),
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             $statusText = $newStatus ? 'Active' : 'Inactive';
@@ -442,7 +442,7 @@ class UserController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => "User status updated to {$statusText}"
+                    'message' => "User status updated to {$statusText}",
                 ]);
             }
 
@@ -454,7 +454,7 @@ class UserController extends Controller
             Log::error('User status update failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'updated_by' => Auth::id()
+                'updated_by' => Auth::id(),
             ]);
 
             return back()->with('error', 'Failed to update user status');
@@ -475,17 +475,17 @@ class UserController extends Controller
 
         try {
             $this->userService->archiveUser($user);
-            
+
             Log::info('User archived', [
                 'user_id' => $user->id,
                 'archived_by' => Auth::id(),
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'User archived successfully'
+                    'message' => 'User archived successfully',
                 ]);
             }
 
@@ -497,7 +497,7 @@ class UserController extends Controller
             Log::error('User archive failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'archived_by' => Auth::id()
+                'archived_by' => Auth::id(),
             ]);
 
             return back()->with('error', 'Failed to archive user');
@@ -514,17 +514,17 @@ class UserController extends Controller
 
         try {
             $this->userService->restoreUser($user);
-            
+
             Log::info('User restored', [
                 'user_id' => $user->id,
                 'restored_by' => Auth::id(),
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'User restored successfully'
+                    'message' => 'User restored successfully',
                 ]);
             }
 
@@ -536,7 +536,7 @@ class UserController extends Controller
             Log::error('User restore failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'restored_by' => Auth::id()
+                'restored_by' => Auth::id(),
             ]);
 
             return back()->with('error', 'Failed to restore user');
@@ -559,18 +559,18 @@ class UserController extends Controller
         try {
             $userName = $user->name;
             $this->userService->deleteUser($user);
-            
+
             Log::warning('User permanently deleted', [
                 'user_id' => $user->id,
                 'user_name' => $userName,
                 'deleted_by' => Auth::id(),
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'User permanently deleted'
+                    'message' => 'User permanently deleted',
                 ]);
             }
 
@@ -582,7 +582,7 @@ class UserController extends Controller
             Log::error('User deletion failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'deleted_by' => Auth::id()
+                'deleted_by' => Auth::id(),
             ]);
 
             return back()->with('error', 'Failed to delete user');
@@ -598,7 +598,7 @@ class UserController extends Controller
         $user->load(['company', 'userSetting']);
 
         // Ensure user has settings
-        if (!$user->userSetting) {
+        if (! $user->userSetting) {
             $user->userSetting = UserSetting::createDefaultForUser($user->id, UserSetting::ROLE_ACCOUNTANT, $user->company_id);
         }
 
@@ -634,17 +634,17 @@ class UserController extends Controller
 
         try {
             $updatedUser = $this->userService->updateUserProfile($user, $request->all());
-            
+
             Log::info('User profile updated', [
                 'user_id' => $user->id,
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Profile updated successfully',
-                    'user' => $updatedUser
+                    'user' => $updatedUser,
                 ]);
             }
 
@@ -655,7 +655,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             Log::error('User profile update failed', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()->withInput()->with('error', 'Failed to update profile');
@@ -683,7 +683,7 @@ class UserController extends Controller
 
         try {
             // Ensure user has settings
-            if (!$user->userSetting) {
+            if (! $user->userSetting) {
                 $user->userSetting = UserSetting::createDefaultForUser($user->id, UserSetting::ROLE_ACCOUNTANT, $user->company_id);
             }
 
@@ -691,11 +691,11 @@ class UserController extends Controller
             if ($request->has('records_per_page')) {
                 $user->userSetting->update(['records_per_page' => $request->get('records_per_page')]);
             }
-            
+
             if ($request->has('dashboard_financial_enable')) {
                 $user->userSetting->update(['dashboard_financial_enable' => $request->boolean('dashboard_financial_enable')]);
             }
-            
+
             if ($request->has('dashboard_technical_enable')) {
                 $user->userSetting->update(['dashboard_technical_enable' => $request->boolean('dashboard_technical_enable')]);
             }
@@ -706,16 +706,16 @@ class UserController extends Controller
 
             // Update other user preferences through the service
             $this->userService->updateUserSettings($user, $request->all());
-            
+
             Log::info('User settings updated', [
                 'user_id' => $user->id,
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Settings updated successfully'
+                    'message' => 'Settings updated successfully',
                 ]);
             }
 
@@ -726,7 +726,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             Log::error('User settings update failed', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()->with('error', 'Failed to update settings');
@@ -749,28 +749,28 @@ class UserController extends Controller
         try {
             // Update password
             $user->update([
-                'password' => Hash::make($request->password)
+                'password' => Hash::make($request->password),
             ]);
 
             // Update MFA setting if provided
             if ($request->has('force_mfa')) {
                 // Ensure user has settings
-                if (!$user->userSetting) {
+                if (! $user->userSetting) {
                     $user->userSetting = UserSetting::createDefaultForUser($user->id, UserSetting::ROLE_ACCOUNTANT, $user->company_id);
                 }
-                
+
                 $user->userSetting->update(['force_mfa' => $request->boolean('force_mfa')]);
             }
-            
+
             Log::info('User password updated', [
                 'user_id' => $user->id,
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Security settings updated successfully'
+                    'message' => 'Security settings updated successfully',
                 ]);
             }
 
@@ -781,7 +781,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             Log::error('User password update failed', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()->with('error', 'Failed to update security settings');
@@ -794,7 +794,7 @@ class UserController extends Controller
     public function getActiveTechnicians(Request $request)
     {
         $user = Auth::user();
-        
+
         $technicians = User::with('userSetting')
             ->where('company_id', $user->company_id)
             ->where('status', 1)
@@ -830,15 +830,15 @@ class UserController extends Controller
     public function exportCsv(Request $request)
     {
         $user = Auth::user();
-        
+
         $users = User::with(['userSetting'])
             ->where('company_id', $user->company_id)
             ->whereNull('archived_at')
             ->orderBy('name')
             ->get();
 
-        $filename = 'users-' . now()->format('Y-m-d') . '.csv';
-        
+        $filename = 'users-'.now()->format('Y-m-d').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
@@ -846,7 +846,7 @@ class UserController extends Controller
 
         $callback = function () use ($users) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Name',
@@ -855,14 +855,14 @@ class UserController extends Controller
                 'Role',
                 'Status',
                 'Last Login',
-                'Created Date'
+                'Created Date',
             ]);
 
             // CSV data
             foreach ($users as $user) {
                 $roleNames = [1 => 'User', 2 => 'Tech', 3 => 'Admin', 4 => 'Super Admin'];
                 $role = $roleNames[$user->userSetting->role ?? 1] ?? 'User';
-                
+
                 fputcsv($file, [
                     $user->name,
                     $user->email,
@@ -870,16 +870,16 @@ class UserController extends Controller
                     $role,
                     $user->status ? 'Active' : 'Inactive',
                     $user->last_login_at ? $user->last_login_at->format('Y-m-d H:i:s') : '',
-                    $user->created_at->format('Y-m-d H:i:s')
+                    $user->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
         Log::info('Users exported to CSV', [
             'count' => $users->count(),
-            'exported_by' => Auth::id()
+            'exported_by' => Auth::id(),
         ]);
 
         return response()->stream($callback, 200, $headers);
@@ -891,7 +891,7 @@ class UserController extends Controller
     public function updatePreferences(Request $request)
     {
         $user = Auth::user();
-        
+
         $request->validate([
             'theme' => 'nullable|in:light,dark,system',
             'language' => 'nullable|string|max:5',
@@ -904,10 +904,10 @@ class UserController extends Controller
 
         try {
             // Get or create user settings
-            if (!$user->userSetting) {
+            if (! $user->userSetting) {
                 $user->userSetting = UserSetting::createDefaultForUser($user->id, UserSetting::ROLE_USER, $user->company_id);
             }
-            
+
             // Update preferences
             $preferences = $user->userSetting->preferences ?? [];
             $preferences['theme'] = $request->input('theme', 'light');
@@ -917,13 +917,13 @@ class UserController extends Controller
             $preferences['time_format'] = $request->input('time_format', '12');
             $preferences['email_notifications'] = $request->boolean('email_notifications');
             $preferences['desktop_notifications'] = $request->boolean('desktop_notifications');
-            
+
             $user->userSetting->preferences = $preferences;
             $user->userSetting->save();
-            
+
             Log::info('User preferences updated', [
                 'user_id' => $user->id,
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
 
             return redirect()
@@ -933,7 +933,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             Log::error('User preferences update failed', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()->with('error', 'Failed to update preferences');
@@ -946,13 +946,13 @@ class UserController extends Controller
     public function destroyAccount(Request $request)
     {
         $user = Auth::user();
-        
+
         $request->validate([
             'password' => 'required|string',
         ]);
 
         // Verify password
-        if (!Hash::check($request->password, $user->password)) {
+        if (! Hash::check($request->password, $user->password)) {
             return back()->with('error', 'Invalid password');
         }
 
@@ -961,26 +961,26 @@ class UserController extends Controller
             $user->archived_at = now();
             $user->status = 0;
             $user->save();
-            
+
             Log::info('User account deleted', [
                 'user_id' => $user->id,
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ]);
-            
+
             Auth::logout();
-            
+
             return redirect('/')->with('success', 'Your account has been deleted');
 
         } catch (\Exception $e) {
             Log::error('User account deletion failed', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return back()->with('error', 'Failed to delete account');
         }
     }
-    
+
     /**
      * Get available roles based on user's permission level
      */
@@ -997,38 +997,38 @@ class UserController extends Controller
             'user' => 1,
             'client-user' => 1,
         ];
-        
+
         // Get all Bouncer roles
         $allRoles = \Silber\Bouncer\BouncerFacade::role()->get();
-        
+
         // Determine the user's highest role level
         $userRoleLevel = 1;
         if ($user->isA('super-admin')) {
             $userRoleLevel = 4;
         } elseif ($user->isA('admin')) {
             $userRoleLevel = 3;
-        } elseif ($user->isA('technician') || $user->isA('accountant') || 
+        } elseif ($user->isA('technician') || $user->isA('accountant') ||
                   $user->isA('sales-representative') || $user->isA('marketing-specialist')) {
             $userRoleLevel = 2;
         }
-        
+
         // Filter roles and format for dropdown
         $availableRoles = [];
         foreach ($allRoles as $role) {
             $roleLevel = $roleHierarchy[$role->name] ?? 1;
-            
+
             // Only include roles at or below user's level
             // Exclude super-admin unless user is super-admin
             if ($role->name === 'super-admin' && $userRoleLevel < 4) {
                 continue;
             }
-            
+
             if ($roleLevel <= $userRoleLevel) {
                 // Use role ID as key and title/name as value
                 $availableRoles[$role->id] = $role->title ?: ucwords(str_replace('-', ' ', $role->name));
             }
         }
-        
+
         return $availableRoles;
     }
 }

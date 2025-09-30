@@ -7,10 +7,10 @@ use Exception;
 
 /**
  * VATcomply API Client
- * 
+ *
  * Free API service for VAT number validation, VAT rates, IP geolocation,
  * and IBAN validation. Open source alternative to paid VAT APIs.
- * 
+ *
  * API Documentation: https://www.vatcomply.com/documentation
  * GitHub: https://github.com/madisvain/vatcomply
  */
@@ -47,14 +47,14 @@ class VatComplyApiClient extends BaseApiClient
 
     /**
      * Validate a VAT number
-     * 
-     * @param string $vatNumber VAT number to validate (e.g., "GB123456789")
+     *
+     * @param  string  $vatNumber  VAT number to validate (e.g., "GB123456789")
      * @return array Validation result with company information
      */
     public function validateVatNumber(string $vatNumber): array
     {
         $parameters = ['vat_number' => $vatNumber];
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_VAT_VALIDATION,
             $parameters,
@@ -62,12 +62,12 @@ class VatComplyApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->get("{$this->baseUrl}/vat", ['vat_number' => $vatNumber]);
 
-                if (!$response->successful()) {
-                    throw new Exception("VATcomply VAT validation failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('VATcomply VAT validation failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 return [
                     'valid' => $data['valid'] ?? false,
                     'country_code' => $data['country_code'] ?? null,
@@ -84,14 +84,14 @@ class VatComplyApiClient extends BaseApiClient
 
     /**
      * Get VAT rates for a country
-     * 
-     * @param string $countryCode ISO country code (e.g., "GB", "DE")
+     *
+     * @param  string  $countryCode  ISO country code (e.g., "GB", "DE")
      * @return array VAT rates for the country
      */
     public function getVatRates(string $countryCode): array
     {
         $parameters = ['country_code' => strtoupper($countryCode)];
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_VAT_RATES,
             $parameters,
@@ -99,12 +99,12 @@ class VatComplyApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->get("{$this->baseUrl}/rates", ['country_code' => strtoupper($countryCode)]);
 
-                if (!$response->successful()) {
-                    throw new Exception("VATcomply VAT rates failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('VATcomply VAT rates failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 return [
                     'country_code' => $data['country_code'] ?? $countryCode,
                     'country_name' => $data['country'] ?? null,
@@ -125,14 +125,14 @@ class VatComplyApiClient extends BaseApiClient
 
     /**
      * Get country information by IP address
-     * 
-     * @param string $ipAddress IP address to geolocate
+     *
+     * @param  string  $ipAddress  IP address to geolocate
      * @return array Country information including VAT rates
      */
     public function getCountryByIp(string $ipAddress): array
     {
         $parameters = ['ip' => $ipAddress];
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_GEOCODING,
             $parameters,
@@ -140,12 +140,12 @@ class VatComplyApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->get("{$this->baseUrl}/geolocate", ['ip_address' => $ipAddress]);
 
-                if (!$response->successful()) {
-                    throw new Exception("VATcomply IP geolocation failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('VATcomply IP geolocation failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 return [
                     'ip_address' => $ipAddress,
                     'country_code' => $data['country_code'] ?? null,
@@ -166,17 +166,17 @@ class VatComplyApiClient extends BaseApiClient
 
     /**
      * Calculate VAT for an amount
-     * 
-     * @param float $amount Amount to calculate VAT for
-     * @param string $countryCode Country code for VAT rate
-     * @param string $rateType Rate type ('standard', 'reduced', 'super_reduced', 'parking')
+     *
+     * @param  float  $amount  Amount to calculate VAT for
+     * @param  string  $countryCode  Country code for VAT rate
+     * @param  string  $rateType  Rate type ('standard', 'reduced', 'super_reduced', 'parking')
      * @return array VAT calculation result
      */
     public function calculateVat(float $amount, string $countryCode, string $rateType = 'standard'): array
     {
         // Get VAT rates for the country
         $rates = $this->getVatRates($countryCode);
-        
+
         // Determine the VAT rate to use
         $vatRate = match ($rateType) {
             'standard' => $rates['standard_rate'],
@@ -209,14 +209,14 @@ class VatComplyApiClient extends BaseApiClient
 
     /**
      * Validate IBAN (bonus feature from VATcomply)
-     * 
-     * @param string $iban IBAN to validate
+     *
+     * @param  string  $iban  IBAN to validate
      * @return array IBAN validation result
      */
     public function validateIban(string $iban): array
     {
         $parameters = ['iban' => $iban];
-        
+
         return $this->makeRequest(
             'iban_validation',
             $parameters,
@@ -224,12 +224,12 @@ class VatComplyApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->get("{$this->baseUrl}/iban", ['iban' => $iban]);
 
-                if (!$response->successful()) {
-                    throw new Exception("VATcomply IBAN validation failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('VATcomply IBAN validation failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 return [
                     'valid' => $data['valid'] ?? false,
                     'iban' => $data['iban'] ?? $iban,
@@ -247,13 +247,13 @@ class VatComplyApiClient extends BaseApiClient
 
     /**
      * Get all VAT rates for EU countries
-     * 
+     *
      * @return array All EU VAT rates
      */
     public function getAllEuVatRates(): array
     {
         $parameters = ['all_eu_rates' => true];
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_VAT_RATES,
             $parameters,
@@ -261,12 +261,12 @@ class VatComplyApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->get("{$this->baseUrl}/rates");
 
-                if (!$response->successful()) {
-                    throw new Exception("VATcomply EU VAT rates failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('VATcomply EU VAT rates failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 return [
                     'rates' => $data,
                     'last_updated' => now()->toISOString(),
@@ -279,23 +279,24 @@ class VatComplyApiClient extends BaseApiClient
 
     /**
      * Check if a country is in the EU for VAT purposes
-     * 
-     * @param string $countryCode Country code to check
+     *
+     * @param  string  $countryCode  Country code to check
      * @return bool True if country is EU member state
      */
     public function isEuMemberState(string $countryCode): bool
     {
         $rates = $this->getVatRates($countryCode);
+
         return $rates['member_state'] ?? false;
     }
 
     /**
      * Get the appropriate VAT treatment for a transaction
-     * 
-     * @param string $supplierCountry Supplier country code
-     * @param string $customerCountry Customer country code
-     * @param bool $customerIsBusinesss Whether customer is a business
-     * @param string|null $customerVatNumber Customer VAT number (if business)
+     *
+     * @param  string  $supplierCountry  Supplier country code
+     * @param  string  $customerCountry  Customer country code
+     * @param  bool  $customerIsBusinesss  Whether customer is a business
+     * @param  string|null  $customerVatNumber  Customer VAT number (if business)
      * @return array VAT treatment recommendation
      */
     public function getVatTreatment(
@@ -306,7 +307,7 @@ class VatComplyApiClient extends BaseApiClient
     ): array {
         $supplierInEu = $this->isEuMemberState($supplierCountry);
         $customerInEu = $this->isEuMemberState($customerCountry);
-        
+
         // Validate customer VAT number if provided
         $vatValidation = null;
         if ($customerVatNumber) {

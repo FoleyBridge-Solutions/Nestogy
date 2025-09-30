@@ -22,7 +22,7 @@ class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         $user = auth()->user();
-        
+
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
@@ -32,12 +32,12 @@ class StoreUserRequest extends FormRequest
             'status' => 'boolean',
             'send_welcome_email' => 'boolean',
         ];
-        
+
         // If user can access cross-tenant (super admin), allow company_id
         if ($user->canAccessCrossTenant()) {
             $rules['company_id'] = 'required|exists:companies,id';
         }
-        
+
         return $rules;
     }
 
@@ -80,18 +80,18 @@ class StoreUserRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Default status to active if not provided
-        if (!$this->has('status')) {
+        if (! $this->has('status')) {
             $this->merge(['status' => 1]);
         }
-        
+
         // Default send_welcome_email to false if not provided
-        if (!$this->has('send_welcome_email')) {
+        if (! $this->has('send_welcome_email')) {
             $this->merge(['send_welcome_email' => false]);
         }
-        
+
         // If not super admin, set company_id to current user's company
         $user = auth()->user();
-        if (!$user->canAccessCrossTenant()) {
+        if (! $user->canAccessCrossTenant()) {
             $this->merge(['company_id' => $user->company_id]);
         }
     }

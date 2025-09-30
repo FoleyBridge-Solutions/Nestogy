@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Domains\Email\Models\EmailMessage;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class EmailMessagePolicy
 {

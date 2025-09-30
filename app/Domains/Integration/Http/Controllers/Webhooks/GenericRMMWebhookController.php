@@ -4,13 +4,13 @@ namespace App\Domains\Integration\Http\Controllers\Webhooks;
 
 use App\Domains\Integration\Services\WebhookService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Generic RMM Webhook Controller
- * 
+ *
  * Handles webhooks from generic/custom RMM systems.
  * Provides flexible processing for any RMM tool with configurable field mappings.
  */
@@ -35,9 +35,9 @@ class GenericRMMWebhookController extends Controller
                 'user_agent' => $request->userAgent(),
                 'content_type' => $request->header('Content-Type'),
                 'auth_headers' => [
-                    'api_key_present' => !empty($request->header('X-API-Key')),
-                    'signature_present' => !empty($request->header('X-Signature')),
-                    'auth_present' => !empty($request->header('Authorization')),
+                    'api_key_present' => ! empty($request->header('X-API-Key')),
+                    'signature_present' => ! empty($request->header('X-Signature')),
+                    'auth_present' => ! empty($request->header('Authorization')),
                 ],
                 'payload_size' => strlen($request->getContent()),
             ]);
@@ -144,9 +144,9 @@ class GenericRMMWebhookController extends Controller
     protected function getAuthenticationInfo(Request $request): array
     {
         return [
-            'api_key_present' => !empty($request->header('X-API-Key')),
-            'signature_present' => !empty($request->header('X-Signature')),
-            'authorization_present' => !empty($request->header('Authorization')),
+            'api_key_present' => ! empty($request->header('X-API-Key')),
+            'signature_present' => ! empty($request->header('X-Signature')),
+            'authorization_present' => ! empty($request->header('Authorization')),
             'custom_auth_headers' => $this->getCustomAuthHeaders($request),
         ];
     }
@@ -158,15 +158,15 @@ class GenericRMMWebhookController extends Controller
     {
         $authHeaders = [];
         $headers = $request->headers->all();
-        
+
         foreach ($headers as $key => $value) {
-            if (str_contains(strtolower($key), 'auth') || 
-                str_contains(strtolower($key), 'key') || 
+            if (str_contains(strtolower($key), 'auth') ||
+                str_contains(strtolower($key), 'key') ||
                 str_contains(strtolower($key), 'token')) {
                 $authHeaders[$key] = 'present';
             }
         }
-        
+
         return $authHeaders;
     }
 
@@ -176,30 +176,32 @@ class GenericRMMWebhookController extends Controller
     protected function getPayloadPreview(array $payload): array
     {
         $preview = [];
-        
+
         // Show first few fields as preview
         $count = 0;
         foreach ($payload as $key => $value) {
-            if ($count >= 10) break;
-            
+            if ($count >= 10) {
+                break;
+            }
+
             if (is_string($value) || is_numeric($value)) {
                 $preview[$key] = $value;
             } elseif (is_array($value)) {
-                $preview[$key] = '[array with ' . count($value) . ' items]';
+                $preview[$key] = '[array with '.count($value).' items]';
             } elseif (is_object($value)) {
                 $preview[$key] = '[object]';
             } else {
-                $preview[$key] = '[' . gettype($value) . ']';
+                $preview[$key] = '['.gettype($value).']';
             }
             $count++;
         }
-        
+
         if (count($payload) > 10) {
-            $preview['...'] = 'and ' . (count($payload) - 10) . ' more fields';
+            $preview['...'] = 'and '.(count($payload) - 10).' more fields';
         }
-        
+
         $preview['total_fields'] = count($payload);
-        
+
         return $preview;
     }
 
@@ -209,7 +211,7 @@ class GenericRMMWebhookController extends Controller
     protected function detectCommonFields(array $payload): array
     {
         $detectedFields = [];
-        
+
         // Common field patterns for different RMM systems
         $patterns = [
             'device_id' => ['device_id', 'deviceId', 'computer_id', 'ComputerID', 'machine_id', 'uid', 'id'],
@@ -220,7 +222,7 @@ class GenericRMMWebhookController extends Controller
             'severity' => ['severity', 'alert_type', 'AlertType', 'priority', 'level'],
             'timestamp' => ['timestamp', 'created_at', 'createdAt', 'DateStamp', 'date', 'time'],
         ];
-        
+
         foreach ($patterns as $fieldType => $possibleKeys) {
             foreach ($possibleKeys as $key) {
                 if (isset($payload[$key])) {
@@ -232,7 +234,7 @@ class GenericRMMWebhookController extends Controller
                 }
             }
         }
-        
+
         return $detectedFields;
     }
 
@@ -244,12 +246,12 @@ class GenericRMMWebhookController extends Controller
         try {
             $payload = $request->all();
             $detected = $this->detectCommonFields($payload);
-            
+
             $suggestions = [];
             foreach ($detected as $fieldType => $info) {
                 $suggestions[$fieldType] = $info['key'];
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Field mapping suggestions generated',
@@ -259,7 +261,7 @@ class GenericRMMWebhookController extends Controller
                     'payload_structure' => $this->analyzePayloadStructure($payload),
                 ],
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -280,18 +282,18 @@ class GenericRMMWebhookController extends Controller
             'nested_objects' => [],
             'array_fields' => [],
         ];
-        
+
         foreach ($payload as $key => $value) {
             $type = gettype($value);
             $structure['field_types'][$type] = ($structure['field_types'][$type] ?? 0) + 1;
-            
+
             if (is_array($value)) {
                 $structure['array_fields'][] = $key;
             } elseif (is_object($value)) {
                 $structure['nested_objects'][] = $key;
             }
         }
-        
+
         return $structure;
     }
 }

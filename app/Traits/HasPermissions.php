@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 /**
  * HasPermissions Trait
- * 
+ *
  * Provides permission functionality to User model.
  * Supports both role-based and direct permissions with company scoping.
  */
@@ -45,7 +45,7 @@ trait HasPermissions
         // Get permissions from roles
         $rolePermissions = Permission::whereHas('roles.users', function ($query) use ($companyId) {
             $query->where('users.id', $this->id)
-                  ->where('user_roles.company_id', $companyId);
+                ->where('user_roles.company_id', $companyId);
         })->get();
 
         // Get direct permissions (only granted ones)
@@ -104,7 +104,7 @@ trait HasPermissions
         return Permission::where('slug', $permissionSlug)
             ->whereHas('roles.users', function ($query) use ($companyId) {
                 $query->where('users.id', $this->id)
-                      ->where('user_roles.company_id', $companyId);
+                    ->where('user_roles.company_id', $companyId);
             })->exists();
     }
 
@@ -118,6 +118,7 @@ trait HasPermissions
                 return true;
             }
         }
+
         return false;
     }
 
@@ -127,10 +128,11 @@ trait HasPermissions
     public function hasAllPermissions(array $permissionSlugs, ?int $companyId = null): bool
     {
         foreach ($permissionSlugs as $permission) {
-            if (!$this->hasPermission($permission, $companyId)) {
+            if (! $this->hasPermission($permission, $companyId)) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -164,7 +166,7 @@ trait HasPermissions
         $companyId = $companyId ?? $this->company_id;
         $roleModel = is_string($role) ? Role::findBySlug($role) : $role;
 
-        if ($roleModel && !$this->hasRole($roleModel->slug, $companyId)) {
+        if ($roleModel && ! $this->hasRole($roleModel->slug, $companyId)) {
             $this->roles()->attach($roleModel->id, ['company_id' => $companyId]);
         }
 
@@ -195,10 +197,10 @@ trait HasPermissions
     {
         $companyId = $companyId ?? $this->company_id;
         $roleIds = Role::whereIn('slug', $roleSlugs)->pluck('id')->toArray();
-        
+
         // Remove all roles for this company first
         $this->roles()->wherePivot('company_id', $companyId)->detach();
-        
+
         // Add new roles
         foreach ($roleIds as $roleId) {
             $this->roles()->attach($roleId, ['company_id' => $companyId]);
@@ -219,8 +221,8 @@ trait HasPermissions
             $this->permissions()->syncWithoutDetaching([
                 $permissionModel->id => [
                     'company_id' => $companyId,
-                    'granted' => true
-                ]
+                    'granted' => true,
+                ],
             ]);
         }
 
@@ -256,8 +258,8 @@ trait HasPermissions
             $this->permissions()->syncWithoutDetaching([
                 $permissionModel->id => [
                     'company_id' => $companyId,
-                    'granted' => false
-                ]
+                    'granted' => false,
+                ],
             ]);
         }
 
@@ -270,7 +272,7 @@ trait HasPermissions
     public function getRoleLevel(?int $companyId = null): int
     {
         $companyId = $companyId ?? $this->company_id;
-        
+
         $maxLevel = $this->roles()
             ->wherePivot('company_id', $companyId)
             ->max('level');
@@ -283,7 +285,7 @@ trait HasPermissions
      */
     public function canAccessDomain(string $domain, ?int $companyId = null): bool
     {
-        return $this->hasPermission($domain . '.view', $companyId);
+        return $this->hasPermission($domain.'.view', $companyId);
     }
 
     /**
@@ -291,7 +293,8 @@ trait HasPermissions
      */
     public function canPerformAction(string $domain, string $action, ?int $companyId = null): bool
     {
-        $permissionSlug = $domain . '.' . $action;
+        $permissionSlug = $domain.'.'.$action;
+
         return $this->hasPermission($permissionSlug, $companyId);
     }
 

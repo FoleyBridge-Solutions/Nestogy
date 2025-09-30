@@ -9,10 +9,10 @@ use Illuminate\Support\Str;
 
 /**
  * DeviceMapping Model
- * 
+ *
  * Maps devices from RMM systems to internal assets and clients.
  * Handles synchronization and device identification.
- * 
+ *
  * @property int $id
  * @property string $uuid
  * @property int $integration_id
@@ -52,11 +52,11 @@ class DeviceMapping extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($mapping) {
             $mapping->uuid = Str::uuid();
-            
-            if (!$mapping->last_updated) {
+
+            if (! $mapping->last_updated) {
                 $mapping->last_updated = now();
             }
         });
@@ -99,7 +99,7 @@ class DeviceMapping extends Model
      */
     public function hasAsset(): bool
     {
-        return !is_null($this->asset_id);
+        return ! is_null($this->asset_id);
     }
 
     /**
@@ -168,7 +168,7 @@ class DeviceMapping extends Model
     {
         $syncData = $this->sync_data ?? [];
         data_set($syncData, $field, $value);
-        
+
         $this->update([
             'sync_data' => $syncData,
             'last_updated' => now(),
@@ -252,7 +252,7 @@ class DeviceMapping extends Model
      */
     public function scopeSearchByName($query, string $search)
     {
-        return $query->where('device_name', 'like', '%' . $search . '%');
+        return $query->where('device_name', 'like', '%'.$search.'%');
     }
 
     /**
@@ -311,7 +311,7 @@ class DeviceMapping extends Model
     public function syncFromPayload(array $payload, array $fieldMappings): void
     {
         $deviceName = data_get($payload, $fieldMappings['device_name'], $this->device_name);
-        
+
         $this->update([
             'device_name' => $deviceName,
             'sync_data' => array_merge($this->sync_data ?? [], [

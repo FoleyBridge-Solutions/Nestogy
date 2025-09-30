@@ -3,16 +3,16 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * Tax API Query Cache Model
- * 
+ *
  * Caches API responses to prevent duplicate calls within a month
  * and improve performance of tax calculations.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $api_provider
@@ -61,24 +61,37 @@ class TaxApiQueryCache extends Model
 
     // API Provider constants
     const PROVIDER_VATCOMPLY = 'vat_comply';
+
     const PROVIDER_NOMINATIM = 'nominatim';
+
     const PROVIDER_FCC = 'fcc';
+
     const PROVIDER_TAXCLOUD = 'taxcloud';
+
     const PROVIDER_CENSUS = 'census';
 
     // Query Type constants
     const TYPE_GEOCODING = 'geocoding';
+
     const TYPE_REVERSE_GEOCODING = 'reverse_geocoding';
+
     const TYPE_VAT_VALIDATION = 'vat_validation';
+
     const TYPE_VAT_RATES = 'vat_rates';
+
     const TYPE_TAX_RATES = 'tax_rates';
+
     const TYPE_USF_RATES = 'usf_rates';
+
     const TYPE_JURISDICTION = 'jurisdiction';
+
     const TYPE_BOUNDARY = 'boundary';
 
     // Status constants
     const STATUS_SUCCESS = 'success';
+
     const STATUS_ERROR = 'error';
+
     const STATUS_RATE_LIMITED = 'rate_limited';
 
     /**
@@ -96,6 +109,7 @@ class TaxApiQueryCache extends Model
     {
         // Sort parameters to ensure consistent hashing
         ksort($parameters);
+
         return hash('sha256', json_encode($parameters));
     }
 
@@ -121,7 +135,7 @@ class TaxApiQueryCache extends Model
     public function scopeValid($query)
     {
         return $query->where('expires_at', '>', now())
-                    ->where('status', self::STATUS_SUCCESS);
+            ->where('status', self::STATUS_SUCCESS);
     }
 
     /**
@@ -158,13 +172,13 @@ class TaxApiQueryCache extends Model
         array $parameters
     ): ?self {
         $hash = self::generateQueryHash($parameters);
-        
+
         return self::where('company_id', $companyId)
-                   ->where('api_provider', $provider)
-                   ->where('query_type', $queryType)
-                   ->where('query_hash', $hash)
-                   ->valid()
-                   ->first();
+            ->where('api_provider', $provider)
+            ->where('query_type', $queryType)
+            ->where('query_hash', $hash)
+            ->valid()
+            ->first();
     }
 
     /**
@@ -176,11 +190,11 @@ class TaxApiQueryCache extends Model
         string $queryType,
         array $parameters,
         array $response,
-        float $responseTimeMs = null,
+        ?float $responseTimeMs = null,
         int $cacheDays = 30
     ): self {
         $hash = self::generateQueryHash($parameters);
-        
+
         return self::updateOrCreate(
             [
                 'company_id' => $companyId,
@@ -213,7 +227,7 @@ class TaxApiQueryCache extends Model
         int $cacheDays = 1
     ): self {
         $hash = self::generateQueryHash($parameters);
-        
+
         return self::updateOrCreate(
             [
                 'company_id' => $companyId,
@@ -247,7 +261,7 @@ class TaxApiQueryCache extends Model
     public static function getCacheStats(int $companyId): array
     {
         $stats = self::where('company_id', $companyId)
-                     ->selectRaw('
+            ->selectRaw('
                          api_provider,
                          query_type,
                          status,
@@ -256,8 +270,8 @@ class TaxApiQueryCache extends Model
                          MIN(api_called_at) as first_query,
                          MAX(api_called_at) as last_query
                      ')
-                     ->groupBy(['api_provider', 'query_type', 'status'])
-                     ->get();
+            ->groupBy(['api_provider', 'query_type', 'status'])
+            ->get();
 
         return $stats->toArray();
     }

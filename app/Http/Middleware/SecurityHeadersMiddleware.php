@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * SecurityHeadersMiddleware
- * 
+ *
  * Adds security headers to HTTP responses to protect against various attacks
  * including XSS, clickjacking, MIME sniffing, and more.
  */
@@ -82,7 +82,7 @@ class SecurityHeadersMiddleware
         }
 
         $csp = $this->buildContentSecurityPolicy($request);
-        
+
         if ($csp) {
             // Use Report-Only mode in development
             if (app()->environment('local', 'development')) {
@@ -118,10 +118,10 @@ class SecurityHeadersMiddleware
         if (config('security.headers.csp_nonce', false)) {
             $nonce = $this->generateNonce();
             $request->attributes->set('csp-nonce', $nonce);
-            
+
             // Add nonce to script-src
             $policies['script-src'][] = "'nonce-{$nonce}'";
-            
+
             // Remove unsafe-inline if nonce is used
             $policies['script-src'] = array_diff($policies['script-src'], ["'unsafe-inline'"]);
         }
@@ -129,8 +129,8 @@ class SecurityHeadersMiddleware
         // Build CSP string
         $cspParts = [];
         foreach ($policies as $directive => $sources) {
-            if (!empty($sources)) {
-                $cspParts[] = $directive . ' ' . implode(' ', $sources);
+            if (! empty($sources)) {
+                $cspParts[] = $directive.' '.implode(' ', $sources);
             } else {
                 $cspParts[] = $directive;
             }
@@ -178,11 +178,11 @@ class SecurityHeadersMiddleware
         $preload = config('security.headers.hsts_preload', false);
 
         $value = "max-age={$maxAge}";
-        
+
         if ($includeSubdomains) {
             $value .= '; includeSubDomains';
         }
-        
+
         if ($preload) {
             $value .= '; preload';
         }
@@ -198,7 +198,7 @@ class SecurityHeadersMiddleware
         $contentType = $response->headers->get('Content-Type');
 
         // Add X-Content-Type-Options for all responses
-        if (!$response->headers->has('X-Content-Type-Options')) {
+        if (! $response->headers->has('X-Content-Type-Options')) {
             $response->headers->set('X-Content-Type-Options', 'nosniff');
         }
 
@@ -211,7 +211,7 @@ class SecurityHeadersMiddleware
         // Add specific headers for HTML responses
         if (str_contains($contentType, 'text/html')) {
             // Ensure X-Frame-Options is set
-            if (!$response->headers->has('X-Frame-Options')) {
+            if (! $response->headers->has('X-Frame-Options')) {
                 $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
             }
         }

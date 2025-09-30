@@ -3,19 +3,19 @@
 namespace App\Domains\Financial\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Carbon\Carbon;
 
 class BudgetController extends Controller
 {
     public function index(Request $request): View
     {
         $budgets = collect(); // TODO: Load from budgets table
-        
+
         $currentYear = Carbon::now()->year;
         $fiscalYear = $request->get('year', $currentYear);
-        
+
         return view('financial.budgets.index', compact('budgets', 'fiscalYear'));
     }
 
@@ -24,7 +24,7 @@ class BudgetController extends Controller
         $departments = collect(); // TODO: Load departments
         $categories = collect(); // TODO: Load budget categories
         $fiscalYears = range(Carbon::now()->year - 1, Carbon::now()->year + 2);
-        
+
         return view('financial.budgets.create', compact('departments', 'categories', 'fiscalYears'));
     }
 
@@ -39,11 +39,11 @@ class BudgetController extends Controller
             'period' => 'required|in:annual,quarterly,monthly',
             'total_amount' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
         ]);
 
         // TODO: Create budget and allocate to periods
-        
+
         return redirect()->route('financial.budgets.index')
             ->with('success', 'Budget created successfully');
     }
@@ -56,7 +56,7 @@ class BudgetController extends Controller
         $variance = 0;
         $utilizationRate = 0;
         $periodAllocations = collect();
-        
+
         return view('financial.budgets.show', compact(
             'budget',
             'actualSpending',
@@ -72,7 +72,7 @@ class BudgetController extends Controller
         $budget = null;
         $departments = collect();
         $categories = collect();
-        
+
         return view('financial.budgets.edit', compact('budget', 'departments', 'categories'));
     }
 
@@ -86,11 +86,11 @@ class BudgetController extends Controller
             'period' => 'required|in:annual,quarterly,monthly',
             'total_amount' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
         ]);
 
         // TODO: Update budget
-        
+
         return redirect()->route('financial.budgets.show', $id)
             ->with('success', 'Budget updated successfully');
     }
@@ -98,7 +98,7 @@ class BudgetController extends Controller
     public function destroy($id)
     {
         // TODO: Delete budget
-        
+
         return redirect()->route('financial.budgets.index')
             ->with('success', 'Budget deleted successfully');
     }
@@ -107,10 +107,10 @@ class BudgetController extends Controller
     {
         $year = $request->get('year', Carbon::now()->year);
         $department = $request->get('department');
-        
+
         // TODO: Load budget vs actual comparison data
         $comparisonData = [];
-        
+
         return view('financial.budgets.comparison', compact('comparisonData', 'year', 'department'));
     }
 
@@ -120,7 +120,7 @@ class BudgetController extends Controller
         $budget = null;
         $forecastData = [];
         $projectedOverage = 0;
-        
+
         return view('financial.budgets.forecast', compact('budget', 'forecastData', 'projectedOverage'));
     }
 }

@@ -2,45 +2,55 @@
 
 namespace App\Domains\Financial\Services;
 
+use App\Domains\Financial\Services\TaxEngine\TaxServiceFactory;
 use App\Models\Client;
-use App\Models\TaxJurisdiction;
 use App\Models\TaxCategory;
-use App\Models\VoIPTaxRate;
 use App\Models\TaxExemption;
 use App\Models\TaxExemptionUsage;
-use App\Domains\Financial\Services\TaxEngine\TaxServiceFactory;
+use App\Models\TaxJurisdiction;
+use App\Models\VoIPTaxRate;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * VoIP Tax Calculation Service
- * 
+ *
  * Comprehensive tax calculation engine for VoIP telecommunications services.
  * Handles federal, state, and local tax calculations with exemption support.
  */
 class VoIPTaxService
 {
     protected ?int $companyId = null;
+
     protected array $config;
+
     protected array $calculationCache = [];
 
     /**
      * Federal tax constants
      */
     const FEDERAL_EXCISE_TAX_RATE = 3.0; // 3% on amounts over $0.20
+
     const FEDERAL_EXCISE_THRESHOLD = 0.20;
+
     const DEFAULT_USF_RATE = 33.4; // Current USF contribution factor (changes quarterly)
 
     /**
      * Service type constants
      */
     const SERVICE_LOCAL = 'local';
+
     const SERVICE_LONG_DISTANCE = 'long_distance';
+
     const SERVICE_INTERNATIONAL = 'international';
+
     const SERVICE_VOIP_FIXED = 'voip_fixed';
+
     const SERVICE_VOIP_NOMADIC = 'voip_nomadic';
+
     const SERVICE_DATA = 'data';
+
     const SERVICE_EQUIPMENT = 'equipment';
 
     public function __construct(array $config = [])
@@ -59,6 +69,7 @@ class VoIPTaxService
     public function setCompanyId(int $companyId): self
     {
         $this->companyId = $companyId;
+
         return $this;
     }
 
@@ -97,10 +108,11 @@ class VoIPTaxService
         try {
             $taxService = TaxServiceFactory::getService('US', $this->companyId);
 
-            if (!$taxService) {
+            if (! $taxService) {
                 Log::warning('VoIPTaxService: No tax service available, using fallback', [
-                    'company_id' => $this->companyId
+                    'company_id' => $this->companyId,
                 ]);
+
                 return $this->getFallbackCalculation($params);
             }
 
@@ -114,7 +126,7 @@ class VoIPTaxService
                 'company_id' => $this->companyId,
                 'base_amount' => $params['amount'],
                 'total_tax' => $taxResult['total_tax_amount'],
-                'service_type' => $params['service_type'] ?? 'voip'
+                'service_type' => $params['service_type'] ?? 'voip',
             ]);
 
             return $taxResult;
@@ -123,7 +135,7 @@ class VoIPTaxService
             Log::error('VoIPTaxService: TaxJar calculation failed, using fallback', [
                 'company_id' => $this->companyId,
                 'error' => $e->getMessage(),
-                'params' => $params
+                'params' => $params,
             ]);
 
             return $this->getFallbackCalculation($params);
@@ -152,7 +164,7 @@ class VoIPTaxService
                     'tax_amount' => round($totalTax, 2),
                     'authority' => 'Fallback Calculation',
                     'jurisdiction' => 'Unknown',
-                ]
+                ],
             ],
             'jurisdictions' => [],
             'final_amount' => round($baseAmount + $totalTax, 2),
@@ -201,8 +213,9 @@ class VoIPTaxService
 
         // Step 2: Find applicable tax category
         $taxCategory = $this->findTaxCategory($serviceType);
-        if (!$taxCategory || !$taxCategory->isTaxable()) {
+        if (! $taxCategory || ! $taxCategory->isTaxable()) {
             Log::info('Service not taxable', ['service_type' => $serviceType, 'category' => $taxCategory?->name]);
+
             return $result;
         }
 
@@ -228,7 +241,7 @@ class VoIPTaxService
             'company_id' => $this->companyId,
             'base_amount' => $baseAmount,
             'total_tax' => $result['total_tax_amount'],
-            'jurisdictions_count' => count($result['jurisdictions'])
+            'jurisdictions_count' => count($result['jurisdictions']),
         ]);
 
         return $result;
@@ -247,10 +260,11 @@ class VoIPTaxService
                 ->get();
         }
 
-        $cacheKey = "jurisdictions:" . md5(json_encode($address)) . ":" . $this->companyId;
+        $cacheKey = 'jurisdictions:'.md5(json_encode($address)).':'.$this->companyId;
 
         if ($this->config['enable_caching'] && Cache::has($cacheKey)) {
             $jurisdictionIds = Cache::get($cacheKey);
+
             return TaxJurisdiction::whereIn('id', $jurisdictionIds)->get();
         }
 
@@ -284,7 +298,7 @@ class VoIPTaxService
      */
     protected function getClientExemptions(?int $clientId, $jurisdictions): \Illuminate\Database\Eloquent\Collection
     {
-        if (!$clientId) {
+        if (! $clientId) {
             return collect();
         }
 
@@ -346,7 +360,7 @@ class VoIPTaxService
     protected function calculateStateTaxes(float $amount, string $serviceType, $jurisdictions, TaxCategory $taxCategory, int $lineCount, int $minutes, Carbon $calculationDate): array
     {
         $taxes = [];
-        
+
         $stateJurisdictions = $jurisdictions->where('jurisdiction_type', 'state');
 
         foreach ($stateJurisdictions as $jurisdiction) {
@@ -392,9 +406,9 @@ class VoIPTaxService
     protected function calculateLocalTaxes(float $amount, string $serviceType, $jurisdictions, TaxCategory $taxCategory, int $lineCount, int $minutes, Carbon $calculationDate): array
     {
         $taxes = [];
-        
+
         $localJurisdictions = $jurisdictions->whereIn('jurisdiction_type', [
-            'county', 'city', 'municipality', 'special_district', 'local'
+            'county', 'city', 'municipality', 'special_district', 'local',
         ]);
 
         foreach ($localJurisdictions as $jurisdiction) {
@@ -473,7 +487,7 @@ class VoIPTaxService
             // Apply exemption but don't go negative
             $tax['tax_amount'] = max(0, $originalTaxAmount - $exemptedAmount);
             $tax['exempted_amount'] = min($exemptedAmount, $originalTaxAmount);
-            
+
             $exemptedTaxes[] = $tax;
         }
 
@@ -540,8 +554,8 @@ class VoIPTaxService
     {
         // In a real implementation, this would query current rates from FCC
         // or from a database table that's updated quarterly
-        $cacheKey = "usf_rate:" . $calculationDate->quarter . ":" . $calculationDate->year;
-        
+        $cacheKey = 'usf_rate:'.$calculationDate->quarter.':'.$calculationDate->year;
+
         return Cache::remember($cacheKey, 86400, function () {
             // Default rate, should be updated from external source
             return self::DEFAULT_USF_RATE;
@@ -573,15 +587,15 @@ class VoIPTaxService
      */
     protected function validateCalculationParams(array $params): void
     {
-        if (!isset($params['amount']) || !is_numeric($params['amount']) || $params['amount'] < 0) {
+        if (! isset($params['amount']) || ! is_numeric($params['amount']) || $params['amount'] < 0) {
             throw new \InvalidArgumentException('Amount must be a non-negative number');
         }
 
-        if (isset($params['line_count']) && (!is_numeric($params['line_count']) || $params['line_count'] < 1)) {
+        if (isset($params['line_count']) && (! is_numeric($params['line_count']) || $params['line_count'] < 1)) {
             throw new \InvalidArgumentException('Line count must be a positive integer');
         }
 
-        if (isset($params['minutes']) && (!is_numeric($params['minutes']) || $params['minutes'] < 0)) {
+        if (isset($params['minutes']) && (! is_numeric($params['minutes']) || $params['minutes'] < 0)) {
             throw new \InvalidArgumentException('Minutes must be a non-negative number');
         }
     }
@@ -602,7 +616,7 @@ class VoIPTaxService
             'minutes' => $params['minutes'] ?? 0,
         ];
 
-        return 'voip_tax:' . md5(json_encode($keyData));
+        return 'voip_tax:'.md5(json_encode($keyData));
     }
 
     /**
@@ -614,9 +628,9 @@ class VoIPTaxService
             // Clear specific pattern if cache driver supports it
             if (config('cache.default') === 'redis') {
                 $prefix = config('cache.prefix', '');
-                $fullPattern = $prefix . $pattern;
+                $fullPattern = $prefix.$pattern;
                 $keys = Cache::getRedis()->keys($fullPattern);
-                if (!empty($keys)) {
+                if (! empty($keys)) {
                     Cache::getRedis()->del($keys);
                 }
             } else {
@@ -629,7 +643,7 @@ class VoIPTaxService
 
         Log::info('VoIP tax calculation cache cleared', [
             'company_id' => $this->companyId,
-            'pattern' => $pattern
+            'pattern' => $pattern,
         ]);
     }
 

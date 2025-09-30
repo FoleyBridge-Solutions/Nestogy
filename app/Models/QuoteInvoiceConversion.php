@@ -3,18 +3,18 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * QuoteInvoiceConversion Model
- * 
+ *
  * Tracks the conversion process from quotes to invoices with contract generation,
  * milestone billing, recurring setups, and comprehensive audit trails.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $quote_id
@@ -76,7 +76,7 @@ use Carbon\Carbon;
  */
 class QuoteInvoiceConversion extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -202,31 +202,47 @@ class QuoteInvoiceConversion extends Model
      * Conversion type enumeration
      */
     const TYPE_DIRECT_INVOICE = 'direct_invoice';
+
     const TYPE_CONTRACT_WITH_INVOICE = 'contract_with_invoice';
+
     const TYPE_MILESTONE_INVOICING = 'milestone_invoicing';
+
     const TYPE_RECURRING_SETUP = 'recurring_setup';
+
     const TYPE_HYBRID_CONVERSION = 'hybrid_conversion';
 
     /**
      * Conversion status enumeration
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_CONTRACT_GENERATED = 'contract_generated';
+
     const STATUS_CONTRACT_SIGNED = 'contract_signed';
+
     const STATUS_INVOICE_GENERATED = 'invoice_generated';
+
     const STATUS_RECURRING_SETUP = 'recurring_setup';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     /**
      * Service activation status enumeration
      */
     const ACTIVATION_NOT_REQUIRED = 'not_required';
+
     const ACTIVATION_PENDING = 'pending';
+
     const ACTIVATION_IN_PROGRESS = 'in_progress';
+
     const ACTIVATION_COMPLETED = 'completed';
+
     const ACTIVATION_FAILED = 'failed';
 
     /**
@@ -340,11 +356,12 @@ class QuoteInvoiceConversion extends Model
      */
     public function getProcessingDuration(): ?int
     {
-        if (!$this->conversion_started_at) {
+        if (! $this->conversion_started_at) {
             return null;
         }
 
         $endTime = $this->conversion_completed_at ?? now();
+
         return $this->conversion_started_at->diffInSeconds($endTime);
     }
 
@@ -353,7 +370,7 @@ class QuoteInvoiceConversion extends Model
      */
     public function getValueVariance(): ?float
     {
-        if (!$this->converted_value) {
+        if (! $this->converted_value) {
             return null;
         }
 
@@ -396,9 +413,9 @@ class QuoteInvoiceConversion extends Model
     public function completeStep(string $step): void
     {
         $completedSteps = $this->completed_steps ?? [];
-        if (!in_array($step, $completedSteps)) {
+        if (! in_array($step, $completedSteps)) {
             $completedSteps[] = $step;
-            
+
             $this->update([
                 'completed_steps' => $completedSteps,
                 'current_step' => count($completedSteps),
@@ -429,6 +446,7 @@ class QuoteInvoiceConversion extends Model
     {
         if ($this->retry_count >= $this->max_retries) {
             $this->update(['status' => self::STATUS_FAILED]);
+
             return;
         }
 
@@ -458,12 +476,12 @@ class QuoteInvoiceConversion extends Model
     /**
      * Update conversion status with audit trail.
      */
-    public function updateStatus(string $status, string $reason = null): void
+    public function updateStatus(string $status, ?string $reason = null): void
     {
         $oldStatus = $this->status;
-        
+
         $this->update(['status' => $status]);
-        
+
         $this->addToAuditTrail('status_changed', [
             'old_status' => $oldStatus,
             'new_status' => $status,
@@ -476,7 +494,7 @@ class QuoteInvoiceConversion extends Model
      */
     public function updateRevenueRecognition(): void
     {
-        if (!$this->revenue_schedule) {
+        if (! $this->revenue_schedule) {
             return;
         }
 
@@ -527,7 +545,8 @@ class QuoteInvoiceConversion extends Model
         ];
 
         $symbol = $symbols[$this->currency_code] ?? $this->currency_code;
-        return $symbol . number_format($amount, 2);
+
+        return $symbol.number_format($amount, 2);
     }
 
     /**
@@ -560,8 +579,8 @@ class QuoteInvoiceConversion extends Model
     public function scopeNeedsRetry($query)
     {
         return $query->where('next_retry_at', '<=', now())
-                    ->where('retry_count', '<', DB::raw('max_retries'))
-                    ->whereIn('status', [self::STATUS_FAILED, self::STATUS_PROCESSING]);
+            ->where('retry_count', '<', DB::raw('max_retries'))
+            ->whereIn('status', [self::STATUS_FAILED, self::STATUS_PROCESSING]);
     }
 
     /**
@@ -581,39 +600,39 @@ class QuoteInvoiceConversion extends Model
 
         // Set defaults when creating
         static::creating(function ($conversion) {
-            if (!$conversion->status) {
+            if (! $conversion->status) {
                 $conversion->status = self::STATUS_PENDING;
             }
 
-            if (!$conversion->activation_status) {
+            if (! $conversion->activation_status) {
                 $conversion->activation_status = self::ACTIVATION_NOT_REQUIRED;
             }
 
-            if (!$conversion->current_step) {
+            if (! $conversion->current_step) {
                 $conversion->current_step = 1;
             }
 
-            if (!$conversion->total_steps) {
+            if (! $conversion->total_steps) {
                 $conversion->total_steps = $conversion->calculateTotalSteps();
             }
 
-            if (!$conversion->max_retries) {
+            if (! $conversion->max_retries) {
                 $conversion->max_retries = 3;
             }
 
-            if (!$conversion->retry_count) {
+            if (! $conversion->retry_count) {
                 $conversion->retry_count = 0;
             }
 
-            if (!$conversion->deferred_revenue) {
+            if (! $conversion->deferred_revenue) {
                 $conversion->deferred_revenue = 0;
             }
 
-            if (!$conversion->recognized_revenue) {
+            if (! $conversion->recognized_revenue) {
                 $conversion->recognized_revenue = 0;
             }
 
-            if (!$conversion->adjustment_amount) {
+            if (! $conversion->adjustment_amount) {
                 $conversion->adjustment_amount = 0;
             }
 
@@ -632,7 +651,7 @@ class QuoteInvoiceConversion extends Model
         // Update processing duration when completed
         static::updating(function ($conversion) {
             if ($conversion->isDirty('status') && $conversion->status === self::STATUS_COMPLETED) {
-                if ($conversion->conversion_started_at && !$conversion->processing_duration) {
+                if ($conversion->conversion_started_at && ! $conversion->processing_duration) {
                     $conversion->processing_duration = $conversion->conversion_started_at->diffInSeconds(now());
                     $conversion->conversion_completed_at = now();
                 }

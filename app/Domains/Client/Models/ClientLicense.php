@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientLicense extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -90,9 +90,9 @@ class ClientLicense extends Model
      */
     public function scopeNotExpired($query)
     {
-        return $query->where(function($q) {
+        return $query->where(function ($q) {
             $q->whereNull('expiry_date')
-              ->orWhere('expiry_date', '>', now());
+                ->orWhere('expiry_date', '>', now());
         });
     }
 
@@ -102,7 +102,7 @@ class ClientLicense extends Model
     public function scopeExpired($query)
     {
         return $query->whereNotNull('expiry_date')
-                    ->where('expiry_date', '<=', now());
+            ->where('expiry_date', '<=', now());
     }
 
     /**
@@ -111,7 +111,7 @@ class ClientLicense extends Model
     public function scopeExpiringSoon($query, $days = 30)
     {
         return $query->whereNotNull('expiry_date')
-                    ->whereBetween('expiry_date', [now(), now()->addDays($days)]);
+            ->whereBetween('expiry_date', [now(), now()->addDays($days)]);
     }
 
     /**
@@ -127,8 +127,8 @@ class ClientLicense extends Model
      */
     public function isExpiringSoon($days = 30)
     {
-        return $this->expiry_date && 
-               $this->expiry_date->isFuture() && 
+        return $this->expiry_date &&
+               $this->expiry_date->isFuture() &&
                $this->expiry_date->diffInDays(now()) <= $days;
     }
 
@@ -137,18 +137,18 @@ class ClientLicense extends Model
      */
     public function getStatusAttribute()
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return 'inactive';
         }
-        
+
         if ($this->isExpired()) {
             return 'expired';
         }
-        
+
         if ($this->isExpiringSoon()) {
             return 'expiring_soon';
         }
-        
+
         return 'active';
     }
 
@@ -195,10 +195,10 @@ class ClientLicense extends Model
      */
     public function getDaysUntilExpiryAttribute()
     {
-        if (!$this->expiry_date) {
+        if (! $this->expiry_date) {
             return null;
         }
-        
+
         return $this->expiry_date->diffInDays(now(), false);
     }
 

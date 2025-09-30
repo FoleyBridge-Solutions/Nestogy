@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['ticket_id', 'is_active']);
             $table->index(['company_id', 'assigned_to']);
         });

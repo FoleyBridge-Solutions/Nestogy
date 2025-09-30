@@ -22,7 +22,7 @@ class UpdateClientRequest extends FormRequest
     public function rules(): array
     {
         $clientId = $this->route('client')->id;
-        
+
         return [
             // Client basic information
             'name' => 'required|string|max:255',
@@ -147,31 +147,31 @@ class UpdateClientRequest extends FormRequest
         // Clean phone numbers
         if ($this->has('phone')) {
             $this->merge([
-                'phone' => preg_replace('/[^0-9]/', '', $this->phone)
+                'phone' => preg_replace('/[^0-9]/', '', $this->phone),
             ]);
         }
 
         if ($this->has('location_phone')) {
             $this->merge([
-                'location_phone' => preg_replace('/[^0-9]/', '', $this->location_phone)
+                'location_phone' => preg_replace('/[^0-9]/', '', $this->location_phone),
             ]);
         }
 
         if ($this->has('contact_phone')) {
             $this->merge([
-                'contact_phone' => preg_replace('/[^0-9]/', '', $this->contact_phone)
+                'contact_phone' => preg_replace('/[^0-9]/', '', $this->contact_phone),
             ]);
         }
 
         if ($this->has('contact_mobile')) {
             $this->merge([
-                'contact_mobile' => preg_replace('/[^0-9]/', '', $this->contact_mobile)
+                'contact_mobile' => preg_replace('/[^0-9]/', '', $this->contact_mobile),
             ]);
         }
 
         if ($this->has('contact_extension')) {
             $this->merge([
-                'contact_extension' => preg_replace('/[^0-9]/', '', $this->contact_extension)
+                'contact_extension' => preg_replace('/[^0-9]/', '', $this->contact_extension),
             ]);
         }
 
@@ -197,7 +197,7 @@ class UpdateClientRequest extends FormRequest
             // Validate currency code if provided
             if ($this->filled('currency_code')) {
                 $validCurrencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR'];
-                if (!in_array(strtoupper($this->currency_code), $validCurrencies)) {
+                if (! in_array(strtoupper($this->currency_code), $validCurrencies)) {
                     $validator->errors()->add('currency_code', 'Invalid currency code.');
                 }
             }

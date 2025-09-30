@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Tax Profile Model
- * 
+ *
  * Defines tax requirements and calculation rules for different product/service categories.
  * Maps categories to appropriate tax engines and required data fields.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int|null $category_id
@@ -37,7 +37,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class TaxProfile extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -89,17 +89,24 @@ class TaxProfile extends Model
      * Profile type constants
      */
     const TYPE_VOIP = 'voip';
+
     const TYPE_DIGITAL_SERVICES = 'digital_services';
+
     const TYPE_EQUIPMENT = 'equipment';
+
     const TYPE_PROFESSIONAL = 'professional';
+
     const TYPE_GENERAL = 'general';
+
     const TYPE_CUSTOM = 'custom';
 
     /**
      * Calculation engine constants
      */
     const ENGINE_VOIP = 'VoIPTaxService';
+
     const ENGINE_SERVICE_TAX = 'ServiceTaxCalculator';
+
     const ENGINE_CUSTOM = 'custom';
 
     /**
@@ -216,7 +223,7 @@ class TaxProfile extends Model
         if (isset($this->field_definitions[$field])) {
             return $this->field_definitions[$field];
         }
-        
+
         // Fall back to default definitions
         return self::FIELD_TYPES[$field] ?? null;
     }
@@ -227,36 +234,36 @@ class TaxProfile extends Model
     public function getValidationRules(): array
     {
         $rules = [];
-        
+
         foreach ($this->required_fields ?? [] as $field) {
             $fieldDef = $this->getFieldDefinition($field);
-            
+
             if ($fieldDef) {
                 switch ($fieldDef['type']) {
                     case 'number':
-                        $rules[$field] = 'required|numeric|min:' . ($fieldDef['min'] ?? 0);
+                        $rules[$field] = 'required|numeric|min:'.($fieldDef['min'] ?? 0);
                         break;
                     case 'address':
-                        $rules[$field . '.state'] = 'required|string|max:2';
-                        $rules[$field . '.city'] = 'nullable|string|max:255';
-                        $rules[$field . '.zip'] = 'nullable|string|max:10';
+                        $rules[$field.'.state'] = 'required|string|max:2';
+                        $rules[$field.'.city'] = 'nullable|string|max:255';
+                        $rules[$field.'.zip'] = 'nullable|string|max:10';
                         break;
                     case 'dimensions':
-                        $rules[$field . '.length'] = 'nullable|numeric|min:0';
-                        $rules[$field . '.width'] = 'nullable|numeric|min:0';
-                        $rules[$field . '.height'] = 'nullable|numeric|min:0';
+                        $rules[$field.'.length'] = 'nullable|numeric|min:0';
+                        $rules[$field.'.width'] = 'nullable|numeric|min:0';
+                        $rules[$field.'.height'] = 'nullable|numeric|min:0';
                         break;
                     default:
                         $rules[$field] = 'required';
                 }
             }
         }
-        
+
         // Add custom validation rules if defined
         if ($this->validation_rules) {
             $rules = array_merge($rules, $this->validation_rules);
         }
-        
+
         return $rules;
     }
 
@@ -266,20 +273,20 @@ class TaxProfile extends Model
     public function getDefaultValues(): array
     {
         $defaults = [];
-        
+
         foreach ($this->required_fields ?? [] as $field) {
             $fieldDef = $this->getFieldDefinition($field);
-            
+
             if ($fieldDef && isset($fieldDef['default'])) {
                 $defaults[$field] = $fieldDef['default'];
             }
         }
-        
+
         // Merge with custom defaults
         if ($this->default_values) {
             $defaults = array_merge($defaults, $this->default_values);
         }
-        
+
         return $defaults;
     }
 
@@ -379,7 +386,7 @@ class TaxProfile extends Model
                 'is_active' => true,
             ],
         ];
-        
+
         foreach ($profiles as $profile) {
             self::create($profile);
         }

@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::table('quotes', function (Blueprint $table) {
             $table->enum('approval_status', [
                 'pending',
-                'manager_approved', 
+                'manager_approved',
                 'executive_approved',
                 'rejected',
-                'not_required'
+                'not_required',
             ])->default('not_required')->after('status');
-            
+
             $table->index('approval_status');
         });
     }

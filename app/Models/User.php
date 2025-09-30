@@ -2,24 +2,23 @@
 
 namespace App\Models;
 
-use Silber\Bouncer\Database\HasRolesAndAbilities;
 use App\Traits\HasEnhancedPermissions;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Silber\Bouncer\Database\HasRolesAndAbilities;
 
 /**
  * User Model
- * 
+ *
  * Represents system users with authentication and role-based access.
  * Supports multi-tenant architecture with company association.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string $email
@@ -38,7 +37,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasRolesAndAbilities, HasEnhancedPermissions;
+    use HasEnhancedPermissions, HasFactory, HasRolesAndAbilities, Notifiable, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -93,8 +92,11 @@ class User extends Authenticatable
      * User roles enumeration
      */
     const ROLE_ACCOUNTANT = 1;
+
     const ROLE_TECH = 2;
+
     const ROLE_ADMIN = 3;           // Tenant administrator
+
     const ROLE_SUPER_ADMIN = 4;     // Platform operator (Company 1 only)
 
     /**
@@ -112,7 +114,7 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Company::class);
     }
-    
+
     /**
      * Get the clients assigned to this user (for technicians).
      */
@@ -124,7 +126,7 @@ class User extends Authenticatable
             ->whereNull('user_clients.expires_at')
             ->orWhere('user_clients.expires_at', '>', now());
     }
-    
+
     /**
      * Get all clients this user can access (assigned or via permissions).
      */
@@ -134,11 +136,11 @@ class User extends Authenticatable
         if ($this->isA('super-admin') || $this->isA('admin')) {
             return Client::where('company_id', $this->company_id);
         }
-        
+
         // Other users only see assigned clients
         return $this->assignedClients();
     }
-    
+
     /**
      * Check if user is assigned to a specific client.
      */
@@ -150,13 +152,13 @@ class User extends Authenticatable
                 ->where('company_id', $this->company_id)
                 ->exists();
         }
-        
+
         // Check if user is assigned to the client
         return $this->assignedClients()
             ->where('clients.id', $clientId)
             ->exists();
     }
-    
+
     /**
      * Get user's access level for a specific client.
      */
@@ -166,19 +168,19 @@ class User extends Authenticatable
         if ($this->isA('super-admin')) {
             return 'admin';
         }
-        
+
         // Admins have manage access to all clients in their company
         if ($this->isA('admin')) {
             return Client::where('id', $clientId)
                 ->where('company_id', $this->company_id)
                 ->exists() ? 'manage' : null;
         }
-        
+
         // Get specific assignment access level
         $assignment = $this->assignedClients()
             ->where('clients.id', $clientId)
             ->first();
-            
+
         return $assignment ? $assignment->pivot->access_level : null;
     }
 
@@ -236,8 +238,8 @@ class User extends Authenticatable
     public function memberOfProjects(): BelongsToMany
     {
         return $this->belongsToMany(\App\Domains\Project\Models\Project::class, 'project_members', 'user_id', 'project_id')
-                    ->withPivot(['role', 'hourly_rate', 'can_edit', 'can_manage_tasks', 'joined_at', 'is_active'])
-                    ->withTimestamps();
+            ->withPivot(['role', 'hourly_rate', 'can_edit', 'can_manage_tasks', 'joined_at', 'is_active'])
+            ->withTimestamps();
     }
 
     /**
@@ -246,10 +248,10 @@ class User extends Authenticatable
     public function favoriteClients(): BelongsToMany
     {
         return $this->belongsToMany(\App\Models\Client::class, 'user_favorite_clients', 'user_id', 'client_id')
-                    ->wherePivot('user_id', $this->id)
-                    ->where('clients.status', 'active')
-                    ->withTimestamps()
-                    ->orderBy('user_favorite_clients.created_at', 'desc');
+            ->wherePivot('user_id', $this->id)
+            ->where('clients.status', 'active')
+            ->withTimestamps()
+            ->orderBy('user_favorite_clients.created_at', 'desc');
     }
 
     /**
@@ -265,7 +267,7 @@ class User extends Authenticatable
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -334,11 +336,11 @@ class User extends Authenticatable
     public function getAvatarUrl(): string
     {
         if ($this->avatar) {
-            return asset('storage/users/' . $this->avatar);
+            return asset('storage/users/'.$this->avatar);
         }
-        
+
         // Use ui-avatars.com for consistency with navbar
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF&size=150';
+        return 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&color=7F9CF5&background=EBF4FF&size=150';
     }
 
     /**
@@ -389,7 +391,7 @@ class User extends Authenticatable
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $userId,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$userId,
             'password' => 'nullable|string|min:8|confirmed',
             'status' => 'boolean',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -400,7 +402,7 @@ class User extends Authenticatable
     /**
      * Bouncer Integration & Backward Compatibility Methods
      */
-    
+
     /**
      * Get the scope for Bouncer (company-based multi-tenancy).
      */
@@ -408,7 +410,7 @@ class User extends Authenticatable
     {
         return $this->company_id;
     }
-    
+
     /**
      * Enhanced permission checking with wildcard support.
      */
@@ -418,11 +420,11 @@ class User extends Authenticatable
         if ($companyId && $companyId !== $this->company_id) {
             return \Bouncer::scope()->to($companyId)->can($this, $ability);
         }
-        
+
         // Use the enhanced permission service that supports wildcards
         return app(\App\Domains\Security\Services\PermissionService::class)->userHasPermission($this, $ability);
     }
-    
+
     /**
      * Check if user has any of the given permissions.
      */
@@ -433,151 +435,154 @@ class User extends Authenticatable
                 return true;
             }
         }
+
         return false;
     }
-    
+
     /**
      * Check if user has all of the given permissions.
      */
     public function hasAllPermissions(array $abilities, ?int $companyId = null): bool
     {
         foreach ($abilities as $ability) {
-            if (!$this->hasPermission($ability, $companyId)) {
+            if (! $this->hasPermission($ability, $companyId)) {
                 return false;
             }
         }
+
         return true;
     }
-    
+
     /**
      * Bouncer-compatible role checking (backward compatibility).
      */
     public function hasRole(string|array $role, ?int $companyId = null): bool
     {
         $roles = is_array($role) ? $role : [$role];
-        
+
         // If checking for a different company, temporarily set scope
         if ($companyId && $companyId !== $this->company_id) {
             $originalScope = \Bouncer::scope();
             \Bouncer::scope()->to($companyId);
-            
+
             foreach ($roles as $roleName) {
                 if ($this->isA($roleName)) {
                     \Bouncer::scope($originalScope);
+
                     return true;
                 }
             }
             \Bouncer::scope($originalScope);
+
             return false;
         }
-        
+
         // Use Bouncer's isA method which works with current scope
         foreach ($roles as $roleName) {
             if ($this->isA($roleName)) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     /**
      * Assign role using Bouncer.
      */
     public function assignRole(string $role, ?int $companyId = null): self
     {
         $scope = $companyId ?? $this->company_id;
-        
+
         if ($scope) {
             \Bouncer::scope()->to($scope)->dontCache();
         }
-        
+
         $this->assign($role);
-        
+
         return $this;
     }
-    
+
     /**
      * Remove role using Bouncer.
      */
     public function removeRole(string $role, ?int $companyId = null): self
     {
         $scope = $companyId ?? $this->company_id;
-        
+
         if ($scope) {
             \Bouncer::scope()->to($scope)->dontCache();
         }
-        
+
         $this->retract($role);
-        
+
         return $this;
     }
-    
+
     /**
      * Give permission directly using Bouncer.
      */
     public function givePermissionTo(string $ability, ?int $companyId = null): self
     {
         $scope = $companyId ?? $this->company_id;
-        
+
         if ($scope) {
             \Bouncer::scope()->to($scope)->dontCache();
         }
-        
+
         \Bouncer::allow($this)->to($ability);
-        
+
         return $this;
     }
-    
+
     /**
      * Revoke permission using Bouncer.
      */
     public function revokePermissionTo(string $ability, ?int $companyId = null): self
     {
         $scope = $companyId ?? $this->company_id;
-        
+
         if ($scope) {
             \Bouncer::scope()->to($scope)->dontCache();
         }
-        
+
         \Bouncer::disallow($this)->to($ability);
-        
+
         return $this;
     }
-    
+
     /**
      * Get all permissions for user (Bouncer integration).
      */
     public function getAllPermissions(?int $companyId = null)
     {
         $scope = $companyId ?? $this->company_id;
-        
+
         // Set scope if different from current user's company
         if ($scope && $scope !== $this->company_id) {
             \Bouncer::scope()->to($scope);
         }
-        
+
         // Get abilities using Bouncer's built-in method
         return $this->getAbilities();
     }
-    
-    
+
     /**
      * Check domain access using Bouncer.
      */
     public function canAccessDomain(string $domain, ?int $companyId = null): bool
     {
-        return $this->hasPermission($domain . '.view', $companyId);
+        return $this->hasPermission($domain.'.view', $companyId);
     }
-    
+
     /**
      * Check domain action using Bouncer.
      */
     public function canPerformAction(string $domain, string $action, ?int $companyId = null): bool
     {
-        return $this->hasPermission($domain . '.' . $action, $companyId);
+        return $this->hasPermission($domain.'.'.$action, $companyId);
     }
-    
+
     /**
      * Override hasVerifiedEmail to always return true when SMTP is not configured.
      * This prevents email verification lockout when no email service is available.
@@ -585,26 +590,26 @@ class User extends Authenticatable
     public function hasVerifiedEmail(): bool
     {
         // If SMTP is not configured (using log driver), consider all emails verified
-        if (config('mail.mailer') === 'log' || !config('mail.host')) {
+        if (config('mail.mailer') === 'log' || ! config('mail.host')) {
             return true;
         }
-        
+
         // Normal email verification check
-        return !is_null($this->email_verified_at);
+        return ! is_null($this->email_verified_at);
     }
-    
+
     /**
      * Override markEmailAsVerified to handle non-SMTP environments.
      */
     public function markEmailAsVerified(): bool
     {
         // If SMTP is not configured, mark as verified immediately
-        if (config('mail.mailer') === 'log' || !config('mail.host')) {
+        if (config('mail.mailer') === 'log' || ! config('mail.host')) {
             return $this->forceFill([
                 'email_verified_at' => $this->freshTimestamp(),
             ])->save();
         }
-        
+
         // Normal email verification
         return $this->forceFill([
             'email_verified_at' => $this->freshTimestamp(),

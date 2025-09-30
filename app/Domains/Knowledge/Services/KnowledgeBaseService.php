@@ -3,19 +3,18 @@
 namespace App\Domains\Knowledge\Services;
 
 use App\Domains\Knowledge\Models\KbArticle;
-use App\Domains\Knowledge\Models\KbCategory;
-use App\Domains\Knowledge\Models\KbArticleView;
 use App\Domains\Knowledge\Models\KbArticleFeedback;
+use App\Domains\Knowledge\Models\KbArticleView;
+use App\Domains\Knowledge\Models\KbCategory;
 use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Knowledge Base Service
- * 
+ *
  * Core service for managing knowledge base operations, search, and ticket deflection
  */
 class KnowledgeBaseService
@@ -40,7 +39,7 @@ class KnowledgeBaseService
             }
 
             // Auto-generate excerpt if not provided
-            if (empty($data['excerpt']) && !empty($data['content'])) {
+            if (empty($data['excerpt']) && ! empty($data['content'])) {
                 $data['excerpt'] = str()->limit(strip_tags($data['content']), 160);
             }
 
@@ -57,12 +56,12 @@ class KnowledgeBaseService
             $article = KbArticle::create($data);
 
             // Handle related articles
-            if (!empty($data['related_article_ids'])) {
+            if (! empty($data['related_article_ids'])) {
                 $article->relatedArticles()->sync($data['related_article_ids']);
             }
 
             // Handle client restrictions
-            if (!empty($data['client_ids'])) {
+            if (! empty($data['client_ids'])) {
                 $article->clients()->sync($data['client_ids']);
             }
 
@@ -70,12 +69,13 @@ class KnowledgeBaseService
             $this->clearCache();
 
             DB::commit();
+
             return $article->fresh(['category', 'author']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create KB article', [
                 'error' => $e->getMessage(),
-                'data' => $data
+                'data' => $data,
             ]);
             throw $e;
         }
@@ -92,8 +92,8 @@ class KnowledgeBaseService
             $contentChanged = isset($data['content']) && $data['content'] !== $article->content;
 
             // Update published_at if changing to published
-            if (isset($data['status']) && 
-                $data['status'] === KbArticle::STATUS_PUBLISHED && 
+            if (isset($data['status']) &&
+                $data['status'] === KbArticle::STATUS_PUBLISHED &&
                 $article->status !== KbArticle::STATUS_PUBLISHED) {
                 $data['published_at'] = now();
             }
@@ -114,13 +114,14 @@ class KnowledgeBaseService
             $this->clearCache();
 
             DB::commit();
+
             return $article->fresh(['category', 'author']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update KB article', [
                 'error' => $e->getMessage(),
                 'article_id' => $article->id,
-                'data' => $data
+                'data' => $data,
             ]);
             throw $e;
         }
@@ -132,7 +133,7 @@ class KnowledgeBaseService
     public function getSuggestedArticles(string $query, int $limit = 5): Collection
     {
         return Cache::remember(
-            "kb_suggestions:" . md5($query) . ":{$limit}",
+            'kb_suggestions:'.md5($query).":{$limit}",
             300, // 5 minutes cache
             function () use ($query, $limit) {
                 return $this->searchService->search($query, [
@@ -284,7 +285,7 @@ class KnowledgeBaseService
     {
         $totalViews = $article->views()->count();
         $viewsThatLedToTickets = $article->views()->ledToTicket()->count();
-        
+
         if ($totalViews > 0) {
             $deflectionRate = (($totalViews - $viewsThatLedToTickets) / $totalViews) * 100;
             $article->update(['deflection_rate' => round($deflectionRate, 2)]);
@@ -313,7 +314,7 @@ class KnowledgeBaseService
             'views_with_search' => $viewsWithSearch,
             'tickets_created' => $viewsThatLedToTickets,
             'tickets_deflected' => max(0, $deflectedTickets),
-            'deflection_rate' => $viewsWithSearch > 0 
+            'deflection_rate' => $viewsWithSearch > 0
                 ? round(($deflectedTickets / $viewsWithSearch) * 100, 2)
                 : 0,
             'top_deflecting_articles' => $this->getTopDeflectingArticles($companyId, 5),
@@ -339,14 +340,14 @@ class KnowledgeBaseService
     protected function formatTicketContentForArticle(Ticket $ticket): string
     {
         $content = "<h2>Issue Description</h2>\n";
-        $content .= "<p>" . nl2br(e($ticket->description)) . "</p>\n\n";
-        
+        $content .= '<p>'.nl2br(e($ticket->description))."</p>\n\n";
+
         $content .= "<h2>Resolution</h2>\n";
-        $content .= "<p>" . nl2br(e($ticket->resolution ?? 'Resolution details to be added.')) . "</p>\n\n";
-        
+        $content .= '<p>'.nl2br(e($ticket->resolution ?? 'Resolution details to be added.'))."</p>\n\n";
+
         if ($ticket->notes) {
             $content .= "<h2>Additional Notes</h2>\n";
-            $content .= "<p>" . nl2br(e($ticket->notes)) . "</p>\n";
+            $content .= '<p>'.nl2br(e($ticket->notes))."</p>\n";
         }
 
         return $content;
@@ -358,22 +359,22 @@ class KnowledgeBaseService
     protected function extractTagsFromTicket(Ticket $ticket): array
     {
         $tags = [];
-        
+
         // Add category as tag
         if ($ticket->category) {
             $tags[] = str()->slug($ticket->category);
         }
-        
+
         // Add priority as tag
         if ($ticket->priority) {
-            $tags[] = 'priority-' . $ticket->priority;
+            $tags[] = 'priority-'.$ticket->priority;
         }
-        
+
         // Extract keywords from subject and description
-        $text = $ticket->subject . ' ' . $ticket->description;
+        $text = $ticket->subject.' '.$ticket->description;
         $keywords = $this->extractKeywords($text, 5);
         $tags = array_merge($tags, $keywords);
-        
+
         return array_unique($tags);
     }
 
@@ -385,18 +386,18 @@ class KnowledgeBaseService
         // Remove HTML tags and special characters
         $text = strip_tags($text);
         $text = preg_replace('/[^a-zA-Z0-9\s]/', '', $text);
-        
+
         // Convert to lowercase and split into words
         $words = str_word_count(strtolower($text), 1);
-        
+
         // Remove common stop words
         $stopWords = ['the', 'is', 'at', 'which', 'on', 'and', 'a', 'an', 'as', 'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'must', 'can', 'shall'];
         $words = array_diff($words, $stopWords);
-        
+
         // Count word frequency
         $wordCounts = array_count_values($words);
         arsort($wordCounts);
-        
+
         // Return top keywords
         return array_slice(array_keys($wordCounts), 0, $limit);
     }
@@ -407,7 +408,7 @@ class KnowledgeBaseService
     protected function clearCache(): void
     {
         Cache::tags(['knowledge_base'])->flush();
-        
+
         // Also clear specific cache keys
         Cache::forget('kb_popular:*');
         Cache::forget('kb_recent:*');

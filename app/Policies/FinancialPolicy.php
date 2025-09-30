@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class FinancialPolicy
 {
@@ -218,7 +217,7 @@ class FinancialPolicy
     {
         return $user->canAny([
             'financial.expenses.approve',
-            'financial.manage'
+            'financial.manage',
         ]);
     }
 
@@ -229,7 +228,7 @@ class FinancialPolicy
     {
         return $user->canAny([
             'financial.view',
-            'reports.financial'
+            'reports.financial',
         ]);
     }
 
@@ -240,7 +239,7 @@ class FinancialPolicy
     {
         return $user->canAny([
             'financial.manage',
-            'financial.expenses.approve'
+            'financial.expenses.approve',
         ]) || $user->isAdmin();
     }
 

@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * ContractNegotiation Model
- * 
+ *
  * Manages contract negotiation processes and workflow
  */
 class ContractNegotiation extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -70,15 +70,22 @@ class ContractNegotiation extends Model
 
     // Negotiation statuses
     const STATUS_ACTIVE = 'active';
+
     const STATUS_PAUSED = 'paused';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     // Negotiation phases
     const PHASE_PREPARATION = 'preparation';
+
     const PHASE_PROPOSAL = 'proposal';
+
     const PHASE_NEGOTIATION = 'negotiation';
+
     const PHASE_APPROVAL = 'approval';
+
     const PHASE_FINALIZATION = 'finalization';
 
     /**
@@ -162,16 +169,17 @@ class ContractNegotiation extends Model
 
     public function isOverdue(): bool
     {
-        return $this->deadline && $this->deadline->isPast() && !$this->isCompleted();
+        return $this->deadline && $this->deadline->isPast() && ! $this->isCompleted();
     }
 
     public function getDurationInDays(): int
     {
-        if (!$this->started_at) {
+        if (! $this->started_at) {
             return 0;
         }
 
         $endDate = $this->completed_at ?? now();
+
         return $this->started_at->diffInDays($endDate);
     }
 
@@ -179,11 +187,11 @@ class ContractNegotiation extends Model
     {
         $internal = $this->internal_participants ?? [];
         $client = $this->client_participants ?? [];
-        
+
         return [
             'internal' => $internal,
             'client' => $client,
-            'total_count' => count($internal) + count($client)
+            'total_count' => count($internal) + count($client),
         ];
     }
 
@@ -191,22 +199,22 @@ class ContractNegotiation extends Model
     {
         $field = $type === 'internal' ? 'internal_participants' : 'client_participants';
         $participants = $this->{$field} ?? [];
-        
+
         // Check if already a participant
         $existingIndex = collect($participants)->search(function ($p) use ($userId) {
             return $p['user_id'] === $userId;
         });
-        
+
         if ($existingIndex !== false) {
             return false; // Already a participant
         }
-        
+
         $participants[] = [
             'user_id' => $userId,
             'added_at' => now()->toISOString(),
-            'permissions' => $permissions
+            'permissions' => $permissions,
         ];
-        
+
         return $this->update([$field => $participants]);
     }
 
@@ -214,11 +222,11 @@ class ContractNegotiation extends Model
     {
         $field = $type === 'internal' ? 'internal_participants' : 'client_participants';
         $participants = $this->{$field} ?? [];
-        
+
         $filtered = collect($participants)->filter(function ($p) use ($userId) {
             return $p['user_id'] !== $userId;
         })->values()->toArray();
-        
+
         return $this->update([$field => $filtered]);
     }
 
@@ -230,19 +238,19 @@ class ContractNegotiation extends Model
             self::PHASE_NEGOTIATION => self::PHASE_APPROVAL,
             self::PHASE_APPROVAL => self::PHASE_FINALIZATION,
         ];
-        
+
         $nextPhase = $phases[$this->phase] ?? null;
-        if (!$nextPhase) {
+        if (! $nextPhase) {
             return false;
         }
-        
+
         return $this->update([
             'phase' => $nextPhase,
-            'last_activity_at' => now()
+            'last_activity_at' => now(),
         ]);
     }
 
-    public function complete(bool $won = true, string $notes = null): bool
+    public function complete(bool $won = true, ?string $notes = null): bool
     {
         $updates = [
             'status' => self::STATUS_COMPLETED,
@@ -250,26 +258,26 @@ class ContractNegotiation extends Model
             'completed_at' => now(),
             'duration_days' => $this->getDurationInDays(),
             'won' => $won,
-            'last_activity_at' => now()
+            'last_activity_at' => now(),
         ];
-        
+
         if ($notes) {
             $updates['outcome_notes'] = $notes;
         }
-        
+
         if ($won && $this->currentVersion) {
             $updates['final_value'] = $this->currentVersion->getTotalValue();
         }
-        
+
         return $this->update($updates);
     }
 
-    public function pause(string $reason = null): bool
+    public function pause(?string $reason = null): bool
     {
         return $this->update([
             'status' => self::STATUS_PAUSED,
             'outcome_notes' => $reason,
-            'last_activity_at' => now()
+            'last_activity_at' => now(),
         ]);
     }
 
@@ -277,11 +285,11 @@ class ContractNegotiation extends Model
     {
         return $this->update([
             'status' => self::STATUS_ACTIVE,
-            'last_activity_at' => now()
+            'last_activity_at' => now(),
         ]);
     }
 
-    public function recordPricingChange(float $newValue, string $reason = null): void
+    public function recordPricingChange(float $newValue, ?string $reason = null): void
     {
         $history = $this->pricing_history ?? [];
         $history[] = [
@@ -289,9 +297,9 @@ class ContractNegotiation extends Model
             'reason' => $reason,
             'round' => $this->round,
             'recorded_at' => now()->toISOString(),
-            'recorded_by' => auth()->id()
+            'recorded_by' => auth()->id(),
         ];
-        
+
         $this->update(['pricing_history' => $history]);
     }
 
@@ -299,7 +307,7 @@ class ContractNegotiation extends Model
     {
         return $this->update([
             'round' => $this->round + 1,
-            'last_activity_at' => now()
+            'last_activity_at' => now(),
         ]);
     }
 
@@ -317,7 +325,7 @@ class ContractNegotiation extends Model
             self::PHASE_APPROVAL => 80,
             self::PHASE_FINALIZATION => 100,
         ];
-        
+
         return $phases[$this->phase] ?? 0;
     }
 
@@ -327,16 +335,17 @@ class ContractNegotiation extends Model
         if ($this->created_by === $user->id || $this->assigned_to === $user->id) {
             return true;
         }
-        
+
         // Check participant permissions
         $participants = $this->internal_participants ?? [];
         $participant = collect($participants)->firstWhere('user_id', $user->id);
-        
+
         if ($participant) {
             $permissions = $participant['permissions'] ?? [];
+
             return in_array('edit', $permissions);
         }
-        
+
         return false;
     }
 
@@ -345,19 +354,19 @@ class ContractNegotiation extends Model
         $prefix = 'NEG';
         $year = date('Y');
         $month = date('m');
-        
+
         // Find the next sequential number for this month
         $lastNegotiation = self::where('negotiation_number', 'like', "{$prefix}-{$year}{$month}-%")
             ->orderBy('negotiation_number', 'desc')
             ->first();
-        
+
         if ($lastNegotiation) {
             $lastNumber = (int) substr($lastNegotiation->negotiation_number, -4);
             $nextNumber = $lastNumber + 1;
         } else {
             $nextNumber = 1;
         }
-        
+
         return sprintf('%s-%s%s-%04d', $prefix, $year, $month, $nextNumber);
     }
 }

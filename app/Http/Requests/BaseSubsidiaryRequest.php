@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * BaseSubsidiaryRequest
- * 
+ *
  * Base class for subsidiary-related form requests with common validation rules.
  */
 abstract class BaseSubsidiaryRequest extends FormRequest
@@ -23,24 +23,24 @@ abstract class BaseSubsidiaryRequest extends FormRequest
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'website' => 'nullable|url|max:255',
-            
+
             // Address information
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'zip' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
-            
+
             // Subsidiary-specific settings
             'access_level' => 'required|in:full,limited,read_only',
             'billing_type' => 'required|in:independent,parent_billed,shared',
             'can_create_subsidiaries' => 'boolean',
             'max_subsidiary_depth' => 'integer|min:0|max:10',
-            
+
             // Currency and localization
             'currency' => 'nullable|string|in:USD,EUR,GBP,CAD,AUD,JPY',
             'locale' => 'nullable|string|max:10',
-            
+
             // Subsidiary settings
             'subsidiary_settings' => 'array',
             'subsidiary_settings.department' => 'nullable|string|max:100',
@@ -94,7 +94,7 @@ abstract class BaseSubsidiaryRequest extends FormRequest
         }
 
         $this->merge([
-            'subsidiary_settings' => array_merge($baseSettings, $subsidiarySettings)
+            'subsidiary_settings' => array_merge($baseSettings, $subsidiarySettings),
         ]);
     }
 
@@ -104,8 +104,8 @@ abstract class BaseSubsidiaryRequest extends FormRequest
     protected function validateCurrencyBilling($validator, ?string $parentCurrency = null): void
     {
         $parentCurrency = $parentCurrency ?? Auth::user()->company->currency;
-        
-        if ($this->billing_type === 'shared' && 
+
+        if ($this->billing_type === 'shared' &&
             $this->currency !== $parentCurrency) {
             $validator->errors()->add('currency',
                 'Currency must match parent company when using shared billing.');
@@ -118,6 +118,7 @@ abstract class BaseSubsidiaryRequest extends FormRequest
     protected function canManageSubsidiaries(): bool
     {
         $user = Auth::user();
+
         return $user && $user->settings?->canManageSubsidiaries();
     }
 }

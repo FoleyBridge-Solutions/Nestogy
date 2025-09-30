@@ -2,15 +2,15 @@
 
 namespace App\Domains\Contract\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Contract\Services\ContractAnalyticsService;
+use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * ContractAnalyticsController
- * 
+ *
  * Handles contract performance analytics, revenue forecasting,
  * and business intelligence dashboard endpoints.
  */
@@ -32,9 +32,9 @@ class ContractAnalyticsController extends Controller
         try {
             $filters = $this->buildFilters($request);
             $companyId = auth()->user()->company_id;
-            
+
             $analytics = $this->analyticsService->getAnalyticsDashboard($companyId, $filters);
-            
+
             return view('financial.analytics.index', [
                 'analytics' => $analytics,
                 'filters' => $filters,
@@ -45,7 +45,7 @@ class ContractAnalyticsController extends Controller
                 'user_id' => auth()->id(),
                 'company_id' => auth()->user()->company_id ?? null,
             ]);
-            
+
             return redirect()->back()->with('error', 'Unable to load analytics dashboard.');
         }
     }
@@ -58,12 +58,12 @@ class ContractAnalyticsController extends Controller
         try {
             $filters = $this->buildFilters($request);
             $companyId = auth()->user()->company_id;
-            
+
             $startDate = isset($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subYear();
             $endDate = isset($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
-            
+
             $revenueData = $this->analyticsService->getRevenueAnalytics($companyId, $startDate, $endDate);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $revenueData,
@@ -74,7 +74,7 @@ class ContractAnalyticsController extends Controller
                 'user_id' => auth()->id(),
                 'filters' => $filters ?? [],
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to fetch revenue analytics',
@@ -90,12 +90,12 @@ class ContractAnalyticsController extends Controller
         try {
             $filters = $this->buildFilters($request);
             $companyId = auth()->user()->company_id;
-            
+
             $startDate = isset($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subYear();
             $endDate = isset($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
-            
+
             $performanceData = $this->analyticsService->getPerformanceMetrics($companyId, $startDate, $endDate);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $performanceData,
@@ -106,7 +106,7 @@ class ContractAnalyticsController extends Controller
                 'user_id' => auth()->id(),
                 'filters' => $filters ?? [],
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to fetch performance metrics',
@@ -122,12 +122,12 @@ class ContractAnalyticsController extends Controller
         try {
             $filters = $this->buildFilters($request);
             $companyId = auth()->user()->company_id;
-            
+
             $startDate = isset($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subYear();
             $endDate = isset($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
-            
+
             $clientData = $this->analyticsService->getClientAnalytics($companyId, $startDate, $endDate);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $clientData,
@@ -138,7 +138,7 @@ class ContractAnalyticsController extends Controller
                 'user_id' => auth()->id(),
                 'filters' => $filters ?? [],
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to fetch client analytics',
@@ -154,7 +154,7 @@ class ContractAnalyticsController extends Controller
         try {
             $companyId = auth()->user()->company_id;
             $forecastData = $this->analyticsService->getRevenueForecast($companyId);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $forecastData,
@@ -165,7 +165,7 @@ class ContractAnalyticsController extends Controller
                 'user_id' => auth()->id(),
                 'company_id' => auth()->user()->company_id ?? null,
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to fetch revenue forecast',
@@ -181,7 +181,7 @@ class ContractAnalyticsController extends Controller
         try {
             $companyId = auth()->user()->company_id;
             $riskData = $this->analyticsService->getRiskAnalytics($companyId);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $riskData,
@@ -192,7 +192,7 @@ class ContractAnalyticsController extends Controller
                 'user_id' => auth()->id(),
                 'company_id' => auth()->user()->company_id ?? null,
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to fetch risk analytics',
@@ -215,10 +215,10 @@ class ContractAnalyticsController extends Controller
             $companyId = auth()->user()->company_id;
             $format = $request->get('format');
             $reportType = $request->get('report_type');
-            
+
             // Generate report based on type and format
             $analytics = $this->analyticsService->getAnalyticsDashboard($companyId, $filters);
-            
+
             switch ($format) {
                 case 'pdf':
                     return $this->exportToPdf($analytics, $reportType);
@@ -236,7 +236,7 @@ class ContractAnalyticsController extends Controller
                 'format' => $request->get('format'),
                 'report_type' => $request->get('report_type'),
             ]);
-            
+
             return redirect()->back()->with('error', 'Unable to export report.');
         }
     }
@@ -249,12 +249,12 @@ class ContractAnalyticsController extends Controller
         try {
             $filters = $this->buildFilters($request);
             $companyId = auth()->user()->company_id;
-            
+
             $startDate = isset($filters['start_date']) ? Carbon::parse($filters['start_date']) : now()->subYear();
             $endDate = isset($filters['end_date']) ? Carbon::parse($filters['end_date']) : now();
-            
+
             $lifecycleData = $this->analyticsService->getContractLifecycleAnalytics($companyId, $startDate, $endDate);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $lifecycleData,
@@ -265,7 +265,7 @@ class ContractAnalyticsController extends Controller
                 'user_id' => auth()->id(),
                 'filters' => $filters ?? [],
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to fetch lifecycle analytics',
@@ -279,27 +279,27 @@ class ContractAnalyticsController extends Controller
     protected function buildFilters(Request $request): array
     {
         $filters = [];
-        
+
         if ($request->has('start_date') && $request->get('start_date')) {
             $filters['start_date'] = $request->get('start_date');
         }
-        
+
         if ($request->has('end_date') && $request->get('end_date')) {
             $filters['end_date'] = $request->get('end_date');
         }
-        
+
         if ($request->has('contract_type') && $request->get('contract_type')) {
             $filters['contract_type'] = $request->get('contract_type');
         }
-        
+
         if ($request->has('client_id') && $request->get('client_id')) {
             $filters['client_id'] = $request->get('client_id');
         }
-        
+
         if ($request->has('status') && $request->get('status')) {
             $filters['status'] = $request->get('status');
         }
-        
+
         return $filters;
     }
 
@@ -311,16 +311,16 @@ class ContractAnalyticsController extends Controller
         // Implementation would use a PDF library like DomPDF
         // For now, return a simple response
         $pdf = app('dompdf.wrapper');
-        
+
         $html = view('financial.analytics.exports.pdf', [
             'analytics' => $analytics,
             'report_type' => $reportType,
             'generated_at' => now(),
         ])->render();
-        
+
         $pdf->loadHTML($html);
-        
-        return $pdf->download('contract-analytics-' . $reportType . '-' . now()->format('Y-m-d') . '.pdf');
+
+        return $pdf->download('contract-analytics-'.$reportType.'-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**
@@ -338,16 +338,16 @@ class ContractAnalyticsController extends Controller
      */
     protected function exportToCsv($analytics, $reportType)
     {
-        $filename = 'contract-analytics-' . $reportType . '-' . now()->format('Y-m-d') . '.csv';
-        
+        $filename = 'contract-analytics-'.$reportType.'-'.now()->format('Y-m-d').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
-        
-        $callback = function() use ($analytics, $reportType) {
+
+        $callback = function () use ($analytics, $reportType) {
             $file = fopen('php://output', 'w');
-            
+
             // Write CSV headers and data based on report type
             switch ($reportType) {
                 case 'overview':
@@ -356,7 +356,7 @@ class ContractAnalyticsController extends Controller
                         fputcsv($file, [ucwords(str_replace('_', ' ', $key)), $value]);
                     }
                     break;
-                    
+
                 case 'revenue':
                     fputcsv($file, ['Period', 'Revenue']);
                     if (isset($analytics['revenue_analytics']['monthly_breakdown']['data'])) {
@@ -367,15 +367,15 @@ class ContractAnalyticsController extends Controller
                         }
                     }
                     break;
-                    
+
                 default:
                     fputcsv($file, ['Report Type', 'Generated At']);
                     fputcsv($file, [$reportType, now()->toString()]);
             }
-            
+
             fclose($file);
         };
-        
+
         return response()->stream($callback, 200, $headers);
     }
 }

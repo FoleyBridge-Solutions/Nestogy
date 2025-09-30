@@ -2,12 +2,12 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\Product;
-use App\Models\Service;
-use App\Models\ProductBundle;
 use App\Models\Client;
-use Illuminate\Support\Collection;
+use App\Models\Product;
+use App\Models\ProductBundle;
+use App\Models\Service;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class ProductSearchService
 {
@@ -21,7 +21,7 @@ class ProductSearchService
     /**
      * Search products with filters
      */
-    public function searchProducts(array $filters = [], Client $client = null): Collection
+    public function searchProducts(array $filters = [], ?Client $client = null): Collection
     {
         $query = Product::query()
             ->where('company_id', auth()->user()->company_id)
@@ -41,6 +41,7 @@ class ProductSearchService
                 $product->client_price = $pricing['unit_price'];
                 $product->has_discount = $pricing['savings'] > 0;
                 $product->discount_percentage = $pricing['savings_percentage'];
+
                 return $product;
             });
         }
@@ -51,15 +52,15 @@ class ProductSearchService
     /**
      * Search services with filters
      */
-    public function searchServices(array $filters = [], Client $client = null): Collection
+    public function searchServices(array $filters = [], ?Client $client = null): Collection
     {
         // First try to get services from Service model with product relationships
         $serviceQuery = Service::query()
             ->with('product')
             ->whereHas('product', function ($q) {
                 $q->where('company_id', auth()->user()->company_id)
-                  ->where('is_active', true)
-                  ->where('type', 'service');
+                    ->where('is_active', true)
+                    ->where('type', 'service');
             });
 
         // Apply service-specific filters if available
@@ -93,7 +94,7 @@ class ProductSearchService
         // Transform standalone products to look like services
         foreach ($standaloneServiceProducts as $product) {
             // Create a pseudo-service object
-            $pseudoService = new \stdClass();
+            $pseudoService = new \stdClass;
             $pseudoService->id = $product->id;
             $pseudoService->product_id = $product->id;
             $pseudoService->product = $product;
@@ -102,7 +103,7 @@ class ProductSearchService
             $pseudoService->requires_scheduling = false;
             $pseudoService->has_setup_fee = false;
             $pseudoService->setup_fee = 0;
-            
+
             $allServices->push($pseudoService);
         }
 
@@ -115,6 +116,7 @@ class ProductSearchService
                     $service->has_discount = $pricing['savings'] > 0;
                     $service->discount_percentage = $pricing['savings_percentage'];
                 }
+
                 return $service;
             });
         }
@@ -125,7 +127,7 @@ class ProductSearchService
     /**
      * Search bundles with filters
      */
-    public function searchBundles(array $filters = [], Client $client = null): Collection
+    public function searchBundles(array $filters = [], ?Client $client = null): Collection
     {
         $query = ProductBundle::query()
             ->where('company_id', auth()->user()->company_id)
@@ -149,7 +151,7 @@ class ProductSearchService
         if (isset($filters['max_price'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('fixed_price', '<=', $filters['max_price'])
-                  ->orWhereNull('fixed_price');
+                    ->orWhereNull('fixed_price');
             });
         }
 
@@ -158,12 +160,13 @@ class ProductSearchService
 
         // Enhance with pricing information if client provided
         if ($client) {
-            $bundles = $bundles->map(function ($bundle) use ($client) {
+            $bundles = $bundles->map(function ($bundle) {
                 // Calculate bundle pricing (this might need to be implemented in PricingService)
                 // For now, use the fixed price or sum of product prices
                 $bundle->client_price = $bundle->fixed_price ?? $bundle->total_price;
                 $bundle->has_discount = false; // TODO: implement bundle discounts
                 $bundle->discount_percentage = 0;
+
                 return $bundle;
             });
         }
@@ -199,7 +202,7 @@ class ProductSearchService
             ->where('is_active', true)
             ->whereHas('pricingRules', function ($q) use ($client) {
                 $q->where('client_id', $client->id)
-                  ->active();
+                    ->active();
             })
             ->limit($limit - $recommendations->count())
             ->get();
@@ -224,6 +227,7 @@ class ProductSearchService
             $pricing = $this->pricingService->calculatePrice($product, $client);
             $product->recommended_price = $pricing['unit_price'];
             $product->recommendation_score = $this->calculateRecommendationScore($product, $client);
+
             return $product;
         })->sortByDesc('recommendation_score')->take($limit);
     }
@@ -236,7 +240,7 @@ class ProductSearchService
         $results = [
             'products' => [],
             'services' => [],
-            'bundles' => []
+            'bundles' => [],
         ];
 
         // Search products
@@ -245,8 +249,8 @@ class ProductSearchService
             ->where('is_active', true)
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('sku', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%");
+                    ->orWhere('sku', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
             })
             ->limit($limit)
             ->get();
@@ -258,7 +262,7 @@ class ProductSearchService
                 'sku' => $product->sku,
                 'type' => $product->type,
                 'price' => $product->base_price,
-                'category' => $product->category
+                'category' => $product->category,
             ];
         })->toArray();
 
@@ -266,11 +270,11 @@ class ProductSearchService
         $services = Service::query()
             ->whereHas('product', function ($q) use ($query) {
                 $q->where('company_id', auth()->user()->company_id)
-                  ->where('is_active', true)
-                  ->where(function ($sq) use ($query) {
-                      $sq->where('name', 'like', "%{$query}%")
-                         ->orWhere('description', 'like', "%{$query}%");
-                  });
+                    ->where('is_active', true)
+                    ->where(function ($sq) use ($query) {
+                        $sq->where('name', 'like', "%{$query}%")
+                            ->orWhere('description', 'like', "%{$query}%");
+                    });
             })
             ->with('product')
             ->limit($limit)
@@ -283,7 +287,7 @@ class ProductSearchService
                 'name' => $service->product->name,
                 'type' => $service->service_type,
                 'price' => $service->product->base_price,
-                'sla_days' => $service->sla_days
+                'sla_days' => $service->sla_days,
             ];
         })->toArray();
 
@@ -293,8 +297,8 @@ class ProductSearchService
             ->active()
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%")
-                  ->orWhere('sku', 'like', "%{$query}%");
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhere('sku', 'like', "%{$query}%");
             })
             ->limit($limit)
             ->get();
@@ -306,7 +310,7 @@ class ProductSearchService
                 'type' => $bundle->bundle_type,
                 'pricing_type' => $bundle->pricing_type,
                 'price' => $bundle->fixed_price,
-                'discount' => $bundle->discount_percentage
+                'discount' => $bundle->discount_percentage,
             ];
         })->toArray();
 
@@ -316,7 +320,7 @@ class ProductSearchService
     /**
      * Get products by category
      */
-    public function getProductsByCategory(string $category, Client $client = null): Collection
+    public function getProductsByCategory(string $category, ?Client $client = null): Collection
     {
         $products = Product::query()
             ->where('company_id', auth()->user()->company_id)
@@ -336,6 +340,7 @@ class ProductSearchService
                     $product->bundle_id = $bestPrice['bundle_id'];
                     $product->bundle_name = $bestPrice['bundle_name'];
                 }
+
                 return $product;
             });
         }
@@ -419,15 +424,15 @@ class ProductSearchService
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
         // Sorting
         $sortBy = $filters['sort_by'] ?? 'name';
         $sortOrder = $filters['sort_order'] ?? 'asc';
-        
+
         switch ($sortBy) {
             case 'price':
                 $query->orderBy('base_price', $sortOrder);
@@ -474,7 +479,7 @@ class ProductSearchService
         $bundles = ProductBundle::whereHas('products', function ($q) use ($product) {
             $q->where('products.id', $product->id);
         })->count();
-        
+
         if ($bundles > 0) {
             $score += 10;
         }
@@ -497,11 +502,11 @@ class ProductSearchService
         $availableQuantity = null;
 
         // Check if product is active
-        if (!$product->is_active) {
+        if (! $product->is_active) {
             return [
                 'available' => false,
                 'message' => 'Product is not available',
-                'available_quantity' => 0
+                'available_quantity' => 0,
             ];
         }
 
@@ -509,7 +514,7 @@ class ProductSearchService
         if ($product->track_inventory) {
             if ($product->current_stock < $quantity) {
                 $available = false;
-                $message = $product->current_stock > 0 
+                $message = $product->current_stock > 0
                     ? "Only {$product->current_stock} units available"
                     : 'Out of stock';
                 $availableQuantity = $product->current_stock;
@@ -527,8 +532,8 @@ class ProductSearchService
             'available' => $available,
             'message' => $message,
             'available_quantity' => $availableQuantity ?? $quantity,
-            'in_stock' => !$product->track_inventory || $product->current_stock > 0,
-            'stock_level' => $product->track_inventory ? $product->current_stock : null
+            'in_stock' => ! $product->track_inventory || $product->current_stock > 0,
+            'stock_level' => $product->track_inventory ? $product->current_stock : null,
         ];
     }
 }

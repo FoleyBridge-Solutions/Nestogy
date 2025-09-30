@@ -20,10 +20,10 @@ return new class extends Migration
             $table->timestamp('heartbeat_at');
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
-            
+
             // Ensure only one server can run a specific job at a time
             $table->unique(['job_name', 'schedule_key'], 'scheduler_unique_execution');
-            
+
             // Indexes for performance
             $table->index(['job_name', 'heartbeat_at'], 'scheduler_heartbeat_idx');
             $table->index('created_at', 'scheduler_cleanup_idx');

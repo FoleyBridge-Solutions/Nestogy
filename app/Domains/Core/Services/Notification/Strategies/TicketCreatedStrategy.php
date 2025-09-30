@@ -7,7 +7,7 @@ use App\Domains\Ticket\Models\Ticket;
 
 /**
  * Ticket Created Notification Strategy
- * 
+ *
  * Handles notifications when a new ticket is created.
  * Notifies assignees, watchers, and clients based on ticket visibility.
  */
@@ -18,7 +18,7 @@ class TicketCreatedStrategy implements NotificationStrategyInterface
      */
     public function execute(Ticket $ticket, array $eventData = []): array
     {
-        if (!$this->shouldExecute($ticket, $eventData)) {
+        if (! $this->shouldExecute($ticket, $eventData)) {
             return ['skipped' => true, 'reason' => 'Strategy execution conditions not met'];
         }
 
@@ -61,7 +61,7 @@ class TicketCreatedStrategy implements NotificationStrategyInterface
         if ($ticket->assignee) {
             $recipients['email'][] = $ticket->assignee;
             $recipients['slack'][] = $ticket->assignee;
-            
+
             // SMS for critical tickets
             if ($ticket->priority === 'Critical') {
                 $recipients['sms'][] = $ticket->assignee;
@@ -89,7 +89,7 @@ class TicketCreatedStrategy implements NotificationStrategyInterface
             foreach ($supervisors as $supervisor) {
                 $recipients['email'][] = $supervisor;
                 $recipients['slack'][] = $supervisor;
-                
+
                 if ($ticket->priority === 'Critical') {
                     $recipients['sms'][] = $supervisor;
                 }
@@ -105,7 +105,8 @@ class TicketCreatedStrategy implements NotificationStrategyInterface
     public function getSubject(Ticket $ticket, array $eventData = []): string
     {
         $priorityPrefix = $ticket->priority === 'Critical' ? '🚨 CRITICAL: ' : '';
-        return $priorityPrefix . "New ticket created: #{$ticket->ticket_number}";
+
+        return $priorityPrefix."New ticket created: #{$ticket->ticket_number}";
     }
 
     /**
@@ -117,19 +118,19 @@ class TicketCreatedStrategy implements NotificationStrategyInterface
         $message .= "Subject: {$ticket->subject}\n";
         $message .= "Priority: {$ticket->priority}\n";
         $message .= "Status: {$ticket->status}\n";
-        
+
         if ($ticket->client) {
             $message .= "Client: {$ticket->client->display_name}\n";
         }
-        
+
         if ($ticket->assignee) {
             $message .= "Assigned to: {$ticket->assignee->name}\n";
         }
-        
+
         if ($ticket->details) {
-            $message .= "\nDetails:\n" . substr($ticket->details, 0, 200);
+            $message .= "\nDetails:\n".substr($ticket->details, 0, 200);
             if (strlen($ticket->details) > 200) {
-                $message .= "...";
+                $message .= '...';
             }
         }
 
@@ -157,12 +158,12 @@ class TicketCreatedStrategy implements NotificationStrategyInterface
     public function shouldExecute(Ticket $ticket, array $eventData = []): bool
     {
         // Only execute for newly created tickets
-        if (!$ticket->wasRecentlyCreated) {
+        if (! $ticket->wasRecentlyCreated) {
             return false;
         }
 
         // Skip if notifications are disabled for this company
-        if ($ticket->company && !$ticket->company->notifications_enabled) {
+        if ($ticket->company && ! $ticket->company->notifications_enabled) {
             return false;
         }
 

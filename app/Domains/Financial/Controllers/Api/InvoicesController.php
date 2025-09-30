@@ -2,13 +2,13 @@
 
 namespace App\Domains\Financial\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Domains\Core\Services\NotificationService;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\InvoiceItem;
 use App\Domains\Financial\Services\RecurringBillingService;
-use App\Domains\Core\Services\NotificationService;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -16,6 +16,7 @@ use Illuminate\Validation\Rule;
 class InvoicesController extends Controller
 {
     protected RecurringBillingService $billingService;
+
     protected NotificationService $notificationService;
 
     public function __construct(
@@ -79,9 +80,10 @@ class InvoicesController extends Controller
             $invoice->total_paid = $invoice->payments->sum('amount');
             $invoice->balance_due = $invoice->total - $invoice->total_paid;
             $invoice->is_overdue = $invoice->status !== 'paid' && $invoice->due_date < now();
-            $invoice->days_overdue = $invoice->is_overdue 
-                ? now()->diffInDays($invoice->due_date) 
+            $invoice->days_overdue = $invoice->is_overdue
+                ? now()->diffInDays($invoice->due_date)
                 : 0;
+
             return $invoice;
         });
 
@@ -95,7 +97,7 @@ class InvoicesController extends Controller
                 }),
                 'total_outstanding' => $query->where('status', '!=', 'paid')->sum('total'),
             ],
-            'message' => 'Invoices retrieved successfully'
+            'message' => 'Invoices retrieved successfully',
         ]);
     }
 
@@ -135,7 +137,7 @@ class InvoicesController extends Controller
             foreach ($validated['items'] as $item) {
                 $itemTotal = $item['quantity'] * $item['rate'];
                 $subtotal += $itemTotal;
-                
+
                 if (isset($item['tax_rate'])) {
                     $taxTotal += $itemTotal * ($item['tax_rate'] / 100);
                 }
@@ -180,8 +182,8 @@ class InvoicesController extends Controller
             // Create invoice items
             foreach ($validated['items'] as $item) {
                 $itemTotal = $item['quantity'] * $item['rate'];
-                $itemTax = isset($item['tax_rate']) 
-                    ? $itemTotal * ($item['tax_rate'] / 100) 
+                $itemTax = isset($item['tax_rate'])
+                    ? $itemTotal * ($item['tax_rate'] / 100)
                     : 0;
 
                 InvoiceItem::create([
@@ -206,17 +208,17 @@ class InvoicesController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $invoice->load(['client', 'items']),
-                'message' => 'Invoice created successfully'
+                'message' => 'Invoice created successfully',
             ], 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create invoice', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create invoice',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -230,7 +232,7 @@ class InvoicesController extends Controller
         if ($invoice->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Unauthorized',
             ], 403);
         }
 
@@ -240,14 +242,14 @@ class InvoicesController extends Controller
         $invoice->total_paid = $invoice->payments->sum('amount');
         $invoice->balance_due = $invoice->total - $invoice->total_paid;
         $invoice->is_overdue = $invoice->status !== 'paid' && $invoice->due_date < now();
-        $invoice->days_overdue = $invoice->is_overdue 
-            ? now()->diffInDays($invoice->due_date) 
+        $invoice->days_overdue = $invoice->is_overdue
+            ? now()->diffInDays($invoice->due_date)
             : 0;
 
         return response()->json([
             'success' => true,
             'data' => $invoice,
-            'message' => 'Invoice retrieved successfully'
+            'message' => 'Invoice retrieved successfully',
         ]);
     }
 
@@ -260,7 +262,7 @@ class InvoicesController extends Controller
         if ($invoice->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Unauthorized',
             ], 403);
         }
 
@@ -268,7 +270,7 @@ class InvoicesController extends Controller
         if (in_array($invoice->status, ['paid', 'cancelled'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot edit ' . $invoice->status . ' invoices'
+                'message' => 'Cannot edit '.$invoice->status.' invoices',
             ], 422);
         }
 
@@ -310,13 +312,13 @@ class InvoicesController extends Controller
                 foreach ($itemsValidated['items'] as $item) {
                     $itemTotal = $item['quantity'] * $item['rate'];
                     $subtotal += $itemTotal;
-                    
+
                     if (isset($item['tax_rate'])) {
                         $taxTotal += $itemTotal * ($item['tax_rate'] / 100);
                     }
 
-                    $itemTax = isset($item['tax_rate']) 
-                        ? $itemTotal * ($item['tax_rate'] / 100) 
+                    $itemTax = isset($item['tax_rate'])
+                        ? $itemTotal * ($item['tax_rate'] / 100)
                         : 0;
 
                     InvoiceItem::create([
@@ -335,7 +337,7 @@ class InvoicesController extends Controller
                 $discountAmount = 0;
                 $discountType = $validated['discount_type'] ?? $invoice->discount_type;
                 $discountValue = $validated['discount_value'] ?? $invoice->discount_value;
-                
+
                 if ($discountType && $discountValue) {
                     if ($discountType === 'percentage') {
                         $discountAmount = $subtotal * ($discountValue / 100);
@@ -373,17 +375,17 @@ class InvoicesController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $invoice->fresh(['client', 'items']),
-                'message' => 'Invoice updated successfully'
+                'message' => 'Invoice updated successfully',
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update invoice', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update invoice',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -397,7 +399,7 @@ class InvoicesController extends Controller
         if ($invoice->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Unauthorized',
             ], 403);
         }
 
@@ -405,7 +407,7 @@ class InvoicesController extends Controller
         if ($invoice->status === 'paid') {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot delete paid invoices'
+                'message' => 'Cannot delete paid invoices',
             ], 422);
         }
 
@@ -414,16 +416,16 @@ class InvoicesController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Invoice deleted successfully'
+                'message' => 'Invoice deleted successfully',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to delete invoice', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete invoice',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -440,45 +442,45 @@ class InvoicesController extends Controller
 
         try {
             $dryRun = $validated['dry_run'] ?? false;
-            
+
             if (isset($validated['contract_id'])) {
                 // Generate for specific contract
                 $contract = \App\Domains\Contract\Models\Contract::find($validated['contract_id']);
-                
+
                 if ($contract->company_id !== auth()->user()->company_id) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Unauthorized'
+                        'message' => 'Unauthorized',
                     ], 403);
                 }
 
                 $invoice = $this->billingService->generateInvoiceFromContract($contract, $dryRun);
-                
+
                 return response()->json([
                     'success' => true,
                     'data' => $dryRun ? ['preview' => $invoice] : $invoice,
-                    'message' => $dryRun ? 'Invoice preview generated' : 'Invoice generated successfully'
+                    'message' => $dryRun ? 'Invoice preview generated' : 'Invoice generated successfully',
                 ]);
             } else {
                 // Generate for all due contracts
                 $result = $this->billingService->generateBulkInvoices($dryRun);
-                
+
                 return response()->json([
                     'success' => true,
                     'data' => $result,
-                    'message' => $dryRun 
-                        ? 'Bulk invoice preview generated' 
-                        : 'Bulk invoices generated successfully'
+                    'message' => $dryRun
+                        ? 'Bulk invoice preview generated'
+                        : 'Bulk invoices generated successfully',
                 ]);
             }
 
         } catch (\Exception $e) {
             Log::error('Failed to generate recurring invoices', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to generate recurring invoices',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -492,7 +494,7 @@ class InvoicesController extends Controller
         if ($invoice->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Unauthorized',
             ], 403);
         }
 
@@ -500,7 +502,7 @@ class InvoicesController extends Controller
         if ($invoice->status === 'paid') {
             return response()->json([
                 'success' => false,
-                'message' => 'Invoice is already paid'
+                'message' => 'Invoice is already paid',
             ], 422);
         }
 
@@ -510,18 +512,18 @@ class InvoicesController extends Controller
             return response()->json([
                 'success' => $result['success'],
                 'data' => $result,
-                'message' => $result['success'] 
-                    ? 'Payment processed successfully' 
-                    : 'Payment retry failed'
+                'message' => $result['success']
+                    ? 'Payment processed successfully'
+                    : 'Payment retry failed',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to retry payment', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retry payment',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -542,16 +544,16 @@ class InvoicesController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $forecast,
-                'message' => 'Billing forecast generated successfully'
+                'message' => 'Billing forecast generated successfully',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to generate billing forecast', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to generate billing forecast',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -565,7 +567,7 @@ class InvoicesController extends Controller
         if ($invoice->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized'
+                'message' => 'Unauthorized',
             ], 403);
         }
 
@@ -586,16 +588,16 @@ class InvoicesController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Invoice sent successfully'
+                'message' => 'Invoice sent successfully',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to send invoice email', ['error' => $e->getMessage()]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send invoice',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -608,7 +610,7 @@ class InvoicesController extends Controller
         $prefix = 'INV';
         $year = date('Y');
         $month = date('m');
-        
+
         $lastInvoice = Invoice::where('company_id', auth()->user()->company_id)
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)

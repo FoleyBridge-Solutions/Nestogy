@@ -2,19 +2,19 @@
 
 namespace App\Domains\Ticket\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Ticket\Models\RecurringTicket;
 use App\Domains\Ticket\Models\TicketTemplate;
-use App\Models\User;
+use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Carbon\Carbon;
 
 /**
  * Recurring Ticket Controller
- * 
+ *
  * Manages recurring ticket schedules with complex frequency patterns,
  * preview functionality, and automated ticket generation following the domain architecture pattern.
  */
@@ -29,15 +29,15 @@ class RecurringTicketController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('template', function($tq) use ($search) {
-                      $tq->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('client', function($cq) use ($search) {
-                      $cq->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('template', function ($tq) use ($search) {
+                        $tq->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('client', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -62,22 +62,22 @@ class RecurringTicketController extends Controller
         }
 
         $recurringTickets = $query->with(['template', 'client', 'assignee', 'createdBy'])
-                                 ->withCount('generatedTickets')
-                                 ->orderBy('created_at', 'desc')
-                                 ->paginate(20)
-                                 ->appends($request->query());
+            ->withCount('generatedTickets')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->appends($request->query());
 
         // Get filter options
         $templates = TicketTemplate::where('company_id', auth()->user()->company_id)
-                                  ->where('is_active', true)
-                                  ->orderBy('name')
-                                  ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->whereNull('archived_at')
-                        ->whereNull('deleted_at')
-                        ->orderBy('name')
-                        ->get();
+            ->whereNull('archived_at')
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->get();
 
         $frequencies = ['daily', 'weekly', 'monthly', 'yearly'];
 
@@ -101,19 +101,19 @@ class RecurringTicketController extends Controller
     public function create()
     {
         $templates = TicketTemplate::where('company_id', auth()->user()->company_id)
-                                  ->where('is_active', true)
-                                  ->orderBy('name')
-                                  ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->where('is_active', true)
-                        ->orderBy('name')
-                        ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('is_active', true)
-                    ->orderBy('name')
-                    ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $frequencies = ['daily', 'weekly', 'monthly', 'yearly'];
         $weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -168,8 +168,8 @@ class RecurringTicketController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Build frequency config based on frequency type
@@ -197,12 +197,12 @@ class RecurringTicketController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Recurring ticket created successfully',
-                'recurring_ticket' => $recurringTicket->load(['template', 'client', 'assignee'])
+                'recurring_ticket' => $recurringTicket->load(['template', 'client', 'assignee']),
             ], 201);
         }
 
         return redirect()->route('tickets.recurring.index')
-                        ->with('success', 'Recurring ticket "' . $recurringTicket->name . '" created successfully.');
+            ->with('success', 'Recurring ticket "'.$recurringTicket->name.'" created successfully.');
     }
 
     /**
@@ -213,13 +213,13 @@ class RecurringTicketController extends Controller
         $this->authorize('view', $recurringTicket);
 
         $recurringTicket->load([
-            'template', 
-            'client', 
-            'assignee', 
+            'template',
+            'client',
+            'assignee',
             'createdBy',
-            'generatedTickets' => function($query) {
+            'generatedTickets' => function ($query) {
                 $query->latest()->limit(20);
-            }
+            },
         ]);
 
         // Get next scheduled dates
@@ -230,7 +230,7 @@ class RecurringTicketController extends Controller
             'total_generated' => $recurringTicket->tickets_generated,
             'last_generated' => $recurringTicket->last_generated_at,
             'next_due' => $recurringTicket->next_due_date,
-            'days_until_next' => $recurringTicket->next_due_date ? 
+            'days_until_next' => $recurringTicket->next_due_date ?
                 now()->diffInDays($recurringTicket->next_due_date, false) : null,
         ];
 
@@ -253,19 +253,19 @@ class RecurringTicketController extends Controller
         $this->authorize('update', $recurringTicket);
 
         $templates = TicketTemplate::where('company_id', auth()->user()->company_id)
-                                  ->where('is_active', true)
-                                  ->orderBy('name')
-                                  ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->where('is_active', true)
-                        ->orderBy('name')
-                        ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('is_active', true)
-                    ->orderBy('name')
-                    ->get();
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $frequencies = ['daily', 'weekly', 'monthly', 'yearly'];
         $weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -322,8 +322,8 @@ class RecurringTicketController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Build frequency config based on frequency type
@@ -347,7 +347,7 @@ class RecurringTicketController extends Controller
             'end_date',
             'assigned_to',
             'time_of_day',
-            'template_variables'
+            'template_variables',
         ]) + [
             'frequency_config' => $frequencyConfig,
             'is_active' => $request->boolean('is_active'),
@@ -364,12 +364,12 @@ class RecurringTicketController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Recurring ticket updated successfully',
-                'recurring_ticket' => $recurringTicket->load(['template', 'client', 'assignee'])
+                'recurring_ticket' => $recurringTicket->load(['template', 'client', 'assignee']),
             ]);
         }
 
         return redirect()->route('tickets.recurring.index')
-                        ->with('success', 'Recurring ticket "' . $recurringTicket->name . '" updated successfully.');
+            ->with('success', 'Recurring ticket "'.$recurringTicket->name.'" updated successfully.');
     }
 
     /**
@@ -385,12 +385,12 @@ class RecurringTicketController extends Controller
         if (request()->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Recurring ticket deleted successfully'
+                'message' => 'Recurring ticket deleted successfully',
             ]);
         }
 
         return redirect()->route('tickets.recurring.index')
-                        ->with('success', 'Recurring ticket "' . $recurringTicketName . '" deleted successfully.');
+            ->with('success', 'Recurring ticket "'.$recurringTicketName.'" deleted successfully.');
     }
 
     /**
@@ -408,7 +408,7 @@ class RecurringTicketController extends Controller
         return response()->json([
             'success' => true,
             'recurring_ticket' => $recurringTicket->name,
-            'preview_dates' => $dates->map(function($date) {
+            'preview_dates' => $dates->map(function ($date) {
                 return [
                     'date' => $date->toDateString(),
                     'time' => $date->format('H:i'),
@@ -426,10 +426,10 @@ class RecurringTicketController extends Controller
     {
         $this->authorize('update', $recurringTicket);
 
-        if (!$recurringTicket->is_active) {
+        if (! $recurringTicket->is_active) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot generate tickets from inactive recurring schedule'
+                'message' => 'Cannot generate tickets from inactive recurring schedule',
             ], 422);
         }
 
@@ -441,22 +441,22 @@ class RecurringTicketController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Ticket generated successfully',
-                    'ticket' => $ticket->load('client')
+                    'ticket' => $ticket->load('client'),
                 ], 201);
             }
 
             return redirect()->route('tickets.show', $ticket)
-                            ->with('success', 'Ticket generated successfully from recurring schedule.');
+                ->with('success', 'Ticket generated successfully from recurring schedule.');
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to generate ticket: ' . $e->getMessage()
+                    'message' => 'Failed to generate ticket: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()->back()
-                           ->with('error', 'Failed to generate ticket: ' . $e->getMessage());
+                ->with('error', 'Failed to generate ticket: '.$e->getMessage());
         }
     }
 
@@ -468,7 +468,7 @@ class RecurringTicketController extends Controller
         $this->authorize('update', $recurringTicket);
 
         $recurringTicket->update([
-            'is_active' => !$recurringTicket->is_active,
+            'is_active' => ! $recurringTicket->is_active,
         ]);
 
         $status = $recurringTicket->is_active ? 'activated' : 'paused';
@@ -476,7 +476,7 @@ class RecurringTicketController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Recurring ticket {$status} successfully",
-            'is_active' => $recurringTicket->is_active
+            'is_active' => $recurringTicket->is_active,
         ]);
     }
 
@@ -499,7 +499,7 @@ class RecurringTicketController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -516,7 +516,7 @@ class RecurringTicketController extends Controller
 
         return response()->json([
             'success' => true,
-            'preview_dates' => $dates->map(function($date) {
+            'preview_dates' => $dates->map(function ($date) {
                 return [
                     'date' => $date->toDateString(),
                     'time' => $date->format('H:i'),
@@ -536,9 +536,9 @@ class RecurringTicketController extends Controller
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -551,19 +551,19 @@ class RecurringTicketController extends Controller
         }
 
         $recurringTickets = $query->with(['template', 'client', 'assignee'])
-                                 ->orderBy('name')
-                                 ->get();
+            ->orderBy('name')
+            ->get();
 
-        $filename = 'recurring-tickets_' . date('Y-m-d_H-i-s') . '.csv';
+        $filename = 'recurring-tickets_'.date('Y-m-d_H-i-s').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($recurringTickets) {
+        $callback = function () use ($recurringTickets) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Name',
@@ -577,7 +577,7 @@ class RecurringTicketController extends Controller
                 'Active',
                 'Tickets Generated',
                 'Next Due',
-                'Created Date'
+                'Created Date',
             ]);
 
             // CSV data
@@ -597,7 +597,7 @@ class RecurringTicketController extends Controller
                     $recurring->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 

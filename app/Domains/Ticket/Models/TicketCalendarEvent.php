@@ -3,21 +3,21 @@
 namespace App\Domains\Ticket\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * Ticket Calendar Event Model
- * 
+ *
  * Represents scheduled events and appointments related to tickets
  * with support for reminders, attendees, and location information.
  */
 class TicketCalendarEvent extends Model
 {
-    use HasFactory, BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'ticket_id',
@@ -51,9 +51,13 @@ class TicketCalendarEvent extends Model
     // ===========================================
 
     const STATUS_SCHEDULED = 'scheduled';
+
     const STATUS_IN_PROGRESS = 'in_progress';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_RESCHEDULED = 'rescheduled';
 
     // ===========================================
@@ -75,6 +79,7 @@ class TicketCalendarEvent extends Model
     public function isHappening(): bool
     {
         $now = now();
+
         return $now->between($this->start_time, $this->end_time);
     }
 
@@ -107,7 +112,7 @@ class TicketCalendarEvent extends Model
      */
     public function conflictsWith(self $otherEvent): bool
     {
-        return $this->start_time->lt($otherEvent->end_time) && 
+        return $this->start_time->lt($otherEvent->end_time) &&
                $this->end_time->gt($otherEvent->start_time);
     }
 
@@ -149,34 +154,34 @@ class TicketCalendarEvent extends Model
         }
 
         $format = 'g:i A';
-        if (!$this->start_time->isSameDay($this->end_time)) {
+        if (! $this->start_time->isSameDay($this->end_time)) {
             $format = 'M j, g:i A';
         }
 
-        return $this->start_time->format($format) . ' - ' . $this->end_time->format($format);
+        return $this->start_time->format($format).' - '.$this->end_time->format($format);
     }
 
     /**
      * Reschedule the event
      */
-    public function reschedule(Carbon $newStartTime, Carbon $newEndTime, string $reason = null): self
+    public function reschedule(Carbon $newStartTime, Carbon $newEndTime, ?string $reason = null): self
     {
         // Create a new event for the new time
         $rescheduled = $this->replicate();
         $rescheduled->start_time = $newStartTime;
         $rescheduled->end_time = $newEndTime;
         $rescheduled->status = self::STATUS_SCHEDULED;
-        
+
         if ($reason) {
-            $rescheduled->notes = ($rescheduled->notes ?? '') . "\nRescheduled: {$reason}";
+            $rescheduled->notes = ($rescheduled->notes ?? '')."\nRescheduled: {$reason}";
         }
-        
+
         $rescheduled->save();
 
         // Mark original as rescheduled
         $this->update([
             'status' => self::STATUS_RESCHEDULED,
-            'notes' => ($this->notes ?? '') . "\nRescheduled to: {$newStartTime->format('M j, Y g:i A')}"
+            'notes' => ($this->notes ?? '')."\nRescheduled to: {$newStartTime->format('M j, Y g:i A')}",
         ]);
 
         return $rescheduled;
@@ -185,22 +190,22 @@ class TicketCalendarEvent extends Model
     /**
      * Cancel the event
      */
-    public function cancel(string $reason = null): void
+    public function cancel(?string $reason = null): void
     {
         $this->update([
             'status' => self::STATUS_CANCELLED,
-            'notes' => ($this->notes ?? '') . ($reason ? "\nCancelled: {$reason}" : "\nCancelled")
+            'notes' => ($this->notes ?? '').($reason ? "\nCancelled: {$reason}" : "\nCancelled"),
         ]);
     }
 
     /**
      * Mark event as completed
      */
-    public function complete(string $notes = null): void
+    public function complete(?string $notes = null): void
     {
         $this->update([
             'status' => self::STATUS_COMPLETED,
-            'notes' => $notes ? ($this->notes ?? '') . "\nCompleted: {$notes}" : $this->notes
+            'notes' => $notes ? ($this->notes ?? '')."\nCompleted: {$notes}" : $this->notes,
         ]);
     }
 
@@ -218,7 +223,7 @@ class TicketCalendarEvent extends Model
     public function addAttendee(string $email): void
     {
         $attendees = $this->attendee_emails ?? [];
-        if (!in_array($email, $attendees)) {
+        if (! in_array($email, $attendees)) {
             $attendees[] = $email;
             $this->update(['attendee_emails' => $attendees]);
         }
@@ -230,7 +235,7 @@ class TicketCalendarEvent extends Model
     public function removeAttendee(string $email): void
     {
         $attendees = $this->attendee_emails ?? [];
-        $attendees = array_filter($attendees, fn($attendee) => $attendee !== $email);
+        $attendees = array_filter($attendees, fn ($attendee) => $attendee !== $email);
         $this->update(['attendee_emails' => array_values($attendees)]);
     }
 
@@ -251,7 +256,7 @@ class TicketCalendarEvent extends Model
             return [
                 'minutes_before' => $minutes,
                 'sent' => false,
-                'reminder_time' => $this->start_time->copy()->subMinutes($minutes)
+                'reminder_time' => $this->start_time->copy()->subMinutes($minutes),
             ];
         }, $minutesBefore);
 
@@ -267,7 +272,7 @@ class TicketCalendarEvent extends Model
         $dueReminders = [];
 
         foreach ($reminders as $index => $reminder) {
-            if (!$reminder['sent'] && now()->gte($reminder['reminder_time'])) {
+            if (! $reminder['sent'] && now()->gte($reminder['reminder_time'])) {
                 $dueReminders[] = $index;
             }
         }
@@ -336,7 +341,7 @@ class TicketCalendarEvent extends Model
     {
         return $query->whereBetween('start_time', [
             now()->startOfWeek(),
-            now()->endOfWeek()
+            now()->endOfWeek(),
         ]);
     }
 
@@ -378,7 +383,7 @@ class TicketCalendarEvent extends Model
     /**
      * Find conflicts for a given time range
      */
-    public static function findConflicts(Carbon $startTime, Carbon $endTime, int $excludeId = null): \Illuminate\Database\Eloquent\Collection
+    public static function findConflicts(Carbon $startTime, Carbon $endTime, ?int $excludeId = null): \Illuminate\Database\Eloquent\Collection
     {
         $query = self::where('start_time', '<', $endTime)
             ->where('end_time', '>', $startTime)
@@ -424,7 +429,7 @@ class TicketCalendarEvent extends Model
 
         // Set default title if not provided
         static::creating(function ($event) {
-            if (!$event->title && $event->ticket) {
+            if (! $event->title && $event->ticket) {
                 $event->title = "Service: {$event->ticket->subject}";
             }
         });

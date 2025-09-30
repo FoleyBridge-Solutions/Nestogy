@@ -2,28 +2,30 @@
 
 namespace App\Domains\Contract\Services;
 
-use App\Contracts\{
-    ContractPluginInterface,
-    BillingCalculatorInterface,
-    StatusTransitionInterface,
-    ContractFieldInterface
-};
-use Illuminate\Support\Collection;
+use App\Contracts\BillingCalculatorInterface;
+use App\Contracts\ContractFieldInterface;
+use App\Contracts\ContractPluginInterface;
+use App\Contracts\StatusTransitionInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Contract Plugin Manager
- * 
+ *
  * Manages registration, discovery, and instantiation of contract plugins
  */
 class ContractPluginManager
 {
     protected array $plugins = [];
+
     protected array $billingCalculators = [];
+
     protected array $statusTransitions = [];
+
     protected array $fieldTypes = [];
+
     protected array $instances = [];
+
     protected int $cacheTimeout = 3600;
 
     /**
@@ -31,11 +33,11 @@ class ContractPluginManager
      */
     public function registerPlugin(string $type, string $identifier, string $class): void
     {
-        if (!class_exists($class)) {
+        if (! class_exists($class)) {
             throw new \InvalidArgumentException("Plugin class {$class} does not exist");
         }
 
-        if (!$this->implementsInterface($class, ContractPluginInterface::class)) {
+        if (! $this->implementsInterface($class, ContractPluginInterface::class)) {
             throw new \InvalidArgumentException("Plugin class {$class} must implement ContractPluginInterface");
         }
 
@@ -48,13 +50,13 @@ class ContractPluginManager
                     $this->billingCalculators[$identifier] = $class;
                 }
                 break;
-            
+
             case 'status_transition':
                 if ($this->implementsInterface($class, StatusTransitionInterface::class)) {
                     $this->statusTransitions[$identifier] = $class;
                 }
                 break;
-            
+
             case 'field':
                 if ($this->implementsInterface($class, ContractFieldInterface::class)) {
                     $this->fieldTypes[$identifier] = $class;
@@ -71,7 +73,7 @@ class ContractPluginManager
      */
     public function getBillingCalculator(string $identifier): BillingCalculatorInterface
     {
-        if (!isset($this->billingCalculators[$identifier])) {
+        if (! isset($this->billingCalculators[$identifier])) {
             throw new \InvalidArgumentException("Billing calculator '{$identifier}' not found");
         }
 
@@ -83,7 +85,7 @@ class ContractPluginManager
      */
     public function getStatusTransitionHandler(string $identifier): StatusTransitionInterface
     {
-        if (!isset($this->statusTransitions[$identifier])) {
+        if (! isset($this->statusTransitions[$identifier])) {
             throw new \InvalidArgumentException("Status transition handler '{$identifier}' not found");
         }
 
@@ -95,7 +97,7 @@ class ContractPluginManager
      */
     public function getFieldRenderer(string $identifier): ContractFieldInterface
     {
-        if (!isset($this->fieldTypes[$identifier])) {
+        if (! isset($this->fieldTypes[$identifier])) {
             throw new \InvalidArgumentException("Field type '{$identifier}' not found");
         }
 
@@ -109,10 +111,10 @@ class ContractPluginManager
     {
         $key = "{$type}.{$identifier}";
 
-        if (!isset($this->instances[$key])) {
+        if (! isset($this->instances[$key])) {
             $class = $this->plugins[$type][$identifier] ?? null;
-            
-            if (!$class) {
+
+            if (! $class) {
                 throw new \InvalidArgumentException("Plugin '{$identifier}' of type '{$type}' not found");
             }
 
@@ -136,7 +138,7 @@ class ContractPluginManager
     public function getAvailableBillingCalculators(): array
     {
         $calculators = [];
-        
+
         foreach ($this->billingCalculators as $identifier => $class) {
             try {
                 $instance = $this->getInstance('billing', $identifier);
@@ -150,7 +152,7 @@ class ContractPluginManager
                     'configuration_schema' => $instance->getConfigurationSchema(),
                 ];
             } catch (\Exception $e) {
-                Log::warning("Failed to load billing calculator '{$identifier}': " . $e->getMessage());
+                Log::warning("Failed to load billing calculator '{$identifier}': ".$e->getMessage());
             }
         }
 
@@ -163,7 +165,7 @@ class ContractPluginManager
     public function getAvailableStatusTransitions(): array
     {
         $transitions = [];
-        
+
         foreach ($this->statusTransitions as $identifier => $class) {
             try {
                 $instance = $this->getInstance('status_transition', $identifier);
@@ -176,7 +178,7 @@ class ContractPluginManager
                     'configuration_schema' => $instance->getConfigurationSchema(),
                 ];
             } catch (\Exception $e) {
-                Log::warning("Failed to load status transition handler '{$identifier}': " . $e->getMessage());
+                Log::warning("Failed to load status transition handler '{$identifier}': ".$e->getMessage());
             }
         }
 
@@ -189,7 +191,7 @@ class ContractPluginManager
     public function getAvailableFieldTypes(): array
     {
         $fieldTypes = [];
-        
+
         foreach ($this->fieldTypes as $identifier => $class) {
             try {
                 $instance = $this->getInstance('field', $identifier);
@@ -206,7 +208,7 @@ class ContractPluginManager
                     'validation_types' => $instance->getSupportedValidationTypes(),
                 ];
             } catch (\Exception $e) {
-                Log::warning("Failed to load field type '{$identifier}': " . $e->getMessage());
+                Log::warning("Failed to load field type '{$identifier}': ".$e->getMessage());
             }
         }
 
@@ -229,19 +231,19 @@ class ContractPluginManager
     protected function discoverBillingCalculators(): void
     {
         $pluginDir = app_path('Plugins/BillingCalculators');
-        
-        if (!is_dir($pluginDir)) {
+
+        if (! is_dir($pluginDir)) {
             return;
         }
 
-        $files = glob($pluginDir . '/*.php');
-        
+        $files = glob($pluginDir.'/*.php');
+
         foreach ($files as $file) {
             $className = $this->getClassNameFromFile($file);
-            
-            if ($className && class_exists($className) && 
+
+            if ($className && class_exists($className) &&
                 $this->implementsInterface($className, BillingCalculatorInterface::class)) {
-                
+
                 $identifier = strtolower(str_replace('Calculator', '', class_basename($className)));
                 $this->registerPlugin('billing', $identifier, $className);
             }
@@ -254,19 +256,19 @@ class ContractPluginManager
     protected function discoverStatusTransitions(): void
     {
         $pluginDir = app_path('Plugins/StatusTransitions');
-        
-        if (!is_dir($pluginDir)) {
+
+        if (! is_dir($pluginDir)) {
             return;
         }
 
-        $files = glob($pluginDir . '/*.php');
-        
+        $files = glob($pluginDir.'/*.php');
+
         foreach ($files as $file) {
             $className = $this->getClassNameFromFile($file);
-            
-            if ($className && class_exists($className) && 
+
+            if ($className && class_exists($className) &&
                 $this->implementsInterface($className, StatusTransitionInterface::class)) {
-                
+
                 $identifier = strtolower(str_replace('Transition', '', class_basename($className)));
                 $this->registerPlugin('status_transition', $identifier, $className);
             }
@@ -279,19 +281,19 @@ class ContractPluginManager
     protected function discoverFieldTypes(): void
     {
         $pluginDir = app_path('Plugins/FieldTypes');
-        
-        if (!is_dir($pluginDir)) {
+
+        if (! is_dir($pluginDir)) {
             return;
         }
 
-        $files = glob($pluginDir . '/*.php');
-        
+        $files = glob($pluginDir.'/*.php');
+
         foreach ($files as $file) {
             $className = $this->getClassNameFromFile($file);
-            
-            if ($className && class_exists($className) && 
+
+            if ($className && class_exists($className) &&
                 $this->implementsInterface($className, ContractFieldInterface::class)) {
-                
+
                 $identifier = strtolower(str_replace('FieldType', '', class_basename($className)));
                 $this->registerPlugin('field', $identifier, $className);
             }
@@ -304,11 +306,11 @@ class ContractPluginManager
     protected function getClassNameFromFile(string $file): ?string
     {
         $content = file_get_contents($file);
-        
+
         if (preg_match('/namespace\s+([^;]+);/', $content, $namespaceMatches) &&
             preg_match('/class\s+([^\s]+)/', $content, $classMatches)) {
-            
-            return $namespaceMatches[1] . '\\' . $classMatches[1];
+
+            return $namespaceMatches[1].'\\'.$classMatches[1];
         }
 
         return null;
@@ -329,26 +331,28 @@ class ContractPluginManager
     {
         $errors = [];
 
-        if (!class_exists($class)) {
+        if (! class_exists($class)) {
             $errors[] = "Plugin class '{$class}' does not exist";
+
             return $errors;
         }
 
-        if (!$this->implementsInterface($class, ContractPluginInterface::class)) {
+        if (! $this->implementsInterface($class, ContractPluginInterface::class)) {
             $errors[] = "Plugin class '{$class}' must implement ContractPluginInterface";
+
             return $errors;
         }
 
         try {
             $instance = app($class);
-            
+
             // Check compatibility
-            if (!$instance->isCompatible()) {
+            if (! $instance->isCompatible()) {
                 $errors[] = "Plugin '{$class}' is not compatible with current system";
             }
 
             // Validate configuration if provided
-            if (!empty($config)) {
+            if (! empty($config)) {
                 $configErrors = $instance->validateConfiguration($config);
                 $errors = array_merge($errors, $configErrors);
             }
@@ -356,13 +360,13 @@ class ContractPluginManager
             // Check dependencies
             $dependencies = $instance->getDependencies();
             foreach ($dependencies as $dependency) {
-                if (!$this->isDependencyAvailable($dependency)) {
+                if (! $this->isDependencyAvailable($dependency)) {
                     $errors[] = "Plugin '{$class}' requires dependency '{$dependency}' which is not available";
                 }
             }
 
         } catch (\Exception $e) {
-            $errors[] = "Failed to instantiate plugin '{$class}': " . $e->getMessage();
+            $errors[] = "Failed to instantiate plugin '{$class}': ".$e->getMessage();
         }
 
         return $errors;
@@ -388,6 +392,7 @@ class ContractPluginManager
         // Check if it's a Laravel service
         try {
             app($dependency);
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -400,7 +405,7 @@ class ContractPluginManager
     public function getPluginInfo(string $type, string $identifier): array
     {
         $instance = $this->getInstance($type, $identifier);
-        
+
         return [
             'name' => $instance->getName(),
             'description' => $instance->getDescription(),
@@ -451,7 +456,7 @@ class ContractPluginManager
         } catch (\Exception $e) {
             // Log the error but don't fail the entire request
             \Illuminate\Support\Facades\Log::warning(
-                "Failed to clear contract plugin cache for type {$type}: " . $e->getMessage(),
+                "Failed to clear contract plugin cache for type {$type}: ".$e->getMessage(),
                 ['type' => $type, 'exception' => $e]
             );
         }

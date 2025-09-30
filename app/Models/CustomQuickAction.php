@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 
 class CustomQuickAction extends Model
 {
@@ -65,19 +65,19 @@ class CustomQuickAction extends Model
             // Private actions for the user
             $q->where(function ($subQ) use ($user) {
                 $subQ->where('visibility', 'private')
-                     ->where('user_id', $user->id);
+                    ->where('user_id', $user->id);
             })
             // Company-wide actions
-            ->orWhere(function ($subQ) use ($user) {
-                $subQ->where('visibility', 'company')
-                     ->where('company_id', $user->company_id);
-            })
+                ->orWhere(function ($subQ) use ($user) {
+                    $subQ->where('visibility', 'company')
+                        ->where('company_id', $user->company_id);
+                })
             // Role-based actions
-            ->orWhere(function ($subQ) use ($user) {
-                $subQ->where('visibility', 'role')
-                     ->where('company_id', $user->company_id)
-                     ->whereJsonContains('allowed_roles', $user->roles->pluck('name')->toArray());
-            });
+                ->orWhere(function ($subQ) use ($user) {
+                    $subQ->where('visibility', 'role')
+                        ->where('company_id', $user->company_id)
+                        ->whereJsonContains('allowed_roles', $user->roles->pluck('name')->toArray());
+                });
         });
     }
 
@@ -103,8 +103,8 @@ class CustomQuickAction extends Model
     public function favoritedBy()
     {
         return $this->belongsToMany(User::class, 'quick_action_favorites')
-                    ->withTimestamps()
-                    ->withPivot('position');
+            ->withTimestamps()
+            ->withPivot('position');
     }
 
     /**
@@ -130,7 +130,7 @@ class CustomQuickAction extends Model
         }
 
         // Check permission if specified
-        if ($this->permission && !$user->can($this->permission)) {
+        if ($this->permission && ! $user->can($this->permission)) {
             return false;
         }
 

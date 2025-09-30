@@ -5,13 +5,13 @@ namespace App\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class File extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -118,15 +118,15 @@ class File extends Model
      */
     public function getFormattedFileSizeAttribute()
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return 'Unknown';
         }
 
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $bytes = $this->file_size;
         $factor = floor((strlen($bytes) - 1) / 3);
-        
-        return sprintf("%.2f", $bytes / pow(1024, $factor)) . ' ' . @$units[$factor];
+
+        return sprintf('%.2f', $bytes / pow(1024, $factor)).' '.@$units[$factor];
     }
 
     /**
@@ -142,7 +142,7 @@ class File extends Model
      */
     public function getUrlAttribute()
     {
-        return asset('storage/' . $this->file_path);
+        return asset('storage/'.$this->file_path);
     }
 
     /**
@@ -204,7 +204,7 @@ class File extends Model
 
         // Auto-determine file type based on MIME type
         static::saving(function ($file) {
-            if (!$file->file_type && $file->mime_type) {
+            if (! $file->file_type && $file->mime_type) {
                 $file->file_type = $file->determineFileType($file->mime_type);
             }
         });

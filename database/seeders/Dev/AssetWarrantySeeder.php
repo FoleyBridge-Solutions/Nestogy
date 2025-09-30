@@ -2,13 +2,13 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use App\Domains\Asset\Models\AssetWarranty;
 use App\Models\Asset;
 use App\Models\Vendor;
 use Carbon\Carbon;
 use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class AssetWarrantySeeder extends Seeder
 {
@@ -25,23 +25,23 @@ class AssetWarrantySeeder extends Seeder
             $assets = Asset::with(['company', 'vendor'])->get();
             $totalAssets = $assets->count();
             $warrantiesToCreate = (int) ($totalAssets * 0.6); // 60% of assets
-            
+
             $this->command->info("Creating warranties for {$warrantiesToCreate} out of {$totalAssets} assets (60%)");
-            
+
             // Randomly select 60% of assets
             $assetsWithWarranties = $assets->random($warrantiesToCreate);
-            
+
             foreach ($assetsWithWarranties as $asset) {
                 // Get vendors for this company
                 $vendors = Vendor::where('company_id', $asset->company_id)->pluck('id')->toArray();
-                
+
                 // Determine warranty status based on asset age
                 $status = $this->determineWarrantyStatus($asset, $faker);
-                
+
                 // Create warranty record
                 $this->createWarranty($asset, $vendors, $status, $faker);
             }
-            
+
             $this->command->info("Created {$warrantiesToCreate} warranty records");
         });
 
@@ -53,12 +53,12 @@ class AssetWarrantySeeder extends Seeder
      */
     private function determineWarrantyStatus($asset, $faker)
     {
-        if (!$asset->warranty_expire) {
+        if (! $asset->warranty_expire) {
             return 'expired';
         }
-        
+
         $daysUntilExpiry = now()->diffInDays($asset->warranty_expire, false);
-        
+
         if ($daysUntilExpiry < 0) {
             // Warranty already expired
             return 'expired';
@@ -78,46 +78,46 @@ class AssetWarrantySeeder extends Seeder
     {
         // Determine warranty type based on asset type and age
         $warrantyType = $this->determineWarrantyType($asset, $faker);
-        
+
         // Calculate warranty dates based on asset purchase date
         $warrantyStartDate = $asset->purchase_date ?? Carbon::now()->subYears(2);
         $warrantyEndDate = $asset->warranty_expire ?? Carbon::instance($warrantyStartDate)->addYears($faker->randomElement([1, 2, 3]));
-        
+
         // Adjust status if warranty has expired
         if ($warrantyEndDate < now()) {
             $status = 'expired';
         }
-        
+
         // Determine warranty provider
         $warrantyProviders = [
             'manufacturer' => [
-                'Dell ProSupport', 'HP Care Pack', 'Lenovo Premier Support', 
-                'Apple Care+', 'Microsoft Complete', 'Cisco SmartNet'
+                'Dell ProSupport', 'HP Care Pack', 'Lenovo Premier Support',
+                'Apple Care+', 'Microsoft Complete', 'Cisco SmartNet',
             ],
             'extended' => [
                 'SquareTrade', 'Asurion', 'AllState Protection Plan',
-                'Best Buy Total Tech', 'Upsie', 'Worth Ave. Group'
+                'Best Buy Total Tech', 'Upsie', 'Worth Ave. Group',
             ],
             'third_party' => [
                 'Service Master', 'Tech Support Plus', 'IT Warranty Services',
-                'Global Warranty Group', 'AmTrust Warranty'
+                'Global Warranty Group', 'AmTrust Warranty',
             ],
             'service_contract' => [
-                'Managed Services Agreement', 'Break-Fix Contract', 
-                'Preventive Maintenance Agreement', 'On-Site Support Contract'
-            ]
+                'Managed Services Agreement', 'Break-Fix Contract',
+                'Preventive Maintenance Agreement', 'On-Site Support Contract',
+            ],
         ];
-        
+
         $provider = $faker->randomElement($warrantyProviders[$warrantyType] ?? ['Generic Warranty Provider']);
-        
+
         // Calculate costs based on asset type and warranty type
         $cost = $this->calculateWarrantyCost($asset->type, $warrantyType, $faker);
         $renewalCost = $cost * $faker->randomFloat(2, 0.8, 1.2); // Renewal cost is 80-120% of original
-        
+
         // Determine if warranty has been used for claims
         $claimCount = 0;
         $lastClaimDate = null;
-        
+
         if ($status === 'active' || $status === 'expired') {
             // 20% chance of having claims
             if ($faker->boolean(20)) {
@@ -125,7 +125,7 @@ class AssetWarrantySeeder extends Seeder
                 $lastClaimDate = $faker->dateTimeBetween($warrantyStartDate, min($warrantyEndDate, now()));
             }
         }
-        
+
         // Create the warranty record
         AssetWarranty::create([
             'company_id' => $asset->company_id,
@@ -136,7 +136,7 @@ class AssetWarrantySeeder extends Seeder
             'warranty_type' => $warrantyType,
             'terms' => $this->generateWarrantyTerms($warrantyType, $faker),
             'coverage_details' => $this->generateCoverageDetails($asset->type, $warrantyType, $faker),
-            'vendor_id' => !empty($vendors) ? $faker->randomElement($vendors) : $asset->vendor_id,
+            'vendor_id' => ! empty($vendors) ? $faker->randomElement($vendors) : $asset->vendor_id,
             'cost' => $cost,
             'renewal_cost' => $renewalCost,
             'auto_renewal' => $faker->boolean(30), // 30% have auto-renewal
@@ -158,14 +158,14 @@ class AssetWarrantySeeder extends Seeder
     {
         // Newer assets more likely to have manufacturer warranty
         $ageInYears = $asset->purchase_date ? $asset->purchase_date->diffInYears(now()) : 2;
-        
+
         if ($ageInYears <= 1) {
             // New assets - mostly manufacturer warranties
             $weights = [
                 'manufacturer' => 70,
                 'extended' => 20,
                 'third_party' => 5,
-                'service_contract' => 5
+                'service_contract' => 5,
             ];
         } elseif ($ageInYears <= 3) {
             // Mid-age assets - mix of extended and manufacturer
@@ -173,7 +173,7 @@ class AssetWarrantySeeder extends Seeder
                 'manufacturer' => 30,
                 'extended' => 40,
                 'third_party' => 20,
-                'service_contract' => 10
+                'service_contract' => 10,
             ];
         } else {
             // Older assets - mostly third-party and service contracts
@@ -181,10 +181,10 @@ class AssetWarrantySeeder extends Seeder
                 'manufacturer' => 5,
                 'extended' => 15,
                 'third_party' => 40,
-                'service_contract' => 40
+                'service_contract' => 40,
             ];
         }
-        
+
         return $this->weightedRandom($weights);
     }
 
@@ -203,21 +203,21 @@ class AssetWarrantySeeder extends Seeder
             'Switch' => ['min' => 200, 'max' => 1500],
             'Storage' => ['min' => 400, 'max' => 3000],
             'Access Point' => ['min' => 50, 'max' => 200],
-            'Other' => ['min' => 50, 'max' => 500]
+            'Other' => ['min' => 50, 'max' => 500],
         ];
-        
+
         $cost = $baseCosts[$assetType] ?? ['min' => 50, 'max' => 500];
-        
+
         // Adjust cost based on warranty type
         $multipliers = [
             'manufacturer' => 1.0,
             'extended' => 1.2,
             'third_party' => 0.8,
-            'service_contract' => 1.5
+            'service_contract' => 1.5,
         ];
-        
+
         $multiplier = $multipliers[$warrantyType] ?? 1.0;
-        
+
         return $faker->randomFloat(2, $cost['min'] * $multiplier, $cost['max'] * $multiplier);
     }
 
@@ -232,32 +232,33 @@ class AssetWarrantySeeder extends Seeder
                 'Next business day on-site service',
                 'Phone and online support included',
                 'Firmware updates included',
-                'Normal wear and tear excluded'
+                'Normal wear and tear excluded',
             ],
             'extended' => [
                 'Coverage begins after manufacturer warranty expires',
                 'Parts and labor included',
                 'Depot repair service',
                 'No lemon policy - replacement after 3 repairs',
-                'Accidental damage not covered'
+                'Accidental damage not covered',
             ],
             'third_party' => [
                 'Certified technician support',
                 'Parts covered up to original purchase price',
                 'Remote support included',
                 'On-site service available for additional fee',
-                'Pre-existing conditions not covered'
+                'Pre-existing conditions not covered',
             ],
             'service_contract' => [
                 'Unlimited service calls',
                 'Preventive maintenance included',
                 'Priority response time',
                 'Replacement parts included',
-                'Software support included'
-            ]
+                'Software support included',
+            ],
         ];
-        
+
         $selectedTerms = $terms[$warrantyType] ?? $terms['manufacturer'];
+
         return implode('; ', $faker->randomElements($selectedTerms, $faker->numberBetween(3, 5)));
     }
 
@@ -267,47 +268,47 @@ class AssetWarrantySeeder extends Seeder
     private function generateCoverageDetails($assetType, $warrantyType, $faker)
     {
         $details = [];
-        
+
         // Base coverage for all warranties
         $details[] = 'Hardware defects and failures';
-        
+
         // Add type-specific coverage
         if (in_array($assetType, ['Server', 'Desktop', 'Laptop'])) {
             $details[] = 'Motherboard, CPU, RAM, and storage components';
             $details[] = 'Power supply and cooling systems';
         }
-        
+
         if (in_array($assetType, ['Firewall', 'Router', 'Switch'])) {
             $details[] = 'Network ports and interfaces';
             $details[] = 'Firmware corruption recovery';
         }
-        
+
         if ($assetType === 'Printer') {
             $details[] = 'Print head and mechanical components';
             $details[] = 'Paper feed mechanisms';
         }
-        
+
         // Add warranty-type specific coverage
         if ($warrantyType === 'extended' || $warrantyType === 'service_contract') {
             $details[] = 'Preventive maintenance visits';
             $details[] = 'Software troubleshooting';
         }
-        
+
         if ($warrantyType === 'manufacturer') {
             $details[] = 'Factory defects';
             $details[] = 'Original manufacturer parts';
         }
-        
+
         // Add exclusions
         $exclusions = [
             'Damage from misuse or neglect',
             'Cosmetic damage',
             'Consumable parts',
-            'Third-party modifications'
+            'Third-party modifications',
         ];
-        
-        $details[] = 'Excludes: ' . implode(', ', $faker->randomElements($exclusions, 2));
-        
+
+        $details[] = 'Excludes: '.implode(', ', $faker->randomElements($exclusions, 2));
+
         return implode('; ', $details);
     }
 
@@ -318,14 +319,14 @@ class AssetWarrantySeeder extends Seeder
     {
         $rand = rand(1, array_sum($weights));
         $cumulative = 0;
-        
+
         foreach ($weights as $key => $weight) {
             $cumulative += $weight;
             if ($rand <= $cumulative) {
                 return $key;
             }
         }
-        
+
         return array_key_first($weights);
     }
 }

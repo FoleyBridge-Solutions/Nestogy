@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 /**
  * InitializeSubscriptionPlans Command
- * 
+ *
  * Creates initial subscription plans from the saas.php config file.
  * This is a one-time setup command to populate the database with
  * default plans that can then be managed through the settings interface.
@@ -32,9 +32,10 @@ class InitializeSubscriptionPlans extends Command
     {
         $existingPlans = SubscriptionPlan::count();
 
-        if ($existingPlans > 0 && !$this->option('force')) {
+        if ($existingPlans > 0 && ! $this->option('force')) {
             $this->warn("Subscription plans already exist ({$existingPlans} found).");
             $this->info('Use --force to override existing plans.');
+
             return Command::SUCCESS;
         }
 
@@ -42,6 +43,7 @@ class InitializeSubscriptionPlans extends Command
 
         if (empty($defaultPlans)) {
             $this->error('No default plans found in config/saas.php');
+
             return Command::FAILURE;
         }
 
@@ -57,7 +59,7 @@ class InitializeSubscriptionPlans extends Command
                 'user_limit' => $planConfig['max_users'] ?? null,
                 'features' => $planConfig['features'] ?? [],
                 'description' => $this->generateDescription($planConfig),
-                'stripe_price_id' => 'price_' . strtolower($key) . '_monthly', // Placeholder - update in Stripe
+                'stripe_price_id' => 'price_'.strtolower($key).'_monthly', // Placeholder - update in Stripe
                 'is_active' => true,
                 'sort_order' => $this->getSortOrder($key),
             ];
@@ -76,10 +78,10 @@ class InitializeSubscriptionPlans extends Command
         }
 
         $this->newLine();
-        $this->info("Subscription plans initialized successfully!");
+        $this->info('Subscription plans initialized successfully!');
         $this->info("Created: {$created} plans");
         $this->info("Updated: {$updated} plans");
-        
+
         $this->newLine();
         $this->warn('Important: Update Stripe Price IDs in the settings interface');
         $this->info('Go to Settings → Billing & Financial → Subscription Plans');
@@ -92,12 +94,12 @@ class InitializeSubscriptionPlans extends Command
      */
     protected function generateDescription(array $config): string
     {
-        $userLimit = isset($config['max_users']) 
-            ? "Up to {$config['max_users']} users" 
+        $userLimit = isset($config['max_users'])
+            ? "Up to {$config['max_users']} users"
             : 'Unlimited users';
 
-        $clientLimit = isset($config['max_clients']) 
-            ? " and {$config['max_clients']} clients" 
+        $clientLimit = isset($config['max_clients'])
+            ? " and {$config['max_clients']} clients"
             : '';
 
         return "Perfect for MSPs needing {$userLimit}{$clientLimit}.";

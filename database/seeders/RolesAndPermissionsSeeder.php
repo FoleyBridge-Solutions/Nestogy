@@ -14,16 +14,16 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         // Clear Bouncer cache to ensure fresh start
         Bouncer::refresh();
-        
+
         // Create Bouncer abilities (permissions)
         $this->createAbilities();
-        
-        // Create Bouncer roles 
+
+        // Create Bouncer roles
         $this->createRoles();
-        
+
         // Assign abilities to roles
         $this->assignAbilitiesToRoles();
-        
+
         // Assign roles to users with company scoping
         $this->assignRolesToUsers();
     }
@@ -42,7 +42,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'clients.manage' => 'Full client management',
             'clients.export' => 'Export client data',
             'clients.import' => 'Import client data',
-            
+
             // Client sub-module permissions
             'clients.contacts.view' => 'View client contacts',
             'clients.contacts.manage' => 'Manage client contacts',
@@ -89,7 +89,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'clients.trips.view' => 'View client trips',
             'clients.trips.manage' => 'Manage client trips',
             'clients.trips.export' => 'Export client trips',
-            
+
             // Ticket permissions
             'tickets.view' => 'View ticket information',
             'tickets.create' => 'Create new tickets',
@@ -97,7 +97,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'tickets.delete' => 'Delete tickets',
             'tickets.manage' => 'Full ticket management',
             'tickets.export' => 'Export ticket data',
-            
+
             // Asset permissions
             'assets.view' => 'View asset information',
             'assets.create' => 'Create new assets',
@@ -114,7 +114,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'assets.depreciations.view' => 'View asset depreciation',
             'assets.depreciations.manage' => 'Manage asset depreciation',
             'assets.depreciations.export' => 'Export asset depreciation',
-            
+
             // Financial permissions
             'financial.view' => 'View financial information',
             'financial.create' => 'Create financial records',
@@ -142,7 +142,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'financial.quotes.send' => 'Send financial quotes',
             'financial.quotes.convert' => 'Convert financial quotes',
             'financial.quotes.cancel' => 'Cancel financial quotes',
-            
+
             // Contract permissions
             'contracts.view' => 'View contracts',
             'contracts.create' => 'Create contracts',
@@ -162,7 +162,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'contracts.bulk-actions' => 'Perform bulk contract actions',
             'contracts.history' => 'View contract history',
             'contracts.milestones' => 'Manage contract milestones',
-            
+
             // Project permissions
             'projects.view' => 'View projects',
             'projects.create' => 'Create new projects',
@@ -177,7 +177,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'projects.members.manage' => 'Manage project members',
             'projects.templates.view' => 'View project templates',
             'projects.templates.manage' => 'Manage project templates',
-            
+
             // Report permissions
             'reports.view' => 'View reports and analytics',
             'reports.create' => 'Create custom reports',
@@ -188,7 +188,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'reports.clients' => 'View client reports',
             'reports.projects' => 'View project reports',
             'reports.users' => 'View user reports',
-            
+
             // User permissions
             'users.view' => 'View user information',
             'users.create' => 'Create new users',
@@ -196,7 +196,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'users.delete' => 'Delete users',
             'users.manage' => 'Manage system users',
             'users.export' => 'Export user data',
-            
+
             // Settings permissions
             'settings.view' => 'View system settings',
             'settings.manage' => 'Manage system settings',
@@ -214,7 +214,7 @@ class RolesAndPermissionsSeeder extends Seeder
             );
         }
 
-        echo "Created " . count($abilities) . " abilities.\n";
+        echo 'Created '.count($abilities)." abilities.\n";
     }
 
     /**
@@ -225,7 +225,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $roles = [
             'super-admin' => 'Super Administrator',
             'admin' => 'Administrator',
-            'tech' => 'Technician', 
+            'tech' => 'Technician',
             'accountant' => 'Accountant',
         ];
 
@@ -236,7 +236,7 @@ class RolesAndPermissionsSeeder extends Seeder
             );
         }
 
-        echo "Created " . count($roles) . " roles.\n";
+        echo 'Created '.count($roles)." roles.\n";
     }
 
     /**
@@ -246,11 +246,11 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         // Super Administrator gets ALL abilities (every single one)
         $superAdminAbilities = ['*']; // This will assign every ability
-        
+
         // Administrator gets all abilities
         $adminAbilities = [
-            'clients.*', 'tickets.*', 'assets.*', 'financial.*', 'projects.*', 
-            'reports.*', 'users.*', 'settings.*', 'system.*'
+            'clients.*', 'tickets.*', 'assets.*', 'financial.*', 'projects.*',
+            'reports.*', 'users.*', 'settings.*', 'system.*',
         ];
 
         // Technician abilities (all except sensitive financial/user management)
@@ -261,7 +261,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'clients.vendors.*', 'clients.racks.*', 'clients.certificates.*', 'clients.domains.*',
             'tickets.*', 'assets.*', 'projects.*',
             'reports.view', 'reports.tickets', 'reports.assets', 'reports.projects', 'reports.export',
-            'financial.view', 'financial.payments.view', 'financial.invoices.view'
+            'financial.view', 'financial.payments.view', 'financial.invoices.view',
         ];
 
         // Accountant abilities (financial focus)
@@ -272,7 +272,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'clients.documents.view', 'clients.files.view',
             'clients.quotes.*', 'clients.calendar-events.*',
             'financial.*', 'reports.view', 'reports.financial', 'reports.clients', 'reports.export',
-            'projects.view', 'projects.tasks.view'
+            'projects.view', 'projects.tasks.view',
         ];
 
         // Assign ALL abilities to super-admin role
@@ -286,7 +286,7 @@ class RolesAndPermissionsSeeder extends Seeder
             if (str_contains($ability, '*')) {
                 // Handle wildcard permissions
                 $prefix = str_replace('*', '', $ability);
-                $matchingAbilities = Bouncer::ability()->where('name', 'like', $prefix . '%')->get();
+                $matchingAbilities = Bouncer::ability()->where('name', 'like', $prefix.'%')->get();
                 foreach ($matchingAbilities as $matchingAbility) {
                     Bouncer::allow('admin')->to($matchingAbility->name);
                 }
@@ -299,7 +299,7 @@ class RolesAndPermissionsSeeder extends Seeder
         foreach ($techAbilities as $ability) {
             if (str_contains($ability, '*')) {
                 $prefix = str_replace('*', '', $ability);
-                $matchingAbilities = Bouncer::ability()->where('name', 'like', $prefix . '%')->get();
+                $matchingAbilities = Bouncer::ability()->where('name', 'like', $prefix.'%')->get();
                 foreach ($matchingAbilities as $matchingAbility) {
                     Bouncer::allow('tech')->to($matchingAbility->name);
                 }
@@ -312,7 +312,7 @@ class RolesAndPermissionsSeeder extends Seeder
         foreach ($accountantAbilities as $ability) {
             if (str_contains($ability, '*')) {
                 $prefix = str_replace('*', '', $ability);
-                $matchingAbilities = Bouncer::ability()->where('name', 'like', $prefix . '%')->get();
+                $matchingAbilities = Bouncer::ability()->where('name', 'like', $prefix.'%')->get();
                 foreach ($matchingAbilities as $matchingAbility) {
                     Bouncer::allow('accountant')->to($matchingAbility->name);
                 }
@@ -332,7 +332,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Get users and assign roles with company scoping
         $userRoleAssignments = [
             1 => ['role' => 'super-admin', 'company_id' => 1], // Super Administrator (has EVERY permission)
-            2 => ['role' => 'tech', 'company_id' => 1],         // Technical Manager  
+            2 => ['role' => 'tech', 'company_id' => 1],         // Technical Manager
             3 => ['role' => 'accountant', 'company_id' => 1],   // Accountant User
             4 => ['role' => 'tech', 'company_id' => 1],         // Test User
         ];
@@ -342,17 +342,17 @@ class RolesAndPermissionsSeeder extends Seeder
             if ($user) {
                 // Set Bouncer scope to the user's company
                 Bouncer::scope()->to($assignment['company_id']);
-                
+
                 // Assign the role
                 Bouncer::assign($assignment['role'])->to($user);
-                
+
                 echo "Assigned {$assignment['role']} role to user {$userId} in company {$assignment['company_id']}.\n";
             }
         }
 
         // Clear scope after assignments
         Bouncer::scope()->to(null);
-        
+
         echo "Assigned roles to users with company scoping.\n";
     }
 }

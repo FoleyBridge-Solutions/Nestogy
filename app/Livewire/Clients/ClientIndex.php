@@ -2,31 +2,42 @@
 
 namespace App\Livewire\Clients;
 
-use App\Models\Client;
 use App\Domains\Core\Services\NavigationService;
+use App\Exports\ClientsExport;
+use App\Models\Client;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ClientsExport;
 
 class ClientIndex extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $type = '';
+
     public $status = 'active'; // Default to active clients only
+
     public $showLeads = false;
+
     public $perPage = 25;
+
     public $sortField = 'name';
+
     public $sortDirection = 'asc';
-    
+
     public $selectedClient;
+
     public $showDeleteModal = false;
+
     public $showConvertModal = false;
+
     public $clientToDelete = null;
+
     public $leadToConvert = null;
+
     public $returnUrl = null;
 
     protected $queryString = [
@@ -42,9 +53,9 @@ class ClientIndex extends Component
         $this->selectedClient = NavigationService::getSelectedClient();
         $this->showLeads = request()->has('lead');
         $this->returnUrl = session('client_selection_return_url');
-        
+
         // Preserve the default status if not in the request
-        if (!request()->has('status')) {
+        if (! request()->has('status')) {
             $this->status = 'active';
         }
     }
@@ -94,6 +105,7 @@ class ClientIndex extends Component
             // Check if there's a return URL from the middleware redirect
             if ($returnUrl = session('client_selection_return_url')) {
                 session()->forget('client_selection_return_url');
+
                 return redirect($returnUrl)
                     ->with('success', "Selected client: {$client->name}");
             }
@@ -129,18 +141,18 @@ class ClientIndex extends Component
             $client = Client::find($this->clientToDelete);
             if ($client && $client->company_id === Auth::user()->company_id) {
                 $clientName = $client->name;
-                
+
                 // Clear selection if deleting selected client
                 if ($this->selectedClient && $this->selectedClient->id === $client->id) {
                     NavigationService::clearSelectedClient();
                     $this->selectedClient = null;
                 }
-                
+
                 $client->delete();
                 session()->flash('success', "Client '{$clientName}' has been deleted.");
             }
         }
-        
+
         $this->showDeleteModal = false;
         $this->clientToDelete = null;
     }
@@ -158,11 +170,11 @@ class ClientIndex extends Component
             if ($client && $client->company_id === Auth::user()->company_id && $client->lead) {
                 $client->lead = false;
                 $client->save();
-                
+
                 session()->flash('success', "Lead '{$client->name}' has been converted to a customer.");
             }
         }
-        
+
         $this->showConvertModal = false;
         $this->leadToConvert = null;
     }
@@ -170,14 +182,14 @@ class ClientIndex extends Component
     public function exportCsv()
     {
         $filename = $this->showLeads ? 'leads-export.csv' : 'clients-export.csv';
-        
+
         return Excel::download(new ClientsExport($this->showLeads), $filename);
     }
 
     public function render()
     {
         $user = Auth::user();
-        
+
         $query = Client::with(['primaryContact', 'primaryLocation', 'tags'])
             ->where('company_id', $user->company_id)
             ->whereNull('archived_at')

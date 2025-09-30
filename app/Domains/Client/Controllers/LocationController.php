@@ -4,8 +4,8 @@ namespace App\Domains\Client\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
-use App\Models\Location;
 use App\Models\Contact;
+use App\Models\Location;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -19,7 +19,7 @@ class LocationController extends Controller
     {
         $this->middleware('auth');
         $this->middleware('company');
-        
+
         // Properly use policies for authorization - no bypassing!
         $this->authorizeResource(Location::class, 'location');
     }
@@ -31,34 +31,34 @@ class LocationController extends Controller
     {
         // Get client from session
         $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
-        
+
         // If no client selected, redirect to client selection
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.index')
                 ->with('info', 'Please select a client to view locations.');
         }
-        
+
         // Authorize using policies
         $this->authorize('view', $client);
         $this->authorize('viewAny', Location::class);
 
         // Query locations for the selected client with optimized column selection
         $query = Location::select([
-            'id', 'name', 'address', 'city', 'state', 'zip', 'country', 
-            'phone', 'primary', 'client_id', 'contact_id', 'description', 'hours'
+            'id', 'name', 'address', 'city', 'state', 'zip', 'country',
+            'phone', 'primary', 'client_id', 'contact_id', 'description', 'hours',
         ])
-        ->with(['contact:id,name,email,phone'])
-        ->where('client_id', $client->id);
+            ->with(['contact:id,name,email,phone'])
+            ->where('client_id', $client->id);
 
         // Apply search filters with correct column names
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%")
-                  ->orWhere('state', 'like', "%{$search}%")
-                  ->orWhere('zip', 'like', "%{$search}%")
-                  ->orWhere('country', 'like', "%{$search}%");
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('state', 'like', "%{$search}%")
+                    ->orWhere('zip', 'like', "%{$search}%")
+                    ->orWhere('country', 'like', "%{$search}%");
             });
         }
 
@@ -78,13 +78,13 @@ class LocationController extends Controller
         }
 
         $locations = $query->orderBy('primary', 'desc')
-                          ->orderBy('name')
-                          ->paginate(20)
-                          ->appends($request->query());
+            ->orderBy('name')
+            ->paginate(20)
+            ->appends($request->query());
 
         // Get unique states and countries for filters with caching
         $cacheKey = "location_filters_client_{$client->id}";
-        $filters = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function() use ($client) {
+        $filters = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($client) {
             return [
                 'states' => Location::where('client_id', $client->id)
                     ->whereNotNull('state')
@@ -95,10 +95,10 @@ class LocationController extends Controller
                     ->whereNotNull('country')
                     ->distinct()
                     ->orderBy('country')
-                    ->pluck('country')
+                    ->pluck('country'),
             ];
         });
-        
+
         $states = $filters['states'];
         $countries = $filters['countries'];
 
@@ -112,13 +112,13 @@ class LocationController extends Controller
     {
         // Get client from session
         $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
-        
+
         // If no client selected, redirect to client selection
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.index')
                 ->with('info', 'Please select a client to create a location.');
         }
-        
+
         // Authorize using policies
         $this->authorize('view', $client);
         $this->authorize('create', Location::class);
@@ -136,13 +136,13 @@ class LocationController extends Controller
     {
         // Get client from session
         $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
-        
+
         // If no client selected, redirect to client selection
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.index')
                 ->with('error', 'Please select a client to create a location.');
         }
-        
+
         // Authorize using policies
         $this->authorize('view', $client);
         $this->authorize('create', Location::class);
@@ -171,23 +171,23 @@ class LocationController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Prepare location data
         $locationData = $request->all();
-        
+
         // Combine address lines into single address field
         $address = $request->address_line_1;
         if ($request->address_line_2) {
-            $address .= ', ' . $request->address_line_2;
+            $address .= ', '.$request->address_line_2;
         }
         $locationData['address'] = $address;
-        
+
         // Remove the separate address line fields as they don't exist in the model
         unset($locationData['address_line_1'], $locationData['address_line_2']);
-        
+
         // Rename zip_code to zip (database column name)
         if (isset($locationData['zip_code'])) {
             $locationData['zip'] = $locationData['zip_code'];
@@ -202,15 +202,15 @@ class LocationController extends Controller
         // If this is set as primary, unset other primary locations for this client
         if ($location->primary) {
             Location::where('client_id', $client->id)
-                        ->where('id', '!=', $location->id)
-                        ->update(['primary' => false]);
+                ->where('id', '!=', $location->id)
+                ->update(['primary' => false]);
         }
 
         // Clear cache for location filters
         \Illuminate\Support\Facades\Cache::forget("location_filters_client_{$client->id}");
 
         return redirect()->route('clients.locations.index')
-                        ->with('success', 'Location created successfully.');
+            ->with('success', 'Location created successfully.');
     }
 
     /**
@@ -220,17 +220,17 @@ class LocationController extends Controller
     {
         // Get client from location
         $client = $location->client;
-        
+
         // Set client in session if different
-        if (!$client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
+        if (! $client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
             \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
         }
-        
+
         // Authorize using policies
         $this->authorize('view', $location);
 
         $location->load('client', 'contact');
-        
+
         // Strategic update of accessed_at only when viewing details
         $location->updateAccessedAt();
 
@@ -244,18 +244,18 @@ class LocationController extends Controller
     {
         // Get client from location
         $client = $location->client;
-        
+
         // Set client in session if different
-        if (!$client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
+        if (! $client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
             \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
         }
-        
+
         // Authorize using policies
         $this->authorize('update', $location);
 
         $contacts = Contact::where('client_id', $client->id)
-                                ->orderBy('name')
-                                ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('clients.locations.edit', compact('location', 'client', 'contacts'));
     }
@@ -267,16 +267,16 @@ class LocationController extends Controller
     {
         // Get client from location
         $client = $location->client;
-        
+
         // Set client in session if different
-        if (!$client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
+        if (! $client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
             \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('update', $location);
-        
+
         // Additional permission check
         // Permission check handled by policy
         // if (!auth()->user()->hasPermission('clients.locations.manage')) {
@@ -307,23 +307,23 @@ class LocationController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Prepare location data
         $locationData = $request->all();
-        
+
         // Combine address lines into single address field
         $address = $request->address_line_1;
         if ($request->address_line_2) {
-            $address .= ', ' . $request->address_line_2;
+            $address .= ', '.$request->address_line_2;
         }
         $locationData['address'] = $address;
-        
+
         // Remove the separate address line fields as they don't exist in the model
         unset($locationData['address_line_1'], $locationData['address_line_2']);
-        
+
         // Rename zip_code to zip (database column name)
         if (isset($locationData['zip_code'])) {
             $locationData['zip'] = $locationData['zip_code'];
@@ -336,15 +336,15 @@ class LocationController extends Controller
         // If this is set as primary, unset other primary locations for this client
         if ($location->primary) {
             Location::where('client_id', $client->id)
-                        ->where('id', '!=', $location->id)
-                        ->update(['primary' => false]);
+                ->where('id', '!=', $location->id)
+                ->update(['primary' => false]);
         }
 
         // Clear cache for location filters
         \Illuminate\Support\Facades\Cache::forget("location_filters_client_{$client->id}");
 
         return redirect()->route('clients.locations.index')
-                        ->with('success', 'Location updated successfully.');
+            ->with('success', 'Location updated successfully.');
     }
 
     /**
@@ -354,16 +354,16 @@ class LocationController extends Controller
     {
         // Get client from location
         $client = $location->client;
-        
+
         // Set client in session if different
-        if (!$client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
+        if (! $client || $location->client_id !== optional(\App\Domains\Core\Services\NavigationService::getSelectedClient())->id) {
             \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('delete', $location);
-        
+
         // Additional permission check
         // Permission check handled by policy
         // if (!auth()->user()->hasPermission('clients.locations.manage')) {
@@ -376,7 +376,7 @@ class LocationController extends Controller
         \Illuminate\Support\Facades\Cache::forget("location_filters_client_{$client->id}");
 
         return redirect()->route('clients.locations.index')
-                        ->with('success', 'Location deleted successfully.');
+            ->with('success', 'Location deleted successfully.');
     }
 
     /**
@@ -386,22 +386,22 @@ class LocationController extends Controller
     {
         // Get client from session
         $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
-        
+
         // If no client selected, redirect to client selection
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.index')
                 ->with('info', 'Please select a client to export locations.');
         }
-        
+
         // Authorize client access
         $this->authorize('view', $client);
-        
+
         // Authorization check for export permission
         // Permission check handled by policy
         // if (!auth()->user()->hasPermission('clients.locations.export')) {
         //     abort(403, 'Insufficient permissions to export location data');
         // }
-        
+
         // Additional gate check for sensitive data export - handled by policy
         // if (!auth()->user()->can('export-client-data')) {
         //     abort(403, 'Export permissions denied');
@@ -411,13 +411,13 @@ class LocationController extends Controller
 
         // Apply same filters as index with correct column names
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%")
-                  ->orWhere('state', 'like', "%{$search}%")
-                  ->orWhere('zip', 'like', "%{$search}%")
-                  ->orWhere('country', 'like', "%{$search}%");
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhere('state', 'like', "%{$search}%")
+                    ->orWhere('zip', 'like', "%{$search}%")
+                    ->orWhere('country', 'like', "%{$search}%");
             });
         }
 
@@ -435,16 +435,16 @@ class LocationController extends Controller
 
         $locations = $query->orderBy('primary', 'desc')->orderBy('name')->get();
 
-        $filename = 'locations_' . $client->name . '_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'locations_'.$client->name.'_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($locations, $client) {
+        $callback = function () use ($locations, $client) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Location Name',
@@ -460,7 +460,7 @@ class LocationController extends Controller
                 'Phone',
                 'Hours',
                 'Primary',
-                'Notes'
+                'Notes',
             ]);
 
             // CSV data
@@ -482,7 +482,7 @@ class LocationController extends Controller
                     $location->notes,
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -496,18 +496,18 @@ class LocationController extends Controller
     {
         // Get client from session
         $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
-        
+
         // If no client selected, return error
-        if (!$client) {
+        if (! $client) {
             return response()->json(['error' => 'No client selected'], 400);
         }
-        
+
         // Authorize client access
         $this->authorize('view', $client);
 
         $contacts = Contact::where('client_id', $client->id)
-                                ->orderBy('name')
-                                ->get(['id', 'name', 'title']);
+            ->orderBy('name')
+            ->get(['id', 'name', 'title']);
 
         return response()->json($contacts);
     }

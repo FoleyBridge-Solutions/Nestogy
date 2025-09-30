@@ -72,12 +72,12 @@ class EmailSettingsRequest extends FormRequest
         $this->merge([
             'ticket_email_parse' => $this->has('ticket_email_parse'),
         ]);
-        
+
         // Remove empty passwords (keep existing)
         if (empty($this->smtp_password)) {
             $this->request->remove('smtp_password');
         }
-        
+
         if (empty($this->imap_password)) {
             $this->request->remove('imap_password');
         }

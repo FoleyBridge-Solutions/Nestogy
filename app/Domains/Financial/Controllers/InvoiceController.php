@@ -6,10 +6,11 @@ use App\Contracts\Services\EmailServiceInterface;
 use App\Contracts\Services\PdfServiceInterface;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Services\ContractGenerationService;
+use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
 use App\Domains\Financial\Services\InvoiceService;
 use App\Domains\Financial\Services\PaymentService;
+use App\Domains\Financial\Services\QuoteInvoiceConversionService;
 use App\Http\Controllers\Controller;
-use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
@@ -18,8 +19,6 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
-use App\Models\Ticket;
-use App\Domains\Financial\Services\QuoteInvoiceConversionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -67,18 +66,18 @@ class InvoiceController extends Controller
             'user_id' => Auth::id(),
             'session_client' => session('selected_client_id'),
         ]);
-        
+
         // Get the selected client from session
         $client = $this->getSelectedClient();
-        
+
         // Calculate statistics based on selected client
         $companyId = Auth::user()->company_id;
         $baseQuery = Invoice::where('company_id', $companyId);
-        
+
         if ($client) {
             $baseQuery->where('client_id', $client->id);
         }
-        
+
         $stats = [
             'total_revenue' => (clone $baseQuery)->whereIn('status', ['paid', 'partial'])->sum('amount'),
             'outstanding' => (clone $baseQuery)->whereIn('status', ['sent', 'partial'])->sum('amount'),
@@ -86,9 +85,9 @@ class InvoiceController extends Controller
                 ->whereIn('status', ['sent', 'partial'])
                 ->where('due_date', '<', now())
                 ->sum('amount'),
-            'total_count' => (clone $baseQuery)->count()
+            'total_count' => (clone $baseQuery)->count(),
         ];
-        
+
         // The Livewire component handles all the logic now
         // We keep the JSON response for API compatibility
         if ($request->wantsJson()) {

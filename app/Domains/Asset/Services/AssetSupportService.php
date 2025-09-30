@@ -2,19 +2,17 @@
 
 namespace App\Domains\Asset\Services;
 
-use App\Models\Asset;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractSchedule;
+use App\Models\Asset;
 use App\Models\Client;
-use App\Events\AssetCreated;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Collection;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Asset Support Service
- * 
+ *
  * Handles automatic evaluation and assignment of asset support status
  * based on active contract schedules and support coverage rules.
  */
@@ -24,8 +22,11 @@ class AssetSupportService
      * Support status constants
      */
     const STATUS_SUPPORTED = 'supported';
+
     const STATUS_UNSUPPORTED = 'unsupported';
+
     const STATUS_PENDING_ASSIGNMENT = 'pending_assignment';
+
     const STATUS_EXCLUDED = 'excluded';
 
     /**
@@ -48,7 +49,7 @@ class AssetSupportService
         try {
             // Get all effective infrastructure schedules for this client
             $infrastructureSchedules = $this->getEffectiveInfrastructureSchedules($asset->client_id, $asset->company_id);
-            
+
             if ($infrastructureSchedules->isEmpty()) {
                 // No infrastructure schedules available
                 $evaluation['new_status'] = self::STATUS_UNSUPPORTED;
@@ -57,7 +58,7 @@ class AssetSupportService
             } else {
                 // Evaluate against each schedule to find coverage
                 $coverageResult = $this->findBestCoverage($asset, $infrastructureSchedules);
-                
+
                 if ($coverageResult['covered']) {
                     $evaluation['new_status'] = self::STATUS_SUPPORTED;
                     $evaluation['reason'] = $coverageResult['reason'];
@@ -89,7 +90,7 @@ class AssetSupportService
             ]);
 
             $evaluation['new_status'] = $asset->support_status ?: self::STATUS_UNSUPPORTED;
-            $evaluation['reason'] = 'Evaluation failed: ' . $e->getMessage();
+            $evaluation['reason'] = 'Evaluation failed: '.$e->getMessage();
             $evaluation['error'] = true;
         }
 
@@ -118,14 +119,14 @@ class AssetSupportService
             try {
                 $asset = Asset::findOrFail($assetId);
                 $evaluation = $this->evaluateAssetSupport($asset, $autoAssign);
-                
+
                 $evaluations[] = $evaluation;
                 $summary['evaluated']++;
 
                 // Track status changes
                 if ($evaluation['previous_status'] !== $evaluation['new_status']) {
                     $summary['status_changes']++;
-                    
+
                     if ($evaluation['new_status'] === self::STATUS_SUPPORTED) {
                         $summary['newly_supported']++;
                     } elseif ($evaluation['new_status'] === self::STATUS_UNSUPPORTED) {
@@ -161,7 +162,7 @@ class AssetSupportService
             ->get();
 
         $assetIds = $assets->pluck('id')->toArray();
-        
+
         return $this->evaluateBulkAssetSupport($assetIds, $autoAssign);
     }
 
@@ -201,7 +202,7 @@ class AssetSupportService
      */
     public function handleScheduleChange(ContractSchedule $schedule): array
     {
-        if (!$schedule->isInfrastructureSchedule()) {
+        if (! $schedule->isInfrastructureSchedule()) {
             return ['message' => 'Schedule is not an infrastructure schedule, no asset re-evaluation needed'];
         }
 
@@ -213,7 +214,7 @@ class AssetSupportService
 
         // Get all assets for the client
         $clientId = $schedule->contract->client_id;
-        
+
         return $this->evaluateClientAssetSupport($clientId, true);
     }
 
@@ -224,14 +225,14 @@ class AssetSupportService
     {
         // Use provided company ID or get from auth
         $companyId = $companyId ?: (auth()->user() ? auth()->user()->company_id : null);
-        
-        if (!$companyId) {
+
+        if (! $companyId) {
             // If no company context, get it from the client
             $client = Client::find($clientId);
             $companyId = $client ? $client->company_id : null;
         }
-        
-        if (!$companyId) {
+
+        if (! $companyId) {
             return collect();
         }
 
@@ -279,7 +280,7 @@ class AssetSupportService
             }
         }
 
-        if (!$result['covered']) {
+        if (! $result['covered']) {
             if (empty($result['potential_schedules'])) {
                 $result['reason'] = 'No infrastructure schedules available for this client';
             } else {
@@ -296,7 +297,7 @@ class AssetSupportService
     protected function determineSupportLevel(Asset $asset, ContractSchedule $schedule): string
     {
         $serviceLevel = $schedule->getServiceLevel($asset->type);
-        
+
         if ($serviceLevel && isset($serviceLevel['level'])) {
             return $serviceLevel['level'];
         }
@@ -315,12 +316,13 @@ class AssetSupportService
      */
     protected function explainWhyNotCovered(Asset $asset, ContractSchedule $schedule): string
     {
-        if (!$schedule->isEffective()) {
+        if (! $schedule->isEffective()) {
             return 'Schedule is not currently effective';
         }
 
-        if (!$schedule->supportsAssetType($asset->type)) {
+        if (! $schedule->supportsAssetType($asset->type)) {
             $supportedTypes = implode(', ', $schedule->getSupportedAssetTypes());
+
             return "Asset type '{$asset->type}' not in supported types: {$supportedTypes}";
         }
 
@@ -334,7 +336,7 @@ class AssetSupportService
      */
     protected function applySupportAssignment(Asset $asset, array $evaluation): void
     {
-        if (!isset($evaluation['supporting_schedule'])) {
+        if (! isset($evaluation['supporting_schedule'])) {
             return;
         }
 
@@ -425,8 +427,8 @@ class AssetSupportService
         // Get company_id from the client
         $client = Client::find($clientId);
         $companyId = $client ? $client->company_id : (auth()->user() ? auth()->user()->company_id : null);
-        
-        if (!$companyId) {
+
+        if (! $companyId) {
             return ['total_assets' => 0, 'by_status' => [], 'by_level' => [], 'auto_assigned_percentage' => 0];
         }
 
@@ -450,7 +452,7 @@ class AssetSupportService
 
         foreach ($stats as $stat) {
             $summary['by_status'][$stat->support_status] = ($summary['by_status'][$stat->support_status] ?? 0) + $stat->count;
-            
+
             if ($stat->support_level) {
                 $summary['by_level'][$stat->support_level] = ($summary['by_level'][$stat->support_level] ?? 0) + $stat->count;
             }
@@ -522,9 +524,9 @@ class AssetSupportService
      * Manually assign support to an asset.
      */
     public function manuallyAssignSupport(
-        Asset $asset, 
-        Contract $contract, 
-        ?ContractSchedule $schedule = null, 
+        Asset $asset,
+        Contract $contract,
+        ?ContractSchedule $schedule = null,
         ?string $supportLevel = null,
         ?string $notes = null
     ): void {

@@ -14,6 +14,7 @@ class UpdateITDocumentationRequest extends FormRequest
     public function authorize(): bool
     {
         $documentation = $this->route('itDocumentation');
+
         return auth()->check() && $this->user()->can('update', $documentation);
     }
 
@@ -39,7 +40,7 @@ class UpdateITDocumentationRequest extends FormRequest
             ],
             'access_level' => [
                 'required',
-                'string', 
+                'string',
                 Rule::in(array_keys(ClientITDocumentation::getAccessLevels())),
             ],
             'review_schedule' => [
@@ -135,7 +136,7 @@ class UpdateITDocumentationRequest extends FormRequest
                 ->sortBy('order')
                 ->values()
                 ->toArray();
-            
+
             $this->merge(['procedure_steps' => $steps]);
         }
 

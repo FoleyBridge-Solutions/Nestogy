@@ -2,23 +2,22 @@
 
 namespace App\Domains\Financial\Services;
 
+use App\Domains\Email\Services\EmailService;
+use App\Domains\Product\Services\VoIPTieredPricingService;
+use App\Domains\Product\Services\VoIPUsageService;
 use App\Models\Client;
-use App\Models\Recurring;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Quote;
-use App\Domains\Financial\Services\VoIPTaxService;
-use App\Domains\Product\Services\VoIPUsageService;
-use App\Domains\Product\Services\VoIPTieredPricingService;
-use App\Domains\Email\Services\EmailService;
+use App\Models\Recurring;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * RecurringBillingService
- * 
+ *
  * Enterprise-grade recurring billing service with comprehensive VoIP features including
  * automated invoice generation, usage-based billing, tiered pricing calculations,
  * proration handling, contract escalations, and VoIP tax integration.
@@ -26,8 +25,11 @@ use Carbon\Carbon;
 class RecurringBillingService
 {
     protected $voipTaxService;
+
     protected $voipUsageService;
+
     protected $voipTieredPricingService;
+
     protected $emailService;
 
     public function __construct(
@@ -76,7 +78,7 @@ class RecurringBillingService
                 'recurring_id' => $recurring->id,
                 'client_id' => $client->id,
                 'amount' => $recurring->amount,
-                'frequency' => $recurring->frequency
+                'frequency' => $recurring->frequency,
             ]);
 
             return $recurring;
@@ -117,7 +119,7 @@ class RecurringBillingService
             Log::info('Recurring billing updated', [
                 'recurring_id' => $recurring->id,
                 'original_amount' => $originalAmount,
-                'new_amount' => $recurring->amount
+                'new_amount' => $recurring->amount,
             ]);
 
             return $recurring;
@@ -131,7 +133,7 @@ class RecurringBillingService
     {
         return DB::transaction(function () use ($recurring) {
             // Check if recurring is ready for invoice generation
-            if (!$this->isReadyForInvoiceGeneration($recurring)) {
+            if (! $this->isReadyForInvoiceGeneration($recurring)) {
                 throw new \Exception('Recurring billing is not ready for invoice generation');
             }
 
@@ -156,7 +158,7 @@ class RecurringBillingService
                 } catch (\Exception $e) {
                     Log::warning('Failed to send recurring invoice email', [
                         'invoice_id' => $invoice->id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -171,11 +173,11 @@ class RecurringBillingService
     public function bulkGenerateInvoices(array $params): array
     {
         $results = ['successful' => [], 'failed' => []];
-        
+
         $query = Recurring::where('company_id', Auth::user()->company_id);
 
         // Apply filters
-        if (isset($params['client_ids']) && !empty($params['client_ids'])) {
+        if (isset($params['client_ids']) && ! empty($params['client_ids'])) {
             $query->whereIn('client_id', $params['client_ids']);
         }
 
@@ -203,18 +205,18 @@ class RecurringBillingService
                     'recurring_id' => $recurring->id,
                     'invoice_id' => $invoice->id,
                     'client_name' => $recurring->client->name,
-                    'amount' => $invoice->amount
+                    'amount' => $invoice->amount,
                 ];
             } catch (\Exception $e) {
                 $results['failed'][] = [
                     'recurring_id' => $recurring->id,
                     'client_name' => $recurring->client->name ?? 'Unknown',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
-                
+
                 Log::error('Bulk invoice generation failed for recurring', [
                     'recurring_id' => $recurring->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -222,7 +224,7 @@ class RecurringBillingService
         Log::info('Bulk invoice generation completed', [
             'successful' => count($results['successful']),
             'failed' => count($results['failed']),
-            'total_processed' => count($recurringBillings)
+            'total_processed' => count($recurringBillings),
         ]);
 
         return $results;
@@ -239,10 +241,10 @@ class RecurringBillingService
             'client' => $recurring->client,
             'billing_period' => [
                 'start' => $recurring->next_date->copy()->subMonth(),
-                'end' => $recurring->next_date
+                'end' => $recurring->next_date,
             ],
             'items' => [],
-            'totals' => []
+            'totals' => [],
         ];
 
         // Add base recurring items
@@ -254,16 +256,16 @@ class RecurringBillingService
                 'quantity' => $item->quantity,
                 'price' => $item->price,
                 'subtotal' => $item->quantity * $item->price,
-                'discount' => $item->discount ?? 0
+                'discount' => $item->discount ?? 0,
             ];
         }
 
         // Calculate usage charges for VoIP services
-        if ($recurring->billing_type === Recurring::BILLING_TYPE_USAGE_BASED || 
+        if ($recurring->billing_type === Recurring::BILLING_TYPE_USAGE_BASED ||
             $recurring->billing_type === Recurring::BILLING_TYPE_HYBRID) {
-            
+
             $usageCharges = $recurring->calculateUsageCharges();
-            
+
             if ($usageCharges['total'] > 0) {
                 $previewData['items'][] = [
                     'type' => 'usage',
@@ -273,7 +275,7 @@ class RecurringBillingService
                     'price' => $usageCharges['total'],
                     'subtotal' => $usageCharges['total'],
                     'discount' => 0,
-                    'usage_breakdown' => $usageCharges['breakdown']
+                    'usage_breakdown' => $usageCharges['breakdown'],
                 ];
             }
         }
@@ -289,15 +291,15 @@ class RecurringBillingService
                     'quantity' => 1,
                     'price' => $adjustment['prorated_amount'],
                     'subtotal' => $adjustment['prorated_amount'],
-                    'discount' => 0
+                    'discount' => 0,
                 ];
             }
         }
 
         // Calculate totals
         $subtotal = collect($previewData['items'])->sum('subtotal');
-        $discount = $recurring->discount_type === Recurring::DISCOUNT_TYPE_PERCENTAGE 
-            ? ($subtotal * $recurring->discount_amount) / 100 
+        $discount = $recurring->discount_type === Recurring::DISCOUNT_TYPE_PERCENTAGE
+            ? ($subtotal * $recurring->discount_amount) / 100
             : $recurring->discount_amount;
 
         // Calculate taxes if VoIP services are present
@@ -311,7 +313,7 @@ class RecurringBillingService
             'subtotal' => $subtotal,
             'discount' => $discount,
             'tax_amount' => $taxAmount,
-            'total' => $subtotal - $discount + $taxAmount
+            'total' => $subtotal - $discount + $taxAmount,
         ];
 
         return $previewData;
@@ -323,7 +325,7 @@ class RecurringBillingService
     public function createRecurringFromQuote(Quote $quote, array $recurringData): Recurring
     {
         return DB::transaction(function () use ($quote, $recurringData) {
-            if (!$quote->isAccepted()) {
+            if (! $quote->isAccepted()) {
                 throw new \Exception('Quote must be accepted before creating recurring billing');
             }
 
@@ -341,13 +343,13 @@ class RecurringBillingService
             $quote->update([
                 'metadata' => array_merge($quote->metadata ?? [], [
                     'converted_to_recurring' => $recurring->id,
-                    'converted_at' => now()->toISOString()
-                ])
+                    'converted_at' => now()->toISOString(),
+                ]),
             ]);
 
             Log::info('Recurring billing created from quote', [
                 'quote_id' => $quote->id,
-                'recurring_id' => $recurring->id
+                'recurring_id' => $recurring->id,
             ]);
 
             return $recurring;
@@ -360,7 +362,7 @@ class RecurringBillingService
     public function processAutomatedBilling(): array
     {
         $results = ['processed' => 0, 'successful' => 0, 'failed' => 0, 'errors' => []];
-        
+
         $dueRecurring = Recurring::due()
             ->where('auto_invoice_generation', true)
             ->with(['client', 'items'])
@@ -368,32 +370,32 @@ class RecurringBillingService
 
         foreach ($dueRecurring as $recurring) {
             $results['processed']++;
-            
+
             try {
                 $this->generateInvoiceFromRecurring($recurring);
                 $results['successful']++;
-                
+
                 Log::info('Automated recurring billing processed', [
                     'recurring_id' => $recurring->id,
-                    'client_id' => $recurring->client_id
+                    'client_id' => $recurring->client_id,
                 ]);
-                
+
             } catch (\Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = [
                     'recurring_id' => $recurring->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
-                
+
                 Log::error('Automated recurring billing failed', [
                     'recurring_id' => $recurring->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
 
         Log::info('Automated recurring billing batch completed', $results);
-        
+
         return $results;
     }
 
@@ -405,7 +407,7 @@ class RecurringBillingService
         foreach ($items as $index => $itemData) {
             $recurring->items()->create(array_merge($itemData, [
                 'recurring_id' => $recurring->id,
-                'order' => $index + 1
+                'order' => $index + 1,
             ]));
         }
     }
@@ -417,7 +419,7 @@ class RecurringBillingService
     {
         // Remove existing items
         $recurring->items()->delete();
-        
+
         // Add new items
         $this->createRecurringItems($recurring, $items);
     }
@@ -440,193 +442,193 @@ class RecurringBillingService
                 'service_type' => $item->service_type,
                 'line_count' => $item->line_count,
                 'minutes' => $item->minutes,
-                'order' => $item->order
+                'order' => $item->order,
             ]);
         }
     }
-    
+
     /**
      * Create recurring billing record from quote
      */
     public function createFromQuote(Quote $quote, array $recurringData): Recurring
-        {
-            return DB::transaction(function () use ($quote, $recurringData) {
-                // Create the recurring billing record
-                $recurring = $this->createRecurring($quote->client, $recurringData);
-    
-                // Copy quote items to recurring billing
-                foreach ($quote->items as $quoteItem) {
-                    $recurring->items()->create([
-                        'name' => $quoteItem->name,
-                        'description' => $quoteItem->description,
-                        'quantity' => $quoteItem->quantity,
-                        'price' => $quoteItem->price,
-                        'tax_id' => $quoteItem->tax_id,
-                        'category_id' => $quoteItem->category_id,
-                        'discount' => $quoteItem->discount,
-                        'order' => $quoteItem->order,
-                    ]);
-                }
-    
-                // Copy VoIP-specific configurations if available
-                if ($quote->voip_config) {
-                    $recurring->update([
-                        'voip_config' => $quote->voip_config,
-                    ]);
-                }
-    
-                // Set up service tiers based on quote items
-                $this->setupServiceTiersFromQuote($recurring, $quote);
-    
-                // Apply initial escalation settings
-                if (!empty($recurringData['escalation_percentage'])) {
-                    $this->setupContractEscalation($recurring, $recurringData);
-                }
-    
-                // Calculate and store initial totals
-                $totals = $this->calculateTotals($recurring);
+    {
+        return DB::transaction(function () use ($quote, $recurringData) {
+            // Create the recurring billing record
+            $recurring = $this->createRecurring($quote->client, $recurringData);
+
+            // Copy quote items to recurring billing
+            foreach ($quote->items as $quoteItem) {
+                $recurring->items()->create([
+                    'name' => $quoteItem->name,
+                    'description' => $quoteItem->description,
+                    'quantity' => $quoteItem->quantity,
+                    'price' => $quoteItem->price,
+                    'tax_id' => $quoteItem->tax_id,
+                    'category_id' => $quoteItem->category_id,
+                    'discount' => $quoteItem->discount,
+                    'order' => $quoteItem->order,
+                ]);
+            }
+
+            // Copy VoIP-specific configurations if available
+            if ($quote->voip_config) {
                 $recurring->update([
-                    'subtotal' => $totals['subtotal'],
-                    'tax_amount' => $totals['tax_amount'],
-                    'total_amount' => $totals['total_amount'],
-                    'last_calculation_date' => now(),
-                ]);
-    
-                // Log the creation
-                Log::info('Recurring billing created from quote', [
-                    'quote_id' => $quote->id,
-                    'recurring_id' => $recurring->id,
-                    'client_id' => $recurring->client_id,
-                    'amount' => $recurring->total_amount,
-                ]);
-    
-                return $recurring;
-            });
-        }
-    
-        /**
-         * Setup service tiers based on quote items
-         */
-        protected function setupServiceTiersFromQuote(Recurring $recurring, Quote $quote): void
-        {
-            $serviceTiers = [];
-            
-            foreach ($quote->items as $item) {
-                // Map quote items to service tiers based on VoIP service types
-                $tierName = $this->mapQuoteItemToServiceTier($item);
-                
-                if ($tierName) {
-                    $serviceTiers[] = [
-                        'name' => $tierName,
-                        'base_price' => $item->price,
-                        'included_allowance' => $this->getDefaultAllowanceForTier($tierName),
-                        'overage_rate' => $this->getDefaultOverageRate($tierName),
-                        'pricing_model' => 'tiered',
-                    ];
-                }
-            }
-    
-            if (!empty($serviceTiers)) {
-                $recurring->update([
-                    'service_tiers' => $serviceTiers,
+                    'voip_config' => $quote->voip_config,
                 ]);
             }
-        }
-    
-        /**
-         * Map quote item to service tier name
-         */
-        protected function mapQuoteItemToServiceTier(InvoiceItem $item): ?string
-        {
-            $itemName = strtolower($item->name);
-            
-            if (str_contains($itemName, 'pbx') || str_contains($itemName, 'hosted')) {
-                return 'Hosted PBX';
+
+            // Set up service tiers based on quote items
+            $this->setupServiceTiersFromQuote($recurring, $quote);
+
+            // Apply initial escalation settings
+            if (! empty($recurringData['escalation_percentage'])) {
+                $this->setupContractEscalation($recurring, $recurringData);
             }
-            
-            if (str_contains($itemName, 'sip') || str_contains($itemName, 'trunk')) {
-                return 'SIP Trunking';
+
+            // Calculate and store initial totals
+            $totals = $this->calculateTotals($recurring);
+            $recurring->update([
+                'subtotal' => $totals['subtotal'],
+                'tax_amount' => $totals['tax_amount'],
+                'total_amount' => $totals['total_amount'],
+                'last_calculation_date' => now(),
+            ]);
+
+            // Log the creation
+            Log::info('Recurring billing created from quote', [
+                'quote_id' => $quote->id,
+                'recurring_id' => $recurring->id,
+                'client_id' => $recurring->client_id,
+                'amount' => $recurring->total_amount,
+            ]);
+
+            return $recurring;
+        });
+    }
+
+    /**
+     * Setup service tiers based on quote items
+     */
+    protected function setupServiceTiersFromQuote(Recurring $recurring, Quote $quote): void
+    {
+        $serviceTiers = [];
+
+        foreach ($quote->items as $item) {
+            // Map quote items to service tiers based on VoIP service types
+            $tierName = $this->mapQuoteItemToServiceTier($item);
+
+            if ($tierName) {
+                $serviceTiers[] = [
+                    'name' => $tierName,
+                    'base_price' => $item->price,
+                    'included_allowance' => $this->getDefaultAllowanceForTier($tierName),
+                    'overage_rate' => $this->getDefaultOverageRate($tierName),
+                    'pricing_model' => 'tiered',
+                ];
             }
-            
-            if (str_contains($itemName, 'line') || str_contains($itemName, 'voip')) {
-                return 'VoIP Lines';
-            }
-            
-            if (str_contains($itemName, 'unified') || str_contains($itemName, 'uc')) {
-                return 'Unified Communications';
-            }
-            
-            return null;
         }
-    
-        /**
-         * Get default allowance for service tier
-         */
-        protected function getDefaultAllowanceForTier(string $tierName): array
-        {
-            $defaults = [
-                'Hosted PBX' => ['minutes' => 1000, 'seats' => 10],
-                'SIP Trunking' => ['minutes' => 5000, 'channels' => 5],
-                'VoIP Lines' => ['minutes' => 500, 'lines' => 1],
-                'Unified Communications' => ['minutes' => 2000, 'users' => 25],
-            ];
-    
-            return $defaults[$tierName] ?? ['minutes' => 1000];
+
+        if (! empty($serviceTiers)) {
+            $recurring->update([
+                'service_tiers' => $serviceTiers,
+            ]);
         }
-    
-        /**
-         * Get default overage rate for service tier
-         */
-        protected function getDefaultOverageRate(string $tierName): float
-        {
-            $defaults = [
-                'Hosted PBX' => 0.05,
-                'SIP Trunking' => 0.03,
-                'VoIP Lines' => 0.08,
-                'Unified Communications' => 0.04,
-            ];
-    
-            return $defaults[$tierName] ?? 0.05;
+    }
+
+    /**
+     * Map quote item to service tier name
+     */
+    protected function mapQuoteItemToServiceTier(InvoiceItem $item): ?string
+    {
+        $itemName = strtolower($item->name);
+
+        if (str_contains($itemName, 'pbx') || str_contains($itemName, 'hosted')) {
+            return 'Hosted PBX';
         }
-    
-        /**
-         * Setup contract escalation settings
-         */
-        protected function setupContractEscalation(Recurring $recurring, array $recurringData): void
-        {
-            $escalationData = [
-                'percentage' => $recurringData['escalation_percentage'],
-                'frequency' => $recurringData['escalation_frequency'] ?? 'annual',
-                'next_escalation_date' => $this->calculateNextEscalationDate(
-                    $recurring->start_date,
-                    $recurringData['escalation_frequency'] ?? 'annual'
-                ),
-                'max_escalations' => $recurringData['max_escalations'] ?? null,
-                'applied_count' => 0,
-            ];
-    
-            $recurring->contractEscalations()->create($escalationData);
+
+        if (str_contains($itemName, 'sip') || str_contains($itemName, 'trunk')) {
+            return 'SIP Trunking';
         }
-    
-        /**
-         * Calculate next escalation date
-         */
-        protected function calculateNextEscalationDate(Carbon $startDate, string $frequency): Carbon
-        {
-            return match($frequency) {
-                'annual' => $startDate->copy()->addYear(),
-                'biennial' => $startDate->copy()->addYears(2),
-                default => $startDate->copy()->addYear(),
-            };
+
+        if (str_contains($itemName, 'line') || str_contains($itemName, 'voip')) {
+            return 'VoIP Lines';
         }
+
+        if (str_contains($itemName, 'unified') || str_contains($itemName, 'uc')) {
+            return 'Unified Communications';
+        }
+
+        return null;
+    }
+
+    /**
+     * Get default allowance for service tier
+     */
+    protected function getDefaultAllowanceForTier(string $tierName): array
+    {
+        $defaults = [
+            'Hosted PBX' => ['minutes' => 1000, 'seats' => 10],
+            'SIP Trunking' => ['minutes' => 5000, 'channels' => 5],
+            'VoIP Lines' => ['minutes' => 500, 'lines' => 1],
+            'Unified Communications' => ['minutes' => 2000, 'users' => 25],
+        ];
+
+        return $defaults[$tierName] ?? ['minutes' => 1000];
+    }
+
+    /**
+     * Get default overage rate for service tier
+     */
+    protected function getDefaultOverageRate(string $tierName): float
+    {
+        $defaults = [
+            'Hosted PBX' => 0.05,
+            'SIP Trunking' => 0.03,
+            'VoIP Lines' => 0.08,
+            'Unified Communications' => 0.04,
+        ];
+
+        return $defaults[$tierName] ?? 0.05;
+    }
+
+    /**
+     * Setup contract escalation settings
+     */
+    protected function setupContractEscalation(Recurring $recurring, array $recurringData): void
+    {
+        $escalationData = [
+            'percentage' => $recurringData['escalation_percentage'],
+            'frequency' => $recurringData['escalation_frequency'] ?? 'annual',
+            'next_escalation_date' => $this->calculateNextEscalationDate(
+                $recurring->start_date,
+                $recurringData['escalation_frequency'] ?? 'annual'
+            ),
+            'max_escalations' => $recurringData['max_escalations'] ?? null,
+            'applied_count' => 0,
+        ];
+
+        $recurring->contractEscalations()->create($escalationData);
+    }
+
+    /**
+     * Calculate next escalation date
+     */
+    protected function calculateNextEscalationDate(Carbon $startDate, string $frequency): Carbon
+    {
+        return match ($frequency) {
+            'annual' => $startDate->copy()->addYear(),
+            'biennial' => $startDate->copy()->addYears(2),
+            default => $startDate->copy()->addYear(),
+        };
+    }
 
     /**
      * Check if data contains VoIP services
      */
     protected function hasVoIPServices(array $data): bool
     {
-        return isset($data['voip_config']) || 
-               isset($data['pricing_model']) || 
+        return isset($data['voip_config']) ||
+               isset($data['pricing_model']) ||
                isset($data['service_tiers']);
     }
 
@@ -652,7 +654,7 @@ class RecurringBillingService
 
         $recurring->update([
             'voip_config' => $voipConfig,
-            'tax_settings' => $taxSettings
+            'tax_settings' => $taxSettings,
         ]);
     }
 
@@ -679,7 +681,7 @@ class RecurringBillingService
             $updates['tax_settings'] = $data['tax_settings'];
         }
 
-        if (!empty($updates)) {
+        if (! empty($updates)) {
             $recurring->update($updates);
         }
     }
@@ -689,7 +691,7 @@ class RecurringBillingService
      */
     protected function isReadyForInvoiceGeneration(Recurring $recurring): bool
     {
-        if (!$recurring->isActive()) {
+        if (! $recurring->isActive()) {
             return false;
         }
 
@@ -719,15 +721,15 @@ class RecurringBillingService
             'voip_services' => $recurring->voip_config,
             'billing_period' => [
                 'start' => $recurring->next_date->copy()->subMonth(),
-                'end' => $recurring->next_date
+                'end' => $recurring->next_date,
             ],
-            'usage_processed' => now()->toISOString()
+            'usage_processed' => now()->toISOString(),
         ];
 
         $invoice->update([
             'metadata' => array_merge($invoice->metadata ?? [], [
-                'voip_billing' => $voipMetadata
-            ])
+                'voip_billing' => $voipMetadata,
+            ]),
         ]);
     }
 
@@ -745,7 +747,7 @@ class RecurringBillingService
     protected function createProrationAdjustment(Recurring $recurring, float $originalAmount, float $newAmount): void
     {
         $adjustmentAmount = $newAmount - $originalAmount;
-        
+
         $recurring->addProrationAdjustment([
             'adjustment_type' => $adjustmentAmount > 0 ? 'addition' : 'removal',
             'description' => 'Mid-cycle service change adjustment',
@@ -754,7 +756,7 @@ class RecurringBillingService
             'reason' => 'Service modification during billing cycle',
             'original_amount' => $originalAmount,
             'new_amount' => $newAmount,
-            'prorated_amount' => $adjustmentAmount
+            'prorated_amount' => $adjustmentAmount,
         ]);
     }
 
@@ -763,30 +765,30 @@ class RecurringBillingService
      */
     public function calculateVoIPTaxes(Recurring $recurring, float $baseAmount, ?Carbon $billingDate = null): array
     {
-        if (!$recurring->tax_calculation_enabled) {
+        if (! $recurring->tax_calculation_enabled) {
             return [
                 'base_amount' => $baseAmount,
                 'total_tax_amount' => 0.0,
                 'final_amount' => $baseAmount,
                 'tax_breakdown' => [],
-                'exemptions_applied' => []
+                'exemptions_applied' => [],
             ];
         }
 
         $billingDate = $billingDate ?? now();
         $client = $recurring->client;
-        
+
         // Determine service type from recurring service configuration
         $serviceType = $this->mapRecurringToVoIPServiceType($recurring);
-        
+
         // Get client service address
         $serviceAddress = $this->getClientServiceAddress($client);
-        
+
         // Initialize VoIP tax service for the company
         $voipTaxService = new VoIPTaxService([
             'cache_ttl' => 3600,
             'enable_caching' => true,
-            'round_precision' => 4
+            'round_precision' => 4,
         ]);
         $voipTaxService->setCompanyId($recurring->company_id);
 
@@ -802,12 +804,12 @@ class RecurringBillingService
 
         try {
             $taxCalculation = $voipTaxService->calculateTaxes($taxParams);
-            
+
             Log::info('VoIP taxes calculated for recurring billing', [
                 'recurring_id' => $recurring->id,
                 'base_amount' => $baseAmount,
                 'total_tax' => $taxCalculation['total_tax_amount'],
-                'service_type' => $serviceType
+                'service_type' => $serviceType,
             ]);
 
             return $taxCalculation;
@@ -815,7 +817,7 @@ class RecurringBillingService
             Log::error('VoIP tax calculation failed for recurring billing', [
                 'recurring_id' => $recurring->id,
                 'error' => $e->getMessage(),
-                'base_amount' => $baseAmount
+                'base_amount' => $baseAmount,
             ]);
 
             // Return no tax calculation on error
@@ -825,7 +827,7 @@ class RecurringBillingService
                 'final_amount' => $baseAmount,
                 'tax_breakdown' => [],
                 'exemptions_applied' => [],
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -835,7 +837,7 @@ class RecurringBillingService
      */
     protected function applyVoIPTaxesToInvoice(Invoice $invoice, Recurring $recurring, array $invoiceItems): Invoice
     {
-        if (!$recurring->tax_calculation_enabled) {
+        if (! $recurring->tax_calculation_enabled) {
             return $invoice;
         }
 
@@ -844,19 +846,19 @@ class RecurringBillingService
 
         foreach ($invoiceItems as $item) {
             $taxCalculation = $this->calculateVoIPTaxes($recurring, $item['amount']);
-            
+
             if ($taxCalculation['total_tax_amount'] > 0) {
                 $totalTaxAmount += $taxCalculation['total_tax_amount'];
                 $allTaxBreakdown[] = [
                     'item_description' => $item['description'],
                     'item_amount' => $item['amount'],
-                    'tax_calculation' => $taxCalculation
+                    'tax_calculation' => $taxCalculation,
                 ];
 
                 // Record exemption usage if any exemptions were applied
-                if (!empty($taxCalculation['exemptions_applied'])) {
+                if (! empty($taxCalculation['exemptions_applied'])) {
                     $this->recordVoIPTaxExemptionUsage(
-                        $taxCalculation['exemptions_applied'], 
+                        $taxCalculation['exemptions_applied'],
                         $invoice->id
                     );
                 }
@@ -869,8 +871,8 @@ class RecurringBillingService
                 'tax_amount' => $totalTaxAmount,
                 'metadata' => array_merge($invoice->metadata ?? [], [
                     'voip_tax_breakdown' => $allTaxBreakdown,
-                    'tax_calculation_date' => now()->toISOString()
-                ])
+                    'tax_calculation_date' => now()->toISOString(),
+                ]),
             ]);
 
             // Recalculate invoice totals
@@ -885,7 +887,7 @@ class RecurringBillingService
      */
     protected function recordVoIPTaxExemptionUsage(array $exemptionsApplied, int $invoiceId): void
     {
-        $voipTaxService = new VoIPTaxService();
+        $voipTaxService = new VoIPTaxService;
         $voipTaxService->setCompanyId(Auth::user()->company_id);
         $voipTaxService->recordExemptionUsage($exemptionsApplied, $invoiceId);
     }
@@ -916,7 +918,7 @@ class RecurringBillingService
     {
         // Try to get service address, fall back to billing address
         $address = $client->service_address ?? $client->address ?? [];
-        
+
         if (is_string($address)) {
             // Parse string address into components
             return $this->parseAddressString($address);
@@ -937,7 +939,7 @@ class RecurringBillingService
         if (count($parts) >= 3) {
             $parsed['street'] = trim($parts[0]);
             $parsed['city'] = trim($parts[1]);
-            
+
             // Try to extract state and zip from last part
             $lastPart = trim($parts[2]);
             if (preg_match('/^(.+)\s+(\d{5}(-\d{4})?)$/', $lastPart, $matches)) {
@@ -977,15 +979,15 @@ class RecurringBillingService
      */
     protected function getEstimatedMinutes(Recurring $recurring, Carbon $billingDate): int
     {
-        if (!in_array($recurring->billing_type, ['usage_based', 'hybrid'])) {
+        if (! in_array($recurring->billing_type, ['usage_based', 'hybrid'])) {
             return 0;
         }
 
         // Get actual usage data for the billing period if available
         $startDate = $this->calculateBillingPeriodStart($recurring, $billingDate);
         $usageSummary = $this->voipUsageService->getUsageSummary(
-            $recurring->client_id, 
-            $startDate, 
+            $recurring->client_id,
+            $startDate,
             $billingDate
         );
 
@@ -1042,7 +1044,7 @@ class RecurringBillingService
             'local_taxes' => 0.0,
             'exemptions_total' => 0.0,
             'by_service_type' => [],
-            'calculations' => []
+            'calculations' => [],
         ];
 
         $recurring = Recurring::whereIn('id', $recurringIds)
@@ -1052,7 +1054,7 @@ class RecurringBillingService
         foreach ($recurring as $record) {
             if ($record->tax_calculation_enabled) {
                 $taxCalculation = $this->calculateVoIPTaxes($record, $record->amount, $calculationDate);
-                
+
                 $summary['total_base_amount'] += $taxCalculation['base_amount'];
                 $summary['total_tax_amount'] += $taxCalculation['total_tax_amount'];
                 $summary['total_final_amount'] += $taxCalculation['final_amount'];
@@ -1070,11 +1072,11 @@ class RecurringBillingService
 
                 // Track by service type
                 $serviceType = $record->service_type;
-                if (!isset($summary['by_service_type'][$serviceType])) {
+                if (! isset($summary['by_service_type'][$serviceType])) {
                     $summary['by_service_type'][$serviceType] = [
                         'base_amount' => 0.0,
                         'tax_amount' => 0.0,
-                        'count' => 0
+                        'count' => 0,
                     ];
                 }
                 $summary['by_service_type'][$serviceType]['base_amount'] += $taxCalculation['base_amount'];
@@ -1084,7 +1086,7 @@ class RecurringBillingService
                 $summary['calculations'][] = array_merge($taxCalculation, [
                     'recurring_id' => $record->id,
                     'client_name' => $record->client->name,
-                    'service_name' => $record->name
+                    'service_name' => $record->name,
                 ]);
             }
         }

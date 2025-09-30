@@ -99,7 +99,7 @@ class AssetSelectorFieldType implements ContractFieldInterface
             $errors[] = 'max_selections must be at least 1';
         }
 
-        if (isset($config['asset_types']) && !is_array($config['asset_types'])) {
+        if (isset($config['asset_types']) && ! is_array($config['asset_types'])) {
             $errors[] = 'asset_types must be an array';
         }
 
@@ -150,24 +150,24 @@ class AssetSelectorFieldType implements ContractFieldInterface
         // Check if assets exist and are accessible
         $companyId = Auth::user()->company_id;
         $query = Asset::where('company_id', $companyId)->whereIn('id', $assetIds);
-        
+
         // Apply client scoping if configured
-        if ($this->config['client_scoped'] && !empty($context['client_id'])) {
+        if ($this->config['client_scoped'] && ! empty($context['client_id'])) {
             $query->where('client_id', $context['client_id']);
         }
 
         // Apply asset type filter
-        if (!empty($this->config['asset_types'])) {
+        if (! empty($this->config['asset_types'])) {
             $query->whereIn('type', $this->config['asset_types']);
         }
 
         // Apply status filter
-        if (!empty($this->config['status_filter'])) {
+        if (! empty($this->config['status_filter'])) {
             $query->whereIn('status', $this->config['status_filter']);
         }
 
         // Apply excluded assets
-        if (!empty($this->config['excluded_assets'])) {
+        if (! empty($this->config['excluded_assets'])) {
             $query->whereNotIn('id', $this->config['excluded_assets']);
         }
 
@@ -176,8 +176,8 @@ class AssetSelectorFieldType implements ContractFieldInterface
 
         // Check for invalid asset IDs
         $invalidIds = array_diff($assetIds, $validAssetIds);
-        if (!empty($invalidIds)) {
-            $errors[] = 'Selected assets are not valid or accessible: ' . implode(', ', $invalidIds);
+        if (! empty($invalidIds)) {
+            $errors[] = 'Selected assets are not valid or accessible: '.implode(', ', $invalidIds);
         }
 
         // Check maximum selections
@@ -186,18 +186,18 @@ class AssetSelectorFieldType implements ContractFieldInterface
         }
 
         // Check required tags
-        if (!empty($this->config['required_tags'])) {
+        if (! empty($this->config['required_tags'])) {
             foreach ($validAssets as $asset) {
                 $assetTags = $asset->tags ?? [];
-                $hasRequiredTags = !empty(array_intersect($this->config['required_tags'], $assetTags));
-                
-                if (!$hasRequiredTags) {
-                    $errors[] = "Asset '{$asset->name}' does not have required tags: " . implode(', ', $this->config['required_tags']);
+                $hasRequiredTags = ! empty(array_intersect($this->config['required_tags'], $assetTags));
+
+                if (! $hasRequiredTags) {
+                    $errors[] = "Asset '{$asset->name}' does not have required tags: ".implode(', ', $this->config['required_tags']);
                 }
             }
         }
 
-        return empty($errors) ? 
+        return empty($errors) ?
             ValidationResult::success(['validated_assets' => $validAssets]) :
             ValidationResult::failure($errors);
     }
@@ -205,79 +205,79 @@ class AssetSelectorFieldType implements ContractFieldInterface
     public function render(array $config, $currentValue = null, array $context = []): string
     {
         $this->initialize($config);
-        
-        $fieldId = $context['field_id'] ?? 'asset_selector_' . uniqid();
+
+        $fieldId = $context['field_id'] ?? 'asset_selector_'.uniqid();
         $fieldName = $context['field_name'] ?? 'asset_ids';
         $multiple = $this->config['multiple'] ? 'multiple' : '';
         $selectedAssets = $this->getSelectedAssets($currentValue, $context);
-        
-        $html = '<div class="asset-selector-container" data-config="' . htmlspecialchars(json_encode($this->config)) . '">';
-        
+
+        $html = '<div class="asset-selector-container" data-config="'.htmlspecialchars(json_encode($this->config)).'">';
+
         if ($this->config['enable_search']) {
             $html .= '<div class="asset-search-container mb-3">';
-            $html .= '<input type="text" class="form-control asset-search-input" placeholder="Search assets..." data-field-id="' . $fieldId . '">';
+            $html .= '<input type="text" class="form-control asset-search-input" placeholder="Search assets..." data-field-id="'.$fieldId.'">';
             $html .= '<div class="asset-search-results"></div>';
             $html .= '</div>';
         }
-        
-        $html .= '<select id="' . $fieldId . '" name="' . $fieldName . '[]" class="form-control asset-selector" ' . $multiple . ' data-client-id="' . ($context['client_id'] ?? '') . '">';
-        
+
+        $html .= '<select id="'.$fieldId.'" name="'.$fieldName.'[]" class="form-control asset-selector" '.$multiple.' data-client-id="'.($context['client_id'] ?? '').'">';
+
         // Add selected assets as options
         foreach ($selectedAssets as $asset) {
-            $details = $this->config['show_asset_details'] ? 
+            $details = $this->config['show_asset_details'] ?
                 " ({$asset->type} - {$asset->status})" : '';
-            $html .= '<option value="' . $asset->id . '" selected>' . 
-                     htmlspecialchars($asset->name . $details) . '</option>';
+            $html .= '<option value="'.$asset->id.'" selected>'.
+                     htmlspecialchars($asset->name.$details).'</option>';
         }
-        
+
         $html .= '</select>';
-        
+
         if ($this->config['max_selections']) {
-            $html .= '<small class="form-text text-muted">Maximum ' . $this->config['max_selections'] . ' assets can be selected</small>';
+            $html .= '<small class="form-text text-muted">Maximum '.$this->config['max_selections'].' assets can be selected</small>';
         }
-        
+
         $html .= '</div>';
-        
+
         return $html;
     }
 
     public function renderDisplay($value, array $config, array $context = []): string
     {
         $this->initialize($config);
-        
+
         if (empty($value)) {
             return '<span class="text-muted">No assets selected</span>';
         }
-        
+
         $selectedAssets = $this->getSelectedAssets($value, $context);
-        
+
         if ($selectedAssets->isEmpty()) {
             return '<span class="text-muted">No assets found</span>';
         }
-        
+
         $html = '<div class="selected-assets">';
-        
+
         foreach ($selectedAssets as $asset) {
-            $statusBadge = '<span class="badge bg-' . $this->getStatusColor($asset->status) . '">' . 
-                          ucfirst($asset->status) . '</span>';
-            
+            $statusBadge = '<span class="badge bg-'.$this->getStatusColor($asset->status).'">'.
+                          ucfirst($asset->status).'</span>';
+
             $html .= '<div class="asset-display-item d-flex justify-content-between align-items-center mb-2 p-2 border rounded">';
             $html .= '<div>';
-            $html .= '<strong>' . htmlspecialchars($asset->name) . '</strong>';
-            
+            $html .= '<strong>'.htmlspecialchars($asset->name).'</strong>';
+
             if ($this->config['show_asset_details']) {
-                $html .= '<br><small class="text-muted">' . 
-                        htmlspecialchars($asset->type) . ' • ' . 
-                        htmlspecialchars($asset->serial_number ?? 'N/A') . '</small>';
+                $html .= '<br><small class="text-muted">'.
+                        htmlspecialchars($asset->type).' • '.
+                        htmlspecialchars($asset->serial_number ?? 'N/A').'</small>';
             }
-            
+
             $html .= '</div>';
-            $html .= '<div>' . $statusBadge . '</div>';
+            $html .= '<div>'.$statusBadge.'</div>';
             $html .= '</div>';
         }
-        
+
         $html .= '</div>';
-        
+
         return $html;
     }
 
@@ -286,13 +286,13 @@ class AssetSelectorFieldType implements ContractFieldInterface
         if (empty($inputValue)) {
             return [];
         }
-        
+
         // Ensure array format
         $assetIds = is_array($inputValue) ? $inputValue : [$inputValue];
-        
+
         // Filter out empty values and convert to integers
         $assetIds = array_filter(array_map('intval', $assetIds));
-        
+
         return $config['multiple'] ?? true ? $assetIds : ($assetIds[0] ?? null);
     }
 
@@ -301,7 +301,7 @@ class AssetSelectorFieldType implements ContractFieldInterface
         if (empty($value)) {
             return [];
         }
-        
+
         return is_array($value) ? $value : [$value];
     }
 
@@ -412,26 +412,26 @@ class AssetSelectorFieldType implements ContractFieldInterface
         if (empty($value)) {
             return $query;
         }
-        
+
         $assetIds = is_array($value) ? $value : [$value];
-        
+
         switch ($operator) {
             case 'in':
                 return $query->whereHas('supportedAssets', function ($q) use ($assetIds) {
                     $q->whereIn('assets.id', $assetIds);
                 });
-                
+
             case 'not_in':
                 return $query->whereDoesntHave('supportedAssets', function ($q) use ($assetIds) {
                     $q->whereIn('assets.id', $assetIds);
                 });
-                
+
             case 'count_gte':
-                return $query->has('supportedAssets', '>=', (int)$value);
-                
+                return $query->has('supportedAssets', '>=', (int) $value);
+
             case 'count_lte':
-                return $query->has('supportedAssets', '<=', (int)$value);
-                
+                return $query->has('supportedAssets', '<=', (int) $value);
+
             default:
                 return $query;
         }
@@ -473,7 +473,7 @@ class AssetSelectorFieldType implements ContractFieldInterface
                 if (typeof TomSelect !== "undefined") {
                     new TomSelect(selector, {
                         plugins: ["remove_button"],
-                        maxItems: ' . ($config['max_selections'] ?? 'null') . ',
+                        maxItems: '.($config['max_selections'] ?? 'null').',
                         create: false,
                         load: function(query, callback) {
                             if (query.length < 2) return callback();
@@ -557,11 +557,11 @@ class AssetSelectorFieldType implements ContractFieldInterface
     public function getFieldDependencies(array $config): array
     {
         $dependencies = [];
-        
+
         if ($config['client_scoped'] ?? true) {
             $dependencies[] = 'client_id';
         }
-        
+
         return $dependencies;
     }
 
@@ -569,9 +569,9 @@ class AssetSelectorFieldType implements ContractFieldInterface
     {
         // Only display if client is selected and user has permission to view assets
         if ($config['client_scoped'] ?? true) {
-            return !empty($formData['client_id']);
+            return ! empty($formData['client_id']);
         }
-        
+
         return Auth::user()->can('view-assets');
     }
 
@@ -580,9 +580,9 @@ class AssetSelectorFieldType implements ContractFieldInterface
         if (empty($value)) {
             return [];
         }
-        
+
         $assets = $this->getSelectedAssets($value);
-        
+
         return $assets->map(function ($asset) {
             return [
                 'id' => $asset->id,
@@ -599,34 +599,34 @@ class AssetSelectorFieldType implements ContractFieldInterface
         if (empty($importValue)) {
             return [];
         }
-        
+
         // If importing asset IDs directly
         if (is_array($importValue) && is_numeric($importValue[0] ?? null)) {
             return array_map('intval', $importValue);
         }
-        
+
         // If importing asset data, try to find by name or serial number
         $assetIds = [];
-        
+
         foreach ($importValue as $assetData) {
             $query = Asset::query();
-            
-            if (!empty($assetData['id'])) {
+
+            if (! empty($assetData['id'])) {
                 $query->where('id', $assetData['id']);
-            } elseif (!empty($assetData['name'])) {
+            } elseif (! empty($assetData['name'])) {
                 $query->where('name', $assetData['name']);
-            } elseif (!empty($assetData['serial_number'])) {
+            } elseif (! empty($assetData['serial_number'])) {
                 $query->where('serial_number', $assetData['serial_number']);
             } else {
                 continue;
             }
-            
+
             $asset = $query->first();
             if ($asset) {
                 $assetIds[] = $asset->id;
             }
         }
-        
+
         return $assetIds;
     }
 
@@ -635,10 +635,10 @@ class AssetSelectorFieldType implements ContractFieldInterface
         if (empty($value)) {
             return [];
         }
-        
+
         $assets = $this->getSelectedAssets($value);
         $assetsByType = $assets->groupBy('type');
-        
+
         return [
             'total_assets' => $assets->count(),
             'asset_breakdown' => $assetsByType->map->count()->toArray(),
@@ -654,13 +654,13 @@ class AssetSelectorFieldType implements ContractFieldInterface
         if (empty($value)) {
             return collect();
         }
-        
+
         $assetIds = is_array($value) ? $value : [$value];
         $companyId = Auth::user()->company_id;
-        
+
         return Asset::where('company_id', $companyId)
-                   ->whereIn('id', $assetIds)
-                   ->get();
+            ->whereIn('id', $assetIds)
+            ->get();
     }
 
     /**
@@ -705,7 +705,7 @@ class AssetSelectorFieldType implements ContractFieldInterface
             'retired' => 'secondary',
             'inventory' => 'info',
         ];
-        
+
         return $colors[$status] ?? 'secondary';
     }
 }

@@ -2,12 +2,10 @@
 
 namespace App\Domains\Client\Controllers;
 
-use App\Http\Controllers\Controller;
-
 use App\Domains\Client\Requests\StoreClientRequest;
 use App\Domains\Client\Requests\UpdateClientRequest;
-use App\Domains\Client\Services\ClientService;
 use App\Domains\Client\Services\ClientMetricsService;
+use App\Domains\Client\Services\ClientService;
 use App\Domains\Core\Controllers\BaseController;
 use App\Imports\ClientsImport;
 use App\Models\Asset;
@@ -23,6 +21,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ClientController extends BaseController
 {
     protected $clientService;
+
     protected $metricsService;
 
     public function __construct(ClientService $clientService, ClientMetricsService $metricsService)
@@ -72,9 +71,9 @@ class ClientController extends BaseController
     public function dynamicIndex(Request $request)
     {
         $user = Auth::user();
-        
+
         // Redirect to login if not authenticated
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -103,9 +102,9 @@ class ClientController extends BaseController
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // Redirect to login if not authenticated
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmailTracking extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -62,13 +62,18 @@ class EmailTracking extends Model
 
     // Email status constants
     const STATUS_SENT = 'sent';
+
     const STATUS_DELIVERED = 'delivered';
+
     const STATUS_BOUNCED = 'bounced';
+
     const STATUS_FAILED = 'failed';
 
     // Email type constants
     const TYPE_CAMPAIGN = 'campaign';
+
     const TYPE_TRANSACTIONAL = 'transactional';
+
     const TYPE_MANUAL = 'manual';
 
     /**
@@ -116,7 +121,7 @@ class EmailTracking extends Model
      */
     public function wasOpened(): bool
     {
-        return !is_null($this->first_opened_at);
+        return ! is_null($this->first_opened_at);
     }
 
     /**
@@ -124,7 +129,7 @@ class EmailTracking extends Model
      */
     public function wasClicked(): bool
     {
-        return !is_null($this->first_clicked_at);
+        return ! is_null($this->first_clicked_at);
     }
 
     /**
@@ -132,7 +137,7 @@ class EmailTracking extends Model
      */
     public function wasReplied(): bool
     {
-        return !is_null($this->replied_at);
+        return ! is_null($this->replied_at);
     }
 
     /**
@@ -140,7 +145,7 @@ class EmailTracking extends Model
      */
     public function wasUnsubscribed(): bool
     {
-        return !is_null($this->unsubscribed_at);
+        return ! is_null($this->unsubscribed_at);
     }
 
     /**
@@ -165,24 +170,24 @@ class EmailTracking extends Model
     public function getEngagementScoreAttribute(): int
     {
         $score = 0;
-        
+
         if ($this->wasOpened()) {
             $score += 30;
         }
-        
+
         if ($this->wasClicked()) {
             $score += 50;
         }
-        
+
         if ($this->wasReplied()) {
             $score += 100;
         }
-        
+
         // Bonus for multiple opens/clicks
         if ($this->open_count > 1) {
             $score += min(($this->open_count - 1) * 5, 20);
         }
-        
+
         if ($this->click_count > 1) {
             $score += min(($this->click_count - 1) * 10, 30);
         }
@@ -195,7 +200,7 @@ class EmailTracking extends Model
      */
     public function getTimeToOpenAttribute(): ?int
     {
-        if (!$this->first_opened_at || !$this->sent_at) {
+        if (! $this->first_opened_at || ! $this->sent_at) {
             return null;
         }
 
@@ -207,7 +212,7 @@ class EmailTracking extends Model
      */
     public function getTimeToClickAttribute(): ?int
     {
-        if (!$this->first_clicked_at || !$this->sent_at) {
+        if (! $this->first_clicked_at || ! $this->sent_at) {
             return null;
         }
 
@@ -343,7 +348,7 @@ class EmailTracking extends Model
     /**
      * Mark as bounced.
      */
-    public function markAsBounced(string $reason = null): void
+    public function markAsBounced(?string $reason = null): void
     {
         $this->update([
             'status' => self::STATUS_BOUNCED,
@@ -355,7 +360,7 @@ class EmailTracking extends Model
     /**
      * Record email open.
      */
-    public function recordOpen(string $userAgent = null, string $ipAddress = null): void
+    public function recordOpen(?string $userAgent = null, ?string $ipAddress = null): void
     {
         $updateData = [
             'open_count' => $this->open_count + 1,
@@ -370,7 +375,7 @@ class EmailTracking extends Model
             $updateData['ip_address'] = $ipAddress;
         }
 
-        if (!$this->first_opened_at) {
+        if (! $this->first_opened_at) {
             $updateData['first_opened_at'] = now();
         }
 
@@ -380,7 +385,7 @@ class EmailTracking extends Model
     /**
      * Record email click.
      */
-    public function recordClick(string $userAgent = null, string $ipAddress = null): void
+    public function recordClick(?string $userAgent = null, ?string $ipAddress = null): void
     {
         $updateData = [
             'click_count' => $this->click_count + 1,
@@ -395,7 +400,7 @@ class EmailTracking extends Model
             $updateData['ip_address'] = $ipAddress;
         }
 
-        if (!$this->first_clicked_at) {
+        if (! $this->first_clicked_at) {
             $updateData['first_clicked_at'] = now();
         }
 

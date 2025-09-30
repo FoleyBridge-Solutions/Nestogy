@@ -3,20 +3,20 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
 
 /**
  * Client Document Model
- * 
+ *
  * Manages documents and files shared with clients through the portal.
  * Supports versioning, security controls, and usage tracking.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -135,7 +135,7 @@ use Carbon\Carbon;
  */
 class ClientDocument extends Model
 {
-    use HasFactory, BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -348,43 +348,61 @@ class ClientDocument extends Model
      * Document type constants
      */
     const TYPE_INVOICE = 'invoice';
+
     const TYPE_CONTRACT = 'contract';
+
     const TYPE_MANUAL = 'manual';
+
     const TYPE_CERTIFICATE = 'certificate';
+
     const TYPE_REPORT = 'report';
+
     const TYPE_RECEIPT = 'receipt';
+
     const TYPE_STATEMENT = 'statement';
 
     /**
      * Category constants
      */
     const CATEGORY_BILLING = 'billing';
+
     const CATEGORY_TECHNICAL = 'technical';
+
     const CATEGORY_LEGAL = 'legal';
+
     const CATEGORY_MARKETING = 'marketing';
+
     const CATEGORY_SUPPORT = 'support';
 
     /**
      * Visibility constants
      */
     const VISIBILITY_PRIVATE = 'private';
+
     const VISIBILITY_SHARED = 'shared';
+
     const VISIBILITY_PUBLIC = 'public';
 
     /**
      * Processing status constants
      */
     const PROCESSING_READY = 'ready';
+
     const PROCESSING_PROCESSING = 'processing';
+
     const PROCESSING_FAILED = 'failed';
+
     const PROCESSING_CORRUPTED = 'corrupted';
 
     /**
      * Status constants
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_ARCHIVED = 'archived';
+
     const STATUS_DELETED = 'deleted';
+
     const STATUS_EXPIRED = 'expired';
 
     /**
@@ -457,7 +475,7 @@ class ClientDocument extends Model
     public function currentVersion(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_document_id')
-                    ->where('is_current_version', true);
+            ->where('is_current_version', true);
     }
 
     /**
@@ -466,7 +484,7 @@ class ClientDocument extends Model
     public function allVersions(): HasMany
     {
         return $this->hasMany(self::class, 'parent_document_id')
-                    ->orderBy('version', 'desc');
+            ->orderBy('version', 'desc');
     }
 
     /**
@@ -514,7 +532,7 @@ class ClientDocument extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === self::STATUS_ACTIVE && !$this->isExpired();
+        return $this->status === self::STATUS_ACTIVE && ! $this->isExpired();
     }
 
     /**
@@ -546,7 +564,7 @@ class ClientDocument extends Model
      */
     public function requiresApproval(): bool
     {
-        return $this->requires_approval === true && !$this->approved_at;
+        return $this->requires_approval === true && ! $this->approved_at;
     }
 
     /**
@@ -562,7 +580,7 @@ class ClientDocument extends Model
      */
     public function requiresAcknowledgment(): bool
     {
-        return $this->requires_acknowledgment === true && !$this->acknowledged_at;
+        return $this->requires_acknowledgment === true && ! $this->acknowledged_at;
     }
 
     /**
@@ -696,7 +714,7 @@ class ClientDocument extends Model
             'last_viewed_at' => Carbon::now(),
         ];
 
-        if (!$this->first_viewed_at) {
+        if (! $this->first_viewed_at) {
             $updates['first_viewed_at'] = Carbon::now();
         }
 
@@ -713,7 +731,7 @@ class ClientDocument extends Model
             'last_downloaded_at' => Carbon::now(),
         ];
 
-        if (!$this->first_downloaded_at) {
+        if (! $this->first_downloaded_at) {
             $updates['first_downloaded_at'] = Carbon::now();
         }
 
@@ -743,7 +761,7 @@ class ClientDocument extends Model
     /**
      * Approve the document.
      */
-    public function approve(int $approvedBy, string $notes = null): bool
+    public function approve(int $approvedBy, ?string $notes = null): bool
     {
         return $this->update([
             'approved_by' => $approvedBy,
@@ -808,6 +826,7 @@ class ClientDocument extends Model
     {
         if (Storage::disk($this->storage_disk)->exists($this->storage_path)) {
             $fileContent = Storage::disk($this->storage_disk)->get($this->storage_path);
+
             return hash('sha256', $fileContent);
         }
 
@@ -820,6 +839,7 @@ class ClientDocument extends Model
     public function verifyIntegrity(): bool
     {
         $currentHash = $this->generateFileHash();
+
         return $currentHash === $this->file_hash;
     }
 
@@ -867,8 +887,8 @@ class ClientDocument extends Model
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $power = $bytes > 0 ? floor(log($bytes, 1024)) : 0;
-        
-        return round($bytes / pow(1024, $power), 2) . ' ' . $units[$power];
+
+        return round($bytes / pow(1024, $power), 2).' '.$units[$power];
     }
 
     /**
@@ -877,10 +897,10 @@ class ClientDocument extends Model
     public function scopeActive($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
-                    ->where(function ($q) {
-                        $q->whereNull('expiry_date')
-                          ->orWhere('expiry_date', '>', Carbon::now());
-                    });
+            ->where(function ($q) {
+                $q->whereNull('expiry_date')
+                    ->orWhere('expiry_date', '>', Carbon::now());
+            });
     }
 
     /**
@@ -929,7 +949,7 @@ class ClientDocument extends Model
     public function scopeRequiringApproval($query)
     {
         return $query->where('requires_approval', true)
-                    ->whereNull('approved_at');
+            ->whereNull('approved_at');
     }
 
     /**
@@ -940,7 +960,7 @@ class ClientDocument extends Model
         parent::boot();
 
         static::creating(function ($document) {
-            if (!$document->version) {
+            if (! $document->version) {
                 $document->version = 1;
             }
 
@@ -948,7 +968,7 @@ class ClientDocument extends Model
                 $document->is_current_version = true;
             }
 
-            if (!$document->file_hash && $document->fileExists()) {
+            if (! $document->file_hash && $document->fileExists()) {
                 $document->file_hash = $document->generateFileHash();
             }
         });

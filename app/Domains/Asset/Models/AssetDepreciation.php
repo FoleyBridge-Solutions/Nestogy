@@ -2,16 +2,15 @@
 
 namespace App\Domains\Asset\Models;
 
+use App\Models\Asset;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Asset;
-use Carbon\Carbon;
 
 class AssetDepreciation extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'asset_depreciations';
 
@@ -197,7 +196,7 @@ class AssetDepreciation extends Model
      */
     private function calculateDecliningBalanceDepreciation()
     {
-        if (!$this->depreciation_rate || $this->depreciation_rate <= 0) {
+        if (! $this->depreciation_rate || $this->depreciation_rate <= 0) {
             return 0;
         }
 
@@ -214,6 +213,7 @@ class AssetDepreciation extends Model
         }
 
         $rate = (2 / $this->useful_life_years) * 100;
+
         return $this->current_book_value * ($rate / 100);
     }
 
@@ -238,11 +238,12 @@ class AssetDepreciation extends Model
      */
     private function calculateUnitsOfProductionDepreciation()
     {
-        if (!$this->total_units_expected || $this->total_units_expected <= 0) {
+        if (! $this->total_units_expected || $this->total_units_expected <= 0) {
             return 0;
         }
 
         $unitsThisYear = $this->units_produced ?? 0;
+
         return $this->depreciable_amount * ($unitsThisYear / $this->total_units_expected);
     }
 
@@ -252,7 +253,7 @@ class AssetDepreciation extends Model
     public function updateAccumulatedDepreciation()
     {
         $totalDepreciation = $this->annual_depreciation * $this->years_since_start;
-        
+
         // Don't depreciate below salvage value
         $maxDepreciation = $this->depreciable_amount;
         $this->accumulated_depreciation = min($totalDepreciation, $maxDepreciation);
@@ -304,23 +305,25 @@ class AssetDepreciation extends Model
         switch ($this->method) {
             case 'straight_line':
                 return $this->depreciable_amount / $this->useful_life_years;
-                
+
             case 'declining_balance':
                 return $currentBookValue * ($this->depreciation_rate / 100);
-                
+
             case 'double_declining':
                 $rate = 2 / $this->useful_life_years;
+
                 return $currentBookValue * $rate;
-                
+
             case 'sum_of_years':
                 $sumOfYears = ($this->useful_life_years * ($this->useful_life_years + 1)) / 2;
                 $remainingYears = $this->useful_life_years - $year + 1;
+
                 return $this->depreciable_amount * ($remainingYears / $sumOfYears);
-                
+
             case 'units_of_production':
                 // This would need to be calculated based on actual units produced each year
                 return $this->annual_depreciation;
-                
+
             default:
                 return 0;
         }
@@ -331,7 +334,7 @@ class AssetDepreciation extends Model
      */
     public function getFormattedOriginalCostAttribute()
     {
-        return '$' . number_format($this->original_cost, 2);
+        return '$'.number_format($this->original_cost, 2);
     }
 
     /**
@@ -339,7 +342,7 @@ class AssetDepreciation extends Model
      */
     public function getFormattedSalvageValueAttribute()
     {
-        return $this->salvage_value ? '$' . number_format($this->salvage_value, 2) : '$0.00';
+        return $this->salvage_value ? '$'.number_format($this->salvage_value, 2) : '$0.00';
     }
 
     /**
@@ -347,7 +350,7 @@ class AssetDepreciation extends Model
      */
     public function getFormattedAnnualDepreciationAttribute()
     {
-        return '$' . number_format($this->annual_depreciation, 2);
+        return '$'.number_format($this->annual_depreciation, 2);
     }
 
     /**
@@ -355,7 +358,7 @@ class AssetDepreciation extends Model
      */
     public function getFormattedAccumulatedDepreciationAttribute()
     {
-        return '$' . number_format($this->accumulated_depreciation, 2);
+        return '$'.number_format($this->accumulated_depreciation, 2);
     }
 
     /**
@@ -363,7 +366,7 @@ class AssetDepreciation extends Model
      */
     public function getFormattedCurrentBookValueAttribute()
     {
-        return '$' . number_format($this->current_book_value, 2);
+        return '$'.number_format($this->current_book_value, 2);
     }
 
     /**

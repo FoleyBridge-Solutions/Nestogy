@@ -25,7 +25,7 @@ class IntegrationsSettingsRequest extends FormRequest
             'module_enable_accounting' => 'boolean',
             'module_enable_ticketing' => 'boolean',
             'enable_alert_domain_expire' => 'boolean',
-            
+
             // Automation Settings
             'enable_cron' => 'boolean',
             'recurring_auto_send_invoice' => 'boolean',
@@ -62,7 +62,7 @@ class IntegrationsSettingsRequest extends FormRequest
             'send_invoice_reminders' => $this->has('send_invoice_reminders'),
             'ticket_autoclose' => $this->has('ticket_autoclose'),
         ]);
-        
+
         // Set default autoclose hours if ticket_autoclose is enabled but hours not provided
         if ($this->ticket_autoclose && empty($this->ticket_autoclose_hours)) {
             $this->merge(['ticket_autoclose_hours' => 72]);

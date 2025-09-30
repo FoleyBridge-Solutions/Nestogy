@@ -16,6 +16,8 @@ Follow PSR-12 with four-space indentation for PHP; run `./vendor/bin/pint` befor
 ## Testing Guidelines
 All automated tests live in `tests/`: domain behaviors in `Feature`, pure logic in `Unit`, and regression checks in `Performance`. Name PHPUnit classes with the `<Thing>Test` suffix that mirrors the subject namespace. Use `php artisan test --filter=Financial` for focused runs, and the helper script `tests/run-financial-accuracy-tests.php` for finance regressions. Favor factories over hand-built fixtures.
 
+**All new code must achieve at least 75% test coverage.** We use [pvoc](https://github.com/akazwz/pvoc) to measure coverage. Run `pvoc` to generate a full coverage report before submitting pull requests.
+
 ## Commit & Pull Request Guidelines
 Commits are imperative and scoped (e.g., "Add varying company sizes to dev seeder"); keep subjects under 72 characters and follow with contextual body bullets when needed. Reference the affected domain in either the subject or first body line so reviewers can route expertise quickly. Pull requests should link tracking issues, note schema changes and seed impacts, include screenshots for UI tweaks, and list any queued background jobs or config toggles required post-deploy.
 

@@ -39,13 +39,6 @@ class QuotePermissionException extends FinancialException
 
     /**
      * Create a new quote permission exception
-     *
-     * @param string $message
-     * @param int|null $quoteId
-     * @param int|null $userId
-     * @param string|null $action
-     * @param int $code
-     * @param Exception|null $previous
      */
     public function __construct(
         string $message = 'Insufficient permissions for quote operation',
@@ -53,7 +46,7 @@ class QuotePermissionException extends FinancialException
         ?int $userId = null,
         ?string $action = null,
         int $code = 403,
-        Exception $previous = null
+        ?Exception $previous = null
     ) {
         $this->quoteId = $quoteId;
         $this->userId = $userId;
@@ -63,8 +56,6 @@ class QuotePermissionException extends FinancialException
 
     /**
      * Get the quote ID
-     *
-     * @return int|null
      */
     public function getQuoteId(): ?int
     {
@@ -73,8 +64,6 @@ class QuotePermissionException extends FinancialException
 
     /**
      * Get the user ID
-     *
-     * @return int|null
      */
     public function getUserId(): ?int
     {
@@ -83,8 +72,6 @@ class QuotePermissionException extends FinancialException
 
     /**
      * Get the attempted action
-     *
-     * @return string|null
      */
     public function getAction(): ?string
     {
@@ -94,8 +81,6 @@ class QuotePermissionException extends FinancialException
     /**
      * Create exception for viewing quote
      *
-     * @param int $quoteId
-     * @param int|null $userId
      * @return static
      */
     public static function cannotView(int $quoteId, ?int $userId = null): self
@@ -111,8 +96,6 @@ class QuotePermissionException extends FinancialException
     /**
      * Create exception for editing quote
      *
-     * @param int $quoteId
-     * @param int|null $userId
      * @return static
      */
     public static function cannotEdit(int $quoteId, ?int $userId = null): self
@@ -128,8 +111,6 @@ class QuotePermissionException extends FinancialException
     /**
      * Create exception for deleting quote
      *
-     * @param int $quoteId
-     * @param int|null $userId
      * @return static
      */
     public static function cannotDelete(int $quoteId, ?int $userId = null): self
@@ -145,8 +126,6 @@ class QuotePermissionException extends FinancialException
     /**
      * Create exception for company mismatch
      *
-     * @param int $quoteId
-     * @param int|null $userId
      * @return static
      */
     public static function companyMismatch(int $quoteId, ?int $userId = null): self
@@ -162,10 +141,6 @@ class QuotePermissionException extends FinancialException
     /**
      * Create exception for status-based restriction
      *
-     * @param int $quoteId
-     * @param string $status
-     * @param string $action
-     * @param int|null $userId
      * @return static
      */
     public static function statusRestriction(int $quoteId, string $status, string $action, ?int $userId = null): self
@@ -180,8 +155,6 @@ class QuotePermissionException extends FinancialException
 
     /**
      * Convert to array format for API responses
-     *
-     * @return array
      */
     public function toArray(): array
     {
@@ -192,7 +165,7 @@ class QuotePermissionException extends FinancialException
             'action' => $this->action,
             'type' => $this->getErrorType(),
             'context' => $this->getContext(),
-            'code' => $this->getCode()
+            'code' => $this->getCode(),
         ];
     }
 }

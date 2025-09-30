@@ -28,7 +28,7 @@ return new class extends Migration
             $table->text('approval_notes')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes
             $table->index(['contract_id', 'amendment_number']);
             $table->index(['company_id', 'status']);

@@ -48,7 +48,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'expiry_date']);
             $table->index(['company_id', 'status']);
@@ -65,7 +65,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'status']);
         });
@@ -83,7 +83,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->json('dns_records')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'expiry_date']);
             $table->index(['company_id', 'domain']);
@@ -101,7 +101,7 @@ return new class extends Migration
             $table->enum('type', ['maintenance', 'meeting', 'project', 'other'])->default('other');
             $table->json('attendees')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'start_time']);
             $table->index(['company_id', 'type']);
@@ -121,7 +121,7 @@ return new class extends Migration
             $table->json('line_items');
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'next_invoice_date']);
             $table->index(['company_id', 'status']);
@@ -142,7 +142,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->text('terms')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'quote_date']);
             $table->index(['company_id', 'status']);
@@ -161,7 +161,7 @@ return new class extends Migration
             $table->enum('status', ['planned', 'in_progress', 'completed', 'cancelled'])->default('planned');
             $table->json('expenses')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'start_time']);
             $table->index(['company_id', 'status']);
@@ -176,7 +176,7 @@ return new class extends Migration
             $table->string('color', 7)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'is_active']);
             $table->unique(['company_id', 'name']);
         });
@@ -195,7 +195,7 @@ return new class extends Migration
             $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'expense_date']);
             $table->index(['company_id', 'category_id']);
             $table->index(['company_id', 'user_id']);
@@ -208,18 +208,18 @@ return new class extends Migration
             $table->unsignedBigInteger('client_id');
             $table->unsignedBigInteger('invoice_id')->nullable();
             $table->unsignedBigInteger('processed_by')->nullable();
-            
+
             // Payment details
             $table->string('payment_method', 50);
             $table->string('payment_reference')->nullable();
             $table->decimal('amount', 10, 2);
             $table->string('currency', 3)->default('USD');
-            
+
             // Gateway information
             $table->string('gateway', 50)->default('manual');
             $table->string('gateway_transaction_id')->nullable();
             $table->decimal('gateway_fee', 8, 2)->nullable();
-            
+
             // Payment status and dates
             $table->enum('status', [
                 'pending',
@@ -229,13 +229,13 @@ return new class extends Migration
                 'cancelled',
                 'refunded',
                 'partial_refund',
-                'chargeback'
+                'chargeback',
             ])->default('pending');
-            
+
             $table->timestamp('payment_date');
             $table->text('notes')->nullable();
             $table->json('metadata')->nullable();
-            
+
             // Refund and chargeback tracking
             $table->decimal('refund_amount', 10, 2)->nullable();
             $table->text('refund_reason')->nullable();
@@ -243,7 +243,7 @@ return new class extends Migration
             $table->decimal('chargeback_amount', 10, 2)->nullable();
             $table->text('chargeback_reason')->nullable();
             $table->timestamp('chargeback_date')->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
 
@@ -268,7 +268,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->timestamps();
             $table->timestamp('archived_at')->nullable();
-            
+
             $table->unique(['company_id', 'name']);
             $table->index(['company_id', 'name']);
             $table->index('type');
@@ -281,7 +281,7 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
             $table->foreignId('tag_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            
+
             $table->unique(['client_id', 'tag_id']);
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'tag_id']);
@@ -302,7 +302,7 @@ return new class extends Migration
                 'equipment',
                 'maintenance',
                 'professional',
-                'managed'
+                'managed',
             ]);
             $table->json('template_items')->nullable(); // Predefined line items
             $table->json('service_config')->nullable(); // Service-specific configuration

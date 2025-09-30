@@ -2,55 +2,67 @@
 
 namespace App\Livewire\Admin\Contract;
 
+use App\Models\ContractClause;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\ContractClause;
 
 class ClausesLibrary extends Component
 {
     use WithPagination;
-    
+
     public $search = '';
+
     public $categoryFilter = '';
+
     public $typeFilter = '';
+
     public $reviewFilter = '';
+
     public $requiredOnly = false;
+
     public $showModal = false;
+
     public $editingClause = null;
-    
+
     // Form fields
     public $title = '';
+
     public $content = '';
+
     public $category = '';
+
     public $type = 'standard';
+
     public $is_required = false;
+
     public $review_status = 'pending';
+
     public $tags = [];
-    
+
     protected $rules = [
         'title' => 'required|min:3',
         'content' => 'required|min:10',
         'category' => 'required',
         'type' => 'required|in:standard,legal,compliance,custom',
     ];
-    
+
     protected $queryString = [
         'search' => ['except' => ''],
         'categoryFilter' => ['except' => ''],
         'typeFilter' => ['except' => ''],
         'reviewFilter' => ['except' => ''],
     ];
-    
+
     public function mount()
     {
         // Initialize
     }
-    
+
     public function updatedSearch()
     {
         $this->resetPage();
     }
-    
+
     public function createMSPClauses()
     {
         $mspClauses = [
@@ -60,21 +72,21 @@ class ClausesLibrary extends Component
             ['title' => 'Remote Monitoring Terms', 'category' => 'technical', 'type' => 'standard'],
             ['title' => 'Backup and Recovery', 'category' => 'technical', 'type' => 'standard'],
         ];
-        
+
         foreach ($mspClauses as $clause) {
             ContractClause::create([
                 'title' => $clause['title'],
-                'content' => 'Standard ' . $clause['title'] . ' clause content.',
+                'content' => 'Standard '.$clause['title'].' clause content.',
                 'category' => $clause['category'],
                 'type' => $clause['type'],
                 'review_status' => 'approved',
                 'is_required' => false,
             ]);
         }
-        
+
         session()->flash('success', 'MSP clauses created successfully.');
     }
-    
+
     public function createLegalClauses()
     {
         $legalClauses = [
@@ -84,21 +96,21 @@ class ClausesLibrary extends Component
             ['title' => 'Force Majeure', 'category' => 'legal', 'type' => 'legal'],
             ['title' => 'Governing Law', 'category' => 'legal', 'type' => 'legal'],
         ];
-        
+
         foreach ($legalClauses as $clause) {
             ContractClause::create([
                 'title' => $clause['title'],
-                'content' => 'Standard ' . $clause['title'] . ' legal provision.',
+                'content' => 'Standard '.$clause['title'].' legal provision.',
                 'category' => $clause['category'],
                 'type' => $clause['type'],
                 'review_status' => 'approved',
                 'is_required' => true,
             ]);
         }
-        
+
         session()->flash('success', 'Legal boilerplate clauses created successfully.');
     }
-    
+
     public function createComplianceClauses()
     {
         $complianceClauses = [
@@ -107,31 +119,31 @@ class ClausesLibrary extends Component
             ['title' => 'PCI DSS Standards', 'category' => 'compliance', 'type' => 'compliance'],
             ['title' => 'Data Protection', 'category' => 'compliance', 'type' => 'compliance'],
         ];
-        
+
         foreach ($complianceClauses as $clause) {
             ContractClause::create([
                 'title' => $clause['title'],
-                'content' => 'Standard ' . $clause['title'] . ' compliance requirements.',
+                'content' => 'Standard '.$clause['title'].' compliance requirements.',
                 'category' => $clause['category'],
                 'type' => $clause['type'],
                 'review_status' => 'approved',
                 'is_required' => true,
             ]);
         }
-        
+
         session()->flash('success', 'Compliance clauses created successfully.');
     }
-    
+
     public function importStandardLibrary()
     {
         // Import a comprehensive standard library
         $this->createMSPClauses();
         $this->createLegalClauses();
         $this->createComplianceClauses();
-        
+
         session()->flash('success', 'Standard library imported successfully.');
     }
-    
+
     public function openModal($clauseId = null)
     {
         if ($clauseId) {
@@ -146,16 +158,16 @@ class ClausesLibrary extends Component
         } else {
             $this->resetForm();
         }
-        
+
         $this->showModal = true;
     }
-    
+
     public function closeModal()
     {
         $this->showModal = false;
         $this->resetForm();
     }
-    
+
     public function resetForm()
     {
         $this->editingClause = null;
@@ -167,11 +179,11 @@ class ClausesLibrary extends Component
         $this->review_status = 'pending';
         $this->tags = [];
     }
-    
+
     public function save()
     {
         $this->validate();
-        
+
         $data = [
             'title' => $this->title,
             'content' => $this->content,
@@ -181,7 +193,7 @@ class ClausesLibrary extends Component
             'review_status' => $this->review_status,
             'tags' => $this->tags,
         ];
-        
+
         if ($this->editingClause) {
             $this->editingClause->update($data);
             session()->flash('success', 'Clause updated successfully.');
@@ -189,10 +201,10 @@ class ClausesLibrary extends Component
             ContractClause::create($data);
             session()->flash('success', 'Clause created successfully.');
         }
-        
+
         $this->closeModal();
     }
-    
+
     public function deleteClause($clauseId)
     {
         $clause = ContractClause::find($clauseId);
@@ -201,7 +213,7 @@ class ClausesLibrary extends Component
             session()->flash('success', 'Clause deleted successfully.');
         }
     }
-    
+
     public function toggleApproval($clauseId)
     {
         $clause = ContractClause::find($clauseId);
@@ -210,7 +222,7 @@ class ClausesLibrary extends Component
             $clause->save();
         }
     }
-    
+
     public function getCategories()
     {
         return [
@@ -222,27 +234,27 @@ class ClausesLibrary extends Component
             'termination' => ['name' => 'Termination', 'icon' => 'x-circle'],
         ];
     }
-    
+
     public function render()
     {
         $clauses = ContractClause::query()
-            ->when($this->search, fn($q) => $q->where('title', 'like', '%'.$this->search.'%')
+            ->when($this->search, fn ($q) => $q->where('title', 'like', '%'.$this->search.'%')
                 ->orWhere('content', 'like', '%'.$this->search.'%'))
-            ->when($this->categoryFilter, fn($q) => $q->where('category', $this->categoryFilter))
-            ->when($this->typeFilter, fn($q) => $q->where('type', $this->typeFilter))
-            ->when($this->reviewFilter, fn($q) => $q->where('review_status', $this->reviewFilter))
-            ->when($this->requiredOnly, fn($q) => $q->where('is_required', true))
+            ->when($this->categoryFilter, fn ($q) => $q->where('category', $this->categoryFilter))
+            ->when($this->typeFilter, fn ($q) => $q->where('type', $this->typeFilter))
+            ->when($this->reviewFilter, fn ($q) => $q->where('review_status', $this->reviewFilter))
+            ->when($this->requiredOnly, fn ($q) => $q->where('is_required', true))
             ->orderBy('category')
             ->orderBy('title')
             ->paginate(10);
-        
+
         $stats = [
             'total' => ContractClause::count(),
             'approved' => ContractClause::where('review_status', 'approved')->count(),
             'pending' => ContractClause::where('review_status', 'pending')->count(),
             'required' => ContractClause::where('is_required', true)->count(),
         ];
-        
+
         return view('livewire.admin.contract.clauses-library', [
             'clauses' => $clauses,
             'categories' => $this->getCategories(),

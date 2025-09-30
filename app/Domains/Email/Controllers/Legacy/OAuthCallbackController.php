@@ -2,9 +2,9 @@
 
 namespace App\Domains\Email\Controllers\Legacy;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Email\Services\EmailProviderService;
 use App\Domains\Email\Services\OAuthTokenManager;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Session;
 class OAuthCallbackController extends Controller
 {
     protected EmailProviderService $providerService;
+
     protected OAuthTokenManager $tokenManager;
 
     public function __construct(
@@ -52,14 +53,15 @@ class OAuthCallbackController extends Controller
 
             Log::info('OAuth state lookup', [
                 'request_state' => $request->state,
-                'state_found' => !empty($oauthState),
+                'state_found' => ! empty($oauthState),
                 'state_data' => $oauthState,
             ]);
 
-            if (!$oauthState) {
+            if (! $oauthState) {
                 Log::warning('OAuth state not found in database - REDIRECTING WITH ERROR', [
                     'request_state' => $request->state,
                 ]);
+
                 return redirect()->route('email.accounts.index')
                     ->with('error', 'OAuth authentication failed: Invalid or expired state parameter');
             }
@@ -82,7 +84,7 @@ class OAuthCallbackController extends Controller
 
             // Get company
             $company = \App\Models\Company::find($companyId);
-            if (!$company) {
+            if (! $company) {
                 return redirect()->route('email.accounts.index')
                     ->with('error', 'OAuth authentication failed: Company not found');
             }
@@ -93,7 +95,7 @@ class OAuthCallbackController extends Controller
             // Get user email from tokens (if available)
             $email = $oauthContext['email'] ?? $this->getEmailFromTokens($company, $tokens);
 
-            if (!$email) {
+            if (! $email) {
                 return redirect()->route('email.accounts.index')
                     ->with('error', 'OAuth authentication failed: Could not determine email address');
             }
@@ -113,7 +115,7 @@ class OAuthCallbackController extends Controller
                 'email' => $email,
                 'provider' => $company->email_provider_type,
                 'account_user_id' => $account->user_id,
-                'tokens_received' => !empty($tokens),
+                'tokens_received' => ! empty($tokens),
             ]);
 
             return redirect()->route('email.accounts.index')
@@ -129,7 +131,7 @@ class OAuthCallbackController extends Controller
             ]);
 
             return redirect()->route('email.accounts.index')
-                ->with('error', 'OAuth authentication failed: ' . $e->getMessage());
+                ->with('error', 'OAuth authentication failed: '.$e->getMessage());
         }
     }
 
@@ -141,11 +143,13 @@ class OAuthCallbackController extends Controller
         try {
             $provider = $this->providerService->getProvider($company);
             $accountData = $provider->getAccountData($tokens, '');
+
             return $accountData['email'] ?? null;
         } catch (\Exception $e) {
             Log::error('Failed to get email from OAuth tokens', [
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }

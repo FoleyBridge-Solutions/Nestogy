@@ -22,7 +22,7 @@ class BundlesController extends Controller
                     'bundle_type' => $bundle->bundle_type ?? 'standard',
                     'pricing_type' => $bundle->pricing_type ?? 'fixed',
                     'fixed_price' => $bundle->fixed_price ? (float) $bundle->fixed_price : null,
-                    'discount_percentage' => $bundle->discount_percentage ? (float) $bundle->discount_percentage : null
+                    'discount_percentage' => $bundle->discount_percentage ? (float) $bundle->discount_percentage : null,
                 ];
             });
 

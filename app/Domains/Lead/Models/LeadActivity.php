@@ -30,24 +30,43 @@ class LeadActivity extends Model
 
     // Activity type constants
     const TYPE_LEAD_CREATED = 'lead_created';
+
     const TYPE_EMAIL_SENT = 'email_sent';
+
     const TYPE_EMAIL_OPENED = 'email_opened';
+
     const TYPE_EMAIL_CLICKED = 'email_clicked';
+
     const TYPE_EMAIL_REPLIED = 'email_replied';
+
     const TYPE_CALL_MADE = 'call_made';
+
     const TYPE_CALL_RECEIVED = 'call_received';
+
     const TYPE_MEETING_SCHEDULED = 'meeting_scheduled';
+
     const TYPE_MEETING_COMPLETED = 'meeting_completed';
+
     const TYPE_NOTE_ADDED = 'note_added';
+
     const TYPE_STATUS_CHANGED = 'status_changed';
+
     const TYPE_SCORE_UPDATED = 'score_updated';
+
     const TYPE_CAMPAIGN_ENROLLED = 'campaign_enrolled';
+
     const TYPE_CAMPAIGN_COMPLETED = 'campaign_completed';
+
     const TYPE_FORM_SUBMITTED = 'form_submitted';
+
     const TYPE_WEBSITE_VISIT = 'website_visit';
+
     const TYPE_DOCUMENT_DOWNLOADED = 'document_downloaded';
+
     const TYPE_QUALIFIED = 'qualified';
+
     const TYPE_CONVERTED = 'converted';
+
     const TYPE_LOST = 'lost';
 
     /**

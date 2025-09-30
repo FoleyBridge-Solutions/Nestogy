@@ -2,8 +2,6 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
-use Illuminate\Support\Collection;
-
 /**
  * Generic Tax Data Service Interface
  *

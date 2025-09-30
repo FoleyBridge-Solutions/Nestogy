@@ -2,20 +2,24 @@
 
 namespace App\Livewire\Financial;
 
-use Livewire\Component;
 use App\Models\Product;
-use App\Models\Service;
 use App\Traits\QuotePricingCalculations;
+use Livewire\Component;
 
 class QuoteItemsTable extends Component
 {
     use QuotePricingCalculations;
 
     public $items = [];
+
     public $currency_code = 'USD';
+
     public $editingIndex = null;
+
     public $showProductSelector = false;
+
     public $searchProducts = '';
+
     public $availableProducts = [];
 
     // New item form
@@ -27,11 +31,11 @@ class QuoteItemsTable extends Component
         'discount' => 0,
         'tax_rate' => 0,
         'type' => 'product',
-        'billing_cycle' => 'one_time'
+        'billing_cycle' => 'one_time',
     ];
 
     protected $listeners = [
-        'itemsUpdated' => 'updateItems'
+        'itemsUpdated' => 'updateItems',
     ];
 
     public function mount($items = [], $currency_code = 'USD')
@@ -62,16 +66,16 @@ class QuoteItemsTable extends Component
         $this->validateNewItem();
 
         $item = [
-            'id' => 'temp_' . time() . '_' . rand(1000, 9999),
+            'id' => 'temp_'.time().'_'.rand(1000, 9999),
             'name' => $this->newItem['name'],
             'description' => $this->newItem['description'],
-            'quantity' => (float)$this->newItem['quantity'],
-            'unit_price' => (float)$this->newItem['unit_price'],
-            'discount' => (float)$this->newItem['discount'],
-            'tax_rate' => (float)$this->newItem['tax_rate'],
+            'quantity' => (float) $this->newItem['quantity'],
+            'unit_price' => (float) $this->newItem['unit_price'],
+            'discount' => (float) $this->newItem['discount'],
+            'tax_rate' => (float) $this->newItem['tax_rate'],
             'type' => $this->newItem['type'],
             'billing_cycle' => $this->newItem['billing_cycle'],
-            'order' => count($this->items) + 1
+            'order' => count($this->items) + 1,
         ];
 
         $item['subtotal'] = $this->calculateItemSubtotal($item);
@@ -87,20 +91,20 @@ class QuoteItemsTable extends Component
     public function addProductToQuote($productId)
     {
         $product = collect($this->availableProducts)->firstWhere('id', $productId);
-        
+
         if ($product) {
             $item = [
-                'id' => 'temp_' . time() . '_' . rand(1000, 9999),
+                'id' => 'temp_'.time().'_'.rand(1000, 9999),
                 'product_id' => $product['id'],
                 'name' => $product['name'],
                 'description' => $product['description'] ?? '',
                 'quantity' => 1,
-                'unit_price' => (float)($product['price'] ?? 0),
+                'unit_price' => (float) ($product['price'] ?? 0),
                 'discount' => 0,
                 'tax_rate' => 0,
                 'type' => 'product',
                 'billing_cycle' => 'one_time',
-                'order' => count($this->items) + 1
+                'order' => count($this->items) + 1,
             ];
 
             $item['subtotal'] = $this->calculateItemSubtotal($item);
@@ -135,12 +139,12 @@ class QuoteItemsTable extends Component
     {
         if (isset($this->items[$index])) {
             $this->items[$index][$field] = $value;
-            
+
             // Recalculate subtotal for pricing fields
             if (in_array($field, ['quantity', 'unit_price', 'discount'])) {
                 $this->items[$index]['subtotal'] = $this->calculateItemSubtotal($this->items[$index]);
             }
-            
+
             $this->dispatch('itemsUpdated', $this->items);
         }
     }
@@ -159,10 +163,10 @@ class QuoteItemsTable extends Component
     {
         if (isset($this->items[$index])) {
             $item = $this->items[$index];
-            $item['id'] = 'temp_' . time() . '_' . rand(1000, 9999);
-            $item['name'] = $item['name'] . ' (Copy)';
+            $item['id'] = 'temp_'.time().'_'.rand(1000, 9999);
+            $item['name'] = $item['name'].' (Copy)';
             $item['order'] = count($this->items) + 1;
-            
+
             $this->items[] = $item;
             $this->dispatch('itemsUpdated', $this->items);
         }
@@ -204,13 +208,13 @@ class QuoteItemsTable extends Component
             'discount' => 0,
             'tax_rate' => 0,
             'type' => 'product',
-            'billing_cycle' => 'one_time'
+            'billing_cycle' => 'one_time',
         ];
     }
 
     public function toggleProductSelector()
     {
-        $this->showProductSelector = !$this->showProductSelector;
+        $this->showProductSelector = ! $this->showProductSelector;
         if ($this->showProductSelector) {
             $this->searchProducts = '';
         }
@@ -222,8 +226,8 @@ class QuoteItemsTable extends Component
             $this->availableProducts = Product::where('company_id', auth()->user()->company_id)
                 ->where('is_active', true)
                 ->where(function ($query) {
-                    $query->where('name', 'like', '%' . $this->searchProducts . '%')
-                          ->orWhere('description', 'like', '%' . $this->searchProducts . '%');
+                    $query->where('name', 'like', '%'.$this->searchProducts.'%')
+                        ->orWhere('description', 'like', '%'.$this->searchProducts.'%');
                 })
                 ->orderBy('name')
                 ->limit(20)
@@ -262,11 +266,12 @@ class QuoteItemsTable extends Component
             'EUR' => '€',
             'GBP' => '£',
             'CAD' => 'C$',
-            'AUD' => 'A$'
+            'AUD' => 'A$',
         ];
 
         $symbol = $symbols[$this->currency_code] ?? $this->currency_code;
-        return $symbol . number_format($amount, 2);
+
+        return $symbol.number_format($amount, 2);
     }
 
     public function render()

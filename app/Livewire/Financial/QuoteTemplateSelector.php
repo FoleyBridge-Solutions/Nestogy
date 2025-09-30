@@ -2,23 +2,29 @@
 
 namespace App\Livewire\Financial;
 
-use Livewire\Component;
 use App\Models\QuoteTemplate;
-use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class QuoteTemplateSelector extends Component
 {
     public $templates = [];
+
     public $filteredTemplates = [];
+
     public $selectedTemplate = null;
+
     public $searchQuery = '';
+
     public $selectedCategory = '';
+
     public $categories = [];
+
     public $showPreview = false;
+
     public $previewTemplate = null;
 
     protected $listeners = [
-        'refreshTemplates' => 'loadTemplates'
+        'refreshTemplates' => 'loadTemplates',
     ];
 
     public function mount($selectedTemplate = null)
@@ -53,7 +59,7 @@ class QuoteTemplateSelector extends Component
                     'terms_conditions' => $template->terms_conditions,
                     'items' => $template->items ?? [],
                     'created_at' => $template->created_at,
-                    'updated_at' => $template->updated_at
+                    'updated_at' => $template->updated_at,
                 ];
             })
             ->toArray();
@@ -85,7 +91,7 @@ class QuoteTemplateSelector extends Component
         $templates = collect($this->templates);
 
         // Filter by search query
-        if (!empty($this->searchQuery)) {
+        if (! empty($this->searchQuery)) {
             $templates = $templates->filter(function ($template) {
                 return str_contains(strtolower($template['name']), strtolower($this->searchQuery)) ||
                        str_contains(strtolower($template['description'] ?? ''), strtolower($this->searchQuery)) ||
@@ -94,7 +100,7 @@ class QuoteTemplateSelector extends Component
         }
 
         // Filter by category
-        if (!empty($this->selectedCategory)) {
+        if (! empty($this->selectedCategory)) {
             $templates = $templates->filter(function ($template) {
                 return $template['category_id'] == $this->selectedCategory;
             });
@@ -106,13 +112,13 @@ class QuoteTemplateSelector extends Component
     public function selectTemplate($templateId)
     {
         $template = collect($this->templates)->firstWhere('id', $templateId);
-        
+
         if ($template) {
             $this->selectedTemplate = $template;
-            
+
             // Increment usage count
             QuoteTemplate::where('id', $templateId)->increment('usage_count');
-            
+
             // Dispatch event to parent component
             $this->dispatch('templateSelected', $template);
         }
@@ -183,7 +189,7 @@ class QuoteTemplateSelector extends Component
                 return [
                     'name' => $category,
                     'templates' => $templates->values()->toArray(),
-                    'count' => $templates->count()
+                    'count' => $templates->count(),
                 ];
             })
             ->values()

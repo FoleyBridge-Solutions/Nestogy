@@ -5,20 +5,20 @@ namespace App\Domains\Report\Services;
 use App\Domains\Report\Models\Report;
 use App\Domains\Report\Models\ReportSchedule;
 use App\Models\User;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Report Scheduler Service
- * 
+ *
  * Automated report generation and delivery
  */
 class ReportSchedulerService
 {
     protected ExecutiveReportService $executiveService;
+
     protected ExportService $exportService;
 
     public function __construct(
@@ -42,21 +42,21 @@ class ReportSchedulerService
             try {
                 $result = $this->generateAndDeliverReport($schedule);
                 $processed[] = $result;
-                
+
                 // Update next run date
                 $this->updateNextRunDate($schedule);
-                
+
                 Log::info('Scheduled report processed successfully', [
                     'schedule_id' => $schedule->id,
                     'report_type' => $schedule->report_type,
                 ]);
-                
+
             } catch (\Exception $e) {
                 $errors[] = [
                     'schedule_id' => $schedule->id,
                     'error' => $e->getMessage(),
                 ];
-                
+
                 Log::error('Failed to process scheduled report', [
                     'schedule_id' => $schedule->id,
                     'error' => $e->getMessage(),
@@ -102,11 +102,11 @@ class ReportSchedulerService
     public function updateSchedule(ReportSchedule $schedule, array $data): ReportSchedule
     {
         $schedule->update($data);
-        
+
         // Recalculate next run date if frequency changed
         if (isset($data['frequency'])) {
             $schedule->update([
-                'next_run_at' => $this->calculateNextRunDate($data['frequency'])
+                'next_run_at' => $this->calculateNextRunDate($data['frequency']),
             ]);
         }
 
@@ -120,13 +120,13 @@ class ReportSchedulerService
     {
         // Generate the report data
         $reportData = $this->generateReportData($schedule);
-        
+
         // Export to requested format
         $exportResult = $this->exportReport($schedule, $reportData);
-        
+
         // Deliver the report
         $deliveryResult = $this->deliverReport($schedule, $exportResult);
-        
+
         // Log the execution
         $this->logReportExecution($schedule, $exportResult, $deliveryResult);
 
@@ -230,7 +230,7 @@ class ReportSchedulerService
     protected function exportReport(ReportSchedule $schedule, array $reportData): array
     {
         $filename = $this->generateFilename($schedule);
-        
+
         switch ($schedule->format) {
             case 'pdf':
                 return $this->exportService->exportToPDF($reportData, $filename, [
@@ -287,22 +287,22 @@ class ReportSchedulerService
      * Send report via email
      */
     protected function sendEmailReport(
-        array $recipient, 
-        ReportSchedule $schedule, 
+        array $recipient,
+        ReportSchedule $schedule,
         array $exportResult,
         array $deliveryOptions
     ): void {
         $user = User::find($recipient['user_id']);
         $subject = $deliveryOptions['email_subject'] ?? "Scheduled Report: {$schedule->name}";
-        
+
         Mail::send('emails.scheduled-report', [
             'schedule' => $schedule,
             'user' => $user,
             'deliveryOptions' => $deliveryOptions,
         ], function ($message) use ($user, $subject, $exportResult) {
             $message->to($user->email, $user->name)
-                   ->subject($subject)
-                   ->attach($exportResult['file_path']);
+                ->subject($subject)
+                ->attach($exportResult['file_path']);
         });
     }
 
@@ -310,8 +310,8 @@ class ReportSchedulerService
      * Send report via Slack (if integration exists)
      */
     protected function sendSlackReport(
-        array $recipient, 
-        ReportSchedule $schedule, 
+        array $recipient,
+        ReportSchedule $schedule,
         array $exportResult,
         array $deliveryOptions
     ): void {
@@ -399,7 +399,7 @@ class ReportSchedulerService
         $date = now()->format('Y-m-d');
         $reportType = str_replace('_', '-', $schedule->report_type);
         $extension = $schedule->format;
-        
+
         return "report-{$reportType}-{$date}.{$extension}";
     }
 

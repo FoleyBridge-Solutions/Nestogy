@@ -1,4 +1,5 @@
 <?php
+
 // Client routes
 
 use Illuminate\Support\Facades\Route;
@@ -18,16 +19,16 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::get('clients/clear-selection', [\App\Domains\Client\Controllers\ClientController::class, 'clearSelection'])->name('clients.clear-selection');
     Route::get('clients/select-screen', [\App\Domains\Client\Controllers\ClientController::class, 'selectScreen'])->name('clients.select-screen');
     Route::post('clients/{client}/convert-lead', [\App\Domains\Client\Controllers\ClientController::class, 'convertLead'])->name('clients.convert-lead');
-    
+
     // Dynamic clients route - show list or specific client dashboard based on query/session
     Route::get('clients', [\App\Domains\Client\Controllers\ClientController::class, 'dynamicIndex'])->name('clients.index');
-    
+
     // Resource routes - register create/edit/store/update/destroy routes BEFORE the show route
     Route::resource('clients', \App\Domains\Client\Controllers\ClientController::class)->except(['index', 'show', 'edit']);
-    
+
     // Use Livewire component for client edit
     Route::get('clients/{client}/edit', \App\Livewire\Clients\EditClient::class)->name('clients.edit');
-    
+
     // Client-specific routes (using session-based client context) - MUST come BEFORE the {client} route
     Route::prefix('clients')->name('clients.')->middleware('require-client')->group(function () {
         Route::get('switch', [\App\Domains\Client\Controllers\ClientController::class, 'switch'])->name('switch');
@@ -35,7 +36,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::patch('notes', [\App\Domains\Client\Controllers\ClientController::class, 'updateNotes'])->name('update-notes');
         Route::post('archive', [\App\Domains\Client\Controllers\ClientController::class, 'archive'])->name('archive');
         Route::post('restore', [\App\Domains\Client\Controllers\ClientController::class, 'restore'])->name('restore');
-        
+
         // Contacts routes (using session-based client context)
         Route::get('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'index'])->name('contacts.index');
         Route::get('contacts/create', [\App\Domains\Client\Controllers\ContactController::class, 'create'])->name('contacts.create');
@@ -45,7 +46,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::get('contacts/{contact}/edit', [\App\Domains\Client\Controllers\ContactController::class, 'edit'])->name('contacts.edit');
         Route::put('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'update'])->name('contacts.update');
         Route::delete('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
-        
+
         // Contact API routes for modal functionality
         Route::prefix('contacts/{contact}')->name('contacts.')->group(function () {
             Route::put('portal-access', [\App\Domains\Client\Controllers\ContactController::class, 'updatePortalAccess'])->name('portal-access.update');
@@ -77,10 +78,10 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::get('assets/{asset}/edit', [\App\Domains\Asset\Controllers\AssetController::class, 'clientEdit'])->name('assets.edit');
         Route::put('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientUpdate'])->name('assets.update');
         Route::delete('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientDestroy'])->name('assets.destroy');
-        
+
         // IT Documentation routes (using session-based client context)
         Route::get('it-documentation', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'clientIndex'])->name('it-documentation.client-index');
-        
+
         // Communication Log routes (using session-based client context)
         Route::get('communications', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'index'])->name('communications.index');
         Route::get('communications/export', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'export'])->name('communications.export');
@@ -91,7 +92,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::put('communications/{communication}', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'update'])->name('communications.update');
         Route::delete('communications/{communication}', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'destroy'])->name('communications.destroy');
     });
-    
+
     // Client show route - display specific client dashboard
     // This MUST come AFTER all other client routes to avoid catching specific routes like /clients/contacts
     Route::get('clients/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'show'])->name('clients.show');

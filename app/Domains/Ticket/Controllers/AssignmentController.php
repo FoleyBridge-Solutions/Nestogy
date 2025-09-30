@@ -2,18 +2,18 @@
 
 namespace App\Domains\Ticket\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketWatcher;
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 /**
  * Assignment Controller
- * 
+ *
  * Manages ticket assignments, bulk operations, watcher functionality,
  * and notification preferences following the domain architecture pattern.
  */
@@ -42,7 +42,7 @@ class AssignmentController extends Controller
                 $query->whereNull('assigned_to');
                 break;
             case 'watchers':
-                $query->whereHas('watchers', function($q) {
+                $query->whereHas('watchers', function ($q) {
                     $q->where('user_id', auth()->id());
                 });
                 break;
@@ -50,12 +50,12 @@ class AssignmentController extends Controller
 
         // Apply additional filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('ticket_number', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($cq) use ($search) {
-                      $cq->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('ticket_number', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -72,15 +72,15 @@ class AssignmentController extends Controller
         }
 
         $tickets = $query->with(['client', 'assignee', 'watchers.user'])
-                        ->orderBy('created_at', 'desc')
-                        ->paginate(20)
-                        ->appends($request->query());
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->appends($request->query());
 
         // Get filter options
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->whereNull('archived_at')
-                        ->orderBy('name')
-                        ->get();
+            ->whereNull('archived_at')
+            ->orderBy('name')
+            ->get();
 
         $statuses = ['new', 'open', 'in_progress', 'pending', 'resolved', 'closed'];
         $priorities = ['Low', 'Medium', 'High', 'Critical'];
@@ -123,7 +123,7 @@ class AssignmentController extends Controller
         if ($previousAssignee) {
             $note = "Ticket reassigned from {$previousAssignee->name} to {$currentUser->name}";
         }
-        
+
         // Check if the ticket has an addNote method, if not skip adding the note
         if (method_exists($ticket, 'addNote')) {
             $ticket->addNote($note, 'assignment');
@@ -154,7 +154,7 @@ class AssignmentController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -196,7 +196,7 @@ class AssignmentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Ticket assigned successfully',
-            'ticket' => $ticket->fresh(['assignee', 'client'])
+            'ticket' => $ticket->fresh(['assignee', 'client']),
         ]);
     }
 
@@ -222,13 +222,13 @@ class AssignmentController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $tickets = Ticket::whereIn('id', $request->ticket_ids)
-                        ->where('company_id', auth()->user()->company_id)
-                        ->get();
+            ->where('company_id', auth()->user()->company_id)
+            ->get();
 
         $assignedCount = 0;
 
@@ -258,7 +258,7 @@ class AssignmentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Successfully assigned {$assignedCount} tickets"
+            'message' => "Successfully assigned {$assignedCount} tickets",
         ]);
     }
 
@@ -278,7 +278,7 @@ class AssignmentController extends Controller
                 }),
                 Rule::unique('ticket_watchers')->where(function ($query) use ($ticket) {
                     return $query->where('ticket_id', $ticket->id)
-                                 ->where('company_id', auth()->user()->company_id);
+                        ->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'notification_preferences' => 'nullable|array',
@@ -291,7 +291,7 @@ class AssignmentController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -315,7 +315,7 @@ class AssignmentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Watcher added successfully',
-            'watcher' => $watcher->load('user')
+            'watcher' => $watcher->load('user'),
         ]);
     }
 
@@ -335,7 +335,7 @@ class AssignmentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Watcher removed successfully'
+            'message' => 'Watcher removed successfully',
         ]);
     }
 
@@ -357,7 +357,7 @@ class AssignmentController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -368,7 +368,7 @@ class AssignmentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Notification preferences updated successfully',
-            'watcher' => $watcher->fresh()
+            'watcher' => $watcher->fresh(),
         ]);
     }
 
@@ -393,13 +393,13 @@ class AssignmentController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $tickets = Ticket::whereIn('id', $request->ticket_ids)
-                        ->where('company_id', auth()->user()->company_id)
-                        ->get();
+            ->where('company_id', auth()->user()->company_id)
+            ->get();
 
         $addedCount = 0;
 
@@ -409,10 +409,10 @@ class AssignmentController extends Controller
                     foreach ($request->user_ids as $userId) {
                         // Check if watcher already exists
                         $exists = TicketWatcher::where('ticket_id', $ticket->id)
-                                             ->where('user_id', $userId)
-                                             ->exists();
+                            ->where('user_id', $userId)
+                            ->exists();
 
-                        if (!$exists) {
+                        if (! $exists) {
                             TicketWatcher::create([
                                 'company_id' => auth()->user()->company_id,
                                 'ticket_id' => $ticket->id,
@@ -435,7 +435,7 @@ class AssignmentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Successfully added {$addedCount} watchers"
+            'message' => "Successfully added {$addedCount} watchers",
         ]);
     }
 
@@ -471,9 +471,9 @@ class AssignmentController extends Controller
         $tickets = $query->with('assignee')->get();
 
         // Group by assignee
-        $workloadData = $tickets->groupBy('assigned_to')->map(function($tickets, $assigneeId) {
+        $workloadData = $tickets->groupBy('assigned_to')->map(function ($tickets, $assigneeId) {
             $assignee = $tickets->first()->assignee ?? null;
-            
+
             return [
                 'assignee' => $assignee ? $assignee->name : 'Unassigned',
                 'total_tickets' => $tickets->count(),
@@ -494,7 +494,7 @@ class AssignmentController extends Controller
                 'total_assignees' => $workloadData->count(),
                 'avg_tickets_per_assignee' => round($tickets->count() / max($workloadData->count(), 1), 2),
                 'unassigned_tickets' => $tickets->whereNull('assigned_to')->count(),
-            ]
+            ],
         ]);
     }
 
@@ -504,20 +504,20 @@ class AssignmentController extends Controller
     public function getTeamOverview(Request $request)
     {
         $teamMembers = User::where('company_id', auth()->user()->company_id)
-                          ->whereNull('archived_at')
-                          ->withCount([
-                              'assignedTickets',
-                              'assignedTickets as open_tickets_count' => function($q) {
-                                  $q->whereIn('status', ['new', 'open', 'in_progress']);
-                              },
-                              'assignedTickets as overdue_tickets_count' => function($q) {
-                                  $q->where('due_date', '<', now())
-                                    ->whereNotIn('status', ['closed', 'resolved']);
-                              }
-                          ])
-                          ->get();
+            ->whereNull('archived_at')
+            ->withCount([
+                'assignedTickets',
+                'assignedTickets as open_tickets_count' => function ($q) {
+                    $q->whereIn('status', ['new', 'open', 'in_progress']);
+                },
+                'assignedTickets as overdue_tickets_count' => function ($q) {
+                    $q->where('due_date', '<', now())
+                        ->whereNotIn('status', ['closed', 'resolved']);
+                },
+            ])
+            ->get();
 
-        $overview = $teamMembers->map(function($member) {
+        $overview = $teamMembers->map(function ($member) {
             return [
                 'id' => $member->id,
                 'name' => $member->name,
@@ -538,7 +538,7 @@ class AssignmentController extends Controller
                 'total_tickets' => $teamMembers->sum('assigned_tickets_count'),
                 'total_open' => $teamMembers->sum('open_tickets_count'),
                 'total_overdue' => $teamMembers->sum('overdue_tickets_count'),
-            ]
+            ],
         ]);
     }
 
@@ -558,13 +558,13 @@ class AssignmentController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         // Get tickets to assign
         $query = Ticket::where('company_id', auth()->user()->company_id)
-                      ->whereNull('assigned_to');
+            ->whereNull('assigned_to');
 
         if ($request->has('ticket_ids')) {
             $query->whereIn('id', $request->ticket_ids);
@@ -574,7 +574,7 @@ class AssignmentController extends Controller
 
         // Get available assignees
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->whereNull('archived_at');
+            ->whereNull('archived_at');
 
         if ($request->has('assignee_pool')) {
             $assignees->whereIn('id', $request->assignee_pool);
@@ -585,7 +585,7 @@ class AssignmentController extends Controller
         if ($assignees->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No available assignees found'
+                'message' => 'No available assignees found',
             ], 422);
         }
 
@@ -595,7 +595,7 @@ class AssignmentController extends Controller
             foreach ($tickets as $ticket) {
                 if (auth()->user()->can('update', $ticket)) {
                     $assignee = $this->selectAssignee($ticket, $assignees, $request->method);
-                    
+
                     if ($assignee) {
                         $ticket->update(['assigned_to' => $assignee->id]);
                         $ticket->addNote("Auto-assigned to {$assignee->name} using {$request->method} method", 'assignment');
@@ -607,7 +607,7 @@ class AssignmentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Auto-assigned {$assignedCount} tickets using {$request->method} method"
+            'message' => "Auto-assigned {$assignedCount} tickets using {$request->method} method",
         ]);
     }
 
@@ -628,19 +628,19 @@ class AssignmentController extends Controller
         }
 
         $tickets = $query->with(['client', 'assignee', 'watchers.user'])
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        $filename = 'ticket-assignments_' . date('Y-m-d_H-i-s') . '.csv';
+        $filename = 'ticket-assignments_'.date('Y-m-d_H-i-s').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($tickets) {
+        $callback = function () use ($tickets) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Ticket #',
@@ -651,13 +651,13 @@ class AssignmentController extends Controller
                 'Priority',
                 'Watchers',
                 'Created Date',
-                'Due Date'
+                'Due Date',
             ]);
 
             // CSV data
             foreach ($tickets as $ticket) {
                 $watchers = $ticket->watchers->pluck('user.name')->join(', ');
-                
+
                 fputcsv($file, [
                     $ticket->ticket_number,
                     $ticket->subject,
@@ -670,7 +670,7 @@ class AssignmentController extends Controller
                     $ticket->due_date?->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -688,7 +688,7 @@ class AssignmentController extends Controller
         $assigned = $query->whereNotNull('assigned_to')->count();
         $unassigned = $total - $assigned;
         $myTickets = $query->where('assigned_to', auth()->id())->count();
-        $watchingTickets = Ticket::whereHas('watchers', function($q) {
+        $watchingTickets = Ticket::whereHas('watchers', function ($q) {
             $q->where('user_id', auth()->id());
         })->count();
 
@@ -710,9 +710,9 @@ class AssignmentController extends Controller
         // This would typically get team members based on user's department/team
         // For now, return all active users in the tenant
         return User::where('company_id', auth()->user()->company_id)
-                  ->whereNull('archived_at')
-                  ->pluck('id')
-                  ->toArray();
+            ->whereNull('archived_at')
+            ->pluck('id')
+            ->toArray();
     }
 
     /**
@@ -721,15 +721,15 @@ class AssignmentController extends Controller
     private function calculateAvgResolutionTime($tickets)
     {
         $resolvedTickets = $tickets->whereIn('status', ['resolved', 'closed'])
-                                  ->filter(function($ticket) {
-                                      return $ticket->resolved_at;
-                                  });
+            ->filter(function ($ticket) {
+                return $ticket->resolved_at;
+            });
 
         if ($resolvedTickets->isEmpty()) {
             return null;
         }
 
-        $totalHours = $resolvedTickets->sum(function($ticket) {
+        $totalHours = $resolvedTickets->sum(function ($ticket) {
             return $ticket->created_at->diffInHours($ticket->resolved_at);
         });
 
@@ -741,9 +741,16 @@ class AssignmentController extends Controller
      */
     private function calculateWorkloadLevel(int $openTickets): string
     {
-        if ($openTickets <= 5) return 'low';
-        if ($openTickets <= 15) return 'medium';
-        if ($openTickets <= 25) return 'high';
+        if ($openTickets <= 5) {
+            return 'low';
+        }
+        if ($openTickets <= 15) {
+            return 'medium';
+        }
+        if ($openTickets <= 25) {
+            return 'high';
+        }
+
         return 'critical';
     }
 
@@ -758,8 +765,8 @@ class AssignmentController extends Controller
 
             case 'workload_balance':
                 return $assignees->loadCount('assignedTickets')
-                                ->sortBy('assigned_tickets_count')
-                                ->first();
+                    ->sortBy('assigned_tickets_count')
+                    ->first();
 
             case 'skill_based':
                 // Simple skill-based assignment based on ticket category/type

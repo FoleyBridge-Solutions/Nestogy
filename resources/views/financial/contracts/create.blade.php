@@ -29,6 +29,39 @@ $activeItem = 'contracts';
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-6">
+        <!-- Error Display Section -->
+        @if(session('error'))
+            <div class="mb-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-lg">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <h3 class="text-sm font-medium text-red-800 dark:text-red-300">Error Creating Contract</h3>
+                        <p class="mt-1 text-sm text-red-700 dark:text-red-400">{{ session('error') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="mb-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-lg">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <h3 class="text-sm font-medium text-red-800 dark:text-red-300">Please correct the following errors:</h3>
+                        <ul class="mt-2 text-sm text-red-700 dark:text-red-400 list-disc list-inside space-y-1">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
             <form action="{{ route('financial.contracts.store') }}" method="POST" @submit="handleSubmission">
                 @csrf
@@ -208,6 +241,7 @@ $activeItem = 'contracts';
                                             name="client_id" 
                                             placeholder="Search and select client..." 
                                             required="true"
+                                            :selected="$selectedClient"
                                             class="w-full px-6 py-6 text-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400" />
                                     </div>
                                     @error('client_id')<span class="text-red-500 text-sm mt-1">{{ $message }}</span>@enderror
@@ -1575,6 +1609,9 @@ function contractWizard() {
             if (!this.isFormValid()) {
                 event.preventDefault();
                 this.showNotification('Please complete all required fields', 'error');
+                
+                // Scroll to top to show errors
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
 
@@ -1683,7 +1720,7 @@ function contractWizard() {
             }
 
             try {
-                const response = await fetch(`/clients/${this.form.client_id}/assets`, {
+                const response = await fetch(`/api/clients/${this.form.client_id}/assets`, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'

@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
+use App\Domains\Core\Services\DashboardLazyLoadService;
 use App\Models\Company;
 use App\Models\User;
-use App\Domains\Core\Services\DashboardLazyLoadService;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Auth;
 
 class WarmDashboardCache extends Command
@@ -33,7 +33,7 @@ class WarmDashboardCache extends Command
     {
         $companyId = $this->option('company');
         $limit = $this->option('limit');
-        
+
         if ($companyId) {
             $companies = Company::where('id', $companyId)->get();
         } else {
@@ -41,38 +41,38 @@ class WarmDashboardCache extends Command
                 ->limit($limit)
                 ->get();
         }
-        
+
         $this->info("Warming cache for {$companies->count()} companies...");
-        
+
         $bar = $this->output->createProgressBar($companies->count());
         $bar->start();
-        
+
         foreach ($companies as $company) {
             $this->warmCompanyCache($company);
             $bar->advance();
         }
-        
+
         $bar->finish();
         $this->newLine();
         $this->info('Dashboard cache warmed successfully!');
-        
+
         return Command::SUCCESS;
     }
-    
+
     protected function warmCompanyCache(Company $company)
     {
         // Get a user from the company to use for auth context
         $user = User::where('company_id', $company->id)
             ->where('status', true)
             ->first();
-        
-        if (!$user) {
+
+        if (! $user) {
             return;
         }
-        
+
         // Simulate auth context
         Auth::login($user);
-        
+
         // Widget types to warm
         $widgets = [
             'kpi-grid',
@@ -81,17 +81,17 @@ class WarmDashboardCache extends Command
             'client-health',
             'team-performance',
         ];
-        
+
         foreach ($widgets as $widgetType) {
             $cacheKey = "dashboard_widget_{$widgetType}_{$company->id}";
             $ttl = DashboardLazyLoadService::getCacheTTL($widgetType);
-            
+
             // Generate cache data based on widget type
             // This would ideally call the actual widget data methods
             // For now, we'll just mark it as warmed
-            \Cache::put($cacheKey . '_warmed', true, $ttl);
+            \Cache::put($cacheKey.'_warmed', true, $ttl);
         }
-        
+
         Auth::logout();
     }
 }

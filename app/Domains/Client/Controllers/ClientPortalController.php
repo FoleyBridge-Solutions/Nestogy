@@ -3,23 +3,20 @@
 namespace App\Domains\Client\Controllers;
 
 use App\Domains\Contract\Models\Contract;
-use App\Models\Client;
-use App\Models\Contact;
-use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Contract\Models\ContractMilestone;
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Security\Services\DigitalSignatureService;
 use App\Http\Controllers\Controller;
+use App\Models\Client;
+use App\Models\Contact;
+use App\Models\Invoice;
+use App\Models\Payment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Carbon\Carbon;
 
 /**
  * ClientPortalController
- * 
+ *
  * Handles client-facing portal functionality for contract management,
  * digital signing, milestone tracking, and payment management.
  */
@@ -56,7 +53,7 @@ class ClientPortalController extends Controller
         // Find contact with portal access
         $contact = Contact::findByEmail($request->email);
 
-        if (!$contact) {
+        if (! $contact) {
             return back()->withErrors([
                 'email' => 'No account found with this email address.',
             ])->onlyInput('email');
@@ -70,17 +67,17 @@ class ClientPortalController extends Controller
         }
 
         // Verify password
-        if (!$contact->verifyPassword($request->password)) {
+        if (! $contact->verifyPassword($request->password)) {
             // Increment failed login attempts
             $contact->incrementFailedLoginAttempts();
-            
+
             return back()->withErrors([
                 'email' => 'Invalid email or password.',
             ])->onlyInput('email');
         }
 
         // Check if contact can access portal
-        if (!$contact->canAccessPortal()) {
+        if (! $contact->canAccessPortal()) {
             // Debug why portal access is denied
             $debugInfo = [
                 'has_portal_access' => $contact->has_portal_access,
@@ -88,24 +85,24 @@ class ClientPortalController extends Controller
                 'client_exists' => $contact->client ? true : false,
                 'client_is_active' => $contact->client ? $contact->client->is_active : 'no_client',
                 'contact_id' => $contact->id,
-                'client_id' => $contact->client_id
+                'client_id' => $contact->client_id,
             ];
-            
+
             \Log::error('Portal access denied for contact', $debugInfo);
-            
+
             $errorMessage = 'Your account does not have portal access enabled. Please contact your administrator.';
-            
+
             // Add specific error details for debugging
-            if (!$contact->has_portal_access) {
+            if (! $contact->has_portal_access) {
                 $errorMessage = 'Portal access is not enabled for your account.';
             } elseif ($contact->isLocked()) {
                 $errorMessage = 'Your account is temporarily locked.';
-            } elseif (!$contact->client) {
+            } elseif (! $contact->client) {
                 $errorMessage = 'No client association found for your account.';
-            } elseif (!$contact->client->is_active) {
+            } elseif (! $contact->client->is_active) {
                 $errorMessage = 'Your client account is not active.';
             }
-            
+
             return back()->withErrors([
                 'email' => $errorMessage,
             ])->onlyInput('email');
@@ -114,10 +111,10 @@ class ClientPortalController extends Controller
         // Update login info and authenticate
         $contact->updateLoginInfo($request->ip());
         auth('client')->login($contact, $request->boolean('remember', false));
-        
+
         // Clear any intended URL to prevent redirect to wrong dashboard
         session()->forget('url.intended');
-        
+
         return redirect()->route('client.dashboard');
     }
 
@@ -128,11 +125,11 @@ class ClientPortalController extends Controller
     {
         $contact = auth('client')->user();
         $client = $contact->client;
-        
+
         // Get contact roles and permissions
         $roles = $contact->getRoles();
         $permissions = $contact->portal_permissions ?? [];
-        
+
         // Base dashboard data that all contacts can see
         $dashboardData = [
             'contact' => $contact,
@@ -140,7 +137,7 @@ class ClientPortalController extends Controller
             'roles' => $roles,
             'permissions' => $permissions,
         ];
-        
+
         // Role-based content sections
         if ($this->canViewContracts($contact)) {
             $contracts = Contract::where('client_id', $client->id)
@@ -159,30 +156,30 @@ class ClientPortalController extends Controller
                 'total_contract_value' => $contracts->sum('contract_value'),
             ];
         }
-        
+
         // Billing-specific content
         if ($this->canViewInvoices($contact)) {
             $dashboardData['invoices'] = $this->getInvoicesForContact($contact);
             $dashboardData['invoiceStats'] = $this->getInvoiceStatsForContact($contact);
         }
-        
-        // Technical-specific content  
+
+        // Technical-specific content
         if ($this->canViewTickets($contact)) {
             $dashboardData['tickets'] = $this->getTicketsForContact($contact);
             $dashboardData['ticketStats'] = $this->getTicketStatsForContact($contact);
         }
-        
+
         if ($this->canViewAssets($contact)) {
             $dashboardData['assets'] = $this->getAssetsForContact($contact);
             $dashboardData['assetStats'] = $this->getAssetStatsForContact($contact);
         }
-        
+
         // Project management for primary contacts
         if ($this->canViewProjects($contact)) {
             $dashboardData['projects'] = $this->getProjectsForContact($contact);
             $dashboardData['projectStats'] = $this->getProjectStatsForContact($contact);
         }
-        
+
         // Recent activity and notifications
         $dashboardData['recentActivity'] = $this->getRecentActivityForContact($contact);
         $dashboardData['upcomingMilestones'] = $this->getUpcomingMilestonesForContact($contact);
@@ -198,14 +195,14 @@ class ClientPortalController extends Controller
     public function contracts(Request $request)
     {
         $contact = auth('client')->user();
-        
+
         // Check if contact can view contracts
-        if (!$this->canViewContracts($contact)) {
+        if (! $this->canViewContracts($contact)) {
             abort(403, 'You do not have permission to view contracts.');
         }
-        
+
         $client = $contact->client;
-        
+
         $query = Contract::where('client_id', $client->id)
             ->with(['milestones', 'signatures', 'invoices']);
 
@@ -231,19 +228,19 @@ class ClientPortalController extends Controller
         $this->authorizeClientAccess($contract);
 
         $contract->load([
-            'milestones' => function($query) {
+            'milestones' => function ($query) {
                 $query->orderBy('due_date', 'asc');
             },
             'signatures',
-            'invoices' => function($query) {
+            'invoices' => function ($query) {
                 $query->with('payments')->orderBy('created_at', 'desc');
             },
-            'approvals' => function($query) {
+            'approvals' => function ($query) {
                 $query->orderBy('created_at', 'desc');
             },
-            'auditLogs' => function($query) {
+            'auditLogs' => function ($query) {
                 $query->orderBy('created_at', 'desc')->limit(10);
-            }
+            },
         ]);
 
         $nextMilestone = $contract->milestones
@@ -283,10 +280,10 @@ class ClientPortalController extends Controller
                 ->where('status', 'pending')
                 ->first();
 
-            if (!$signature) {
+            if (! $signature) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No pending signature found for this contract.'
+                    'message' => 'No pending signature found for this contract.',
                 ], 400);
             }
 
@@ -314,19 +311,19 @@ class ClientPortalController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Contract signed successfully!'
+                'message' => 'Contract signed successfully!',
             ]);
 
         } catch (\Exception $e) {
             Log::error('Error signing contract', [
                 'contract_id' => $contract->id,
                 'client_id' => auth('client')->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while signing the contract.'
+                'message' => 'An error occurred while signing the contract.',
             ], 500);
         }
     }
@@ -340,16 +337,16 @@ class ClientPortalController extends Controller
 
         try {
             $pdf = $contract->generatePdf();
-            
+
             return response($pdf, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="contract-' . $contract->contract_number . '.pdf"',
+                'Content-Disposition' => 'attachment; filename="contract-'.$contract->contract_number.'.pdf"',
             ]);
         } catch (\Exception $e) {
             Log::error('Error generating contract PDF for client', [
                 'contract_id' => $contract->id,
                 'client_id' => auth('client')->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->with('error', 'Unable to download contract PDF.');
@@ -398,7 +395,7 @@ class ClientPortalController extends Controller
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
                     $path = $file->store('milestone-attachments', 'public');
-                    
+
                     $milestone->attachments()->create([
                         'filename' => $file->getClientOriginalName(),
                         'path' => $path,
@@ -429,7 +426,7 @@ class ClientPortalController extends Controller
             Log::error('Error updating milestone progress', [
                 'milestone_id' => $milestone->id,
                 'client_id' => auth('client')->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->with('error', 'Unable to update milestone progress.');
@@ -480,16 +477,16 @@ class ClientPortalController extends Controller
 
         try {
             $pdf = $invoice->generatePdf();
-            
+
             return response($pdf, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="invoice-' . $invoice->invoice_number . '.pdf"',
+                'Content-Disposition' => 'attachment; filename="invoice-'.$invoice->invoice_number.'.pdf"',
             ]);
         } catch (\Exception $e) {
             Log::error('Error generating invoice PDF for client', [
                 'invoice_id' => $invoice->id,
                 'client_id' => auth('client')->id(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->with('error', 'Unable to download invoice PDF.');
@@ -503,7 +500,7 @@ class ClientPortalController extends Controller
     {
         $contact = auth('client')->user();
         $client = $contact->client;
-        
+
         return view('client-portal.profile', compact('contact', 'client'));
     }
 
@@ -525,7 +522,7 @@ class ClientPortalController extends Controller
 
         try {
             $contact->update($request->only([
-                'name', 'phone', 'mobile', 'title', 'department'
+                'name', 'phone', 'mobile', 'title', 'department',
             ]));
 
             if ($request->has('notification_preferences')) {
@@ -533,7 +530,7 @@ class ClientPortalController extends Controller
                     'portal_permissions' => array_merge(
                         $contact->portal_permissions ?? [],
                         ['notification_preferences' => $request->notification_preferences]
-                    )
+                    ),
                 ]);
             }
 
@@ -542,7 +539,7 @@ class ClientPortalController extends Controller
         } catch (\Exception $e) {
             Log::error('Error updating contact profile', [
                 'contact_id' => $contact->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()->back()->with('error', 'Unable to update profile.');
@@ -555,32 +552,30 @@ class ClientPortalController extends Controller
     public function logout(Request $request)
     {
         auth('client')->logout();
-        
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
+
         return redirect()->route('client.login');
     }
 
     /**
      * Helper methods
      */
-
     protected function authorizeClientAccess(Contract $contract)
     {
         $contact = auth('client')->user();
-        
+
         // Check client association
         if ($contract->client_id !== $contact->client_id) {
             abort(403, 'Unauthorized access to contract.');
         }
-        
+
         // Check contract viewing permissions
-        if (!$this->canViewContracts($contact)) {
+        if (! $this->canViewContracts($contact)) {
             abort(403, 'You do not have permission to view contracts.');
         }
     }
-
 
     protected function getRecentActivity(int $clientId): array
     {
@@ -597,9 +592,9 @@ class ClientPortalController extends Controller
 
     protected function getUpcomingMilestones(int $clientId): array
     {
-        return ContractMilestone::whereHas('contract', function($query) use ($clientId) {
-                $query->where('client_id', $clientId);
-            })
+        return ContractMilestone::whereHas('contract', function ($query) use ($clientId) {
+            $query->where('client_id', $clientId);
+        })
             ->where('status', '!=', 'completed')
             ->where('due_date', '>=', now())
             ->orderBy('due_date', 'asc')
@@ -613,9 +608,9 @@ class ClientPortalController extends Controller
         $actions = [];
 
         // Pending signatures
-        $pendingSignatures = ContractSignature::whereHas('contract', function($query) use ($clientId) {
-                $query->where('client_id', $clientId);
-            })
+        $pendingSignatures = ContractSignature::whereHas('contract', function ($query) use ($clientId) {
+            $query->where('client_id', $clientId);
+        })
             ->where('status', 'pending')
             ->count();
 
@@ -629,9 +624,9 @@ class ClientPortalController extends Controller
         }
 
         // Overdue milestones requiring input
-        $overdueMilestones = ContractMilestone::whereHas('contract', function($query) use ($clientId) {
-                $query->where('client_id', $clientId);
-            })
+        $overdueMilestones = ContractMilestone::whereHas('contract', function ($query) use ($clientId) {
+            $query->where('client_id', $clientId);
+        })
             ->where('status', '!=', 'completed')
             ->where('due_date', '<', now())
             ->count();
@@ -651,85 +646,87 @@ class ClientPortalController extends Controller
     /**
      * Role and Permission Checking Methods
      */
-    
     protected function canViewContracts(Contact $contact): bool
     {
         // Primary contacts can always view contracts
         // Others need explicit permission
-        return $contact->isPrimary() || 
+        return $contact->isPrimary() ||
                in_array('can_view_contracts', $contact->portal_permissions ?? []);
     }
-    
+
     protected function canViewInvoices(Contact $contact): bool
     {
         // Billing contacts and primary can view invoices
-        return $contact->isBilling() || 
-               $contact->isPrimary() || 
+        return $contact->isBilling() ||
+               $contact->isPrimary() ||
                in_array('can_view_invoices', $contact->portal_permissions ?? []);
     }
-    
+
     protected function canViewTickets(Contact $contact): bool
     {
         // Technical contacts can view tickets, others need permission
-        return $contact->isTechnical() || 
-               $contact->isPrimary() || 
+        return $contact->isTechnical() ||
+               $contact->isPrimary() ||
                in_array('can_view_tickets', $contact->portal_permissions ?? []);
     }
-    
+
     protected function canCreateTickets(Contact $contact): bool
     {
-        return $contact->isTechnical() || 
-               $contact->isPrimary() || 
+        return $contact->isTechnical() ||
+               $contact->isPrimary() ||
                in_array('can_create_tickets', $contact->portal_permissions ?? []);
     }
-    
+
     protected function canViewAssets(Contact $contact): bool
     {
-        return $contact->isTechnical() || 
-               $contact->isPrimary() || 
+        return $contact->isTechnical() ||
+               $contact->isPrimary() ||
                in_array('can_view_assets', $contact->portal_permissions ?? []);
     }
-    
+
     protected function canViewProjects(Contact $contact): bool
     {
-        return $contact->isPrimary() || 
+        return $contact->isPrimary() ||
                in_array('can_view_projects', $contact->portal_permissions ?? []);
     }
-    
+
     protected function canViewReports(Contact $contact): bool
     {
-        return $contact->isPrimary() || 
+        return $contact->isPrimary() ||
                in_array('can_view_reports', $contact->portal_permissions ?? []);
     }
-    
+
     protected function canApproveQuotes(Contact $contact): bool
     {
-        return $contact->isPrimary() || 
-               $contact->isBilling() || 
+        return $contact->isPrimary() ||
+               $contact->isBilling() ||
                in_array('can_approve_quotes', $contact->portal_permissions ?? []);
     }
 
     /**
      * Contact-specific Data Methods
      */
-    
     protected function getInvoicesForContact(Contact $contact)
     {
-        if (!$contact->client) return collect();
-        
+        if (! $contact->client) {
+            return collect();
+        }
+
         return $contact->client->invoices()
             ->with(['payments'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
     }
-    
+
     protected function getInvoiceStatsForContact(Contact $contact): array
     {
-        if (!$contact->client) return [];
-        
+        if (! $contact->client) {
+            return [];
+        }
+
         $invoices = $contact->client->invoices();
-        
+
         return [
             'total_invoices' => $invoices->count(),
             'outstanding_amount' => $invoices->where('status', 'sent')->sum('amount'),
@@ -739,23 +736,27 @@ class ClientPortalController extends Controller
                 ->sum('amount'),
         ];
     }
-    
+
     protected function getTicketsForContact(Contact $contact)
     {
-        if (!$contact->client) return collect();
-        
+        if (! $contact->client) {
+            return collect();
+        }
+
         return $contact->client->tickets()
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
     }
-    
+
     protected function getTicketStatsForContact(Contact $contact): array
     {
-        if (!$contact->client) return [];
-        
+        if (! $contact->client) {
+            return [];
+        }
+
         $tickets = $contact->client->tickets();
-        
+
         return [
             'total_tickets' => $tickets->count(),
             'open_tickets' => $tickets->whereIn('status', ['Open', 'In Progress', 'Waiting', 'On Hold'])->count(),
@@ -765,23 +766,27 @@ class ClientPortalController extends Controller
             'avg_response_time' => '< 1h', // Placeholder - calculate from ticket history
         ];
     }
-    
+
     protected function getAssetsForContact(Contact $contact)
     {
-        if (!$contact->client) return collect();
-        
+        if (! $contact->client) {
+            return collect();
+        }
+
         return $contact->client->assets()
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
     }
-    
+
     protected function getAssetStatsForContact(Contact $contact): array
     {
-        if (!$contact->client) return [];
-        
+        if (! $contact->client) {
+            return [];
+        }
+
         $assets = $contact->client->assets();
-        
+
         return [
             'total_assets' => $assets->count(),
             'active_assets' => $assets->where('status', 'active')->count(),
@@ -789,23 +794,27 @@ class ClientPortalController extends Controller
             'warranty_expiring' => $assets->where('warranty_expire', '<=', now()->addDays(60))->count(),
         ];
     }
-    
+
     protected function getProjectsForContact(Contact $contact)
     {
-        if (!$contact->client) return collect();
-        
+        if (! $contact->client) {
+            return collect();
+        }
+
         return $contact->client->projects()
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
     }
-    
+
     protected function getProjectStatsForContact(Contact $contact): array
     {
-        if (!$contact->client) return [];
-        
+        if (! $contact->client) {
+            return [];
+        }
+
         $projects = $contact->client->projects();
-        
+
         return [
             'total_projects' => $projects->count(),
             'active_projects' => $projects->whereNull('completed_at')->count(),
@@ -815,14 +824,16 @@ class ClientPortalController extends Controller
                 ->count(),
         ];
     }
-    
+
     protected function getRecentActivityForContact(Contact $contact): array
     {
-        if (!$contact->client) return [];
-        
+        if (! $contact->client) {
+            return [];
+        }
+
         // Filter activity based on what the contact can see
         $activities = [];
-        
+
         if ($this->canViewContracts($contact)) {
             $contractActivity = Contract::where('client_id', $contact->client->id)
                 ->with('auditLogs')
@@ -831,27 +842,27 @@ class ClientPortalController extends Controller
                 ->take(5);
             $activities = array_merge($activities, $contractActivity->toArray());
         }
-        
+
         if ($this->canViewTickets($contact)) {
             // Add ticket activity
         }
-        
+
         if ($this->canViewInvoices($contact)) {
             // Add invoice activity
         }
-        
+
         return array_slice($activities, 0, 10);
     }
-    
+
     protected function getUpcomingMilestonesForContact(Contact $contact): array
     {
-        if (!$this->canViewContracts($contact) || !$contact->client) {
+        if (! $this->canViewContracts($contact) || ! $contact->client) {
             return [];
         }
-        
-        return ContractMilestone::whereHas('contract', function($query) use ($contact) {
-                $query->where('client_id', $contact->client->id);
-            })
+
+        return ContractMilestone::whereHas('contract', function ($query) use ($contact) {
+            $query->where('client_id', $contact->client->id);
+        })
             ->where('status', '!=', 'completed')
             ->where('due_date', '>=', now())
             ->orderBy('due_date', 'asc')
@@ -859,18 +870,20 @@ class ClientPortalController extends Controller
             ->get()
             ->toArray();
     }
-    
+
     protected function getPendingActionsForContact(Contact $contact): array
     {
         $actions = [];
-        
-        if (!$contact->client) return $actions;
-        
+
+        if (! $contact->client) {
+            return $actions;
+        }
+
         // Contract signatures (if can view contracts)
         if ($this->canViewContracts($contact)) {
-            $pendingSignatures = ContractSignature::whereHas('contract', function($query) use ($contact) {
-                    $query->where('client_id', $contact->client->id);
-                })
+            $pendingSignatures = ContractSignature::whereHas('contract', function ($query) use ($contact) {
+                $query->where('client_id', $contact->client->id);
+            })
                 ->where('status', 'pending')
                 ->count();
 
@@ -883,19 +896,19 @@ class ClientPortalController extends Controller
                 ];
             }
         }
-        
+
         // Quote approvals (if can approve quotes)
         if ($this->canApproveQuotes($contact)) {
             // Add quote approval actions
         }
-        
+
         // Overdue invoices (if billing contact)
         if ($this->canViewInvoices($contact)) {
             $overdueInvoices = $contact->client->invoices()
                 ->where('status', 'sent')
                 ->where('due_date', '<', now())
                 ->count();
-                
+
             if ($overdueInvoices > 0) {
                 $actions[] = [
                     'type' => 'invoice',
@@ -905,106 +918,106 @@ class ClientPortalController extends Controller
                 ];
             }
         }
-        
+
         return $actions;
     }
 
     /**
      * Additional Role-based Methods
      */
-    
+
     // Invoice methods
     public function invoices(Request $request)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewInvoices($contact)) {
+
+        if (! $this->canViewInvoices($contact)) {
             abort(403, 'You do not have permission to view invoices.');
         }
-        
+
         $invoices = $this->getInvoicesForContact($contact);
         $stats = $this->getInvoiceStatsForContact($contact);
         $notifications = $this->getNotificationsForContact($contact);
-        
+
         return view('client-portal.invoices.index', compact('invoices', 'stats', 'contact', 'notifications'));
     }
-    
+
     public function showInvoice(Invoice $invoice)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewInvoices($contact)) {
+
+        if (! $this->canViewInvoices($contact)) {
             abort(403, 'You do not have permission to view invoices.');
         }
-        
+
         if ($invoice->client_id !== $contact->client_id) {
             abort(403, 'Unauthorized access to invoice.');
         }
-        
+
         $invoice->load(['items', 'payments']);
-        
+
         return view('client-portal.invoices.show', compact('invoice', 'contact'));
     }
-    
+
     public function downloadClientInvoice(Invoice $invoice)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewInvoices($contact)) {
+
+        if (! $this->canViewInvoices($contact)) {
             abort(403, 'You do not have permission to view invoices.');
         }
-        
+
         if ($invoice->client_id !== $contact->client_id) {
             abort(403, 'Unauthorized access to invoice.');
         }
-        
+
         try {
             $pdf = $invoice->generatePdf();
-            
+
             return response($pdf, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="invoice-' . $invoice->invoice_number . '.pdf"',
+                'Content-Disposition' => 'attachment; filename="invoice-'.$invoice->invoice_number.'.pdf"',
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Unable to download invoice PDF.');
         }
     }
-    
+
     // Ticket methods
     public function tickets(Request $request)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewTickets($contact)) {
+
+        if (! $this->canViewTickets($contact)) {
             abort(403, 'You do not have permission to view tickets.');
         }
-        
+
         $tickets = $this->getTicketsForContact($contact);
         $stats = $this->getTicketStatsForContact($contact);
         $notifications = $this->getNotificationsForContact($contact);
-        
+
         return view('client-portal.tickets.index', compact('tickets', 'stats', 'contact', 'notifications'));
     }
-    
+
     public function createTicket()
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canCreateTickets($contact)) {
+
+        if (! $this->canCreateTickets($contact)) {
             abort(403, 'You do not have permission to create tickets.');
         }
-        
+
         return view('client-portal.tickets.create', compact('contact'));
     }
-    
+
     public function storeTicket(Request $request)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canCreateTickets($contact)) {
+
+        if (! $this->canCreateTickets($contact)) {
             abort(403, 'You do not have permission to create tickets.');
         }
-        
+
         $request->validate([
             'subject' => 'required|string|max:255',
             'details' => 'required|string',
@@ -1012,7 +1025,7 @@ class ClientPortalController extends Controller
             'category' => 'nullable|string',
             'attachments.*' => 'nullable|file|max:10240',
         ]);
-        
+
         try {
             \Log::info('Creating ticket for contact', [
                 'contact_id' => $contact->id,
@@ -1020,7 +1033,7 @@ class ClientPortalController extends Controller
                 'company_id' => $contact->company_id,
                 'has_client' => $contact->client ? true : false,
             ]);
-            
+
             $ticket = $contact->client->tickets()->create([
                 'subject' => $request->subject,
                 'details' => $request->details,
@@ -1032,14 +1045,14 @@ class ClientPortalController extends Controller
                 'source' => 'Portal',
                 'created_by' => $contact->id, // Use the contact ID who created the ticket
             ]);
-            
+
             \Log::info('Ticket created successfully', ['ticket_id' => $ticket->id]);
-            
+
             // TODO: Handle file attachments - TicketAttachment model needs to be created
             // if ($request->hasFile('attachments')) {
             //     foreach ($request->file('attachments') as $file) {
             //         $path = $file->store('ticket-attachments', 'public');
-            //         
+            //
             //         $ticket->attachments()->create([
             //             'filename' => $file->getClientOriginalName(),
             //             'path' => $path,
@@ -1050,10 +1063,10 @@ class ClientPortalController extends Controller
             //         ]);
             //     }
             // }
-            
+
             return redirect()->route('client.tickets.show', $ticket)
                 ->with('success', 'Ticket created successfully.');
-                
+
         } catch (\Exception $e) {
             \Log::error('Error creating ticket', [
                 'error' => $e->getMessage(),
@@ -1063,42 +1076,42 @@ class ClientPortalController extends Controller
                 'contact_id' => $contact->id,
                 'client_id' => $contact->client_id,
             ]);
-            
+
             return redirect()->back()
-                ->with('error', 'Unable to create ticket: ' . $e->getMessage())
+                ->with('error', 'Unable to create ticket: '.$e->getMessage())
                 ->withInput();
         }
     }
-    
+
     public function showTicket($ticket)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewTickets($contact)) {
+
+        if (! $this->canViewTickets($contact)) {
             abort(403, 'You do not have permission to view tickets.');
         }
-        
+
         // Find the ticket - assuming we have a Ticket model
         $ticket = $contact->client->tickets()->findOrFail($ticket);
-        
+
         return view('client-portal.tickets.show', compact('ticket', 'contact'));
     }
-    
+
     public function addTicketComment(Request $request, $ticket)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewTickets($contact)) {
+
+        if (! $this->canViewTickets($contact)) {
             abort(403, 'You do not have permission to comment on tickets.');
         }
-        
+
         $ticket = $contact->client->tickets()->findOrFail($ticket);
-        
+
         $request->validate([
             'comment' => 'required|string',
             'attachments.*' => 'nullable|file|max:10240',
         ]);
-        
+
         try {
             $comment = $ticket->comments()->create([
                 'comment' => $request->comment,
@@ -1106,12 +1119,12 @@ class ClientPortalController extends Controller
                 'user_id' => $contact->id,
                 'is_internal' => false,
             ]);
-            
+
             // Handle file attachments if any
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
                     $path = $file->store('ticket-attachments', 'public');
-                    
+
                     $comment->attachments()->create([
                         'filename' => $file->getClientOriginalName(),
                         'path' => $path,
@@ -1122,77 +1135,79 @@ class ClientPortalController extends Controller
                     ]);
                 }
             }
-            
+
             return redirect()->back()->with('success', 'Comment added successfully.');
-            
+
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Unable to add comment.');
         }
     }
-    
+
     // Asset methods
     public function assets(Request $request)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewAssets($contact)) {
+
+        if (! $this->canViewAssets($contact)) {
             abort(403, 'You do not have permission to view assets.');
         }
-        
+
         $assets = $this->getAssetsForContact($contact);
         $stats = $this->getAssetStatsForContact($contact);
-        
+
         return view('client-portal.assets.index', compact('assets', 'stats', 'contact'));
     }
-    
+
     public function showAsset($asset)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewAssets($contact)) {
+
+        if (! $this->canViewAssets($contact)) {
             abort(403, 'You do not have permission to view assets.');
         }
-        
+
         $asset = $contact->client->assets()->findOrFail($asset);
-        
+
         return view('client-portal.assets.show', compact('asset', 'contact'));
     }
-    
+
     // Project methods
     public function projects(Request $request)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewProjects($contact)) {
+
+        if (! $this->canViewProjects($contact)) {
             abort(403, 'You do not have permission to view projects.');
         }
-        
+
         $projects = $this->getProjectsForContact($contact);
         $stats = $this->getProjectStatsForContact($contact);
-        
+
         return view('client-portal.projects.index', compact('projects', 'stats', 'contact'));
     }
-    
+
     public function showProject($project)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewProjects($contact)) {
+
+        if (! $this->canViewProjects($contact)) {
             abort(403, 'You do not have permission to view projects.');
         }
-        
+
         $project = $contact->client->projects()->findOrFail($project);
-        
+
         return view('client-portal.projects.show', compact('project', 'contact'));
     }
-    
+
     /**
      * Get notifications for contact.
      */
     protected function getNotificationsForContact(Contact $contact)
     {
-        if (!$contact->client) return collect();
-        
+        if (! $contact->client) {
+            return collect();
+        }
+
         return \App\Models\PortalNotification::where('client_id', $contact->client->id)
             ->where('company_id', $contact->client->company_id)
             ->where('show_in_portal', true)
@@ -1202,86 +1217,87 @@ class ClientPortalController extends Controller
             ->limit(10)
             ->get();
     }
-    
+
     /**
      * Mark notification as read.
      */
     public function markNotificationAsRead($notificationId)
     {
         $contact = auth('client')->user();
-        
+
         $notification = \App\Models\PortalNotification::where('id', $notificationId)
             ->where('client_id', $contact->client->id)
             ->where('company_id', $contact->client->company_id)
             ->first();
-        
+
         if ($notification) {
             $notification->markAsRead();
+
             return response()->json(['success' => true]);
         }
-        
+
         return response()->json(['success' => false], 404);
     }
-    
+
     /**
      * List client quotes
      */
     public function quotes(Request $request)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewQuotes($contact)) {
+
+        if (! $this->canViewQuotes($contact)) {
             abort(403, 'You do not have permission to view quotes.');
         }
-        
+
         $quotes = $this->getQuotesForContact($contact);
         $stats = $this->getQuoteStatsForContact($contact);
         $notifications = $this->getNotificationsForContact($contact);
-        
+
         return view('client-portal.quotes.index', compact('quotes', 'stats', 'contact', 'notifications'));
     }
-    
+
     /**
      * Show specific quote
      */
     public function showQuote(\App\Models\Quote $quote)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewQuotes($contact)) {
+
+        if (! $this->canViewQuotes($contact)) {
             abort(403, 'You do not have permission to view quotes.');
         }
-        
+
         if ($quote->client_id !== $contact->client_id) {
             abort(403, 'Unauthorized access to quote.');
         }
-        
+
         $quote->load(['items', 'client', 'category']);
-        
+
         return view('client-portal.quotes.show', compact('quote', 'contact'));
     }
-    
+
     /**
      * Download quote PDF
      */
     public function downloadQuotePdf(\App\Models\Quote $quote)
     {
         $contact = auth('client')->user();
-        
-        if (!$this->canViewQuotes($contact)) {
+
+        if (! $this->canViewQuotes($contact)) {
             abort(403, 'You do not have permission to view quotes.');
         }
-        
+
         if ($quote->client_id !== $contact->client_id) {
             abort(403, 'Unauthorized access to quote.');
         }
-        
+
         try {
             $quote->load(['client', 'items', 'category']);
-            
+
             $pdfService = app(\App\Domains\Core\Services\PdfService::class);
             $filename = $pdfService->generateFilename('quote', $quote->getFullNumber());
-            
+
             return $pdfService->download(
                 view: 'pdf.quote',
                 data: ['quote' => $quote],
@@ -1292,45 +1308,49 @@ class ClientPortalController extends Controller
             Log::error('Quote PDF generation failed for client', [
                 'quote_id' => $quote->id,
                 'client_id' => $contact->client_id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return redirect()->back()->with('error', 'Unable to download quote PDF.');
         }
     }
-    
+
     /**
      * Check if contact can view quotes
      */
     protected function canViewQuotes(Contact $contact): bool
     {
-        return $contact->isPrimary() || 
-               $contact->isBilling() || 
+        return $contact->isPrimary() ||
+               $contact->isBilling() ||
                in_array('can_view_quotes', $contact->portal_permissions ?? []);
     }
-    
+
     /**
      * Get quotes for contact
      */
     protected function getQuotesForContact(Contact $contact)
     {
-        if (!$contact->client) return collect();
-        
+        if (! $contact->client) {
+            return collect();
+        }
+
         return $contact->client->quotes()
             ->with(['items', 'category'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
     }
-    
+
     /**
      * Get quote statistics for contact
      */
     protected function getQuoteStatsForContact(Contact $contact): array
     {
-        if (!$contact->client) return [];
-        
+        if (! $contact->client) {
+            return [];
+        }
+
         $quotes = $contact->client->quotes();
-        
+
         return [
             'total' => $quotes->count(),
             'pending' => $quotes->whereIn('status', ['Sent', 'Viewed'])->count(),

@@ -1,4 +1,5 @@
 <?php
+
 // Asset routes
 
 use Illuminate\Support\Facades\Route;
@@ -14,7 +15,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::get('assets/filter', [\App\Domains\Asset\Controllers\AssetController::class, 'getAssetsByFilter'])->name('assets.filter');
     Route::get('assets/metrics', [\App\Domains\Asset\Controllers\AssetController::class, 'getMetrics'])->name('assets.metrics');
     Route::get('assets/bulk', [\App\Domains\Asset\Controllers\AssetController::class, 'bulk'])->name('assets.bulk');
-    
+
     Route::resource('assets', \App\Domains\Asset\Controllers\AssetController::class);
     Route::prefix('assets')->name('assets.')->group(function () {
         Route::resource('maintenance', \App\Domains\Asset\Controllers\MaintenanceController::class);

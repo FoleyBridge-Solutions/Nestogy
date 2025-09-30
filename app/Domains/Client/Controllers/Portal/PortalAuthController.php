@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
-use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
+use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 
 /**
  * Portal Authentication Controller
- * 
+ *
  * Handles authentication, session management, and password reset
  * for client portal users with company-based access control.
  */
@@ -35,7 +35,6 @@ class PortalAuthController extends Controller
     /**
      * Handle portal login request
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function login(Request $request)
@@ -44,7 +43,7 @@ class PortalAuthController extends Controller
             'email' => 'required|email',
             'password' => 'required|string',
             'company_code' => 'nullable|string',
-            'remember' => 'boolean'
+            'remember' => 'boolean',
         ]);
 
         // Rate limiting
@@ -60,7 +59,7 @@ class PortalAuthController extends Controller
                 })
                 ->first();
 
-            if (!$user) {
+            if (! $user) {
                 RateLimiter::hit($this->throttleKey($request));
                 throw ValidationException::withMessages([
                     'email' => ['The provided credentials are incorrect.'],
@@ -75,17 +74,17 @@ class PortalAuthController extends Controller
             }
 
             // Check if account is active
-            if (!$user->is_active) {
+            if (! $user->is_active) {
                 throw ValidationException::withMessages([
                     'email' => ['Your account has been deactivated. Please contact your administrator.'],
                 ]);
             }
 
             // Check IP restrictions
-            if (!$user->isIpAllowed($request->ip())) {
+            if (! $user->isIpAllowed($request->ip())) {
                 Log::warning('Portal login attempt from unauthorized IP', [
                     'user_id' => $user->id,
-                    'ip' => $request->ip()
+                    'ip' => $request->ip(),
                 ]);
                 throw ValidationException::withMessages([
                     'email' => ['Access denied from this location.'],
@@ -93,10 +92,10 @@ class PortalAuthController extends Controller
             }
 
             // Verify password
-            if (!Hash::check($request->password, $user->password)) {
+            if (! Hash::check($request->password, $user->password)) {
                 $user->recordFailedLogin();
                 RateLimiter::hit($this->throttleKey($request));
-                
+
                 throw ValidationException::withMessages([
                     'email' => ['The provided credentials are incorrect.'],
                 ]);
@@ -106,12 +105,13 @@ class PortalAuthController extends Controller
             if ($user->two_factor_secret) {
                 // Store user ID in session for 2FA verification
                 session(['portal_2fa_user' => $user->id]);
+
                 return redirect()->route('portal.two-factor.challenge');
             }
 
             // Perform login
             $this->performLogin($user, $request->remember);
-            
+
             return $this->redirectAfterLogin($user);
 
         } catch (ValidationException $e) {
@@ -119,9 +119,9 @@ class PortalAuthController extends Controller
         } catch (\Exception $e) {
             Log::error('Portal login error', [
                 'error' => $e->getMessage(),
-                'email' => $request->email
+                'email' => $request->email,
             ]);
-            
+
             throw ValidationException::withMessages([
                 'email' => ['An error occurred during login. Please try again.'],
             ]);
@@ -135,7 +135,7 @@ class PortalAuthController extends Controller
      */
     public function showTwoFactorChallenge()
     {
-        if (!session('portal_2fa_user')) {
+        if (! session('portal_2fa_user')) {
             return redirect()->route('portal.login');
         }
 
@@ -145,23 +145,23 @@ class PortalAuthController extends Controller
     /**
      * Verify two-factor authentication code
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function verifyTwoFactor(Request $request)
     {
         $request->validate([
-            'code' => 'required|string'
+            'code' => 'required|string',
         ]);
 
         $userId = session('portal_2fa_user');
-        if (!$userId) {
+        if (! $userId) {
             return redirect()->route('portal.login');
         }
 
         $user = ClientPortalUser::find($userId);
-        if (!$user) {
+        if (! $user) {
             session()->forget('portal_2fa_user');
+
             return redirect()->route('portal.login');
         }
 
@@ -169,7 +169,7 @@ class PortalAuthController extends Controller
         $valid = app(\Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider::class)
             ->verify($user->two_factor_secret, $request->code);
 
-        if (!$valid) {
+        if (! $valid) {
             throw ValidationException::withMessages([
                 'code' => ['The provided two-factor authentication code was invalid.'],
             ]);
@@ -187,8 +187,6 @@ class PortalAuthController extends Controller
     /**
      * Perform the actual login
      *
-     * @param ClientPortalUser $user
-     * @param bool $remember
      * @return void
      */
     protected function performLogin(ClientPortalUser $user, bool $remember = false)
@@ -215,7 +213,7 @@ class PortalAuthController extends Controller
             ->causedBy($user)
             ->withProperties([
                 'ip' => request()->ip(),
-                'user_agent' => request()->userAgent()
+                'user_agent' => request()->userAgent(),
             ])
             ->log('Portal user logged in');
     }
@@ -223,7 +221,6 @@ class PortalAuthController extends Controller
     /**
      * Redirect after successful login
      *
-     * @param ClientPortalUser $user
      * @return \Illuminate\Http\RedirectResponse
      */
     protected function redirectAfterLogin(ClientPortalUser $user)
@@ -241,7 +238,6 @@ class PortalAuthController extends Controller
     /**
      * Handle portal logout
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function logout(Request $request)
@@ -277,14 +273,13 @@ class PortalAuthController extends Controller
     /**
      * Handle password reset request
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function sendPasswordResetLink(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'company_code' => 'nullable|string'
+            'company_code' => 'nullable|string',
         ]);
 
         // Find user
@@ -296,7 +291,7 @@ class PortalAuthController extends Controller
             })
             ->first();
 
-        if (!$user || !$user->is_active) {
+        if (! $user || ! $user->is_active) {
             // Don't reveal if user exists
             return back()->with('status', 'If an account exists with this email, you will receive a password reset link.');
         }
@@ -322,7 +317,7 @@ class PortalAuthController extends Controller
     /**
      * Show password reset form
      *
-     * @param string $token
+     * @param  string  $token
      * @return \Illuminate\View\View
      */
     public function showResetPasswordForm($token)
@@ -333,7 +328,6 @@ class PortalAuthController extends Controller
     /**
      * Handle password reset
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function resetPassword(Request $request)
@@ -350,7 +344,7 @@ class PortalAuthController extends Controller
                 $user->forceFill([
                     'password' => Hash::make($password),
                     'password_changed_at' => now(),
-                    'must_change_password' => false
+                    'must_change_password' => false,
                 ])->save();
 
                 // Log activity
@@ -378,7 +372,6 @@ class PortalAuthController extends Controller
     /**
      * Handle password change
      *
-     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function changePassword(Request $request)
@@ -390,7 +383,7 @@ class PortalAuthController extends Controller
 
         $user = Auth::guard('portal')->user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             throw ValidationException::withMessages([
                 'current_password' => ['The current password is incorrect.'],
             ]);
@@ -399,7 +392,7 @@ class PortalAuthController extends Controller
         $user->update([
             'password' => Hash::make($request->password),
             'password_changed_at' => now(),
-            'must_change_password' => false
+            'must_change_password' => false,
         ]);
 
         // Log activity
@@ -414,14 +407,12 @@ class PortalAuthController extends Controller
     /**
      * Enable two-factor authentication
      *
-     * @param Request $request
-     * @param EnableTwoFactorAuthentication $enable
      * @return \Illuminate\Http\RedirectResponse
      */
     public function enableTwoFactor(Request $request, EnableTwoFactorAuthentication $enable)
     {
         $user = Auth::guard('portal')->user();
-        
+
         $enable($user);
 
         // Log activity
@@ -436,19 +427,17 @@ class PortalAuthController extends Controller
     /**
      * Disable two-factor authentication
      *
-     * @param Request $request
-     * @param DisableTwoFactorAuthentication $disable
      * @return \Illuminate\Http\RedirectResponse
      */
     public function disableTwoFactor(Request $request, DisableTwoFactorAuthentication $disable)
     {
         $request->validate([
-            'password' => 'required'
+            'password' => 'required',
         ]);
 
         $user = Auth::guard('portal')->user();
 
-        if (!Hash::check($request->password, $user->password)) {
+        if (! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'password' => ['The password is incorrect.'],
             ]);
@@ -468,13 +457,13 @@ class PortalAuthController extends Controller
     /**
      * Ensure request is not rate limited
      *
-     * @param Request $request
      * @return void
+     *
      * @throws ValidationException
      */
     protected function ensureIsNotRateLimited(Request $request)
     {
-        if (!RateLimiter::tooManyAttempts($this->throttleKey($request), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey($request), 5)) {
             return;
         }
 
@@ -482,19 +471,16 @@ class PortalAuthController extends Controller
 
         throw ValidationException::withMessages([
             'email' => [
-                'Too many login attempts. Please try again in ' . $seconds . ' seconds.',
+                'Too many login attempts. Please try again in '.$seconds.' seconds.',
             ],
         ]);
     }
 
     /**
      * Get the throttle key for rate limiting
-     *
-     * @param Request $request
-     * @return string
      */
     protected function throttleKey(Request $request): string
     {
-        return 'portal_login_' . $request->ip();
+        return 'portal_login_'.$request->ip();
     }
 }

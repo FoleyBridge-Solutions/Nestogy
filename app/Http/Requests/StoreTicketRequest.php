@@ -125,7 +125,7 @@ class StoreTicketRequest extends FormRequest
         // Clean vendor ticket number
         if ($this->has('vendor_ticket_number')) {
             $this->merge([
-                'vendor_ticket_number' => trim($this->vendor_ticket_number)
+                'vendor_ticket_number' => trim($this->vendor_ticket_number),
             ]);
         }
 
@@ -134,7 +134,7 @@ class StoreTicketRequest extends FormRequest
             $primaryContact = \App\Domains\Client\Models\ClientContact::where('client_id', $this->client_id)
                 ->where('primary', true)
                 ->first();
-            
+
             if ($primaryContact) {
                 $this->merge(['contact_id' => $primaryContact->id]);
             }
@@ -195,7 +195,7 @@ class StoreTicketRequest extends FormRequest
                 if ($assignedUser) {
                     if ($assignedUser->company_id !== $user->company_id) {
                         $validator->errors()->add('assigned_to', 'The selected user is invalid.');
-                    } elseif (!$assignedUser->settings || $assignedUser->settings->role < 2) {
+                    } elseif (! $assignedUser->settings || $assignedUser->settings->role < 2) {
                         $validator->errors()->add('assigned_to', 'The selected user does not have technician privileges.');
                     }
                 }
@@ -210,7 +210,7 @@ class StoreTicketRequest extends FormRequest
             }
 
             // If scheduling, ensure assigned user is set
-            if ($this->filled('scheduled_at') && !$this->filled('assigned_to')) {
+            if ($this->filled('scheduled_at') && ! $this->filled('assigned_to')) {
                 $validator->errors()->add('assigned_to', 'An assigned technician is required when scheduling a ticket.');
             }
 

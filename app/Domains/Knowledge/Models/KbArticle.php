@@ -3,8 +3,8 @@
 namespace App\Domains\Knowledge\Models;
 
 use App\Models\BaseModel;
-use App\Models\User;
 use App\Models\Client;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +13,7 @@ use Laravel\Scout\Searchable;
 
 /**
  * Knowledge Base Article Model
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $category_id
@@ -37,7 +37,7 @@ use Laravel\Scout\Searchable;
  */
 class KbArticle extends BaseModel
 {
-    use SoftDeletes, Searchable;
+    use Searchable, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -70,12 +70,17 @@ class KbArticle extends BaseModel
     ];
 
     const STATUS_DRAFT = 'draft';
+
     const STATUS_PUBLISHED = 'published';
+
     const STATUS_ARCHIVED = 'archived';
+
     const STATUS_UNDER_REVIEW = 'under_review';
 
     const VISIBILITY_PUBLIC = 'public';
+
     const VISIBILITY_INTERNAL = 'internal';
+
     const VISIBILITY_CLIENT = 'client';
 
     /**
@@ -219,6 +224,7 @@ class KbArticle extends BaseModel
         if ($total === 0) {
             return 0;
         }
+
         return round(($this->helpful_count / $total) * 100, 2);
     }
 
@@ -229,6 +235,7 @@ class KbArticle extends BaseModel
     {
         $slug = str()->slug($title);
         $count = static::where('slug', 'LIKE', "{$slug}%")->count();
+
         return $count ? "{$slug}-{$count}" : $slug;
     }
 
@@ -246,7 +253,7 @@ class KbArticle extends BaseModel
             if (empty($article->version)) {
                 $article->version = '1.0.0';
             }
-            if (empty($article->excerpt) && !empty($article->content)) {
+            if (empty($article->excerpt) && ! empty($article->content)) {
                 $article->excerpt = str()->limit(strip_tags($article->content), 160);
             }
         });
@@ -255,7 +262,7 @@ class KbArticle extends BaseModel
             if ($article->isDirty('content')) {
                 // Increment version on content changes
                 $version = explode('.', $article->version);
-                $version[2] = (int)$version[2] + 1;
+                $version[2] = (int) $version[2] + 1;
                 $article->version = implode('.', $version);
             }
         });

@@ -5,22 +5,25 @@ namespace App\Domains\Financial\Services\TaxEngine;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * TaxCloud V3 API Client
- * 
+ *
  * Updated client for TaxCloud V3 API which uses different authentication
  * and endpoints compared to V1. Uses Connection ID and X-API-KEY header.
- * 
+ *
  * API Documentation: https://docs.taxcloud.com/
  */
 class TaxCloudV3ApiClient
 {
     protected string $baseUrl = 'https://api.v3.taxcloud.com/tax';
+
     protected ?string $connectionId;
+
     protected ?string $apiKey;
+
     protected int $companyId;
+
     protected int $timeout = 30;
 
     public function __construct(int $companyId, array $config = [])
@@ -36,7 +39,7 @@ class TaxCloudV3ApiClient
      */
     public function hasValidCredentials(): bool
     {
-        return !empty($this->connectionId) && !empty($this->apiKey);
+        return ! empty($this->connectionId) && ! empty($this->apiKey);
     }
 
     /**
@@ -58,28 +61,28 @@ class TaxCloudV3ApiClient
     public function calculateEquipmentTax(
         float $amount,
         array $destination,
-        array $origin = null,
-        string $customerId = null,
+        ?array $origin = null,
+        ?string $customerId = null,
         array $lineItems = []
     ): array {
-        if (!$this->hasValidCredentials()) {
+        if (! $this->hasValidCredentials()) {
             return $this->getCredentialsErrorResponse();
         }
 
         try {
             // Use default origin if not provided
             $origin = $origin ?? $this->getDefaultOrigin();
-            
+
             // Prepare line items
             if (empty($lineItems)) {
                 $lineItems = [
                     [
                         'index' => 0,
-                        'itemId' => 'EQUIP-' . time(),
+                        'itemId' => 'EQUIP-'.time(),
                         'tic' => 0, // General tangible personal property
                         'price' => $amount,
-                        'quantity' => 1
-                    ]
+                        'quantity' => 1,
+                    ],
                 ];
             }
 
@@ -88,36 +91,37 @@ class TaxCloudV3ApiClient
                 'items' => [
                     [
                         'currency' => [
-                            'currencyCode' => 'USD'
+                            'currencyCode' => 'USD',
                         ],
-                        'customerId' => $customerId ?? 'customer-' . $this->companyId,
+                        'customerId' => $customerId ?? 'customer-'.$this->companyId,
                         'destination' => $this->formatAddress($destination),
                         'origin' => $this->formatAddress($origin),
-                        'lineItems' => $lineItems
-                    ]
-                ]
+                        'lineItems' => $lineItems,
+                    ],
+                ],
             ];
 
             $response = Http::timeout($this->timeout)
                 ->withHeaders([
                     'X-API-KEY' => $this->apiKey,
-                    'Content-Type' => 'application/json'
+                    'Content-Type' => 'application/json',
                 ])
                 ->post("{$this->baseUrl}/connections/{$this->connectionId}/carts", $payload);
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return $this->formatTaxResponse($data);
             } else {
                 $error = $response->json();
-                throw new Exception("TaxCloud V3 API error: " . ($error['message'] ?? $response->body()));
+                throw new Exception('TaxCloud V3 API error: '.($error['message'] ?? $response->body()));
             }
 
         } catch (Exception $e) {
             Log::error('TaxCloud V3 tax calculation failed', [
                 'error' => $e->getMessage(),
                 'amount' => $amount,
-                'destination' => $destination
+                'destination' => $destination,
             ]);
 
             return [
@@ -127,7 +131,7 @@ class TaxCloudV3ApiClient
                 'tax_amount' => 0,
                 'total' => $amount,
                 'tax_rate' => 0,
-                'source' => 'taxcloud_v3_error'
+                'source' => 'taxcloud_v3_error',
             ];
         }
     }
@@ -143,7 +147,7 @@ class TaxCloudV3ApiClient
             'city' => $address['city'] ?? '',
             'state' => $address['state'] ?? $address['state_code'] ?? '',
             'zip' => $address['postal_code'] ?? $address['zip'] ?? $address['zip_code'] ?? '',
-            'countryCode' => $address['country'] ?? $address['country_code'] ?? 'US'
+            'countryCode' => $address['country'] ?? $address['country_code'] ?? 'US',
         ];
     }
 
@@ -158,7 +162,7 @@ class TaxCloudV3ApiClient
             'city' => 'Los Angeles',
             'state' => 'CA',
             'zip' => '90210',
-            'countryCode' => 'US'
+            'countryCode' => 'US',
         ];
     }
 
@@ -168,21 +172,21 @@ class TaxCloudV3ApiClient
     protected function formatTaxResponse(array $data): array
     {
         try {
-            if (!isset($data['items'][0])) {
+            if (! isset($data['items'][0])) {
                 throw new Exception('Invalid response format from TaxCloud V3');
             }
 
             $item = $data['items'][0];
             $lineItems = $item['lineItems'] ?? [];
-            
+
             $subtotal = 0;
             $totalTax = 0;
             $jurisdictions = [];
-            
+
             foreach ($lineItems as $lineItem) {
                 $subtotal += ($lineItem['price'] ?? 0) * ($lineItem['quantity'] ?? 1);
                 $totalTax += $lineItem['tax']['amount'] ?? 0;
-                
+
                 // Extract jurisdiction information if available
                 if (isset($lineItem['tax']['jurisdictions'])) {
                     foreach ($lineItem['tax']['jurisdictions'] as $jurisdiction) {
@@ -209,23 +213,23 @@ class TaxCloudV3ApiClient
                 'jurisdictions' => $jurisdictions,
                 'line_items' => $lineItems,
                 'source' => 'taxcloud_v3',
-                'response_data' => $data
+                'response_data' => $data,
             ];
 
         } catch (Exception $e) {
             Log::error('Failed to format TaxCloud V3 response', [
                 'error' => $e->getMessage(),
-                'response' => $data
+                'response' => $data,
             ]);
 
             return [
                 'success' => false,
-                'error' => 'Failed to parse TaxCloud response: ' . $e->getMessage(),
+                'error' => 'Failed to parse TaxCloud response: '.$e->getMessage(),
                 'subtotal' => 0,
                 'tax_amount' => 0,
                 'total' => 0,
                 'tax_rate' => 0,
-                'source' => 'taxcloud_v3_parse_error'
+                'source' => 'taxcloud_v3_parse_error',
             ];
         }
     }
@@ -235,7 +239,7 @@ class TaxCloudV3ApiClient
      */
     public function convertCartToOrder(string $cartId, string $orderId, bool $completed = true): array
     {
-        if (!$this->hasValidCredentials()) {
+        if (! $this->hasValidCredentials()) {
             return $this->getCredentialsErrorResponse();
         }
 
@@ -243,7 +247,7 @@ class TaxCloudV3ApiClient
             $payload = [
                 'completed' => $completed,
                 'cartId' => $cartId,
-                'orderId' => $orderId
+                'orderId' => $orderId,
             ];
 
             if ($completed) {
@@ -253,30 +257,30 @@ class TaxCloudV3ApiClient
             $response = Http::timeout($this->timeout)
                 ->withHeaders([
                     'X-API-KEY' => $this->apiKey,
-                    'Content-Type' => 'application/json'
+                    'Content-Type' => 'application/json',
                 ])
                 ->post("{$this->baseUrl}/connections/{$this->connectionId}/carts/orders", $payload);
 
             if ($response->successful()) {
                 return [
                     'success' => true,
-                    'order_data' => $response->json()
+                    'order_data' => $response->json(),
                 ];
             } else {
                 $error = $response->json();
-                throw new Exception("Failed to convert cart to order: " . ($error['message'] ?? $response->body()));
+                throw new Exception('Failed to convert cart to order: '.($error['message'] ?? $response->body()));
             }
 
         } catch (Exception $e) {
             Log::error('TaxCloud V3 cart to order conversion failed', [
                 'error' => $e->getMessage(),
                 'cart_id' => $cartId,
-                'order_id' => $orderId
+                'order_id' => $orderId,
             ]);
 
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -286,7 +290,7 @@ class TaxCloudV3ApiClient
      */
     public function testConnection(): array
     {
-        if (!$this->hasValidCredentials()) {
+        if (! $this->hasValidCredentials()) {
             return $this->getCredentialsErrorResponse();
         }
 
@@ -298,7 +302,7 @@ class TaxCloudV3ApiClient
                     'line1' => '162 E Ave',
                     'city' => 'Norwalk',
                     'state' => 'CT',
-                    'zip' => '06851'
+                    'zip' => '06851',
                 ],
                 null,
                 'test-customer'
@@ -308,7 +312,7 @@ class TaxCloudV3ApiClient
                 'success' => $testResult['success'],
                 'connection_status' => $testResult['success'] ? 'Connected' : 'Failed',
                 'test_result' => $testResult,
-                'api_version' => 'v3'
+                'api_version' => 'v3',
             ];
 
         } catch (Exception $e) {
@@ -316,7 +320,7 @@ class TaxCloudV3ApiClient
                 'success' => false,
                 'connection_status' => 'Failed',
                 'error' => $e->getMessage(),
-                'api_version' => 'v3'
+                'api_version' => 'v3',
             ];
         }
     }
@@ -333,7 +337,7 @@ class TaxCloudV3ApiClient
             'tax_amount' => 0,
             'total' => 0,
             'tax_rate' => 0,
-            'source' => 'configuration_error'
+            'source' => 'configuration_error',
         ];
     }
 }

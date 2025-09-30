@@ -7,9 +7,9 @@ use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Client extends Model
 {
@@ -168,7 +168,7 @@ class Client extends Model
             ->whereNull('user_clients.expires_at')
             ->orWhere('user_clients.expires_at', '>', now());
     }
-    
+
     /**
      * Get the primary technician for this client.
      */
@@ -178,7 +178,7 @@ class Client extends Model
             ->wherePivot('is_primary', true)
             ->first();
     }
-    
+
     /**
      * Check if a specific user is assigned to this client.
      */
@@ -188,7 +188,7 @@ class Client extends Model
             ->where('users.id', $userId)
             ->exists();
     }
-    
+
     /**
      * Assign a technician to this client.
      */
@@ -199,10 +199,10 @@ class Client extends Model
                 'access_level' => 'view',
                 'is_primary' => false,
                 'assigned_at' => now(),
-            ], $options)
+            ], $options),
         ]);
     }
-    
+
     /**
      * Remove a technician from this client.
      */

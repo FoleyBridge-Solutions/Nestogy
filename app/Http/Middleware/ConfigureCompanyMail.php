@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Domains\Email\Services\DynamicMailConfigService;
 use Closure;
 use Illuminate\Http\Request;
-use App\Domains\Email\Services\DynamicMailConfigService;
 
 class ConfigureCompanyMail
 {
@@ -18,7 +18,6 @@ class ConfigureCompanyMail
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */

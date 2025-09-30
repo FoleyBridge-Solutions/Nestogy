@@ -2,19 +2,17 @@
 
 namespace App\Domains\Security\Controllers;
 
+use App\Domains\Security\Services\RoleService;
 use App\Http\Controllers\Controller;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Domains\Security\Services\RoleService;
 use Silber\Bouncer\BouncerFacade as Bouncer;
-use Illuminate\Validation\Rule;
 
 /**
  * RoleController
- * 
+ *
  * Manages roles and permissions for the application. Provides CRUD operations
  * for roles, permission assignment, and role templates for MSP-specific workflows.
  */
@@ -35,16 +33,16 @@ class RoleController extends Controller
         $this->authorize('viewAny', \App\Models\Role::class);
 
         $user = Auth::user();
-        
+
         // Get all Bouncer roles
         $allRoles = Bouncer::role()->with(['abilities'])->get();
-        
+
         // Filter roles based on user's role hierarchy
         $roles = $this->filterRolesByHierarchy($allRoles, $user);
-        
+
         // Get role statistics for current company
         $roleStats = $this->roleService->getRoleStats($user->company_id);
-        
+
         // Get all available abilities grouped by category
         $abilitiesByCategory = $this->getAbilitiesByCategory();
 
@@ -65,7 +63,7 @@ class RoleController extends Controller
     public function create()
     {
         $this->authorize('create', \App\Models\Role::class);
-        
+
         $abilitiesByCategory = $this->getAbilitiesByCategory();
         $roleTemplates = $this->getMspRoleTemplates();
 
@@ -88,7 +86,7 @@ class RoleController extends Controller
         ]);
 
         DB::beginTransaction();
-        
+
         try {
             // Create the role
             $role = Bouncer::role()->create([
@@ -126,7 +124,7 @@ class RoleController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             Log::error('Role creation failed', [
                 'error' => $e->getMessage(),
                 'request_data' => $request->all(),
@@ -142,7 +140,7 @@ class RoleController extends Controller
 
             return back()
                 ->withInput()
-                ->with('error', 'Failed to create role: ' . $e->getMessage());
+                ->with('error', 'Failed to create role: '.$e->getMessage());
         }
     }
 
@@ -154,15 +152,15 @@ class RoleController extends Controller
         $this->authorize('view', \App\Models\Role::class);
 
         $role = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
-        
+
         // Get users with this role in current company
         $user = Auth::user();
         $usersWithRole = collect();
-        
+
         // This would need to be implemented based on your user-role relationship structure
         // For now, we'll get role statistics instead
         $roleStats = $this->roleService->getRoleStats($user->company_id);
-        
+
         return view('settings.roles.show', compact('role', 'roleStats'));
     }
 
@@ -174,15 +172,15 @@ class RoleController extends Controller
         $this->authorize('update', \App\Models\Role::class);
 
         $role = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
-        
+
         // Check role hierarchy - users can't edit roles above their level
         $user = Auth::user();
-        if (!$this->canManageRole($user, $role)) {
+        if (! $this->canManageRole($user, $role)) {
             return back()->with('error', 'You do not have permission to edit this role');
         }
-        
+
         // Prevent editing certain system-critical roles
-        if (in_array($role->name, ['super-admin']) && !$user->isA('super-admin')) {
+        if (in_array($role->name, ['super-admin']) && ! $user->isA('super-admin')) {
             return back()->with('error', 'Only Super Administrators can edit the Super Admin role');
         }
 
@@ -203,12 +201,12 @@ class RoleController extends Controller
 
         // Check role hierarchy - users can't edit roles above their level
         $user = Auth::user();
-        if (!$this->canManageRole($user, $role)) {
+        if (! $this->canManageRole($user, $role)) {
             return back()->with('error', 'You do not have permission to edit this role');
         }
-        
+
         // Prevent editing certain system-critical roles
-        if (in_array($role->name, ['super-admin']) && !$user->isA('super-admin')) {
+        if (in_array($role->name, ['super-admin']) && ! $user->isA('super-admin')) {
             return back()->with('error', 'Only Super Administrators can edit the Super Admin role');
         }
 
@@ -220,7 +218,7 @@ class RoleController extends Controller
         ]);
 
         DB::beginTransaction();
-        
+
         try {
             // Update role details
             $role->update([
@@ -264,7 +262,7 @@ class RoleController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             Log::error('Role update failed', [
                 'role_name' => $role->name,
                 'error' => $e->getMessage(),
@@ -280,7 +278,7 @@ class RoleController extends Controller
 
             return back()
                 ->withInput()
-                ->with('error', 'Failed to update role: ' . $e->getMessage());
+                ->with('error', 'Failed to update role: '.$e->getMessage());
         }
     }
 
@@ -295,7 +293,7 @@ class RoleController extends Controller
 
         // Check role hierarchy - users can't delete roles above their level
         $user = Auth::user();
-        if (!$this->canManageRole($user, $role)) {
+        if (! $this->canManageRole($user, $role)) {
             return back()->with('error', 'You do not have permission to delete this role');
         }
 
@@ -305,7 +303,7 @@ class RoleController extends Controller
         }
 
         DB::beginTransaction();
-        
+
         try {
             $roleName = $role->name;
             $roleTitle = $role->title;
@@ -334,7 +332,7 @@ class RoleController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             Log::error('Role deletion failed', [
                 'role_name' => $role->name,
                 'error' => $e->getMessage(),
@@ -348,7 +346,7 @@ class RoleController extends Controller
                 ], 500);
             }
 
-            return back()->with('error', 'Failed to delete role: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete role: '.$e->getMessage());
         }
     }
 
@@ -367,7 +365,7 @@ class RoleController extends Controller
         ]);
 
         DB::beginTransaction();
-        
+
         try {
             // Create new role
             $newRole = Bouncer::role()->create([
@@ -404,7 +402,7 @@ class RoleController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             Log::error('Role duplication failed', [
                 'original_role' => $originalRole->name,
                 'error' => $e->getMessage(),
@@ -420,7 +418,7 @@ class RoleController extends Controller
 
             return back()
                 ->withInput()
-                ->with('error', 'Failed to duplicate role: ' . $e->getMessage());
+                ->with('error', 'Failed to duplicate role: '.$e->getMessage());
         }
     }
 
@@ -441,7 +439,7 @@ class RoleController extends Controller
         $template = $templates[$request->template];
 
         DB::beginTransaction();
-        
+
         try {
             // Create role
             $role = Bouncer::role()->create([
@@ -480,7 +478,7 @@ class RoleController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             Log::error('Role template application failed', [
                 'template' => $request->template,
                 'error' => $e->getMessage(),
@@ -496,7 +494,7 @@ class RoleController extends Controller
 
             return back()
                 ->withInput()
-                ->with('error', 'Failed to apply role template: ' . $e->getMessage());
+                ->with('error', 'Failed to apply role template: '.$e->getMessage());
         }
     }
 
@@ -516,26 +514,26 @@ class RoleController extends Controller
             'user' => 1,
             'client-user' => 1,
         ];
-        
+
         // Get user's role level
         $userRoleLevel = 1;
         if ($user->isA('super-admin')) {
             $userRoleLevel = 4;
         } elseif ($user->isA('admin')) {
             $userRoleLevel = 3;
-        } elseif ($user->isA('technician') || $user->isA('accountant') || 
+        } elseif ($user->isA('technician') || $user->isA('accountant') ||
                   $user->isA('sales-representative') || $user->isA('marketing-specialist')) {
             $userRoleLevel = 2;
         }
-        
+
         // Get target role level
         $targetRoleLevel = $roleHierarchy[$role->name] ?? 1;
-        
+
         // Super Admins can manage all roles
         if ($userRoleLevel === 4) {
             return true;
         }
-        
+
         // Users can only manage roles at or below their level, excluding super-admin
         return $role->name !== 'super-admin' && $targetRoleLevel <= $userRoleLevel;
     }
@@ -559,11 +557,11 @@ class RoleController extends Controller
             'user' => 1,
             'client-user' => 1,
         ];
-        
+
         // Determine the user's highest role level
         $userRoleLevel = 1; // Default to lowest level
         $userRoleName = null;
-        
+
         // Check if user has super-admin role
         if ($user->isA('super-admin')) {
             $userRoleLevel = 4;
@@ -571,7 +569,7 @@ class RoleController extends Controller
         } elseif ($user->isA('admin')) {
             $userRoleLevel = 3;
             $userRoleName = 'admin';
-        } elseif ($user->isA('technician') || $user->isA('accountant') || 
+        } elseif ($user->isA('technician') || $user->isA('accountant') ||
                   $user->isA('sales-representative') || $user->isA('marketing-specialist')) {
             $userRoleLevel = 2;
             // Find which specific role they have
@@ -585,18 +583,18 @@ class RoleController extends Controller
             $userRoleLevel = 1;
             $userRoleName = 'user';
         }
-        
+
         // Filter roles based on hierarchy
         return $roles->filter(function ($role) use ($roleHierarchy, $userRoleLevel) {
             // Get the level of the current role
             $roleLevel = $roleHierarchy[$role->name] ?? 1;
-            
+
             // Only show roles at or below the user's level
             // Exception: Super Admins can see all roles
             if ($userRoleLevel === 4) {
                 return true; // Super Admin sees everything
             }
-            
+
             // For non-super admins, hide the super-admin role and only show roles at or below their level
             return $role->name !== 'super-admin' && $roleLevel <= $userRoleLevel;
         })->values(); // Reset array keys
@@ -613,11 +611,11 @@ class RoleController extends Controller
         foreach ($abilities as $ability) {
             $parts = explode('.', $ability->name);
             $category = ucfirst($parts[0]);
-            
-            if (!isset($categorized[$category])) {
+
+            if (! isset($categorized[$category])) {
                 $categorized[$category] = [];
             }
-            
+
             $categorized[$category][] = [
                 'name' => $ability->name,
                 'title' => $ability->title ?? $this->generateAbilityTitle($ability->name),
@@ -633,9 +631,9 @@ class RoleController extends Controller
     private function generateAbilityTitle(string $abilityName): string
     {
         $parts = explode('.', $abilityName);
-        
+
         // Convert snake_case to Title Case
-        $formatted = array_map(function($part) {
+        $formatted = array_map(function ($part) {
             return ucwords(str_replace(['_', '-'], ' ', $part));
         }, $parts);
 

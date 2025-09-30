@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\BelongsToCompany;
-use Carbon\Carbon;
 
 /**
  * Dunning Action Model
- * 
+ *
  * Represents individual collection actions and their outcomes with
  * comprehensive tracking of communication attempts, responses, and results.
- * 
+ *
  * @property int $id
  * @property int $campaign_id
  * @property int $sequence_id
@@ -84,7 +84,7 @@ use Carbon\Carbon;
  */
 class DunningAction extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'dunning_actions';
 
@@ -106,7 +106,7 @@ class DunningAction extends Model
         'resulted_in_payment', 'roi', 'client_satisfaction_score',
         'error_message', 'error_details', 'last_error_at', 'requires_manual_review',
         'pause_sequence', 'pause_reason', 'sequence_resumed_at', 'next_action_id',
-        'created_by', 'processed_by'
+        'created_by', 'processed_by',
     ];
 
     protected $casts = [
@@ -160,52 +160,85 @@ class DunningAction extends Model
         'processed_by' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Status constants
     const STATUS_PENDING = 'pending';
+
     const STATUS_SCHEDULED = 'scheduled';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_SENT = 'sent';
+
     const STATUS_DELIVERED = 'delivered';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_BOUNCED = 'bounced';
+
     const STATUS_OPENED = 'opened';
+
     const STATUS_CLICKED = 'clicked';
+
     const STATUS_RESPONDED = 'responded';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_ESCALATED = 'escalated';
 
     // Action type constants (same as DunningSequence)
     const ACTION_EMAIL = 'email';
+
     const ACTION_SMS = 'sms';
+
     const ACTION_PHONE_CALL = 'phone_call';
+
     const ACTION_LETTER = 'letter';
+
     const ACTION_PORTAL_NOTIFICATION = 'portal_notification';
+
     const ACTION_SERVICE_SUSPENSION = 'service_suspension';
+
     const ACTION_SERVICE_RESTORATION = 'service_restoration';
+
     const ACTION_LEGAL_HANDOFF = 'legal_handoff';
+
     const ACTION_COLLECTION_AGENCY = 'collection_agency';
+
     const ACTION_PAYMENT_PLAN_OFFER = 'payment_plan_offer';
+
     const ACTION_SETTLEMENT_OFFER = 'settlement_offer';
+
     const ACTION_ACCOUNT_HOLD = 'account_hold';
+
     const ACTION_CREDIT_HOLD = 'credit_hold';
+
     const ACTION_WRITEOFF = 'writeoff';
 
     // Response type constants
     const RESPONSE_PAYMENT = 'payment';
+
     const RESPONSE_CONTACT = 'contact';
+
     const RESPONSE_DISPUTE = 'dispute';
+
     const RESPONSE_PROMISE_TO_PAY = 'promise_to_pay';
+
     const RESPONSE_HARDSHIP = 'hardship';
+
     const RESPONSE_LEGAL_THREAT = 'legal_threat';
 
     // Escalation level constants
     const ESCALATION_MANAGER = 'manager';
+
     const ESCALATION_LEGAL = 'legal';
+
     const ESCALATION_COLLECTION_AGENCY = 'collection_agency';
+
     const ESCALATION_WRITEOFF = 'writeoff';
 
     /**
@@ -304,6 +337,7 @@ class DunningAction extends Model
     public function canRetry(): bool
     {
         $maxRetries = $this->sequence->max_retry_attempts ?? 3;
+
         return $this->status === self::STATUS_FAILED &&
                $this->retry_count < $maxRetries;
     }
@@ -318,7 +352,7 @@ class DunningAction extends Model
             self::ACTION_SMS,
             self::ACTION_PHONE_CALL,
             self::ACTION_LETTER,
-            self::ACTION_PORTAL_NOTIFICATION
+            self::ACTION_PORTAL_NOTIFICATION,
         ]);
     }
 
@@ -338,7 +372,7 @@ class DunningAction extends Model
         $this->update([
             'status' => self::STATUS_SENT,
             'attempted_at' => Carbon::now(),
-            'delivery_metadata' => array_merge($this->delivery_metadata ?? [], $metadata)
+            'delivery_metadata' => array_merge($this->delivery_metadata ?? [], $metadata),
         ]);
     }
 
@@ -347,11 +381,11 @@ class DunningAction extends Model
      */
     public function markAsOpened(): void
     {
-        if (!$this->opened) {
+        if (! $this->opened) {
             $this->update([
                 'opened' => true,
                 'opened_at' => Carbon::now(),
-                'status' => self::STATUS_OPENED
+                'status' => self::STATUS_OPENED,
             ]);
         }
     }
@@ -361,11 +395,11 @@ class DunningAction extends Model
      */
     public function markAsClicked(): void
     {
-        if (!$this->clicked) {
+        if (! $this->clicked) {
             $this->update([
                 'clicked' => true,
                 'clicked_at' => Carbon::now(),
-                'status' => self::STATUS_CLICKED
+                'status' => self::STATUS_CLICKED,
             ]);
         }
     }
@@ -379,7 +413,7 @@ class DunningAction extends Model
             'response_type' => $responseType,
             'response_data' => $responseData,
             'responded_at' => Carbon::now(),
-            'status' => self::STATUS_RESPONDED
+            'status' => self::STATUS_RESPONDED,
         ]);
 
         // Create collection note for the response
@@ -389,11 +423,11 @@ class DunningAction extends Model
             'invoice_id' => $this->invoice_id,
             'dunning_action_id' => $this->id,
             'note_type' => $responseType === self::RESPONSE_CONTACT ? 'client_contact' : $responseType,
-            'subject' => 'Customer Response to ' . ucwords(str_replace('_', ' ', $this->action_type)),
-            'content' => 'Customer responded with: ' . $responseType,
+            'subject' => 'Customer Response to '.ucwords(str_replace('_', ' ', $this->action_type)),
+            'content' => 'Customer responded with: '.$responseType,
             'outcome' => $responseType,
             'outcome_details' => json_encode($responseData),
-            'created_by' => 1 // System user
+            'created_by' => 1, // System user
         ]);
     }
 
@@ -406,7 +440,7 @@ class DunningAction extends Model
             'resulted_in_payment' => true,
             'amount_collected' => $amount,
             'status' => self::STATUS_COMPLETED,
-            'completed_at' => Carbon::now()
+            'completed_at' => Carbon::now(),
         ]);
 
         // Calculate ROI
@@ -425,7 +459,7 @@ class DunningAction extends Model
             'status' => self::STATUS_FAILED,
             'error_message' => $errorMessage,
             'error_details' => $errorDetails,
-            'last_error_at' => Carbon::now()
+            'last_error_at' => Carbon::now(),
         ]);
 
         // Schedule retry if possible
@@ -433,7 +467,7 @@ class DunningAction extends Model
             $retryInterval = $this->sequence->retry_interval_hours ?? 24;
             $this->update([
                 'next_retry_at' => Carbon::now()->addHours($retryInterval),
-                'retry_count' => $this->retry_count + 1
+                'retry_count' => $this->retry_count + 1,
             ]);
         }
     }
@@ -441,7 +475,7 @@ class DunningAction extends Model
     /**
      * Escalate action to higher level.
      */
-    public function escalate(string $reason, string $level = self::ESCALATION_MANAGER, int $escalatedToUserId = null): void
+    public function escalate(string $reason, string $level = self::ESCALATION_MANAGER, ?int $escalatedToUserId = null): void
     {
         $this->update([
             'escalated' => true,
@@ -450,7 +484,7 @@ class DunningAction extends Model
             'escalated_to_user_id' => $escalatedToUserId,
             'escalated_at' => Carbon::now(),
             'status' => self::STATUS_ESCALATED,
-            'requires_manual_review' => true
+            'requires_manual_review' => true,
         ]);
 
         // Create collection note for escalation
@@ -461,11 +495,11 @@ class DunningAction extends Model
             'dunning_action_id' => $this->id,
             'note_type' => 'escalation',
             'priority' => $level === self::ESCALATION_LEGAL ? 'urgent' : 'high',
-            'subject' => 'Action Escalated to ' . ucwords(str_replace('_', ' ', $level)),
+            'subject' => 'Action Escalated to '.ucwords(str_replace('_', ' ', $level)),
             'content' => $reason,
             'escalation_risk' => true,
             'attorney_review_required' => $level === self::ESCALATION_LEGAL,
-            'created_by' => auth()->id() ?? 1
+            'created_by' => auth()->id() ?? 1,
         ]);
     }
 
@@ -476,7 +510,7 @@ class DunningAction extends Model
     {
         $this->update([
             'pause_sequence' => true,
-            'pause_reason' => $reason
+            'pause_reason' => $reason,
         ]);
     }
 
@@ -488,7 +522,7 @@ class DunningAction extends Model
         $this->update([
             'pause_sequence' => false,
             'sequence_resumed_at' => Carbon::now(),
-            'pause_reason' => null
+            'pause_reason' => null,
         ]);
     }
 
@@ -549,7 +583,7 @@ class DunningAction extends Model
     public function scopeReadyToExecute($query)
     {
         return $query->where('status', self::STATUS_SCHEDULED)
-                    ->where('scheduled_at', '<=', Carbon::now());
+            ->where('scheduled_at', '<=', Carbon::now());
     }
 
     /**
@@ -558,8 +592,8 @@ class DunningAction extends Model
     public function scopeCanRetry($query)
     {
         return $query->where('status', self::STATUS_FAILED)
-                    ->where('next_retry_at', '<=', Carbon::now())
-                    ->whereColumn('retry_count', '<', 'max_retry_attempts');
+            ->where('next_retry_at', '<=', Carbon::now())
+            ->whereColumn('retry_count', '<', 'max_retry_attempts');
     }
 
     /**
@@ -594,7 +628,7 @@ class DunningAction extends Model
         $prefix = 'DA';
         $timestamp = now()->format('ymd');
         $random = str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-        
+
         return "{$prefix}-{$timestamp}-{$random}";
     }
 
@@ -606,17 +640,17 @@ class DunningAction extends Model
         parent::boot();
 
         static::creating(function ($action) {
-            if (!$action->action_reference) {
+            if (! $action->action_reference) {
                 $action->action_reference = self::generateActionReference();
             }
-            if (!$action->created_by) {
+            if (! $action->created_by) {
                 $action->created_by = auth()->id() ?? 1;
             }
         });
 
         static::updated(function ($action) {
             // Update sequence performance metrics when action is completed
-            if ($action->isDirty('status') && 
+            if ($action->isDirty('status') &&
                 in_array($action->status, [self::STATUS_COMPLETED, self::STATUS_RESPONDED])) {
                 $action->sequence->updatePerformanceMetrics();
             }

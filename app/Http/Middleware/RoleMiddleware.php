@@ -2,15 +2,15 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\UserSetting;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\UserSetting;
 
 /**
  * RoleMiddleware
- * 
+ *
  * Handles role-based access control with hierarchical permissions.
  * Supports role hierarchy: Admin (3) > Tech (2) > Accountant (1)
  */
@@ -23,7 +23,7 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
@@ -33,7 +33,7 @@ class RoleMiddleware
 
         // Check if user has sufficient role level
         if ($userRole < $requiredRole) {
-            abort(403, 'Insufficient permissions. Required role: ' . $this->getRoleLabel($requiredRole));
+            abort(403, 'Insufficient permissions. Required role: '.$this->getRoleLabel($requiredRole));
         }
 
         // Store current user role in request for easy access

@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Domains\Ticket\Services\TicketService;
-use App\Domains\Ticket\Services\SLAService;
-use App\Domains\Ticket\Models\Ticket;
-use App\Models\Client;
 use App\Domains\Core\Services\NotificationService;
+use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Ticket\Services\SLAService;
+use App\Domains\Ticket\Services\TicketService;
+use App\Models\Client;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 class CheckSlaBreaches extends Command
@@ -29,7 +29,9 @@ class CheckSlaBreaches extends Command
     protected $description = 'Check for SLA breaches and trigger escalations';
 
     protected TicketService $ticketService;
+
     protected SLAService $slaService;
+
     protected NotificationService $notificationService;
 
     /**
@@ -87,7 +89,7 @@ class CheckSlaBreaches extends Command
 
         // Filter tickets that have SLA breaches or are approaching breach
         return $tickets->filter(function ($ticket) {
-            if (!$ticket->client) {
+            if (! $ticket->client) {
                 return false;
             }
 
@@ -105,7 +107,7 @@ class CheckSlaBreaches extends Command
         $slaInfo = $this->ticketService->getTicketSlaInfo($ticket);
         $sla = $slaInfo['sla'] ?? null;
 
-        if (!$sla || !$sla->notify_on_breach) {
+        if (! $sla || ! $sla->notify_on_breach) {
             return;
         }
 
@@ -140,7 +142,7 @@ class CheckSlaBreaches extends Command
         } catch (\Exception $e) {
             Log::error('Failed to send SLA notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -152,6 +154,7 @@ class CheckSlaBreaches extends Command
     {
         if ($count === 0) {
             $this->info('No tickets with SLA breaches found');
+
             return;
         }
 
@@ -184,12 +187,12 @@ class CheckSlaBreaches extends Command
         [$slaStatus, $hoursOverdue] = $this->extractSlaStatusAndOverdue($slaInfo);
 
         return [
-            $ticket->prefix . $ticket->number,
-            substr($ticket->subject, 0, 40) . '...',
+            $ticket->prefix.$ticket->number,
+            substr($ticket->subject, 0, 40).'...',
             $ticket->client->name ?? 'N/A',
             $ticket->priority,
             $slaStatus,
-            $hoursOverdue
+            $hoursOverdue,
         ];
     }
 
@@ -223,7 +226,7 @@ class CheckSlaBreaches extends Command
      */
     private function calculateBreachDetails($deadline, $status)
     {
-        if (!$deadline) {
+        if (! $deadline) {
             return [$status, 0];
         }
 
@@ -235,7 +238,7 @@ class CheckSlaBreaches extends Command
      */
     private function handleNotifications($breachedTickets, $dryRun)
     {
-        if (!$dryRun) {
+        if (! $dryRun) {
             foreach ($breachedTickets as $ticket) {
                 $this->sendSlaNotifications($ticket);
             }
@@ -253,7 +256,7 @@ class CheckSlaBreaches extends Command
         Log::info('SLA breach check completed', [
             'breached_count' => $count,
             'company_id' => $companyId,
-            'dry_run' => $dryRun
+            'dry_run' => $dryRun,
         ]);
     }
 
@@ -262,10 +265,10 @@ class CheckSlaBreaches extends Command
      */
     private function handleException(\Exception $e)
     {
-        $this->error('Failed to check SLA breaches: ' . $e->getMessage());
+        $this->error('Failed to check SLA breaches: '.$e->getMessage());
         Log::error('SLA breach check failed', [
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
 
         return Command::FAILURE;

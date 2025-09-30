@@ -5,24 +5,32 @@ namespace App\Livewire\Projects;
 use App\Domains\Project\Models\Project;
 use App\Models\Client;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Auth;
 
 class ProjectIndex extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $status = '';
+
     public $clientId = '';
+
     public $managerId = '';
+
     public $priority = '';
+
     public $sortField = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $perPage = 25;
-    
+
     public $selectedProjects = [];
+
     public $selectAll = false;
 
     protected $queryString = [
@@ -33,7 +41,7 @@ class ProjectIndex extends Component
         'priority' => ['except' => ''],
         'sortField' => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
-        'perPage' => ['except' => 25]
+        'perPage' => ['except' => 25],
     ];
 
     public function mount()
@@ -73,14 +81,14 @@ class ProjectIndex extends Component
     public function bulkUpdateStatus($status)
     {
         $count = count($this->selectedProjects);
-        
+
         Project::whereIn('id', $this->selectedProjects)
             ->where('company_id', Auth::user()->company_id)
             ->update(['status' => $status]);
 
         $this->selectedProjects = [];
         $this->selectAll = false;
-        
+
         session()->flash('message', "$count projects have been updated to $status status.");
     }
 
@@ -89,7 +97,7 @@ class ProjectIndex extends Component
         $project = Project::where('id', $projectId)
             ->where('company_id', Auth::user()->company_id)
             ->first();
-            
+
         if ($project) {
             $project->update(['archived_at' => now()]);
             session()->flash('message', "Project '{$project->name}' has been archived.");
@@ -103,9 +111,9 @@ class ProjectIndex extends Component
             ->whereNull('archived_at')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%')
-                      ->orWhere('project_number', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('description', 'like', '%'.$this->search.'%')
+                        ->orWhere('project_number', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->status, function ($query) {
@@ -128,12 +136,12 @@ class ProjectIndex extends Component
     public function render()
     {
         $projects = $this->getProjects();
-        
+
         $clients = Client::where('company_id', Auth::user()->company_id)
             ->whereNull('deleted_at')
             ->orderBy('name')
             ->get();
-            
+
         $users = User::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
             ->orderBy('name')
@@ -144,7 +152,7 @@ class ProjectIndex extends Component
             'clients' => $clients,
             'users' => $users,
             'statuses' => ['planning', 'active', 'in_progress', 'on_hold', 'completed', 'cancelled'],
-            'priorities' => ['low', 'medium', 'high', 'urgent']
+            'priorities' => ['low', 'medium', 'high', 'urgent'],
         ]);
     }
 }

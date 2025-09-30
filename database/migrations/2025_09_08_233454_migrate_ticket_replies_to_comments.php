@@ -2,9 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
-use App\Domains\Ticket\Models\TicketTimeEntry;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -59,18 +58,18 @@ return new class extends Migration
                 archived_at as deleted_at
             FROM ticket_replies
         ");
-        
+
         // Create time entries for replies that had time_worked
         $repliesWithTime = DB::table('ticket_replies')
             ->whereNotNull('time_worked')
             ->where('time_worked', '!=', '00:00:00')
             ->get();
-            
+
         foreach ($repliesWithTime as $reply) {
             // Convert TIME to hours
             $timeParts = explode(':', $reply->time_worked);
             $hours = intval($timeParts[0]) + (intval($timeParts[1]) / 60);
-            
+
             if ($hours > 0) {
                 // Create time entry
                 $timeEntryId = DB::table('ticket_time_entries')->insertGetId([
@@ -87,7 +86,7 @@ return new class extends Migration
                     'created_at' => $reply->created_at,
                     'updated_at' => $reply->updated_at,
                 ]);
-                
+
                 // Update the migrated comment to link to time entry
                 DB::table('ticket_comments')
                     ->where('ticket_id', $reply->ticket_id)
@@ -96,7 +95,7 @@ return new class extends Migration
                     ->update(['time_entry_id' => $timeEntryId]);
             }
         }
-        
+
         // Add column to track migration (for safety)
         Schema::table('ticket_replies', function (Blueprint $table) {
             $table->boolean('migrated_to_comments')->default(true);
@@ -110,7 +109,7 @@ return new class extends Migration
     {
         // Delete migrated comments
         DB::table('ticket_comments')->where('source', 'manual')->delete();
-        
+
         // Remove migration tracking column
         Schema::table('ticket_replies', function (Blueprint $table) {
             $table->dropColumn('migrated_to_comments');

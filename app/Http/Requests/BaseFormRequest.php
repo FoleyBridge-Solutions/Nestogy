@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 abstract class BaseFormRequest extends FormRequest
 {
     protected string $modelClass;
+
     protected bool $requiresCompanyValidation = true;
 
     abstract protected function initializeRequest(): void;
@@ -21,14 +22,15 @@ abstract class BaseFormRequest extends FormRequest
 
     public function authorize(): bool
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return false;
         }
 
         $action = $this->getRouteAction();
-        
+
         if ($this->route() && $this->route()->parameter($this->getModelParameter())) {
             $model = $this->route()->parameter($this->getModelParameter());
+
             return Auth::user()->can($action, $model);
         }
 
@@ -39,7 +41,7 @@ abstract class BaseFormRequest extends FormRequest
     {
         $method = $this->getMethod();
         $routeName = $this->route() ? $this->route()->getName() : '';
-        
+
         if ($method === 'POST') {
             return 'create';
         } elseif ($method === 'PUT' || $method === 'PATCH') {
@@ -47,13 +49,14 @@ abstract class BaseFormRequest extends FormRequest
         } elseif ($method === 'DELETE') {
             return 'delete';
         }
-        
+
         return 'view';
     }
 
     protected function getModelParameter(): string
     {
         $modelName = class_basename($this->modelClass);
+
         return strtolower($modelName);
     }
 
@@ -120,7 +123,7 @@ abstract class BaseFormRequest extends FormRequest
                 'nullable',
                 Rule::exists('clients', 'id')->where(function ($query) use ($companyId) {
                     $query->where('company_id', $companyId)->whereNull('archived_at');
-                })
+                }),
             ];
         }
 
@@ -129,7 +132,7 @@ abstract class BaseFormRequest extends FormRequest
                 'nullable',
                 Rule::exists('contacts', 'id')->where(function ($query) use ($companyId) {
                     $query->where('company_id', $companyId)->whereNull('archived_at');
-                })
+                }),
             ];
         }
 
@@ -138,7 +141,7 @@ abstract class BaseFormRequest extends FormRequest
                 'nullable',
                 Rule::exists('locations', 'id')->where(function ($query) use ($companyId) {
                     $query->where('company_id', $companyId)->whereNull('archived_at');
-                })
+                }),
             ];
         }
 
@@ -147,7 +150,7 @@ abstract class BaseFormRequest extends FormRequest
                 'nullable',
                 Rule::exists('vendors', 'id')->where(function ($query) use ($companyId) {
                     $query->where('company_id', $companyId)->whereNull('archived_at');
-                })
+                }),
             ];
         }
 
@@ -156,7 +159,7 @@ abstract class BaseFormRequest extends FormRequest
                 'nullable',
                 Rule::exists('users', 'id')->where(function ($query) use ($companyId) {
                     $query->where('company_id', $companyId);
-                })
+                }),
             ];
         }
 
@@ -245,7 +248,7 @@ abstract class BaseFormRequest extends FormRequest
         foreach ($phoneFields as $field) {
             if ($this->has($field) && $this->get($field)) {
                 $this->merge([
-                    $field => preg_replace('/[^0-9+]/', '', $this->get($field))
+                    $field => preg_replace('/[^0-9+]/', '', $this->get($field)),
                 ]);
             }
         }
@@ -255,7 +258,7 @@ abstract class BaseFormRequest extends FormRequest
         foreach ($emailFields as $field) {
             if ($this->has($field) && $this->get($field)) {
                 $this->merge([
-                    $field => strtolower(trim($this->get($field)))
+                    $field => strtolower(trim($this->get($field))),
                 ]);
             }
         }
@@ -265,7 +268,7 @@ abstract class BaseFormRequest extends FormRequest
         foreach ($booleanFields as $field) {
             if ($this->has($field)) {
                 $this->merge([
-                    $field => $this->boolean($field)
+                    $field => $this->boolean($field),
                 ]);
             }
         }
@@ -287,15 +290,15 @@ abstract class BaseFormRequest extends FormRequest
     protected function setDefaultValues(): void
     {
         // Set common default values
-        if ($this->hasField('status') && !$this->filled('status')) {
+        if ($this->hasField('status') && ! $this->filled('status')) {
             $this->merge(['status' => 'active']);
         }
 
-        if ($this->hasField('currency_code') && !$this->filled('currency_code')) {
+        if ($this->hasField('currency_code') && ! $this->filled('currency_code')) {
             $this->merge(['currency_code' => 'USD']);
         }
 
-        if ($this->hasField('country') && !$this->filled('country')) {
+        if ($this->hasField('country') && ! $this->filled('country')) {
             $this->merge(['country' => 'US']);
         }
     }
@@ -313,7 +316,7 @@ abstract class BaseFormRequest extends FormRequest
         // Validate currency codes
         if ($this->filled('currency_code')) {
             $validCurrencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR'];
-            if (!in_array(strtoupper($this->currency_code), $validCurrencies)) {
+            if (! in_array(strtoupper($this->currency_code), $validCurrencies)) {
                 $validator->errors()->add('currency_code', 'Invalid currency code.');
             }
         }
@@ -359,7 +362,7 @@ abstract class BaseFormRequest extends FormRequest
             'nullable',
             'string',
             'size:3',
-            Rule::in(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR'])
+            Rule::in(['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR']),
         ];
     }
 
@@ -369,7 +372,7 @@ abstract class BaseFormRequest extends FormRequest
             'nullable',
             'numeric',
             'min:0',
-            'max:999999999.99'
+            'max:999999999.99',
         ];
     }
 
@@ -377,7 +380,7 @@ abstract class BaseFormRequest extends FormRequest
     {
         return [
             'nullable',
-            'date'
+            'date',
         ];
     }
 
@@ -386,7 +389,7 @@ abstract class BaseFormRequest extends FormRequest
         return [
             'nullable',
             'date',
-            'after:today'
+            'after:today',
         ];
     }
 
@@ -395,7 +398,7 @@ abstract class BaseFormRequest extends FormRequest
         return [
             'nullable',
             'string',
-            'regex:/^#[a-fA-F0-9]{6}$/'
+            'regex:/^#[a-fA-F0-9]{6}$/',
         ];
     }
 }

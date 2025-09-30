@@ -25,7 +25,7 @@ return new class extends Migration
             $table->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled'])->default('scheduled');
             $table->foreignId('technician_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'asset_id']);
             $table->index(['company_id', 'scheduled_date']);
             $table->index(['company_id', 'status']);
@@ -44,7 +44,7 @@ return new class extends Migration
             $table->decimal('cost', 10, 2)->nullable();
             $table->enum('status', ['active', 'expired', 'claimed'])->default('active');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'asset_id']);
             $table->index(['company_id', 'end_date']);
             $table->index(['company_id', 'status']);
@@ -63,7 +63,7 @@ return new class extends Migration
             $table->decimal('current_book_value', 12, 2);
             $table->date('depreciation_start_date');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'asset_id']);
         });
 
@@ -80,7 +80,7 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->json('deliverables')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'project_id']);
             $table->index(['company_id', 'due_date']);
             $table->index(['company_id', 'status']);
@@ -103,7 +103,7 @@ return new class extends Migration
             $table->enum('status', ['not_started', 'in_progress', 'completed', 'on_hold', 'cancelled'])->default('not_started');
             $table->integer('completion_percentage')->default(0);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'project_id']);
             $table->index(['company_id', 'milestone_id']);
             $table->index(['company_id', 'status']);
@@ -122,7 +122,7 @@ return new class extends Migration
             $table->dateTime('joined_at');
             $table->dateTime('left_at')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'project_id']);
             $table->index(['company_id', 'user_id']);
             $table->unique(['project_id', 'user_id']);
@@ -139,7 +139,7 @@ return new class extends Migration
             $table->integer('estimated_duration_days')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'category']);
             $table->index(['company_id', 'is_active']);
         });
@@ -152,7 +152,7 @@ return new class extends Migration
             $table->enum('dependency_type', ['finish_to_start', 'start_to_start', 'finish_to_finish', 'start_to_finish'])->default('finish_to_start');
             $table->integer('lag_days')->default(0);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'task_id']);
             $table->index(['company_id', 'depends_on_task_id']);
             $table->unique(['task_id', 'depends_on_task_id']);
@@ -165,7 +165,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->boolean('email_notifications')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'task_id']);
             $table->index(['company_id', 'user_id']);
             $table->unique(['task_id', 'user_id']);
@@ -181,7 +181,7 @@ return new class extends Migration
             $table->dateTime('completed_at')->nullable();
             $table->foreignId('completed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'task_id']);
             $table->index(['company_id', 'is_completed']);
         });
@@ -197,7 +197,7 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'sort_order']);
         });
@@ -214,7 +214,7 @@ return new class extends Migration
             $table->boolean('is_system')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'category_id']);
             $table->index(['company_id', 'type']);
             $table->index(['company_id', 'is_active']);
@@ -230,7 +230,7 @@ return new class extends Migration
             $table->json('configuration');
             $table->boolean('is_shared')->default(false);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'template_id']);
             $table->index(['company_id', 'user_id']);
         });
@@ -248,7 +248,7 @@ return new class extends Migration
             $table->dateTime('expires_at')->nullable();
             $table->json('parameters');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'user_id']);
             $table->index(['company_id', 'status']);
             $table->index(['company_id', 'expires_at']);
@@ -267,7 +267,7 @@ return new class extends Migration
             $table->integer('height')->default(1);
             $table->boolean('is_visible')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'user_id']);
             $table->index(['company_id', 'widget_type']);
         });
@@ -287,7 +287,7 @@ return new class extends Migration
             $table->dateTime('last_run')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'template_id']);
             $table->index(['company_id', 'next_run']);
             $table->index(['company_id', 'is_active']);
@@ -302,7 +302,7 @@ return new class extends Migration
             $table->json('dimensions')->nullable();
             $table->date('metric_date');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'metric_name']);
             $table->index(['company_id', 'metric_date']);
             $table->index(['company_id', 'metric_type']);
@@ -320,7 +320,7 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'kpi_name']);
             $table->index(['company_id', 'period']);
             $table->index(['company_id', 'is_active']);

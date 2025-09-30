@@ -2,8 +2,8 @@
 
 namespace App\Domains\Client\Requests;
 
-use App\Models\ClientDocument;
 use App\Http\Requests\BaseUpdateRequest;
+use App\Models\ClientDocument;
 
 class UpdateClientDocumentRequest extends BaseUpdateRequest
 {
@@ -12,7 +12,7 @@ class UpdateClientDocumentRequest extends BaseUpdateRequest
         return $this->mergeRules(
             [
                 'client_id' => $this->getClientValidationRule(),
-                'category' => 'required|in:' . implode(',', array_keys(ClientDocument::getCategories())),
+                'category' => 'required|in:'.implode(',', array_keys(ClientDocument::getCategories())),
                 'expires_at' => 'nullable|date|after:today',
                 'tags' => 'nullable|string|max:500',
                 'is_confidential' => 'boolean',
@@ -20,17 +20,17 @@ class UpdateClientDocumentRequest extends BaseUpdateRequest
             $this->getStandardTextRules()
         );
     }
-    
+
     protected function getBooleanFields(): array
     {
         return ['is_confidential'];
     }
-    
+
     protected function getRouteParameterName(): string
     {
         return 'document';
     }
-    
+
     protected function customMessages(): array
     {
         return [

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * ContractComponentAssignment Model
- * 
+ *
  * Represents the assignment of a component to a specific contract
  */
 class ContractComponentAssignment extends Model
@@ -36,7 +36,9 @@ class ContractComponentAssignment extends Model
 
     // Assignment statuses
     const STATUS_ACTIVE = 'active';
+
     const STATUS_INACTIVE = 'inactive';
+
     const STATUS_PENDING = 'pending';
 
     /**
@@ -83,7 +85,7 @@ class ContractComponentAssignment extends Model
     public function calculatePrice(): float
     {
         // Use pricing override if available, otherwise use component pricing
-        if (!empty($this->pricing_override)) {
+        if (! empty($this->pricing_override)) {
             return $this->calculateOverridePrice();
         }
 
@@ -93,20 +95,21 @@ class ContractComponentAssignment extends Model
     protected function calculateOverridePrice(): float
     {
         $override = $this->pricing_override;
-        
-        if (!isset($override['type'])) {
+
+        if (! isset($override['type'])) {
             return 0.0;
         }
 
         switch ($override['type']) {
             case 'fixed':
                 return (float) ($override['amount'] ?? 0);
-                
+
             case 'percentage':
                 $basePrice = $this->component->calculatePrice($this->variable_values ?? []);
                 $percentage = (float) ($override['percentage'] ?? 100);
+
                 return $basePrice * ($percentage / 100);
-                
+
             default:
                 return 0.0;
         }
@@ -115,12 +118,14 @@ class ContractComponentAssignment extends Model
     public function getConfigurationValue(string $key, $default = null)
     {
         $config = $this->configuration ?? [];
+
         return $config[$key] ?? $default;
     }
 
     public function getVariableValue(string $key, $default = null)
     {
         $variables = $this->variable_values ?? [];
+
         return $variables[$key] ?? $default;
     }
 
@@ -128,12 +133,12 @@ class ContractComponentAssignment extends Model
     {
         $template = $this->component->template_content ?? '';
         $variables = $this->variable_values ?? [];
-        
+
         // Simple template variable replacement
         foreach ($variables as $key => $value) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
+            $template = str_replace('{{'.$key.'}}', $value, $template);
         }
-        
+
         return $template;
     }
 }

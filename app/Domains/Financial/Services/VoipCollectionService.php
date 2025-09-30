@@ -2,19 +2,17 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\Client;
 use App\Models\AccountHold;
+use App\Models\Client;
 use App\Models\CollectionNote;
-use App\Models\DunningAction;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 
 /**
  * VoIP Collection Service
- * 
+ *
  * Handles VoIP-specific collection activities including service suspension
  * with E911 preservation, equipment recovery, number porting restrictions,
  * and specialized VoIP collection workflows.
@@ -22,11 +20,13 @@ use Illuminate\Support\Facades\Http;
 class VoipCollectionService
 {
     protected CollectionManagementService $collectionService;
+
     protected array $essentialServices = ['E911', 'emergency', '911'];
+
     protected array $suspensionGracePeriod = [
         'residential' => 3, // 3 days
         'business' => 7,    // 7 days
-        'enterprise' => 14  // 14 days
+        'enterprise' => 14,  // 14 days
     ];
 
     public function __construct(CollectionManagementService $collectionService)
@@ -38,8 +38,8 @@ class VoipCollectionService
      * Initiate service suspension with E911 preservation.
      */
     public function suspendVoipServices(
-        Client $client, 
-        string $reason, 
+        Client $client,
+        string $reason,
         array $options = []
     ): AccountHold {
         return DB::transaction(function () use ($client, $reason, $options) {
@@ -71,7 +71,7 @@ class VoipCollectionService
                 'equipment_hold' => $options['equipment_hold'] ?? false,
                 'porting_restriction' => $options['porting_restriction'] ?? true,
                 'notes' => $options['notes'] ?? '',
-                'created_by' => auth()->id() ?? 1
+                'created_by' => auth()->id() ?? 1,
             ]);
 
             // Execute suspension if scheduled for now
@@ -88,14 +88,14 @@ class VoipCollectionService
                 'outcome' => CollectionNote::OUTCOME_SERVICE_SUSPENDED,
                 'is_important' => true,
                 'follow_up_date' => $hold->scheduled_date->addDays(7),
-                'created_by' => auth()->id() ?? 1
+                'created_by' => auth()->id() ?? 1,
             ]);
 
             Log::info('VoIP service suspension initiated', [
                 'client_id' => $client->id,
                 'hold_id' => $hold->id,
                 'suspension_level' => $suspensionLevel,
-                'scheduled_date' => $hold->scheduled_date
+                'scheduled_date' => $hold->scheduled_date,
             ]);
 
             return $hold;
@@ -120,8 +120,8 @@ class VoipCollectionService
             case 'low':
                 return AccountHold::SEVERITY_SOFT_SUSPENSION; // Block outbound only
             case 'medium':
-                return $accountType === 'enterprise' ? 
-                    AccountHold::SEVERITY_SOFT_SUSPENSION : 
+                return $accountType === 'enterprise' ?
+                    AccountHold::SEVERITY_SOFT_SUSPENSION :
                     AccountHold::SEVERITY_PARTIAL_SUSPENSION; // Block most services
             case 'high':
                 return AccountHold::SEVERITY_PARTIAL_SUSPENSION;
@@ -138,7 +138,7 @@ class VoipCollectionService
     protected function getAffectedServices(Client $client, string $suspensionLevel): array
     {
         $allServices = $this->getClientVoipServices($client);
-        
+
         switch ($suspensionLevel) {
             case AccountHold::SEVERITY_SOFT_SUSPENSION:
                 return $this->filterServices($allServices, ['outbound_calling', 'international']);
@@ -157,7 +157,7 @@ class VoipCollectionService
     protected function getPreservedServices(Client $client): array
     {
         $preserved = ['E911', 'emergency_services'];
-        
+
         // Enterprise clients get additional preserved services
         if ($client->account_type === 'enterprise') {
             $preserved = array_merge($preserved, ['inbound_calling', 'voicemail']);
@@ -180,7 +180,7 @@ class VoipCollectionService
             'call_forwarding' => true,
             'conference' => true,
             'E911' => true,
-            'features' => true
+            'features' => true,
         ];
     }
 
@@ -190,20 +190,26 @@ class VoipCollectionService
     protected function filterServices(array $services, array $toSuspend, array $toPreserve = []): array
     {
         $affected = [];
-        
+
         foreach ($services as $service => $enabled) {
-            if (!$enabled) continue;
-            
+            if (! $enabled) {
+                continue;
+            }
+
             // Never suspend preserved services
-            if (in_array($service, $toPreserve)) continue;
-            if (in_array($service, $this->essentialServices)) continue;
-            
+            if (in_array($service, $toPreserve)) {
+                continue;
+            }
+            if (in_array($service, $this->essentialServices)) {
+                continue;
+            }
+
             // Check if service should be suspended
             if (in_array('all', $toSuspend) || in_array($service, $toSuspend)) {
                 $affected[] = $service;
             }
         }
-        
+
         return $affected;
     }
 
@@ -221,14 +227,14 @@ class VoipCollectionService
                 'client_id' => $client->id,
                 'services' => $servicesAffected,
                 'preserve_services' => $hold->services_preserved ?? [],
-                'hold_id' => $hold->id
+                'hold_id' => $hold->id,
             ]);
 
             if ($result['success']) {
                 $hold->update([
                     'executed_date' => Carbon::now(),
                     'execution_status' => 'completed',
-                    'system_response' => $result['response'] ?? null
+                    'system_response' => $result['response'] ?? null,
                 ]);
 
                 // Apply porting restriction if enabled
@@ -239,24 +245,23 @@ class VoipCollectionService
                 Log::info('VoIP service suspension executed', [
                     'client_id' => $client->id,
                     'hold_id' => $hold->id,
-                    'services_suspended' => $servicesAffected
+                    'services_suspended' => $servicesAffected,
                 ]);
 
                 return true;
             }
 
-            throw new \Exception('VoIP system returned failure: ' . ($result['error'] ?? 'Unknown error'));
-
+            throw new \Exception('VoIP system returned failure: '.($result['error'] ?? 'Unknown error'));
         } catch (\Exception $e) {
             $hold->update([
                 'execution_status' => 'failed',
-                'system_response' => $e->getMessage()
+                'system_response' => $e->getMessage(),
             ]);
 
             Log::error('Failed to execute VoIP service suspension', [
                 'client_id' => $hold->client_id,
                 'hold_id' => $hold->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -276,21 +281,21 @@ class VoipCollectionService
                     'phone_number' => $number,
                     'client_id' => $client->id,
                     'hold_id' => $hold->id,
-                    'reason' => 'Collections account hold'
+                    'reason' => 'Collections account hold',
                 ]);
             }
 
             Log::info('Porting restrictions applied', [
                 'client_id' => $client->id,
                 'hold_id' => $hold->id,
-                'numbers_count' => count($phoneNumbers)
+                'numbers_count' => count($phoneNumbers),
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to apply porting restrictions', [
                 'client_id' => $client->id,
                 'hold_id' => $hold->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -308,7 +313,7 @@ class VoipCollectionService
                 $result = $this->callVoipApi('restore_services', [
                     'client_id' => $client->id,
                     'services' => $hold->services_affected ?? [],
-                    'hold_id' => $hold->id
+                    'hold_id' => $hold->id,
                 ]);
 
                 if ($result['success']) {
@@ -322,7 +327,7 @@ class VoipCollectionService
                         'status' => AccountHold::STATUS_RESOLVED,
                         'resolved_date' => Carbon::now(),
                         'resolved_by' => auth()->id() ?? 1,
-                        'resolution_reason' => $reason ?: 'Services restored'
+                        'resolution_reason' => $reason ?: 'Services restored',
                     ]);
 
                     // Create collection note
@@ -332,25 +337,24 @@ class VoipCollectionService
                         'note_type' => CollectionNote::TYPE_SERVICE_SUSPENSION,
                         'content' => "VoIP services restored: {$reason}",
                         'outcome' => CollectionNote::OUTCOME_SERVICES_RESTORED,
-                        'created_by' => auth()->id() ?? 1
+                        'created_by' => auth()->id() ?? 1,
                     ]);
 
                     Log::info('VoIP services restored', [
                         'client_id' => $client->id,
                         'hold_id' => $hold->id,
-                        'reason' => $reason
+                        'reason' => $reason,
                     ]);
 
                     return true;
                 }
 
-                throw new \Exception('VoIP system returned failure: ' . ($result['error'] ?? 'Unknown error'));
-
+                throw new \Exception('VoIP system returned failure: '.($result['error'] ?? 'Unknown error'));
             } catch (\Exception $e) {
                 Log::error('Failed to restore VoIP services', [
                     'client_id' => $hold->client_id,
                     'hold_id' => $hold->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
 
                 return false;
@@ -370,21 +374,21 @@ class VoipCollectionService
                 $this->callVoipApi('remove_porting_restriction', [
                     'phone_number' => $number,
                     'client_id' => $client->id,
-                    'hold_id' => $hold->id
+                    'hold_id' => $hold->id,
                 ]);
             }
 
             Log::info('Porting restrictions removed', [
                 'client_id' => $client->id,
                 'hold_id' => $hold->id,
-                'numbers_count' => count($phoneNumbers)
+                'numbers_count' => count($phoneNumbers),
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to remove porting restrictions', [
                 'client_id' => $client->id,
                 'hold_id' => $hold->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -393,8 +397,8 @@ class VoipCollectionService
      * Initiate equipment recovery process.
      */
     public function initiateEquipmentRecovery(
-        Client $client, 
-        array $equipmentList = [], 
+        Client $client,
+        array $equipmentList = [],
         string $reason = ''
     ): array {
         $recoveryRecord = [
@@ -404,7 +408,7 @@ class VoipCollectionService
             'reason' => $reason,
             'status' => 'initiated',
             'recovery_method' => $this->determineRecoveryMethod($client),
-            'estimated_value' => $this->calculateEquipmentValue($equipmentList ?: $this->getClientEquipment($client))
+            'estimated_value' => $this->calculateEquipmentValue($equipmentList ?: $this->getClientEquipment($client)),
         ];
 
         // Create collection note
@@ -416,13 +420,13 @@ class VoipCollectionService
             'is_important' => true,
             'requires_attention' => true,
             'follow_up_date' => Carbon::now()->addDays(14),
-            'created_by' => auth()->id() ?? 1
+            'created_by' => auth()->id() ?? 1,
         ]);
 
         Log::info('Equipment recovery initiated', [
             'client_id' => $client->id,
             'equipment_count' => count($recoveryRecord['equipment_list']),
-            'estimated_value' => $recoveryRecord['estimated_value']
+            'estimated_value' => $recoveryRecord['estimated_value'],
         ]);
 
         return $recoveryRecord;
@@ -435,7 +439,7 @@ class VoipCollectionService
     {
         // This would integrate with equipment management system
         $equipment = $this->callVoipApi('get_client_equipment', [
-            'client_id' => $client->id
+            'client_id' => $client->id,
         ]);
 
         return $equipment['equipment'] ?? [];
@@ -479,7 +483,7 @@ class VoipCollectionService
     {
         // This would integrate with phone number management system
         $numbers = $this->callVoipApi('get_client_numbers', [
-            'client_id' => $client->id
+            'client_id' => $client->id,
         ]);
 
         return $numbers['phone_numbers'] ?? [];
@@ -491,18 +495,18 @@ class VoipCollectionService
     public function checkE911Compliance(Client $client): array
     {
         $e911Status = $this->callVoipApi('check_e911_status', [
-            'client_id' => $client->id
+            'client_id' => $client->id,
         ]);
 
         $compliance = [
             'is_compliant' => $e911Status['compliant'] ?? false,
             'active_e911_numbers' => $e911Status['e911_numbers'] ?? [],
             'compliance_issues' => $e911Status['issues'] ?? [],
-            'can_suspend_safely' => true
+            'can_suspend_safely' => true,
         ];
 
         // Check if suspension would create E911 compliance issues
-        if (!empty($compliance['active_e911_numbers'])) {
+        if (! empty($compliance['active_e911_numbers'])) {
             $compliance['can_suspend_safely'] = $this->validateE911Preservation($compliance);
         }
 
@@ -516,7 +520,7 @@ class VoipCollectionService
     {
         // E911 services must always remain active
         // This checks if our suspension logic properly preserves these services
-        return !empty($compliance['active_e911_numbers']);
+        return ! empty($compliance['active_e911_numbers']);
     }
 
     /**
@@ -533,7 +537,7 @@ class VoipCollectionService
             'recommended_actions' => [],
             'timeline' => [],
             'risk_factors' => [],
-            'compliance_considerations' => []
+            'compliance_considerations' => [],
         ];
 
         // Service suspension recommendations
@@ -543,7 +547,7 @@ class VoipCollectionService
                 'priority' => 'high',
                 'timeline' => '3-7 days',
                 'level' => $this->determineSuspensionLevel($client),
-                'e911_preserved' => true
+                'e911_preserved' => true,
             ];
         }
 
@@ -553,7 +557,7 @@ class VoipCollectionService
                 'action' => 'equipment_recovery',
                 'priority' => $equipmentValue > 1000 ? 'high' : 'medium',
                 'method' => $this->determineRecoveryMethod($client),
-                'estimated_value' => $equipmentValue
+                'estimated_value' => $equipmentValue,
             ];
         }
 
@@ -562,7 +566,7 @@ class VoipCollectionService
             $strategy['recommended_actions'][] = [
                 'action' => 'porting_restriction',
                 'priority' => 'medium',
-                'reason' => 'Prevent number porting during collection process'
+                'reason' => 'Prevent number porting during collection process',
             ];
         }
 
@@ -578,10 +582,10 @@ class VoipCollectionService
     {
         // This would integrate with the actual VoIP management system
         // For now, return mock successful responses
-        
+
         Log::info('VoIP API call', [
             'endpoint' => $endpoint,
-            'data' => $data
+            'data' => $data,
         ]);
 
         switch ($endpoint) {
@@ -590,27 +594,27 @@ class VoipCollectionService
             case 'restrict_porting':
             case 'remove_porting_restriction':
                 return ['success' => true, 'response' => 'Operation completed'];
-                
+
             case 'get_client_equipment':
                 return [
                     'equipment' => [
                         ['id' => 1, 'type' => 'phone', 'model' => 'Yealink T46G', 'value' => 150],
-                        ['id' => 2, 'type' => 'gateway', 'model' => 'Cisco SPA122', 'value' => 75]
-                    ]
+                        ['id' => 2, 'type' => 'gateway', 'model' => 'Cisco SPA122', 'value' => 75],
+                    ],
                 ];
-                
+
             case 'get_client_numbers':
                 return [
-                    'phone_numbers' => ['+15551234567', '+15557654321']
+                    'phone_numbers' => ['+15551234567', '+15557654321'],
                 ];
-                
+
             case 'check_e911_status':
                 return [
                     'compliant' => true,
                     'e911_numbers' => ['+15551234567'],
-                    'issues' => []
+                    'issues' => [],
                 ];
-                
+
             default:
                 return ['success' => false, 'error' => 'Unknown endpoint'];
         }
@@ -625,7 +629,7 @@ class VoipCollectionService
             'suspensions_executed' => 0,
             'equipment_recovery_initiated' => 0,
             'compliance_checks' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         // Execute scheduled suspensions
@@ -643,7 +647,7 @@ class VoipCollectionService
                 $results['errors'][] = [
                     'type' => 'suspension',
                     'hold_id' => $hold->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -656,11 +660,11 @@ class VoipCollectionService
         foreach ($activeHolds as $hold) {
             try {
                 $compliance = $this->checkE911Compliance($hold->client);
-                if (!$compliance['is_compliant']) {
+                if (! $compliance['is_compliant']) {
                     Log::warning('E911 compliance issue detected', [
                         'client_id' => $hold->client_id,
                         'hold_id' => $hold->id,
-                        'issues' => $compliance['compliance_issues']
+                        'issues' => $compliance['compliance_issues'],
                     ]);
                 }
                 $results['compliance_checks']++;
@@ -668,7 +672,7 @@ class VoipCollectionService
                 $results['errors'][] = [
                     'type' => 'compliance_check',
                     'hold_id' => $hold->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }

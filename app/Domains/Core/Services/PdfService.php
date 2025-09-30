@@ -4,10 +4,10 @@ namespace App\Domains\Core\Services;
 
 use App\Contracts\Services\PdfServiceInterface;
 use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
-use Spatie\LaravelPdf\Facades\Pdf as SpatiePdf;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\LaravelPdf\Facades\Pdf as SpatiePdf;
 
 class PdfService implements PdfServiceInterface
 {
@@ -22,6 +22,7 @@ class PdfService implements PdfServiceInterface
     protected function config(?string $key = null)
     {
         $config = config('pdf');
+
         return $key ? ($config[$key] ?? null) : $config;
     }
 
@@ -36,7 +37,7 @@ class PdfService implements PdfServiceInterface
         // Get template configuration
         $templates = $this->config('templates');
         $templateConfig = $templates[$template] ?? $templates['default'];
-        
+
         // Merge options with template config
         $pdfOptions = array_merge($templateConfig, $options);
 
@@ -107,13 +108,13 @@ class PdfService implements PdfServiceInterface
     public function generateAndSave(string $view, array $data, string $filename, array $options = []): string
     {
         $content = $this->generate($view, $data, $options);
-        
+
         $storage = $this->config('storage');
         $disk = $storage['disk'];
-        $path = $storage['path'] . '/' . $filename;
-        
+        $path = $storage['path'].'/'.$filename;
+
         Storage::disk($disk)->put($path, $content);
-        
+
         return $path;
     }
 
@@ -123,6 +124,7 @@ class PdfService implements PdfServiceInterface
     public function generateInvoice(array $invoiceData, array $options = []): string
     {
         $options['template'] = 'invoice';
+
         return $this->generate('pdf.invoice', $invoiceData, $options);
     }
 
@@ -132,6 +134,7 @@ class PdfService implements PdfServiceInterface
     public function generateQuote(array $quoteData, array $options = []): string
     {
         $options['template'] = 'quote';
+
         return $this->generate('pdf.quote', $quoteData, $options);
     }
 
@@ -141,6 +144,7 @@ class PdfService implements PdfServiceInterface
     public function generateReport(array $reportData, array $options = []): string
     {
         $options['template'] = 'report';
+
         return $this->generate('pdf.report', $reportData, $options);
     }
 
@@ -150,6 +154,7 @@ class PdfService implements PdfServiceInterface
     public function generateTicket(array $ticketData, array $options = []): string
     {
         $options['template'] = 'ticket';
+
         return $this->generate('pdf.ticket', $ticketData, $options);
     }
 
@@ -159,6 +164,7 @@ class PdfService implements PdfServiceInterface
     public function generateAssetReport(array $assetData, array $options = []): string
     {
         $options['template'] = 'asset_report';
+
         return $this->generate('pdf.asset-report', $assetData, $options);
     }
 
@@ -178,10 +184,10 @@ class PdfService implements PdfServiceInterface
                 'top' => 20,
                 'right' => 20,
                 'bottom' => 20,
-                'left' => 20
-            ]
+                'left' => 20,
+            ],
         ];
-        
+
         // Merge options with template config
         $pdfOptions = array_merge($templateConfig, $options);
 
@@ -220,27 +226,27 @@ class PdfService implements PdfServiceInterface
         }
 
         // Generate filename and path (matching ContractGenerationService fallback behavior)
-        $filename = "contract-{$contract->contract_number}-" . time() . ".pdf";
+        $filename = "contract-{$contract->contract_number}-".time().'.pdf';
         $path = "contracts/{$contract->company_id}/{$filename}";
-        
+
         // Generate PDF content
         $pdfContent = $pdf->output();
-        
+
         // Debug: Check if PDF content was generated
         if (empty($pdfContent)) {
             throw new \Exception('PDF content is empty - generation failed');
         }
-        
+
         Log::info('PDF content generated with formatting', [
             'content_size' => strlen($pdfContent),
             'path' => $path,
             'has_html' => strpos($content, '<html>') !== false,
-            'has_styles' => strpos($content, '<style>') !== false
+            'has_styles' => strpos($content, '<style>') !== false,
         ]);
-        
+
         // Save PDF to default storage (S3) - directories created automatically
         Storage::put($path, $pdfContent);
-        
+
         return $path;
     }
 
@@ -252,11 +258,11 @@ class PdfService implements PdfServiceInterface
         $storage = $this->config('storage');
         $format = $storage['filename_format'];
         $timestamp = now()->format('Y-m-d_H-i-s');
-        
+
         $filename = str_replace(['{type}', '{id}', '{timestamp}'], [
             $type,
             $id ?? Str::random(8),
-            $timestamp
+            $timestamp,
         ], $format);
 
         return $filename;
@@ -268,7 +274,8 @@ class PdfService implements PdfServiceInterface
     public function getStoragePath(string $filename): string
     {
         $storage = $this->config('storage');
-        return $storage['path'] . '/' . $filename;
+
+        return $storage['path'].'/'.$filename;
     }
 
     /**
@@ -279,7 +286,7 @@ class PdfService implements PdfServiceInterface
         $storage = $this->config('storage');
         $disk = $storage['disk'];
         $path = $this->getStoragePath($filename);
-        
+
         return Storage::disk($disk)->url($path);
     }
 
@@ -291,7 +298,7 @@ class PdfService implements PdfServiceInterface
         $storage = $this->config('storage');
         $disk = $storage['disk'];
         $path = $this->getStoragePath($filename);
-        
+
         return Storage::disk($disk)->delete($path);
     }
 
@@ -303,7 +310,7 @@ class PdfService implements PdfServiceInterface
         $storage = $this->config('storage');
         $disk = $storage['disk'];
         $path = $this->getStoragePath($filename);
-        
+
         return Storage::disk($disk)->exists($path);
     }
 
@@ -315,7 +322,7 @@ class PdfService implements PdfServiceInterface
         $storage = $this->config('storage');
         $disk = $storage['disk'];
         $path = $this->getStoragePath($filename);
-        
+
         return Storage::disk($disk)->size($path);
     }
 
@@ -325,7 +332,7 @@ class PdfService implements PdfServiceInterface
     public function download(string $view, array $data, string $filename, array $options = [])
     {
         $driver = $options['driver'] ?? $this->config('default');
-        
+
         switch ($driver) {
             case 'spatie':
                 return $this->downloadWithSpatie($view, $data, $filename, $options);
@@ -341,11 +348,11 @@ class PdfService implements PdfServiceInterface
     protected function downloadWithDomPdf(string $view, array $data, string $filename, array $options)
     {
         $pdf = DomPDF::loadView($view, $data);
-        
+
         if (isset($options['paper'])) {
             $pdf->setPaper($options['paper'], $options['orientation'] ?? 'portrait');
         }
-        
+
         return $pdf->download($filename);
     }
 
@@ -355,15 +362,15 @@ class PdfService implements PdfServiceInterface
     protected function downloadWithSpatie(string $view, array $data, string $filename, array $options)
     {
         $pdf = SpatiePdf::view($view, $data);
-        
+
         if (isset($options['paper'])) {
             $pdf->paperSize($options['paper']);
         }
-        
+
         if (isset($options['orientation'])) {
             $pdf->orientation($options['orientation']);
         }
-        
+
         return $pdf->download($filename);
     }
 
@@ -373,6 +380,7 @@ class PdfService implements PdfServiceInterface
     public function getTemplates(): array
     {
         $templates = $this->config('templates');
+
         return array_keys($templates);
     }
 
@@ -382,6 +390,7 @@ class PdfService implements PdfServiceInterface
     public function getTemplateConfig(string $template): array
     {
         $templates = $this->config('templates');
+
         return $templates[$template] ?? [];
     }
 }

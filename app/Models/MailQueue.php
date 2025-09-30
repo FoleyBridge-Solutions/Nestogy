@@ -10,10 +10,10 @@ use Illuminate\Support\Str;
 
 class MailQueue extends Model
 {
-    use HasFactory, BelongsToCompany;
-    
+    use BelongsToCompany, HasFactory;
+
     protected $table = 'mail_queue';
-    
+
     protected $fillable = [
         'uuid',
         'company_id',
@@ -60,7 +60,7 @@ class MailQueue extends Model
         'tags',
         'metadata',
     ];
-    
+
     protected $casts = [
         'cc' => 'array',
         'bcc' => 'array',
@@ -79,42 +79,57 @@ class MailQueue extends Model
         'next_retry_at' => 'datetime',
         'opened_at' => 'datetime',
     ];
-    
+
     const STATUS_PENDING = 'pending';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_SENT = 'sent';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_BOUNCED = 'bounced';
+
     const STATUS_COMPLAINED = 'complained';
+
     const STATUS_CANCELLED = 'cancelled';
-    
+
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_CRITICAL = 'critical';
-    
+
     const CATEGORY_INVOICE = 'invoice';
+
     const CATEGORY_NOTIFICATION = 'notification';
+
     const CATEGORY_MARKETING = 'marketing';
+
     const CATEGORY_SYSTEM = 'system';
+
     const CATEGORY_PORTAL = 'portal';
+
     const CATEGORY_SUPPORT = 'support';
+
     const CATEGORY_REPORT = 'report';
-    
+
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($model) {
-            if (!$model->uuid) {
+            if (! $model->uuid) {
                 $model->uuid = (string) Str::uuid();
             }
-            if (!$model->tracking_token) {
+            if (! $model->tracking_token) {
                 $model->tracking_token = Str::random(32);
             }
         });
     }
-    
+
     /**
      * Get the client associated with the email.
      */
@@ -122,7 +137,7 @@ class MailQueue extends Model
     {
         return $this->belongsTo(Client::class);
     }
-    
+
     /**
      * Get the contact associated with the email.
      */
@@ -130,7 +145,7 @@ class MailQueue extends Model
     {
         return $this->belongsTo(Contact::class);
     }
-    
+
     /**
      * Get the user who initiated the email.
      */
@@ -138,7 +153,7 @@ class MailQueue extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+
     /**
      * Get the related model.
      */
@@ -146,25 +161,25 @@ class MailQueue extends Model
     {
         return $this->morphTo();
     }
-    
+
     /**
      * Check if email is ready to be sent.
      */
     public function isReadyToSend(): bool
     {
-        return $this->status === self::STATUS_PENDING && 
-               (!$this->scheduled_at || $this->scheduled_at->isPast());
+        return $this->status === self::STATUS_PENDING &&
+               (! $this->scheduled_at || $this->scheduled_at->isPast());
     }
-    
+
     /**
      * Check if email can be retried.
      */
     public function canRetry(): bool
     {
-        return $this->status === self::STATUS_FAILED && 
+        return $this->status === self::STATUS_FAILED &&
                $this->attempts < $this->max_attempts;
     }
-    
+
     /**
      * Mark email as processing.
      */
@@ -172,7 +187,7 @@ class MailQueue extends Model
     {
         $this->update(['status' => self::STATUS_PROCESSING]);
     }
-    
+
     /**
      * Mark email as sent.
      */
@@ -185,7 +200,7 @@ class MailQueue extends Model
             'provider_response' => $providerResponse,
         ]);
     }
-    
+
     /**
      * Mark email as failed.
      */
@@ -197,7 +212,7 @@ class MailQueue extends Model
             'error' => $error,
             'timestamp' => now()->toIso8601String(),
         ];
-        
+
         $this->update([
             'status' => self::STATUS_FAILED,
             'failed_at' => now(),
@@ -208,7 +223,7 @@ class MailQueue extends Model
             'next_retry_at' => $this->calculateNextRetryTime(),
         ]);
     }
-    
+
     /**
      * Calculate next retry time based on exponential backoff.
      */
@@ -217,13 +232,13 @@ class MailQueue extends Model
         if ($this->attempts >= $this->max_attempts) {
             return null;
         }
-        
+
         // Exponential backoff: 5 min, 15 min, 45 min, etc.
         $minutes = 5 * pow(3, $this->attempts);
-        
+
         return now()->addMinutes($minutes);
     }
-    
+
     /**
      * Record email open.
      */
@@ -233,14 +248,14 @@ class MailQueue extends Model
         $opens[] = array_merge($data, [
             'timestamp' => now()->toIso8601String(),
         ]);
-        
+
         $this->update([
             'opened_at' => $this->opened_at ?? now(),
             'open_count' => $this->open_count + 1,
             'opens' => $opens,
         ]);
     }
-    
+
     /**
      * Record email click.
      */
@@ -251,19 +266,19 @@ class MailQueue extends Model
             'url' => $url,
             'timestamp' => now()->toIso8601String(),
         ]);
-        
+
         $this->update([
             'click_count' => $this->click_count + 1,
             'clicks' => $clicks,
         ]);
     }
-    
+
     /**
      * Get status badge color.
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'gray',
             self::STATUS_PROCESSING => 'blue',
             self::STATUS_SENT => 'green',
@@ -274,13 +289,13 @@ class MailQueue extends Model
             default => 'gray'
         };
     }
-    
+
     /**
      * Get priority badge color.
      */
     public function getPriorityColorAttribute(): string
     {
-        return match($this->priority) {
+        return match ($this->priority) {
             self::PRIORITY_LOW => 'gray',
             self::PRIORITY_NORMAL => 'blue',
             self::PRIORITY_HIGH => 'orange',

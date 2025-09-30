@@ -2,16 +2,16 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuditLog;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\AuditLog;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * GeoBlockingMiddleware
- * 
+ *
  * Blocks or allows access based on geographic location of the request IP.
  * Uses IP geolocation services to determine country/region.
  */
@@ -27,7 +27,7 @@ class GeoBlockingMiddleware
     public function handle(Request $request, Closure $next, ?string $mode = null, ?string $countries = null): Response
     {
         // Check if geo-blocking is enabled
-        if (!config('security.geo_blocking.enabled', false)) {
+        if (! config('security.geo_blocking.enabled', false)) {
             return $next($request);
         }
 
@@ -40,14 +40,15 @@ class GeoBlockingMiddleware
 
         // Get country for the IP
         $country = $this->getCountryForIp($clientIp);
-        
-        if (!$country) {
+
+        if (! $country) {
             // If we can't determine country, use default policy
             $defaultPolicy = config('security.geo_blocking.default_policy', 'allow');
             if ($defaultPolicy === 'block') {
                 $this->logBlockedAttempt($request, $clientIp, 'unknown', 'Could not determine country');
                 abort(403, 'Access denied. Could not verify your location.');
             }
+
             return $next($request);
         }
 
@@ -58,11 +59,11 @@ class GeoBlockingMiddleware
 
         // Check if access should be allowed
         $isInList = in_array(strtoupper($country), $countriesList);
-        $shouldAllow = ($mode === 'allow' && $isInList) || ($mode === 'block' && !$isInList);
+        $shouldAllow = ($mode === 'allow' && $isInList) || ($mode === 'block' && ! $isInList);
 
-        if (!$shouldAllow) {
-            $this->logBlockedAttempt($request, $clientIp, $country, "Country $country is " . ($mode === 'allow' ? 'not allowed' : 'blocked'));
-            
+        if (! $shouldAllow) {
+            $this->logBlockedAttempt($request, $clientIp, $country, "Country $country is ".($mode === 'allow' ? 'not allowed' : 'blocked'));
+
             // Return appropriate response
             if (config('security.geo_blocking.stealth_mode', false)) {
                 abort(404); // Pretend the resource doesn't exist
@@ -85,17 +86,18 @@ class GeoBlockingMiddleware
     {
         // Check for trusted proxies and get real IP
         $trustedProxies = config('security.trusted_proxies', []);
-        
-        if (!empty($trustedProxies)) {
+
+        if (! empty($trustedProxies)) {
             $requestIp = $request->ip();
             if (in_array($requestIp, $trustedProxies)) {
                 // Get IP from headers
                 $forwardedFor = $request->header('X-Forwarded-For');
                 if ($forwardedFor) {
                     $ips = array_map('trim', explode(',', $forwardedFor));
+
                     return $ips[0];
                 }
-                
+
                 $realIp = $request->header('X-Real-IP');
                 if ($realIp) {
                     return $realIp;
@@ -120,7 +122,7 @@ class GeoBlockingMiddleware
     protected function getCountryForIp(string $ip): ?string
     {
         // Check cache first
-        $cacheKey = 'geo_country_' . $ip;
+        $cacheKey = 'geo_country_'.$ip;
         $cached = Cache::get($cacheKey);
         if ($cached !== null) {
             return $cached ?: null; // Return null if cached value is false
@@ -147,12 +149,12 @@ class GeoBlockingMiddleware
         ]);
 
         foreach ($services as $service => $enabled) {
-            if (!$enabled) {
+            if (! $enabled) {
                 continue;
             }
 
             try {
-                $country = match($service) {
+                $country = match ($service) {
                     'ipapi' => $this->getCountryFromIpApi($ip),
                     'ipgeolocation' => $this->getCountryFromIpGeolocation($ip),
                     'maxmind' => $this->getCountryFromMaxMind($ip),
@@ -198,11 +200,11 @@ class GeoBlockingMiddleware
     protected function getCountryFromIpGeolocation(string $ip): ?string
     {
         $apiKey = config('security.geo_blocking.api_keys.ipgeolocation');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return null;
         }
 
-        $response = Http::timeout(5)->get("https://api.ipgeolocation.io/ipgeo", [
+        $response = Http::timeout(5)->get('https://api.ipgeolocation.io/ipgeo', [
             'apiKey' => $apiKey,
             'ip' => $ip,
             'fields' => 'country_code2',
@@ -210,6 +212,7 @@ class GeoBlockingMiddleware
 
         if ($response->successful()) {
             $data = $response->json();
+
             return $data['country_code2'] ?? null;
         }
 
@@ -222,7 +225,7 @@ class GeoBlockingMiddleware
     protected function getCountryFromMaxMind(string $ip): ?string
     {
         $databasePath = config('security.geo_blocking.maxmind_database_path');
-        if (!$databasePath || !file_exists($databasePath)) {
+        if (! $databasePath || ! file_exists($databasePath)) {
             return null;
         }
 
@@ -232,6 +235,7 @@ class GeoBlockingMiddleware
             if (class_exists(\GeoIp2\Database\Reader::class)) {
                 $reader = new \GeoIp2\Database\Reader($databasePath);
                 $record = $reader->country($ip);
+
                 return $record->country->isoCode;
             }
         } catch (\Exception $e) {

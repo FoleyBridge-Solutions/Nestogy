@@ -3,26 +3,27 @@
 namespace App\Domains\Financial\Services;
 
 use App\Models\Client;
-use App\Models\Invoice;
+use App\Models\CollectionNote;
 use App\Models\Payment;
 use App\Models\PaymentPlan;
-use App\Models\CollectionNote;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Payment Plan Service
- * 
+ *
  * Handles sophisticated payment plan creation, modification, processing,
  * and optimization with intelligent risk-based calculations and automated monitoring.
  */
 class PaymentPlanService
 {
     protected CollectionManagementService $collectionService;
+
     protected string $cachePrefix = 'payment_plan:';
+
     protected int $cacheTtl = 1800; // 30 minutes
 
     public function __construct(CollectionManagementService $collectionService)
@@ -34,25 +35,25 @@ class PaymentPlanService
      * Create an optimal payment plan for a client based on their financial situation.
      */
     public function createOptimalPaymentPlan(
-        Client $client, 
-        float $totalAmount, 
+        Client $client,
+        float $totalAmount,
         array $options = []
     ): array {
         // Get client risk assessment
         $riskAssessment = $this->collectionService->assessClientRisk($client);
-        
+
         // Calculate optimal payment plan parameters
         $planOptions = $this->calculateOptimalPlanOptions($client, $totalAmount, $riskAssessment, $options);
-        
+
         // Select the best plan option
         $selectedPlan = $this->selectBestPlanOption($planOptions, $riskAssessment);
-        
+
         Log::info('Optimal payment plan created', [
             'client_id' => $client->id,
             'total_amount' => $totalAmount,
             'selected_plan' => $selectedPlan['plan_type'],
             'monthly_payment' => $selectedPlan['monthly_payment'],
-            'duration_months' => $selectedPlan['duration_months']
+            'duration_months' => $selectedPlan['duration_months'],
         ]);
 
         return $selectedPlan;
@@ -62,15 +63,15 @@ class PaymentPlanService
      * Calculate multiple payment plan options based on client profile.
      */
     protected function calculateOptimalPlanOptions(
-        Client $client, 
-        float $totalAmount, 
-        array $riskAssessment, 
+        Client $client,
+        float $totalAmount,
+        array $riskAssessment,
         array $options = []
     ): array {
         $monthlyRevenue = $client->getMonthlyRecurring();
         $riskLevel = $riskAssessment['risk_level'];
         $paymentHistory = $riskAssessment['factors']['payment_history'] ?? [];
-        
+
         $planOptions = [];
 
         // Conservative Plan (Low Risk)
@@ -82,7 +83,7 @@ class PaymentPlanService
                 'down_payment_percent' => 10,
                 'interest_rate' => 0,
                 'setup_fee' => 0,
-                'priority' => 1
+                'priority' => 1,
             ]);
         }
 
@@ -94,7 +95,7 @@ class PaymentPlanService
             'down_payment_percent' => 15,
             'interest_rate' => 0,
             'setup_fee' => 25,
-            'priority' => 2
+            'priority' => 2,
         ]);
 
         // Aggressive Plan (High Risk)
@@ -106,12 +107,12 @@ class PaymentPlanService
                 'down_payment_percent' => 25,
                 'interest_rate' => 1.5,
                 'setup_fee' => 50,
-                'priority' => 3
+                'priority' => 3,
             ]);
         }
 
         // Custom options from input
-        if (!empty($options['custom_duration'])) {
+        if (! empty($options['custom_duration'])) {
             $planOptions[] = $this->createPlanOption([
                 'plan_type' => 'custom',
                 'total_amount' => $totalAmount,
@@ -119,7 +120,7 @@ class PaymentPlanService
                 'down_payment_percent' => $options['down_payment_percent'] ?? 20,
                 'interest_rate' => $options['interest_rate'] ?? 0,
                 'setup_fee' => $options['setup_fee'] ?? 0,
-                'priority' => 4
+                'priority' => 4,
             ]);
         }
 
@@ -139,11 +140,11 @@ class PaymentPlanService
 
         $downPayment = $totalAmount * ($downPaymentPercent / 100);
         $principalAmount = $totalAmount - $downPayment;
-        
+
         // Calculate monthly payment with interest
         if ($interestRate > 0) {
             $monthlyRate = $interestRate / 12;
-            $monthlyPayment = $principalAmount * ($monthlyRate * pow(1 + $monthlyRate, $durationMonths)) / 
+            $monthlyPayment = $principalAmount * ($monthlyRate * pow(1 + $monthlyRate, $durationMonths)) /
                              (pow(1 + $monthlyRate, $durationMonths) - 1);
         } else {
             $monthlyPayment = $principalAmount / $durationMonths;
@@ -163,7 +164,7 @@ class PaymentPlanService
             'total_interest' => round($totalWithInterest - $totalAmount, 2),
             'priority' => $params['priority'],
             'affordability_ratio' => 0, // Will be calculated
-            'success_probability' => 0  // Will be calculated
+            'success_probability' => 0,  // Will be calculated
         ];
     }
 
@@ -186,6 +187,7 @@ class PaymentPlanService
             if ($a['success_probability'] === $b['success_probability']) {
                 return $a['affordability_ratio'] <=> $b['affordability_ratio'];
             }
+
             return $b['success_probability'] <=> $a['success_probability'];
         });
 
@@ -198,7 +200,7 @@ class PaymentPlanService
     protected function calculateSuccessProbability(array $planOption, array $riskAssessment): float
     {
         $baseSuccessRate = 70; // Base 70% success rate
-        
+
         // Adjust based on risk level
         switch ($riskAssessment['risk_level']) {
             case 'low':
@@ -260,7 +262,7 @@ class PaymentPlanService
                 'start_date' => $options['start_date'] ?? Carbon::now()->addDays(3),
                 'created_by' => auth()->id() ?? 1,
                 'notes' => $options['notes'] ?? '',
-                'terms_and_conditions' => $this->generateTermsAndConditions($planDetails)
+                'terms_and_conditions' => $this->generateTermsAndConditions($planDetails),
             ]);
 
             // Link invoices to the payment plan
@@ -274,18 +276,18 @@ class PaymentPlanService
                 'client_id' => $client->id,
                 'payment_plan_id' => $paymentPlan->id,
                 'note_type' => CollectionNote::TYPE_PAYMENT_PLAN,
-                'content' => "Payment plan created: {$planDetails['duration_months']} months, $" . 
-                           number_format($planDetails['monthly_payment'], 2) . " per month",
+                'content' => "Payment plan created: {$planDetails['duration_months']} months, $".
+                           number_format($planDetails['monthly_payment'], 2).' per month',
                 'outcome' => CollectionNote::OUTCOME_PAYMENT_PLAN_CREATED,
                 'follow_up_date' => $paymentPlan->start_date,
-                'created_by' => auth()->id() ?? 1
+                'created_by' => auth()->id() ?? 1,
             ]);
 
             Log::info('Payment plan created', [
                 'payment_plan_id' => $paymentPlan->id,
                 'client_id' => $client->id,
                 'total_amount' => $planDetails['total_amount'],
-                'duration_months' => $planDetails['duration_months']
+                'duration_months' => $planDetails['duration_months'],
             ]);
 
             return $paymentPlan;
@@ -306,7 +308,7 @@ class PaymentPlanService
                 'due_date' => $currentDate->copy(),
                 'amount' => $paymentPlan->down_payment,
                 'type' => 'down_payment',
-                'status' => 'pending'
+                'status' => 'pending',
             ];
         }
 
@@ -317,7 +319,7 @@ class PaymentPlanService
                 'due_date' => $dueDate,
                 'amount' => $paymentPlan->monthly_payment,
                 'type' => 'monthly_payment',
-                'status' => 'pending'
+                'status' => 'pending',
             ];
         }
 
@@ -330,32 +332,32 @@ class PaymentPlanService
     protected function generateTermsAndConditions(array $planDetails): string
     {
         $terms = [
-            "Payment Plan Agreement",
-            "Total Amount: $" . number_format($planDetails['total_amount'], 2),
-            "Monthly Payment: $" . number_format($planDetails['monthly_payment'], 2),
-            "Duration: " . $planDetails['duration_months'] . " months"
+            'Payment Plan Agreement',
+            'Total Amount: $'.number_format($planDetails['total_amount'], 2),
+            'Monthly Payment: $'.number_format($planDetails['monthly_payment'], 2),
+            'Duration: '.$planDetails['duration_months'].' months',
         ];
 
         if ($planDetails['down_payment'] > 0) {
-            $terms[] = "Down Payment: $" . number_format($planDetails['down_payment'], 2);
+            $terms[] = 'Down Payment: $'.number_format($planDetails['down_payment'], 2);
         }
 
         if ($planDetails['interest_rate'] > 0) {
-            $terms[] = "Interest Rate: " . $planDetails['interest_rate'] . "% annual";
+            $terms[] = 'Interest Rate: '.$planDetails['interest_rate'].'% annual';
         }
 
         if ($planDetails['setup_fee'] > 0) {
-            $terms[] = "Setup Fee: $" . number_format($planDetails['setup_fee'], 2);
+            $terms[] = 'Setup Fee: $'.number_format($planDetails['setup_fee'], 2);
         }
 
         $terms = array_merge($terms, [
-            "",
-            "Terms:",
-            "- Payments are due on the same day each month",
-            "- Late payments may incur additional fees",
-            "- Failure to maintain payment schedule may result in plan termination",
-            "- Services may be suspended for non-payment",
-            "- Early payment is accepted without penalty"
+            '',
+            'Terms:',
+            '- Payments are due on the same day each month',
+            '- Late payments may incur additional fees',
+            '- Failure to maintain payment schedule may result in plan termination',
+            '- Services may be suspended for non-payment',
+            '- Early payment is accepted without penalty',
         ]);
 
         return implode("\n", $terms);
@@ -369,7 +371,7 @@ class PaymentPlanService
         $results = [
             'processed' => 0,
             'failed' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         $duePaymentPlans = PaymentPlan::where('status', PaymentPlan::STATUS_ACTIVE)
@@ -388,12 +390,12 @@ class PaymentPlanService
                 $results['failed']++;
                 $results['errors'][] = [
                     'plan_id' => $plan->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
-                
+
                 Log::error('Failed to process payment plan payment', [
                     'payment_plan_id' => $plan->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -408,10 +410,10 @@ class PaymentPlanService
     {
         // This would integrate with the payment processing system
         // For now, we'll mark it as a manual process requiring attention
-        
+
         $plan->update([
             'last_payment_attempt' => Carbon::now(),
-            'payment_attempts' => $plan->payment_attempts + 1
+            'payment_attempts' => $plan->payment_attempts + 1,
         ]);
 
         // Check for defaults
@@ -426,11 +428,11 @@ class PaymentPlanService
     protected function checkForDefault(PaymentPlan $plan): void
     {
         $daysPastDue = Carbon::now()->diffInDays($plan->next_payment_date);
-        
+
         if ($daysPastDue > 15 && $plan->status !== PaymentPlan::STATUS_DEFAULTED) {
             $plan->update([
                 'status' => PaymentPlan::STATUS_DEFAULTED,
-                'default_date' => Carbon::now()
+                'default_date' => Carbon::now(),
             ]);
 
             // Create collection note
@@ -442,13 +444,13 @@ class PaymentPlanService
                 'outcome' => CollectionNote::OUTCOME_PAYMENT_PLAN_DEFAULTED,
                 'is_important' => true,
                 'requires_attention' => true,
-                'created_by' => 1
+                'created_by' => 1,
             ]);
 
             Log::warning('Payment plan defaulted', [
                 'payment_plan_id' => $plan->id,
                 'client_id' => $plan->client_id,
-                'days_past_due' => $daysPastDue
+                'days_past_due' => $daysPastDue,
             ]);
         }
     }
@@ -457,8 +459,8 @@ class PaymentPlanService
      * Modify an existing payment plan.
      */
     public function modifyPaymentPlan(
-        PaymentPlan $plan, 
-        array $modifications, 
+        PaymentPlan $plan,
+        array $modifications,
         string $reason = ''
     ): PaymentPlan {
         return DB::transaction(function () use ($plan, $modifications, $reason) {
@@ -466,7 +468,7 @@ class PaymentPlanService
             $originalDetails = [
                 'monthly_payment' => $plan->monthly_payment,
                 'duration_months' => $plan->duration_months,
-                'interest_rate' => $plan->interest_rate
+                'interest_rate' => $plan->interest_rate,
             ];
 
             // Apply modifications
@@ -487,13 +489,13 @@ class PaymentPlanService
                 'note_type' => CollectionNote::TYPE_PAYMENT_PLAN,
                 'content' => "Payment plan modified: {$reason}",
                 'outcome' => CollectionNote::OUTCOME_PAYMENT_PLAN_MODIFIED,
-                'created_by' => auth()->id() ?? 1
+                'created_by' => auth()->id() ?? 1,
             ]);
 
             Log::info('Payment plan modified', [
                 'payment_plan_id' => $plan->id,
                 'modifications' => $modifications,
-                'reason' => $reason
+                'reason' => $reason,
             ]);
 
             return $plan->fresh();
@@ -518,23 +520,23 @@ class PaymentPlanService
             'late_payments' => 0,
             'missed_payments' => 0,
             'average_days_late' => 0,
-            'success_probability' => 0
+            'success_probability' => 0,
         ];
 
         $totalScheduled = collect($schedule)->sum('amount');
         $metrics['amount_remaining'] = max(0, $totalScheduled - $metrics['amount_paid']);
-        $metrics['completion_percentage'] = $totalScheduled > 0 ? 
+        $metrics['completion_percentage'] = $totalScheduled > 0 ?
             ($metrics['amount_paid'] / $totalScheduled) * 100 : 0;
 
         // Analyze payment timing
         $lateDays = [];
         foreach ($schedule as $scheduledPayment) {
             $payment = $payments->where('scheduled_payment_id', $scheduledPayment['id'] ?? null)->first();
-            
+
             if ($payment) {
                 $daysDiff = Carbon::parse($payment->created_at)
                     ->diffInDays(Carbon::parse($scheduledPayment['due_date']), false);
-                
+
                 if ($daysDiff <= 0) {
                     $metrics['on_time_payments']++;
                 } else {
@@ -548,7 +550,7 @@ class PaymentPlanService
             }
         }
 
-        if (!empty($lateDays)) {
+        if (! empty($lateDays)) {
             $metrics['average_days_late'] = array_sum($lateDays) / count($lateDays);
         }
 
@@ -600,11 +602,11 @@ class PaymentPlanService
      */
     public function getPaymentPlanRecommendations(Client $client): array
     {
-        $cacheKey = $this->cachePrefix . "recommendations:{$client->id}";
-        
+        $cacheKey = $this->cachePrefix."recommendations:{$client->id}";
+
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($client) {
             $totalBalance = $client->getPastDueAmount();
-            
+
             if ($totalBalance <= 0) {
                 return ['message' => 'No outstanding balance'];
             }
@@ -617,7 +619,7 @@ class PaymentPlanService
             $recommendations[] = [
                 'type' => 'optimal_plan',
                 'plan' => $optimalPlan,
-                'recommendation' => 'Recommended based on client risk profile and financial capacity'
+                'recommendation' => 'Recommended based on client risk profile and financial capacity',
             ];
 
             // Quick payment discount
@@ -627,7 +629,7 @@ class PaymentPlanService
                     'discount_percent' => 10,
                     'full_payment_required' => true,
                     'deadline' => Carbon::now()->addDays(10)->toDateString(),
-                    'recommendation' => 'Offer discount for full payment within 10 days'
+                    'recommendation' => 'Offer discount for full payment within 10 days',
                 ];
             }
 
@@ -639,7 +641,7 @@ class PaymentPlanService
                     'settlement_amount' => $settlementAmount,
                     'original_amount' => $totalBalance,
                     'savings' => $totalBalance - $settlementAmount,
-                    'recommendation' => 'Consider settlement due to high collection risk'
+                    'recommendation' => 'Consider settlement due to high collection risk',
                 ];
             }
 
@@ -652,9 +654,9 @@ class PaymentPlanService
      */
     public function clearClientCache(Client $client): void
     {
-        $cacheKey = $this->cachePrefix . "recommendations:{$client->id}";
+        $cacheKey = $this->cachePrefix."recommendations:{$client->id}";
         Cache::forget($cacheKey);
-        
+
         // Clear collection service cache as well
         $this->collectionService->clearClientRiskCache($client);
     }

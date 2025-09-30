@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * UserSetting Model
- * 
+ *
  * Stores user-specific settings and preferences including role, dashboard settings,
  * and security preferences.
- * 
+ *
  * @property int $id
  * @property int $user_id
  * @property int $role
@@ -76,11 +76,17 @@ class UserSetting extends Model
      * User roles enumeration
      */
     const ROLE_ACCOUNTANT = 1;
+
     const ROLE_TECH = 2;
+
     const ROLE_ADMIN = 3;           // Tenant administrator
+
     const ROLE_SUPER_ADMIN = 4;     // Platform operator (Company 1 only)
+
     const ROLE_PARENT_ADMIN = 5;    // Can manage subsidiaries
+
     const ROLE_SUBSIDIARY_ADMIN = 6; // Admin of subsidiary with limited parent access
+
     const ROLE_CROSS_COMPANY_USER = 7; // Access across company hierarchy
 
     /**
@@ -353,11 +359,11 @@ class UserSetting extends Model
     public static function createDefaultForUser(int $userId, int $role = self::ROLE_ACCOUNTANT, ?int $companyId = null): self
     {
         // If no company ID provided, try to get it from the user
-        if (!$companyId) {
+        if (! $companyId) {
             $user = User::find($userId);
             $companyId = $user ? $user->company_id : null;
         }
-        
+
         return self::create([
             'user_id' => $userId,
             'company_id' => $companyId,

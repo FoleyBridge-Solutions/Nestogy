@@ -2,9 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Project;
 use App\Models\Client;
-use App\Models\Company;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -27,12 +26,12 @@ class ProjectFactory extends Factory
     {
         $startDate = $this->faker->dateTimeBetween('-3 months', '+1 month');
         $endDate = $this->faker->dateTimeBetween($startDate, '+6 months');
-        
+
         return [
             'client_id' => Client::factory(),
             'prefix' => 'PRJ',
             'number' => $this->faker->unique()->numberBetween(1, 9999),
-            'name' => $this->faker->catchPhrase() . ' Project',
+            'name' => $this->faker->catchPhrase().' Project',
             'description' => $this->faker->paragraphs(3, true),
             'due' => $endDate,
             'manager_id' => User::factory(),

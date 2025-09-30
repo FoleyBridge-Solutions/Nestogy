@@ -2,19 +2,19 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Traits\BelongsToCompany;
 use App\Domains\Contract\Traits\HasAuditTrail;
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * ContractSignature Model
- * 
+ *
  * Digital signature management with multi-provider support,
  * legal compliance tracking, and audit trail maintenance.
- * 
+ *
  * @property int $id
  * @property int $contract_id
  * @property int $company_id
@@ -64,7 +64,7 @@ use Carbon\Carbon;
  */
 class ContractSignature extends Model
 {
-    use HasFactory, BelongsToCompany, HasAuditTrail;
+    use BelongsToCompany, HasAuditTrail, HasFactory;
 
     /**
      * The table associated with the model.
@@ -154,37 +154,54 @@ class ContractSignature extends Model
      * Signatory type enumeration
      */
     const TYPE_CLIENT = 'client';
+
     const TYPE_COMPANY = 'company';
+
     const TYPE_WITNESS = 'witness';
+
     const TYPE_NOTARY = 'notary';
 
     /**
      * Signature type enumeration
      */
     const SIGNATURE_ELECTRONIC = 'electronic';
+
     const SIGNATURE_DIGITAL = 'digital';
+
     const SIGNATURE_WET = 'wet';
+
     const SIGNATURE_DOCUSIGN = 'docusign';
+
     const SIGNATURE_HELLOSIGN = 'hellosign';
+
     const SIGNATURE_ADOBE_SIGN = 'adobe_sign';
 
     /**
      * Status enumeration
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_SENT = 'sent';
+
     const STATUS_VIEWED = 'viewed';
+
     const STATUS_SIGNED = 'signed';
+
     const STATUS_DECLINED = 'declined';
+
     const STATUS_EXPIRED = 'expired';
+
     const STATUS_VOIDED = 'voided';
 
     /**
      * Provider enumeration
      */
     const PROVIDER_DOCUSIGN = 'docusign';
+
     const PROVIDER_HELLOSIGN = 'hellosign';
+
     const PROVIDER_ADOBE_SIGN = 'adobe_sign';
+
     const PROVIDER_INTERNAL = 'internal';
 
     /**
@@ -232,11 +249,11 @@ class ContractSignature extends Model
      */
     public function isExpired(): bool
     {
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return false;
         }
 
-        return Carbon::now()->gt($this->expires_at) && !$this->isSigned();
+        return Carbon::now()->gt($this->expires_at) && ! $this->isSigned();
     }
 
     /**
@@ -308,15 +325,15 @@ class ContractSignature extends Model
      */
     public function sign(array $signatureData = []): bool
     {
-        if (!in_array($this->status, [self::STATUS_SENT, self::STATUS_VIEWED])) {
+        if (! in_array($this->status, [self::STATUS_SENT, self::STATUS_VIEWED])) {
             return false;
         }
 
         $updateData = array_merge(
             ['status' => self::STATUS_SIGNED],
             array_intersect_key($signatureData, array_flip([
-                'signature_data', 'signature_hash', 'ip_address', 
-                'user_agent', 'location', 'biometric_data'
+                'signature_data', 'signature_hash', 'ip_address',
+                'user_agent', 'location', 'biometric_data',
             ]))
         );
 
@@ -335,7 +352,7 @@ class ContractSignature extends Model
      */
     public function decline(?string $reason = null): bool
     {
-        if (!in_array($this->status, [self::STATUS_SENT, self::STATUS_VIEWED])) {
+        if (! in_array($this->status, [self::STATUS_SENT, self::STATUS_VIEWED])) {
             return false;
         }
 
@@ -378,7 +395,7 @@ class ContractSignature extends Model
      */
     public function sendReminder(): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -420,9 +437,9 @@ class ContractSignature extends Model
     public function updateProviderStatus(array $providerData): void
     {
         $updateData = array_intersect_key($providerData, array_flip([
-            'status', 'provider_reference_id', 'envelope_id', 'recipient_id'
+            'status', 'provider_reference_id', 'envelope_id', 'recipient_id',
         ]));
-        
+
         $updateData['provider_metadata'] = $this->mergeProviderMetadata($providerData);
 
         $this->update($updateData);
@@ -436,7 +453,7 @@ class ContractSignature extends Model
     {
         return array_merge($this->provider_metadata ?? [], $newData);
     }
-    
+
     // Audit trail methods moved to HasAuditTrail trait
 
     /**
@@ -444,7 +461,7 @@ class ContractSignature extends Model
      */
     public function getSignatureUrl(): ?string
     {
-        if (!$this->provider_reference_id) {
+        if (! $this->provider_reference_id) {
             return null;
         }
 
@@ -465,7 +482,7 @@ class ContractSignature extends Model
      */
     public function getTimeUntilExpiration(): ?int
     {
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return null;
         }
 
@@ -478,13 +495,13 @@ class ContractSignature extends Model
     public function getFormattedSignatory(): string
     {
         $info = $this->signatory_name;
-        
+
         if ($this->signatory_title) {
-            $info .= ', ' . $this->signatory_title;
+            $info .= ', '.$this->signatory_title;
         }
-        
+
         if ($this->signatory_company) {
-            $info .= ' (' . $this->signatory_company . ')';
+            $info .= ' ('.$this->signatory_company.')';
         }
 
         return $info;
@@ -520,7 +537,7 @@ class ContractSignature extends Model
     public function scopeExpired($query)
     {
         return $query->where('expires_at', '<', now())
-                    ->whereNotIn('status', [self::STATUS_SIGNED, self::STATUS_DECLINED, self::STATUS_VOIDED]);
+            ->whereNotIn('status', [self::STATUS_SIGNED, self::STATUS_DECLINED, self::STATUS_VOIDED]);
     }
 
     /**
@@ -529,13 +546,13 @@ class ContractSignature extends Model
     public function scopeNeedsReminder($query, int $daysSinceSent = 3)
     {
         return $query->whereIn('status', [self::STATUS_SENT, self::STATUS_VIEWED])
-                    ->where(function ($q) use ($daysSinceSent) {
-                        $q->whereNull('last_reminder_sent')
-                          ->where('sent_at', '<', now()->subDays($daysSinceSent));
-                    })
-                    ->orWhere(function ($q) use ($daysSinceSent) {
-                        $q->where('last_reminder_sent', '<', now()->subDays($daysSinceSent));
-                    });
+            ->where(function ($q) use ($daysSinceSent) {
+                $q->whereNull('last_reminder_sent')
+                    ->where('sent_at', '<', now()->subDays($daysSinceSent));
+            })
+            ->orWhere(function ($q) use ($daysSinceSent) {
+                $q->where('last_reminder_sent', '<', now()->subDays($daysSinceSent));
+            });
     }
 
     /**
@@ -547,19 +564,19 @@ class ContractSignature extends Model
 
         // Set defaults when creating
         static::creating(function ($signature) {
-            if (!$signature->status) {
+            if (! $signature->status) {
                 $signature->status = self::STATUS_PENDING;
             }
 
-            if (!$signature->signing_order) {
+            if (! $signature->signing_order) {
                 $signature->signing_order = 1;
             }
 
-            if (!$signature->legally_binding) {
+            if (! $signature->legally_binding) {
                 $signature->legally_binding = true;
             }
 
-            if (!$signature->expires_at) {
+            if (! $signature->expires_at) {
                 $signature->expires_at = now()->addDays(30);
             }
 

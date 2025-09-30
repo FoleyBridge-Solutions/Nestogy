@@ -192,7 +192,7 @@ return [
         'stealth_mode' => env('GEO_BLOCKING_STEALTH_MODE', false),
         'default_policy' => env('GEO_BLOCKING_DEFAULT_POLICY', 'allow'), // 'allow' or 'block'
         'high_risk_countries' => [
-            'CN', 'RU', 'KP', 'IR', 'SY', 'BY', 'MM', 'AF', 'IQ', 'LY', 'SO', 'SS', 'YE', 'VE'
+            'CN', 'RU', 'KP', 'IR', 'SY', 'BY', 'MM', 'AF', 'IQ', 'LY', 'SO', 'SS', 'YE', 'VE',
         ],
         'services' => [
             'ipapi' => env('GEO_SERVICE_IPAPI_ENABLED', true),

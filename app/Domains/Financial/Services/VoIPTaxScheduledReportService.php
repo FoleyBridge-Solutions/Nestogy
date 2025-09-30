@@ -2,25 +2,25 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Domains\Financial\Services\VoIPTaxReportingService;
 use App\Models\Company;
-use App\Models\TaxJurisdiction;
 use App\Models\TaxExemption;
+use App\Models\TaxJurisdiction;
 use App\Models\VoIPTaxRate;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * VoIP Tax Scheduled Report Service
- * 
+ *
  * Handles automated report generation, compliance monitoring,
  * and scheduled delivery of tax reports.
  */
 class VoIPTaxScheduledReportService
 {
     protected VoIPTaxReportingService $reportingService;
+
     protected array $config;
 
     public function __construct(array $config = [])
@@ -42,11 +42,11 @@ class VoIPTaxScheduledReportService
         $month = $month ?? Carbon::now()->subMonth();
         $startDate = $month->copy()->startOfMonth();
         $endDate = $month->copy()->endOfMonth();
-        
+
         $results = [];
-        
+
         $companies = Company::active()->with('users')->get();
-        
+
         foreach ($companies as $company) {
             try {
                 $results[$company->id] = $this->generateCompanyMonthlyReport($company, $startDate, $endDate);
@@ -57,14 +57,14 @@ class VoIPTaxScheduledReportService
                     'month' => $month->format('Y-m'),
                     'error' => $e->getMessage(),
                 ]);
-                
+
                 $results[$company->id] = [
                     'success' => false,
                     'error' => $e->getMessage(),
                 ];
             }
         }
-        
+
         return $results;
     }
 
@@ -74,7 +74,7 @@ class VoIPTaxScheduledReportService
     public function generateCompanyMonthlyReport(Company $company, Carbon $startDate, Carbon $endDate): array
     {
         $this->reportingService = new VoIPTaxReportingService($company->id);
-        
+
         $reportData = [
             'company' => [
                 'id' => $company->id,
@@ -96,7 +96,7 @@ class VoIPTaxScheduledReportService
         $reportData['reports']['tax_summary'] = $this->reportingService->generateTaxSummaryReport($startDate, $endDate);
         $reportData['reports']['service_type_analysis'] = $this->reportingService->generateServiceTypeAnalysis($startDate, $endDate);
         $reportData['reports']['exemption_usage'] = $this->reportingService->generateExemptionReport($startDate, $endDate);
-        
+
         // Generate jurisdiction-specific reports for active jurisdictions
         $jurisdictions = TaxJurisdiction::where('company_id', $company->id)
             ->active()
@@ -106,24 +106,24 @@ class VoIPTaxScheduledReportService
             ->get();
 
         foreach ($jurisdictions as $jurisdiction) {
-            $reportData['reports']['jurisdictions'][$jurisdiction->id] = 
+            $reportData['reports']['jurisdictions'][$jurisdiction->id] =
                 $this->reportingService->generateJurisdictionReport($jurisdiction->id, $startDate, $endDate);
         }
 
         // Compliance status assessment
         $reportData['compliance_status'] = $this->assessComplianceStatus($company);
-        
+
         // Generate action items
         $reportData['action_items'] = $this->generateActionItems($company, $reportData['compliance_status']);
-        
+
         // Save report to storage
         $filename = $this->saveReportToStorage($company, $reportData, $startDate);
-        
+
         // Send notifications if enabled
         if ($this->config['email_notifications']) {
             $this->sendReportNotifications($company, $reportData, $filename);
         }
-        
+
         return [
             'success' => true,
             'filename' => $filename,
@@ -144,14 +144,14 @@ class VoIPTaxScheduledReportService
         $quarter = $quarter ?? Carbon::now()->subQuarter();
         $startDate = $quarter->copy()->startOfQuarter();
         $endDate = $quarter->copy()->endOfQuarter();
-        
+
         $results = [];
         $companies = Company::active()->get();
-        
+
         foreach ($companies as $company) {
             try {
                 $this->reportingService = new VoIPTaxReportingService($company->id);
-                
+
                 // Get jurisdictions with quarterly filing requirements
                 $jurisdictions = TaxJurisdiction::where('company_id', $company->id)
                     ->active()
@@ -161,11 +161,11 @@ class VoIPTaxScheduledReportService
                 $filingReports = [];
                 foreach ($jurisdictions as $jurisdiction) {
                     $jurisdictionReport = $this->reportingService->generateJurisdictionReport(
-                        $jurisdiction->id, 
-                        $startDate, 
+                        $jurisdiction->id,
+                        $startDate,
                         $endDate
                     );
-                    
+
                     $filingReports[$jurisdiction->id] = [
                         'jurisdiction' => $jurisdiction->name,
                         'authority' => $jurisdiction->authority_name,
@@ -175,28 +175,28 @@ class VoIPTaxScheduledReportService
                         'forms_required' => $jurisdiction->filing_requirements['forms'] ?? [],
                     ];
                 }
-                
+
                 $results[$company->id] = [
                     'success' => true,
                     'quarter' => $quarter->format('Y-Q'),
                     'filing_reports' => $filingReports,
                     'generated_at' => now()->toISOString(),
                 ];
-                
+
             } catch (\Exception $e) {
                 Log::error('Failed to generate quarterly filing report', [
                     'company_id' => $company->id,
                     'quarter' => $quarter->format('Y-Q'),
                     'error' => $e->getMessage(),
                 ]);
-                
+
                 $results[$company->id] = [
                     'success' => false,
                     'error' => $e->getMessage(),
                 ];
             }
         }
-        
+
         return $results;
     }
 
@@ -207,16 +207,16 @@ class VoIPTaxScheduledReportService
     {
         $alerts = [];
         $companies = Company::active()->get();
-        
+
         foreach ($companies as $company) {
             $companyAlerts = [];
-            
+
             // Check for expired exemptions
             $expiredExemptions = TaxExemption::where('company_id', $company->id)
                 ->where('status', TaxExemption::STATUS_EXPIRED)
                 ->orWhere(function ($query) {
                     $query->whereNotNull('expiry_date')
-                          ->where('expiry_date', '<', now());
+                        ->where('expiry_date', '<', now());
                 })
                 ->with('client')
                 ->get();
@@ -290,7 +290,7 @@ class VoIPTaxScheduledReportService
                 ];
             }
 
-            if (!empty($companyAlerts)) {
+            if (! empty($companyAlerts)) {
                 $alerts[$company->id] = [
                     'company_name' => $company->name,
                     'alert_count' => count($companyAlerts),
@@ -298,13 +298,13 @@ class VoIPTaxScheduledReportService
                 ];
 
                 // Send immediate notifications for critical alerts
-                $criticalAlerts = array_filter($companyAlerts, fn($alert) => $alert['severity'] === 'critical');
-                if (!empty($criticalAlerts) && $this->config['email_notifications']) {
+                $criticalAlerts = array_filter($companyAlerts, fn ($alert) => $alert['severity'] === 'critical');
+                if (! empty($criticalAlerts) && $this->config['email_notifications']) {
                     $this->sendCriticalAlertNotification($company, $criticalAlerts);
                 }
             }
         }
-        
+
         return $alerts;
     }
 
@@ -316,20 +316,20 @@ class VoIPTaxScheduledReportService
         $cutoffDate = Carbon::now()->subDays($this->config['retention_days']);
         $disk = Storage::disk($this->config['storage_disk']);
         $reportPath = $this->config['reports_path'];
-        
+
         $deletedFiles = [];
         $totalSize = 0;
-        
+
         try {
             $files = $disk->allFiles($reportPath);
-            
+
             foreach ($files as $file) {
                 $lastModified = Carbon::createFromTimestamp($disk->lastModified($file));
-                
+
                 if ($lastModified->lt($cutoffDate)) {
                     $size = $disk->size($file);
                     $totalSize += $size;
-                    
+
                     $disk->delete($file);
                     $deletedFiles[] = [
                         'file' => $file,
@@ -338,20 +338,20 @@ class VoIPTaxScheduledReportService
                     ];
                 }
             }
-            
+
             Log::info('VoIP tax reports cleanup completed', [
                 'files_deleted' => count($deletedFiles),
                 'total_size_freed' => $totalSize,
                 'cutoff_date' => $cutoffDate->toDateString(),
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to cleanup old VoIP tax reports', [
                 'error' => $e->getMessage(),
                 'cutoff_date' => $cutoffDate->toDateString(),
             ]);
         }
-        
+
         return [
             'files_deleted' => count($deletedFiles),
             'total_size_freed' => $totalSize,
@@ -366,15 +366,15 @@ class VoIPTaxScheduledReportService
     {
         $score = 100;
         $issues = [];
-        
+
         // Check exemption certificate status
         $expiredExemptions = TaxExemption::where('company_id', $company->id)
             ->where(function ($query) {
                 $query->where('status', TaxExemption::STATUS_EXPIRED)
-                      ->orWhere(function ($q) {
-                          $q->whereNotNull('expiry_date')
+                    ->orWhere(function ($q) {
+                        $q->whereNotNull('expiry_date')
                             ->where('expiry_date', '<', now());
-                      });
+                    });
             })->count();
 
         if ($expiredExemptions > 0) {
@@ -418,7 +418,7 @@ class VoIPTaxScheduledReportService
     protected function generateActionItems(Company $company, array $complianceStatus): array
     {
         $actionItems = [];
-        
+
         foreach ($complianceStatus['issues'] as $issue) {
             if (str_contains($issue, 'expired exemption')) {
                 $actionItems[] = [
@@ -429,7 +429,7 @@ class VoIPTaxScheduledReportService
                     'due_date' => now()->addDays(7)->toDateString(),
                 ];
             }
-            
+
             if (str_contains($issue, 'outdated tax rates')) {
                 $actionItems[] = [
                     'priority' => 'medium',
@@ -439,7 +439,7 @@ class VoIPTaxScheduledReportService
                     'due_date' => now()->addDays(14)->toDateString(),
                 ];
             }
-            
+
             if (str_contains($issue, 'jurisdictions without tax rates')) {
                 $actionItems[] = [
                     'priority' => 'high',
@@ -450,7 +450,7 @@ class VoIPTaxScheduledReportService
                 ];
             }
         }
-        
+
         return $actionItems;
     }
 
@@ -464,20 +464,20 @@ class VoIPTaxScheduledReportService
             $company->id,
             $month->format('Y_m')
         );
-        
-        $filepath = $this->config['reports_path'] . '/' . $filename;
+
+        $filepath = $this->config['reports_path'].'/'.$filename;
         $disk = Storage::disk($this->config['storage_disk']);
-        
+
         $content = json_encode($reportData, JSON_PRETTY_PRINT);
-        
+
         if ($this->config['compression']) {
             $content = gzcompress($content);
             $filename .= '.gz';
             $filepath .= '.gz';
         }
-        
+
         $disk->put($filepath, $content);
-        
+
         return $filename;
     }
 
@@ -506,11 +506,11 @@ class VoIPTaxScheduledReportService
     protected function calculateFilingDueDate(TaxJurisdiction $jurisdiction, Carbon $periodEnd): ?string
     {
         $requirements = $jurisdiction->filing_requirements;
-        
-        if (!$requirements || !isset($requirements['due_days_after_period'])) {
+
+        if (! $requirements || ! isset($requirements['due_days_after_period'])) {
             return null;
         }
-        
+
         return $periodEnd->copy()
             ->addDays($requirements['due_days_after_period'])
             ->toDateString();

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('email_account_id')->nullable()->constrained()->cascadeOnDelete();
-            
+
             $table->string('name'); // "Default", "Business", "Personal"
             $table->longText('content_html')->nullable();
             $table->longText('content_text')->nullable();
@@ -23,9 +23,9 @@ return new class extends Migration
             $table->boolean('auto_append_replies')->default(true);
             $table->boolean('auto_append_forwards')->default(true);
             $table->json('conditions')->nullable(); // Rules for when to use this signature
-            
+
             $table->timestamps();
-            
+
             $table->index(['user_id']);
             $table->index(['email_account_id']);
         });

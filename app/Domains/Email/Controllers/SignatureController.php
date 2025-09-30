@@ -2,9 +2,9 @@
 
 namespace App\Domains\Email\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Domains\Email\Models\EmailSignature;
 use App\Domains\Email\Models\EmailAccount;
+use App\Domains\Email\Models\EmailSignature;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -25,7 +25,7 @@ class SignatureController extends Controller
     public function create()
     {
         $accounts = EmailAccount::forUser(Auth::id())->active()->get();
-        
+
         return view('email.signatures.create', compact('accounts'));
     }
 
@@ -48,7 +48,7 @@ class SignatureController extends Controller
         // Validate account ownership if specified
         if ($request->email_account_id) {
             $account = EmailAccount::forUser(Auth::id())->find($request->email_account_id);
-            if (!$account) {
+            if (! $account) {
                 return back()->withErrors(['email_account_id' => 'Invalid email account'])->withInput();
             }
         }
@@ -81,7 +81,7 @@ class SignatureController extends Controller
         $this->authorize('update', $signature);
 
         $accounts = EmailAccount::forUser(Auth::id())->active()->get();
-        
+
         return view('email.signatures.edit', compact('signature', 'accounts'));
     }
 
@@ -106,7 +106,7 @@ class SignatureController extends Controller
         // Validate account ownership if specified
         if ($request->email_account_id) {
             $account = EmailAccount::forUser(Auth::id())->find($request->email_account_id);
-            if (!$account) {
+            if (! $account) {
                 return back()->withErrors(['email_account_id' => 'Invalid email account'])->withInput();
             }
         }

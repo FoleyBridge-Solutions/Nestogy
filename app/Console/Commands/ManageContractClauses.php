@@ -9,11 +9,13 @@ use Illuminate\Console\Command;
 
 class ManageContractClauses extends Command
 {
-
     // Class constants to reduce duplication
     private const ACTION_LIST = 'list';
+
     private const ACTION_ADD = 'add';
+
     private const ACTION_REMOVE = 'remove';
+
     private const MSG_MANAGE_START = 'Managing contract clauses...';
 
     /**
@@ -64,6 +66,7 @@ class ManageContractClauses extends Command
             default:
                 $this->error("Unknown action: {$action}");
                 $this->info('Available actions: list, validate, create, update');
+
                 return 1;
         }
     }
@@ -82,6 +85,7 @@ class ManageContractClauses extends Command
 
         if ($clauses->isEmpty()) {
             $this->info('No clauses found.');
+
             return 0;
         }
 
@@ -119,8 +123,9 @@ class ManageContractClauses extends Command
     {
         $templateIdentifier = $this->option('template');
 
-        if (!$templateIdentifier) {
+        if (! $templateIdentifier) {
             $this->error('Template name or ID required for validation');
+
             return 1;
         }
 
@@ -131,8 +136,9 @@ class ManageContractClauses extends Command
             $template = ContractTemplate::where('name', 'like', "%{$templateIdentifier}%")->first();
         }
 
-        if (!$template) {
+        if (! $template) {
             $this->error('Template not found');
+
             return 1;
         }
 
@@ -142,7 +148,7 @@ class ManageContractClauses extends Command
         // Check dependencies
         $dependencyErrors = $this->clauseService->validateClauseDependencies($template);
 
-        if (!empty($dependencyErrors)) {
+        if (! empty($dependencyErrors)) {
             $this->error('Dependency Validation Errors:');
             foreach ($dependencyErrors as $error) {
                 $this->line("  ✗ {$error}");
@@ -154,7 +160,7 @@ class ManageContractClauses extends Command
         // Check missing required clauses
         $missingCategories = $this->clauseService->getMissingRequiredClauses($template);
 
-        if (!empty($missingCategories)) {
+        if (! empty($missingCategories)) {
             $this->warn('Missing Required Categories:');
             foreach ($missingCategories as $category) {
                 $this->line("  ! Missing: {$category}");
@@ -179,11 +185,11 @@ class ManageContractClauses extends Command
         $name = $this->option('name');
         $content = $this->option('content');
 
-        if (!$name) {
+        if (! $name) {
             $name = $this->ask('Clause name');
         }
 
-        if (!$content) {
+        if (! $content) {
             $content = $this->ask('Clause content (use {{variable}} for template variables)');
         }
 
@@ -214,6 +220,7 @@ class ManageContractClauses extends Command
     {
         $this->error('Update functionality not yet implemented');
         $this->info('Use the list command to see existing clauses');
+
         return 1;
     }
 }

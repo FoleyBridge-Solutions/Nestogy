@@ -2,12 +2,11 @@
 
 namespace App\Domains\Financial\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Financial\Models\Invoice;
-use App\Domains\Financial\Models\Payment;
+use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Carbon\Carbon;
 
 class CollectionController extends Controller
 {
@@ -39,7 +38,7 @@ class CollectionController extends Controller
             ->paginate(20);
 
         $totalDisputed = $disputes->sum('total');
-        
+
         // Calculate average resolution time from resolved disputes
         $avgResolutionTime = \App\Models\Invoice::where('company_id', $companyId)
             ->where('status', 'disputed')
@@ -58,9 +57,9 @@ class CollectionController extends Controller
     {
         $scheduledReminders = collect(); // TODO: Load from reminder schedule table
         $reminderTemplates = collect(); // TODO: Load email templates
-        
+
         $recentReminders = collect(); // TODO: Load recent sent reminders
-        
+
         return view('financial.collections.reminders', compact(
             'scheduledReminders',
             'reminderTemplates',
@@ -73,11 +72,11 @@ class CollectionController extends Controller
         $validated = $request->validate([
             'template_id' => 'nullable|exists:reminder_templates,id',
             'custom_message' => 'nullable|string|max:1000',
-            'cc_emails' => 'nullable|string'
+            'cc_emails' => 'nullable|string',
         ]);
 
         // TODO: Send reminder email
-        
+
         return redirect()->back()->with('success', 'Reminder sent successfully');
     }
 
@@ -85,13 +84,13 @@ class CollectionController extends Controller
     {
         $validated = $request->validate([
             'dispute_reason' => 'required|string|max:500',
-            'dispute_amount' => 'nullable|numeric|min:0'
+            'dispute_amount' => 'nullable|numeric|min:0',
         ]);
 
         $invoice->update([
             'status' => 'disputed',
             'dispute_reason' => $validated['dispute_reason'],
-            'dispute_amount' => $validated['dispute_amount'] ?? $invoice->total
+            'dispute_amount' => $validated['dispute_amount'] ?? $invoice->total,
         ]);
 
         return redirect()->back()->with('success', 'Invoice marked as disputed');
@@ -102,11 +101,11 @@ class CollectionController extends Controller
         $validated = $request->validate([
             'resolution_type' => 'required|in:paid,waived,adjusted,cancelled',
             'resolution_notes' => 'required|string|max:500',
-            'adjusted_amount' => 'nullable|numeric|min:0'
+            'adjusted_amount' => 'nullable|numeric|min:0',
         ]);
 
         // TODO: Handle dispute resolution logic
-        
+
         return redirect()->back()->with('success', 'Dispute resolved successfully');
     }
 }

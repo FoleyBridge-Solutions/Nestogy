@@ -32,7 +32,7 @@ return new class extends Migration
             $table->json('address_change')->nullable(); // NCOA data
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->index(['client_id', 'company_name']);
             $table->index('address_status');
         });
@@ -49,7 +49,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->index(['type', 'is_active']);
             $table->index('name');
         });
@@ -66,7 +66,7 @@ return new class extends Migration
             $table->text('signature_image')->nullable(); // Base64 or URL
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'is_active']);
         });
 
@@ -78,7 +78,7 @@ return new class extends Migration
             $table->integer('quantity_ordered')->default(0);
             $table->integer('quantity_available')->default(0);
             $table->timestamps();
-            
+
             $table->index('contact_id');
         });
 
@@ -99,7 +99,7 @@ return new class extends Migration
             $table->json('merge_variables')->nullable();
             $table->string('idempotency_key')->unique();
             $table->timestamps();
-            
+
             $table->index('created_at');
         });
 
@@ -115,7 +115,7 @@ return new class extends Migration
             $table->json('merge_variables')->nullable();
             $table->string('idempotency_key')->unique();
             $table->timestamps();
-            
+
             $table->index('created_at');
         });
 
@@ -133,7 +133,7 @@ return new class extends Migration
             $table->enum('size', ['us_letter', 'us_legal'])->default('us_letter');
             $table->string('idempotency_key')->unique();
             $table->timestamps();
-            
+
             $table->index('created_at');
             $table->index('check_number');
         });
@@ -149,7 +149,7 @@ return new class extends Migration
             $table->json('merge_variables')->nullable();
             $table->string('idempotency_key')->unique();
             $table->timestamps();
-            
+
             $table->index('created_at');
         });
 
@@ -161,12 +161,12 @@ return new class extends Migration
             $table->uuid('mailable_id');
             $table->string('postgrid_id')->nullable()->unique();
             $table->enum('status', ['pending', 'ready', 'printing', 'processed_for_delivery', 'completed', 'cancelled', 'failed'])->default('pending');
-            
+
             // US Intelligent Mail Barcode tracking
             $table->enum('imb_status', ['entered_mail_stream', 'out_for_delivery', 'returned_to_sender'])->nullable();
             $table->timestamp('imb_date')->nullable();
             $table->string('imb_zip_code')->nullable();
-            
+
             $table->string('tracking_number')->nullable(); // For certified/registered
             $table->string('mailing_class')->default('first_class');
             $table->timestamp('send_date')->nullable();
@@ -175,7 +175,7 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->timestamps();
-            
+
             $table->index(['mailable_type', 'mailable_id']);
             $table->index(['client_id', 'status']);
             $table->index('postgrid_id');
@@ -192,7 +192,7 @@ return new class extends Migration
             $table->json('payload');
             $table->timestamp('processed_at')->nullable();
             $table->timestamps();
-            
+
             $table->index(['type', 'processed_at']);
         });
     }

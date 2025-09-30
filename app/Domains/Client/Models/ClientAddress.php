@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientAddress extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -106,29 +106,29 @@ class ClientAddress extends Model
     public function getFormattedAddressAttribute()
     {
         $lines = [];
-        
+
         if ($this->address_line_1) {
             $lines[] = $this->address_line_1;
         }
-        
+
         if ($this->address_line_2) {
             $lines[] = $this->address_line_2;
         }
-        
+
         $cityStateZip = array_filter([
             $this->city,
             $this->state,
             $this->zip_code,
         ]);
-        
-        if (!empty($cityStateZip)) {
+
+        if (! empty($cityStateZip)) {
             $lines[] = implode(', ', $cityStateZip);
         }
-        
+
         if ($this->country && $this->country !== 'US') {
             $lines[] = $this->country;
         }
-        
+
         return implode("\n", $lines);
     }
 

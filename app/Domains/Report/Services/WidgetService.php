@@ -5,11 +5,10 @@ namespace App\Domains\Report\Services;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 /**
  * Widget Service
- * 
+ *
  * Reusable widget components for dashboards
  */
 class WidgetService
@@ -19,8 +18,8 @@ class WidgetService
      */
     public function getKPIWidget(array $config): array
     {
-        $cacheKey = 'kpi_widget:' . md5(serialize($config));
-        
+        $cacheKey = 'kpi_widget:'.md5(serialize($config));
+
         return Cache::remember($cacheKey, $config['cache_minutes'] ?? 300, function () use ($config) {
             $currentValue = $this->executeQuery($config['query'], $config['params'] ?? []);
             $previousValue = null;
@@ -30,10 +29,10 @@ class WidgetService
             // Calculate comparison if previous period query is provided
             if (isset($config['previous_query'])) {
                 $previousValue = $this->executeQuery(
-                    $config['previous_query'], 
+                    $config['previous_query'],
                     $config['previous_params'] ?? []
                 );
-                
+
                 if ($previousValue && $previousValue > 0) {
                     $change = $currentValue - $previousValue;
                     $changePercent = ($change / $previousValue) * 100;
@@ -62,11 +61,11 @@ class WidgetService
      */
     public function getChartWidget(array $config): array
     {
-        $cacheKey = 'chart_widget:' . md5(serialize($config));
-        
+        $cacheKey = 'chart_widget:'.md5(serialize($config));
+
         return Cache::remember($cacheKey, $config['cache_minutes'] ?? 300, function () use ($config) {
             $data = $this->executeQuery($config['query'], $config['params'] ?? []);
-            
+
             // Process data based on chart type
             $chartData = $this->processChartData($data, $config);
 
@@ -87,15 +86,15 @@ class WidgetService
      */
     public function getTableWidget(array $config): array
     {
-        $cacheKey = 'table_widget:' . md5(serialize($config));
-        
+        $cacheKey = 'table_widget:'.md5(serialize($config));
+
         return Cache::remember($cacheKey, $config['cache_minutes'] ?? 300, function () use ($config) {
             $query = $config['query'];
             $params = $config['params'] ?? [];
-            
+
             // Add pagination if specified
             if (isset($config['paginate'])) {
-                $query .= " LIMIT " . ($config['paginate']['offset'] ?? 0) . ", " . $config['paginate']['limit'];
+                $query .= ' LIMIT '.($config['paginate']['offset'] ?? 0).', '.$config['paginate']['limit'];
             }
 
             $data = DB::select($query, $params);
@@ -118,8 +117,8 @@ class WidgetService
      */
     public function getGaugeWidget(array $config): array
     {
-        $cacheKey = 'gauge_widget:' . md5(serialize($config));
-        
+        $cacheKey = 'gauge_widget:'.md5(serialize($config));
+
         return Cache::remember($cacheKey, $config['cache_minutes'] ?? 300, function () use ($config) {
             $value = $this->executeQuery($config['query'], $config['params'] ?? []);
             $max = $config['max'] ?? 100;
@@ -146,14 +145,14 @@ class WidgetService
      */
     public function getStatListWidget(array $config): array
     {
-        $cacheKey = 'stat_list_widget:' . md5(serialize($config));
-        
+        $cacheKey = 'stat_list_widget:'.md5(serialize($config));
+
         return Cache::remember($cacheKey, $config['cache_minutes'] ?? 300, function () use ($config) {
             $stats = [];
-            
+
             foreach ($config['stats'] as $statConfig) {
                 $value = $this->executeQuery($statConfig['query'], $statConfig['params'] ?? []);
-                
+
                 $stats[] = [
                     'label' => $statConfig['label'],
                     'value' => $value,
@@ -178,17 +177,17 @@ class WidgetService
      */
     public function getProgressWidget(array $config): array
     {
-        $cacheKey = 'progress_widget:' . md5(serialize($config));
-        
+        $cacheKey = 'progress_widget:'.md5(serialize($config));
+
         return Cache::remember($cacheKey, $config['cache_minutes'] ?? 300, function () use ($config) {
             $items = [];
-            
+
             foreach ($config['items'] as $itemConfig) {
                 $current = $this->executeQuery($itemConfig['current_query'], $itemConfig['params'] ?? []);
                 $target = $itemConfig['target'] ?? $this->executeQuery($itemConfig['target_query'], $itemConfig['params'] ?? []);
-                
+
                 $percentage = $target > 0 ? ($current / $target) * 100 : 0;
-                
+
                 $items[] = [
                     'label' => $itemConfig['label'],
                     'current' => $current,
@@ -213,14 +212,14 @@ class WidgetService
      */
     public function getAlertWidget(array $config): array
     {
-        $cacheKey = 'alert_widget:' . md5(serialize($config));
-        
+        $cacheKey = 'alert_widget:'.md5(serialize($config));
+
         return Cache::remember($cacheKey, $config['cache_minutes'] ?? 60, function () use ($config) {
             $alerts = [];
-            
+
             foreach ($config['alerts'] as $alertConfig) {
                 $value = $this->executeQuery($alertConfig['query'], $alertConfig['params'] ?? []);
-                
+
                 if ($this->shouldShowAlert($value, $alertConfig['condition'])) {
                     $alerts[] = [
                         'type' => $alertConfig['type'] ?? 'warning', // success, info, warning, danger
@@ -249,12 +248,13 @@ class WidgetService
     protected function executeQuery(string $query, array $params = [])
     {
         $result = DB::select($query, $params);
-        
+
         if (empty($result)) {
             return 0;
         }
 
         $first = (array) $result[0];
+
         return reset($first); // Get first column value
     }
 
@@ -276,15 +276,15 @@ class WidgetService
             case 'pie':
             case 'doughnut':
                 return $this->processPieChartData($data, $config);
-            
+
             case 'line':
             case 'area':
                 return $this->processLineChartData($data, $config);
-            
+
             case 'bar':
             case 'column':
                 return $this->processBarChartData($data, $config);
-            
+
             default:
                 return $this->processGenericChartData($data, $config);
         }
@@ -303,7 +303,7 @@ class WidgetService
             'datasets' => [[
                 'data' => $values,
                 'backgroundColor' => $config['colors'] ?? $this->generateColors(count($labels)),
-            ]]
+            ]],
         ];
     }
 
@@ -314,15 +314,15 @@ class WidgetService
     {
         $keys = array_keys($data->first());
         $labels = $data->pluck($keys[0])->toArray();
-        
+
         $datasets = [];
         for ($i = 1; $i < count($keys); $i++) {
             $datasets[] = [
-                'label' => $config['series_labels'][$i-1] ?? $keys[$i],
+                'label' => $config['series_labels'][$i - 1] ?? $keys[$i],
                 'data' => $data->pluck($keys[$i])->toArray(),
-                'borderColor' => $config['colors'][$i-1] ?? $this->generateColors(1)[0],
-                'backgroundColor' => $config['chart_type'] === 'area' 
-                    ? $this->hexToRgba($config['colors'][$i-1] ?? $this->generateColors(1)[0], 0.2)
+                'borderColor' => $config['colors'][$i - 1] ?? $this->generateColors(1)[0],
+                'backgroundColor' => $config['chart_type'] === 'area'
+                    ? $this->hexToRgba($config['colors'][$i - 1] ?? $this->generateColors(1)[0], 0.2)
                     : 'transparent',
                 'fill' => $config['chart_type'] === 'area',
             ];
@@ -330,7 +330,7 @@ class WidgetService
 
         return [
             'labels' => $labels,
-            'datasets' => $datasets
+            'datasets' => $datasets,
         ];
     }
 
@@ -351,7 +351,7 @@ class WidgetService
             'labels' => $data->pluck(array_keys($data->first())[0])->toArray(),
             'datasets' => [[
                 'data' => $data->pluck(array_keys($data->first())[1])->toArray(),
-            ]]
+            ]],
         ];
     }
 
@@ -365,7 +365,7 @@ class WidgetService
         }
 
         $isPositive = $changePercent > 0;
-        
+
         if ($goodDirection === 'up') {
             return $isPositive ? 'positive' : 'negative';
         } else {
@@ -437,7 +437,7 @@ class WidgetService
     {
         $baseColors = [
             '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
-            '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6B7280'
+            '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6B7280',
         ];
 
         if ($count <= count($baseColors)) {
@@ -467,15 +467,15 @@ class WidgetService
     protected function hexToRgba(string $hex, float $alpha = 1): string
     {
         $hex = ltrim($hex, '#');
-        
+
         if (strlen($hex) === 3) {
-            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
         }
-        
+
         $r = hexdec(substr($hex, 0, 2));
         $g = hexdec(substr($hex, 2, 2));
         $b = hexdec(substr($hex, 4, 2));
-        
+
         return "rgba($r, $g, $b, $alpha)";
     }
 }

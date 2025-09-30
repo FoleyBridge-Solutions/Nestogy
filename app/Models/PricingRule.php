@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PricingRule extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -76,7 +76,7 @@ class PricingRule extends Model
      */
     public function isValid(): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -118,20 +118,20 @@ class PricingRule extends Model
      */
     public function appliesToDateTime($dateTime = null): bool
     {
-        $dt = $dateTime ? new \DateTime($dateTime) : new \DateTime();
+        $dt = $dateTime ? new \DateTime($dateTime) : new \DateTime;
 
         // Check day of week
-        if (!empty($this->applicable_days)) {
+        if (! empty($this->applicable_days)) {
             $dayOfWeek = strtolower($dt->format('l'));
-            if (!in_array($dayOfWeek, $this->applicable_days)) {
+            if (! in_array($dayOfWeek, $this->applicable_days)) {
                 return false;
             }
         }
 
         // Check hour of day
-        if (!empty($this->applicable_hours)) {
-            $hour = (int)$dt->format('G');
-            if (!in_array($hour, $this->applicable_hours)) {
+        if (! empty($this->applicable_hours)) {
+            $hour = (int) $dt->format('G');
+            if (! in_array($hour, $this->applicable_hours)) {
                 return false;
             }
         }
@@ -160,9 +160,9 @@ class PricingRule extends Model
         $finalPrice = max(0, $basePrice - $discountAmount);
 
         // Apply tiered pricing if applicable
-        if ($this->pricing_model === 'tiered' && !empty($this->conditions['tiers'])) {
+        if ($this->pricing_model === 'tiered' && ! empty($this->conditions['tiers'])) {
             $finalPrice = $this->calculateTieredPrice($basePrice, $quantity);
-        } elseif ($this->pricing_model === 'volume' && !empty($this->conditions['volumes'])) {
+        } elseif ($this->pricing_model === 'volume' && ! empty($this->conditions['volumes'])) {
             $finalPrice = $this->calculateVolumePrice($basePrice, $quantity);
         }
 
@@ -183,7 +183,9 @@ class PricingRule extends Model
             $tierMax = $tier['max'] ?? PHP_INT_MAX;
             $tierPrice = $tier['price'] ?? $basePrice;
 
-            if ($remaining <= 0) break;
+            if ($remaining <= 0) {
+                break;
+            }
 
             $tierQuantity = min($remaining, $tierMax - $tierMin + 1);
             $total += $tierQuantity * $tierPrice;
@@ -204,7 +206,7 @@ class PricingRule extends Model
         foreach ($volumes as $volume) {
             $volumeMin = $volume['min'] ?? 0;
             $volumeMax = $volume['max'] ?? PHP_INT_MAX;
-            
+
             if ($quantity >= $volumeMin && $quantity <= $volumeMax) {
                 $applicablePrice = $volume['price'] ?? $basePrice;
                 break;
@@ -219,7 +221,7 @@ class PricingRule extends Model
      */
     public function validatePromoCode($code): bool
     {
-        if (!$this->is_promotional || !$this->promo_code) {
+        if (! $this->is_promotional || ! $this->promo_code) {
             return true;
         }
 
@@ -248,13 +250,13 @@ class PricingRule extends Model
     public function getDiscountDisplay(): string
     {
         if ($this->price_override !== null) {
-            return '$' . number_format($this->price_override, 2);
+            return '$'.number_format($this->price_override, 2);
         }
 
         if ($this->discount_type === 'percentage') {
-            return $this->discount_value . '% off';
+            return $this->discount_value.'% off';
         } elseif ($this->discount_type === 'fixed') {
-            return '$' . number_format($this->discount_value, 2) . ' off';
+            return '$'.number_format($this->discount_value, 2).' off';
         }
 
         return 'Custom pricing';
@@ -266,14 +268,14 @@ class PricingRule extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-                    ->where(function ($q) {
-                        $q->whereNull('valid_from')
-                          ->orWhere('valid_from', '<=', now());
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('valid_until')
-                          ->orWhere('valid_until', '>=', now());
-                    });
+            ->where(function ($q) {
+                $q->whereNull('valid_from')
+                    ->orWhere('valid_from', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('valid_until')
+                    ->orWhere('valid_until', '>=', now());
+            });
     }
 
     /**
@@ -283,7 +285,7 @@ class PricingRule extends Model
     {
         return $query->where(function ($q) use ($clientId) {
             $q->whereNull('client_id')
-              ->orWhere('client_id', $clientId);
+                ->orWhere('client_id', $clientId);
         });
     }
 
@@ -293,6 +295,6 @@ class PricingRule extends Model
     public function scopeByPriority($query)
     {
         return $query->orderBy('priority', 'desc')
-                    ->orderBy('created_at', 'asc');
+            ->orderBy('created_at', 'asc');
     }
 }

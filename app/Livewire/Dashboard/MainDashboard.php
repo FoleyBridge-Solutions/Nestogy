@@ -2,25 +2,30 @@
 
 namespace App\Livewire\Dashboard;
 
-use Livewire\Component;
-use Livewire\Attributes\On;
-use Livewire\Attributes\Reactive;
 use App\Domains\Core\Services\DashboardDataService;
 use App\Domains\Core\Services\DashboardLazyLoadService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 class MainDashboard extends Component
 {
     public string $view = 'executive'; // executive, operations, financial, support
+
     public array $widgets = [];
+
     public array $allWidgetConfigs = [];
+
     public array $metrics = [];
+
     public bool $darkMode = false;
+
     public int $refreshInterval = 30; // seconds
+
     public string $kpiPeriod = 'month';
-    
+
     protected function getListeners()
     {
         $listeners = [
@@ -28,13 +33,13 @@ class MainDashboard extends Component
             'widgetUpdated' => 'handleWidgetUpdate',
             'changeView' => 'switchView',
         ];
-        
+
         // Add dynamic Echo listener if user is authenticated
         if (Auth::check()) {
             $companyId = Auth::user()->company_id;
             $listeners["echo:dashboard.{$companyId},DashboardDataUpdated"] = 'handleRealtimeUpdate';
         }
-        
+
         return $listeners;
     }
 
@@ -47,7 +52,7 @@ class MainDashboard extends Component
     public function initializeDashboard()
     {
         $user = Auth::user();
-        
+
         // Set view based on user role
         if ($user->isAdmin()) {
             $this->view = session('dashboard_view', 'executive');
@@ -58,10 +63,10 @@ class MainDashboard extends Component
         } else {
             $this->view = 'support';
         }
-        
+
         // Load user preferences
         $this->darkMode = optional($user->userSetting)->theme === 'dark';
-        
+
         // Configure widgets based on view
         $this->configureWidgets();
     }
@@ -104,7 +109,7 @@ class MainDashboard extends Component
                 ['type' => 'recent-solutions', 'size' => 'half'],
             ],
         ];
-        
+
         // Add lazy loading configuration to each widget
         foreach ($widgetConfigs as $view => &$widgets) {
             // Don't sort - preserve our manual order
@@ -114,21 +119,21 @@ class MainDashboard extends Component
                 $widget['strategy'] = DashboardLazyLoadService::getLoadingStrategy($widget['type']);
             }
         }
-        
+
         $this->allWidgetConfigs = $widgetConfigs;
-        
+
         // Set the current view's widgets
         $this->widgets = $this->allWidgetConfigs[$this->view] ?? $this->allWidgetConfigs['executive'];
     }
 
     public function loadDashboardData()
     {
-        $cacheKey = "dashboard_data_{$this->view}_" . Auth::id();
-        
+        $cacheKey = "dashboard_data_{$this->view}_".Auth::id();
+
         $this->metrics = Cache::remember($cacheKey, 60, function () {
             // Preload all common data that widgets will need
             $companyId = Auth::user()->company_id;
-            
+
             // Preload common date ranges
             $now = Carbon::now();
             $periods = [
@@ -140,24 +145,24 @@ class MainDashboard extends Component
                 'last_30_days' => ['start' => $now->copy()->subDays(30), 'end' => $now],
                 'last_7_days' => ['start' => $now->copy()->subDays(7), 'end' => $now],
             ];
-            
+
             // Preload invoice stats for all periods at once
             $invoiceStats = \App\Domains\Core\Services\DashboardCacheService::getMultiPeriodInvoiceStats($companyId, $periods);
-            
+
             // Preload client stats
             $clientStats = \App\Domains\Core\Services\DashboardCacheService::getClientStats($companyId, $now);
-            
+
             // Preload daily chart data for the last 30 days
             $chartData = \App\Domains\Core\Services\DashboardCacheService::getDailyChartData(
-                $companyId, 
-                $now->copy()->subDays(30), 
+                $companyId,
+                $now->copy()->subDays(30),
                 $now
             );
-            
+
             try {
                 $service = new DashboardDataService($companyId);
 
-                $data = match($this->view) {
+                $data = match ($this->view) {
                     'executive' => $service->getExecutiveDashboardData(now()->startOfMonth(), now()->endOfMonth()),
                     'operations' => method_exists($service, 'getOperationsDashboardData')
                         ? $service->getOperationsDashboardData()
@@ -170,7 +175,7 @@ class MainDashboard extends Component
                         : ['view' => 'support'],
                     default => []
                 };
-                
+
                 // Add preloaded data to the response
                 $data['preloaded'] = [
                     'invoice_stats' => $invoiceStats,
@@ -190,19 +195,19 @@ class MainDashboard extends Component
                     ],
                     'company_id' => $companyId,
                     'loaded_at' => now(),
-                    'error' => 'Service temporarily unavailable'
+                    'error' => 'Service temporarily unavailable',
                 ];
             }
-            
+
             return $data;
         });
-        
+
         $this->dispatch('dashboard-data-loaded', $this->metrics);
     }
 
     public function setKpiPeriod(string $period): void
     {
-        if (!in_array($period, ['month', 'quarter', 'year', 'all'], true)) {
+        if (! in_array($period, ['month', 'quarter', 'year', 'all'], true)) {
             return;
         }
 
@@ -217,27 +222,27 @@ class MainDashboard extends Component
     public function updatedView($value)
     {
         \Log::info('Dashboard view updated', ['old' => $this->view, 'new' => $value]);
-        
+
         if (in_array($value, ['executive', 'operations', 'financial', 'support'])) {
             // Save the new view to session
             session(['dashboard_view' => $value]);
-            
+
             // Clear widgets first to force re-render
             $this->widgets = [];
-            
+
             // Reconfigure widgets for new view
             $this->configureWidgets();
-            
+
             // Clear cache to force fresh data load
-            $cacheKey = "dashboard_data_{$this->view}_" . Auth::id();
+            $cacheKey = "dashboard_data_{$this->view}_".Auth::id();
             Cache::forget($cacheKey);
-            
+
             // Reload dashboard data
             $this->loadDashboardData();
-            
+
             \Log::info('Dashboard view change complete', [
                 'view' => $this->view,
-                'widgets' => array_column($this->widgets, 'type')
+                'widgets' => array_column($this->widgets, 'type'),
             ]);
         }
     }
@@ -247,17 +252,17 @@ class MainDashboard extends Component
         if (in_array($view, ['executive', 'operations', 'financial', 'support'])) {
             $this->view = $view;
             session(['dashboard_view' => $view]);
-            
+
             // Clear widgets first to force re-render
             $this->widgets = [];
-            
+
             // Reconfigure widgets for new view
             $this->configureWidgets();
-            
+
             // Clear cache to force fresh data load
-            $cacheKey = "dashboard_data_{$this->view}_" . Auth::id();
+            $cacheKey = "dashboard_data_{$this->view}_".Auth::id();
             Cache::forget($cacheKey);
-            
+
             // Reload dashboard data
             $this->loadDashboardData();
         }
@@ -269,7 +274,7 @@ class MainDashboard extends Component
         $this->dispatch('export-dashboard', [
             'view' => $this->view,
             'format' => $format,
-            'data' => $this->metrics
+            'data' => $this->metrics,
         ]);
     }
 
@@ -314,23 +319,23 @@ class MainDashboard extends Component
                     $this->refreshWidget('kpi-grid');
                     $this->refreshWidget('activity-feed');
                     break;
-                    
+
                 case 'payment-received':
                     $this->refreshWidget('revenue-chart');
                     $this->refreshWidget('kpi-grid');
                     $this->refreshWidget('activity-feed');
                     break;
-                    
+
                 case 'invoice-created':
                     $this->refreshWidget('kpi-grid');
                     $this->refreshWidget('activity-feed');
                     break;
-                    
+
                 case 'client-updated':
                     $this->refreshWidget('client-health');
                     $this->refreshWidget('activity-feed');
                     break;
-                    
+
                 default:
                     // Refresh all widgets for unknown updates
                     $this->loadDashboardData();
@@ -355,7 +360,7 @@ class MainDashboard extends Component
         if (empty($this->allWidgetConfigs)) {
             $this->configureWidgets();
         }
-        
+
         return view('livewire.dashboard.main-dashboard', [
             'metrics' => $this->metrics,
             'widgets' => $this->widgets,

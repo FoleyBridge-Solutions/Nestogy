@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\SubscriptionPlan;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class SubscriptionPlanSeeder extends Seeder
@@ -95,7 +94,7 @@ class SubscriptionPlanSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'sort_order' => 3,
-            ]
+            ],
         ];
 
         foreach ($plans as $planData) {

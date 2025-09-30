@@ -3,21 +3,20 @@
 namespace App\Domains\Financial\Services;
 
 use App\Models\Client;
+use App\Models\CollectionNote;
+use App\Models\DunningAction;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentPlan;
-use App\Models\DunningAction;
-use App\Models\CollectionNote;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Payment Processing Service
- * 
+ *
  * Handles payment processing integration for dunning management including
  * multiple payment methods, retry logic, payment plan processing, and
  * automated collection payment handling with PCI compliance.
@@ -25,15 +24,16 @@ use Illuminate\Support\Facades\Cache;
 class PaymentProcessingService
 {
     protected CommunicationService $communicationService;
+
     protected VoipCollectionService $voipService;
-    
+
     protected array $paymentMethods = [
         'credit_card' => 'Credit Card',
         'ach' => 'ACH Bank Transfer',
         'wire_transfer' => 'Wire Transfer',
         'check' => 'Check',
         'cash' => 'Cash',
-        'crypto' => 'Cryptocurrency'
+        'crypto' => 'Cryptocurrency',
     ];
 
     protected array $processingFees = [
@@ -42,10 +42,11 @@ class PaymentProcessingService
         'wire_transfer' => 25.00, // $25 flat fee
         'check' => 0,         // No fee
         'cash' => 0,          // No fee
-        'crypto' => 1.5       // 1.5%
+        'crypto' => 1.5,       // 1.5%
     ];
 
     protected int $maxRetryAttempts = 3;
+
     protected array $retryDelays = [1, 3, 7]; // Days between retries
 
     public function __construct(
@@ -73,12 +74,12 @@ class PaymentProcessingService
             'error' => null,
             'fees' => 0,
             'net_amount' => $amount,
-            'retry_scheduled' => false
+            'retry_scheduled' => false,
         ];
 
         try {
             // Validate payment method
-            if (!isset($this->paymentMethods[$paymentMethod])) {
+            if (! isset($this->paymentMethods[$paymentMethod])) {
                 throw new \InvalidArgumentException("Invalid payment method: {$paymentMethod}");
             }
 
@@ -92,7 +93,7 @@ class PaymentProcessingService
 
             // Process payment through gateway
             $gatewayResult = $this->processPaymentThroughGateway($payment, $paymentData);
-            
+
             if ($gatewayResult['success']) {
                 // Payment successful
                 $payment->update([
@@ -101,7 +102,7 @@ class PaymentProcessingService
                     'transaction_id' => $gatewayResult['transaction_id'],
                     'gateway_response' => $gatewayResult['response'],
                     'processing_fee' => $fees,
-                    'net_amount' => $amount - $fees
+                    'net_amount' => $amount - $fees,
                 ]);
 
                 $result['success'] = true;
@@ -118,7 +119,7 @@ class PaymentProcessingService
                     'failed_at' => Carbon::now(),
                     'failure_reason' => $gatewayResult['error'],
                     'gateway_response' => $gatewayResult['response'],
-                    'retry_count' => 0
+                    'retry_count' => 0,
                 ]);
 
                 $result['error'] = $gatewayResult['error'];
@@ -134,19 +135,19 @@ class PaymentProcessingService
 
         } catch (\Exception $e) {
             $result['error'] = $e->getMessage();
-            
+
             Log::error('Payment processing failed', [
                 'client_id' => $client->id,
                 'amount' => $amount,
                 'payment_method' => $paymentMethod,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             if (isset($payment)) {
                 $payment->update([
                     'status' => Payment::STATUS_FAILED,
                     'failed_at' => Carbon::now(),
-                    'failure_reason' => $e->getMessage()
+                    'failure_reason' => $e->getMessage(),
                 ]);
             }
         }
@@ -160,12 +161,12 @@ class PaymentProcessingService
     protected function calculateProcessingFees(float $amount, string $paymentMethod): float
     {
         $feeRate = $this->processingFees[$paymentMethod] ?? 0;
-        
+
         // Percentage-based fees
         if ($paymentMethod === 'credit_card' || $paymentMethod === 'ach' || $paymentMethod === 'crypto') {
             return round($amount * ($feeRate / 100), 2);
         }
-        
+
         // Flat fees
         return $feeRate;
     }
@@ -192,7 +193,7 @@ class PaymentProcessingService
             'user_agent' => request()->userAgent(),
             'source' => $options['source'] ?? 'dunning_system',
             'notes' => $options['notes'] ?? '',
-            'created_by' => auth()->id() ?? 1
+            'created_by' => auth()->id() ?? 1,
         ]);
     }
 
@@ -202,15 +203,15 @@ class PaymentProcessingService
     protected function sanitizePaymentData(array $paymentData): array
     {
         $sanitized = $paymentData;
-        
+
         // Remove sensitive credit card information
         unset($sanitized['card_number']);
         unset($sanitized['cvv']);
         unset($sanitized['card_cvv']);
-        
+
         // Mask account numbers
         if (isset($sanitized['account_number'])) {
-            $sanitized['account_number'] = '****' . substr($sanitized['account_number'], -4);
+            $sanitized['account_number'] = '****'.substr($sanitized['account_number'], -4);
         }
 
         return $sanitized;
@@ -238,7 +239,7 @@ class PaymentProcessingService
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
-                'response' => null
+                'response' => null,
             ];
         }
     }
@@ -256,25 +257,26 @@ class PaymentProcessingService
             'description' => "Payment for account #{$payment->client->account_number}",
             'metadata' => [
                 'client_id' => $payment->client_id,
-                'payment_id' => $payment->id
-            ]
+                'payment_id' => $payment->id,
+            ],
         ], [
-            'Authorization' => 'Bearer ' . config('payment.stripe.secret_key')
+            'Authorization' => 'Bearer '.config('payment.stripe.secret_key'),
         ]);
 
         if ($response->successful()) {
             $data = $response->json();
+
             return [
                 'success' => true,
                 'transaction_id' => $data['id'],
-                'response' => $data
+                'response' => $data,
             ];
         }
 
         return [
             'success' => false,
             'error' => $response->json()['error']['message'] ?? 'Credit card processing failed',
-            'response' => $response->json()
+            'response' => $response->json(),
         ];
     }
 
@@ -287,31 +289,31 @@ class PaymentProcessingService
         $response = Http::post('https://api.dwolla.com/transfers', [
             'amount' => [
                 'currency' => 'USD',
-                'value' => number_format($payment->amount, 2, '.', '')
+                'value' => number_format($payment->amount, 2, '.', ''),
             ],
             'source' => $paymentData['funding_source_url'],
             'destination' => config('payment.dwolla.destination_url'),
             'metadata' => [
                 'client_id' => $payment->client_id,
-                'payment_id' => $payment->id
-            ]
+                'payment_id' => $payment->id,
+            ],
         ], [
-            'Authorization' => 'Bearer ' . config('payment.dwolla.access_token'),
-            'Accept' => 'application/vnd.dwolla.v1.hal+json'
+            'Authorization' => 'Bearer '.config('payment.dwolla.access_token'),
+            'Accept' => 'application/vnd.dwolla.v1.hal+json',
         ]);
 
         if ($response->successful()) {
             return [
                 'success' => true,
                 'transaction_id' => basename($response->header('Location')),
-                'response' => $response->json()
+                'response' => $response->json(),
             ];
         }
 
         return [
             'success' => false,
             'error' => 'ACH processing failed',
-            'response' => $response->json()
+            'response' => $response->json(),
         ];
     }
 
@@ -324,7 +326,7 @@ class PaymentProcessingService
         return [
             'success' => false,
             'error' => 'Wire transfer requires manual verification',
-            'response' => ['status' => 'pending_verification']
+            'response' => ['status' => 'pending_verification'],
         ];
     }
 
@@ -338,24 +340,25 @@ class PaymentProcessingService
             'amount' => $payment->amount,
             'currency' => 'USD',
             'name' => 'Account Payment',
-            'description' => "Payment for account #{$payment->client->account_number}"
+            'description' => "Payment for account #{$payment->client->account_number}",
         ], [
-            'X-CC-Api-Key' => config('payment.coinbase.api_key')
+            'X-CC-Api-Key' => config('payment.coinbase.api_key'),
         ]);
 
         if ($response->successful()) {
             $data = $response->json()['data'];
+
             return [
                 'success' => $data['confirmed_at'] !== null,
                 'transaction_id' => $data['code'],
-                'response' => $data
+                'response' => $data,
             ];
         }
 
         return [
             'success' => false,
             'error' => 'Cryptocurrency processing failed',
-            'response' => $response->json()
+            'response' => $response->json(),
         ];
     }
 
@@ -367,8 +370,8 @@ class PaymentProcessingService
         // Manual payments are marked as successful but require verification
         return [
             'success' => true,
-            'transaction_id' => 'MANUAL_' . strtoupper($payment->payment_method) . '_' . time(),
-            'response' => ['status' => 'manual_processing']
+            'transaction_id' => 'MANUAL_'.strtoupper($payment->payment_method).'_'.time(),
+            'response' => ['status' => 'manual_processing'],
         ];
     }
 
@@ -399,7 +402,7 @@ class PaymentProcessingService
             [
                 'payment_amount' => $payment->amount,
                 'payment_method' => $this->paymentMethods[$payment->payment_method],
-                'transaction_id' => $payment->transaction_id
+                'transaction_id' => $payment->transaction_id,
             ],
             ['channels' => ['email', 'portal_notification']]
         );
@@ -409,17 +412,17 @@ class PaymentProcessingService
             'client_id' => $client->id,
             'payment_id' => $payment->id,
             'note_type' => CollectionNote::TYPE_PAYMENT,
-            'content' => "Payment received: $" . number_format($payment->amount, 2) . 
+            'content' => 'Payment received: $'.number_format($payment->amount, 2).
                         " via {$this->paymentMethods[$payment->payment_method]}",
             'outcome' => CollectionNote::OUTCOME_PAYMENT_RECEIVED,
-            'created_by' => auth()->id() ?? 1
+            'created_by' => auth()->id() ?? 1,
         ]);
 
         Log::info('Payment processed successfully', [
             'client_id' => $client->id,
             'payment_id' => $payment->id,
             'amount' => $payment->amount,
-            'method' => $payment->payment_method
+            'method' => $payment->payment_method,
         ]);
     }
 
@@ -439,7 +442,9 @@ class PaymentProcessingService
             ->get();
 
         foreach ($unpaidInvoices as $invoice) {
-            if ($remainingAmount <= 0) break;
+            if ($remainingAmount <= 0) {
+                break;
+            }
 
             $invoiceBalance = $invoice->getBalance();
             $paymentAmount = min($remainingAmount, $invoiceBalance);
@@ -450,14 +455,14 @@ class PaymentProcessingService
                 'payment_id' => $payment->id,
                 'amount' => $paymentAmount,
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ]);
 
             // Update invoice if fully paid
             if ($paymentAmount >= $invoiceBalance) {
                 $invoice->update([
                     'status' => Invoice::STATUS_PAID,
-                    'paid_date' => Carbon::now()
+                    'paid_date' => Carbon::now(),
                 ]);
             }
 
@@ -472,7 +477,7 @@ class PaymentProcessingService
                 'amount' => $remainingAmount,
                 'reason' => 'Overpayment credit',
                 'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ]);
         }
     }
@@ -483,7 +488,9 @@ class PaymentProcessingService
     protected function updatePaymentPlan(Payment $payment): void
     {
         $paymentPlan = PaymentPlan::find($payment->payment_plan_id);
-        if (!$paymentPlan) return;
+        if (! $paymentPlan) {
+            return;
+        }
 
         // Update payment plan status and next payment date
         $schedule = $paymentPlan->payment_schedule ?? [];
@@ -491,7 +498,7 @@ class PaymentProcessingService
 
         // Find next unpaid payment in schedule
         foreach ($schedule as $scheduledPayment) {
-            if ($scheduledPayment['status'] === 'pending' && 
+            if ($scheduledPayment['status'] === 'pending' &&
                 Carbon::parse($scheduledPayment['due_date'])->isFuture()) {
                 $nextPaymentDate = Carbon::parse($scheduledPayment['due_date']);
                 break;
@@ -503,14 +510,14 @@ class PaymentProcessingService
             'last_payment_amount' => $payment->amount,
             'next_payment_date' => $nextPaymentDate,
             'payments_made' => $paymentPlan->payments_made + 1,
-            'amount_paid' => $paymentPlan->amount_paid + $payment->amount
+            'amount_paid' => $paymentPlan->amount_paid + $payment->amount,
         ]);
 
         // Check if payment plan is complete
         if ($paymentPlan->amount_paid >= $paymentPlan->total_amount) {
             $paymentPlan->update([
                 'status' => PaymentPlan::STATUS_COMPLETED,
-                'completed_date' => Carbon::now()
+                'completed_date' => Carbon::now(),
             ]);
         }
     }
@@ -547,11 +554,12 @@ class PaymentProcessingService
             'card_declined',
             'invalid_card',
             'account_closed',
-            'fraud_suspected'
+            'fraud_suspected',
         ];
 
         $errorType = $gatewayResult['error_type'] ?? '';
-        return !in_array($errorType, $nonRetryableErrors);
+
+        return ! in_array($errorType, $nonRetryableErrors);
     }
 
     /**
@@ -565,7 +573,7 @@ class PaymentProcessingService
         $payment->update([
             'status' => Payment::STATUS_RETRY_SCHEDULED,
             'retry_count' => $payment->retry_count + 1,
-            'next_retry_date' => $retryDate
+            'next_retry_date' => $retryDate,
         ]);
 
         // Create scheduled dunning action for retry
@@ -576,13 +584,13 @@ class PaymentProcessingService
             'status' => DunningAction::STATUS_SCHEDULED,
             'scheduled_date' => $retryDate,
             'retry_attempt' => $payment->retry_count,
-            'created_by' => auth()->id() ?? 1
+            'created_by' => auth()->id() ?? 1,
         ]);
 
         Log::info('Payment retry scheduled', [
             'payment_id' => $payment->id,
             'retry_count' => $payment->retry_count,
-            'retry_date' => $retryDate
+            'retry_date' => $retryDate,
         ]);
     }
 
@@ -600,7 +608,7 @@ class PaymentProcessingService
             [
                 'payment_amount' => $payment->amount,
                 'payment_method' => $this->paymentMethods[$payment->payment_method],
-                'failure_reason' => $payment->failure_reason
+                'failure_reason' => $payment->failure_reason,
             ],
             ['channels' => ['email', 'portal_notification']]
         );
@@ -610,18 +618,18 @@ class PaymentProcessingService
             'client_id' => $client->id,
             'payment_id' => $payment->id,
             'note_type' => CollectionNote::TYPE_PAYMENT,
-            'content' => "Payment failed: $" . number_format($payment->amount, 2) . 
+            'content' => 'Payment failed: $'.number_format($payment->amount, 2).
                         " - {$payment->failure_reason}",
             'outcome' => CollectionNote::OUTCOME_PAYMENT_FAILED,
             'requires_attention' => true,
-            'created_by' => auth()->id() ?? 1
+            'created_by' => auth()->id() ?? 1,
         ]);
 
         Log::warning('Payment failed permanently', [
             'payment_id' => $payment->id,
             'client_id' => $client->id,
             'amount' => $payment->amount,
-            'reason' => $payment->failure_reason
+            'reason' => $payment->failure_reason,
         ]);
     }
 
@@ -635,7 +643,7 @@ class PaymentProcessingService
             'successful' => 0,
             'failed' => 0,
             'rescheduled' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         $retryPayments = Payment::where('status', Payment::STATUS_RETRY_SCHEDULED)
@@ -649,16 +657,16 @@ class PaymentProcessingService
 
                 // Get original payment data
                 $paymentData = $payment->payment_data ?? [];
-                
+
                 // Retry payment
                 $result = $this->processPaymentThroughGateway($payment, $paymentData);
-                
+
                 if ($result['success']) {
                     $payment->update([
                         'status' => Payment::STATUS_COMPLETED,
                         'processed_at' => Carbon::now(),
                         'transaction_id' => $result['transaction_id'],
-                        'gateway_response' => $result['response']
+                        'gateway_response' => $result['response'],
                     ]);
 
                     $this->handleSuccessfulPayment($payment);
@@ -672,7 +680,7 @@ class PaymentProcessingService
                         $payment->update([
                             'status' => Payment::STATUS_FAILED,
                             'failed_at' => Carbon::now(),
-                            'failure_reason' => $result['error']
+                            'failure_reason' => $result['error'],
                         ]);
                         $this->handleFailedPayment($payment);
                         $results['failed']++;
@@ -682,12 +690,12 @@ class PaymentProcessingService
             } catch (\Exception $e) {
                 $results['errors'][] = [
                     'payment_id' => $payment->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
-                
+
                 Log::error('Payment retry failed', [
                     'payment_id' => $payment->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -704,7 +712,7 @@ class PaymentProcessingService
             'processed' => 0,
             'successful' => 0,
             'failed' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         $duePaymentPlans = PaymentPlan::where('status', PaymentPlan::STATUS_ACTIVE)
@@ -726,7 +734,7 @@ class PaymentProcessingService
                     [
                         'payment_plan_id' => $plan->id,
                         'source' => 'payment_plan_auto',
-                        'notes' => 'Automatic payment plan payment'
+                        'notes' => 'Automatic payment plan payment',
                     ]
                 );
 
@@ -739,7 +747,7 @@ class PaymentProcessingService
             } catch (\Exception $e) {
                 $results['errors'][] = [
                     'payment_plan_id' => $plan->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -758,25 +766,26 @@ class PaymentProcessingService
             'payment_plan_id' => $options['payment_plan_id'] ?? null,
             'invoice_id' => $options['invoice_id'] ?? null,
             'expires' => Carbon::now()->addDays(30)->timestamp,
-            'one_time_use' => $options['one_time_use'] ?? false
+            'one_time_use' => $options['one_time_use'] ?? false,
         ];
 
         $token = encrypt($tokenData);
+
         return url("/payment/pay/{$token}");
     }
 
     /**
      * Get payment processing statistics.
      */
-    public function getPaymentStatistics(Client $client = null, array $dateRange = []): array
+    public function getPaymentStatistics(?Client $client = null, array $dateRange = []): array
     {
         $query = Payment::query();
-        
+
         if ($client) {
             $query->where('client_id', $client->id);
         }
 
-        if (!empty($dateRange)) {
+        if (! empty($dateRange)) {
             $query->whereBetween('created_at', $dateRange);
         }
 
@@ -789,10 +798,10 @@ class PaymentProcessingService
             'pending_payments' => $payments->where('status', Payment::STATUS_PENDING)->count(),
             'total_amount' => $payments->where('status', Payment::STATUS_COMPLETED)->sum('amount'),
             'total_fees' => $payments->where('status', Payment::STATUS_COMPLETED)->sum('processing_fee'),
-            'success_rate' => $payments->count() > 0 ? 
+            'success_rate' => $payments->count() > 0 ?
                 ($payments->where('status', Payment::STATUS_COMPLETED)->count() / $payments->count()) * 100 : 0,
             'by_method' => $payments->groupBy('payment_method')->map->count(),
-            'average_amount' => $payments->where('status', Payment::STATUS_COMPLETED)->avg('amount') ?? 0
+            'average_amount' => $payments->where('status', Payment::STATUS_COMPLETED)->avg('amount') ?? 0,
         ];
     }
 }

@@ -8,17 +8,17 @@ use App\Domains\Contract\Services\ContractGenerationService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
 
 /**
  * DigitalSignatureService
- * 
+ *
  * Multi-provider digital signature integration service supporting DocuSign,
  * HelloSign, Adobe Sign, and internal signature capture with full audit trails.
  */
 class DigitalSignatureService
 {
     protected $defaultProvider;
+
     protected $providers = [];
 
     public function __construct()
@@ -30,14 +30,14 @@ class DigitalSignatureService
     /**
      * Send contract for signature using specified or default provider
      */
-    public function sendForSignature(Contract $contract, string $provider = null): array
+    public function sendForSignature(Contract $contract, ?string $provider = null): array
     {
         $provider = $provider ?: $this->defaultProvider;
-        
+
         Log::info('Sending contract for signature', [
             'contract_id' => $contract->id,
             'provider' => $provider,
-            'signatures_count' => $contract->signatures()->count()
+            'signatures_count' => $contract->signatures()->count(),
         ]);
 
         try {
@@ -57,9 +57,9 @@ class DigitalSignatureService
             Log::error('Failed to send contract for signature', [
                 'contract_id' => $contract->id,
                 'provider' => $provider,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             throw $e;
         }
     }
@@ -71,7 +71,7 @@ class DigitalSignatureService
     {
         Log::info('Processing signature webhook', [
             'provider' => $provider,
-            'payload_keys' => array_keys($payload)
+            'payload_keys' => array_keys($payload),
         ]);
 
         try {
@@ -89,9 +89,9 @@ class DigitalSignatureService
             Log::error('Failed to process signature webhook', [
                 'provider' => $provider,
                 'error' => $e->getMessage(),
-                'payload' => $payload
+                'payload' => $payload,
             ]);
-            
+
             throw $e;
         }
     }
@@ -101,7 +101,7 @@ class DigitalSignatureService
      */
     public function getSignatureStatus(ContractSignature $signature): array
     {
-        if (!$signature->provider || !$signature->provider_reference_id) {
+        if (! $signature->provider || ! $signature->provider_reference_id) {
             return ['status' => $signature->status, 'provider_status' => null];
         }
 
@@ -120,9 +120,9 @@ class DigitalSignatureService
             Log::error('Failed to get signature status', [
                 'signature_id' => $signature->id,
                 'provider' => $signature->provider,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return ['status' => $signature->status, 'provider_status' => 'error', 'error' => $e->getMessage()];
         }
     }
@@ -132,7 +132,7 @@ class DigitalSignatureService
      */
     public function cancelSignature(ContractSignature $signature): bool
     {
-        if (!$signature->provider || !$signature->provider_reference_id) {
+        if (! $signature->provider || ! $signature->provider_reference_id) {
             return $signature->void('Cancelled internally');
         }
 
@@ -151,9 +151,9 @@ class DigitalSignatureService
             Log::error('Failed to cancel signature', [
                 'signature_id' => $signature->id,
                 'provider' => $signature->provider,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return false;
         }
     }
@@ -179,13 +179,13 @@ class DigitalSignatureService
                     'documentBase64' => $documentContent,
                     'name' => "{$contract->contract_number}.pdf",
                     'fileExtension' => 'pdf',
-                    'documentId' => '1'
-                ]
+                    'documentId' => '1',
+                ],
             ],
             'recipients' => [
-                'signers' => []
+                'signers' => [],
             ],
-            'status' => 'sent'
+            'status' => 'sent',
         ];
 
         // Add signers
@@ -194,30 +194,30 @@ class DigitalSignatureService
             $signers[] = [
                 'email' => $signature->signatory_email,
                 'name' => $signature->signatory_name,
-                'recipientId' => (string)($index + 1),
-                'routingOrder' => (string)$signature->signing_order,
+                'recipientId' => (string) ($index + 1),
+                'routingOrder' => (string) $signature->signing_order,
                 'tabs' => [
                     'signHereTabs' => [
                         [
                             'documentId' => '1',
                             'pageNumber' => '1',
                             'xPosition' => '100',
-                            'yPosition' => '100'
-                        ]
-                    ]
-                ]
+                            'yPosition' => '100',
+                        ],
+                    ],
+                ],
             ];
         }
         $envelope['recipients']['signers'] = $signers;
 
         // Send to DocuSign
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->getDocuSignAccessToken(),
-            'Content-Type' => 'application/json'
+            'Authorization' => 'Bearer '.$this->getDocuSignAccessToken(),
+            'Content-Type' => 'application/json',
         ])->post("{$baseUrl}/v2.1/accounts/{$accountId}/envelopes", $envelope);
 
-        if (!$response->successful()) {
-            throw new \Exception('DocuSign API error: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('DocuSign API error: '.$response->body());
         }
 
         $responseData = $response->json();
@@ -228,8 +228,8 @@ class DigitalSignatureService
             $signature->updateProviderStatus([
                 'provider' => 'docusign',
                 'envelope_id' => $envelopeId,
-                'recipient_id' => (string)($index + 1),
-                'status' => 'sent'
+                'recipient_id' => (string) ($index + 1),
+                'status' => 'sent',
             ]);
         }
 
@@ -237,7 +237,7 @@ class DigitalSignatureService
             'success' => true,
             'provider' => 'docusign',
             'envelope_id' => $envelopeId,
-            'signatures_sent' => count($signers)
+            'signatures_sent' => count($signers),
         ];
     }
 
@@ -259,7 +259,7 @@ class DigitalSignatureService
             $signers[] = [
                 'email_address' => $signature->signatory_email,
                 'name' => $signature->signatory_name,
-                'order' => $signature->signing_order
+                'order' => $signature->signing_order,
             ];
         }
 
@@ -268,17 +268,17 @@ class DigitalSignatureService
             'subject' => "Please sign: {$contract->title}",
             'message' => 'Please review and sign this contract.',
             'signers' => $signers,
-            'test_mode' => $config['test_mode'] ?? false
+            'test_mode' => $config['test_mode'] ?? false,
         ];
 
         // Send to HelloSign
         $response = Http::withHeaders([
-            'Authorization' => 'Basic ' . base64_encode($apiKey . ':')
+            'Authorization' => 'Basic '.base64_encode($apiKey.':'),
         ])->attach('file[0]', $documentContent, "{$contract->contract_number}.pdf")
-          ->post('https://api.hellosign.com/v3/signature_request/send', $requestData);
+            ->post('https://api.hellosign.com/v3/signature_request/send', $requestData);
 
-        if (!$response->successful()) {
-            throw new \Exception('HelloSign API error: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('HelloSign API error: '.$response->body());
         }
 
         $responseData = $response->json();
@@ -289,7 +289,7 @@ class DigitalSignatureService
             $signature->updateProviderStatus([
                 'provider' => 'hellosign',
                 'provider_reference_id' => $signatureRequestId,
-                'status' => 'sent'
+                'status' => 'sent',
             ]);
         }
 
@@ -297,7 +297,7 @@ class DigitalSignatureService
             'success' => true,
             'provider' => 'hellosign',
             'signature_request_id' => $signatureRequestId,
-            'signatures_sent' => count($signers)
+            'signatures_sent' => count($signers),
         ];
     }
 
@@ -315,13 +315,13 @@ class DigitalSignatureService
 
         // First, upload the document
         $uploadResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->getAdobeSignAccessToken(),
-            'Content-Type' => 'application/pdf'
+            'Authorization' => 'Bearer '.$this->getAdobeSignAccessToken(),
+            'Content-Type' => 'application/pdf',
         ])->withBody($documentContent, 'application/pdf')
-          ->post("{$baseUrl}/api/rest/v6/transientDocuments");
+            ->post("{$baseUrl}/api/rest/v6/transientDocuments");
 
-        if (!$uploadResponse->successful()) {
-            throw new \Exception('Adobe Sign document upload error: ' . $uploadResponse->body());
+        if (! $uploadResponse->successful()) {
+            throw new \Exception('Adobe Sign document upload error: '.$uploadResponse->body());
         }
 
         $transientDocumentId = $uploadResponse->json()['transientDocumentId'];
@@ -333,34 +333,34 @@ class DigitalSignatureService
                 'memberInfos' => [
                     [
                         'email' => $signature->signatory_email,
-                        'fax' => null
-                    ]
+                        'fax' => null,
+                    ],
                 ],
                 'order' => $signature->signing_order,
-                'role' => 'SIGNER'
+                'role' => 'SIGNER',
             ];
         }
 
         $agreement = [
             'fileInfos' => [
                 [
-                    'transientDocumentId' => $transientDocumentId
-                ]
+                    'transientDocumentId' => $transientDocumentId,
+                ],
             ],
             'name' => $contract->title,
             'participantSetsInfo' => $participantSets,
             'signatureType' => 'ESIGN',
-            'state' => 'IN_PROCESS'
+            'state' => 'IN_PROCESS',
         ];
 
         // Create agreement
         $agreementResponse = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->getAdobeSignAccessToken(),
-            'Content-Type' => 'application/json'
+            'Authorization' => 'Bearer '.$this->getAdobeSignAccessToken(),
+            'Content-Type' => 'application/json',
         ])->post("{$baseUrl}/api/rest/v6/agreements", $agreement);
 
-        if (!$agreementResponse->successful()) {
-            throw new \Exception('Adobe Sign agreement creation error: ' . $agreementResponse->body());
+        if (! $agreementResponse->successful()) {
+            throw new \Exception('Adobe Sign agreement creation error: '.$agreementResponse->body());
         }
 
         $agreementId = $agreementResponse->json()['id'];
@@ -370,7 +370,7 @@ class DigitalSignatureService
             $signature->updateProviderStatus([
                 'provider' => 'adobe_sign',
                 'provider_reference_id' => $agreementId,
-                'status' => 'sent'
+                'status' => 'sent',
             ]);
         }
 
@@ -378,7 +378,7 @@ class DigitalSignatureService
             'success' => true,
             'provider' => 'adobe_sign',
             'agreement_id' => $agreementId,
-            'signatures_sent' => count($participantSets)
+            'signatures_sent' => count($participantSets),
         ];
     }
 
@@ -388,10 +388,10 @@ class DigitalSignatureService
     protected function sendViaInternal(Contract $contract): array
     {
         $signatures = $contract->signatures()->orderBy('signing_order')->get();
-        
+
         foreach ($signatures as $signature) {
             $signature->send();
-            
+
             // For internal signatures, we could send email notifications here
             // or set up other notification mechanisms
         }
@@ -400,7 +400,7 @@ class DigitalSignatureService
             'success' => true,
             'provider' => 'internal',
             'signatures_sent' => $signatures->count(),
-            'message' => 'Internal signature process initiated'
+            'message' => 'Internal signature process initiated',
         ];
     }
 
@@ -412,13 +412,13 @@ class DigitalSignatureService
         $eventType = $payload['event'] ?? null;
         $envelopeId = $payload['data']['envelopeId'] ?? null;
 
-        if (!$envelopeId) {
+        if (! $envelopeId) {
             throw new \Exception('Missing envelope ID in DocuSign webhook');
         }
 
         // Find signatures by envelope ID
         $signatures = ContractSignature::where('envelope_id', $envelopeId)->get();
-        
+
         if ($signatures->isEmpty()) {
             throw new \Exception("No signatures found for envelope ID: {$envelopeId}");
         }
@@ -430,20 +430,20 @@ class DigitalSignatureService
                     $signature->markAsViewed();
                     $results[] = ['signature_id' => $signature->id, 'action' => 'marked_as_sent'];
                     break;
-                    
+
                 case 'envelope-completed':
                     $signature->sign([
                         'signed_via' => 'docusign',
-                        'envelope_id' => $envelopeId
+                        'envelope_id' => $envelopeId,
                     ]);
                     $results[] = ['signature_id' => $signature->id, 'action' => 'signed'];
                     break;
-                    
+
                 case 'envelope-declined':
                     $signature->decline('Declined via DocuSign');
                     $results[] = ['signature_id' => $signature->id, 'action' => 'declined'];
                     break;
-                    
+
                 case 'envelope-voided':
                     $signature->void('Voided via DocuSign');
                     $results[] = ['signature_id' => $signature->id, 'action' => 'voided'];
@@ -459,12 +459,12 @@ class DigitalSignatureService
         $eventType = $payload['event']['event_type'] ?? null;
         $signatureRequestId = $payload['signature_request']['signature_request_id'] ?? null;
 
-        if (!$signatureRequestId) {
+        if (! $signatureRequestId) {
             throw new \Exception('Missing signature request ID in HelloSign webhook');
         }
 
         $signatures = ContractSignature::where('provider_reference_id', $signatureRequestId)->get();
-        
+
         if ($signatures->isEmpty()) {
             throw new \Exception("No signatures found for request ID: {$signatureRequestId}");
         }
@@ -476,15 +476,15 @@ class DigitalSignatureService
                     $signature->markAsViewed();
                     $results[] = ['signature_id' => $signature->id, 'action' => 'marked_as_sent'];
                     break;
-                    
+
                 case 'signature_request_all_signed':
                     $signature->sign([
                         'signed_via' => 'hellosign',
-                        'signature_request_id' => $signatureRequestId
+                        'signature_request_id' => $signatureRequestId,
                     ]);
                     $results[] = ['signature_id' => $signature->id, 'action' => 'signed'];
                     break;
-                    
+
                 case 'signature_request_declined':
                     $signature->decline('Declined via HelloSign');
                     $results[] = ['signature_id' => $signature->id, 'action' => 'declined'];
@@ -500,12 +500,12 @@ class DigitalSignatureService
         $eventType = $payload['event'] ?? null;
         $agreementId = $payload['agreement']['id'] ?? null;
 
-        if (!$agreementId) {
+        if (! $agreementId) {
             throw new \Exception('Missing agreement ID in Adobe Sign webhook');
         }
 
         $signatures = ContractSignature::where('provider_reference_id', $agreementId)->get();
-        
+
         if ($signatures->isEmpty()) {
             throw new \Exception("No signatures found for agreement ID: {$agreementId}");
         }
@@ -516,11 +516,11 @@ class DigitalSignatureService
                 case 'AGREEMENT_WORKFLOW_COMPLETED':
                     $signature->sign([
                         'signed_via' => 'adobe_sign',
-                        'agreement_id' => $agreementId
+                        'agreement_id' => $agreementId,
                     ]);
                     $results[] = ['signature_id' => $signature->id, 'action' => 'signed'];
                     break;
-                    
+
                 case 'AGREEMENT_ACTION_DELEGATED':
                 case 'AGREEMENT_ACTION_REPLACED_SIGNER':
                     // Handle signer changes

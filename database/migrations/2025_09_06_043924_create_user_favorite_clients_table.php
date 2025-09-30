@@ -16,10 +16,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->timestamps();
-            
+
             // Ensure a user can only favorite a client once
             $table->unique(['user_id', 'client_id']);
-            
+
             // Add indexes for performance
             $table->index(['user_id', 'created_at']);
         });

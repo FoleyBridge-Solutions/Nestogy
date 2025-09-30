@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 
 /**
  * ContractClauseService
- * 
+ *
  * Handles contract generation from modular clauses with dynamic section numbering.
  */
 class ContractClauseService
@@ -19,8 +19,9 @@ class ContractClauseService
 
     public function __construct(?DefinitionRegistry $definitionRegistry = null)
     {
-        $this->definitionRegistry = $definitionRegistry ?: new DefinitionRegistry();
+        $this->definitionRegistry = $definitionRegistry ?: new DefinitionRegistry;
     }
+
     /**
      * Generate contract content from template clauses.
      */
@@ -28,86 +29,87 @@ class ContractClauseService
     {
         // Get clauses in order
         $clauses = $template->clauses()
-                            ->active()
-                            ->orderBy('contract_template_clauses.sort_order')
-                            ->get();
-        
+            ->active()
+            ->orderBy('contract_template_clauses.sort_order')
+            ->get();
+
         // Validate dependencies before generation
         $dependencyErrors = $this->validateClauseDependencies($template);
-        if (!empty($dependencyErrors)) {
-            throw new \Exception('Contract generation failed due to dependency errors: ' . implode('; ', $dependencyErrors));
+        if (! empty($dependencyErrors)) {
+            throw new \Exception('Contract generation failed due to dependency errors: '.implode('; ', $dependencyErrors));
         }
-        
+
         // Resolve clause inclusion based on conditions and dependencies
         $resolvedClauses = $this->resolveClauseInclusion($clauses, $variables);
-        
+
         // Generate dynamic definitions based on included clauses
         $resolvedClauses = $this->replaceDynamicDefinitions($resolvedClauses, $variables);
-        
+
         // Group resolved clauses by category to create sections
         $clausesByCategory = $this->groupClausesByCategory($resolvedClauses);
-        
+
         // Generate section headers and clause numbering
         $sectionHeaders = $this->generateSectionHeaders($clausesByCategory);
         $clauseNumbers = $this->generateClauseNumbers($clausesByCategory);
-        
+
         // Generate section mapping for dynamic cross-references
         $sectionMapping = $this->generateSectionMapping($clausesByCategory);
-        
+
         // Merge dynamic section reference variables into the main variables array
         $variables = array_merge($variables, $this->generateSectionReferenceVariables($sectionMapping));
-        
+
         // Process each section and its clauses
         $contractContent = '';
         $hasProcessedHeaderContent = false;
-        
+
         foreach ($clausesByCategory as $category => $categoryData) {
             $sectionHeader = $sectionHeaders[$category] ?? '';
             $categoryClauses = $categoryData['clauses'];
-            
+
             // Check if we have any content from header sections
-            if ($category === 'header' && !empty($categoryClauses)) {
+            if ($category === 'header' && ! empty($categoryClauses)) {
                 foreach ($categoryClauses as $clause) {
                     $clauseNumber = $clauseNumbers[$clause->id] ?? [];
                     $templateConditions = $clause->pivot->conditions ?? [];
-                    
+
                     $processedContent = $clause->processContent($variables, $templateConditions, $clauseNumber, $sectionMapping);
-                    
-                    if (!empty(trim($processedContent))) {
-                        $contractContent .= $processedContent . "\n\n";
+
+                    if (! empty(trim($processedContent))) {
+                        $contractContent .= $processedContent."\n\n";
                         $hasProcessedHeaderContent = true;
                     }
                 }
+
                 continue; // Skip the rest of the loop for header category
             }
-            
+
             // Add page break before each major section (after header content has been processed)
-            if ($hasProcessedHeaderContent && $category !== 'header' && !empty($sectionHeader)) {
-                $contractContent .= '<div style="page-break-before: always;"></div>' . "\n\n";
+            if ($hasProcessedHeaderContent && $category !== 'header' && ! empty($sectionHeader)) {
+                $contractContent .= '<div style="page-break-before: always;"></div>'."\n\n";
             }
-            
+
             // Add section header if not header category
-            if ($category !== 'header' && !empty($sectionHeader)) {
-                $contractContent .= $sectionHeader . "\n\n";
+            if ($category !== 'header' && ! empty($sectionHeader)) {
+                $contractContent .= $sectionHeader."\n\n";
             }
-            
+
             // Process clauses in this section
             foreach ($categoryClauses as $clause) {
                 $clauseNumber = $clauseNumbers[$clause->id] ?? [];
                 $templateConditions = $clause->pivot->conditions ?? [];
-                
+
                 $processedContent = $clause->processContent($variables, $templateConditions, $clauseNumber, $sectionMapping);
-                
+
                 // Remove duplicate section headers from clause content
                 $processedContent = $this->removeDuplicateHeaders($processedContent, $sectionHeader, $category);
-                
+
                 // Skip empty content (e.g., from failed conditions)
-                if (!empty(trim($processedContent))) {
-                    $contractContent .= $processedContent . "\n\n";
+                if (! empty(trim($processedContent))) {
+                    $contractContent .= $processedContent."\n\n";
                 }
             }
         }
-        
+
         return $contractContent;
     }
 
@@ -119,7 +121,7 @@ class ContractClauseService
         $grouped = [];
         $categoryOrder = [
             'header' => 0,
-            'definitions' => 1, 
+            'definitions' => 1,
             'services' => 2,
             'sla' => 3,
             'obligations' => 4,
@@ -133,25 +135,25 @@ class ContractClauseService
             'change_management' => 12,
             'legal' => 13,
             'admin' => 14,
-            'signature' => 15
+            'signature' => 15,
         ];
-        
+
         foreach ($clauses as $clause) {
             $category = $clause->category;
-            if (!isset($grouped[$category])) {
+            if (! isset($grouped[$category])) {
                 $grouped[$category] = [
                     'clauses' => collect(),
-                    'order' => $categoryOrder[$category] ?? 999
+                    'order' => $categoryOrder[$category] ?? 999,
                 ];
             }
             $grouped[$category]['clauses']->push($clause);
         }
-        
+
         // Sort by category order
-        uasort($grouped, function($a, $b) {
+        uasort($grouped, function ($a, $b) {
             return $a['order'] <=> $b['order'];
         });
-        
+
         return $grouped;
     }
 
@@ -162,10 +164,10 @@ class ContractClauseService
     {
         $headers = [];
         $sectionNumber = 1;
-        
+
         $sectionTitles = [
             'definitions' => 'DEFINITIONS',
-            'services' => 'SCOPE OF SUPPORT SERVICES', 
+            'services' => 'SCOPE OF SUPPORT SERVICES',
             'sla' => 'SERVICE LEVEL AGREEMENTS',
             'obligations' => 'CLIENT OBLIGATIONS AND RESPONSIBILITIES',
             'financial' => 'FEES AND PAYMENT TERMS',
@@ -178,20 +180,21 @@ class ContractClauseService
             'change_management' => 'CHANGE MANAGEMENT',
             'legal' => 'GOVERNING LAW AND DISPUTE RESOLUTION',
             'admin' => 'GENERAL PROVISIONS',
-            'signature' => '' // No header for signature section
+            'signature' => '', // No header for signature section
         ];
-        
+
         foreach ($clausesByCategory as $category => $data) {
             if ($category === 'header' || $category === 'signature') {
                 $headers[$category] = '';
+
                 continue;
             }
-            
+
             $title = $sectionTitles[$category] ?? strtoupper(str_replace('_', ' ', $category));
             $headers[$category] = "{$sectionNumber}. {$title}";
             $sectionNumber++;
         }
-        
+
         return $headers;
     }
 
@@ -201,11 +204,11 @@ class ContractClauseService
     protected function generateClauseNumbers(array $clausesByCategory): array
     {
         $clauseNumbers = [];
-        
+
         foreach ($clausesByCategory as $category => $data) {
             $clauses = $data['clauses'];
             $clauseCounter = 1;
-            
+
             foreach ($clauses as $clause) {
                 if ($category === 'header' || $category === 'signature') {
                     // No numbering for header and signature
@@ -214,13 +217,13 @@ class ContractClauseService
                     // Number clauses within sections as subsections
                     $clauseNumbers[$clause->id] = [
                         'clause_number' => $clauseCounter,
-                        'section_number' => $this->getSectionNumberForCategory($category, $clausesByCategory)
+                        'section_number' => $this->getSectionNumberForCategory($category, $clausesByCategory),
                     ];
                     $clauseCounter++;
                 }
             }
         }
-        
+
         return $clauseNumbers;
     }
 
@@ -239,6 +242,7 @@ class ContractClauseService
             }
             $sectionNumber++;
         }
+
         return $sectionNumber;
     }
 
@@ -249,7 +253,7 @@ class ContractClauseService
     {
         $mapping = [];
         $sectionNumber = 1;
-        
+
         $sectionTitles = [
             'definitions' => 'DEFINITIONS',
             'services' => 'SCOPE OF SUPPORT SERVICES',
@@ -266,21 +270,21 @@ class ContractClauseService
             'legal' => 'GOVERNING LAW AND DISPUTE RESOLUTION',
             'admin' => 'GENERAL PROVISIONS',
         ];
-        
+
         foreach ($clausesByCategory as $category => $data) {
             if ($category === 'header' || $category === 'signature') {
                 continue;
             }
-            
+
             $title = $sectionTitles[$category] ?? strtoupper(str_replace('_', ' ', $category));
             $mapping[$category] = [
                 'number' => $sectionNumber,
                 'title' => $title,
-                'reference' => "Section {$sectionNumber} ({$title})"
+                'reference' => "Section {$sectionNumber} ({$title})",
             ];
             $sectionNumber++;
         }
-        
+
         return $mapping;
     }
 
@@ -290,13 +294,13 @@ class ContractClauseService
     protected function generateSectionReferenceVariables(array $sectionMapping): array
     {
         $variables = [];
-        
+
         // Generate standard section reference variables
         foreach ($sectionMapping as $category => $data) {
-            $variableName = $category . '_section_ref';
+            $variableName = $category.'_section_ref';
             $variables[$variableName] = $data['reference'];
         }
-        
+
         // Add common alternative names for easier template usage
         $commonMappings = [
             'definitions_section_ref' => $sectionMapping['definitions']['reference'] ?? 'DEFINITIONS SECTION NOT PRESENT',
@@ -310,7 +314,7 @@ class ContractClauseService
             'legal_section_ref' => $sectionMapping['legal']['reference'] ?? 'LEGAL SECTION NOT PRESENT',
             'admin_section_ref' => $sectionMapping['admin']['reference'] ?? 'ADMIN SECTION NOT PRESENT',
         ];
-        
+
         return array_merge($variables, $commonMappings);
     }
 
@@ -321,7 +325,7 @@ class ContractClauseService
     {
         $includedClauses = collect();
         $excludedClauses = collect();
-        
+
         // First pass: Evaluate conditional clauses
         foreach ($clauses as $clause) {
             if ($clause->isConditional()) {
@@ -335,16 +339,16 @@ class ContractClauseService
                 $includedClauses->push($clause);
             }
         }
-        
+
         // Second pass: Remove duplicate clauses by category (prefer specific over generic)
         $includedClauses = $this->removeDuplicatesByCategory($includedClauses);
-        
+
         // Third pass: Check dependencies and auto-include required dependencies
         $finalClauses = $this->resolveDependencies($includedClauses, $clauses);
-        
+
         // Fourth pass: Check for conflicts and remove conflicting clauses
         $finalClauses = $this->resolveConflicts($finalClauses);
-        
+
         return $finalClauses;
     }
 
@@ -354,17 +358,17 @@ class ContractClauseService
     protected function evaluateClauseConditions(ContractClause $clause, array $variables): bool
     {
         $conditions = $clause->getConditions();
-        
+
         if (empty($conditions)) {
             return true; // No conditions means always include
         }
-        
+
         foreach ($conditions as $condition) {
-            if (!$this->evaluateCondition($condition, $variables)) {
+            if (! $this->evaluateCondition($condition, $variables)) {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -376,9 +380,9 @@ class ContractClauseService
         $type = $condition['type'] ?? 'equals';
         $variable = $condition['variable'] ?? '';
         $value = $condition['value'] ?? null;
-        
+
         $actualValue = $variables[$variable] ?? null;
-        
+
         switch ($type) {
             case 'equals':
                 return $actualValue == $value;
@@ -387,9 +391,9 @@ class ContractClauseService
             case 'exists':
                 return isset($variables[$variable]);
             case 'not_exists':
-                return !isset($variables[$variable]);
+                return ! isset($variables[$variable]);
             case 'truthy':
-                return !empty($actualValue);
+                return ! empty($actualValue);
             case 'falsy':
                 return empty($actualValue);
             case 'contains':
@@ -408,20 +412,20 @@ class ContractClauseService
     {
         $finalClauses = $includedClauses->keyBy('slug');
         $added = true;
-        
+
         // Keep adding dependencies until no new ones are found
         while ($added) {
             $added = false;
-            
+
             foreach ($finalClauses as $clause) {
                 if ($clause->hasDependencies()) {
                     $dependencies = $clause->getDependencies();
-                    
+
                     foreach ($dependencies as $dependencySlug) {
-                        if (!$finalClauses->has($dependencySlug)) {
+                        if (! $finalClauses->has($dependencySlug)) {
                             // Find the dependency clause
                             $dependencyClause = $allClauses->firstWhere('slug', $dependencySlug);
-                            
+
                             if ($dependencyClause) {
                                 $finalClauses[$dependencySlug] = $dependencyClause;
                                 $added = true;
@@ -431,7 +435,7 @@ class ContractClauseService
                 }
             }
         }
-        
+
         return $finalClauses->values();
     }
 
@@ -442,28 +446,30 @@ class ContractClauseService
     {
         $clausesByCategory = $clauses->groupBy('category');
         $finalClauses = collect();
-        
+
         // Categories that allow multiple clauses (different clauses, not duplicates)
         $multiClauseCategories = ['header', 'legal', 'warranties', 'financial'];
-        
+
         foreach ($clausesByCategory as $category => $categoryClauses) {
             if ($categoryClauses->count() <= 1) {
                 // No duplicates in this category
                 $finalClauses = $finalClauses->merge($categoryClauses);
+
                 continue;
             }
-            
+
             // Allow multiple clauses in certain categories
             if (in_array($category, $multiClauseCategories)) {
                 $finalClauses = $finalClauses->merge($categoryClauses);
+
                 continue;
             }
-            
+
             // Multiple clauses in same category - prefer specific over generic
             $preferredClause = $this->selectPreferredClause($categoryClauses);
             $finalClauses->push($preferredClause);
         }
-        
+
         return $finalClauses;
     }
 
@@ -475,25 +481,25 @@ class ContractClauseService
         // Preference order: MSP-specific > VoIP-specific > VAR-specific > generic
         $preferenceOrder = [
             'msp' => 10,
-            'voip' => 9, 
+            'voip' => 9,
             'var' => 8,
             'compliance' => 7,
             'specific' => 5,
-            'generic' => 1
+            'generic' => 1,
         ];
-        
+
         $bestClause = null;
         $bestScore = 0;
-        
+
         foreach ($clauses as $clause) {
             $score = $this->calculateClauseSpecificity($clause, $preferenceOrder);
-            
+
             if ($score > $bestScore) {
                 $bestScore = $score;
                 $bestClause = $clause;
             }
         }
-        
+
         return $bestClause ?? $clauses->first();
     }
 
@@ -503,14 +509,14 @@ class ContractClauseService
     protected function calculateClauseSpecificity(ContractClause $clause, array $preferenceOrder): int
     {
         $name = strtolower($clause->name);
-        
+
         // Check for specific prefixes in order of preference
         foreach ($preferenceOrder as $type => $score) {
             if (str_contains($name, $type)) {
                 return $score;
             }
         }
-        
+
         // Default to generic if no specific patterns found
         return $preferenceOrder['generic'];
     }
@@ -522,7 +528,7 @@ class ContractClauseService
     {
         $finalClauses = collect();
         $conflictMap = [];
-        
+
         // Build conflict map
         foreach ($clauses as $clause) {
             if ($clause->hasConflicts()) {
@@ -532,21 +538,21 @@ class ContractClauseService
                 }
             }
         }
-        
+
         // Process clauses and resolve conflicts
         foreach ($clauses as $clause) {
             $hasConflict = false;
-            
+
             if (isset($conflictMap[$clause->slug])) {
                 $conflicts = $conflictMap[$clause->slug];
-                
+
                 // Check if any conflicting clause is already included
                 foreach ($finalClauses as $existingClause) {
                     if (in_array($existingClause->slug, $conflicts)) {
                         // Resolve conflict based on priority (required > optional, system > user)
                         if ($this->getClausePriority($clause) > $this->getClausePriority($existingClause)) {
                             // Remove the existing clause and add this one
-                            $finalClauses = $finalClauses->reject(function($c) use ($existingClause) {
+                            $finalClauses = $finalClauses->reject(function ($c) use ($existingClause) {
                                 return $c->slug === $existingClause->slug;
                             });
                         } else {
@@ -557,12 +563,12 @@ class ContractClauseService
                     }
                 }
             }
-            
-            if (!$hasConflict) {
+
+            if (! $hasConflict) {
                 $finalClauses->push($clause);
             }
         }
-        
+
         return $finalClauses;
     }
 
@@ -572,17 +578,17 @@ class ContractClauseService
     protected function getClausePriority(ContractClause $clause): int
     {
         $priority = 0;
-        
+
         // Required clauses have higher priority
         if ($clause->is_required) {
             $priority += 100;
         }
-        
+
         // System clauses have higher priority
         if ($clause->is_system) {
             $priority += 50;
         }
-        
+
         // Clause type priority
         switch ($clause->clause_type) {
             case 'required':
@@ -595,7 +601,7 @@ class ContractClauseService
                 $priority += 10;
                 break;
         }
-        
+
         return $priority;
     }
 
@@ -607,7 +613,7 @@ class ContractClauseService
         $clauses = $template->clauses;
         $errors = [];
         $clauseSlugs = $clauses->pluck('slug')->toArray();
-        
+
         foreach ($clauses as $clause) {
             // Check dependencies
             if ($clause->hasDependencies()) {
@@ -618,13 +624,13 @@ class ContractClauseService
                         // Dynamic definitions don't need to be in the database - they're generated
                         continue;
                     }
-                    
-                    if (!in_array($dependencySlug, $clauseSlugs)) {
+
+                    if (! in_array($dependencySlug, $clauseSlugs)) {
                         $errors[] = "Clause '{$clause->name}' requires '{$dependencySlug}' but it's not included in template";
                     }
                 }
             }
-            
+
             // Check conflicts
             if ($clause->hasConflicts()) {
                 $conflicts = $clause->getConflicts();
@@ -635,7 +641,7 @@ class ContractClauseService
                 }
             }
         }
-        
+
         return $errors;
     }
 
@@ -645,12 +651,12 @@ class ContractClauseService
     public function getMissingRequiredClauses(ContractTemplate $template): array
     {
         $existingCategories = $template->clauses->pluck('category')->unique()->toArray();
-        
+
         // Define required categories by contract type
         $requiredCategories = $this->getRequiredCategoriesForContractType($template->template_type);
-        
+
         $missingCategories = array_diff($requiredCategories, $existingCategories);
-        
+
         return $missingCategories;
     }
 
@@ -660,7 +666,7 @@ class ContractClauseService
     protected function getRequiredCategoriesForContractType(string $contractType): array
     {
         $baseRequired = ['header', 'definitions', 'services', 'financial', 'legal', 'signature'];
-        
+
         $typeSpecificRequired = [
             'managed_services' => ['sla', 'obligations', 'warranties', 'exclusions'],
             'cybersecurity_services' => ['compliance', 'data_protection', 'confidentiality'],
@@ -671,9 +677,9 @@ class ContractClauseService
             'professional_services' => ['intellectual_property', 'warranties'],
             'software_licensing' => ['intellectual_property', 'warranties'],
         ];
-        
+
         $additional = $typeSpecificRequired[$contractType] ?? [];
-        
+
         return array_merge($baseRequired, $additional);
     }
 
@@ -684,20 +690,20 @@ class ContractClauseService
     {
         $addedClauses = [];
         $errors = [];
-        
+
         // Check if clause is already in template
         if ($template->clauses()->where('contract_clauses.id', $clause->id)->exists()) {
             return [
                 'added' => [],
-                'errors' => ["Clause '{$clause->name}' is already in template"]
+                'errors' => ["Clause '{$clause->name}' is already in template"],
             ];
         }
-        
+
         // Check for conflicts first
         if ($clause->hasConflicts()) {
             $conflicts = $clause->getConflicts();
             $existingClauses = $template->clauses->pluck('slug')->toArray();
-            
+
             foreach ($conflicts as $conflictSlug) {
                 if (in_array($conflictSlug, $existingClauses)) {
                     $conflictingClause = $template->clauses->firstWhere('slug', $conflictSlug);
@@ -705,28 +711,28 @@ class ContractClauseService
                 }
             }
         }
-        
-        if (!empty($errors)) {
+
+        if (! empty($errors)) {
             return ['added' => [], 'errors' => $errors];
         }
-        
+
         // Add dependencies first
         if ($clause->hasDependencies()) {
             $dependencies = $clause->getDependencies();
             $existingClauses = $template->clauses->pluck('slug')->toArray();
-            
+
             foreach ($dependencies as $dependencySlug) {
-                if (!in_array($dependencySlug, $existingClauses)) {
+                if (! in_array($dependencySlug, $existingClauses)) {
                     // Find and add the dependency
                     $dependencyClause = ContractClause::where('company_id', $template->company_id)
-                                                     ->where('slug', $dependencySlug)
-                                                     ->where('status', 'active')
-                                                     ->first();
-                    
+                        ->where('slug', $dependencySlug)
+                        ->where('status', 'active')
+                        ->first();
+
                     if ($dependencyClause) {
                         $this->attachClauseToTemplate($template, $dependencyClause, [
                             'auto_added' => true,
-                            'reason' => "Required dependency for '{$clause->name}'"
+                            'reason' => "Required dependency for '{$clause->name}'",
                         ]);
                         $addedClauses[] = $dependencyClause;
                     } else {
@@ -735,16 +741,16 @@ class ContractClauseService
                 }
             }
         }
-        
+
         // Add the main clause if no errors
         if (empty($errors)) {
             $this->attachClauseToTemplate($template, $clause, $options);
             $addedClauses[] = $clause;
         }
-        
+
         return [
             'added' => $addedClauses,
-            'errors' => $errors
+            'errors' => $errors,
         ];
     }
 
@@ -756,18 +762,18 @@ class ContractClauseService
         $removedClauses = [];
         $errors = [];
         $warnings = [];
-        
+
         // Check if any other clauses depend on this one
-        $dependentClauses = $template->clauses->filter(function($otherClause) use ($clause) {
-            return $otherClause->id !== $clause->id && 
-                   $otherClause->hasDependencies() && 
+        $dependentClauses = $template->clauses->filter(function ($otherClause) use ($clause) {
+            return $otherClause->id !== $clause->id &&
+                   $otherClause->hasDependencies() &&
                    in_array($clause->slug, $otherClause->getDependencies());
         });
-        
-        if ($dependentClauses->isNotEmpty() && !($options['force'] ?? false)) {
+
+        if ($dependentClauses->isNotEmpty() && ! ($options['force'] ?? false)) {
             $dependentNames = $dependentClauses->pluck('name')->toArray();
-            $errors[] = "Cannot remove '{$clause->name}' - required by: " . implode(', ', $dependentNames);
-            $warnings[] = "Use force option to remove anyway";
+            $errors[] = "Cannot remove '{$clause->name}' - required by: ".implode(', ', $dependentNames);
+            $warnings[] = 'Use force option to remove anyway';
         } else {
             // Remove dependent clauses first if forcing
             if ($dependentClauses->isNotEmpty() && ($options['force'] ?? false)) {
@@ -776,16 +782,16 @@ class ContractClauseService
                     $removedClauses[] = $dependentClause;
                 }
             }
-            
+
             // Remove the main clause
             $template->clauses()->detach($clause->id);
             $removedClauses[] = $clause;
         }
-        
+
         return [
             'removed' => $removedClauses,
             'errors' => $errors,
-            'warnings' => $warnings
+            'warnings' => $warnings,
         ];
     }
 
@@ -799,15 +805,15 @@ class ContractClauseService
             'reason' => $options['reason'] ?? null,
             'added_at' => now()->toISOString(),
         ], $options['metadata'] ?? []);
-        
+
         $pivotData = [
             'sort_order' => $options['sort_order'] ?? $clause->sort_order,
             'is_required' => $options['is_required'] ?? $clause->is_required,
             'conditions' => isset($options['conditions']) ? json_encode($options['conditions']) : null,
             'variable_overrides' => isset($options['variable_overrides']) ? json_encode($options['variable_overrides']) : null,
-            'metadata' => json_encode($metadata)
+            'metadata' => json_encode($metadata),
         ];
-        
+
         $template->clauses()->attach($clause->id, $pivotData);
     }
 
@@ -819,34 +825,35 @@ class ContractClauseService
         $tree = [
             'clause' => $clause,
             'dependencies' => [],
-            'conflicts' => $clause->getConflicts()
+            'conflicts' => $clause->getConflicts(),
         ];
-        
+
         if (in_array($clause->id, $visited)) {
             $tree['circular_dependency'] = true;
+
             return $tree;
         }
-        
+
         $visited[] = $clause->id;
-        
+
         if ($clause->hasDependencies()) {
             foreach ($clause->getDependencies() as $dependencySlug) {
                 $dependencyClause = ContractClause::where('company_id', $clause->company_id)
-                                                  ->where('slug', $dependencySlug)
-                                                  ->where('status', 'active')
-                                                  ->first();
-                
+                    ->where('slug', $dependencySlug)
+                    ->where('status', 'active')
+                    ->first();
+
                 if ($dependencyClause) {
                     $tree['dependencies'][] = $this->getDependencyTree($dependencyClause, $visited);
                 } else {
                     $tree['dependencies'][] = [
                         'missing' => $dependencySlug,
-                        'error' => 'Dependency not found'
+                        'error' => 'Dependency not found',
                     ];
                 }
             }
         }
-        
+
         return $tree;
     }
 
@@ -856,20 +863,20 @@ class ContractClauseService
     public function parseTemplateIntoCluses(ContractTemplate $template): array
     {
         $content = $template->template_content;
-        
+
         // Define the clause structure based on the RECURRING SUPPORT SERVICES AGREEMENT
         $clauseDefinitions = $this->getRecurringServicesClauseDefinitions();
-        
+
         $parsedClauses = [];
-        
+
         foreach ($clauseDefinitions as $clauseDef) {
             $startPattern = $clauseDef['start_pattern'];
             $endPattern = $clauseDef['end_pattern'] ?? null;
-            
+
             // Extract clause content using regex patterns
             $clauseContent = $this->extractClauseContent($content, $startPattern, $endPattern);
-            
-            if (!empty($clauseContent)) {
+
+            if (! empty($clauseContent)) {
                 $parsedClauses[] = [
                     'name' => $clauseDef['name'],
                     'slug' => $clauseDef['slug'],
@@ -882,7 +889,7 @@ class ContractClauseService
                 ];
             }
         }
-        
+
         return $parsedClauses;
     }
 
@@ -893,7 +900,7 @@ class ContractClauseService
     {
         if ($endPattern) {
             // Extract between start and end patterns
-            $pattern = '/' . preg_quote($startPattern, '/') . '(.*?)' . preg_quote($endPattern, '/') . '/s';
+            $pattern = '/'.preg_quote($startPattern, '/').'(.*?)'.preg_quote($endPattern, '/').'/s';
             if (preg_match($pattern, $content, $matches)) {
                 return trim($matches[1]);
             }
@@ -902,10 +909,11 @@ class ContractClauseService
             $pos = strpos($content, $startPattern);
             if ($pos !== false) {
                 $start = $pos + strlen($startPattern);
+
                 return trim(substr($content, $start));
             }
         }
-        
+
         return '';
     }
 
@@ -916,24 +924,24 @@ class ContractClauseService
     {
         $pattern = '/\{\{([^}#\/]+)\}\}/';
         preg_match_all($pattern, $content, $matches);
-        
+
         $variables = [];
         foreach ($matches[1] ?? [] as $match) {
             $variable = trim($match);
-            
+
             // Skip conditional directives
             if (strpos($variable, '#if') === 0 || strpos($variable, '/if') === 0) {
                 continue;
             }
-            
+
             // Extract base variable name from formatted variables
             if (strpos($variable, '|') !== false) {
                 $variable = trim(explode('|', $variable)[0]);
             }
-            
+
             $variables[] = $variable;
         }
-        
+
         return array_unique($variables);
     }
 
@@ -1093,20 +1101,20 @@ class ContractClauseService
     {
         // Analyze all clauses to determine required definitions
         $requiredDefinitions = $this->analyzeRequiredDefinitions($clauses);
-        
+
         // If no definitions are required, remove any existing definitions clause
         if (empty($requiredDefinitions)) {
             return $clauses->reject(function ($clause) {
                 return $clause->category === 'definitions';
             });
         }
-        
+
         // Generate dynamic definitions content
         $dynamicContent = $this->generateDynamicDefinitionsContent($requiredDefinitions, $variables);
-        
+
         // Find existing definitions clause
         $definitionsClause = $clauses->firstWhere('category', 'definitions');
-        
+
         if ($definitionsClause) {
             // Create a clone of the definitions clause with dynamic content
             $dynamicDefinitionsClause = $definitionsClause->replicate();
@@ -1126,7 +1134,7 @@ class ContractClauseService
             ]);
             $dynamicDefinitionsClause->id = 'dynamic_definitions'; // Temporary ID
         }
-        
+
         // Handle replacement or insertion of definitions clause
         if ($definitionsClause) {
             // Replace existing definitions clause
@@ -1134,36 +1142,37 @@ class ContractClauseService
                 if ($clause->id === $definitionsClause->id) {
                     return $dynamicDefinitionsClause;
                 }
-                
+
                 // Also check for and replace dynamic definition placeholders in other clauses
                 $content = $clause->content;
                 $updated = false;
-                
+
                 // Replace dynamic definition placeholders
                 if (strpos($content, '{{msp-definitions}}') !== false) {
                     $content = str_replace('{{msp-definitions}}', $dynamicContent, $content);
                     $updated = true;
                 }
-                
+
                 if (strpos($content, '{{voip-definitions}}') !== false) {
                     $voipDefinitions = $this->generateVoIPDefinitions($variables);
                     $content = str_replace('{{voip-definitions}}', $voipDefinitions, $content);
                     $updated = true;
                 }
-                
+
                 if (strpos($content, '{{var-definitions}}') !== false) {
                     $varDefinitions = $this->generateVARDefinitions($variables);
                     $content = str_replace('{{var-definitions}}', $varDefinitions, $content);
                     $updated = true;
                 }
-                
+
                 // If we updated the content, create a clone with the new content
                 if ($updated) {
                     $updatedClause = clone $clause;
                     $updatedClause->content = $content;
+
                     return $updatedClause;
                 }
-                
+
                 return $clause;
             });
         } else {
@@ -1171,27 +1180,27 @@ class ContractClauseService
             $headerClauses = collect();
             $otherClauses = collect();
             $insertedDefinitions = false;
-            
+
             foreach ($clauses as $clause) {
                 if ($clause->category === 'header') {
                     $headerClauses->push($clause);
                 } else {
-                    if (!$insertedDefinitions) {
+                    if (! $insertedDefinitions) {
                         $otherClauses->push($dynamicDefinitionsClause);
                         $insertedDefinitions = true;
                     }
                     $otherClauses->push($clause);
                 }
             }
-            
+
             // If no header clauses found, insert definitions at the beginning
-            if (!$insertedDefinitions) {
+            if (! $insertedDefinitions) {
                 $otherClauses->prepend($dynamicDefinitionsClause);
             }
-            
+
             $updatedClauses = $headerClauses->concat($otherClauses);
         }
-        
+
         return $updatedClauses;
     }
 
@@ -1203,28 +1212,28 @@ class ContractClauseService
         // Disable automatic definition generation - definitions should be manually assigned via clauses
         // If you need definitions in a contract, add a specific definitions clause to the template
         return [];
-        
+
         /* DISABLED AUTO-GENERATION CODE:
         $requiredDefinitions = [];
-        
+
         // Get the definition registry service
         $definitionRegistry = app(\App\Domains\Core\Services\DefinitionRegistryService::class);
-        
+
         // Collect required definitions from each clause
         foreach ($clauses as $clause) {
             // Get explicit required definitions from clause metadata
             $clauseDefinitions = $clause->getRequiredDefinitions();
             $requiredDefinitions = array_merge($requiredDefinitions, $clauseDefinitions);
-            
+
             // Also analyze clause content for implicit definitions
             $suggestedDefinitions = $definitionRegistry->suggestDefinitions($clause->content);
             $requiredDefinitions = array_merge($requiredDefinitions, $suggestedDefinitions);
         }
-        
+
         // Remove duplicates and validate that all definitions exist
         $uniqueDefinitions = array_unique($requiredDefinitions);
         $missingDefinitions = $definitionRegistry->validateDefinitions($uniqueDefinitions);
-        
+
         // Filter out any missing definitions (log warning)
         if (!empty($missingDefinitions)) {
             \Log::warning('Missing definitions found during analysis', [
@@ -1233,7 +1242,7 @@ class ContractClauseService
             ]);
             $uniqueDefinitions = array_diff($uniqueDefinitions, $missingDefinitions);
         }
-        
+
         return array_values($uniqueDefinitions);
         */
     }
@@ -1246,16 +1255,15 @@ class ContractClauseService
         if (empty($requiredDefinitions)) {
             return "DEFINITIONS\n\nAs used in this Agreement, the following terms shall have the meanings ascribed to them below:\n\n[No definitions required]\n";
         }
-        
+
         // Get the definition registry service
         $definitionRegistry = app(\App\Domains\Core\Services\DefinitionRegistryService::class);
-        
+
         // Generate the definitions section using the registry
         $dynamicContent = $definitionRegistry->generateDefinitionsSection($requiredDefinitions, $variables);
-        
+
         return $dynamicContent;
     }
-
 
     /**
      * Check if a dependency is a dynamic definition.
@@ -1263,13 +1271,13 @@ class ContractClauseService
     protected function isDynamicDefinition(string $dependency): bool
     {
         $dynamicPrefixes = ['msp-definitions', 'voip-definitions', 'var-definitions', 'compliance-definitions'];
-        
+
         foreach ($dynamicPrefixes as $prefix) {
             if (strpos($dependency, $prefix) === 0) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -1289,6 +1297,7 @@ class ContractClauseService
     protected function generateVoIPDefinitions(array $variables): string
     {
         $voipDefinitions = $this->definitionRegistry->getDefinitionsForTemplateCategory('voip');
+
         return $this->generateDynamicDefinitionsContent($voipDefinitions, $variables);
     }
 
@@ -1298,6 +1307,7 @@ class ContractClauseService
     protected function generateVARDefinitions(array $variables): string
     {
         $varDefinitions = $this->definitionRegistry->getDefinitionsForTemplateCategory('var');
+
         return $this->generateDynamicDefinitionsContent($varDefinitions, $variables);
     }
 }

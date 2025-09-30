@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientCalendarEvent extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -91,13 +91,13 @@ class ClientCalendarEvent extends Model
      */
     public function scopeDateRange($query, $startDate, $endDate)
     {
-        return $query->where(function($q) use ($startDate, $endDate) {
+        return $query->where(function ($q) use ($startDate, $endDate) {
             $q->whereBetween('start_datetime', [$startDate, $endDate])
-              ->orWhereBetween('end_datetime', [$startDate, $endDate])
-              ->orWhere(function($q2) use ($startDate, $endDate) {
-                  $q2->where('start_datetime', '<=', $startDate)
-                     ->where('end_datetime', '>=', $endDate);
-              });
+                ->orWhereBetween('end_datetime', [$startDate, $endDate])
+                ->orWhere(function ($q2) use ($startDate, $endDate) {
+                    $q2->where('start_datetime', '<=', $startDate)
+                        ->where('end_datetime', '>=', $endDate);
+                });
         });
     }
 
@@ -123,6 +123,7 @@ class ClientCalendarEvent extends Model
     public function isHappening()
     {
         $now = now();
+
         return $now->between($this->start_datetime, $this->end_datetime);
     }
 
@@ -147,7 +148,7 @@ class ClientCalendarEvent extends Model
      */
     public function getDurationMinutesAttribute()
     {
-        if (!$this->start_datetime || !$this->end_datetime) {
+        if (! $this->start_datetime || ! $this->end_datetime) {
             return null;
         }
 
@@ -160,25 +161,26 @@ class ClientCalendarEvent extends Model
     public function getDurationHumanAttribute()
     {
         $minutes = $this->duration_minutes;
-        
-        if (!$minutes) {
+
+        if (! $minutes) {
             return 'Unknown duration';
         }
 
         if ($minutes < 60) {
-            return $minutes . ' minutes';
+            return $minutes.' minutes';
         } elseif ($minutes < 1440) { // Less than 24 hours
             $hours = floor($minutes / 60);
             $remainingMinutes = $minutes % 60;
-            
+
             if ($remainingMinutes == 0) {
-                return $hours . ' hour' . ($hours > 1 ? 's' : '');
+                return $hours.' hour'.($hours > 1 ? 's' : '');
             } else {
-                return $hours . 'h ' . $remainingMinutes . 'm';
+                return $hours.'h '.$remainingMinutes.'m';
             }
         } else {
             $days = floor($minutes / 1440);
-            return $days . ' day' . ($days > 1 ? 's' : '');
+
+            return $days.' day'.($days > 1 ? 's' : '');
         }
     }
 
@@ -218,7 +220,7 @@ class ClientCalendarEvent extends Model
      */
     public function getFormattedAttendeesAttribute()
     {
-        if (!$this->attendees || empty($this->attendees)) {
+        if (! $this->attendees || empty($this->attendees)) {
             return 'No attendees';
         }
 
@@ -226,7 +228,7 @@ class ClientCalendarEvent extends Model
             return $this->attendees[0];
         }
 
-        return $this->attendees[0] . ' +' . (count($this->attendees) - 1) . ' more';
+        return $this->attendees[0].' +'.(count($this->attendees) - 1).' more';
     }
 
     /**

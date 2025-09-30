@@ -209,6 +209,7 @@ class ShortcutService
             if ($a['category'] === $b['category']) {
                 return $a['priority'] <=> $b['priority'];
             }
+
             return $a['category'] <=> $b['category'];
         });
 
@@ -287,7 +288,9 @@ class ShortcutService
         ];
 
         foreach ($categoryLabels as $category => $label) {
-            if (!isset($categorized[$category])) continue;
+            if (! isset($categorized[$category])) {
+                continue;
+            }
 
             $helpText .= "{$label}:\n";
             foreach ($categorized[$category] as $shortcut) {
@@ -302,7 +305,7 @@ class ShortcutService
         $helpText .= "• 'go to [place]' - Navigate anywhere\n";
         $helpText .= "• 'show [items]' - View lists\n";
         $helpText .= "• 'find [query]' - Search anything\n\n";
-        $helpText .= "⌨️ Tip: Use shortcuts for faster navigation and actions";
+        $helpText .= '⌨️ Tip: Use shortcuts for faster navigation and actions';
 
         return $helpText;
     }
@@ -313,7 +316,7 @@ class ShortcutService
     public static function findShortcutByCommand(string $command): ?array
     {
         $shortcuts = static::getActiveShortcuts();
-        
+
         foreach ($shortcuts as $shortcut) {
             if ($shortcut['command'] === $command) {
                 return $shortcut;
@@ -353,7 +356,9 @@ class ShortcutService
      */
     public static function isValidShortcut(array $keys): bool
     {
-        if (empty($keys)) return false;
+        if (empty($keys)) {
+            return false;
+        }
 
         $modifiers = ['Ctrl', 'Alt', 'Shift', 'Meta'];
         $hasModifier = false;
@@ -373,17 +378,18 @@ class ShortcutService
      */
     public static function addShortcut(array $shortcut): bool
     {
-        if (!static::isValidShortcut($shortcut['keys'])) {
+        if (! static::isValidShortcut($shortcut['keys'])) {
             return false;
         }
 
         $category = $shortcut['category'] ?? 'custom';
-        
-        if (!isset(static::$shortcuts[$category])) {
+
+        if (! isset(static::$shortcuts[$category])) {
             static::$shortcuts[$category] = [];
         }
 
         static::$shortcuts[$category][] = $shortcut;
+
         return true;
     }
 }

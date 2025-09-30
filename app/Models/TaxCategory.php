@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Tax Category Model
- * 
+ *
  * Represents service category classifications for VoIP taxation.
  * Different service types may have different tax treatments.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $name
@@ -37,7 +37,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class TaxCategory extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -90,39 +90,63 @@ class TaxCategory extends Model
      * Category type enumeration
      */
     const TYPE_TELECOMMUNICATIONS = 'telecommunications';
+
     const TYPE_INTERNET = 'internet';
+
     const TYPE_DATA_SERVICES = 'data_services';
+
     const TYPE_EQUIPMENT = 'equipment';
+
     const TYPE_INSTALLATION = 'installation';
+
     const TYPE_MAINTENANCE = 'maintenance';
+
     const TYPE_HOSTING = 'hosting';
+
     const TYPE_SOFTWARE = 'software';
 
     /**
      * Service category constants for VoIP
      */
     const CATEGORY_LOCAL_SERVICE = 'local_service';
+
     const CATEGORY_LONG_DISTANCE = 'long_distance';
+
     const CATEGORY_INTERNATIONAL = 'international';
+
     const CATEGORY_TOLL_FREE = 'toll_free';
+
     const CATEGORY_DATA_SERVICES = 'data_services';
+
     const CATEGORY_INTERNET_ACCESS = 'internet_access';
+
     const CATEGORY_VOIP_FIXED = 'voip_fixed';
+
     const CATEGORY_VOIP_NOMADIC = 'voip_nomadic';
+
     const CATEGORY_HOSTED_PBX = 'hosted_pbx';
+
     const CATEGORY_SIP_TRUNKING = 'sip_trunking';
+
     const CATEGORY_PRI_CIRCUITS = 'pri_circuits';
+
     const CATEGORY_FEATURES = 'features';
+
     const CATEGORY_EQUIPMENT = 'equipment';
+
     const CATEGORY_INSTALLATION = 'installation';
+
     const CATEGORY_MAINTENANCE = 'maintenance';
 
     /**
      * Tax treatment enumeration
      */
     const TREATMENT_STANDARD = 'standard';
+
     const TREATMENT_EXEMPT = 'exempt';
+
     const TREATMENT_REDUCED = 'reduced';
+
     const TREATMENT_SPECIAL = 'special';
 
     /**
@@ -147,7 +171,7 @@ class TaxCategory extends Model
     public function quoteItems(): HasMany
     {
         return $this->hasMany(InvoiceItem::class, 'tax_category_id')
-                    ->whereHas('quote');
+            ->whereHas('quote');
     }
 
     /**
@@ -156,7 +180,7 @@ class TaxCategory extends Model
     public function invoiceItems(): HasMany
     {
         return $this->hasMany(InvoiceItem::class, 'tax_category_id')
-                    ->whereHas('invoice');
+            ->whereHas('invoice');
     }
 
     /**
@@ -209,9 +233,9 @@ class TaxCategory extends Model
     public function getTaxRatesForJurisdiction(int $jurisdictionId): \Illuminate\Database\Eloquent\Collection
     {
         return $this->activeTaxRates()
-                   ->byJurisdiction($jurisdictionId)
-                   ->orderByPriority()
-                   ->get();
+            ->byJurisdiction($jurisdictionId)
+            ->orderByPriority()
+            ->get();
     }
 
     /**
@@ -222,12 +246,12 @@ class TaxCategory extends Model
         $rules = $this->tax_rules ?? [];
 
         // Filter rules based on conditions
-        if (!empty($conditions)) {
+        if (! empty($conditions)) {
             $filteredRules = [];
-            
+
             foreach ($rules as $rule) {
                 $ruleApplies = true;
-                
+
                 if (isset($rule['conditions'])) {
                     foreach ($rule['conditions'] as $key => $value) {
                         if (isset($conditions[$key]) && $conditions[$key] !== $value) {
@@ -236,12 +260,12 @@ class TaxCategory extends Model
                         }
                     }
                 }
-                
+
                 if ($ruleApplies) {
                     $filteredRules[] = $rule;
                 }
             }
-            
+
             return $filteredRules;
         }
 
@@ -253,7 +277,7 @@ class TaxCategory extends Model
      */
     public function hasExemptionRules(): bool
     {
-        return !empty($this->exemption_rules);
+        return ! empty($this->exemption_rules);
     }
 
     /**
@@ -261,19 +285,19 @@ class TaxCategory extends Model
      */
     public function getExemptionRules(array $conditions = []): array
     {
-        if (!$this->hasExemptionRules()) {
+        if (! $this->hasExemptionRules()) {
             return [];
         }
 
         $rules = $this->exemption_rules;
 
         // Filter rules based on conditions
-        if (!empty($conditions)) {
+        if (! empty($conditions)) {
             $filteredRules = [];
-            
+
             foreach ($rules as $rule) {
                 $ruleApplies = true;
-                
+
                 if (isset($rule['conditions'])) {
                     foreach ($rule['conditions'] as $key => $value) {
                         if (isset($conditions[$key]) && $conditions[$key] !== $value) {
@@ -282,12 +306,12 @@ class TaxCategory extends Model
                         }
                     }
                 }
-                
+
                 if ($ruleApplies) {
                     $filteredRules[] = $rule;
                 }
             }
-            
+
             return $filteredRules;
         }
 
@@ -367,9 +391,9 @@ class TaxCategory extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('code', 'like', '%' . $search . '%')
-              ->orWhere('description', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('code', 'like', '%'.$search.'%')
+                ->orWhere('description', 'like', '%'.$search.'%');
         });
     }
 
@@ -387,12 +411,12 @@ class TaxCategory extends Model
     public static function findByServiceType(string $serviceType): ?self
     {
         return static::active()
-                    ->where(function ($q) use ($serviceType) {
-                        $q->whereNull('service_types')
-                          ->orWhereJsonContains('service_types', $serviceType);
-                    })
-                    ->orderByPriority()
-                    ->first();
+            ->where(function ($q) use ($serviceType) {
+                $q->whereNull('service_types')
+                    ->orWhereJsonContains('service_types', $serviceType);
+            })
+            ->orderByPriority()
+            ->first();
     }
 
     /**
@@ -536,7 +560,7 @@ class TaxCategory extends Model
         foreach ($defaultCategories as $categoryData) {
             $categoryData['company_id'] = $companyId;
             $categoryData['is_active'] = true;
-            
+
             $categories[] = static::create($categoryData);
         }
 
@@ -551,7 +575,7 @@ class TaxCategory extends Model
         parent::boot();
 
         static::creating(function ($category) {
-            if (!isset($category->priority)) {
+            if (! isset($category->priority)) {
                 // Set default priority based on category type
                 $priorities = [
                     self::TYPE_TELECOMMUNICATIONS => 100,
@@ -563,7 +587,7 @@ class TaxCategory extends Model
                     self::TYPE_HOSTING => 700,
                     self::TYPE_SOFTWARE => 800,
                 ];
-                
+
                 $category->priority = $priorities[$category->category_type] ?? 999;
             }
         });

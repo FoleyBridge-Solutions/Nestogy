@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Mail;
 
 /**
  * Notify Client of RMM Alert Job
- * 
+ *
  * Sends notifications to clients about critical RMM alerts and tickets.
  * Configurable based on client preferences and alert severity.
  */
@@ -23,6 +23,7 @@ class NotifyClientOfRMMAlert implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Ticket $ticket;
+
     protected RMMAlert $alert;
 
     /**
@@ -59,10 +60,11 @@ class NotifyClientOfRMMAlert implements ShouldQueue
             ]);
 
             // Check if client notifications are enabled
-            if (!$this->shouldNotifyClient()) {
+            if (! $this->shouldNotifyClient()) {
                 Log::info('Client notifications disabled, skipping', [
                     'ticket_id' => $this->ticket->id,
                 ]);
+
                 return;
             }
 
@@ -97,18 +99,19 @@ class NotifyClientOfRMMAlert implements ShouldQueue
     {
         // Check integration alert rules
         $alertRules = $this->alert->integration->alert_rules ?? [];
-        if (!data_get($alertRules, 'notify_client', false)) {
+        if (! data_get($alertRules, 'notify_client', false)) {
             return false;
         }
 
         // Check client notification preferences
         $client = $this->ticket->client;
-        if (!$client) {
+        if (! $client) {
             return false;
         }
 
         // Only notify for certain severity levels
         $minSeverity = data_get($alertRules, 'notify_client_min_severity', 'high');
+
         return $this->meetsMinimumSeverity($minSeverity);
     }
 
@@ -136,14 +139,15 @@ class NotifyClientOfRMMAlert implements ShouldQueue
     protected function sendEmailNotification(): void
     {
         $client = $this->ticket->client;
-        
+
         // Get primary contact email
         $email = $client->email ?? $client->primaryContact()?->email;
-        if (!$email) {
+        if (! $email) {
             Log::warning('No email address found for client notification', [
                 'client_id' => $client->id,
                 'ticket_id' => $this->ticket->id,
             ]);
+
             return;
         }
 
@@ -181,21 +185,22 @@ class NotifyClientOfRMMAlert implements ShouldQueue
     protected function sendSMSNotification(): void
     {
         $client = $this->ticket->client;
-        
+
         // Get primary contact phone
         $phone = $client->phone ?? $client->primaryContact()?->phone;
-        if (!$phone) {
+        if (! $phone) {
             Log::info('No phone number found for SMS notification', [
                 'client_id' => $client->id,
                 'ticket_id' => $this->ticket->id,
             ]);
+
             return;
         }
 
-        $message = "URGENT: System alert for {$client->getDisplayName()}. " .
-                  "Issue: {$this->alert->message}. " .
-                  "Ticket #{$this->ticket->id} created. " .
-                  "Check client portal for details.";
+        $message = "URGENT: System alert for {$client->getDisplayName()}. ".
+                  "Issue: {$this->alert->message}. ".
+                  "Ticket #{$this->ticket->id} created. ".
+                  'Check client portal for details.';
 
         try {
             // This would integrate with your SMS service
@@ -233,9 +238,9 @@ class NotifyClientOfRMMAlert implements ShouldQueue
     {
         return [
             'client-notification',
-            'ticket:' . $this->ticket->id,
-            'alert:' . $this->alert->id,
-            'severity:' . $this->alert->severity,
+            'ticket:'.$this->ticket->id,
+            'alert:'.$this->alert->id,
+            'severity:'.$this->alert->severity,
         ];
     }
 }

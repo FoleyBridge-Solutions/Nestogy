@@ -3,16 +3,16 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * RevenueMetric Model
- * 
+ *
  * Tracks detailed revenue metrics and calculations for analytics and forecasting.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int|null $client_id
@@ -42,7 +42,7 @@ use Carbon\Carbon;
  */
 class RevenueMetric extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'revenue_metrics';
 
@@ -96,30 +96,46 @@ class RevenueMetric extends Model
 
     // Metric Types
     const TYPE_MRR = 'mrr';
+
     const TYPE_ARR = 'arr';
+
     const TYPE_LTV = 'ltv';
+
     const TYPE_CHURN = 'churn';
+
     const TYPE_ARPU = 'arpu';
+
     const TYPE_EXPANSION = 'expansion';
+
     const TYPE_CONTRACTION = 'contraction';
 
     // Period Types
     const PERIOD_DAILY = 'daily';
+
     const PERIOD_WEEKLY = 'weekly';
+
     const PERIOD_MONTHLY = 'monthly';
+
     const PERIOD_QUARTERLY = 'quarterly';
+
     const PERIOD_ANNUAL = 'annual';
 
     // Service Categories
     const SERVICE_VOIP = 'voip';
+
     const SERVICE_EQUIPMENT = 'equipment';
+
     const SERVICE_PROFESSIONAL = 'professional_services';
+
     const SERVICE_SUPPORT = 'support';
 
     // Revenue Types
     const REVENUE_RECURRING = 'recurring';
+
     const REVENUE_ONE_TIME = 'one_time';
+
     const REVENUE_USAGE_BASED = 'usage_based';
+
     const REVENUE_OVERAGE = 'overage';
 
     /**
@@ -153,7 +169,7 @@ class RevenueMetric extends Model
         ], $options);
 
         // Calculate growth if we have previous data
-        if (!isset($data['previous_value'])) {
+        if (! isset($data['previous_value'])) {
             $previous = static::where('company_id', $companyId)
                 ->where('metric_type', $metricType)
                 ->where('client_id', $data['client_id'] ?? null)
@@ -164,8 +180,8 @@ class RevenueMetric extends Model
             if ($previous) {
                 $data['previous_value'] = $previous->metric_value;
                 $data['growth_amount'] = $metricValue - $previous->metric_value;
-                $data['growth_percentage'] = $previous->metric_value > 0 
-                    ? (($metricValue - $previous->metric_value) / $previous->metric_value) * 100 
+                $data['growth_percentage'] = $previous->metric_value > 0
+                    ? (($metricValue - $previous->metric_value) / $previous->metric_value) * 100
                     : 0;
             }
         }
@@ -183,7 +199,7 @@ class RevenueMetric extends Model
      */
     public function getGrowthTrend(): string
     {
-        if (!$this->growth_percentage) {
+        if (! $this->growth_percentage) {
             return 'stable';
         }
 
@@ -212,9 +228,8 @@ class RevenueMetric extends Model
     public function getFormattedValue(): string
     {
         return match ($this->metric_type) {
-            self::TYPE_CHURN => number_format($this->metric_value, 2) . '%',
-            self::TYPE_MRR, self::TYPE_ARR, self::TYPE_LTV, self::TYPE_ARPU => 
-                '$' . number_format($this->metric_value, 2),
+            self::TYPE_CHURN => number_format($this->metric_value, 2).'%',
+            self::TYPE_MRR, self::TYPE_ARR, self::TYPE_LTV, self::TYPE_ARPU => '$'.number_format($this->metric_value, 2),
             default => number_format($this->metric_value, 2),
         };
     }

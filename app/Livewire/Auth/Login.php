@@ -9,8 +9,11 @@ use Livewire\Component;
 class Login extends Component
 {
     public string $email = '';
+
     public string $password = '';
+
     public string $code = '';
+
     public bool $remember = false;
 
     protected function rules()
@@ -34,7 +37,7 @@ class Login extends Component
         // Note: 2FA logic would need to be integrated here.
         // This is a basic implementation.
 
-        if (!Auth::attempt($credentials, $this->remember)) {
+        if (! Auth::attempt($credentials, $this->remember)) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);

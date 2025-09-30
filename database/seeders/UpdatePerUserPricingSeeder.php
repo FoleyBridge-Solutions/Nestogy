@@ -27,7 +27,7 @@ class UpdatePerUserPricingSeeder extends Seeder
                 'features' => [
                     'core_psa_features',
                     'basic_ticketing',
-                    'client_management', 
+                    'client_management',
                     'basic_invoicing',
                     'email_support',
                     'api_access',
@@ -97,22 +97,22 @@ class UpdatePerUserPricingSeeder extends Seeder
 
         foreach ($plans as $planData) {
             $plan = SubscriptionPlan::where('name', $planData['name'])->first();
-            
+
             if ($plan) {
                 // Update existing plan
                 $plan->update($planData);
-                $this->command->info("Updated {$planData['name']} plan to per-user pricing: $" . $planData['price_per_user_monthly'] . "/user/month");
+                $this->command->info("Updated {$planData['name']} plan to per-user pricing: $".$planData['price_per_user_monthly'].'/user/month');
             } else {
                 // Create new plan if it doesn't exist
                 SubscriptionPlan::create($planData);
-                $this->command->info("Created {$planData['name']} plan with per-user pricing: $" . $planData['price_per_user_monthly'] . "/user/month");
+                $this->command->info("Created {$planData['name']} plan with per-user pricing: $".$planData['price_per_user_monthly'].'/user/month');
             }
         }
-        
+
         // Remove the Free plan as it doesn't fit per-user model well
         SubscriptionPlan::where('name', 'Free')->delete();
         $this->command->info('Removed Free plan (not suitable for per-user model)');
-        
+
         $this->command->info('Per-user pricing update completed!');
         $this->command->info('New pricing: Starter $29/user, Professional $45/user, Enterprise $65/user');
     }

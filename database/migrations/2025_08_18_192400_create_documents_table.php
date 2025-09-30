@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
-            
+
             // Manual morphs to avoid automatic index creation
             $table->string('documentable_type');
             $table->unsignedBigInteger('documentable_id');
-            
+
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('file_path');

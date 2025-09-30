@@ -2,15 +2,15 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuditLog;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\AuditLog;
 use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * IpWhitelistMiddleware
- * 
+ *
  * Restricts access based on IP whitelist configuration.
  * Supports individual IPs, IP ranges, and CIDR notation.
  */
@@ -25,9 +25,9 @@ class IpWhitelistMiddleware
     public function handle(Request $request, Closure $next, ?string $listName = null): Response
     {
         $clientIp = $this->getClientIp($request);
-        
+
         // Check if IP whitelisting is enabled
-        if (!config('security.ip_whitelist.enabled', false)) {
+        if (! config('security.ip_whitelist.enabled', false)) {
             return $next($request);
         }
 
@@ -40,9 +40,9 @@ class IpWhitelistMiddleware
         $whitelist = $this->getWhitelist($listName);
 
         // Check if IP is whitelisted
-        if (!$this->isIpAllowed($clientIp, $whitelist)) {
+        if (! $this->isIpAllowed($clientIp, $whitelist)) {
             $this->logBlockedAttempt($request, $clientIp, $listName);
-            
+
             // Return appropriate response based on configuration
             if (config('security.ip_whitelist.stealth_mode', false)) {
                 abort(404); // Pretend the resource doesn't exist
@@ -65,8 +65,8 @@ class IpWhitelistMiddleware
     {
         // Check for trusted proxies and get real IP
         $trustedProxies = config('security.trusted_proxies', []);
-        
-        if (!empty($trustedProxies)) {
+
+        if (! empty($trustedProxies)) {
             // Check X-Forwarded-For header if from trusted proxy
             $requestIp = $request->ip();
             if (in_array($requestIp, $trustedProxies) || $this->isIpInRanges($requestIp, $trustedProxies)) {
@@ -75,9 +75,10 @@ class IpWhitelistMiddleware
                 if ($forwardedFor) {
                     // Get the first IP in the chain
                     $ips = array_map('trim', explode(',', $forwardedFor));
+
                     return $ips[0];
                 }
-                
+
                 // Try X-Real-IP header
                 $realIp = $request->header('X-Real-IP');
                 if ($realIp) {
@@ -103,8 +104,8 @@ class IpWhitelistMiddleware
     protected function getWhitelist(?string $listName): array
     {
         // Cache whitelist for performance
-        $cacheKey = 'ip_whitelist_' . ($listName ?? 'default');
-        
+        $cacheKey = 'ip_whitelist_'.($listName ?? 'default');
+
         return Cache::remember($cacheKey, 300, function () use ($listName) {
             if ($listName) {
                 // Get named whitelist
@@ -165,24 +166,26 @@ class IpWhitelistMiddleware
      */
     protected function isIpInCidr(string $ip, string $cidr): bool
     {
-        list($subnet, $bits) = explode('/', $cidr);
-        
+        [$subnet, $bits] = explode('/', $cidr);
+
         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             // IPv4
             $ip = ip2long($ip);
             $subnet = ip2long($subnet);
             $mask = -1 << (32 - $bits);
             $subnet &= $mask;
+
             return ($ip & $mask) == $subnet;
         } elseif (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) && filter_var($subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
             // IPv6
             $ip = inet_pton($ip);
             $subnet = inet_pton($subnet);
-            $binMask = str_repeat('1', $bits) . str_repeat('0', 128 - $bits);
+            $binMask = str_repeat('1', $bits).str_repeat('0', 128 - $bits);
             $mask = pack('H*', base_convert($binMask, 2, 16));
+
             return ($ip & $mask) == ($subnet & $mask);
         }
-        
+
         return false;
     }
 
@@ -191,7 +194,7 @@ class IpWhitelistMiddleware
      */
     protected function isIpInRange(string $ip, string $range): bool
     {
-        list($start, $end) = explode('-', $range);
+        [$start, $end] = explode('-', $range);
         $start = trim($start);
         $end = trim($end);
 
@@ -199,6 +202,7 @@ class IpWhitelistMiddleware
             $ip = ip2long($ip);
             $start = ip2long($start);
             $end = ip2long($end);
+
             return $ip >= $start && $ip <= $end;
         }
 
@@ -213,7 +217,8 @@ class IpWhitelistMiddleware
     {
         $pattern = str_replace('.', '\.', $pattern);
         $pattern = str_replace('*', '.*', $pattern);
-        return preg_match('/^' . $pattern . '$/', $ip) === 1;
+
+        return preg_match('/^'.$pattern.'$/', $ip) === 1;
     }
 
     /**
@@ -226,6 +231,7 @@ class IpWhitelistMiddleware
                 return true;
             }
         }
+
         return false;
     }
 

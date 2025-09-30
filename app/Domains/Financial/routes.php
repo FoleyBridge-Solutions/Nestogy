@@ -1,19 +1,20 @@
 <?php
+
 // Financial module routes
 
-use Illuminate\Support\Facades\Route;
-use App\Domains\Financial\Controllers\QuoteController;
-use App\Domains\Financial\Controllers\InvoiceController;
 use App\Domains\Contract\Controllers\ContractController;
+use App\Domains\Financial\Controllers\InvoiceController;
+use App\Domains\Financial\Controllers\QuoteController;
 use App\Domains\Financial\Controllers\RecurringInvoiceController;
+use Illuminate\Support\Facades\Route;
 
 // IMPORTANT: Include 'web' middleware for session, CSRF, and other web-specific functionality
 Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('financial.')->group(function () {
-    
+
     // Dashboard routes
     Route::get('/', [\App\Domains\Financial\Controllers\FinancialDashboardController::class, 'index'])->name('index');
     Route::get('/dashboard', [\App\Domains\Financial\Controllers\FinancialDashboardController::class, 'index'])->name('dashboard');
-    
+
     // Quote routes
     Route::resource('quotes', QuoteController::class);
     Route::prefix('quotes/{quote}')->name('quotes.')->group(function () {
@@ -51,7 +52,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
     Route::get('invoices/paid', [InvoiceController::class, 'paid'])->name('invoices.paid');
     Route::get('invoices/recurring', [InvoiceController::class, 'recurring'])->name('invoices.recurring');
     Route::get('invoices/export/csv', [InvoiceController::class, 'exportCsv'])->name('invoices.export.csv');
-    
+
     // Recurring Invoices
     Route::resource('recurring-invoices', RecurringInvoiceController::class);
     Route::prefix('invoices/{invoice}')->name('invoices.')->group(function () {
@@ -93,17 +94,13 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
     });
 
     // Contract routes (resource route comes after specific routes to avoid conflicts)
-    Route::prefix('contracts')->name('contracts.')->group(function () {
-        Route::get('wizard', \App\Livewire\ContractWizard::class)->name('wizard');
-    });
-    
     Route::resource('contracts', ContractController::class);
-    
+
     // Additional contract routes
     Route::get('contracts-dashboard', [ContractController::class, 'dashboard'])->name('contracts.dashboard');
     Route::get('contracts-expiring', [ContractController::class, 'expiring'])->name('contracts.expiring');
     Route::get('contracts-search', [ContractController::class, 'search'])->name('contracts.search');
-    
+
     Route::prefix('contracts/{contract}')->name('contracts.')->group(function () {
         Route::post('approve', [ContractController::class, 'approve'])->name('approve');
         Route::post('reject', [ContractController::class, 'reject'])->name('reject');
@@ -124,7 +121,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::post('amendments', [ContractController::class, 'createAmendment'])->name('amendments.store');
         Route::post('convert-to-invoice', [ContractController::class, 'convertToInvoice'])->name('convert-to-invoice');
         Route::get('compliance-status', [ContractController::class, 'complianceStatus'])->name('compliance-status');
-        
+
         // Programmable contract features
         Route::get('asset-assignments', [ContractController::class, 'assetAssignments'])->name('asset-assignments');
         Route::get('contact-assignments', [ContractController::class, 'contactAssignments'])->name('contact-assignments');
@@ -139,7 +136,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
 
     // Recurring invoices routes
     Route::resource('recurring-invoices', \App\Domains\Client\Controllers\RecurringInvoiceController::class);
-    
+
     // Recurring billing routes (for VoIP and usage-based billing)
     Route::resource('recurring', \App\Domains\Financial\Controllers\RecurringController::class);
 
@@ -160,17 +157,17 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::get('/schedules', [\App\Domains\Financial\Controllers\BillingController::class, 'schedules'])->name('schedules');
         Route::get('/usage', [\App\Domains\Financial\Controllers\BillingController::class, 'usage'])->name('usage');
     });
-    
+
     // Payment Methods Routes
     Route::prefix('payment-methods')->name('payment-methods.')->group(function () {
         Route::get('/', [\App\Domains\Financial\Controllers\PaymentMethodController::class, 'index'])->name('index');
         Route::get('/create', [\App\Domains\Financial\Controllers\PaymentMethodController::class, 'create'])->name('create');
         Route::post('/', [\App\Domains\Financial\Controllers\PaymentMethodController::class, 'store'])->name('store');
     });
-    
+
     // Payments Routes
     Route::resource('payments', \App\Domains\Financial\Controllers\PaymentController::class);
-    
+
     // Collections Routes
     Route::prefix('collections')->name('collections.')->group(function () {
         Route::get('/', [\App\Domains\Financial\Controllers\CollectionController::class, 'overdue'])->name('index');
@@ -181,7 +178,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::post('/invoices/{invoice}/dispute', [\App\Domains\Financial\Controllers\CollectionController::class, 'markDisputed'])->name('mark-disputed');
         Route::post('/invoices/{invoice}/resolve', [\App\Domains\Financial\Controllers\CollectionController::class, 'resolveDispute'])->name('resolve-dispute');
     });
-    
+
     // Reports Routes
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/revenue', [\App\Domains\Financial\Controllers\ReportController::class, 'revenue'])->name('revenue');
@@ -190,7 +187,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::get('/aging', [\App\Domains\Financial\Controllers\ReportController::class, 'aging'])->name('aging');
         Route::get('/tax', [\App\Domains\Financial\Controllers\ReportController::class, 'tax'])->name('tax');
     });
-    
+
     // Accounting Routes
     Route::prefix('accounting')->name('accounting.')->group(function () {
         Route::get('/chart', [\App\Domains\Financial\Controllers\AccountingController::class, 'chartOfAccounts'])->name('chart');
@@ -201,34 +198,34 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::get('/export/trial-balance', [\App\Domains\Financial\Controllers\AccountingController::class, 'exportTrialBalance'])->name('export.trial-balance');
         Route::get('/export/general-ledger', [\App\Domains\Financial\Controllers\AccountingController::class, 'exportGeneralLedger'])->name('export.general-ledger');
     });
-    
+
     // Product & Service Management
     Route::resource('products', \App\Domains\Financial\Controllers\ProductController::class);
     Route::resource('services', \App\Domains\Financial\Controllers\ServiceController::class);
     Route::resource('pricing', \App\Domains\Financial\Controllers\PricingController::class);
     Route::resource('discounts', \App\Domains\Financial\Controllers\DiscountController::class);
-    
+
     // Vendor & Expense Management
     Route::resource('vendors', \App\Domains\Financial\Controllers\VendorController::class);
     Route::resource('expenses', \App\Domains\Financial\Controllers\ExpenseController::class);
     Route::get('expenses/categories', [\App\Domains\Financial\Controllers\ExpenseController::class, 'categories'])->name('expenses.categories');
     Route::post('expenses/{expense}/approve', [\App\Domains\Financial\Controllers\ExpenseController::class, 'approve'])->name('expenses.approve');
     Route::post('expenses/{expense}/reject', [\App\Domains\Financial\Controllers\ExpenseController::class, 'reject'])->name('expenses.reject');
-    
+
     // Purchase Orders
     Route::resource('purchase-orders', \App\Domains\Financial\Controllers\PurchaseOrderController::class);
-    
+
     // Tax Management
     Route::resource('tax-rates', \App\Domains\Financial\Controllers\TaxRateController::class);
-    
-    // Payment Reminders  
+
+    // Payment Reminders
     Route::resource('reminders', \App\Domains\Financial\Controllers\ReminderController::class);
-    
+
     // Budget Management
     Route::resource('budgets', \App\Domains\Financial\Controllers\BudgetController::class);
     Route::get('budgets/comparison', [\App\Domains\Financial\Controllers\BudgetController::class, 'comparison'])->name('budgets.comparison');
     Route::get('budgets/{budget}/forecast', [\App\Domains\Financial\Controllers\BudgetController::class, 'forecast'])->name('budgets.forecast');
-    
+
     // Financial Forecasting
     Route::prefix('forecasts')->name('forecasts.')->group(function () {
         Route::get('/', [\App\Domains\Financial\Controllers\ForecastController::class, 'index'])->name('index');
@@ -237,7 +234,7 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::get('/growth', [\App\Domains\Financial\Controllers\ForecastController::class, 'growth'])->name('growth');
         Route::get('/scenarios', [\App\Domains\Financial\Controllers\ForecastController::class, 'scenarios'])->name('scenarios');
     });
-    
+
     // Audit & Compliance
     Route::prefix('audits')->name('audits.')->group(function () {
         Route::get('/', [\App\Domains\Financial\Controllers\AuditController::class, 'index'])->name('index');
@@ -247,17 +244,17 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::get('/trail/{entity}/{id}', [\App\Domains\Financial\Controllers\AuditController::class, 'trail'])->name('trail');
         Route::post('/export', [\App\Domains\Financial\Controllers\AuditController::class, 'export'])->name('export');
     });
-    
+
     // Analytics Routes
     Route::prefix('analytics')->name('analytics.')->group(function () {
         Route::get('/contracts', [\App\Domains\Financial\Controllers\AnalyticsController::class, 'contracts'])->name('contracts');
     });
-    
+
     // Integrations Routes
     Route::prefix('integrations')->name('integrations.')->group(function () {
         Route::get('/quickbooks', [\App\Domains\Financial\Controllers\IntegrationController::class, 'quickbooks'])->name('quickbooks');
     });
-    
+
     // Export Routes
     Route::prefix('export')->name('export.')->group(function () {
         Route::get('/', [\App\Domains\Financial\Controllers\ExportController::class, 'index'])->name('index');
@@ -267,28 +264,28 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::post('/expenses', [\App\Domains\Financial\Controllers\ExportController::class, 'exportExpenses'])->name('expenses');
         Route::post('/reports', [\App\Domains\Financial\Controllers\ExportController::class, 'exportReports'])->name('reports');
     });
-    
+
     // Accounting Routes
     Route::prefix('accounts')->name('accounts.')->group(function () {
         Route::get('/', [\App\Domains\Financial\Controllers\AccountingController::class, 'chartOfAccounts'])->name('index');
         Route::get('/chart', [\App\Domains\Financial\Controllers\AccountingController::class, 'chartOfAccounts'])->name('chart');
         Route::post('/reconcile', [\App\Domains\Financial\Controllers\AccountingController::class, 'reconcile'])->name('reconcile');
     });
-    
+
     // Journal Routes
     Route::prefix('journal')->name('journal.')->group(function () {
         Route::get('/', [\App\Domains\Financial\Controllers\AccountingController::class, 'journalEntries'])->name('index');
         Route::get('/entries', [\App\Domains\Financial\Controllers\AccountingController::class, 'journalEntries'])->name('entries');
         Route::post('/entry', [\App\Domains\Financial\Controllers\AccountingController::class, 'createJournalEntry'])->name('store');
     });
-    
+
     // Tax Routes
     Route::prefix('tax')->name('tax.')->group(function () {
         Route::get('/', [\App\Domains\Financial\Controllers\TaxRateController::class, 'index'])->name('index');
         Route::get('/rates', [\App\Domains\Financial\Controllers\TaxRateController::class, 'index'])->name('rates');
         Route::get('/reports', [\App\Domains\Financial\Controllers\TaxRateController::class, 'reports'])->name('reports');
     });
-    
+
     // Additional utility routes
     Route::get('clients/search', [QuoteController::class, 'searchClients'])->name('clients.search');
 });

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
-use App\Models\Vendor;
 use App\Models\Company;
+use App\Models\Vendor;
+use Illuminate\Database\Seeder;
 
 class VendorSeeder extends Seeder
 {
@@ -42,7 +42,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.microsoft.com',
                 'hours' => '24/7 Support',
                 'sla' => '4 hour response time',
-                'account_number' => 'MS-' . str_pad($company->id, 6, '0', STR_PAD_LEFT),
+                'account_number' => 'MS-'.str_pad($company->id, 6, '0', STR_PAD_LEFT),
                 'notes' => 'Primary software vendor for Office 365 and Azure services',
             ],
             [
@@ -54,7 +54,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.dell.com',
                 'hours' => 'Mon-Fri 8am-6pm EST',
                 'sla' => 'Next business day onsite',
-                'account_number' => 'DELL-' . str_pad($company->id, 8, '0', STR_PAD_LEFT),
+                'account_number' => 'DELL-'.str_pad($company->id, 8, '0', STR_PAD_LEFT),
                 'notes' => 'Preferred hardware vendor with volume discount agreement',
             ],
             [
@@ -66,7 +66,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.hp.com',
                 'hours' => 'Mon-Fri 8am-8pm EST',
                 'sla' => 'Next business day parts',
-                'account_number' => 'HP-' . str_pad($company->id, 7, '0', STR_PAD_LEFT),
+                'account_number' => 'HP-'.str_pad($company->id, 7, '0', STR_PAD_LEFT),
                 'notes' => 'Printer leasing and maintenance agreement',
             ],
             [
@@ -78,7 +78,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.cisco.com',
                 'hours' => '24/7 Support',
                 'sla' => '2 hour critical response',
-                'account_number' => 'CSCO-' . str_pad($company->id, 9, '0', STR_PAD_LEFT),
+                'account_number' => 'CSCO-'.str_pad($company->id, 9, '0', STR_PAD_LEFT),
                 'notes' => 'Enterprise networking and Meraki cloud solutions',
             ],
             [
@@ -90,7 +90,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://aws.amazon.com',
                 'hours' => '24/7 Support',
                 'sla' => 'Business support plan',
-                'account_number' => 'AWS-' . str_pad($company->id, 10, '0', STR_PAD_LEFT),
+                'account_number' => 'AWS-'.str_pad($company->id, 10, '0', STR_PAD_LEFT),
                 'notes' => 'Cloud hosting for client applications',
             ],
             [
@@ -102,7 +102,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.cdw.com',
                 'hours' => 'Mon-Fri 7am-7pm CST',
                 'sla' => 'Same day quote response',
-                'account_number' => 'CDW-' . str_pad($company->id, 8, '0', STR_PAD_LEFT),
+                'account_number' => 'CDW-'.str_pad($company->id, 8, '0', STR_PAD_LEFT),
                 'notes' => 'Primary technology reseller and procurement partner',
             ],
             [
@@ -114,7 +114,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.ingrammicro.com',
                 'hours' => 'Mon-Fri 8am-8pm EST',
                 'sla' => 'Next day shipping',
-                'account_number' => 'IM-' . str_pad($company->id, 9, '0', STR_PAD_LEFT),
+                'account_number' => 'IM-'.str_pad($company->id, 9, '0', STR_PAD_LEFT),
                 'notes' => 'Secondary distributor for hard-to-find items',
             ],
             [
@@ -126,7 +126,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.techdata.com',
                 'hours' => 'Mon-Fri 8:30am-8pm EST',
                 'sla' => 'Same day processing',
-                'account_number' => 'TD-' . str_pad($company->id, 8, '0', STR_PAD_LEFT),
+                'account_number' => 'TD-'.str_pad($company->id, 8, '0', STR_PAD_LEFT),
                 'notes' => 'Specialty software and licensing distributor',
             ],
             [
@@ -138,7 +138,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.shi.com',
                 'hours' => 'Mon-Fri 8am-8pm EST',
                 'sla' => 'Dedicated account manager',
-                'account_number' => 'SHI-' . str_pad($company->id, 7, '0', STR_PAD_LEFT),
+                'account_number' => 'SHI-'.str_pad($company->id, 7, '0', STR_PAD_LEFT),
                 'notes' => 'Government and education contract pricing',
             ],
             [
@@ -150,7 +150,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.verizon.com/business',
                 'hours' => '24/7 Support',
                 'sla' => '4 hour circuit restoration',
-                'account_number' => 'VZ-' . str_pad($company->id, 10, '0', STR_PAD_LEFT),
+                'account_number' => 'VZ-'.str_pad($company->id, 10, '0', STR_PAD_LEFT),
                 'notes' => 'Primary ISP and MPLS provider',
             ],
             [
@@ -162,7 +162,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.business.att.com',
                 'hours' => '24/7 Support',
                 'sla' => 'Premium support tier',
-                'account_number' => 'ATT-' . str_pad($company->id, 9, '0', STR_PAD_LEFT),
+                'account_number' => 'ATT-'.str_pad($company->id, 9, '0', STR_PAD_LEFT),
                 'notes' => 'Backup internet and voice services',
             ],
             [
@@ -174,7 +174,7 @@ class VendorSeeder extends Seeder
                 'website' => 'https://www.lenovo.com',
                 'hours' => 'Mon-Fri 9am-9pm EST',
                 'sla' => 'Premier support contract',
-                'account_number' => 'LEN-' . str_pad($company->id, 8, '0', STR_PAD_LEFT),
+                'account_number' => 'LEN-'.str_pad($company->id, 8, '0', STR_PAD_LEFT),
                 'notes' => 'ThinkPad and ThinkServer products',
             ],
         ];
@@ -185,7 +185,7 @@ class VendorSeeder extends Seeder
 
         // Create vendors (randomly select 10-15 for each company)
         $selectedVendors = array_rand($vendors, rand(10, min(15, count($vendors))));
-        if (!is_array($selectedVendors)) {
+        if (! is_array($selectedVendors)) {
             $selectedVendors = [$selectedVendors];
         }
 
@@ -193,11 +193,11 @@ class VendorSeeder extends Seeder
             $vendorData = $vendors[$index];
             $vendorData['template'] = false;
             $vendorData['company_id'] = $company->id;
-            
+
             Vendor::create($vendorData);
         }
 
-        $this->command->info("    ✓ Created " . count($selectedVendors) . " vendors");
+        $this->command->info('    ✓ Created '.count($selectedVendors).' vendors');
     }
 
     /**

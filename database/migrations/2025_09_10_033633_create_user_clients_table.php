@@ -21,11 +21,11 @@ return new class extends Migration
             $table->date('expires_at')->nullable(); // For temporary assignments
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
             // Foreign keys
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
-            
+
             // Indexes
             $table->unique(['user_id', 'client_id']);
             $table->index('client_id');

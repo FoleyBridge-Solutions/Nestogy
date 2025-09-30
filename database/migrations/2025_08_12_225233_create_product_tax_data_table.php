@@ -23,13 +23,13 @@ return new class extends Migration
             $table->decimal('total_tax_amount', 10, 2)->nullable();
             $table->timestamp('last_calculated_at')->nullable();
             $table->timestamps();
-            
+
             // Indexes
             $table->index('company_id');
             $table->index('product_id');
             $table->index('tax_profile_id');
             $table->unique(['company_id', 'product_id']);
-            
+
             // Foreign keys
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');

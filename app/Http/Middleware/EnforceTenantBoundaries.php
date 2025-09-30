@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * EnforceTenantBoundaries
- * 
+ *
  * Ensures users can only access data from their own company unless they are
  * super-admins from Company 1 with cross-tenant permissions.
  */
@@ -21,8 +21,8 @@ class EnforceTenantBoundaries
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -34,7 +34,7 @@ class EnforceTenantBoundaries
         // Regular users are restricted to their company's data
         // This middleware will be used with route model binding to ensure
         // models belong to the authenticated user's company
-        
+
         return $next($request);
     }
 
@@ -43,7 +43,7 @@ class EnforceTenantBoundaries
      */
     protected function modelBelongsToUserCompany($model, $user): bool
     {
-        if (!$model || !$user) {
+        if (! $model || ! $user) {
             return false;
         }
 

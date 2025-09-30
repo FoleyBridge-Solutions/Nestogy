@@ -2,22 +2,20 @@
 
 namespace App\Domains\Financial\Services;
 
+use App\Models\Client;
 use App\Models\CreditNote;
 use App\Models\CreditNoteApproval;
 use App\Models\User;
-use App\Models\Company;
-use App\Models\Client;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Collection;
-use Carbon\Carbon;
-use Exception;
 
 /**
  * Credit Note Approval Service
- * 
+ *
  * Comprehensive approval workflow management including:
  * - Multi-level approval hierarchies
  * - Dynamic approval routing based on amount and risk
@@ -51,7 +49,7 @@ class CreditNoteApprovalService
             'approval_workflow' => $levels,
             'requires_executive_approval' => $this->hasExecutiveLevel($levels),
             'requires_finance_review' => $this->hasFinanceLevel($levels),
-            'requires_legal_review' => $this->hasLegalLevel($levels)
+            'requires_legal_review' => $this->hasLegalLevel($levels),
         ]);
 
         // Send initial notifications
@@ -60,7 +58,7 @@ class CreditNoteApprovalService
         Log::info('Credit note approval workflow created', [
             'credit_note_id' => $creditNote->id,
             'approval_levels' => $levels->count(),
-            'total_approvals' => $approvals->count()
+            'total_approvals' => $approvals->count(),
         ]);
 
         return $approvals;
@@ -72,14 +70,14 @@ class CreditNoteApprovalService
     public function processApprovalDecision(
         CreditNoteApproval $approval,
         string $decision,
-        string $comments = null,
+        ?string $comments = null,
         array $evidence = []
     ): bool {
         return DB::transaction(function () use ($approval, $decision, $comments, $evidence) {
             $approver = Auth::user();
-            
+
             // Validate approver permissions
-            if (!$this->canApprove($approval, $approver)) {
+            if (! $this->canApprove($approval, $approver)) {
                 throw new Exception('User does not have permission to approve this credit note');
             }
 
@@ -94,9 +92,10 @@ class CreditNoteApprovalService
                 case 'delegate':
                     // For delegation, we need a target user from evidence
                     $targetUser = isset($evidence['delegate_to']) ? User::find($evidence['delegate_to']) : null;
-                    if (!$targetUser) {
+                    if (! $targetUser) {
                         throw new Exception('Delegation target user not specified');
                     }
+
                     return $this->processDelegationDecision($approval, $targetUser, $comments);
                 default:
                     throw new Exception('Invalid approval decision');
@@ -112,7 +111,7 @@ class CreditNoteApprovalService
         $results = [
             'processed' => 0,
             'approved' => 0,
-            'failed' => 0
+            'failed' => 0,
         ];
 
         // Get pending approvals eligible for auto-approval
@@ -121,19 +120,19 @@ class CreditNoteApprovalService
         foreach ($eligibleApprovals as $approval) {
             try {
                 $rules = $this->getAutoApprovalRules($approval);
-                
+
                 if ($this->evaluateAutoApprovalRules($approval, $rules)) {
                     $approval->autoApprove($rules, 'Auto-approved based on system rules');
                     $this->checkWorkflowCompletion($approval->creditNote);
                     $results['approved']++;
                 }
-                
+
                 $results['processed']++;
-                
+
             } catch (Exception $e) {
                 Log::error('Auto-approval failed', [
                     'approval_id' => $approval->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 $results['failed']++;
             }
@@ -150,7 +149,7 @@ class CreditNoteApprovalService
         $results = [
             'breached' => 0,
             'escalated' => 0,
-            'notifications_sent' => 0
+            'notifications_sent' => 0,
         ];
 
         // Find overdue approvals
@@ -167,7 +166,7 @@ class CreditNoteApprovalService
             // Auto-escalate if configured
             if ($this->shouldAutoEscalate($approval)) {
                 $escalationTarget = $this->findEscalationTarget($approval);
-                
+
                 if ($escalationTarget) {
                     $approval->escalate($escalationTarget, 'SLA breach auto-escalation');
                     $results['escalated']++;
@@ -188,7 +187,7 @@ class CreditNoteApprovalService
     private function processDelegationDecision(
         CreditNoteApproval $approval,
         User $delegateTo,
-        string $reason = null
+        ?string $reason = null
     ): bool {
         return $this->processDelegation($approval, $delegateTo, $reason ?? 'Approval delegated');
     }
@@ -200,14 +199,14 @@ class CreditNoteApprovalService
         CreditNoteApproval $approval,
         User $delegateTo,
         string $reason,
-        Carbon $expiry = null
+        ?Carbon $expiry = null
     ): bool {
-        if (!$approval->isPending()) {
+        if (! $approval->isPending()) {
             return false;
         }
 
         // Validate delegation permissions
-        if (!$this->canDelegate($approval, Auth::user(), $delegateTo)) {
+        if (! $this->canDelegate($approval, Auth::user(), $delegateTo)) {
             throw new Exception('Delegation not permitted');
         }
 
@@ -215,12 +214,12 @@ class CreditNoteApprovalService
 
         if ($success) {
             $this->sendDelegationNotifications($approval, $delegateTo);
-            
+
             Log::info('Approval delegated', [
                 'approval_id' => $approval->id,
                 'from_user' => Auth::id(),
                 'to_user' => $delegateTo->id,
-                'reason' => $reason
+                'reason' => $reason,
             ]);
         }
 
@@ -233,12 +232,12 @@ class CreditNoteApprovalService
     public function processEmergencyBypass(
         CreditNote $creditNote,
         string $reason,
-        User $bypassedBy = null
+        ?User $bypassedBy = null
     ): bool {
         $bypassedBy = $bypassedBy ?? Auth::user();
 
         // Validate bypass permissions
-        if (!$this->canBypass($creditNote, $bypassedBy)) {
+        if (! $this->canBypass($creditNote, $bypassedBy)) {
             throw new Exception('Emergency bypass not permitted');
         }
 
@@ -252,7 +251,7 @@ class CreditNoteApprovalService
                     'bypassed_by' => $bypassedBy->id,
                     'bypassed_at' => now(),
                     'bypass_reason' => $reason,
-                    'emergency_approval' => true
+                    'emergency_approval' => true,
                 ]);
 
             // Approve the credit note
@@ -264,7 +263,7 @@ class CreditNoteApprovalService
             Log::warning('Emergency approval bypass executed', [
                 'credit_note_id' => $creditNote->id,
                 'bypassed_by' => $bypassedBy->id,
-                'reason' => $reason
+                'reason' => $reason,
             ]);
 
             return true;
@@ -277,7 +276,7 @@ class CreditNoteApprovalService
     public function getWorkflowStatus(CreditNote $creditNote): array
     {
         $approvals = $creditNote->approvals()->orderBy('sequence_order')->get();
-        
+
         return [
             'total_levels' => $approvals->count(),
             'completed_levels' => $approvals->where('status', CreditNoteApproval::STATUS_APPROVED)->count(),
@@ -287,38 +286,38 @@ class CreditNoteApprovalService
             'next_approver' => $this->getNextApprover($approvals),
             'sla_status' => $this->getSlaStatus($approvals),
             'overall_status' => $this->getOverallWorkflowStatus($approvals),
-            'estimated_completion' => $this->estimateCompletionTime($approvals)
+            'estimated_completion' => $this->estimateCompletionTime($approvals),
         ];
     }
 
     /**
      * Bulk approval processing
      */
-    public function processBulkApprovals(Collection $approvals, string $decision, string $comments = null): array
+    public function processBulkApprovals(Collection $approvals, string $decision, ?string $comments = null): array
     {
         $results = [
             'successful' => [],
             'failed' => [],
-            'total_processed' => 0
+            'total_processed' => 0,
         ];
 
         foreach ($approvals as $approval) {
             try {
                 $success = $this->processApprovalDecision($approval, $decision, $comments);
-                
+
                 if ($success) {
                     $results['successful'][] = $approval->id;
                 } else {
                     $results['failed'][] = ['id' => $approval->id, 'reason' => 'Processing returned false'];
                 }
-                
+
             } catch (Exception $e) {
                 $results['failed'][] = [
                     'id' => $approval->id,
-                    'reason' => $e->getMessage()
+                    'reason' => $e->getMessage(),
                 ];
             }
-            
+
             $results['total_processed']++;
         }
 
@@ -336,7 +335,7 @@ class CreditNoteApprovalService
         if (isset($filters['date_range'])) {
             $query->whereBetween('requested_at', [
                 $filters['date_range']['start'],
-                $filters['date_range']['end']
+                $filters['date_range']['end'],
             ]);
         }
 
@@ -353,13 +352,13 @@ class CreditNoteApprovalService
                 'rejected' => $approvals->where('status', CreditNoteApproval::STATUS_REJECTED)->count(),
                 'pending' => $approvals->where('status', CreditNoteApproval::STATUS_PENDING)->count(),
                 'average_response_time' => $approvals->avg('response_time_hours'),
-                'sla_breach_rate' => $approvals->where('sla_breached', true)->count() / max($approvals->count(), 1) * 100
+                'sla_breach_rate' => $approvals->where('sla_breached', true)->count() / max($approvals->count(), 1) * 100,
             ],
             'by_level' => $approvals->groupBy('approval_level')->map->count(),
             'by_approver' => $this->getApproverStatistics($approvals),
             'sla_performance' => $this->getSlaPerformanceMetrics($approvals),
             'escalation_patterns' => $this->getEscalationPatterns($approvals),
-            'auto_approval_effectiveness' => $this->getAutoApprovalMetrics($approvals)
+            'auto_approval_effectiveness' => $this->getAutoApprovalMetrics($approvals),
         ];
     }
 
@@ -380,7 +379,7 @@ class CreditNoteApprovalService
                 'threshold' => 50,
                 'approvers' => $this->findApprovers(CreditNoteApproval::LEVEL_SUPERVISOR),
                 'sla_hours' => 24,
-                'required' => true
+                'required' => true,
             ]);
         }
 
@@ -391,7 +390,7 @@ class CreditNoteApprovalService
                 'threshold' => 500,
                 'approvers' => $this->findApprovers(CreditNoteApproval::LEVEL_MANAGER),
                 'sla_hours' => 48,
-                'required' => true
+                'required' => true,
             ]);
         }
 
@@ -402,7 +401,7 @@ class CreditNoteApprovalService
                 'threshold' => 2000,
                 'approvers' => $this->findApprovers(CreditNoteApproval::LEVEL_FINANCE_MANAGER),
                 'sla_hours' => 72,
-                'required' => true
+                'required' => true,
             ]);
         }
 
@@ -413,7 +412,7 @@ class CreditNoteApprovalService
                 'threshold' => 10000,
                 'approvers' => $this->findApprovers(CreditNoteApproval::LEVEL_EXECUTIVE),
                 'sla_hours' => 96,
-                'required' => true
+                'required' => true,
             ]);
         }
 
@@ -424,7 +423,7 @@ class CreditNoteApprovalService
                 'threshold' => 25000,
                 'approvers' => $this->findApprovers(CreditNoteApproval::LEVEL_LEGAL),
                 'sla_hours' => 120,
-                'required' => true
+                'required' => true,
             ]);
         }
 
@@ -434,7 +433,7 @@ class CreditNoteApprovalService
     private function createApprovalRecord(CreditNote $creditNote, array $levelData, int $sequence): CreditNoteApproval
     {
         $approver = $this->selectApprover($levelData['approvers']);
-        
+
         return CreditNoteApproval::create([
             'company_id' => $creditNote->company_id,
             'credit_note_id' => $creditNote->id,
@@ -448,16 +447,16 @@ class CreditNoteApprovalService
             'approval_criteria' => [
                 'amount_based' => true,
                 'reason_based' => in_array($creditNote->reason_code, ['billing_error', 'goodwill']),
-                'risk_based' => $this->assessClientRisk($creditNote->client) !== 'low'
+                'risk_based' => $this->assessClientRisk($creditNote->client) !== 'low',
             ],
-            'requested_at' => now()
+            'requested_at' => now(),
         ]);
     }
 
-    private function processApproval(CreditNoteApproval $approval, string $comments = null, array $evidence = []): bool
+    private function processApproval(CreditNoteApproval $approval, ?string $comments = null, array $evidence = []): bool
     {
         $success = $approval->approve($comments, $evidence);
-        
+
         if ($success) {
             $this->checkWorkflowCompletion($approval->creditNote);
         }
@@ -468,7 +467,7 @@ class CreditNoteApprovalService
     private function processRejection(CreditNoteApproval $approval, string $reason): bool
     {
         $success = $approval->reject($reason);
-        
+
         if ($success) {
             // Reject the entire credit note workflow
             $this->rejectWorkflow($approval->creditNote, $reason);
@@ -480,8 +479,8 @@ class CreditNoteApprovalService
     private function processEscalation(CreditNoteApproval $approval, string $reason): bool
     {
         $escalationTarget = $this->findEscalationTarget($approval);
-        
-        if (!$escalationTarget) {
+
+        if (! $escalationTarget) {
             throw new Exception('No escalation target available');
         }
 
@@ -497,9 +496,9 @@ class CreditNoteApprovalService
         if ($pendingApprovals === 0) {
             // All approvals completed - approve the credit note
             $creditNote->approve(Auth::user(), 'All approval levels completed');
-            
+
             Log::info('Credit note approval workflow completed', [
-                'credit_note_id' => $creditNote->id
+                'credit_note_id' => $creditNote->id,
             ]);
         }
     }
@@ -510,7 +509,7 @@ class CreditNoteApprovalService
         $creditNote->approvals()
             ->where('status', CreditNoteApproval::STATUS_PENDING)
             ->update([
-                'status' => CreditNoteApproval::STATUS_CANCELLED
+                'status' => CreditNoteApproval::STATUS_CANCELLED,
             ]);
 
         // Reject the credit note
@@ -525,7 +524,7 @@ class CreditNoteApprovalService
     private function canDelegate(CreditNoteApproval $approval, User $from, User $to): bool
     {
         // Check if user can delegate and target user can receive delegation
-        return $approval->approver_id === $from->id && 
+        return $approval->approver_id === $from->id &&
                $this->hasApprovalRole($to, $approval->approval_level);
     }
 
@@ -551,21 +550,21 @@ class CreditNoteApprovalService
             'max_amount' => 100,
             'allowed_reasons' => ['duplicate_billing', 'system_error'],
             'client_standing' => 'good',
-            'frequency_limit' => 5 // per month
+            'frequency_limit' => 5, // per month
         ];
     }
 
     private function evaluateAutoApprovalRules(CreditNoteApproval $approval, array $rules): bool
     {
         $creditNote = $approval->creditNote;
-        
+
         // Check amount threshold
         if ($creditNote->total_amount > $rules['max_amount']) {
             return false;
         }
 
         // Check reason codes
-        if (!in_array($creditNote->reason_code, $rules['allowed_reasons'])) {
+        if (! in_array($creditNote->reason_code, $rules['allowed_reasons'])) {
             return false;
         }
 
@@ -617,17 +616,18 @@ class CreditNoteApprovalService
     private function getNextApprover(Collection $approvals): ?User
     {
         $current = $this->getCurrentApprovalLevel($approvals);
+
         return $current?->approver;
     }
 
     private function getSlaStatus(Collection $approvals): array
     {
         $pending = $approvals->where('status', CreditNoteApproval::STATUS_PENDING);
-        
+
         return [
             'on_time' => $pending->where('sla_deadline', '>', now())->count(),
             'at_risk' => $pending->where('sla_deadline', '<=', now()->addHours(4))->count(),
-            'breached' => $pending->where('sla_breached', true)->count()
+            'breached' => $pending->where('sla_breached', true)->count(),
         ];
     }
 
@@ -636,43 +636,44 @@ class CreditNoteApprovalService
         if ($approvals->where('status', CreditNoteApproval::STATUS_REJECTED)->count() > 0) {
             return 'rejected';
         }
-        
+
         if ($approvals->where('status', CreditNoteApproval::STATUS_PENDING)->count() > 0) {
             return 'pending';
         }
-        
+
         return 'completed';
     }
 
     private function estimateCompletionTime(Collection $approvals): ?Carbon
     {
         $pending = $approvals->where('status', CreditNoteApproval::STATUS_PENDING);
-        
+
         if ($pending->isEmpty()) {
             return null;
         }
-        
+
         return $pending->max('sla_deadline');
     }
 
     private function shouldAutoEscalate(CreditNoteApproval $approval): bool
     {
-        return $approval->sla_breached && 
+        return $approval->sla_breached &&
                in_array($approval->approval_level, [
                    CreditNoteApproval::LEVEL_SUPERVISOR,
-                   CreditNoteApproval::LEVEL_MANAGER
+                   CreditNoteApproval::LEVEL_MANAGER,
                ]);
     }
 
     private function findEscalationTarget(CreditNoteApproval $approval): ?User
     {
         $nextLevel = $this->getNextEscalationLevel($approval->approval_level);
-        
-        if (!$nextLevel) {
+
+        if (! $nextLevel) {
             return null;
         }
-        
+
         $approvers = $this->findApprovers($nextLevel);
+
         return $approvers->first();
     }
 
@@ -682,17 +683,17 @@ class CreditNoteApprovalService
             CreditNoteApproval::LEVEL_SUPERVISOR => CreditNoteApproval::LEVEL_MANAGER,
             CreditNoteApproval::LEVEL_MANAGER => CreditNoteApproval::LEVEL_FINANCE_MANAGER,
             CreditNoteApproval::LEVEL_FINANCE_MANAGER => CreditNoteApproval::LEVEL_EXECUTIVE,
-            CreditNoteApproval::LEVEL_EXECUTIVE => null
+            CreditNoteApproval::LEVEL_EXECUTIVE => null,
         ];
-        
+
         return $hierarchy[$currentLevel] ?? null;
     }
 
     private function getMonthlyAutoApprovals(int $clientId): int
     {
         return CreditNoteApproval::whereHas('creditNote', function ($query) use ($clientId) {
-                $query->where('client_id', $clientId);
-            })
+            $query->where('client_id', $clientId);
+        })
             ->where('auto_approved', true)
             ->whereBetween('approved_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->count();
@@ -708,7 +709,7 @@ class CreditNoteApprovalService
                     'approved' => $group->where('status', CreditNoteApproval::STATUS_APPROVED)->count(),
                     'rejected' => $group->where('status', CreditNoteApproval::STATUS_REJECTED)->count(),
                     'average_response_time' => $group->avg('response_time_hours'),
-                    'sla_breach_rate' => $group->where('sla_breached', true)->count() / $group->count() * 100
+                    'sla_breach_rate' => $group->where('sla_breached', true)->count() / $group->count() * 100,
                 ];
             })
             ->sortByDesc('total_approvals')
@@ -721,34 +722,34 @@ class CreditNoteApprovalService
         return [
             'overall_compliance' => $approvals->where('sla_breached', false)->count() / max($approvals->count(), 1) * 100,
             'by_level' => $approvals->groupBy('approval_level')
-                ->map(fn($group) => $group->where('sla_breached', false)->count() / $group->count() * 100),
+                ->map(fn ($group) => $group->where('sla_breached', false)->count() / $group->count() * 100),
             'average_response_time' => $approvals->avg('response_time_hours'),
             'fastest_approval' => $approvals->min('response_time_hours'),
-            'slowest_approval' => $approvals->max('response_time_hours')
+            'slowest_approval' => $approvals->max('response_time_hours'),
         ];
     }
 
     private function getEscalationPatterns(Collection $approvals): array
     {
         $escalated = $approvals->where('escalated', true);
-        
+
         return [
             'total_escalations' => $escalated->count(),
             'escalation_rate' => $escalated->count() / max($approvals->count(), 1) * 100,
             'by_level' => $escalated->groupBy('approval_level')->map->count(),
-            'common_reasons' => $escalated->groupBy('escalation_reason')->map->count()
+            'common_reasons' => $escalated->groupBy('escalation_reason')->map->count(),
         ];
     }
 
     private function getAutoApprovalMetrics(Collection $approvals): array
     {
         $autoApproved = $approvals->where('auto_approved', true);
-        
+
         return [
             'total_auto_approvals' => $autoApproved->count(),
             'auto_approval_rate' => $autoApproved->count() / max($approvals->count(), 1) * 100,
             'average_processing_time' => $autoApproved->avg('response_time_hours'),
-            'success_rate' => 100 // Auto-approvals are always successful by definition
+            'success_rate' => 100, // Auto-approvals are always successful by definition
         ];
     }
 

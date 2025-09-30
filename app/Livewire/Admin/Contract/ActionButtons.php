@@ -2,28 +2,31 @@
 
 namespace App\Livewire\Admin\Contract;
 
-use Livewire\Component;
 use App\Models\ContractActionButton;
+use Livewire\Component;
 
 class ActionButtons extends Component
 {
     public $actionButtons;
+
     public $enableSorting = false;
+
     public $showModal = false;
+
     public $editingButton = null;
-    
+
     protected $listeners = ['refreshButtons' => '$refresh'];
-    
+
     public function mount()
     {
         $this->loadButtons();
     }
-    
+
     public function loadButtons()
     {
         $this->actionButtons = ContractActionButton::orderBy('sort_order')->get();
     }
-    
+
     public function createDefaultButtons()
     {
         // Create default action buttons
@@ -34,7 +37,7 @@ class ActionButtons extends Component
             ['label' => 'Download PDF', 'icon' => 'arrow-down-tray', 'action_type' => 'download', 'slug' => 'download-pdf'],
             ['label' => 'Email', 'icon' => 'envelope', 'action_type' => 'email', 'slug' => 'email'],
         ];
-        
+
         foreach ($defaults as $index => $button) {
             ContractActionButton::create([
                 'label' => $button['label'],
@@ -45,24 +48,24 @@ class ActionButtons extends Component
                 'is_active' => true,
             ]);
         }
-        
+
         $this->loadButtons();
         session()->flash('success', 'Default action buttons created successfully.');
     }
-    
+
     public function editButton($buttonId)
     {
         $this->editingButton = ContractActionButton::find($buttonId);
         $this->showModal = true;
     }
-    
+
     public function previewButton($buttonId)
     {
         // Preview logic
         $button = ContractActionButton::find($buttonId);
         $this->dispatch('show-preview', button: $button);
     }
-    
+
     public function deleteButton($buttonId)
     {
         $button = ContractActionButton::find($buttonId);
@@ -72,7 +75,7 @@ class ActionButtons extends Component
             session()->flash('success', 'Action button deleted successfully.');
         }
     }
-    
+
     public function updateSortOrder($items)
     {
         foreach ($items as $index => $item) {
@@ -80,7 +83,7 @@ class ActionButtons extends Component
         }
         $this->loadButtons();
     }
-    
+
     public function render()
     {
         return view('livewire.admin.contract.action-buttons');

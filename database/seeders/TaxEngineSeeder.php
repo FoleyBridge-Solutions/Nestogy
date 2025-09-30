@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\TaxJurisdiction;
 use App\Models\ServiceTaxRate;
+use App\Models\TaxJurisdiction;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class TaxEngineSeeder extends Seeder
 {
@@ -16,13 +16,13 @@ class TaxEngineSeeder extends Seeder
     {
         $this->command->info('Seeding tax jurisdictions...');
         $this->seedTaxJurisdictions();
-        
+
         $this->command->info('Seeding service tax rates...');
         $this->seedServiceTaxRates();
-        
+
         $this->command->info('Tax engine seeding completed!');
     }
-    
+
     /**
      * Seed basic tax jurisdictions for major US states
      */
@@ -40,7 +40,7 @@ class TaxEngineSeeder extends Seeder
                 'is_active' => true,
                 'priority' => 10,
             ],
-            
+
             // Major state jurisdictions
             [
                 'company_id' => 1,
@@ -98,7 +98,7 @@ class TaxEngineSeeder extends Seeder
                 'priority' => 20,
             ],
         ];
-        
+
         foreach ($jurisdictions as $jurisdiction) {
             TaxJurisdiction::firstOrCreate(
                 ['code' => $jurisdiction['code']],
@@ -106,7 +106,7 @@ class TaxEngineSeeder extends Seeder
             );
         }
     }
-    
+
     /**
      * Seed basic service tax rates for telecom services
      */
@@ -119,9 +119,9 @@ class TaxEngineSeeder extends Seeder
         $nyJurisdiction = TaxJurisdiction::where('code', 'US-NY')->first();
         $flJurisdiction = TaxJurisdiction::where('code', 'US-FL')->first();
         $ilJurisdiction = TaxJurisdiction::where('code', 'US-IL')->first();
-        
+
         $effectiveDate = Carbon::now();
-        
+
         $taxRates = [
             // Federal Taxes (apply to all VoIP/telecom services)
             [
@@ -158,7 +158,7 @@ class TaxEngineSeeder extends Seeder
                 'priority' => 20,
                 'effective_date' => $effectiveDate,
             ],
-            
+
             // California State Taxes
             [
                 'company_id' => 1,
@@ -209,7 +209,7 @@ class TaxEngineSeeder extends Seeder
                 'priority' => 50,
                 'effective_date' => $effectiveDate,
             ],
-            
+
             // Texas State Taxes
             [
                 'company_id' => 1,
@@ -244,7 +244,7 @@ class TaxEngineSeeder extends Seeder
                 'priority' => 40,
                 'effective_date' => $effectiveDate,
             ],
-            
+
             // New York State Taxes
             [
                 'company_id' => 1,
@@ -279,7 +279,7 @@ class TaxEngineSeeder extends Seeder
                 'priority' => 40,
                 'effective_date' => $effectiveDate,
             ],
-            
+
             // Add telecom service type variations
             [
                 'company_id' => 1,
@@ -315,7 +315,7 @@ class TaxEngineSeeder extends Seeder
                 'effective_date' => $effectiveDate,
             ],
         ];
-        
+
         foreach ($taxRates as $taxRate) {
             ServiceTaxRate::firstOrCreate(
                 [

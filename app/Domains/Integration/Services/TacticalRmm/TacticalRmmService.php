@@ -8,21 +8,23 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Tactical RMM Service
- * 
+ *
  * Implements RmmServiceInterface for Tactical RMM integration.
  * Provides standardized access to Tactical RMM API functionality.
  */
 class TacticalRmmService implements RmmServiceInterface
 {
     protected RmmIntegration $integration;
+
     protected TacticalRmmApiClient $apiClient;
+
     protected TacticalRmmDataMapper $dataMapper;
 
     public function __construct(RmmIntegration $integration)
     {
         $this->integration = $integration;
         $this->apiClient = new TacticalRmmApiClient($integration);
-        $this->dataMapper = new TacticalRmmDataMapper();
+        $this->dataMapper = new TacticalRmmDataMapper;
     }
 
     /**
@@ -39,15 +41,15 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAgents(array $filters = []): array
     {
         $response = $this->apiClient->get('/agents/');
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
         $agents = $this->dataMapper->mapAgents($response['data']);
-        
+
         // Apply filters if provided
-        if (!empty($filters)) {
+        if (! empty($filters)) {
             $agents = $this->filterAgents($agents, $filters);
         }
 
@@ -64,8 +66,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAgent(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -84,38 +86,38 @@ class TacticalRmmService implements RmmServiceInterface
     {
         // Use the correct endpoint according to TacticalRMM API specification
         $endpoint = '/clients/';
-        
+
         Log::info('TacticalRMM: Fetching clients', [
             'integration_id' => $this->integration->id,
             'endpoint' => $endpoint,
             'api_url' => $this->integration->api_url,
         ]);
-        
+
         $response = $this->apiClient->get($endpoint);
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             Log::error('TacticalRMM: Failed to fetch clients', [
                 'integration_id' => $this->integration->id,
                 'endpoint' => $endpoint,
                 'error' => $response['message'] ?? 'Unknown error',
                 'response' => $response,
             ]);
-            
+
             return [
                 'success' => false,
-                'message' => 'Failed to fetch clients from Tactical RMM: ' . ($response['message'] ?? 'Unknown error'),
+                'message' => 'Failed to fetch clients from Tactical RMM: '.($response['message'] ?? 'Unknown error'),
                 'data' => [],
                 'debug_info' => [
                     'endpoint' => $endpoint,
                     'integration_url' => $this->integration->api_url,
-                    'has_api_key' => !empty($this->integration->api_key),
+                    'has_api_key' => ! empty($this->integration->api_key),
                     'response' => $response,
-                ]
+                ],
             ];
         }
-        
+
         // Check if we're getting JSON data (not HTML)
-        if ($response['data'] === null || !is_array($response['data'])) {
+        if ($response['data'] === null || ! is_array($response['data'])) {
             Log::error('TacticalRMM: Invalid response data format', [
                 'integration_id' => $this->integration->id,
                 'endpoint' => $endpoint,
@@ -124,34 +126,34 @@ class TacticalRmmService implements RmmServiceInterface
                 'raw_body_sample' => isset($response['raw_body']) ? substr($response['raw_body'], 0, 500) : null,
                 'headers' => $response['headers'] ?? [],
             ]);
-            
+
             return [
                 'success' => false,
-                'message' => 'Invalid response format from Tactical RMM API. Expected JSON array but received: ' . gettype($response['data']),
+                'message' => 'Invalid response format from Tactical RMM API. Expected JSON array but received: '.gettype($response['data']),
                 'data' => [],
                 'debug_info' => [
                     'endpoint' => $endpoint,
                     'response_type' => gettype($response['data']),
                     'integration_url' => $this->integration->api_url,
-                ]
+                ],
             ];
         }
-        
+
         try {
             $clients = $this->dataMapper->mapClients($response['data']);
-            
+
             Log::info('TacticalRMM: Successfully fetched clients', [
                 'integration_id' => $this->integration->id,
                 'client_count' => count($clients),
                 'endpoint' => $endpoint,
             ]);
-            
+
             return [
                 'success' => true,
                 'data' => $clients,
                 'total' => count($clients),
             ];
-            
+
         } catch (\Exception $e) {
             Log::error('TacticalRMM: Error mapping clients', [
                 'integration_id' => $this->integration->id,
@@ -159,16 +161,16 @@ class TacticalRmmService implements RmmServiceInterface
                 'error' => $e->getMessage(),
                 'raw_data_sample' => array_slice($response['data'], 0, 2), // First 2 items for debugging
             ]);
-            
+
             return [
                 'success' => false,
-                'message' => 'Error processing client data from Tactical RMM: ' . $e->getMessage(),
+                'message' => 'Error processing client data from Tactical RMM: '.$e->getMessage(),
                 'data' => [],
                 'debug_info' => [
                     'endpoint' => $endpoint,
                     'mapping_error' => $e->getMessage(),
                     'raw_data_count' => count($response['data']),
-                ]
+                ],
             ];
         }
     }
@@ -182,30 +184,30 @@ class TacticalRmmService implements RmmServiceInterface
         if (empty($clientData['name'])) {
             return [
                 'success' => false,
-                'message' => 'Client name is required'
+                'message' => 'Client name is required',
             ];
         }
 
         // Prepare data for TacticalRMM API
         $apiData = [
             'name' => $clientData['name'],
-            'description' => $clientData['description'] ?? 'Created from Nestogy'
+            'description' => $clientData['description'] ?? 'Created from Nestogy',
         ];
 
         $response = $this->apiClient->post('/clients/', $apiData);
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
         // Map the created client data
         $client = $this->dataMapper->mapClient($response['data']);
-        
+
         return [
             'success' => true,
             'data' => $client,
             'id' => $client['id'],
-            'name' => $client['name']
+            'name' => $client['name'],
         ];
     }
 
@@ -215,8 +217,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getSites(string $clientId): array
     {
         $response = $this->apiClient->get('/clients/sites/', ['client' => $clientId]);
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -234,12 +236,12 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAlerts(array $filters = []): array
     {
         $params = [];
-        
+
         // Apply date filters if provided
         if (isset($filters['from_date'])) {
             $params['created_time__gte'] = $filters['from_date'];
         }
-        
+
         if (isset($filters['to_date'])) {
             $params['created_time__lte'] = $filters['to_date'];
         }
@@ -249,8 +251,8 @@ class TacticalRmmService implements RmmServiceInterface
         }
 
         $response = $this->apiClient->get('/alerts/', $params);
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -269,8 +271,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAlert(string $alertId): array
     {
         $response = $this->apiClient->get("/alerts/{$alertId}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -288,13 +290,13 @@ class TacticalRmmService implements RmmServiceInterface
     public function updateAlert(string $alertId, string $action, ?string $note = null): array
     {
         $data = ['action' => $action];
-        
+
         if ($note) {
             $data['note'] = $note;
         }
 
         $response = $this->apiClient->patch("/alerts/{$alertId}/", $data);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -311,8 +313,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAgentChecks(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/checks/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -336,7 +338,7 @@ class TacticalRmmService implements RmmServiceInterface
         ];
 
         $response = $this->apiClient->post("/agents/{$agentId}/cmd/", $data);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -354,8 +356,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAgentInfo(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -373,8 +375,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAgentSoftware(string $agentId): array
     {
         $response = $this->apiClient->get("/software/{$agentId}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -392,8 +394,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAgentServices(string $agentId): array
     {
         $response = $this->apiClient->get("/services/{$agentId}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -411,8 +413,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAgentEventLogs(string $agentId, string $logType, int $days = 7): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/eventlog/{$logType}/{$days}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -430,7 +432,7 @@ class TacticalRmmService implements RmmServiceInterface
     public function runScript(string $agentId, array $scriptData): array
     {
         $response = $this->apiClient->post("/agents/{$agentId}/runscript/", $scriptData);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -448,8 +450,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getPendingActions(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/pendingactions/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -470,7 +472,7 @@ class TacticalRmmService implements RmmServiceInterface
         ];
 
         $response = $this->apiClient->post("/agents/{$agentId}/reboot/", $data);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -504,8 +506,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function syncAgents(): array
     {
         $response = $this->getAgents();
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -532,8 +534,8 @@ class TacticalRmmService implements RmmServiceInterface
         }
 
         $response = $this->getAlerts($filters);
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -562,7 +564,7 @@ class TacticalRmmService implements RmmServiceInterface
     {
         try {
             $standardizedData = $this->dataMapper->mapWebhookPayload($payload);
-            
+
             return [
                 'success' => true,
                 'data' => $standardizedData,
@@ -587,7 +589,7 @@ class TacticalRmmService implements RmmServiceInterface
     public function getRateLimits(): array
     {
         $rateLimitInfo = $this->apiClient->getRateLimitInfo();
-        
+
         return [
             'success' => true,
             'limits' => $rateLimitInfo,
@@ -600,7 +602,7 @@ class TacticalRmmService implements RmmServiceInterface
     public function getServiceHealth(): array
     {
         $response = $this->apiClient->get('/core/version/');
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -663,8 +665,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getDeviceHardware(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -682,8 +684,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getDevicePerformance(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -701,8 +703,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getDeviceNetwork(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -720,8 +722,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getDeviceUpdates(string $agentId): array
     {
         $response = $this->apiClient->get("/winupdate/{$agentId}/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -739,9 +741,9 @@ class TacticalRmmService implements RmmServiceInterface
     public function installUpdates(string $agentId, array $updateIds = []): array
     {
         $data = empty($updateIds) ? [] : ['updates' => $updateIds];
-        
+
         $response = $this->apiClient->post("/winupdate/{$agentId}/install/", $data);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -759,7 +761,7 @@ class TacticalRmmService implements RmmServiceInterface
     public function scanForUpdates(string $agentId): array
     {
         $response = $this->apiClient->post("/winupdate/{$agentId}/scan/");
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -777,8 +779,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getDeviceProcesses(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/processes/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -796,7 +798,7 @@ class TacticalRmmService implements RmmServiceInterface
     public function killProcess(string $agentId, int $processId): array
     {
         $response = $this->apiClient->delete("/agents/{$agentId}/processes/{$processId}/");
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -813,9 +815,9 @@ class TacticalRmmService implements RmmServiceInterface
     public function startService(string $agentId, string $serviceName): array
     {
         $data = ['action' => 'start'];
-        
+
         $response = $this->apiClient->post("/services/{$agentId}/{$serviceName}/", $data);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -832,9 +834,9 @@ class TacticalRmmService implements RmmServiceInterface
     public function stopService(string $agentId, string $serviceName): array
     {
         $data = ['action' => 'stop'];
-        
+
         $response = $this->apiClient->post("/services/{$agentId}/{$serviceName}/", $data);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -851,9 +853,9 @@ class TacticalRmmService implements RmmServiceInterface
     public function restartService(string $agentId, string $serviceName): array
     {
         $data = ['action' => 'restart'];
-        
+
         $response = $this->apiClient->post("/services/{$agentId}/{$serviceName}/", $data);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -875,8 +877,8 @@ class TacticalRmmService implements RmmServiceInterface
         ];
 
         $response = $this->apiClient->post("/agents/{$agentId}/wmi/", $data);
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -892,7 +894,7 @@ class TacticalRmmService implements RmmServiceInterface
     public function wakeOnLan(string $agentId): array
     {
         $response = $this->apiClient->post("/agents/{$agentId}/wol/");
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -914,7 +916,7 @@ class TacticalRmmService implements RmmServiceInterface
         ];
 
         $response = $this->apiClient->post("/agents/{$agentId}/shutdown/", $data);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -931,8 +933,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAgentHistory(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/history/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -950,8 +952,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getAgentNotes(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/notes/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -967,9 +969,9 @@ class TacticalRmmService implements RmmServiceInterface
     public function addAgentNote(string $agentId, string $note): array
     {
         $data = ['note' => $note];
-        
+
         $response = $this->apiClient->post("/agents/{$agentId}/notes/", $data);
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -987,8 +989,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function getMeshCentralInfo(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/meshcentral/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -1004,7 +1006,7 @@ class TacticalRmmService implements RmmServiceInterface
     public function initiateMeshCentral(string $agentId): array
     {
         $response = $this->apiClient->post("/agents/{$agentId}/meshcentral/");
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -1022,7 +1024,7 @@ class TacticalRmmService implements RmmServiceInterface
     public function recoverMeshCentral(string $agentId): array
     {
         $response = $this->apiClient->post("/agents/{$agentId}/meshcentral/recover/");
-        
+
         if ($response['success']) {
             return [
                 'success' => true,
@@ -1039,8 +1041,8 @@ class TacticalRmmService implements RmmServiceInterface
     public function pingDevice(string $agentId): array
     {
         $response = $this->apiClient->get("/agents/{$agentId}/ping/");
-        
-        if (!$response['success']) {
+
+        if (! $response['success']) {
             return $response;
         }
 
@@ -1115,7 +1117,7 @@ class TacticalRmmService implements RmmServiceInterface
         }
 
         return [
-            'success' => !empty($results),
+            'success' => ! empty($results),
             'data' => $results,
             'errors' => $errors,
             'collected_at' => now()->toISOString(),

@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Location;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class LocationPolicy
 {
@@ -17,7 +16,7 @@ class LocationPolicy
         if ($user->isAdmin()) {
             return true;
         }
-        
+
         return $user->can('clients.locations.view');
     }
 
@@ -30,7 +29,7 @@ class LocationPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $location)) {
             return true;
         }
-        
+
         return $user->can('clients.locations.view') && $this->sameCompany($user, $location);
     }
 
@@ -43,7 +42,7 @@ class LocationPolicy
         if ($user->isAdmin()) {
             return true;
         }
-        
+
         return $user->can('clients.locations.manage');
     }
 
@@ -56,7 +55,7 @@ class LocationPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $location)) {
             return true;
         }
-        
+
         return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
     }
 
@@ -69,7 +68,7 @@ class LocationPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $location)) {
             return true;
         }
-        
+
         return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
     }
 
@@ -82,7 +81,7 @@ class LocationPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $location)) {
             return true;
         }
-        
+
         return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
     }
 
@@ -95,7 +94,7 @@ class LocationPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $location)) {
             return true;
         }
-        
+
         return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
     }
 

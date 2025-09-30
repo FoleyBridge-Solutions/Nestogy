@@ -19,8 +19,8 @@ class CommunicationLogIntegrationService
 
             // Try to find the client based on email addresses
             $client = $this->findClientFromEmailAddresses($emailMessage);
-            
-            if (!$client) {
+
+            if (! $client) {
                 // No client found, don't create log entry
                 return null;
             }
@@ -97,7 +97,7 @@ class CommunicationLogIntegrationService
 
         // Remove the email account owner's email
         $accountEmail = $emailMessage->emailAccount->email_address;
-        $allEmails = array_filter($allEmails, function($email) use ($accountEmail) {
+        $allEmails = array_filter($allEmails, function ($email) use ($accountEmail) {
             return strtolower($email) !== strtolower($accountEmail);
         });
 
@@ -146,11 +146,11 @@ class CommunicationLogIntegrationService
     {
         $subject = $emailMessage->subject ?: 'No Subject';
         $preview = $emailMessage->preview ?: '';
-        
+
         if ($preview) {
-            return $subject . ' - ' . \Illuminate\Support\Str::limit($preview, 100);
+            return $subject.' - '.\Illuminate\Support\Str::limit($preview, 100);
         }
-        
+
         return $subject;
     }
 
@@ -158,8 +158,8 @@ class CommunicationLogIntegrationService
     {
         // For emails, we can determine outcome based on folder or status
         $folderType = $emailMessage->emailFolder->type;
-        
-        return match($folderType) {
+
+        return match ($folderType) {
             'sent' => 'completed',
             'drafts' => 'pending',
             'trash' => 'cancelled',
@@ -170,24 +170,24 @@ class CommunicationLogIntegrationService
     private function determineContactPerson(EmailMessage $emailMessage, Client $client): ?string
     {
         $direction = $this->determineDirection($emailMessage, $client);
-        
+
         if ($direction === 'inbound') {
             // For inbound emails, the contact person is the sender
             return $emailMessage->from_name ?: $emailMessage->from_address;
         } else {
             // For outbound emails, try to find the primary recipient from client contacts
-            if ($emailMessage->to_addresses && !empty($emailMessage->to_addresses)) {
+            if ($emailMessage->to_addresses && ! empty($emailMessage->to_addresses)) {
                 $primaryRecipient = $emailMessage->to_addresses[0];
-                
+
                 // Try to find contact name
                 $contact = \App\Models\Contact::where('client_id', $client->id)
                     ->where('email', $primaryRecipient)
                     ->first();
-                
+
                 return $contact ? $contact->name : $primaryRecipient;
             }
         }
-        
+
         return null;
     }
 
@@ -195,18 +195,18 @@ class CommunicationLogIntegrationService
     {
         // Extract first few lines of email as notes
         $body = $emailMessage->body_text ?: strip_tags($emailMessage->body_html ?: '');
-        
+
         if (empty($body)) {
             return null;
         }
-        
+
         // Take first 500 characters
         $notes = \Illuminate\Support\Str::limit($body, 500);
-        
+
         // Clean up the notes
         $notes = preg_replace('/\s+/', ' ', $notes); // Normalize whitespace
         $notes = trim($notes);
-        
+
         return $notes ?: null;
     }
 
@@ -228,12 +228,13 @@ class CommunicationLogIntegrationService
         }
 
         // Only log if account has auto-logging enabled
-        if (!$emailMessage->emailAccount->auto_log_communications) {
+        if (! $emailMessage->emailAccount->auto_log_communications) {
             return false;
         }
 
         // Only log if we can find a client
         $client = $this->findClientFromEmailAddresses($emailMessage);
+
         return $client !== null;
     }
 }

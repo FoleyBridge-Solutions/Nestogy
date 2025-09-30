@@ -26,23 +26,22 @@ class TestPhysicalMail extends Command
      * Execute the console command.
      */
     public function handle(
-        PhysicalMailService $mailService, 
+        PhysicalMailService $mailService,
         PostGridClient $postgrid,
         \App\Domains\PhysicalMail\Services\PhysicalMailTemplateBuilder $templateBuilder
-    ): int
-    {
+    ): int {
         $this->info('Testing PostGrid Physical Mail Service');
-        $this->info('Mode: ' . ($postgrid->isTestMode() ? 'TEST' : 'LIVE'));
-        
+        $this->info('Mode: '.($postgrid->isTestMode() ? 'TEST' : 'LIVE'));
+
         $type = $this->option('type');
-        
+
         // Ask user which approach to use
         $approach = $this->choice(
             'Which approach would you like to test?',
             ['safe-template', 'raw-html', 'unsafe-html'],
             0
         );
-        
+
         // Test data
         $data = [
             'type' => $type,
@@ -81,70 +80,70 @@ class TestPhysicalMail extends Command
                     'addressLine2' => 'Suite 100',
                     'city' => 'San Francisco',
                     'provinceOrState' => 'CA',
-                    'postalOrZip' => '94105'
+                    'postalOrZip' => '94105',
                 ],
                 'from' => [
                     'firstName' => 'Jane',
                     'lastName' => 'Smith',
                     'jobTitle' => 'Customer Success Manager',
-                    'companyName' => 'Nestogy ERP'
-                ]
+                    'companyName' => 'Nestogy ERP',
+                ],
             ],
         ];
-        
+
         // Override address_placement based on approach
         if ($approach === 'unsafe-html') {
             $data['address_placement'] = 'top_first_page';
             $this->warn('Using unsafe HTML - this may get cancelled by PostGrid!');
         }
-        
+
         try {
-            $this->info('Sending test ' . $type . ' using ' . $approach . ' approach...');
-            
+            $this->info('Sending test '.$type.' using '.$approach.' approach...');
+
             $order = $mailService->send($type, $data);
-            
+
             $this->info('✅ Mail queued successfully!');
-            $this->info('Order ID: ' . $order->id);
-            $this->info('Status: ' . $order->status);
-            
+            $this->info('Order ID: '.$order->id);
+            $this->info('Status: '.$order->status);
+
             // Wait for job to process
             $this->info('Waiting for job to process...');
             sleep(3);
-            
+
             // Refresh order to get PostGrid ID
             $order->refresh();
-            
+
             if ($order->postgrid_id) {
-                $this->info('PostGrid ID: ' . $order->postgrid_id);
-                $this->info('PDF URL: ' . $order->pdf_url);
-                
+                $this->info('PostGrid ID: '.$order->postgrid_id);
+                $this->info('PDF URL: '.$order->pdf_url);
+
                 // Get tracking info
                 $tracking = $mailService->getTracking($order);
-                $this->info('Tracking Status: ' . json_encode($tracking));
-                
+                $this->info('Tracking Status: '.json_encode($tracking));
+
                 // Check for cancellation
                 if ($tracking['status'] === 'cancelled') {
                     $this->error('❌ Letter was cancelled by PostGrid!');
-                    
+
                     // Get detailed info
                     $letter = $postgrid->getLetter($order->postgrid_id);
                     if (isset($letter['cancellation'])) {
-                        $this->error('Cancellation reason: ' . $letter['cancellation']['reason']);
-                        $this->error('Cancellation note: ' . $letter['cancellation']['note']);
+                        $this->error('Cancellation reason: '.$letter['cancellation']['reason']);
+                        $this->error('Cancellation note: '.$letter['cancellation']['note']);
                     }
                 } else {
                     $this->info('✅ Letter accepted by PostGrid!');
                 }
-                
+
                 // In test mode, progress the order
                 if ($postgrid->isTestMode() && $tracking['status'] !== 'cancelled') {
                     $this->info('Progressing test order through statuses...');
-                    
+
                     for ($i = 0; $i < 3; $i++) {
                         try {
                             $response = $mailService->progressTestOrder($order);
                             $order->refresh();
-                            $this->info('  → Status: ' . $order->status);
+                            $this->info('  → Status: '.$order->status);
                         } catch (\Exception $e) {
                             break;
                         }
@@ -153,16 +152,17 @@ class TestPhysicalMail extends Command
             } else {
                 $this->warn('PostGrid ID not yet available. Check queue processing.');
             }
-            
+
             return Command::SUCCESS;
-            
+
         } catch (\Exception $e) {
-            $this->error('Failed to send mail: ' . $e->getMessage());
-            $this->error('Trace: ' . $e->getTraceAsString());
+            $this->error('Failed to send mail: '.$e->getMessage());
+            $this->error('Trace: '.$e->getTraceAsString());
+
             return Command::FAILURE;
         }
     }
-    
+
     /**
      * Get test content based on approach
      */
@@ -176,7 +176,7 @@ class TestPhysicalMail extends Command
                     'title' => 'Test Business Letter',
                     'body' => '{{body}}',
                 ]);
-            
+
             case 'raw-html':
                 // Raw HTML that will be automatically made safe
                 return '<h1>Test Letter</h1>
@@ -186,7 +186,7 @@ class TestPhysicalMail extends Command
                 <p>Sincerely,</p>
                 <p>{{from.firstName}} {{from.lastName}}<br>
                 {{from.companyName}}</p>';
-            
+
             case 'unsafe-html':
                 // Intentionally unsafe HTML to test cancellation
                 return '<!DOCTYPE html>
@@ -244,7 +244,7 @@ class TestPhysicalMail extends Command
     </div>
 </body>
 </html>';
-            
+
             default:
                 return $this->getTestContent('safe-template', $templateBuilder);
         }

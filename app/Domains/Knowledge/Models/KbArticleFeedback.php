@@ -2,14 +2,14 @@
 
 namespace App\Domains\Knowledge\Models;
 
+use App\Domains\Client\Models\ClientContact;
 use App\Models\BaseModel;
 use App\Models\User;
-use App\Domains\Client\Models\ClientContact;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Knowledge Base Article Feedback Model
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $article_id
@@ -45,8 +45,11 @@ class KbArticleFeedback extends BaseModel
     ];
 
     const TYPE_RATING = 'rating';
+
     const TYPE_COMMENT = 'comment';
+
     const TYPE_SUGGESTION = 'suggestion';
+
     const TYPE_REPORT = 'report';
 
     /**
@@ -110,10 +113,10 @@ class KbArticleFeedback extends BaseModel
     ): self {
         // Check for existing feedback from same user/contact/IP
         $ipAddress = request()->ip();
-        
+
         $existingQuery = self::where('article_id', $articleId)
             ->where('feedback_type', self::TYPE_RATING);
-        
+
         if ($userId) {
             $existingQuery->where('user_id', $userId);
         } elseif ($contactId) {
@@ -121,9 +124,9 @@ class KbArticleFeedback extends BaseModel
         } else {
             $existingQuery->where('ip_address', $ipAddress);
         }
-        
+
         $existing = $existingQuery->first();
-        
+
         if ($existing) {
             // Update existing feedback
             $existing->update([
@@ -162,7 +165,7 @@ class KbArticleFeedback extends BaseModel
     protected static function updateArticleCounters(int $articleId): void
     {
         $article = KbArticle::find($articleId);
-        if (!$article) {
+        if (! $article) {
             return;
         }
 

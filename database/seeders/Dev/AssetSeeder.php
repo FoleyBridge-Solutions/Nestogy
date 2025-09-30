@@ -2,11 +2,11 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
 use App\Models\Asset;
-use App\Models\Company;
 use App\Models\Client;
+use App\Models\Company;
 use App\Models\Location;
+use Illuminate\Database\Seeder;
 
 class AssetSeeder extends Seeder
 {
@@ -16,18 +16,18 @@ class AssetSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('Starting Asset Seeder...');
-        
+
         // Skip root company
         $companies = Company::where('id', '>', 1)->get();
-        
+
         foreach ($companies as $company) {
             $this->command->info("Creating assets for company: {$company->name}");
-            
+
             $clients = Client::where('company_id', $company->id)->get();
-            
+
             foreach ($clients as $client) {
                 $locations = Location::where('client_id', $client->id)->pluck('id')->toArray();
-                
+
                 // Create various types of assets for each client
                 $assetTypes = [
                     'desktop' => rand(5, 20),
@@ -38,22 +38,22 @@ class AssetSeeder extends Seeder
                     'mobile' => rand(2, 10),
                     'software' => rand(5, 15),
                 ];
-                
+
                 foreach ($assetTypes as $type => $count) {
                     Asset::factory()
                         ->count($count)
                         ->forClient($client)
                         ->state([
                             'type' => $type,
-                            'location_id' => !empty($locations) ? fake()->randomElement($locations) : null,
+                            'location_id' => ! empty($locations) ? fake()->randomElement($locations) : null,
                         ])
                         ->create();
                 }
             }
-            
+
             $this->command->info("Completed assets for company: {$company->name}");
         }
-        
+
         $this->command->info('Asset Seeder completed!');
     }
 }

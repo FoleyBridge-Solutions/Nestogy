@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('contracts', function (Blueprint $table) {
             $table->unsignedBigInteger('template_id')->nullable()->after('quote_id');
             $table->index('template_id');
-            
+
             // Add foreign key constraint if contract_templates table exists
             $table->foreign('template_id')
                 ->references('id')

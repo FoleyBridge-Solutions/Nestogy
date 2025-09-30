@@ -61,7 +61,7 @@ class StoreClientRequest extends BaseFormRequest
     protected function getExpectedFields(): array
     {
         return [
-            'name', 'email', 'phone', 'website', 'notes', 'status'
+            'name', 'email', 'phone', 'website', 'notes', 'status',
         ];
     }
 
@@ -138,25 +138,25 @@ class StoreClientRequest extends BaseFormRequest
         // Clean phone numbers
         if ($this->has('location_phone')) {
             $this->merge([
-                'location_phone' => preg_replace('/[^0-9]/', '', $this->location_phone)
+                'location_phone' => preg_replace('/[^0-9]/', '', $this->location_phone),
             ]);
         }
 
         if ($this->has('contact_phone')) {
             $this->merge([
-                'contact_phone' => preg_replace('/[^0-9]/', '', $this->contact_phone)
+                'contact_phone' => preg_replace('/[^0-9]/', '', $this->contact_phone),
             ]);
         }
 
         if ($this->has('contact_mobile')) {
             $this->merge([
-                'contact_mobile' => preg_replace('/[^0-9]/', '', $this->contact_mobile)
+                'contact_mobile' => preg_replace('/[^0-9]/', '', $this->contact_mobile),
             ]);
         }
 
         if ($this->has('contact_extension')) {
             $this->merge([
-                'contact_extension' => preg_replace('/[^0-9]/', '', $this->contact_extension)
+                'contact_extension' => preg_replace('/[^0-9]/', '', $this->contact_extension),
             ]);
         }
 
@@ -168,19 +168,19 @@ class StoreClientRequest extends BaseFormRequest
         ]);
 
         // Set default values
-        if (!$this->has('currency_code') || empty($this->currency_code)) {
+        if (! $this->has('currency_code') || empty($this->currency_code)) {
             $this->merge(['currency_code' => 'USD']);
         }
 
-        if (!$this->has('net_terms') || empty($this->net_terms)) {
+        if (! $this->has('net_terms') || empty($this->net_terms)) {
             $this->merge(['net_terms' => 30]);
         }
 
-        if (!$this->has('status') || empty($this->status)) {
+        if (! $this->has('status') || empty($this->status)) {
             $this->merge(['status' => 'active']);
         }
 
-        if (!$this->has('country') || empty($this->country)) {
+        if (! $this->has('country') || empty($this->country)) {
             $this->merge(['country' => 'US']);
         }
     }
@@ -207,7 +207,7 @@ class StoreClientRequest extends BaseFormRequest
                 $existingContact = \App\Models\Contact::where('company_id', $user->company_id)
                     ->where('email', $this->contact_email)
                     ->first();
-                
+
                 if ($existingContact) {
                     $validator->errors()->add('contact_email', 'A contact with this email already exists.');
                 }
@@ -216,7 +216,7 @@ class StoreClientRequest extends BaseFormRequest
             // Validate currency code if provided
             if ($this->filled('currency_code')) {
                 $validCurrencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY', 'INR'];
-                if (!in_array(strtoupper($this->currency_code), $validCurrencies)) {
+                if (! in_array(strtoupper($this->currency_code), $validCurrencies)) {
                     $validator->errors()->add('currency_code', 'Invalid currency code.');
                 }
             }

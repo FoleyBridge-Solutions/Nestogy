@@ -55,21 +55,32 @@ class AuditLog extends Model
      * Event types constants
      */
     const EVENT_LOGIN = 'login';
+
     const EVENT_LOGOUT = 'logout';
+
     const EVENT_CREATE = 'create';
+
     const EVENT_UPDATE = 'update';
+
     const EVENT_DELETE = 'delete';
+
     const EVENT_SECURITY = 'security';
+
     const EVENT_API = 'api';
+
     const EVENT_ACCESS = 'access';
+
     const EVENT_ERROR = 'error';
 
     /**
      * Severity levels
      */
     const SEVERITY_INFO = 'info';
+
     const SEVERITY_WARNING = 'warning';
+
     const SEVERITY_ERROR = 'error';
+
     const SEVERITY_CRITICAL = 'critical';
 
     /**
@@ -96,6 +107,7 @@ class AuditLog extends Model
         if ($this->model_type && $this->model_id) {
             return $this->model_type::find($this->model_id);
         }
+
         return null;
     }
 
@@ -150,7 +162,7 @@ class AuditLog extends Model
             'event_type' => $eventType,
             'model_type' => get_class($model),
             'model_id' => $model->getKey(),
-            'action' => $eventType . ' ' . class_basename($model),
+            'action' => $eventType.' '.class_basename($model),
             'old_values' => $oldValues,
             'new_values' => $newValues,
             'ip_address' => request()->ip(),

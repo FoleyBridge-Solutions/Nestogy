@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * RecurringInvoice Model
- * 
+ *
  * Manages recurring invoice schedules based on contracts with support for
  * various billing frequencies, escalations, prorations, and milestone-based billing.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -105,22 +105,33 @@ class RecurringInvoice extends Model
 
     // Status constants
     const STATUS_ACTIVE = 'active';
+
     const STATUS_PAUSED = 'paused';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_EXPIRED = 'expired';
 
     // Billing frequency constants
     const FREQUENCY_WEEKLY = 'weekly';
+
     const FREQUENCY_BI_WEEKLY = 'bi_weekly';
+
     const FREQUENCY_MONTHLY = 'monthly';
+
     const FREQUENCY_QUARTERLY = 'quarterly';
+
     const FREQUENCY_SEMI_ANNUALLY = 'semi_annually';
+
     const FREQUENCY_ANNUALLY = 'annually';
+
     const FREQUENCY_BI_ANNUALLY = 'bi_annually';
 
     // Escalation frequency constants
     const ESCALATION_ANNUAL = 'annual';
+
     const ESCALATION_BIENNIAL = 'biennial';
 
     /**
@@ -164,17 +175,18 @@ class RecurringInvoice extends Model
         return $query->where('status', self::STATUS_PAUSED);
     }
 
-    public function scopeDue($query, Carbon $asOfDate = null)
+    public function scopeDue($query, ?Carbon $asOfDate = null)
     {
         $asOfDate = $asOfDate ?? now();
+
         return $query->where('status', self::STATUS_ACTIVE)
-                    ->where('next_invoice_date', '<=', $asOfDate);
+            ->where('next_invoice_date', '<=', $asOfDate);
     }
 
     public function scopeOverdue($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
-                    ->where('next_invoice_date', '<', now());
+            ->where('next_invoice_date', '<', now());
     }
 
     public function scopeByFrequency($query, string $frequency)
@@ -197,7 +209,7 @@ class RecurringInvoice extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_ACTIVE => 'Active',
             self::STATUS_PAUSED => 'Paused',
             self::STATUS_COMPLETED => 'Completed',
@@ -209,7 +221,7 @@ class RecurringInvoice extends Model
 
     public function getBillingFrequencyLabelAttribute(): string
     {
-        return match($this->billing_frequency) {
+        return match ($this->billing_frequency) {
             self::FREQUENCY_WEEKLY => 'Weekly',
             self::FREQUENCY_BI_WEEKLY => 'Bi-weekly',
             self::FREQUENCY_MONTHLY => 'Monthly',
@@ -224,17 +236,17 @@ class RecurringInvoice extends Model
     public function getNextInvoiceAmountAttribute(): float
     {
         $amount = $this->amount;
-        
+
         // Apply discount if applicable
         if ($this->discount_percentage > 0) {
             $amount = $amount * (1 - $this->discount_percentage / 100);
         }
-        
+
         // Add tax if applicable
         if ($this->tax_rate > 0) {
             $amount = $amount * (1 + $this->tax_rate / 100);
         }
-        
+
         return round($amount, 2);
     }
 
@@ -262,47 +274,49 @@ class RecurringInvoice extends Model
 
     public function getDaysUntilNextInvoiceAttribute(): int
     {
-        if (!$this->next_invoice_date) {
+        if (! $this->next_invoice_date) {
             return 0;
         }
-        
+
         return max(0, now()->diffInDays($this->next_invoice_date, false));
     }
 
     public function getIsOverdueAttribute(): bool
     {
-        return $this->status === self::STATUS_ACTIVE && 
-               $this->next_invoice_date && 
+        return $this->status === self::STATUS_ACTIVE &&
+               $this->next_invoice_date &&
                $this->next_invoice_date->isPast();
     }
 
     public function getEscalationDueAttribute(): bool
     {
-        if (!$this->escalation_percentage || $this->escalation_percentage <= 0) {
+        if (! $this->escalation_percentage || $this->escalation_percentage <= 0) {
             return false;
         }
 
-        if (!$this->last_escalation_date) {
+        if (! $this->last_escalation_date) {
             // Check if it's time for first escalation
             $monthsSinceStart = $this->start_date->diffInMonths(now());
+
             return ($this->escalation_frequency === self::ESCALATION_ANNUAL && $monthsSinceStart >= 12) ||
                    ($this->escalation_frequency === self::ESCALATION_BIENNIAL && $monthsSinceStart >= 24);
         }
 
         $monthsSinceEscalation = $this->last_escalation_date->diffInMonths(now());
+
         return ($this->escalation_frequency === self::ESCALATION_ANNUAL && $monthsSinceEscalation >= 12) ||
                ($this->escalation_frequency === self::ESCALATION_BIENNIAL && $monthsSinceEscalation >= 24);
     }
 
     public function getRemainingInvoicesAttribute(): ?int
     {
-        if (!$this->end_date) {
+        if (! $this->end_date) {
             return null; // Indefinite
         }
 
         $periodsRemaining = 0;
         $currentDate = $this->next_invoice_date ?? now();
-        
+
         while ($currentDate <= $this->end_date) {
             $periodsRemaining++;
             $currentDate = $this->calculateNextDate($currentDate);
@@ -326,13 +340,13 @@ class RecurringInvoice extends Model
     /**
      * Check if recurring invoice is due for generation
      */
-    public function isDueForGeneration(Carbon $asOfDate = null): bool
+    public function isDueForGeneration(?Carbon $asOfDate = null): bool
     {
         $asOfDate = $asOfDate ?? now();
-        
-        return $this->isActive() && 
-               $this->auto_generate && 
-               $this->next_invoice_date && 
+
+        return $this->isActive() &&
+               $this->auto_generate &&
+               $this->next_invoice_date &&
                $this->next_invoice_date <= $asOfDate;
     }
 
@@ -341,9 +355,9 @@ class RecurringInvoice extends Model
      */
     public function isContractValid(): bool
     {
-        return $this->contract && 
-               $this->contract->isActive() && 
-               (!$this->end_date || $this->end_date >= now());
+        return $this->contract &&
+               $this->contract->isActive() &&
+               (! $this->end_date || $this->end_date >= now());
     }
 
     /**
@@ -362,6 +376,7 @@ class RecurringInvoice extends Model
                 if ($this->billing_cycle_day) {
                     return $nextDate->addMonth()->day($this->billing_cycle_day);
                 }
+
                 return $nextDate->addMonth();
             case self::FREQUENCY_QUARTERLY:
                 return $nextDate->addMonths(3);
@@ -379,9 +394,9 @@ class RecurringInvoice extends Model
     /**
      * Pause the recurring invoice
      */
-    public function pause(string $reason = null): bool
+    public function pause(?string $reason = null): bool
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return false;
         }
 
@@ -434,7 +449,7 @@ class RecurringInvoice extends Model
     /**
      * Cancel the recurring invoice
      */
-    public function cancel(string $reason = null): bool
+    public function cancel(?string $reason = null): bool
     {
         $this->update([
             'status' => self::STATUS_CANCELLED,
@@ -460,7 +475,7 @@ class RecurringInvoice extends Model
         ]);
 
         // Mark as completed if we've reached the end date
-        if (!$this->next_invoice_date) {
+        if (! $this->next_invoice_date) {
             $this->complete();
         }
     }
@@ -470,7 +485,7 @@ class RecurringInvoice extends Model
      */
     public function applyEscalation(): float
     {
-        if (!$this->escalation_percentage || $this->escalation_percentage <= 0) {
+        if (! $this->escalation_percentage || $this->escalation_percentage <= 0) {
             return $this->amount;
         }
 
@@ -492,18 +507,18 @@ class RecurringInvoice extends Model
         $invoices = [];
         $currentDate = $this->next_invoice_date ?? now();
         $amount = $this->next_invoice_amount;
-        
-        for ($i = 0; $i < $count && (!$this->end_date || $currentDate <= $this->end_date); $i++) {
+
+        for ($i = 0; $i < $count && (! $this->end_date || $currentDate <= $this->end_date); $i++) {
             $invoices[] = [
                 'date' => $currentDate->copy(),
                 'due_date' => $currentDate->copy()->addDays($this->invoice_due_days),
                 'amount' => $amount,
                 'billing_cycle' => $this->invoices_generated + $i + 1,
             ];
-            
+
             $currentDate = $this->calculateNextDate($currentDate);
         }
-        
+
         return $invoices;
     }
 
@@ -515,14 +530,14 @@ class RecurringInvoice extends Model
         return [
             'total_invoices_generated' => $this->invoices_generated,
             'total_revenue_generated' => $this->total_revenue_generated,
-            'average_invoice_amount' => $this->invoices_generated > 0 ? 
+            'average_invoice_amount' => $this->invoices_generated > 0 ?
                 $this->total_revenue_generated / $this->invoices_generated : 0,
             'annualized_revenue' => $this->annualized_revenue,
             'days_until_next_invoice' => $this->days_until_next_invoice,
             'is_overdue' => $this->is_overdue,
             'escalation_due' => $this->escalation_due,
             'remaining_invoices' => $this->remaining_invoices,
-            'projected_total_revenue' => $this->remaining_invoices ? 
+            'projected_total_revenue' => $this->remaining_invoices ?
                 $this->total_revenue_generated + ($this->remaining_invoices * $this->next_invoice_amount) : null,
         ];
     }
@@ -535,19 +550,19 @@ class RecurringInvoice extends Model
         parent::boot();
 
         static::creating(function ($recurringInvoice) {
-            if (!$recurringInvoice->company_id && auth()->user()) {
+            if (! $recurringInvoice->company_id && auth()->user()) {
                 $recurringInvoice->company_id = auth()->user()->company_id;
             }
-            
-            if (!$recurringInvoice->created_by && auth()->user()) {
+
+            if (! $recurringInvoice->created_by && auth()->user()) {
                 $recurringInvoice->created_by = auth()->id();
             }
         });
 
         static::updating(function ($recurringInvoice) {
             // Auto-complete if end date has passed and status is still active
-            if ($recurringInvoice->status === self::STATUS_ACTIVE && 
-                $recurringInvoice->end_date && 
+            if ($recurringInvoice->status === self::STATUS_ACTIVE &&
+                $recurringInvoice->end_date &&
                 $recurringInvoice->end_date->isPast()) {
                 $recurringInvoice->status = self::STATUS_COMPLETED;
                 $recurringInvoice->next_invoice_date = null;

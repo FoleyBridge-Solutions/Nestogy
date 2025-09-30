@@ -2,23 +2,22 @@
 
 namespace App\Domains\Report\Services;
 
-use App\Models\Client;
 use App\Domains\Financial\Models\Payment;
 use App\Domains\Ticket\Models\Ticket;
-use Illuminate\Support\Collection;
+use App\Models\Client;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Executive Report Service
- * 
+ *
  * Pre-built executive reports and QBR generation
  */
 class ExecutiveReportService
 {
     protected DashboardService $dashboardService;
+
     protected WidgetService $widgetService;
 
     public function __construct(
@@ -38,7 +37,7 @@ class ExecutiveReportService
         Carbon $quarterEnd
     ): array {
         $cacheKey = "qbr_report:{$companyId}:{$quarterStart->format('Y-m-d')}:{$quarterEnd->format('Y-m-d')}";
-        
+
         return Cache::remember($cacheKey, 3600, function () use ($companyId, $quarterStart, $quarterEnd) {
             return [
                 'executive_summary' => $this->generateExecutiveSummary($companyId, $quarterStart, $quarterEnd),
@@ -110,8 +109,8 @@ class ExecutiveReportService
             'clients' => $healthScores,
             'summary' => [
                 'total_clients' => count($healthScores),
-                'healthy_clients' => count(array_filter($healthScores, fn($c) => $c['overall_score'] >= 80)),
-                'at_risk_clients' => count(array_filter($healthScores, fn($c) => $c['overall_score'] < 60)),
+                'healthy_clients' => count(array_filter($healthScores, fn ($c) => $c['overall_score'] >= 80)),
+                'at_risk_clients' => count(array_filter($healthScores, fn ($c) => $c['overall_score'] < 60)),
                 'average_score' => round(array_sum(array_column($healthScores, 'overall_score')) / count($healthScores), 2),
             ],
             'recommendations' => $this->generateHealthScoreRecommendations($healthScores),
@@ -154,7 +153,7 @@ class ExecutiveReportService
     protected function generateExecutiveSummary(int $companyId, Carbon $start, Carbon $end): array
     {
         $dashboard = $this->dashboardService->getExecutiveDashboard($companyId, $start, $end);
-        
+
         return [
             'revenue_summary' => $this->formatRevenueSummary($dashboard['financial_metrics']),
             'service_summary' => $this->formatServiceSummary($dashboard['service_metrics']),
@@ -222,7 +221,7 @@ class ExecutiveReportService
     protected function calculateClientHealthScore(Client $client): array
     {
         $scores = [];
-        
+
         // Ticket health (40% weight)
         $recentTickets = $client->tickets()->where('created_at', '>=', now()->subMonth())->count();
         $escalatedTickets = $client->tickets()->where('escalated', true)->where('created_at', '>=', now()->subMonth())->count();
@@ -247,9 +246,9 @@ class ExecutiveReportService
         $growthRate = $previousRevenue > 0 ? (($currentRevenue - $previousRevenue) / $previousRevenue) * 100 : 0;
         $scores['growth_health'] = min(100, max(0, 50 + $growthRate));
 
-        $overallScore = ($scores['ticket_health'] * 0.4) + 
-                       ($scores['payment_health'] * 0.3) + 
-                       ($scores['engagement_health'] * 0.2) + 
+        $overallScore = ($scores['ticket_health'] * 0.4) +
+                       ($scores['payment_health'] * 0.3) +
+                       ($scores['engagement_health'] * 0.2) +
                        ($scores['growth_health'] * 0.1);
 
         return [
@@ -267,8 +266,13 @@ class ExecutiveReportService
      */
     protected function determineRiskLevel(float $score): string
     {
-        if ($score >= 80) return 'low';
-        if ($score >= 60) return 'medium';
+        if ($score >= 80) {
+            return 'low';
+        }
+        if ($score >= 60) {
+            return 'medium';
+        }
+
         return 'high';
     }
 
@@ -278,28 +282,28 @@ class ExecutiveReportService
     protected function calculateQuarterGrade(array $dashboard): array
     {
         $scores = [];
-        
+
         // Revenue performance (30%)
         $revenueGrowth = $dashboard['financial_metrics']['revenue_growth'] ?? 0;
         $scores['revenue'] = min(100, max(0, 50 + $revenueGrowth));
-        
+
         // Service performance (40%)
         $slaCompliance = $dashboard['service_metrics']['sla_compliance'] ?? 0;
         $scores['service'] = $slaCompliance;
-        
+
         // Client satisfaction (20%)
         $satisfaction = $dashboard['service_metrics']['customer_satisfaction'] ?? 0;
         $scores['satisfaction'] = $satisfaction * 20; // Convert 5-point scale to 100
-        
+
         // Growth performance (10%)
         $clientGrowth = $dashboard['client_metrics']['churn_rate'] ?? 0;
         $scores['growth'] = max(0, 100 - $clientGrowth * 2);
-        
-        $overallScore = ($scores['revenue'] * 0.3) + 
-                       ($scores['service'] * 0.4) + 
-                       ($scores['satisfaction'] * 0.2) + 
+
+        $overallScore = ($scores['revenue'] * 0.3) +
+                       ($scores['service'] * 0.4) +
+                       ($scores['satisfaction'] * 0.2) +
                        ($scores['growth'] * 0.1);
-        
+
         return [
             'overall_score' => round($overallScore, 2),
             'letter_grade' => $this->getLetterGrade($overallScore),
@@ -312,15 +316,34 @@ class ExecutiveReportService
      */
     protected function getLetterGrade(float $score): string
     {
-        if ($score >= 90) return 'A+';
-        if ($score >= 85) return 'A';
-        if ($score >= 80) return 'A-';
-        if ($score >= 75) return 'B+';
-        if ($score >= 70) return 'B';
-        if ($score >= 65) return 'B-';
-        if ($score >= 60) return 'C+';
-        if ($score >= 55) return 'C';
-        if ($score >= 50) return 'C-';
+        if ($score >= 90) {
+            return 'A+';
+        }
+        if ($score >= 85) {
+            return 'A';
+        }
+        if ($score >= 80) {
+            return 'A-';
+        }
+        if ($score >= 75) {
+            return 'B+';
+        }
+        if ($score >= 70) {
+            return 'B';
+        }
+        if ($score >= 65) {
+            return 'B-';
+        }
+        if ($score >= 60) {
+            return 'C+';
+        }
+        if ($score >= 55) {
+            return 'C';
+        }
+        if ($score >= 50) {
+            return 'C-';
+        }
+
         return 'F';
     }
 
@@ -330,6 +353,7 @@ class ExecutiveReportService
     protected function getQuarterLabel(Carbon $date): string
     {
         $quarter = ceil($date->month / 3);
+
         return "Q{$quarter} {$date->year}";
     }
 
@@ -341,7 +365,7 @@ class ExecutiveReportService
         $revenue = number_format($metrics['current_revenue'] ?? 0, 2);
         $growth = round($metrics['revenue_growth'] ?? 0, 2);
         $direction = $growth >= 0 ? 'increased' : 'decreased';
-        
+
         return "Revenue for this period was \${$revenue}, which {$direction} by {$growth}% compared to the previous period.";
     }
 
@@ -352,7 +376,7 @@ class ExecutiveReportService
     {
         $compliance = round($metrics['sla_compliance'] ?? 0, 2);
         $avgResolution = round($metrics['avg_resolution_time_hours'] ?? 0, 2);
-        
+
         return "Service level compliance was {$compliance}% with an average resolution time of {$avgResolution} hours.";
     }
 
@@ -364,7 +388,7 @@ class ExecutiveReportService
         $total = $metrics['total_clients'] ?? 0;
         $new = $metrics['new_clients'] ?? 0;
         $churn = round($metrics['churn_rate'] ?? 0, 2);
-        
+
         return "We served {$total} clients this period, added {$new} new clients, and maintained a churn rate of {$churn}%.";
     }
 

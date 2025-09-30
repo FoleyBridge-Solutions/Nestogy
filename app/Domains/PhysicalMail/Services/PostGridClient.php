@@ -2,24 +2,26 @@
 
 namespace App\Domains\PhysicalMail\Services;
 
+use App\Domains\PhysicalMail\Exceptions\PostGridException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use App\Domains\PhysicalMail\Exceptions\PostGridException;
 
 class PostGridClient
 {
     protected string $baseUrl = 'https://api.postgrid.com/print-mail/v1';
+
     private bool $testMode;
+
     private string $apiKey;
 
     public function __construct()
     {
         $this->testMode = config('physical_mail.postgrid.test_mode', true);
-        $this->apiKey = $this->testMode 
+        $this->apiKey = $this->testMode
             ? config('physical_mail.postgrid.test_key')
             : config('physical_mail.postgrid.live_key');
 
-        if (!$this->apiKey) {
+        if (! $this->apiKey) {
             throw new PostGridException('PostGrid API key not configured', 0, 'configuration_error');
         }
     }
@@ -48,13 +50,13 @@ class PostGridClient
      */
     public function send(string $type, array $data, ?string $idempotencyKey = null): array
     {
-        $endpoint = '/' . Str::plural(strtolower($type));
-        
+        $endpoint = '/'.Str::plural(strtolower($type));
+
         $headers = [];
         if ($idempotencyKey) {
             $headers['Idempotency-Key'] = $idempotencyKey;
         }
-        
+
         return $this->post($endpoint, $data, $headers);
     }
 
@@ -95,10 +97,10 @@ class PostGridClient
      */
     public function progressTest(string $resource, string $id): array
     {
-        if (!$this->testMode) {
+        if (! $this->testMode) {
             throw new PostGridException('Can only progress test orders', 0, 'test_mode_required');
         }
-        
+
         return $this->post("/{$resource}/{$id}/progressions");
     }
 
@@ -242,47 +244,47 @@ class PostGridClient
             'limit' => $limit,
             'search' => json_encode($search),
         ];
-        
+
         return $this->list($resource, $params);
     }
-    
+
     // HTTP Methods
-    
+
     /**
      * Send GET request
      */
     protected function get(string $endpoint, array $params = []): array
     {
         $response = Http::withHeaders($this->getHeaders())
-            ->get($this->baseUrl . $endpoint, $params);
-        
+            ->get($this->baseUrl.$endpoint, $params);
+
         return $this->handleResponse($response);
     }
-    
+
     /**
      * Send POST request
      */
     protected function post(string $endpoint, array $data = [], array $additionalHeaders = []): array
     {
         $headers = array_merge($this->getHeaders(), $additionalHeaders);
-        
+
         $response = Http::withHeaders($headers)
-            ->post($this->baseUrl . $endpoint, $data);
-        
+            ->post($this->baseUrl.$endpoint, $data);
+
         return $this->handleResponse($response);
     }
-    
+
     /**
      * Send DELETE request
      */
     protected function delete(string $endpoint): array
     {
         $response = Http::withHeaders($this->getHeaders())
-            ->delete($this->baseUrl . $endpoint);
-        
+            ->delete($this->baseUrl.$endpoint);
+
         return $this->handleResponse($response);
     }
-    
+
     /**
      * Handle API response
      */
@@ -291,12 +293,12 @@ class PostGridClient
         if ($response->successful()) {
             return $response->json() ?? [];
         }
-        
+
         $error = $response->json() ?? [];
         $message = $error['error']['message'] ?? 'Unknown error';
         $type = $error['error']['type'] ?? 'unknown_error';
         $code = $response->status();
-        
+
         throw new PostGridException($message, $code, $type);
     }
 }

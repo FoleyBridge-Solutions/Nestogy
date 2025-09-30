@@ -20,14 +20,14 @@ class ServicesController extends Controller
                     'product' => [
                         'id' => $service->product->id ?? null,
                         'name' => $service->product->name ?? 'Unknown Service',
-                        'base_price' => (float) ($service->product->base_price ?? 0)
+                        'base_price' => (float) ($service->product->base_price ?? 0),
                     ],
                     'service_type' => $service->service_type ?? 'consulting',
                     'estimated_hours' => $service->estimated_hours ?? 1,
                     'sla_days' => $service->sla_days,
                     'requires_scheduling' => (bool) $service->requires_scheduling,
                     'has_setup_fee' => (bool) $service->has_setup_fee,
-                    'setup_fee' => (float) ($service->setup_fee ?? 0)
+                    'setup_fee' => (float) ($service->setup_fee ?? 0),
                 ];
             });
 

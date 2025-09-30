@@ -3,18 +3,18 @@
 namespace App\Domains\Contract\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * ContractMilestone Model
- * 
+ *
  * Milestone management for contract projects with progress tracking,
  * billing integration, and VoIP-specific milestone types.
- * 
+ *
  * @property int $id
  * @property int $contract_id
  * @property int $company_id
@@ -85,7 +85,7 @@ use Carbon\Carbon;
  */
 class ContractMilestone extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -225,43 +225,66 @@ class ContractMilestone extends Model
      * Milestone type enumeration
      */
     const TYPE_PROJECT_PHASE = 'project_phase';
+
     const TYPE_DELIVERABLE = 'deliverable';
+
     const TYPE_PAYMENT_MILESTONE = 'payment_milestone';
+
     const TYPE_SERVICE_ACTIVATION = 'service_activation';
+
     const TYPE_EQUIPMENT_DELIVERY = 'equipment_delivery';
+
     const TYPE_INSTALLATION_COMPLETE = 'installation_complete';
+
     const TYPE_TESTING_COMPLETE = 'testing_complete';
+
     const TYPE_GO_LIVE = 'go_live';
+
     const TYPE_TRAINING_COMPLETE = 'training_complete';
+
     const TYPE_ACCEPTANCE_CRITERIA = 'acceptance_criteria';
+
     const TYPE_CUSTOM = 'custom';
 
     /**
      * Milestone status enumeration
      */
     const STATUS_NOT_STARTED = 'not_started';
+
     const STATUS_IN_PROGRESS = 'in_progress';
+
     const STATUS_PENDING_REVIEW = 'pending_review';
+
     const STATUS_PENDING_APPROVAL = 'pending_approval';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_DELAYED = 'delayed';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_BLOCKED = 'blocked';
 
     /**
      * Billing trigger enumeration
      */
     const BILLING_ON_START = 'milestone_start';
+
     const BILLING_ON_COMPLETION = 'milestone_completion';
+
     const BILLING_MANUAL = 'manual_trigger';
+
     const BILLING_CLIENT_APPROVAL = 'client_approval';
 
     /**
      * Risk level enumeration
      */
     const RISK_LOW = 'low';
+
     const RISK_MEDIUM = 'medium';
+
     const RISK_HIGH = 'high';
+
     const RISK_CRITICAL = 'critical';
 
     /**
@@ -357,7 +380,7 @@ class ContractMilestone extends Model
      */
     public function getDurationVariance(): ?int
     {
-        if (!$this->actual_duration_days || !$this->estimated_duration_days) {
+        if (! $this->actual_duration_days || ! $this->estimated_duration_days) {
             return null;
         }
 
@@ -369,7 +392,7 @@ class ContractMilestone extends Model
      */
     public function getBudgetVariance(): ?float
     {
-        if (!$this->budget_allocated) {
+        if (! $this->budget_allocated) {
             return null;
         }
 
@@ -435,12 +458,12 @@ class ContractMilestone extends Model
     {
         $updateData = ['completion_percentage' => min(100, max(0, $percentage))];
 
-        if (!empty($metrics)) {
+        if (! empty($metrics)) {
             $updateData['progress_metrics'] = array_merge($this->progress_metrics ?? [], $metrics);
         }
 
         // Auto-complete if 100%
-        if ($percentage >= 100 && !$this->isCompleted()) {
+        if ($percentage >= 100 && ! $this->isCompleted()) {
             $updateData['status'] = self::STATUS_COMPLETED;
             $updateData['actual_completion_date'] = now();
         }
@@ -451,7 +474,7 @@ class ContractMilestone extends Model
     /**
      * Add risk factor.
      */
-    public function addRisk(string $description, string $level = self::RISK_MEDIUM, string $mitigation = null): void
+    public function addRisk(string $description, string $level = self::RISK_MEDIUM, ?string $mitigation = null): void
     {
         $risks = $this->risk_factors ?? [];
         $risks[] = [
@@ -468,11 +491,11 @@ class ContractMilestone extends Model
     /**
      * Update milestone status with reason.
      */
-    public function updateStatus(string $status, string $reason = null): void
+    public function updateStatus(string $status, ?string $reason = null): void
     {
         $this->update([
             'status' => $status,
-            'completion_notes' => $reason ? ($this->completion_notes . "\n" . now()->format('Y-m-d H:i:s') . ": " . $reason) : $this->completion_notes,
+            'completion_notes' => $reason ? ($this->completion_notes."\n".now()->format('Y-m-d H:i:s').': '.$reason) : $this->completion_notes,
         ]);
     }
 
@@ -524,7 +547,7 @@ class ContractMilestone extends Model
     public function scopeOverdue($query)
     {
         return $query->where('planned_completion_date', '<', now())
-                    ->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED]);
+            ->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED]);
     }
 
     /**
@@ -552,19 +575,19 @@ class ContractMilestone extends Model
 
         // Set defaults when creating
         static::creating(function ($milestone) {
-            if (!$milestone->status) {
+            if (! $milestone->status) {
                 $milestone->status = self::STATUS_NOT_STARTED;
             }
 
-            if (!$milestone->completion_percentage) {
+            if (! $milestone->completion_percentage) {
                 $milestone->completion_percentage = 0;
             }
 
-            if (!$milestone->sort_order) {
+            if (! $milestone->sort_order) {
                 $lastMilestone = static::where('contract_id', $milestone->contract_id)
                     ->orderBy('sort_order', 'desc')
                     ->first();
-                
+
                 $milestone->sort_order = $lastMilestone ? $lastMilestone->sort_order + 1 : 1;
             }
         });

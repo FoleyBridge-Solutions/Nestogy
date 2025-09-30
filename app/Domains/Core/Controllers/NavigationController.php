@@ -2,12 +2,11 @@
 
 namespace App\Domains\Core\Controllers;
 
-use App\Http\Controllers\Controller;
-
-use App\Domains\Core\Services\NavigationService;
 use App\Domains\Core\Services\CommandPaletteService;
-use Illuminate\Http\Request;
+use App\Domains\Core\Services\NavigationService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class NavigationController extends Controller
@@ -19,10 +18,10 @@ class NavigationController extends Controller
     {
         $domain = $request->get('domain', 'dashboard');
         $user = auth()->user();
-        
+
         $navigation = NavigationService::getFilteredNavigationItems($domain);
         $badges = NavigationService::getBadgeCounts($domain);
-        
+
         return response()->json([
             'domain' => $domain,
             'items' => $navigation,
@@ -39,7 +38,7 @@ class NavigationController extends Controller
     {
         $domain = $request->get('domain');
         $badges = NavigationService::getBadgeCounts($domain);
-        
+
         return response()->json($badges);
     }
 
@@ -54,9 +53,9 @@ class NavigationController extends Controller
             'domain' => NavigationService::getActiveDomain(),
             'workflow' => NavigationService::getWorkflowContext(),
         ];
-        
+
         $suggestions = CommandPaletteService::getSuggestions($query, $context);
-        
+
         return response()->json($suggestions);
     }
 
@@ -68,19 +67,19 @@ class NavigationController extends Controller
         $request->validate([
             'command' => 'required|string|max:500',
         ]);
-        
+
         $context = [
             'client_id' => session('selected_client_id'),
             'domain' => NavigationService::getActiveDomain(),
             'workflow' => NavigationService::getWorkflowContext(),
             'user_id' => auth()->id(),
         ];
-        
+
         $result = CommandPaletteService::processCommand($request->command, $context);
-        
+
         // Log command for analytics
         $this->logCommand($request->command, $result);
-        
+
         return response()->json($result);
     }
 
@@ -92,11 +91,11 @@ class NavigationController extends Controller
         $request->validate([
             'workflow' => 'required|string|in:urgent,today,scheduled,financial,reports,morning_routine,billing_day,maintenance_window',
         ]);
-        
+
         NavigationService::setWorkflowContext($request->workflow);
-        
+
         $highlights = NavigationService::getWorkflowNavigationHighlights($request->workflow);
-        
+
         return response()->json([
             'success' => true,
             'workflow' => $request->workflow,
@@ -111,7 +110,7 @@ class NavigationController extends Controller
     {
         $workflow = $request->get('workflow', NavigationService::getWorkflowContext());
         $highlights = NavigationService::getWorkflowNavigationHighlights($workflow);
-        
+
         return response()->json($highlights);
     }
 
@@ -122,17 +121,17 @@ class NavigationController extends Controller
     {
         $limit = $request->get('limit', 10);
         $recentItems = [];
-        
+
         try {
             $companyId = auth()->user()->company_id;
-            
+
             // Get recent tickets
             $recentTickets = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
                 ->with('client')
                 ->orderBy('updated_at', 'desc')
                 ->limit(4)
                 ->get();
-            
+
             foreach ($recentTickets as $ticket) {
                 $recentItems[] = [
                     'type' => 'ticket',
@@ -146,7 +145,7 @@ class NavigationController extends Controller
                     'priority' => $ticket->priority,
                 ];
             }
-            
+
             // Get upcoming scheduled tickets
             $upcomingTickets = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
                 ->whereNotNull('scheduled_at')
@@ -156,13 +155,13 @@ class NavigationController extends Controller
                 ->orderBy('scheduled_at', 'asc')
                 ->limit(3)
                 ->get();
-            
+
             foreach ($upcomingTickets as $ticket) {
                 $recentItems[] = [
                     'type' => 'ticket',
                     'id' => $ticket->id,
                     'title' => "#{$ticket->id} - {$ticket->subject}",
-                    'subtitle' => 'Scheduled: ' . $ticket->scheduled_at->format('M j, g:i A'),
+                    'subtitle' => 'Scheduled: '.$ticket->scheduled_at->format('M j, g:i A'),
                     'url' => route('tickets.show', $ticket->id),
                     'icon' => '📅',
                     'timestamp' => $ticket->scheduled_at,
@@ -170,55 +169,55 @@ class NavigationController extends Controller
                     'priority' => $ticket->priority,
                 ];
             }
-            
+
             // Get recent invoices
             $recentInvoices = \App\Models\Invoice::where('company_id', $companyId)
                 ->with('client')
                 ->orderBy('updated_at', 'desc')
                 ->limit(3)
                 ->get();
-            
+
             foreach ($recentInvoices as $invoice) {
-                $invoiceNumber = $invoice->prefix ? $invoice->prefix . $invoice->number : $invoice->number;
+                $invoiceNumber = $invoice->prefix ? $invoice->prefix.$invoice->number : $invoice->number;
                 $recentItems[] = [
                     'type' => 'invoice',
                     'id' => $invoice->id,
                     'title' => "Invoice #{$invoiceNumber}",
-                    'subtitle' => ($invoice->client ? $invoice->client->name . ' - ' : '') . '$' . number_format($invoice->amount, 2),
+                    'subtitle' => ($invoice->client ? $invoice->client->name.' - ' : '').'$'.number_format($invoice->amount, 2),
                     'url' => route('financial.invoices.show', $invoice->id),
                     'icon' => '💰',
                     'timestamp' => $invoice->updated_at,
                     'status' => $invoice->status,
                 ];
             }
-            
+
             // Get recent quotes
             $recentQuotes = \App\Models\Quote::where('company_id', $companyId)
                 ->with('client')
                 ->orderBy('updated_at', 'desc')
                 ->limit(2)
                 ->get();
-            
+
             foreach ($recentQuotes as $quote) {
-                $quoteNumber = $quote->prefix ? $quote->prefix . $quote->number : $quote->number;
+                $quoteNumber = $quote->prefix ? $quote->prefix.$quote->number : $quote->number;
                 $recentItems[] = [
                     'type' => 'quote',
                     'id' => $quote->id,
                     'title' => "Quote #{$quoteNumber}",
-                    'subtitle' => ($quote->client ? $quote->client->name . ' - ' : '') . '$' . number_format($quote->total, 2),
+                    'subtitle' => ($quote->client ? $quote->client->name.' - ' : '').'$'.number_format($quote->total, 2),
                     'url' => route('financial.quotes.show', $quote->id),
                     'icon' => '📝',
                     'timestamp' => $quote->updated_at,
                     'status' => $quote->status,
                 ];
             }
-            
+
             // Get recently accessed clients
             $recentClients = \App\Models\Client::where('company_id', $companyId)
                 ->orderBy('updated_at', 'desc')
                 ->limit(2)
                 ->get();
-            
+
             foreach ($recentClients as $client) {
                 $recentItems[] = [
                     'type' => 'client',
@@ -231,18 +230,18 @@ class NavigationController extends Controller
                     'status' => $client->status ?? 'active',
                 ];
             }
-            
+
             // Sort by timestamp (most recent first)
-            usort($recentItems, function($a, $b) {
+            usort($recentItems, function ($a, $b) {
                 return $b['timestamp']->timestamp - $a['timestamp']->timestamp;
             });
-            
+
         } catch (\Exception $e) {
-            \Log::error('Error fetching recent items: ' . $e->getMessage());
+            \Log::error('Error fetching recent items: '.$e->getMessage());
             // Return empty array on error
             $recentItems = [];
         }
-        
+
         return response()->json(array_slice($recentItems, 0, $limit));
     }
 
@@ -255,13 +254,13 @@ class NavigationController extends Controller
         $context = $request->get('context', 'global');
         $clientId = $request->get('client_id');
         $domain = $request->get('domain', 'all');
-        
+
         if (empty($query)) {
             return response()->json(['results' => []]);
         }
-        
+
         $results = [];
-        
+
         try {
             // Handle smart search patterns first
             $smartResult = $this->handleSmartSearchPatterns($query);
@@ -271,18 +270,18 @@ class NavigationController extends Controller
             // Search tickets
             if ($domain === 'all' || $domain === 'tickets') {
                 $tickets = \App\Domains\Ticket\Models\Ticket::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('title', 'like', "%{$query}%")
-                          ->orWhere('description', 'like', "%{$query}%")
-                          ->orWhere('id', 'like', "%{$query}%");
+                            ->orWhere('description', 'like', "%{$query}%")
+                            ->orWhere('id', 'like', "%{$query}%");
                     });
-                
+
                 if ($clientId) {
                     $tickets->where('client_id', $clientId);
                 }
-                
+
                 $tickets = $tickets->limit(5)->get();
-                
+
                 foreach ($tickets as $ticket) {
                     $results[] = [
                         'type' => 'ticket',
@@ -297,18 +296,18 @@ class NavigationController extends Controller
                     ];
                 }
             }
-            
+
             // Search clients
             if ($domain === 'all' || $domain === 'clients') {
                 $clients = \App\Models\Client::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
-                          ->orWhere('email', 'like', "%{$query}%")
-                          ->orWhere('phone', 'like', "%{$query}%");
+                            ->orWhere('email', 'like', "%{$query}%")
+                            ->orWhere('phone', 'like', "%{$query}%");
                     })
                     ->limit(5)
                     ->get();
-                
+
                 foreach ($clients as $client) {
                     $results[] = [
                         'type' => 'client',
@@ -322,21 +321,21 @@ class NavigationController extends Controller
                     ];
                 }
             }
-            
+
             // Search invoices
             if ($domain === 'all' || $domain === 'financial') {
                 $invoices = \App\Models\Invoice::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('invoice_number', 'like', "%{$query}%")
-                          ->orWhere('id', 'like', "%{$query}%");
+                            ->orWhere('id', 'like', "%{$query}%");
                     });
-                
+
                 if ($clientId) {
                     $invoices->where('client_id', $clientId);
                 }
-                
+
                 $invoices = $invoices->limit(5)->get();
-                
+
                 foreach ($invoices as $invoice) {
                     $results[] = [
                         'type' => 'invoice',
@@ -346,27 +345,27 @@ class NavigationController extends Controller
                         'url' => route('financial.invoices.show', $invoice->id),
                         'meta' => [
                             'status' => $invoice->status,
-                            'amount' => '$' . number_format($invoice->total, 2),
+                            'amount' => '$'.number_format($invoice->total, 2),
                         ],
                     ];
                 }
             }
-            
+
             // Search quotes
             if ($domain === 'all' || $domain === 'financial') {
                 $quotes = \App\Models\Quote::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('quote_number', 'like', "%{$query}%")
-                          ->orWhere('id', 'like', "%{$query}%")
-                          ->orWhere('description', 'like', "%{$query}%");
+                            ->orWhere('id', 'like', "%{$query}%")
+                            ->orWhere('description', 'like', "%{$query}%");
                     });
-                
+
                 if ($clientId) {
                     $quotes->where('client_id', $clientId);
                 }
-                
+
                 $quotes = $quotes->limit(5)->get();
-                
+
                 foreach ($quotes as $quote) {
                     $results[] = [
                         'type' => 'quote',
@@ -376,28 +375,28 @@ class NavigationController extends Controller
                         'url' => route('financial.quotes.show', $quote->id),
                         'meta' => [
                             'status' => $quote->status,
-                            'amount' => '$' . number_format($quote->total, 2),
+                            'amount' => '$'.number_format($quote->total, 2),
                         ],
                     ];
                 }
             }
-            
+
             // Search assets
             if ($domain === 'all' || $domain === 'assets') {
                 $assets = \App\Models\Asset::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
-                          ->orWhere('asset_tag', 'like', "%{$query}%")
-                          ->orWhere('serial_number', 'like', "%{$query}%")
-                          ->orWhere('model', 'like', "%{$query}%");
+                            ->orWhere('asset_tag', 'like', "%{$query}%")
+                            ->orWhere('serial_number', 'like', "%{$query}%")
+                            ->orWhere('model', 'like', "%{$query}%");
                     });
-                
+
                 if ($clientId) {
                     $assets->where('client_id', $clientId);
                 }
-                
+
                 $assets = $assets->limit(5)->get();
-                
+
                 foreach ($assets as $asset) {
                     $results[] = [
                         'type' => 'asset',
@@ -411,22 +410,22 @@ class NavigationController extends Controller
                     ];
                 }
             }
-            
+
             // Search projects
             if ($domain === 'all' || $domain === 'projects') {
                 $projects = \App\Models\Project::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
-                          ->orWhere('description', 'like', "%{$query}%")
-                          ->orWhere('project_code', 'like', "%{$query}%");
+                            ->orWhere('description', 'like', "%{$query}%")
+                            ->orWhere('project_code', 'like', "%{$query}%");
                     });
-                
+
                 if ($clientId) {
                     $projects->where('client_id', $clientId);
                 }
-                
+
                 $projects = $projects->limit(5)->get();
-                
+
                 foreach ($projects as $project) {
                     $results[] = [
                         'type' => 'project',
@@ -440,22 +439,22 @@ class NavigationController extends Controller
                     ];
                 }
             }
-            
+
             // Search contracts
             if ($domain === 'all' || $domain === 'financial') {
                 $contracts = \App\Domains\Contract\Models\Contract::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('contract_number', 'like', "%{$query}%")
-                          ->orWhere('title', 'like', "%{$query}%")
-                          ->orWhere('description', 'like', "%{$query}%");
+                            ->orWhere('title', 'like', "%{$query}%")
+                            ->orWhere('description', 'like', "%{$query}%");
                     });
-                
+
                 if ($clientId) {
                     $contracts->where('client_id', $clientId);
                 }
-                
+
                 $contracts = $contracts->limit(5)->get();
-                
+
                 foreach ($contracts as $contract) {
                     $results[] = [
                         'type' => 'contract',
@@ -469,18 +468,18 @@ class NavigationController extends Controller
                     ];
                 }
             }
-            
+
             // Search expenses
             if ($domain === 'all' || $domain === 'financial') {
                 $expenses = \App\Models\Expense::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('description', 'like', "%{$query}%")
-                          ->orWhere('vendor', 'like', "%{$query}%")
-                          ->orWhere('reference', 'like', "%{$query}%");
+                            ->orWhere('vendor', 'like', "%{$query}%")
+                            ->orWhere('reference', 'like', "%{$query}%");
                     })
                     ->limit(5)
                     ->get();
-                
+
                 foreach ($expenses as $expense) {
                     $results[] = [
                         'type' => 'expense',
@@ -490,26 +489,26 @@ class NavigationController extends Controller
                         'url' => route('financial.expenses.show', $expense->id),
                         'meta' => [
                             'status' => $expense->status,
-                            'amount' => '$' . number_format($expense->amount, 2),
+                            'amount' => '$'.number_format($expense->amount, 2),
                         ],
                     ];
                 }
             }
-            
+
             // Search payments
             if ($domain === 'all' || $domain === 'financial') {
                 $payments = \App\Models\Payment::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('reference', 'like', "%{$query}%")
-                          ->orWhere('notes', 'like', "%{$query}%");
+                            ->orWhere('notes', 'like', "%{$query}%");
                     });
-                
+
                 if ($clientId) {
                     $payments->where('client_id', $clientId);
                 }
-                
+
                 $payments = $payments->limit(5)->get();
-                
+
                 foreach ($payments as $payment) {
                     $results[] = [
                         'type' => 'payment',
@@ -519,22 +518,22 @@ class NavigationController extends Controller
                         'url' => route('financial.payments.show', $payment->id),
                         'meta' => [
                             'status' => $payment->status,
-                            'amount' => '$' . number_format($payment->amount, 2),
+                            'amount' => '$'.number_format($payment->amount, 2),
                         ],
                     ];
                 }
             }
-            
+
             // Search users
             if ($domain === 'all' || $domain === 'users') {
                 $users = \App\Models\User::where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
-                          ->orWhere('email', 'like', "%{$query}%");
+                            ->orWhere('email', 'like', "%{$query}%");
                     })
                     ->limit(5)
                     ->get();
-                
+
                 foreach ($users as $user) {
                     $results[] = [
                         'type' => 'user',
@@ -548,25 +547,25 @@ class NavigationController extends Controller
                     ];
                 }
             }
-            
+
             // Search products
             if ($domain === 'all' || $domain === 'products') {
                 $products = \App\Models\Product::products()
                     ->where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
-                          ->orWhere('description', 'like', "%{$query}%")
-                          ->orWhere('sku', 'like', "%{$query}%");
+                            ->orWhere('description', 'like', "%{$query}%")
+                            ->orWhere('sku', 'like', "%{$query}%");
                     })
                     ->limit(5)
                     ->get();
-                
+
                 foreach ($products as $product) {
                     $results[] = [
                         'type' => 'product',
                         'icon' => '📦',
                         'title' => $product->name,
-                        'subtitle' => $product->description ?: 'Product - ' . $product->getFormattedPrice(),
+                        'subtitle' => $product->description ?: 'Product - '.$product->getFormattedPrice(),
                         'url' => route('products.show', $product->id),
                         'meta' => [
                             'status' => $product->is_active ? 'active' : 'inactive',
@@ -575,25 +574,25 @@ class NavigationController extends Controller
                     ];
                 }
             }
-            
+
             // Search services
             if ($domain === 'all' || $domain === 'services') {
                 $services = \App\Models\Product::services()
                     ->where('company_id', auth()->user()->company_id)
-                    ->where(function($q) use ($query) {
+                    ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
-                          ->orWhere('description', 'like', "%{$query}%")
-                          ->orWhere('sku', 'like', "%{$query}%");
+                            ->orWhere('description', 'like', "%{$query}%")
+                            ->orWhere('sku', 'like', "%{$query}%");
                     })
                     ->limit(5)
                     ->get();
-                
+
                 foreach ($services as $service) {
                     $results[] = [
                         'type' => 'service',
                         'icon' => '🔧',
                         'title' => $service->name,
-                        'subtitle' => $service->description ?: 'Service - ' . $service->getFormattedPrice(),
+                        'subtitle' => $service->description ?: 'Service - '.$service->getFormattedPrice(),
                         'url' => route('services.show', $service->id),
                         'meta' => [
                             'status' => $service->is_active ? 'active' : 'inactive',
@@ -602,19 +601,19 @@ class NavigationController extends Controller
                     ];
                 }
             }
-            
+
             // Search knowledge base articles (if exists)
             if ($domain === 'all' || $domain === 'knowledge') {
                 try {
                     $articles = \App\Models\KbArticle::where('company_id', auth()->user()->company_id)
-                        ->where(function($q) use ($query) {
+                        ->where(function ($q) use ($query) {
                             $q->where('title', 'like', "%{$query}%")
-                              ->orWhere('content', 'like', "%{$query}%")
-                              ->orWhere('tags', 'like', "%{$query}%");
+                                ->orWhere('content', 'like', "%{$query}%")
+                                ->orWhere('tags', 'like', "%{$query}%");
                         })
                         ->limit(5)
                         ->get();
-                    
+
                     foreach ($articles as $article) {
                         $results[] = [
                             'type' => 'article',
@@ -631,25 +630,25 @@ class NavigationController extends Controller
                     // Model might not exist
                 }
             }
-            
+
             // Search IT Documentation
             if ($domain === 'all' || $domain === 'clients') {
                 try {
-                    $docs = \App\Domains\Client\Models\ClientITDocumentation::whereHas('client', function($q) {
-                            $q->where('company_id', auth()->user()->company_id);
-                        })
-                        ->where(function($q) use ($query) {
+                    $docs = \App\Domains\Client\Models\ClientITDocumentation::whereHas('client', function ($q) {
+                        $q->where('company_id', auth()->user()->company_id);
+                    })
+                        ->where(function ($q) use ($query) {
                             $q->where('network_diagram', 'like', "%{$query}%")
-                              ->orWhere('server_info', 'like', "%{$query}%")
-                              ->orWhere('network_equipment', 'like', "%{$query}%");
+                                ->orWhere('server_info', 'like', "%{$query}%")
+                                ->orWhere('network_equipment', 'like', "%{$query}%");
                         });
-                    
+
                     if ($clientId) {
                         $docs->where('client_id', $clientId);
                     }
-                    
+
                     $docs = $docs->limit(5)->get();
-                    
+
                     foreach ($docs as $doc) {
                         $results[] = [
                             'type' => 'it-doc',
@@ -664,19 +663,19 @@ class NavigationController extends Controller
                     // Model might not exist
                 }
             }
-            
+
             // Search client contacts
             if (($domain === 'all' || $domain === 'clients') && $clientId) {
                 try {
                     $contacts = \App\Domains\Client\Models\ClientContact::where('client_id', $clientId)
-                        ->where(function($q) use ($query) {
+                        ->where(function ($q) use ($query) {
                             $q->where('name', 'like', "%{$query}%")
-                              ->orWhere('email', 'like', "%{$query}%")
-                              ->orWhere('phone', 'like', "%{$query}%");
+                                ->orWhere('email', 'like', "%{$query}%")
+                                ->orWhere('phone', 'like', "%{$query}%");
                         })
                         ->limit(5)
                         ->get();
-                    
+
                     foreach ($contacts as $contact) {
                         $results[] = [
                             'type' => 'contact',
@@ -691,11 +690,11 @@ class NavigationController extends Controller
                     // Model might not exist
                 }
             }
-            
+
         } catch (\Exception $e) {
-            \Log::error('Search error: ' . $e->getMessage());
+            \Log::error('Search error: '.$e->getMessage());
         }
-        
+
         return response()->json(['results' => $results]);
     }
 
@@ -706,7 +705,7 @@ class NavigationController extends Controller
     {
         $query = trim($query);
         $companyId = auth()->user()->company_id;
-        
+
         // Pattern: #123 - Find ticket by ID
         if (preg_match('/^#(\d+)$/', $query, $matches)) {
             $ticketId = $matches[1];
@@ -714,7 +713,7 @@ class NavigationController extends Controller
                 ->where('id', $ticketId)
                 ->with('client')
                 ->first();
-                
+
             if ($ticket) {
                 return [[
                     'type' => 'ticket',
@@ -729,7 +728,7 @@ class NavigationController extends Controller
                 ]];
             }
         }
-        
+
         // Pattern: @ClientName - Find client by name
         if (preg_match('/^@(.+)$/', $query, $matches)) {
             $clientName = trim($matches[1]);
@@ -737,7 +736,7 @@ class NavigationController extends Controller
                 ->where('name', 'like', "%{$clientName}%")
                 ->limit(3)
                 ->get();
-                
+
             $results = [];
             foreach ($clients as $client) {
                 $results[] = [
@@ -751,9 +750,10 @@ class NavigationController extends Controller
                     ],
                 ];
             }
+
             return $results;
         }
-        
+
         // Pattern: $INV-123 - Find invoice by number
         if (preg_match('/^\$(.+)$/', $query, $matches)) {
             $invoiceNumber = trim($matches[1]);
@@ -761,7 +761,7 @@ class NavigationController extends Controller
                 ->where('invoice_number', 'like', "%{$invoiceNumber}%")
                 ->with('client')
                 ->first();
-                
+
             if ($invoice) {
                 return [[
                     'type' => 'invoice',
@@ -771,12 +771,12 @@ class NavigationController extends Controller
                     'url' => route('financial.invoices.show', $invoice->id),
                     'meta' => [
                         'status' => $invoice->status,
-                        'amount' => '$' . number_format($invoice->total, 2),
+                        'amount' => '$'.number_format($invoice->total, 2),
                     ],
                 ]];
             }
         }
-        
+
         // Pattern: %ProjectName - Find project by name
         if (preg_match('/^%(.+)$/', $query, $matches)) {
             $projectName = trim($matches[1]);
@@ -785,7 +785,7 @@ class NavigationController extends Controller
                 ->with('client')
                 ->limit(3)
                 ->get();
-                
+
             $results = [];
             foreach ($projects as $project) {
                 $results[] = [
@@ -799,9 +799,10 @@ class NavigationController extends Controller
                     ],
                 ];
             }
+
             return $results;
         }
-        
+
         // Pattern: ^AssetTag - Find asset by tag
         if (preg_match('/^\^(.+)$/', $query, $matches)) {
             $assetTag = trim($matches[1]);
@@ -809,7 +810,7 @@ class NavigationController extends Controller
                 ->where('asset_tag', 'like', "%{$assetTag}%")
                 ->with('client')
                 ->first();
-                
+
             if ($asset) {
                 return [[
                     'type' => 'asset',
@@ -823,7 +824,7 @@ class NavigationController extends Controller
                 ]];
             }
         }
-        
+
         return null; // No smart pattern matched
     }
 

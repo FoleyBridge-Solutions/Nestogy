@@ -10,10 +10,10 @@ use Illuminate\Support\Str;
 
 /**
  * Integration Model
- * 
+ *
  * Represents RMM and other external system integrations.
  * Handles configuration, authentication, and field mappings.
- * 
+ *
  * @property int $id
  * @property string $uuid
  * @property int $company_id
@@ -31,7 +31,7 @@ use Illuminate\Support\Str;
  */
 class Integration extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -61,9 +61,13 @@ class Integration extends Model
 
     // Provider constants
     const PROVIDER_CONNECTWISE = 'connectwise';
+
     const PROVIDER_DATTO = 'datto';
+
     const PROVIDER_NINJA = 'ninja';
+
     const PROVIDER_TACTICAL_RMM = 'tactical_rmm';
+
     const PROVIDER_GENERIC = 'generic';
 
     const PROVIDER_LABELS = [
@@ -77,7 +81,7 @@ class Integration extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($integration) {
             $integration->uuid = Str::uuid();
         });
@@ -104,7 +108,7 @@ class Integration extends Model
      */
     public function getCredentials(): array
     {
-        if (!$this->credentials_encrypted) {
+        if (! $this->credentials_encrypted) {
             return [];
         }
 
@@ -144,7 +148,7 @@ class Integration extends Model
      */
     public function getWebhookEndpoint(): string
     {
-        return route('api.webhooks.' . $this->provider, ['integration' => $this->uuid]);
+        return route('api.webhooks.'.$this->provider, ['integration' => $this->uuid]);
     }
 
     /**

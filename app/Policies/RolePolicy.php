@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class RolePolicy
 {

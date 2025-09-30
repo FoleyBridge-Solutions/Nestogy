@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::table('companies', function (Blueprint $table) {
             $table->enum('email_provider_type', ['manual', 'microsoft365', 'google_workspace', 'exchange', 'custom_oauth'])
-                  ->default('manual')
-                  ->after('currency');
+                ->default('manual')
+                ->after('currency');
             $table->json('email_provider_config')->nullable()->after('email_provider_type');
         });
     }

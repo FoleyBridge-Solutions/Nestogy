@@ -2,14 +2,12 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Support\Facades\Auth;
 use App\Models\Quote;
-use App\Models\Client;
-use App\Models\Category;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * StoreQuoteRequest
- * 
+ *
  * Validation rules for creating new quotes with enterprise features
  * and VoIP-specific configurations.
  */
@@ -22,7 +20,7 @@ class StoreQuoteRequest extends BaseQuoteRequest
     {
         // Temporarily simplify authorization for debugging
         return Auth::check();
-        
+
         // Original permission check (commented out for debugging):
         // return Auth::check() && Auth::user()->hasPermission('financial.quotes.manage');
     }
@@ -65,7 +63,7 @@ class StoreQuoteRequest extends BaseQuoteRequest
         // Debug: Log validation attempt
         \Log::info('StoreQuoteRequest validation', [
             'data' => $this->all(),
-            'user_id' => \Auth::id()
+            'user_id' => \Auth::id(),
         ]);
 
         $validator->after(function ($validator) {
@@ -110,15 +108,15 @@ class StoreQuoteRequest extends BaseQuoteRequest
         if ($this->expectsJson()) {
             $errors = $validator->errors()->toArray();
             $detailedErrors = [];
-            
+
             foreach ($errors as $field => $messages) {
                 $detailedErrors[$field] = [
                     'messages' => $messages,
                     'value' => $this->input($field),
-                    'type' => gettype($this->input($field))
+                    'type' => gettype($this->input($field)),
                 ];
             }
-            
+
             $response = response()->json([
                 'message' => 'Validation failed. Please check the highlighted fields and try again.',
                 'errors' => $errors,
@@ -127,7 +125,7 @@ class StoreQuoteRequest extends BaseQuoteRequest
                     'status' => $this->input('status'),
                     'client_id' => $this->input('client_id'),
                     'category_id' => $this->input('category_id'),
-                ]
+                ],
             ], 422);
 
             throw new \Illuminate\Validation\ValidationException($validator, $response);

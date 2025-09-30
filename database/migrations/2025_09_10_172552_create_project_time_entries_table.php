@@ -23,7 +23,7 @@ return new class extends Migration
             $table->boolean('billed')->default(false);
             $table->decimal('rate', 10, 2)->nullable();
             $table->timestamps();
-            
+
             $table->index(['project_id', 'date']);
             $table->index(['user_id', 'date']);
             $table->index('billable');

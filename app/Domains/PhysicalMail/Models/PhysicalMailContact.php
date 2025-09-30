@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PhysicalMailContact extends Model
 {
-    use HasFactory, HasUuids, HasPostGridIntegration;
+    use HasFactory, HasPostGridIntegration, HasUuids;
 
     protected $table = 'physical_mail_contacts';
 
@@ -54,6 +54,7 @@ class PhysicalMailContact extends Model
     public function getFullNameAttribute(): string
     {
         $parts = array_filter([$this->first_name, $this->last_name]);
+
         return implode(' ', $parts) ?: $this->company_name ?: 'Unknown';
     }
 
@@ -70,11 +71,11 @@ class PhysicalMailContact extends Model
             implode(', ', array_filter([
                 $this->city,
                 $this->province_or_state,
-                $this->postal_or_zip
+                $this->postal_or_zip,
             ])),
             $this->country_code,
         ]);
-        
+
         return implode("\n", $lines);
     }
 
@@ -113,7 +114,7 @@ class PhysicalMailContact extends Model
             'email' => $this->email,
             'phoneNumber' => $this->phone_number,
             'metadata' => $this->metadata,
-        ], fn($value) => !is_null($value));
+        ], fn ($value) => ! is_null($value));
     }
 
     /**

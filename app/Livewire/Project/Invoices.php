@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Project;
 
-use Livewire\Component;
 use App\Domains\Project\Models\Project;
+use Livewire\Component;
 
 class Invoices extends Component
 {
@@ -17,6 +17,7 @@ class Invoices extends Component
     public function render()
     {
         $invoices = \App\Models\Invoice::where('client_id', $this->project->client_id)->get();
+
         return view('livewire.project.invoices', compact('invoices'));
     }
 }

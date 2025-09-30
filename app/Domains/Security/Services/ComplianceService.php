@@ -2,20 +2,19 @@
 
 namespace App\Domains\Security\Services;
 
-use App\Models\Client;
-use App\Models\DunningAction;
-use App\Models\CollectionNote;
 use App\Models\AccountHold;
+use App\Models\Client;
+use App\Models\CollectionNote;
+use App\Models\DunningAction;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Compliance Service
- * 
+ *
  * Handles FDCPA, TCPA, and state law compliance monitoring,
  * legal documentation generation, dispute handling, and
  * compliance reporting for dunning management operations.
@@ -27,7 +26,7 @@ class ComplianceService
         'dispute_period_respected' => false,
         'cease_communication_honored' => false,
         'legal_notices_proper' => false,
-        'harassment_avoided' => false
+        'harassment_avoided' => false,
     ];
 
     protected array $tcpaRequirements = [
@@ -35,24 +34,26 @@ class ComplianceService
         'opt_out_honored' => false,
         'time_restrictions_followed' => false,
         'frequency_limits_respected' => false,
-        'do_not_call_honored' => false
+        'do_not_call_honored' => false,
     ];
 
     protected array $stateSpecificRules = [
         'CA' => ['max_interest_rate' => 10, 'wage_garnishment_limit' => 25],
         'NY' => ['max_interest_rate' => 16, 'wage_garnishment_limit' => 10],
         'TX' => ['max_interest_rate' => 18, 'wage_garnishment_limit' => 25],
-        'FL' => ['max_interest_rate' => 18, 'wage_garnishment_limit' => 25]
+        'FL' => ['max_interest_rate' => 18, 'wage_garnishment_limit' => 25],
     ];
 
     protected int $disputeResponseDays = 30;
+
     protected int $validationNoticeDays = 5;
+
     protected array $documentRetentionYears = [
         'collection_notes' => 7,
         'payment_records' => 7,
         'dispute_records' => 7,
         'legal_notices' => 10,
-        'compliance_reports' => 5
+        'compliance_reports' => 5,
     ];
 
     /**
@@ -70,18 +71,18 @@ class ComplianceService
             'fdcpa_compliance' => $this->checkFdcpaCompliance($client),
             'tcpa_compliance' => $this->checkTcpaCompliance($client),
             'state_compliance' => $this->checkStateCompliance($client),
-            'documentation_compliance' => $this->checkDocumentationCompliance($client)
+            'documentation_compliance' => $this->checkDocumentationCompliance($client),
         ];
 
         // Determine overall compliance status
-        $hasViolations = !empty($compliance['fdcpa_compliance']['violations']) ||
-                        !empty($compliance['tcpa_compliance']['violations']) ||
-                        !empty($compliance['state_compliance']['violations']);
+        $hasViolations = ! empty($compliance['fdcpa_compliance']['violations']) ||
+                        ! empty($compliance['tcpa_compliance']['violations']) ||
+                        ! empty($compliance['state_compliance']['violations']);
 
         if ($hasViolations) {
             $compliance['overall_status'] = 'non_compliant';
-        } elseif (!empty($compliance['fdcpa_compliance']['warnings']) ||
-                 !empty($compliance['tcpa_compliance']['warnings'])) {
+        } elseif (! empty($compliance['fdcpa_compliance']['warnings']) ||
+                 ! empty($compliance['tcpa_compliance']['warnings'])) {
             $compliance['overall_status'] = 'at_risk';
         }
 
@@ -92,7 +93,7 @@ class ComplianceService
         Log::info('Compliance check completed', [
             'client_id' => $client->id,
             'status' => $compliance['overall_status'],
-            'violations_count' => count($compliance['violations'])
+            'violations_count' => count($compliance['violations']),
         ]);
 
         return $compliance;
@@ -107,17 +108,17 @@ class ComplianceService
             'status' => 'compliant',
             'violations' => [],
             'warnings' => [],
-            'requirements_met' => []
+            'requirements_met' => [],
         ];
 
         // Check validation notice requirement
         $validationNotice = $this->checkValidationNotice($client);
-        if (!$validationNotice['sent']) {
+        if (! $validationNotice['sent']) {
             $compliance['violations'][] = [
                 'type' => 'missing_validation_notice',
                 'description' => 'Initial validation notice not sent within 5 days',
                 'severity' => 'high',
-                'action_required' => 'Send validation notice immediately'
+                'action_required' => 'Send validation notice immediately',
             ];
         } else {
             $compliance['requirements_met'][] = 'validation_notice_sent';
@@ -136,7 +137,7 @@ class ComplianceService
                 'type' => 'excessive_communication',
                 'description' => 'Communication frequency exceeds FDCPA limits',
                 'severity' => 'medium',
-                'details' => $communicationCheck['details']
+                'details' => $communicationCheck['details'],
             ];
         }
 
@@ -147,7 +148,7 @@ class ComplianceService
                 'type' => 'cease_communication_violated',
                 'description' => 'Communication continued after cease request',
                 'severity' => 'high',
-                'action_required' => 'Stop all communications immediately'
+                'action_required' => 'Stop all communications immediately',
             ];
         }
 
@@ -171,17 +172,17 @@ class ComplianceService
             'status' => 'compliant',
             'violations' => [],
             'warnings' => [],
-            'requirements_met' => []
+            'requirements_met' => [],
         ];
 
         // Check SMS consent
         $smsConsent = $this->checkSmsConsent($client);
-        if (!$smsConsent['valid']) {
+        if (! $smsConsent['valid']) {
             $compliance['violations'][] = [
                 'type' => 'missing_sms_consent',
                 'description' => 'SMS communications sent without proper consent',
                 'severity' => 'high',
-                'action_required' => 'Stop SMS communications until consent obtained'
+                'action_required' => 'Stop SMS communications until consent obtained',
             ];
         }
 
@@ -192,7 +193,7 @@ class ComplianceService
                 'type' => 'call_time_violation',
                 'description' => 'Calls made outside permitted hours',
                 'severity' => 'medium',
-                'details' => $timeRestrictions['details']
+                'details' => $timeRestrictions['details'],
             ];
         }
 
@@ -203,7 +204,7 @@ class ComplianceService
                 'type' => 'do_not_call_violation',
                 'description' => 'Calls made to number on Do Not Call registry',
                 'severity' => 'high',
-                'action_required' => 'Remove from calling list immediately'
+                'action_required' => 'Remove from calling list immediately',
             ];
         }
 
@@ -213,7 +214,7 @@ class ComplianceService
             $compliance['violations'][] = [
                 'type' => 'opt_out_violation',
                 'description' => 'Communications continued after opt-out request',
-                'severity' => 'high'
+                'severity' => 'high',
             ];
         }
 
@@ -235,15 +236,16 @@ class ComplianceService
             'state' => $state,
             'violations' => [],
             'warnings' => [],
-            'applicable_rules' => $stateRules
+            'applicable_rules' => $stateRules,
         ];
 
         if (empty($stateRules)) {
             $compliance['warnings'][] = [
                 'type' => 'unknown_state_rules',
                 'description' => "State-specific rules for {$state} not configured",
-                'severity' => 'low'
+                'severity' => 'low',
             ];
+
             return $compliance;
         }
 
@@ -265,11 +267,11 @@ class ComplianceService
 
         // Check state-specific licensing requirements
         $licensingCheck = $this->checkCollectionLicensing($state);
-        if (!$licensingCheck['compliant']) {
+        if (! $licensingCheck['compliant']) {
             $compliance['violations'][] = [
                 'type' => 'licensing_violation',
                 'description' => "Collection activities require license in {$state}",
-                'severity' => 'critical'
+                'severity' => 'critical',
             ];
         }
 
@@ -287,7 +289,7 @@ class ComplianceService
             'status' => 'compliant',
             'violations' => [],
             'warnings' => [],
-            'retention_compliance' => []
+            'retention_compliance' => [],
         ];
 
         // Check required documentation exists
@@ -295,15 +297,15 @@ class ComplianceService
             'collection_notes' => CollectionNote::where('client_id', $client->id)->exists(),
             'dunning_actions' => DunningAction::where('client_id', $client->id)->exists(),
             'validation_notice' => $this->hasValidationNotice($client),
-            'dispute_records' => $this->hasDisputeRecords($client)
+            'dispute_records' => $this->hasDisputeRecords($client),
         ];
 
         foreach ($requiredDocs as $docType => $exists) {
-            if (!$exists) {
+            if (! $exists) {
                 $compliance['violations'][] = [
                     'type' => "missing_{$docType}",
-                    'description' => ucfirst(str_replace('_', ' ', $docType)) . ' documentation missing',
-                    'severity' => 'medium'
+                    'description' => ucfirst(str_replace('_', ' ', $docType)).' documentation missing',
+                    'severity' => 'medium',
                 ];
             }
         }
@@ -312,12 +314,12 @@ class ComplianceService
         foreach ($this->documentRetentionYears as $docType => $years) {
             $retentionCheck = $this->checkRetentionCompliance($client, $docType, $years);
             $compliance['retention_compliance'][$docType] = $retentionCheck;
-            
-            if (!$retentionCheck['compliant']) {
+
+            if (! $retentionCheck['compliant']) {
                 $compliance['warnings'][] = [
                     'type' => "retention_warning_{$docType}",
                     'description' => "Some {$docType} may exceed retention period",
-                    'severity' => 'low'
+                    'severity' => 'low',
                 ];
             }
         }
@@ -336,12 +338,12 @@ class ComplianceService
             ->whereIn('action_type', [
                 DunningAction::ACTION_EMAIL,
                 DunningAction::ACTION_LETTER,
-                DunningAction::ACTION_PHONE_CALL
+                DunningAction::ACTION_PHONE_CALL,
             ])
             ->orderBy('created_at')
             ->first();
 
-        if (!$firstAction) {
+        if (! $firstAction) {
             return ['sent' => false, 'required' => false];
         }
 
@@ -354,7 +356,7 @@ class ComplianceService
             'sent' => $validationNotice !== null,
             'required' => true,
             'first_action_date' => $firstAction->created_at,
-            'validation_notice_date' => $validationNotice?->created_at
+            'validation_notice_date' => $validationNotice?->created_at,
         ];
     }
 
@@ -377,7 +379,7 @@ class ComplianceService
                 ->whereIn('action_type', [
                     DunningAction::ACTION_EMAIL,
                     DunningAction::ACTION_PHONE_CALL,
-                    DunningAction::ACTION_SMS
+                    DunningAction::ACTION_SMS,
                 ])
                 ->exists();
 
@@ -387,7 +389,7 @@ class ComplianceService
                     'description' => 'Collection activities continued during dispute period',
                     'severity' => 'high',
                     'dispute_date' => $dispute->created_at,
-                    'action_required' => 'Pause all collection activities during disputes'
+                    'action_required' => 'Pause all collection activities during disputes',
                 ];
             }
 
@@ -398,12 +400,12 @@ class ComplianceService
                 ->where('note_type', CollectionNote::TYPE_DISPUTE_RESPONSE)
                 ->exists();
 
-            if (!$disputeResponse) {
+            if (! $disputeResponse) {
                 $violations[] = [
                     'type' => 'dispute_not_responded',
                     'description' => 'Dispute not responded to within 30 days',
                     'severity' => 'medium',
-                    'dispute_date' => $dispute->created_at
+                    'dispute_date' => $dispute->created_at,
                 ];
             }
         }
@@ -422,23 +424,23 @@ class ComplianceService
             case 'validation_notice':
                 $documents[] = $this->generateValidationNotice($client, $options);
                 break;
-                
+
             case 'final_demand':
                 $documents[] = $this->generateFinalDemandLetter($client, $options);
                 break;
-                
+
             case 'dispute_response':
                 $documents[] = $this->generateDisputeResponse($client, $options);
                 break;
-                
+
             case 'legal_referral':
                 $documents[] = $this->generateLegalReferralPackage($client, $options);
                 break;
-                
+
             case 'compliance_report':
                 $documents[] = $this->generateComplianceReport($client, $options);
                 break;
-                
+
             default:
                 throw new \InvalidArgumentException("Unknown document type: {$documentType}");
         }
@@ -457,7 +459,7 @@ class ComplianceService
     protected function generateValidationNotice(Client $client, array $options = []): array
     {
         $totalBalance = $client->getBalance();
-        
+
         $content = "
 DEBT VALIDATION NOTICE
 
@@ -466,7 +468,7 @@ This is an attempt to collect a debt and any information obtained will be used f
 Debtor: {$client->name}
 Account: #{$client->account_number}
 Original Creditor: Nestogy Communications
-Amount: $" . number_format($totalBalance, 2) . "
+Amount: $".number_format($totalBalance, 2).'
 
 Unless you dispute the validity of this debt within 30 days of receiving this notice, the debt will be assumed to be valid. If you dispute the debt in writing within 30 days, we will obtain verification and mail it to you.
 
@@ -477,15 +479,15 @@ Nestogy Collections Department
 Phone: 1-800-NESTOGY
 Email: collections@nestogy.com
 
-Date: " . Carbon::now()->format('M j, Y') . "
-        ";
+Date: '.Carbon::now()->format('M j, Y').'
+        ';
 
         return [
             'type' => 'validation_notice',
             'client_id' => $client->id,
             'content' => $content,
             'generated_date' => Carbon::now(),
-            'file_name' => "validation_notice_{$client->id}_" . time() . ".pdf"
+            'file_name' => "validation_notice_{$client->id}_".time().'.pdf',
         ];
     }
 
@@ -495,7 +497,7 @@ Date: " . Carbon::now()->format('M j, Y') . "
     protected function generateFinalDemandLetter(Client $client, array $options = []): array
     {
         $totalBalance = $client->getBalance();
-        
+
         $content = "
 FINAL DEMAND FOR PAYMENT
 
@@ -503,7 +505,7 @@ FINAL DEMAND FOR PAYMENT
 {$client->mailing_address}
 
 Account: #{$client->account_number}
-Amount Due: $" . number_format($totalBalance, 2) . "
+Amount Due: $".number_format($totalBalance, 2).'
 
 DEMAND IS HEREBY MADE for payment of the above amount, which represents charges for services provided to you.
 
@@ -518,18 +520,18 @@ This is a final notice. Act now to avoid additional costs and legal action.
 
 TAKE NOTICE that this is an attempt to collect a debt and any information obtained will be used for that purpose.
 
-Date: " . Carbon::now()->format('M j, Y') . "
+Date: '.Carbon::now()->format('M j, Y').'
 
 NESTOGY COLLECTIONS DEPARTMENT
-        ";
+        ';
 
         return [
             'type' => 'final_demand',
             'client_id' => $client->id,
             'content' => $content,
             'generated_date' => Carbon::now(),
-            'file_name' => "final_demand_{$client->id}_" . time() . ".pdf",
-            'legal_significance' => true
+            'file_name' => "final_demand_{$client->id}_".time().'.pdf',
+            'legal_significance' => true,
         ];
     }
 
@@ -550,7 +552,7 @@ NESTOGY COLLECTIONS DEPARTMENT
                 'outcome' => CollectionNote::OUTCOME_DISPUTE_RECEIVED,
                 'requires_legal_review' => true,
                 'is_important' => true,
-                'created_by' => auth()->id() ?? 1
+                'created_by' => auth()->id() ?? 1,
             ]);
 
             // Pause collection activities
@@ -565,20 +567,20 @@ NESTOGY COLLECTIONS DEPARTMENT
                 'scheduled_date' => $responseDate,
                 'notes' => 'Respond to client dispute within FDCPA timeframe',
                 'requires_legal_review' => true,
-                'created_by' => auth()->id() ?? 1
+                'created_by' => auth()->id() ?? 1,
             ]);
 
             Log::info('Dispute processed', [
                 'client_id' => $client->id,
                 'dispute_id' => $dispute->id,
-                'amount' => $disputeData['amount'] ?? $client->getBalance()
+                'amount' => $disputeData['amount'] ?? $client->getBalance(),
             ]);
 
             return [
                 'dispute_id' => $dispute->id,
                 'status' => 'received',
                 'response_due_date' => $responseDate,
-                'collection_paused' => true
+                'collection_paused' => true,
             ];
         });
     }
@@ -594,7 +596,7 @@ NESTOGY COLLECTIONS DEPARTMENT
             ->update([
                 'status' => DunningAction::STATUS_CANCELLED,
                 'cancellation_reason' => $reason,
-                'cancelled_at' => Carbon::now()
+                'cancelled_at' => Carbon::now(),
             ]);
 
         // Create compliance hold
@@ -605,7 +607,7 @@ NESTOGY COLLECTIONS DEPARTMENT
             'status' => AccountHold::STATUS_ACTIVE,
             'severity' => AccountHold::SEVERITY_COMPLIANCE_HOLD,
             'notes' => 'Automatic compliance hold due to dispute or legal requirement',
-            'created_by' => auth()->id() ?? 1
+            'created_by' => auth()->id() ?? 1,
         ]);
     }
 
@@ -616,7 +618,7 @@ NESTOGY COLLECTIONS DEPARTMENT
     {
         $dateRange = [
             $options['start_date'] ?? Carbon::now()->subMonth(),
-            $options['end_date'] ?? Carbon::now()
+            $options['end_date'] ?? Carbon::now(),
         ];
 
         $report = [
@@ -626,21 +628,21 @@ NESTOGY COLLECTIONS DEPARTMENT
                 'total_clients_reviewed' => 0,
                 'compliant_clients' => 0,
                 'non_compliant_clients' => 0,
-                'at_risk_clients' => 0
+                'at_risk_clients' => 0,
             ],
             'fdcpa_compliance' => [
                 'validation_notices_sent' => 0,
                 'disputes_received' => 0,
                 'disputes_responded' => 0,
-                'violations' => []
+                'violations' => [],
             ],
             'tcpa_compliance' => [
                 'sms_consent_violations' => 0,
                 'call_time_violations' => 0,
-                'opt_out_violations' => 0
+                'opt_out_violations' => 0,
             ],
             'state_compliance' => [],
-            'required_actions' => []
+            'required_actions' => [],
         ];
 
         // Get all clients with collection activity in period
@@ -652,7 +654,7 @@ NESTOGY COLLECTIONS DEPARTMENT
 
         foreach ($clients as $client) {
             $compliance = $this->performComplianceCheck($client);
-            
+
             switch ($compliance['overall_status']) {
                 case 'compliant':
                     $report['summary']['compliant_clients']++;
@@ -667,7 +669,7 @@ NESTOGY COLLECTIONS DEPARTMENT
         }
 
         // Store report
-        $fileName = 'compliance_report_' . Carbon::now()->format('Y_m_d') . '.json';
+        $fileName = 'compliance_report_'.Carbon::now()->format('Y_m_d').'.json';
         Storage::put("compliance/reports/{$fileName}", json_encode($report, JSON_PRETTY_PRINT));
 
         return $report;
@@ -695,26 +697,77 @@ NESTOGY COLLECTIONS DEPARTMENT
             'legal_significance' => $document['legal_significance'] ?? false,
             'retention_years' => $this->documentRetentionYears[$document['type']] ?? 7,
             'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now()
+            'updated_at' => Carbon::now(),
         ]);
     }
 
     /**
      * Check various compliance requirements with mock implementations.
      */
-    protected function checkCommunicationFrequency(Client $client): array { return ['excessive' => false, 'details' => []]; }
-    protected function checkCeaseCommunicationRequests(Client $client): array { return ['violations' => false]; }
-    protected function checkProhibitedPractices(Client $client): array { return []; }
-    protected function checkSmsConsent(Client $client): array { return ['valid' => $client->sms_consent ?? false]; }
-    protected function checkCallTimeRestrictions(Client $client): array { return ['violations' => false, 'details' => []]; }
-    protected function checkDoNotCallRegistry(Client $client): array { return ['violation' => $client->do_not_call ?? false]; }
-    protected function checkOptOutHandling(Client $client): array { return ['violations' => false]; }
-    protected function checkInterestRateCompliance(Client $client, float $maxRate): array { return ['violation' => false]; }
-    protected function checkGarnishmentCompliance(Client $client, float $maxPercent): array { return ['violation' => false]; }
-    protected function checkCollectionLicensing(string $state): array { return ['compliant' => true]; }
-    protected function hasValidationNotice(Client $client): bool { return true; }
-    protected function hasDisputeRecords(Client $client): bool { return CollectionNote::where('client_id', $client->id)->where('contains_dispute', true)->exists(); }
-    protected function checkRetentionCompliance(Client $client, string $docType, int $years): array { return ['compliant' => true]; }
+    protected function checkCommunicationFrequency(Client $client): array
+    {
+        return ['excessive' => false, 'details' => []];
+    }
+
+    protected function checkCeaseCommunicationRequests(Client $client): array
+    {
+        return ['violations' => false];
+    }
+
+    protected function checkProhibitedPractices(Client $client): array
+    {
+        return [];
+    }
+
+    protected function checkSmsConsent(Client $client): array
+    {
+        return ['valid' => $client->sms_consent ?? false];
+    }
+
+    protected function checkCallTimeRestrictions(Client $client): array
+    {
+        return ['violations' => false, 'details' => []];
+    }
+
+    protected function checkDoNotCallRegistry(Client $client): array
+    {
+        return ['violation' => $client->do_not_call ?? false];
+    }
+
+    protected function checkOptOutHandling(Client $client): array
+    {
+        return ['violations' => false];
+    }
+
+    protected function checkInterestRateCompliance(Client $client, float $maxRate): array
+    {
+        return ['violation' => false];
+    }
+
+    protected function checkGarnishmentCompliance(Client $client, float $maxPercent): array
+    {
+        return ['violation' => false];
+    }
+
+    protected function checkCollectionLicensing(string $state): array
+    {
+        return ['compliant' => true];
+    }
+
+    protected function hasValidationNotice(Client $client): bool
+    {
+        return true;
+    }
+
+    protected function hasDisputeRecords(Client $client): bool
+    {
+        return CollectionNote::where('client_id', $client->id)->where('contains_dispute', true)->exists();
+    }
+
+    protected function checkRetentionCompliance(Client $client, string $docType, int $years): array
+    {
+        return ['compliant' => true];
+    }
 
     /**
      * Generate required actions based on compliance check.
@@ -737,7 +790,7 @@ NESTOGY COLLECTIONS DEPARTMENT
                     'action' => $violation['action_required'],
                     'priority' => $violation['severity'] === 'high' ? 'urgent' : 'normal',
                     'deadline' => Carbon::now()->addDays($violation['severity'] === 'high' ? 1 : 7),
-                    'violation_type' => $violation['type']
+                    'violation_type' => $violation['type'],
                 ];
             }
         }

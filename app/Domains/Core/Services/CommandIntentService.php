@@ -4,11 +4,10 @@ namespace App\Domains\Core\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 /**
  * Command Intent Service
- * 
+ *
  * Handles natural language processing and intent recognition for the command system.
  * Converts user input into structured intents with entities and modifiers.
  */
@@ -18,18 +17,26 @@ class CommandIntentService
      * Primary intent types
      */
     const INTENT_CREATE = 'CREATE';
+
     const INTENT_SHOW = 'SHOW';
+
     const INTENT_GO = 'GO';
+
     const INTENT_FIND = 'FIND';
+
     const INTENT_ACTION = 'ACTION';
 
     /**
      * Intent modifiers
      */
     const MODIFIER_FOR_CLIENT = 'FOR_CLIENT';
+
     const MODIFIER_URGENT = 'URGENT';
+
     const MODIFIER_OVERDUE = 'OVERDUE';
+
     const MODIFIER_SCHEDULED = 'SCHEDULED';
+
     const MODIFIER_MY = 'MY';
 
     /**
@@ -95,7 +102,7 @@ class CommandIntentService
     public static function parseCommand(string $input, array $context = []): ParsedCommand
     {
         $input = static::preprocessInput($input);
-        
+
         // Check for shortcuts first
         if ($shortcut = static::parseShortcuts($input, $context)) {
             return $shortcut;
@@ -133,7 +140,7 @@ class CommandIntentService
 
         // Expand abbreviations
         foreach (static::$abbreviations as $abbrev => $full) {
-            $input = preg_replace('/\b' . preg_quote($abbrev) . '\b/', $full, $input);
+            $input = preg_replace('/\b'.preg_quote($abbrev).'\b/', $full, $input);
         }
 
         // Fix common typos
@@ -159,7 +166,7 @@ class CommandIntentService
 
             $entityMap = [
                 '#' => 'ticket',
-                '@' => 'client', 
+                '@' => 'client',
                 '$' => 'invoice',
             ];
 
@@ -185,6 +192,7 @@ class CommandIntentService
             if ($symbol === '+') {
                 // Creation shortcut
                 $entity = static::identifyPrimaryEntity($rest) ?? 'ticket';
+
                 return new ParsedCommand([
                     'original' => $input,
                     'intent' => self::INTENT_CREATE,
@@ -233,10 +241,10 @@ class CommandIntentService
     protected static function extractIntent(string $input): string
     {
         $words = explode(' ', $input);
-        
+
         foreach (static::$intentVerbs as $intent => $verbs) {
             foreach ($verbs as $verb) {
-                if (in_array($verb, $words) || str_starts_with($input, $verb . ' ')) {
+                if (in_array($verb, $words) || str_starts_with($input, $verb.' ')) {
                     return $intent;
                 }
             }
@@ -268,7 +276,7 @@ class CommandIntentService
                 if ($synonym === '#' || $synonym === '@' || $synonym === '$') {
                     continue; // Skip shortcuts, handled separately
                 }
-                
+
                 if (in_array($synonym, $words) || str_contains($input, $synonym)) {
                     $entities[] = $entityType;
                     break; // Only add each entity type once
@@ -326,6 +334,7 @@ class CommandIntentService
         // Look for invoice numbers
         if (preg_match('/\b(INV-?\d+|QUOTE-?\d+)\b/i', $input, $matches)) {
             $type = str_starts_with(strtolower($matches[1]), 'inv') ? 'invoice' : 'quote';
+
             return ['type' => $type, 'value' => $matches[1]];
         }
 
@@ -364,12 +373,12 @@ class CommandIntentService
         $confidence += 0.2;
 
         // Entity presence
-        if (!empty($entities)) {
+        if (! empty($entities)) {
             $confidence += 0.2;
         }
 
         // Modifier presence
-        if (!empty($modifiers)) {
+        if (! empty($modifiers)) {
             $confidence += 0.1;
         }
 
@@ -386,20 +395,20 @@ class CommandIntentService
      */
     public static function getSuggestions(string $partial, array $context = []): array
     {
-        $cacheKey = 'command_suggestions:' . md5($partial . serialize($context));
-        
+        $cacheKey = 'command_suggestions:'.md5($partial.serialize($context));
+
         return Cache::remember($cacheKey, 300, function () use ($partial, $context) {
             $suggestions = [];
-            
+
             // Intent-based suggestions
             $suggestions = array_merge($suggestions, static::getIntentSuggestions($partial));
-            
+
             // Entity-based suggestions
             $suggestions = array_merge($suggestions, static::getEntitySuggestions($partial));
-            
+
             // Context-aware suggestions
             $suggestions = array_merge($suggestions, static::getContextSuggestions($partial, $context));
-            
+
             // Quick action suggestions
             $suggestions = array_merge($suggestions, static::getQuickActionSuggestions($partial));
 
@@ -432,7 +441,7 @@ class CommandIntentService
     }
 
     /**
-     * Get entity-based suggestions  
+     * Get entity-based suggestions
      */
     protected static function getEntitySuggestions(string $partial): array
     {
@@ -466,7 +475,7 @@ class CommandIntentService
         if (isset($context['client_id'])) {
             $clientSuggestions = [
                 'create ticket' => 'Create ticket for current client',
-                'create invoice' => 'Create invoice for current client', 
+                'create invoice' => 'Create invoice for current client',
                 'show tickets' => 'Show tickets for current client',
                 'show invoices' => 'Show invoices for current client',
             ];
@@ -520,11 +529,11 @@ class CommandIntentService
             // Exact prefix matches first
             $aPrefix = str_starts_with($a['text'], $partial) ? 1 : 0;
             $bPrefix = str_starts_with($b['text'], $partial) ? 1 : 0;
-            
+
             if ($aPrefix !== $bPrefix) {
                 return $bPrefix - $aPrefix;
             }
-            
+
             // Then by confidence
             return $b['confidence'] <=> $a['confidence'];
         });
@@ -537,7 +546,7 @@ class CommandIntentService
      */
     protected static function getIntentDescription(string $intent): string
     {
-        return match($intent) {
+        return match ($intent) {
             self::INTENT_CREATE => 'Create new items',
             self::INTENT_SHOW => 'Display and filter items',
             self::INTENT_GO => 'Navigate to pages',
@@ -572,15 +581,15 @@ class CommandIntentService
         // Store successful command patterns for future suggestion improvements
         $userId = auth()->id();
         $pattern = static::extractPattern($command);
-        
+
         $userPatterns = Cache::get("user_patterns:{$userId}", []);
-        
+
         if ($successful) {
             $userPatterns[$pattern] = ($userPatterns[$pattern] ?? 0) + 1;
         } else {
             $userPatterns[$pattern] = max(0, ($userPatterns[$pattern] ?? 0) - 1);
         }
-        
+
         Cache::put("user_patterns:{$userId}", $userPatterns, 86400); // 24 hours
     }
 
@@ -590,6 +599,7 @@ class CommandIntentService
     protected static function extractPattern(string $command): string
     {
         $parsed = static::parseCommand($command);
-        return $parsed->getIntent() . ':' . implode(',', $parsed->getEntities());
+
+        return $parsed->getIntent().':'.implode(',', $parsed->getEntities());
     }
 }

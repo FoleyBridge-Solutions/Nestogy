@@ -2,9 +2,9 @@
 
 namespace App\Domains\Project\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\User;
 
 class ProjectTask extends Model
 {

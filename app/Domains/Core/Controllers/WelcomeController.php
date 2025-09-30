@@ -3,9 +3,7 @@
 namespace App\Domains\Core\Controllers;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\SubscriptionPlan;
-use Illuminate\Http\Request;
 
 class WelcomeController extends Controller
 {
@@ -20,7 +18,7 @@ class WelcomeController extends Controller
             // Fallback if database is not set up yet
             $subscriptionPlans = collect();
         }
-        
+
         return view('welcome', compact('subscriptionPlans'));
     }
 }

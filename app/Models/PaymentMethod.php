@@ -3,20 +3,19 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
-use Illuminate\Support\Str;
 
 /**
  * Payment Method Model
- * 
+ *
  * Manages stored payment methods for clients including credit cards,
  * bank accounts, digital wallets, and cryptocurrency options.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -93,7 +92,7 @@ use Illuminate\Support\Str;
  */
 class PaymentMethod extends Model
 {
-    use HasFactory, BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -226,37 +225,54 @@ class PaymentMethod extends Model
      * Payment method type constants
      */
     const TYPE_CREDIT_CARD = 'credit_card';
+
     const TYPE_DEBIT_CARD = 'debit_card';
+
     const TYPE_BANK_ACCOUNT = 'bank_account';
+
     const TYPE_PAYPAL = 'paypal';
+
     const TYPE_APPLE_PAY = 'apple_pay';
+
     const TYPE_GOOGLE_PAY = 'google_pay';
+
     const TYPE_CRYPTOCURRENCY = 'cryptocurrency';
 
     /**
      * Payment provider constants
      */
     const PROVIDER_STRIPE = 'stripe';
+
     const PROVIDER_PAYPAL = 'paypal';
+
     const PROVIDER_AUTHORIZE_NET = 'authorize_net';
+
     const PROVIDER_SQUARE = 'square';
+
     const PROVIDER_INTERNAL = 'internal';
 
     /**
      * Card brand constants
      */
     const BRAND_VISA = 'visa';
+
     const BRAND_MASTERCARD = 'mastercard';
+
     const BRAND_AMEX = 'amex';
+
     const BRAND_DISCOVER = 'discover';
+
     const BRAND_DINERS = 'diners';
+
     const BRAND_JCB = 'jcb';
+
     const BRAND_UNIONPAY = 'unionpay';
 
     /**
      * Bank account type constants
      */
     const BANK_CHECKING = 'checking';
+
     const BANK_SAVINGS = 'savings';
 
     /**
@@ -312,9 +328,9 @@ class PaymentMethod extends Model
      */
     public function isActive(): bool
     {
-        return $this->is_active === true && 
-               $this->deactivated_at === null && 
-               !$this->isExpired();
+        return $this->is_active === true &&
+               $this->deactivated_at === null &&
+               ! $this->isExpired();
     }
 
     /**
@@ -329,6 +345,7 @@ class PaymentMethod extends Model
         // Check card expiration
         if ($this->isCard() && $this->card_exp_month && $this->card_exp_year) {
             $expiry = Carbon::createFromDate($this->card_exp_year, $this->card_exp_month, 1)->endOfMonth();
+
             return Carbon::now()->gt($expiry);
         }
 
@@ -373,9 +390,9 @@ class PaymentMethod extends Model
     public function isWallet(): bool
     {
         return in_array($this->type, [
-            self::TYPE_PAYPAL, 
-            self::TYPE_APPLE_PAY, 
-            self::TYPE_GOOGLE_PAY
+            self::TYPE_PAYPAL,
+            self::TYPE_APPLE_PAY,
+            self::TYPE_GOOGLE_PAY,
         ]);
     }
 
@@ -421,10 +438,11 @@ class PaymentMethod extends Model
     public function getCardDisplayName(): string
     {
         $brand = $this->card_brand ? ucfirst($this->card_brand) : 'Card';
-        $lastFour = $this->card_last_four ? '****' . $this->card_last_four : '';
-        
+        $lastFour = $this->card_last_four ? '****'.$this->card_last_four : '';
+
         if ($this->card_exp_month && $this->card_exp_year) {
             $expiry = sprintf('%02d/%s', $this->card_exp_month, substr($this->card_exp_year, -2));
+
             return "{$brand} {$lastFour} ({$expiry})";
         }
 
@@ -437,9 +455,9 @@ class PaymentMethod extends Model
     public function getBankDisplayName(): string
     {
         $type = $this->bank_account_type ? ucfirst($this->bank_account_type) : 'Account';
-        $lastFour = $this->bank_account_last_four ? '****' . $this->bank_account_last_four : '';
+        $lastFour = $this->bank_account_last_four ? '****'.$this->bank_account_last_four : '';
         $bank = $this->bank_name ? " ({$this->bank_name})" : '';
-        
+
         return "{$type} {$lastFour}{$bank}";
     }
 
@@ -449,7 +467,7 @@ class PaymentMethod extends Model
     public function getWalletDisplayName(): string
     {
         $type = ucfirst(str_replace('_', ' ', $this->type));
-        
+
         if ($this->wallet_email) {
             return "{$type} ({$this->wallet_email})";
         }
@@ -463,9 +481,10 @@ class PaymentMethod extends Model
     public function getCryptoDisplayName(): string
     {
         $type = $this->crypto_type ? ucfirst($this->crypto_type) : 'Cryptocurrency';
-        
+
         if ($this->crypto_address) {
-            $shortAddress = substr($this->crypto_address, 0, 6) . '...' . substr($this->crypto_address, -4);
+            $shortAddress = substr($this->crypto_address, 0, 6).'...'.substr($this->crypto_address, -4);
+
             return "{$type} ({$shortAddress})";
         }
 
@@ -538,7 +557,7 @@ class PaymentMethod extends Model
     /**
      * Deactivate the payment method.
      */
-    public function deactivate(string $reason = null): bool
+    public function deactivate(?string $reason = null): bool
     {
         return $this->update([
             'is_active' => false,
@@ -574,7 +593,7 @@ class PaymentMethod extends Model
     /**
      * Record failed payment.
      */
-    public function recordFailedPayment(string $reason = null): bool
+    public function recordFailedPayment(?string $reason = null): bool
     {
         return $this->update([
             'failed_payments_count' => $this->failed_payments_count + 1,
@@ -599,7 +618,7 @@ class PaymentMethod extends Model
         }
 
         // Check currency restrictions
-        if ($this->allowed_currencies && !in_array($currency, $this->allowed_currencies)) {
+        if ($this->allowed_currencies && ! in_array($currency, $this->allowed_currencies)) {
             return false;
         }
 
@@ -635,7 +654,7 @@ class PaymentMethod extends Model
     public function getSuccessRate(): float
     {
         $total = $this->successful_payments_count + $this->failed_payments_count;
-        
+
         if ($total === 0) {
             return 100.0;
         }
@@ -687,7 +706,7 @@ class PaymentMethod extends Model
             $data = [$this->crypto_address, $this->crypto_type];
         }
 
-        return hash('sha256', implode('|', array_filter($data)) . $this->client_id);
+        return hash('sha256', implode('|', array_filter($data)).$this->client_id);
     }
 
     /**
@@ -696,7 +715,7 @@ class PaymentMethod extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-                    ->whereNull('deactivated_at');
+            ->whereNull('deactivated_at');
     }
 
     /**
@@ -738,7 +757,7 @@ class PaymentMethod extends Model
     {
         return $query->where(function ($q) {
             $q->whereNull('expires_at')
-              ->orWhere('expires_at', '>', Carbon::now());
+                ->orWhere('expires_at', '>', Carbon::now());
         });
     }
 
@@ -750,17 +769,17 @@ class PaymentMethod extends Model
         parent::boot();
 
         static::creating(function ($paymentMethod) {
-            if (!$paymentMethod->fingerprint) {
+            if (! $paymentMethod->fingerprint) {
                 $paymentMethod->fingerprint = $paymentMethod->generateFingerprint();
             }
 
             // Set as default if this is the first payment method for the client
-            if (!$paymentMethod->is_default) {
+            if (! $paymentMethod->is_default) {
                 $hasDefault = self::where('client_id', $paymentMethod->client_id)
-                                 ->where('is_default', true)
-                                 ->exists();
-                                 
-                if (!$hasDefault) {
+                    ->where('is_default', true)
+                    ->exists();
+
+                if (! $hasDefault) {
                     $paymentMethod->is_default = true;
                 }
             }

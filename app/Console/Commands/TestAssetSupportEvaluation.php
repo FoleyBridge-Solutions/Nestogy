@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\Asset;
+use App\Domains\Asset\Services\AssetSupportService;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractSchedule;
+use App\Models\Asset;
 use App\Models\Client;
-use App\Domains\Asset\Services\AssetSupportService;
+use Illuminate\Console\Command;
 
 class TestAssetSupportEvaluation extends Command
 {
@@ -33,8 +33,9 @@ class TestAssetSupportEvaluation extends Command
 
         // Get a test client
         $client = Client::first();
-        if (!$client) {
+        if (! $client) {
             $this->error('No clients found. Cannot run test.');
+
             return 1;
         }
 
@@ -51,12 +52,12 @@ class TestAssetSupportEvaluation extends Command
             ->where('contract_number', 'LIKE', 'TEST-%')
             ->first();
 
-        if (!$contract) {
+        if (! $contract) {
             $this->info('Creating test contract...');
             $contract = Contract::create([
                 'company_id' => $client->company_id,
                 'client_id' => $client->id,
-                'contract_number' => 'TEST-' . date('Ymd-His'),
+                'contract_number' => 'TEST-'.date('Ymd-His'),
                 'contract_type' => 'support_agreement',
                 'title' => 'Test MSP Support Contract',
                 'status' => 'active',
@@ -73,7 +74,7 @@ class TestAssetSupportEvaluation extends Command
             ->where('schedule_type', 'A')
             ->first();
 
-        if (!$schedule) {
+        if (! $schedule) {
             $this->info('Creating infrastructure schedule (Schedule A)...');
             $schedule = ContractSchedule::create([
                 'company_id' => $client->company_id,
@@ -105,8 +106,8 @@ class TestAssetSupportEvaluation extends Command
 
         $supportedTypes = implode(', ', $schedule->supported_asset_types ?? []);
         $this->info("Schedule supports: {$supportedTypes}");
-        $this->info("Auto-assign enabled: " . ($schedule->auto_assign_assets ? 'YES' : 'NO'));
-        $this->info("Schedule is effective: " . ($schedule->isEffective() ? 'YES' : 'NO'));
+        $this->info('Auto-assign enabled: '.($schedule->auto_assign_assets ? 'YES' : 'NO'));
+        $this->info('Schedule is effective: '.($schedule->isEffective() ? 'YES' : 'NO'));
 
         // Test with assets from this client
         $assets = Asset::where('client_id', $client->id)->limit(5)->get();
@@ -124,7 +125,7 @@ class TestAssetSupportEvaluation extends Command
         }
 
         $this->info("\nTesting Asset Support Evaluation:");
-        $this->info("=================================");
+        $this->info('=================================');
 
         foreach ($assets as $asset) {
             $this->info("\nAsset: {$asset->name} (Type: {$asset->type})");
@@ -133,7 +134,7 @@ class TestAssetSupportEvaluation extends Command
             // Evaluate support
             $evaluation = $assetSupportService->evaluateAssetSupport($asset, true);
 
-            $this->info("Evaluation results:");
+            $this->info('Evaluation results:');
             $this->info("- Previous status: {$evaluation['previous_status']}");
             $this->info("- New status: {$evaluation['new_status']}");
             $this->info("- Reason: {$evaluation['reason']}");
@@ -141,11 +142,11 @@ class TestAssetSupportEvaluation extends Command
             if (isset($evaluation['supporting_schedule'])) {
                 $this->info("- Supporting schedule: {$evaluation['supporting_schedule']['title']}");
                 $this->info("- Support level: {$evaluation['support_level']}");
-                $this->info("- Auto-assigned: " . ($evaluation['auto_assigned'] ? 'YES' : 'NO'));
+                $this->info('- Auto-assigned: '.($evaluation['auto_assigned'] ? 'YES' : 'NO'));
             }
 
-            if (!empty($evaluation['recommendations'])) {
-                $this->info("- Recommendations:");
+            if (! empty($evaluation['recommendations'])) {
+                $this->info('- Recommendations:');
                 foreach ($evaluation['recommendations'] as $rec) {
                     $this->info("  * {$rec['action']}");
                 }
@@ -154,12 +155,12 @@ class TestAssetSupportEvaluation extends Command
             // Refresh and show final status
             $asset->refresh();
             $this->info("Final status: {$asset->support_status} ({$asset->support_status_display})");
-            $this->info("Support level: " . ($asset->support_level_display ?? 'None'));
+            $this->info('Support level: '.($asset->support_level_display ?? 'None'));
         }
 
         // Show summary statistics
         $this->info("\nSupport Status Summary:");
-        $this->info("======================");
+        $this->info('======================');
 
         $stats = $assetSupportService->getClientSupportStatistics($client->id);
         $this->info("Total assets: {$stats['total_assets']}");
@@ -168,8 +169,8 @@ class TestAssetSupportEvaluation extends Command
             $this->info("- {$status}: {$count}");
         }
 
-        if (!empty($stats['by_level'])) {
-            $this->info("Support levels:");
+        if (! empty($stats['by_level'])) {
+            $this->info('Support levels:');
             foreach ($stats['by_level'] as $level => $count) {
                 $this->info("- {$level}: {$count}");
             }

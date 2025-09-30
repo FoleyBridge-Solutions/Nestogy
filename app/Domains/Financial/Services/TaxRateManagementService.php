@@ -2,24 +2,25 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\VoIPTaxRate;
-use App\Models\TaxJurisdiction;
 use App\Models\TaxCategory;
+use App\Models\TaxJurisdiction;
 use App\Models\TaxRateHistory;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
+use App\Models\VoIPTaxRate;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Tax Rate Management Service
- * 
+ *
  * Handles creation, update, and management of VoIP tax rates.
  * Supports external API integration for automated rate updates.
  */
 class TaxRateManagementService
 {
     protected int $companyId;
+
     protected array $config;
 
     public function __construct(int $companyId, array $config = [])
@@ -41,7 +42,7 @@ class TaxRateManagementService
     {
         return DB::transaction(function () use ($data, $userId, $reason) {
             $existingRate = null;
-            
+
             if (isset($data['id'])) {
                 $existingRate = VoIPTaxRate::find($data['id']);
             }
@@ -50,7 +51,7 @@ class TaxRateManagementService
             if ($existingRate) {
                 $oldValues = $existingRate->toArray();
                 $existingRate->update($data);
-                
+
                 // Record history
                 TaxRateHistory::create([
                     'company_id' => $this->companyId,
@@ -65,7 +66,7 @@ class TaxRateManagementService
                 Log::info('Tax rate updated', [
                     'rate_id' => $existingRate->id,
                     'tax_name' => $existingRate->tax_name,
-                    'changed_by' => $userId
+                    'changed_by' => $userId,
                 ]);
 
                 return $existingRate;
@@ -78,7 +79,7 @@ class TaxRateManagementService
             Log::info('Tax rate created', [
                 'rate_id' => $newRate->id,
                 'tax_name' => $newRate->tax_name,
-                'created_by' => $userId
+                'created_by' => $userId,
             ]);
 
             return $newRate;
@@ -94,14 +95,14 @@ class TaxRateManagementService
             'created' => 0,
             'updated' => 0,
             'errors' => [],
-            'batch_id' => uniqid('batch_')
+            'batch_id' => uniqid('batch_'),
         ];
 
         DB::transaction(function () use ($rates, $userId, $source, &$results) {
             foreach ($rates as $index => $rateData) {
                 try {
                     $rateData['company_id'] = $this->companyId;
-                    
+
                     // Validate required fields
                     $this->validateTaxRateData($rateData);
 
@@ -120,7 +121,7 @@ class TaxRateManagementService
                     $results['errors'][] = [
                         'index' => $index,
                         'data' => $rateData,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
                 }
             }
@@ -131,7 +132,7 @@ class TaxRateManagementService
             'batch_id' => $results['batch_id'],
             'created' => $results['created'],
             'updated' => $results['updated'],
-            'errors' => count($results['errors'])
+            'errors' => count($results['errors']),
         ]);
 
         return $results;
@@ -142,33 +143,34 @@ class TaxRateManagementService
      */
     public function updateFromExternalAPI(?int $userId = null): array
     {
-        if (!$this->config['external_api_enabled'] || !$this->config['external_api_url']) {
+        if (! $this->config['external_api_enabled'] || ! $this->config['external_api_url']) {
             throw new \Exception('External API is not configured');
         }
 
         $results = [
             'updated' => 0,
             'errors' => [],
-            'batch_id' => uniqid('api_update_')
+            'batch_id' => uniqid('api_update_'),
         ];
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->config['external_api_key'],
-                'Accept' => 'application/json'
+                'Authorization' => 'Bearer '.$this->config['external_api_key'],
+                'Accept' => 'application/json',
             ])->timeout(60)->get($this->config['external_api_url'], [
                 'company_id' => $this->companyId,
-                'effective_date' => now()->toDateString()
+                'effective_date' => now()->toDateString(),
             ]);
 
             if ($response->failed()) {
-                throw new \Exception('External API request failed: ' . $response->status());
+                throw new \Exception('External API request failed: '.$response->status());
             }
 
             $externalRates = $response->json('data', []);
-            
+
             if (empty($externalRates)) {
                 Log::warning('No tax rates received from external API');
+
                 return $results;
             }
 
@@ -184,12 +186,12 @@ class TaxRateManagementService
         } catch (\Exception $e) {
             Log::error('External API tax rate update failed', [
                 'company_id' => $this->companyId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             $results['errors'][] = [
                 'type' => 'api_error',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
 
@@ -203,7 +205,7 @@ class TaxRateManagementService
     {
         return DB::transaction(function () use ($rateId, $effectiveDate, $changes, $userId) {
             $taxRate = VoIPTaxRate::findOrFail($rateId);
-            
+
             if ($effectiveDate->isPast()) {
                 throw new \InvalidArgumentException('Effective date cannot be in the past');
             }
@@ -232,11 +234,11 @@ class TaxRateManagementService
     public function expireTaxRate(int $rateId, Carbon $expiryDate, ?int $userId = null): VoIPTaxRate
     {
         $taxRate = VoIPTaxRate::findOrFail($rateId);
-        
+
         return $this->createOrUpdateTaxRate([
             'id' => $rateId,
             'expiry_date' => $expiryDate,
-            'is_active' => $expiryDate->isPast() ? false : $taxRate->is_active
+            'is_active' => $expiryDate->isPast() ? false : $taxRate->is_active,
         ], $userId, 'Rate expiration');
     }
 
@@ -251,12 +253,12 @@ class TaxRateManagementService
         $federalJurisdiction = TaxJurisdiction::firstOrCreate([
             'company_id' => $this->companyId,
             'jurisdiction_type' => 'federal',
-            'code' => 'US-FED'
+            'code' => 'US-FED',
         ], [
             'name' => 'United States Federal',
             'authority_name' => 'Federal Communications Commission',
             'is_active' => true,
-            'priority' => 1
+            'priority' => 1,
         ]);
 
         // Create default tax categories
@@ -277,7 +279,7 @@ class TaxRateManagementService
                 'effective_date' => now(),
                 'is_active' => true,
                 'priority' => 100,
-                'service_types' => ['local', 'long_distance', 'voip_fixed', 'voip_nomadic']
+                'service_types' => ['local', 'long_distance', 'voip_fixed', 'voip_nomadic'],
             ],
             [
                 'tax_jurisdiction_id' => $federalJurisdiction->id,
@@ -291,8 +293,8 @@ class TaxRateManagementService
                 'effective_date' => now(),
                 'is_active' => true,
                 'priority' => 110,
-                'service_types' => ['local', 'long_distance', 'international', 'voip_fixed', 'voip_nomadic']
-            ]
+                'service_types' => ['local', 'long_distance', 'international', 'voip_fixed', 'voip_nomadic'],
+            ],
         ];
 
         foreach ($defaultRates as $rateData) {
@@ -303,7 +305,7 @@ class TaxRateManagementService
             } catch (\Exception $e) {
                 $results['errors'][] = [
                     'data' => $rateData,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -311,7 +313,7 @@ class TaxRateManagementService
         Log::info('Default tax rates initialized', [
             'company_id' => $this->companyId,
             'created' => $results['created'],
-            'errors' => count($results['errors'])
+            'errors' => count($results['errors']),
         ]);
 
         return $results;
@@ -388,23 +390,23 @@ class TaxRateManagementService
     protected function validateTaxRateData(array $data): void
     {
         $required = [
-            'tax_jurisdiction_id', 'tax_category_id', 'tax_type', 
-            'tax_name', 'rate_type', 'authority_name', 'effective_date'
+            'tax_jurisdiction_id', 'tax_category_id', 'tax_type',
+            'tax_name', 'rate_type', 'authority_name', 'effective_date',
         ];
 
         foreach ($required as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
+            if (! isset($data[$field]) || empty($data[$field])) {
                 throw new \InvalidArgumentException("Required field '{$field}' is missing");
             }
         }
 
         // Validate rate type specific fields
-        if ($data['rate_type'] === 'percentage' && !isset($data['percentage_rate'])) {
+        if ($data['rate_type'] === 'percentage' && ! isset($data['percentage_rate'])) {
             throw new \InvalidArgumentException('Percentage rate is required for percentage rate type');
         }
 
-        if (in_array($data['rate_type'], ['fixed', 'per_line', 'per_minute']) && !isset($data['fixed_amount'])) {
-            throw new \InvalidArgumentException('Fixed amount is required for ' . $data['rate_type'] . ' rate type');
+        if (in_array($data['rate_type'], ['fixed', 'per_line', 'per_minute']) && ! isset($data['fixed_amount'])) {
+            throw new \InvalidArgumentException('Fixed amount is required for '.$data['rate_type'].' rate type');
         }
     }
 
@@ -470,18 +472,18 @@ class TaxRateManagementService
     protected function createBackup(string $batchId): void
     {
         $rates = VoIPTaxRate::where('company_id', $this->companyId)->get();
-        
+
         $backupData = [
             'batch_id' => $batchId,
             'company_id' => $this->companyId,
             'backup_date' => now()->toISOString(),
-            'rates' => $rates->toArray()
+            'rates' => $rates->toArray(),
         ];
 
         // Store backup (could be file system, database, or cloud storage)
-        $backupPath = storage_path('app/tax-backups/' . $batchId . '.json');
-        
-        if (!file_exists(dirname($backupPath))) {
+        $backupPath = storage_path('app/tax-backups/'.$batchId.'.json');
+
+        if (! file_exists(dirname($backupPath))) {
             mkdir(dirname($backupPath), 0755, true);
         }
 
@@ -491,7 +493,7 @@ class TaxRateManagementService
             'company_id' => $this->companyId,
             'batch_id' => $batchId,
             'backup_path' => $backupPath,
-            'rates_count' => $rates->count()
+            'rates_count' => $rates->count(),
         ]);
     }
 
@@ -500,15 +502,15 @@ class TaxRateManagementService
      */
     public function restoreFromBackup(string $batchId): array
     {
-        $backupPath = storage_path('app/tax-backups/' . $batchId . '.json');
-        
-        if (!file_exists($backupPath)) {
+        $backupPath = storage_path('app/tax-backups/'.$batchId.'.json');
+
+        if (! file_exists($backupPath)) {
             throw new \Exception("Backup file not found for batch ID: {$batchId}");
         }
 
         $backupData = json_decode(file_get_contents($backupPath), true);
-        
-        if (!$backupData || $backupData['company_id'] !== $this->companyId) {
+
+        if (! $backupData || $backupData['company_id'] !== $this->companyId) {
             throw new \Exception('Invalid backup data or company mismatch');
         }
 
@@ -517,7 +519,7 @@ class TaxRateManagementService
 
         // Restore rates
         $results = ['restored' => 0, 'errors' => []];
-        
+
         foreach ($backupData['rates'] as $rateData) {
             try {
                 unset($rateData['id'], $rateData['created_at'], $rateData['updated_at'], $rateData['deleted_at']);
@@ -526,7 +528,7 @@ class TaxRateManagementService
             } catch (\Exception $e) {
                 $results['errors'][] = [
                     'data' => $rateData,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -535,7 +537,7 @@ class TaxRateManagementService
             'company_id' => $this->companyId,
             'batch_id' => $batchId,
             'restored' => $results['restored'],
-            'errors' => count($results['errors'])
+            'errors' => count($results['errors']),
         ]);
 
         return $results;

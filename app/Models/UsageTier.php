@@ -3,19 +3,18 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * UsageTier Model
- * 
+ *
  * Manages tiered pricing structures for usage-based billing with support for
  * progressive rates, volume discounts, and time-of-day pricing variations.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $pricing_rule_id
@@ -34,7 +33,7 @@ use Carbon\Carbon;
  */
 class UsageTier extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -172,30 +171,40 @@ class UsageTier extends Model
      * Pricing model constants
      */
     const PRICING_MODEL_FLAT_RATE = 'flat_rate';
+
     const PRICING_MODEL_PER_UNIT = 'per_unit';
+
     const PRICING_MODEL_BLOCK_PRICING = 'block_pricing';
+
     const PRICING_MODEL_PROGRESSIVE = 'progressive';
 
     /**
      * Overage handling constants
      */
     const OVERAGE_CHARGE = 'charge';
+
     const OVERAGE_BLOCK = 'block';
+
     const OVERAGE_THROTTLE = 'throttle';
+
     const OVERAGE_POOL = 'pool';
 
     /**
      * Billing frequency constants
      */
     const BILLING_MONTHLY = 'monthly';
+
     const BILLING_DAILY = 'daily';
+
     const BILLING_USAGE_BASED = 'usage_based';
 
     /**
      * Proration method constants
      */
     const PRORATION_DAILY = 'daily';
+
     const PRORATION_HOURLY = 'hourly';
+
     const PRORATION_USAGE_BASED = 'usage_based';
 
     /**
@@ -227,12 +236,12 @@ class UsageTier extends Model
      */
     public function isCurrentlyActive(): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
         $now = now();
-        
+
         if ($this->effective_date && $now->lt($this->effective_date)) {
             return false;
         }
@@ -249,7 +258,7 @@ class UsageTier extends Model
      */
     public function isActiveOnDate(Carbon $date): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -285,13 +294,13 @@ class UsageTier extends Model
      */
     public function calculateCost(float $usage, array $options = []): float
     {
-        if (!$this->containsUsage($usage)) {
+        if (! $this->containsUsage($usage)) {
             return 0;
         }
 
         $tierUsage = $this->getTierUsage($usage);
         $baseCost = $this->calculateBaseCost($tierUsage, $options);
-        
+
         // Apply time-based multipliers
         if ($this->has_peak_pricing) {
             $baseCost *= $this->getTimeMultiplier($options);
@@ -317,7 +326,7 @@ class UsageTier extends Model
     {
         $tierStart = $this->min_usage;
         $tierEnd = $this->max_usage ?? $totalUsage;
-        
+
         return min($totalUsage, $tierEnd) - $tierStart;
     }
 
@@ -336,8 +345,10 @@ class UsageTier extends Model
             case self::PRICING_MODEL_BLOCK_PRICING:
                 if ($this->block_size && $this->block_rate) {
                     $blocks = ceil($tierUsage / $this->block_size);
+
                     return $blocks * $this->block_rate;
                 }
+
                 return 0;
 
             case self::PRICING_MODEL_PROGRESSIVE:
@@ -354,7 +365,7 @@ class UsageTier extends Model
     protected function getTimeMultiplier(array $options = []): float
     {
         $timestamp = $options['timestamp'] ?? now();
-        
+
         if ($timestamp->isWeekend()) {
             return $this->weekend_rate_multiplier;
         }
@@ -371,12 +382,12 @@ class UsageTier extends Model
      */
     protected function isPeakTime(Carbon $timestamp): bool
     {
-        if (!$this->peak_hours) {
+        if (! $this->peak_hours) {
             return false;
         }
 
         $hour = $timestamp->hour;
-        
+
         foreach ($this->peak_hours as $period) {
             if ($hour >= $period['start'] && $hour < $period['end']) {
                 return true;
@@ -392,8 +403,8 @@ class UsageTier extends Model
     protected function getGeographicMultiplier(array $options = []): float
     {
         $destination = $options['destination_country'] ?? null;
-        
-        if (!$destination || !$this->geographic_rates) {
+
+        if (! $destination || ! $this->geographic_rates) {
             return 1.0;
         }
 
@@ -405,7 +416,7 @@ class UsageTier extends Model
      */
     protected function getVolumeDiscountMultiplier(float $totalUsage): float
     {
-        if (!$this->volume_discount_rules) {
+        if (! $this->volume_discount_rules) {
             return 1.0;
         }
 
@@ -425,13 +436,13 @@ class UsageTier extends Model
     {
         switch ($this->pricing_model) {
             case self::PRICING_MODEL_FLAT_RATE:
-                return '$' . number_format($this->base_rate, 2);
+                return '$'.number_format($this->base_rate, 2);
 
             case self::PRICING_MODEL_PER_UNIT:
-                return '$' . number_format($this->per_unit_rate, 4) . ' per ' . $this->usage_unit;
+                return '$'.number_format($this->per_unit_rate, 4).' per '.$this->usage_unit;
 
             case self::PRICING_MODEL_BLOCK_PRICING:
-                return '$' . number_format($this->block_rate, 2) . ' per ' . number_format($this->block_size) . ' ' . $this->usage_unit;
+                return '$'.number_format($this->block_rate, 2).' per '.number_format($this->block_size).' '.$this->usage_unit;
 
             default:
                 return 'Variable';
@@ -444,13 +455,14 @@ class UsageTier extends Model
     public function getUsageRangeDisplay(): string
     {
         $min = number_format($this->min_usage);
-        
-        if ($this->is_unlimited_tier || !$this->max_usage) {
-            return $min . '+ ' . $this->usage_unit;
+
+        if ($this->is_unlimited_tier || ! $this->max_usage) {
+            return $min.'+ '.$this->usage_unit;
         }
 
         $max = number_format($this->max_usage);
-        return $min . ' - ' . $max . ' ' . $this->usage_unit;
+
+        return $min.' - '.$max.' '.$this->usage_unit;
     }
 
     /**
@@ -467,11 +479,11 @@ class UsageTier extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-                    ->where('effective_date', '<=', now())
-                    ->where(function ($q) {
-                        $q->whereNull('expiry_date')
-                          ->orWhere('expiry_date', '>', now());
-                    });
+            ->where('effective_date', '<=', now())
+            ->where(function ($q) {
+                $q->whereNull('expiry_date')
+                    ->orWhere('expiry_date', '>', now());
+            });
     }
 
     /**
@@ -540,22 +552,22 @@ class UsageTier extends Model
         parent::boot();
 
         static::creating(function ($tier) {
-            if (!$tier->tier_code) {
-                $tier->tier_code = 'TIER-' . strtoupper(uniqid());
+            if (! $tier->tier_code) {
+                $tier->tier_code = 'TIER-'.strtoupper(uniqid());
             }
-            
-            if (!isset($tier->tier_order)) {
+
+            if (! isset($tier->tier_order)) {
                 $lastTier = static::where('pricing_rule_id', $tier->pricing_rule_id)
                     ->orderBy('tier_order', 'desc')
                     ->first();
-                    
+
                 $tier->tier_order = $lastTier ? $lastTier->tier_order + 1 : 1;
             }
         });
 
         static::updating(function ($tier) {
             $tier->updated_by = auth()->id() ?? 1;
-            
+
             // Store change history
             if ($tier->isDirty()) {
                 $history = $tier->tier_history ?? [];

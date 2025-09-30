@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientContact extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -122,7 +122,7 @@ class ClientContact extends Model
         if ($this->phone && $this->extension) {
             return "{$this->phone} ext. {$this->extension}";
         }
-        
+
         return $this->phone ?: $this->mobile;
     }
 
@@ -131,7 +131,7 @@ class ClientContact extends Model
      */
     public function hasAuth()
     {
-        return !empty($this->password_hash) || !empty($this->pin);
+        return ! empty($this->password_hash) || ! empty($this->pin);
     }
 
     /**
@@ -140,12 +140,20 @@ class ClientContact extends Model
     public function getTypeLabelsAttribute()
     {
         $types = [];
-        
-        if ($this->primary) $types[] = 'Primary';
-        if ($this->billing) $types[] = 'Billing';
-        if ($this->technical) $types[] = 'Technical';
-        if ($this->important) $types[] = 'Important';
-        
+
+        if ($this->primary) {
+            $types[] = 'Primary';
+        }
+        if ($this->billing) {
+            $types[] = 'Billing';
+        }
+        if ($this->technical) {
+            $types[] = 'Technical';
+        }
+        if ($this->important) {
+            $types[] = 'Important';
+        }
+
         return $types;
     }
 }

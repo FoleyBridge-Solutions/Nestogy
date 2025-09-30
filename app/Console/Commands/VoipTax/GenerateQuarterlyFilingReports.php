@@ -3,8 +3,8 @@
 namespace App\Console\Commands\VoipTax;
 
 use App\Domains\Financial\Services\VoIPTaxScheduledReportService;
-use Illuminate\Console\Command;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 /**
  * Generate Quarterly VoIP Tax Filing Reports
@@ -56,10 +56,11 @@ class GenerateQuarterlyFilingReports extends Command
                 $this->info("Filtering to company ID: {$companyId}");
             }
 
-            $reportService = new VoIPTaxScheduledReportService();
+            $reportService = new VoIPTaxScheduledReportService;
 
             if ($dryRun) {
                 $this->info('Would generate quarterly filing reports for specified period.');
+
                 return Command::SUCCESS;
             }
 
@@ -68,13 +69,13 @@ class GenerateQuarterlyFilingReports extends Command
 
             // Filter results if specific company requested
             if ($companyId) {
-                $results = array_filter($results, fn($key) => $key == $companyId, ARRAY_FILTER_USE_KEY);
+                $results = array_filter($results, fn ($key) => $key == $companyId, ARRAY_FILTER_USE_KEY);
             }
 
             // Display results
             $this->displayFilingReports($results, $quarter);
 
-            $successCount = count(array_filter($results, fn($result) => $result['success'] ?? false));
+            $successCount = count(array_filter($results, fn ($result) => $result['success'] ?? false));
             $totalCount = count($results);
 
             $this->info("Completed: {$successCount}/{$totalCount} quarterly filing reports generated successfully");
@@ -82,8 +83,9 @@ class GenerateQuarterlyFilingReports extends Command
             return $successCount === $totalCount ? Command::SUCCESS : Command::FAILURE;
 
         } catch (\Exception $e) {
-            $this->error('Failed to generate quarterly filing reports: ' . $e->getMessage());
-            $this->error('Stack trace: ' . $e->getTraceAsString());
+            $this->error('Failed to generate quarterly filing reports: '.$e->getMessage());
+            $this->error('Stack trace: '.$e->getTraceAsString());
+
             return Command::FAILURE;
         }
     }
@@ -98,8 +100,8 @@ class GenerateQuarterlyFilingReports extends Command
         if ($quarterParam) {
             // Parse YYYY-Q format (e.g., "2024-1")
             if (preg_match('/^(\d{4})-([1-4])$/', $quarterParam, $matches)) {
-                $year = (int)$matches[1];
-                $quarterNum = (int)$matches[2];
+                $year = (int) $matches[1];
+                $quarterNum = (int) $matches[2];
 
                 // Create Carbon instance for the start of the specified quarter
                 return Carbon::create($year)->quarter($quarterNum);
@@ -119,6 +121,7 @@ class GenerateQuarterlyFilingReports extends Command
     {
         if (empty($results)) {
             $this->warn('No filing reports to display');
+
             return;
         }
 
@@ -126,8 +129,9 @@ class GenerateQuarterlyFilingReports extends Command
             $this->line('');
             $this->line("<fg=cyan>═══ Company ID: {$companyId} ═══</>");
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 $this->error("❌ Failed: {$result['error']}");
+
                 continue;
             }
 
@@ -135,6 +139,7 @@ class GenerateQuarterlyFilingReports extends Command
 
             if (empty($result['filing_reports'])) {
                 $this->warn('   No jurisdictions with quarterly filing requirements found');
+
                 continue;
             }
 
@@ -146,23 +151,23 @@ class GenerateQuarterlyFilingReports extends Command
                 $this->line("  Filing Due Date: <fg=red>{$filingReport['filing_due_date']}</>");
 
                 // Display tax collection summary
-                $taxCollected = '$' . number_format($filingReport['tax_collected'], 2);
+                $taxCollected = '$'.number_format($filingReport['tax_collected'], 2);
                 $this->line("  Tax Collected: <fg=green>{$taxCollected}</>");
 
                 // Display return data
                 $returnData = $filingReport['return_data'];
                 $this->line('');
                 $this->line('  <fg=cyan>Filing Data Summary:</>');
-                $this->line('    Gross Receipts: $' . number_format($returnData['gross_receipts'], 2));
-                $this->line('    Taxable Receipts: $' . number_format($returnData['taxable_receipts'], 2));
-                $this->line('    Tax Due: $' . number_format($returnData['tax_due'], 2));
-                $this->line('    Exemptions Claimed: $' . number_format($returnData['exemptions_claimed'], 2));
-                $this->line('    Net Tax Due: $' . number_format($returnData['net_tax_due'], 2));
+                $this->line('    Gross Receipts: $'.number_format($returnData['gross_receipts'], 2));
+                $this->line('    Taxable Receipts: $'.number_format($returnData['taxable_receipts'], 2));
+                $this->line('    Tax Due: $'.number_format($returnData['tax_due'], 2));
+                $this->line('    Exemptions Claimed: $'.number_format($returnData['exemptions_claimed'], 2));
+                $this->line('    Net Tax Due: $'.number_format($returnData['net_tax_due'], 2));
 
                 // Display required forms
-                if (!empty($filingReport['forms_required'])) {
+                if (! empty($filingReport['forms_required'])) {
                     $this->line('');
-                    $this->line('  <fg=magenta>Required Forms:</> ' . implode(', ', $filingReport['forms_required']));
+                    $this->line('  <fg=magenta>Required Forms:</> '.implode(', ', $filingReport['forms_required']));
                 }
 
                 // Calculate days until due
@@ -170,7 +175,7 @@ class GenerateQuarterlyFilingReports extends Command
                 $daysUntilDue = now()->diffInDays($dueDate, false);
 
                 if ($daysUntilDue < 0) {
-                    $this->line("  <fg=red>⚠️ OVERDUE by " . abs($daysUntilDue) . " days!</>");
+                    $this->line('  <fg=red>⚠️ OVERDUE by '.abs($daysUntilDue).' days!</>');
                 } elseif ($daysUntilDue <= 7) {
                     $this->line("  <fg=yellow>⚡ Due in {$daysUntilDue} days - file soon!</>");
                 } else {
@@ -197,7 +202,7 @@ class GenerateQuarterlyFilingReports extends Command
         $upcomingFilings = 0;
 
         foreach ($results as $result) {
-            if (!$result['success'] || empty($result['filing_reports'])) {
+            if (! $result['success'] || empty($result['filing_reports'])) {
                 continue;
             }
 
@@ -218,7 +223,7 @@ class GenerateQuarterlyFilingReports extends Command
 
         $this->line("Quarter: Q{$quarter->quarter} {$quarter->year}");
         $this->line("Total Jurisdictions: {$totalJurisdictions}");
-        $this->line('Total Tax Collected: $' . number_format($totalTaxCollected, 2));
+        $this->line('Total Tax Collected: $'.number_format($totalTaxCollected, 2));
 
         if ($overdueFilings > 0) {
             $this->line("<fg=red>Overdue Filings: {$overdueFilings}</>");

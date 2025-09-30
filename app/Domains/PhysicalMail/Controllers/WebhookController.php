@@ -22,8 +22,9 @@ class WebhookController extends Controller
         ]);
 
         // Verify webhook signature
-        if (!$this->verifySignature($request)) {
+        if (! $this->verifySignature($request)) {
             Log::warning('Invalid PostGrid webhook signature');
+
             return response('Unauthorized', 401);
         }
 
@@ -33,6 +34,7 @@ class WebhookController extends Controller
         // Check if we've already processed this webhook
         if ($this->isDuplicate($data)) {
             Log::info('Duplicate webhook, skipping', ['event_id' => $data['id'] ?? 'unknown']);
+
             return response('OK (duplicate)', 200);
         }
 
@@ -51,11 +53,12 @@ class WebhookController extends Controller
         $signature = $request->header('X-PostGrid-Signature');
         $secret = config('physical_mail.postgrid.webhook_secret');
 
-        if (!$signature || !$secret) {
+        if (! $signature || ! $secret) {
             // If no secret is configured, skip verification in development
             if (app()->environment('local', 'testing')) {
                 return true;
             }
+
             return false;
         }
 
@@ -72,7 +75,7 @@ class WebhookController extends Controller
      */
     private function isDuplicate(array $data): bool
     {
-        if (!isset($data['id'])) {
+        if (! isset($data['id'])) {
             return false;
         }
 

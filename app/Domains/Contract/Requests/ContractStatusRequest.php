@@ -14,6 +14,7 @@ class ContractStatusRequest extends FormRequest
     public function authorize(): bool
     {
         $contract = $this->route('contract');
+
         return $this->user()->can('update', $contract);
     }
 
@@ -26,7 +27,7 @@ class ContractStatusRequest extends FormRequest
             'status' => [
                 'required',
                 'string',
-                Rule::in(array_keys(Contract::getAvailableStatuses()))
+                Rule::in(array_keys(Contract::getAvailableStatuses())),
             ],
             'reason' => 'sometimes|nullable|string|max:1000',
             'effective_date' => 'sometimes|nullable|date|after_or_equal:today',
@@ -69,7 +70,7 @@ class ContractStatusRequest extends FormRequest
             ];
 
             if (in_array($newStatus, $statusesRequiringReason) && empty($this->reason)) {
-                $validator->errors()->add('reason', 'Reason is required when changing status to ' . $newStatus . '.');
+                $validator->errors()->add('reason', 'Reason is required when changing status to '.$newStatus.'.');
             }
 
             // Validate signature requirements for activation
@@ -85,7 +86,7 @@ class ContractStatusRequest extends FormRequest
             }
 
             // Validate that cancelled contracts cannot be changed to active
-            if ($currentStatus === Contract::STATUS_CANCELLED && 
+            if ($currentStatus === Contract::STATUS_CANCELLED &&
                 in_array($newStatus, [Contract::STATUS_ACTIVE, Contract::STATUS_SIGNED])) {
                 $validator->errors()->add('status', 'Cancelled contracts cannot be reactivated.');
             }
@@ -93,7 +94,7 @@ class ContractStatusRequest extends FormRequest
             // Validate effective date for future status changes
             if ($this->has('effective_date') && $this->effective_date) {
                 $effectiveDate = \Carbon\Carbon::parse($this->effective_date);
-                
+
                 // Some status changes should be immediate
                 $immediateStatuses = [
                     Contract::STATUS_SUSPENDED,
@@ -167,8 +168,8 @@ class ContractStatusRequest extends FormRequest
 
         // Check if transition is allowed
         $allowed = $allowedTransitions[$currentStatus] ?? [];
-        
-        if (!in_array($newStatus, $allowed)) {
+
+        if (! in_array($newStatus, $allowed)) {
             $validator->errors()->add('status', "Cannot change status from {$currentStatus} to {$newStatus}.");
         }
     }

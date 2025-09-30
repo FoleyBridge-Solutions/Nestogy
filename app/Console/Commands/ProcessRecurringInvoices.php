@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Domains\Financial\Services\RecurringInvoiceService;
 use App\Models\RecurringInvoice;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -77,10 +77,10 @@ class ProcessRecurringInvoices extends Command
             }
 
             // Filter out already processed today unless forced
-            if (!$force) {
+            if (! $force) {
                 $query->where(function ($q) use ($date) {
                     $q->whereNull('last_invoice_date')
-                      ->orWhere('last_invoice_date', '<', $date->startOfDay());
+                        ->orWhere('last_invoice_date', '<', $date->startOfDay());
                 });
             }
 
@@ -88,6 +88,7 @@ class ProcessRecurringInvoices extends Command
 
             if ($dueRecurringInvoices->isEmpty()) {
                 $this->info('No recurring invoices due for processing.');
+
                 return Command::SUCCESS;
             }
 
@@ -98,12 +99,14 @@ class ProcessRecurringInvoices extends Command
 
             if ($isDryRun) {
                 $this->info('Dry run completed. No invoices were created.');
+
                 return Command::SUCCESS;
             }
 
             // Confirm processing unless forced
-            if (!$force && !$this->confirm('Proceed with invoice generation?')) {
+            if (! $force && ! $this->confirm('Proceed with invoice generation?')) {
                 $this->info('Processing cancelled.');
+
                 return Command::SUCCESS;
             }
 
@@ -113,7 +116,7 @@ class ProcessRecurringInvoices extends Command
                 'generated' => 0,
                 'errors' => 0,
                 'total_amount' => 0,
-                'details' => []
+                'details' => [],
             ];
 
             $progressBar = $this->output->createProgressBar($dueRecurringInvoices->count());
@@ -131,7 +134,7 @@ class ProcessRecurringInvoices extends Command
                             'invoice_id' => $invoice->id,
                             'client' => $recurring->client->name,
                             'amount' => $invoice->amount,
-                            'status' => 'success'
+                            'status' => 'success',
                         ];
                     }
 
@@ -142,13 +145,13 @@ class ProcessRecurringInvoices extends Command
                         'recurring_id' => $recurring->id,
                         'client' => $recurring->client->name,
                         'error' => $e->getMessage(),
-                        'status' => 'error'
+                        'status' => 'error',
                     ];
 
                     Log::error('Failed to process recurring invoice', [
                         'recurring_invoice_id' => $recurring->id,
                         'error' => $e->getMessage(),
-                        'command' => 'process-recurring-invoices'
+                        'command' => 'process-recurring-invoices',
                     ]);
                 }
 
@@ -168,7 +171,7 @@ class ProcessRecurringInvoices extends Command
                 'errors' => $results['errors'],
                 'total_amount' => $results['total_amount'],
                 'date' => $date->toDateString(),
-                'command' => 'process-recurring-invoices'
+                'command' => 'process-recurring-invoices',
             ]);
 
             return $results['errors'] > 0 ? Command::FAILURE : Command::SUCCESS;
@@ -178,8 +181,9 @@ class ProcessRecurringInvoices extends Command
             Log::error('Recurring invoice processing command failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'command' => 'process-recurring-invoices'
+                'command' => 'process-recurring-invoices',
             ]);
+
             return Command::FAILURE;
         }
     }
@@ -190,11 +194,12 @@ class ProcessRecurringInvoices extends Command
     protected function processRecurringInvoice(RecurringInvoice $recurring, Carbon $date)
     {
         // Validate contract is still active
-        if (!$recurring->contract || !$recurring->contract->isActive()) {
+        if (! $recurring->contract || ! $recurring->contract->isActive()) {
             $this->warn("Skipping recurring invoice {$recurring->id} - contract not active");
 
             // Pause the recurring invoice
             $recurring->pause('Contract no longer active');
+
             return null;
         }
 
@@ -214,10 +219,10 @@ class ProcessRecurringInvoices extends Command
                 $recurring->id,
                 $recurring->client->name ?? 'Unknown',
                 $recurring->contract->contract_number ?? 'N/A',
-                '$' . number_format($recurring->amount, 2),
+                '$'.number_format($recurring->amount, 2),
                 $recurring->billing_frequency_label,
                 $recurring->next_invoice_date->format('M d, Y'),
-                $recurring->contract->isActive() ? 'Ready' : 'Contract Inactive'
+                $recurring->contract->isActive() ? 'Ready' : 'Contract Inactive',
             ];
         })->toArray();
 
@@ -233,7 +238,7 @@ class ProcessRecurringInvoices extends Command
         $this->info("- Processed: {$results['processed']}");
         $this->info("- Generated: {$results['generated']}");
         $this->info("- Errors: {$results['errors']}");
-        $this->info("- Total Amount: $" . number_format($results['total_amount'], 2));
+        $this->info('- Total Amount: $'.number_format($results['total_amount'], 2));
 
         if ($results['errors'] > 0) {
             $this->newLine();
@@ -252,7 +257,7 @@ class ProcessRecurringInvoices extends Command
 
             foreach ($results['details'] as $detail) {
                 if ($detail['status'] === 'success') {
-                    $this->info("- Invoice #{$detail['invoice_id']} for {$detail['client']}: $" . number_format($detail['amount'], 2));
+                    $this->info("- Invoice #{$detail['invoice_id']} for {$detail['client']}: $".number_format($detail['amount'], 2));
                 }
             }
         }

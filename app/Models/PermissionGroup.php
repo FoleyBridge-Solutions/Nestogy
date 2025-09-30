@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * PermissionGroup Model
- * 
+ *
  * Represents groups of permissions for better organization in UI.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string $slug
@@ -57,7 +57,7 @@ class PermissionGroup extends Model
         int $sortOrder = 0
     ): self {
         $slug = str()->slug($name);
-        
+
         return self::create([
             'name' => $name,
             'slug' => $slug,

@@ -7,27 +7,27 @@ use App\Models\PhysicalMailSettings;
 class CompanyAwarePostGridClient extends PostGridClient
 {
     protected ?PhysicalMailSettings $settings;
-    
+
     public function __construct(?int $companyId = null)
     {
         // Get company settings
         $this->settings = PhysicalMailSettings::forCompany($companyId);
-        
-        if (!$this->settings) {
+
+        if (! $this->settings) {
             throw new \Exception('No physical mail settings found for company');
         }
-        
-        if (!$this->settings->isConfigured()) {
+
+        if (! $this->settings->isConfigured()) {
             throw new \Exception('Physical mail is not configured for this company');
         }
-        
+
         // Initialize parent with company settings
         parent::__construct(
             testMode: $this->settings->shouldUseTestMode(),
             apiKey: $this->settings->getActiveApiKey()
         );
     }
-    
+
     /**
      * Get company settings
      */
@@ -35,7 +35,7 @@ class CompanyAwarePostGridClient extends PostGridClient
     {
         return $this->settings;
     }
-    
+
     /**
      * Get default from address
      */
@@ -43,7 +43,7 @@ class CompanyAwarePostGridClient extends PostGridClient
     {
         return $this->settings->getFromAddress();
     }
-    
+
     /**
      * Get default mail options
      */

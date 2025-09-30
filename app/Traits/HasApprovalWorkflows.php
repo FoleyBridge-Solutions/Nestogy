@@ -2,13 +2,12 @@
 
 namespace App\Traits;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 /**
  * HasApprovalWorkflows Trait
- * 
+ *
  * Provides approval workflow functionality with comprehensive permission checks.
  * Handles financial approvals, expense workflows, and multi-level authorization.
  */
@@ -20,15 +19,15 @@ trait HasApprovalWorkflows
     protected function authorizeExpenseApproval(string $action, $expense = null, array $context = []): void
     {
         $user = auth()->user();
-        
+
         // Check base approval permission
-        if (!$user->hasPermission('financial.expenses.approve')) {
+        if (! $user->hasPermission('financial.expenses.approve')) {
             $this->logApprovalAttempt('expense', $action, 'denied', 'Missing base approval permission');
             abort(403, 'Insufficient permissions to approve expenses');
         }
 
         // Check workflow gates
-        if (!Gate::allows('approve-expenses')) {
+        if (! Gate::allows('approve-expenses')) {
             abort(403, 'Expense approval workflow permissions denied');
         }
 
@@ -38,7 +37,7 @@ trait HasApprovalWorkflows
         }
 
         // Check approval hierarchy
-        if ($expense && !$this->checkApprovalHierarchy($expense, $user)) {
+        if ($expense && ! $this->checkApprovalHierarchy($expense, $user)) {
             abort(403, 'Insufficient approval authority for this expense amount');
         }
 
@@ -51,14 +50,14 @@ trait HasApprovalWorkflows
     protected function authorizePaymentApproval(string $action, $payment = null, array $context = []): void
     {
         $user = auth()->user();
-        
+
         // Check payment management permission
-        if (!$user->hasPermission('financial.payments.manage')) {
+        if (! $user->hasPermission('financial.payments.manage')) {
             abort(403, 'Insufficient permissions to manage payments');
         }
 
         // Check approval gates
-        if (!Gate::allows('approve-payments')) {
+        if (! Gate::allows('approve-payments')) {
             abort(403, 'Payment approval workflow permissions denied');
         }
 
@@ -76,18 +75,18 @@ trait HasApprovalWorkflows
     protected function authorizeBudgetApproval(string $action, $budget = null, array $context = []): void
     {
         $user = auth()->user();
-        
+
         // Budget approval requires elevated permissions
-        if (!$user->hasAnyPermission(['financial.manage', 'system.settings.manage'])) {
+        if (! $user->hasAnyPermission(['financial.manage', 'system.settings.manage'])) {
             abort(403, 'Insufficient permissions for budget approval');
         }
 
-        if (!Gate::allows('approve-budgets')) {
+        if (! Gate::allows('approve-budgets')) {
             abort(403, 'Budget approval workflow permissions denied');
         }
 
         // Only admins and senior financial managers can approve budgets
-        if (!$user->isAdmin() && !$this->isSeniorFinancialManager($user)) {
+        if (! $user->isAdmin() && ! $this->isSeniorFinancialManager($user)) {
             abort(403, 'Senior financial management or admin access required for budget approval');
         }
 
@@ -100,8 +99,8 @@ trait HasApprovalWorkflows
     protected function authorizeInvoiceApproval(string $action, $invoice = null, array $context = []): void
     {
         $user = auth()->user();
-        
-        if (!$user->hasPermission('financial.invoices.manage')) {
+
+        if (! $user->hasPermission('financial.invoices.manage')) {
             abort(403, 'Insufficient permissions to manage invoices');
         }
 
@@ -122,15 +121,15 @@ trait HasApprovalWorkflows
         $limits = $this->getApprovalLimits($user);
 
         if ($amount > $limits['expense_limit']) {
-            $this->logApprovalAttempt('expense', 'approve', 'denied', 
+            $this->logApprovalAttempt('expense', 'approve', 'denied',
                 "Amount ${amount} exceeds user approval limit of $${limits['expense_limit']}", $expense);
-            
-            abort(403, "Expense amount exceeds your approval limit of $${limits['expense_limit']}. " . 
-                      "This expense requires approval from a higher authority.");
+
+            abort(403, "Expense amount exceeds your approval limit of $${limits['expense_limit']}. ".
+                      'This expense requires approval from a higher authority.');
         }
 
         // Check if expense requires multiple approvals
-        if ($amount > $limits['multi_approval_threshold'] && !$this->hasRequiredApprovals($expense)) {
+        if ($amount > $limits['multi_approval_threshold'] && ! $this->hasRequiredApprovals($expense)) {
             abort(403, 'This expense requires multiple approvals before processing');
         }
     }
@@ -151,7 +150,7 @@ trait HasApprovalWorkflows
         ];
 
         $maxAmount = $approvalHierarchy[$userLevel] ?? 0;
-        
+
         return $amount <= $maxAmount;
     }
 
@@ -168,7 +167,7 @@ trait HasApprovalWorkflows
         }
 
         // Check payment method restrictions
-        if (in_array($payment->method, ['wire_transfer', 'check']) && !$user->hasPermission('financial.manage')) {
+        if (in_array($payment->method, ['wire_transfer', 'check']) && ! $user->hasPermission('financial.manage')) {
             abort(403, 'Elevated permissions required for wire transfer and check payments');
         }
 
@@ -192,7 +191,7 @@ trait HasApprovalWorkflows
 
         // Check invoice aging
         if ($invoice->created_at && $invoice->created_at->diffInDays(now()) > 30) {
-            if (!$user->hasPermission('financial.manage')) {
+            if (! $user->hasPermission('financial.manage')) {
                 abort(403, 'Elevated permissions required to approve aged invoices');
             }
         }
@@ -204,7 +203,7 @@ trait HasApprovalWorkflows
     protected function getApprovalLimits($user): array
     {
         $baseLimit = 500; // Default base limit
-        
+
         if ($user->isAdmin()) {
             return [
                 'expense_limit' => 50000,
@@ -245,7 +244,7 @@ trait HasApprovalWorkflows
      */
     protected function isSeniorFinancialManager($user): bool
     {
-        return $user->hasPermission('financial.manage') && 
+        return $user->hasPermission('financial.manage') &&
                $user->getRoleLevel() >= 2 && // At least technician level
                $user->hasAnyPermission(['financial.expenses.approve', 'reports.financial']);
     }
@@ -259,6 +258,7 @@ trait HasApprovalWorkflows
         // Implementation would depend on your approval tracking system
         if (method_exists($expense, 'approvals')) {
             $requiredApprovals = $this->getRequiredApprovalCount($expense->amount);
+
             return $expense->approvals()->count() >= $requiredApprovals;
         }
 
@@ -270,8 +270,13 @@ trait HasApprovalWorkflows
      */
     protected function getRequiredApprovalCount($amount): int
     {
-        if ($amount > 10000) return 2;
-        if ($amount > 5000) return 1;
+        if ($amount > 10000) {
+            return 2;
+        }
+        if ($amount > 5000) {
+            return 1;
+        }
+
         return 0;
     }
 
@@ -282,16 +287,16 @@ trait HasApprovalWorkflows
     {
         // Check for rapid successive payments
         $recentPayments = $this->getRecentPaymentsByUser($user->id, 1); // Last 1 hour
-        
+
         if ($recentPayments > 5) {
             return true;
         }
 
         // Check for unusual amounts
         $roundAmount = ($payment->amount % 100 === 0) && $payment->amount > 10000;
-        
+
         // Check for payments outside business hours
-        $outsideBusinessHours = !$this->isBusinessHours();
+        $outsideBusinessHours = ! $this->isBusinessHours();
 
         return $roundAmount && $outsideBusinessHours;
     }
@@ -312,6 +317,7 @@ trait HasApprovalWorkflows
     protected function isBusinessHours(): bool
     {
         $hour = now()->hour;
+
         return $hour >= 9 && $hour <= 17; // 9 AM to 5 PM
     }
 
@@ -334,12 +340,12 @@ trait HasApprovalWorkflows
         $action = $rule['action'] ?? null;
         $message = $rule['message'] ?? 'Workflow rule violation';
 
-        if (!$condition || !$action) {
+        if (! $condition || ! $action) {
             return;
         }
 
         // Evaluate condition (simplified example)
-        if ($this->evaluateCondition($model, $condition) && !$this->evaluateAction($model, $action)) {
+        if ($this->evaluateCondition($model, $condition) && ! $this->evaluateAction($model, $action)) {
             abort(403, $message);
         }
     }
@@ -355,23 +361,23 @@ trait HasApprovalWorkflows
         $operator = $condition['operator'] ?? '=';
         $value = $condition['value'] ?? null;
 
-        if (!$field || !isset($model->$field)) {
+        if (! $field || ! isset($model->$field)) {
             return false;
         }
 
         switch ($operator) {
             case '>':
-                return $model->$field > $value;
+                return $value < $model->$field;
             case '<':
-                return $model->$field < $value;
+                return $value > $model->$field;
             case '>=':
-                return $model->$field >= $value;
+                return $value <= $model->$field;
             case '<=':
-                return $model->$field <= $value;
+                return $value >= $model->$field;
             case '!=':
-                return $model->$field != $value;
+                return $value != $model->$field;
             default:
-                return $model->$field == $value;
+                return $value == $model->$field;
         }
     }
 
@@ -388,9 +394,11 @@ trait HasApprovalWorkflows
                 return $permission ? auth()->user()->hasPermission($permission) : false;
             case 'role':
                 $role = $action['role'] ?? null;
+
                 return $role ? auth()->user()->hasRole($role) : false;
             case 'custom':
                 $method = $action['method'] ?? null;
+
                 return $method && method_exists($this, $method) ? $this->$method($model) : false;
         }
 

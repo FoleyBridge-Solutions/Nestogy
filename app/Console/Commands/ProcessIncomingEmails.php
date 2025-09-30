@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Domains\Email\Services\ImapService;
 use App\Domains\Ticket\Services\TicketService;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\Ticket;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 class ProcessIncomingEmails extends Command
@@ -16,8 +16,11 @@ class ProcessIncomingEmails extends Command
 
     // Class constants to reduce duplication
     private const STATUS_UNREAD = 'unread';
+
     private const STATUS_PROCESSED = 'processed';
+
     private const DEFAULT_BATCH_SIZE = 50;
+
     private const MSG_EMAIL_START = 'Processing incoming emails...';
 
     /**
@@ -33,6 +36,7 @@ class ProcessIncomingEmails extends Command
     protected $description = 'Process incoming emails and create tickets';
 
     protected ImapService $imapService;
+
     protected TicketService $ticketService;
 
     public function __construct(ImapService $imapService, TicketService $ticketService)
@@ -54,8 +58,9 @@ class ProcessIncomingEmails extends Command
 
         try {
             // Connect to IMAP
-            if (!$this->imapService->connect($account)) {
+            if (! $this->imapService->connect($account)) {
                 $this->error('Failed to connect to IMAP server');
+
                 return Command::FAILURE;
             }
 
@@ -65,6 +70,7 @@ class ProcessIncomingEmails extends Command
             if ($messages->isEmpty()) {
                 $this->info('No unread messages found');
                 $this->imapService->disconnect();
+
                 return Command::SUCCESS;
             }
 
@@ -87,7 +93,7 @@ class ProcessIncomingEmails extends Command
                     Log::error('Email processing failed', [
                         'message_id' => $message->getMessageId(),
                         'subject' => $message->getSubject(),
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -101,7 +107,7 @@ class ProcessIncomingEmails extends Command
         } catch (\Exception $e) {
             $this->error("Command failed: {$e->getMessage()}");
             Log::error('Process incoming emails command failed', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return Command::FAILURE;
@@ -146,16 +152,16 @@ class ProcessIncomingEmails extends Command
         }
 
         // Try to find client by email domain
-        $domain = substr(strrchr($email, "@"), 1);
+        $domain = substr(strrchr($email, '@'), 1);
         $client = Client::where('website', 'like', "%{$domain}%")->first();
 
-        if (!$client) {
+        if (! $client) {
             // Create a generic client for unknown senders
             $client = Client::create([
                 'name' => $name ?: "Client ({$domain})",
                 'type' => 'Email Client',
                 'company_id' => 1, // Default company - adjust as needed
-                'lead' => true
+                'lead' => true,
             ]);
         }
 
@@ -165,7 +171,7 @@ class ProcessIncomingEmails extends Command
             'email' => $email,
             'client_id' => $client->id,
             'company_id' => $client->company_id,
-            'primary' => true
+            'primary' => true,
         ]);
     }
 
@@ -202,7 +208,7 @@ class ProcessIncomingEmails extends Command
             'type' => 'public',
             'user_id' => null, // Email reply
             'contact_id' => $contact?->id,
-            'created_at' => now()
+            'created_at' => now(),
         ]);
 
         // Update ticket status if closed
@@ -212,7 +218,7 @@ class ProcessIncomingEmails extends Command
 
         Log::info('Email reply added to ticket', [
             'ticket_id' => $ticket->id,
-            'contact_email' => $contact?->email
+            'contact_email' => $contact?->email,
         ]);
     }
 
@@ -229,7 +235,7 @@ class ProcessIncomingEmails extends Command
             'client_id' => $contact?->client_id,
             'contact_id' => $contact?->id,
             'company_id' => $contact?->company_id ?? 1,
-            'source' => 'Email'
+            'source' => 'Email',
         ];
 
         $ticket = $this->ticketService->createTicket($ticketData);
@@ -239,14 +245,14 @@ class ProcessIncomingEmails extends Command
         foreach ($attachments as $attachment) {
             try {
                 $filename = $attachment->getName();
-                $tempPath = sys_get_temp_dir() . '/' . $filename;
+                $tempPath = sys_get_temp_dir().'/'.$filename;
 
                 if ($this->imapService->downloadAttachment($attachment, $tempPath)) {
                     // Here you could use FileUploadService to store the attachment
                     // For now, just log it
                     Log::info('Email attachment found', [
                         'ticket_id' => $ticket['ticket_id'],
-                        'filename' => $filename
+                        'filename' => $filename,
                     ]);
 
                     // Clean up temp file
@@ -257,7 +263,7 @@ class ProcessIncomingEmails extends Command
             } catch (\Exception $e) {
                 Log::warning('Failed to process email attachment', [
                     'filename' => $attachment->getName(),
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -265,7 +271,7 @@ class ProcessIncomingEmails extends Command
         Log::info('Ticket created from email', [
             'ticket_id' => $ticket['ticket_id'],
             'subject' => $subject,
-            'contact_email' => $contact?->email
+            'contact_email' => $contact?->email,
         ]);
     }
 }

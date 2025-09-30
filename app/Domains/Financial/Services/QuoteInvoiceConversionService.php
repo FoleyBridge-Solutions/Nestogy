@@ -2,38 +2,34 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\Quote;
-use App\Models\Invoice;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractMilestone;
-use App\Models\QuoteInvoiceConversion;
-use App\Models\RecurringInvoice;
-use App\Models\Client;
 use App\Domains\Contract\Services\ContractGenerationService;
-use App\Domains\Financial\Services\InvoiceService;
-use App\Domains\Financial\Services\RecurringInvoiceService;
+use App\Models\Invoice;
+use App\Models\Quote;
+use App\Models\QuoteInvoiceConversion;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Collection;
-use Carbon\Carbon;
 
 /**
  * QuoteInvoiceConversionService
- * 
+ *
  * Comprehensive Quote-to-Invoice conversion service with contract generation,
  * milestone-based billing, recurring invoice setup, and VoIP-specific features.
  */
 class QuoteInvoiceConversionService
 {
     protected $contractGenerationService;
+
     protected $invoiceService;
+
     protected $recurringInvoiceService;
 
     public function __construct(
         ContractGenerationService $contractGenerationService,
         InvoiceService $invoiceService,
-        RecurringInvoiceService $recurringInvoiceService = null
+        ?RecurringInvoiceService $recurringInvoiceService = null
     ) {
         $this->contractGenerationService = $contractGenerationService;
         $this->invoiceService = $invoiceService;
@@ -44,13 +40,13 @@ class QuoteInvoiceConversionService
      * Convert quote directly to invoice (simple conversion)
      */
     public function convertDirectToInvoice(
-        Quote $quote, 
+        Quote $quote,
         array $options = []
     ): QuoteInvoiceConversion {
         return DB::transaction(function () use ($quote, $options) {
             Log::info('Starting direct quote to invoice conversion', [
                 'quote_id' => $quote->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Validate quote eligibility
@@ -86,13 +82,13 @@ class QuoteInvoiceConversionService
                 // Update quote status
                 $quote->update([
                     'status' => Quote::STATUS_CONVERTED,
-                    'converted_invoice_id' => $invoice->id
+                    'converted_invoice_id' => $invoice->id,
                 ]);
 
                 Log::info('Direct conversion completed', [
                     'quote_id' => $quote->id,
                     'invoice_id' => $invoice->id,
-                    'conversion_id' => $conversion->id
+                    'conversion_id' => $conversion->id,
                 ]);
 
                 return $conversion->fresh();
@@ -102,7 +98,7 @@ class QuoteInvoiceConversionService
                     'status' => 'failed',
                     'error_log' => [['error' => $e->getMessage(), 'timestamp' => now()]],
                 ]);
-                
+
                 throw $e;
             }
         });
@@ -119,7 +115,7 @@ class QuoteInvoiceConversionService
         return DB::transaction(function () use ($quote, $contractData, $invoiceOptions) {
             Log::info('Starting quote to contract with invoice conversion', [
                 'quote_id' => $quote->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Validate quote eligibility
@@ -144,8 +140,8 @@ class QuoteInvoiceConversionService
                 // Generate contract first
                 $contractTemplate = $this->selectOptimalTemplate($quote, $contractData);
                 $contract = $this->contractGenerationService->generateFromQuote(
-                    $quote, 
-                    $contractTemplate, 
+                    $quote,
+                    $contractTemplate,
                     $contractData
                 );
 
@@ -155,9 +151,9 @@ class QuoteInvoiceConversionService
                 ]);
 
                 // Create initial invoice if contract doesn't require signature
-                if (!$this->requiresSignatureBeforeInvoicing($contract)) {
+                if (! $this->requiresSignatureBeforeInvoicing($contract)) {
                     $invoice = $this->createInvoiceFromQuote($quote, $invoiceOptions, $contract);
-                    
+
                     $conversion->update([
                         'invoice_id' => $invoice->id,
                         'status' => 'completed',
@@ -172,14 +168,14 @@ class QuoteInvoiceConversionService
                 // Update quote status
                 $quote->update([
                     'status' => Quote::STATUS_CONVERTED,
-                    'converted_invoice_id' => $conversion->invoice_id
+                    'converted_invoice_id' => $conversion->invoice_id,
                 ]);
 
                 Log::info('Contract with invoice conversion completed', [
                     'quote_id' => $quote->id,
                     'contract_id' => $contract->id,
                     'invoice_id' => $conversion->invoice_id,
-                    'conversion_id' => $conversion->id
+                    'conversion_id' => $conversion->id,
                 ]);
 
                 return $conversion->fresh();
@@ -189,7 +185,7 @@ class QuoteInvoiceConversionService
                     'status' => 'failed',
                     'error_log' => [['error' => $e->getMessage(), 'timestamp' => now()]],
                 ]);
-                
+
                 throw $e;
             }
         });
@@ -207,7 +203,7 @@ class QuoteInvoiceConversionService
             Log::info('Starting milestone-based conversion', [
                 'quote_id' => $quote->id,
                 'milestones_count' => count($milestoneSchedule),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Validate quote eligibility
@@ -233,8 +229,8 @@ class QuoteInvoiceConversionService
                 // Generate contract with milestones
                 $contractTemplate = $this->selectOptimalTemplate($quote, $contractData);
                 $contract = $this->contractGenerationService->generateFromQuote(
-                    $quote, 
-                    $contractTemplate, 
+                    $quote,
+                    $contractTemplate,
                     $contractData
                 );
 
@@ -254,13 +250,13 @@ class QuoteInvoiceConversionService
 
                 // Update quote status
                 $quote->update([
-                    'status' => Quote::STATUS_CONVERTED
+                    'status' => Quote::STATUS_CONVERTED,
                 ]);
 
                 Log::info('Milestone-based conversion completed', [
                     'quote_id' => $quote->id,
                     'contract_id' => $contract->id,
-                    'conversion_id' => $conversion->id
+                    'conversion_id' => $conversion->id,
                 ]);
 
                 return $conversion->fresh();
@@ -270,7 +266,7 @@ class QuoteInvoiceConversionService
                     'status' => 'failed',
                     'error_log' => [['error' => $e->getMessage(), 'timestamp' => now()]],
                 ]);
-                
+
                 throw $e;
             }
         });
@@ -288,7 +284,7 @@ class QuoteInvoiceConversionService
             Log::info('Starting recurring invoice conversion', [
                 'quote_id' => $quote->id,
                 'recurring_frequency' => $recurringOptions['frequency'] ?? 'monthly',
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Validate quote eligibility
@@ -314,8 +310,8 @@ class QuoteInvoiceConversionService
                 // Generate service contract
                 $contractTemplate = $this->selectOptimalTemplate($quote, $contractData);
                 $contract = $this->contractGenerationService->generateFromQuote(
-                    $quote, 
-                    $contractTemplate, 
+                    $quote,
+                    $contractTemplate,
                     $contractData
                 );
 
@@ -340,14 +336,14 @@ class QuoteInvoiceConversionService
                 // Update quote status
                 $quote->update([
                     'status' => Quote::STATUS_CONVERTED,
-                    'converted_invoice_id' => $initialInvoice?->id
+                    'converted_invoice_id' => $initialInvoice?->id,
                 ]);
 
                 Log::info('Recurring invoice conversion completed', [
                     'quote_id' => $quote->id,
                     'contract_id' => $contract->id,
                     'recurring_invoices_count' => count($recurringInvoices),
-                    'conversion_id' => $conversion->id
+                    'conversion_id' => $conversion->id,
                 ]);
 
                 return $conversion->fresh();
@@ -357,7 +353,7 @@ class QuoteInvoiceConversionService
                     'status' => 'failed',
                     'error_log' => [['error' => $e->getMessage(), 'timestamp' => now()]],
                 ]);
-                
+
                 throw $e;
             }
         });
@@ -374,7 +370,7 @@ class QuoteInvoiceConversionService
             Log::info('Starting hybrid conversion', [
                 'quote_id' => $quote->id,
                 'conversion_types' => array_keys($conversionPlan),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Validate quote eligibility
@@ -406,22 +402,22 @@ class QuoteInvoiceConversionService
                         case 'service_contract':
                             $contracts[] = $this->createServiceContract($quote, $config);
                             break;
-                        
+
                         case 'equipment_contract':
                             $contracts[] = $this->createEquipmentContract($quote, $config);
                             break;
-                        
+
                         case 'immediate_invoice':
                             $invoices[] = $this->createImmediateInvoice($quote, $config);
                             break;
-                        
+
                         case 'recurring_setup':
                             $recurringSetups[] = $this->createRecurringSetup($quote, $config);
                             break;
                     }
                 }
 
-                $totalValue = array_sum(array_map(fn($inv) => $inv->amount, $invoices));
+                $totalValue = array_sum(array_map(fn ($inv) => $inv->amount, $invoices));
 
                 $conversion->update([
                     'contract_id' => $contracts[0]->id ?? null, // Primary contract
@@ -440,14 +436,14 @@ class QuoteInvoiceConversionService
                 // Update quote status
                 $quote->update([
                     'status' => Quote::STATUS_CONVERTED,
-                    'converted_invoice_id' => $invoices[0]->id ?? null
+                    'converted_invoice_id' => $invoices[0]->id ?? null,
                 ]);
 
                 Log::info('Hybrid conversion completed', [
                     'quote_id' => $quote->id,
                     'contracts_created' => count($contracts),
                     'invoices_created' => count($invoices),
-                    'conversion_id' => $conversion->id
+                    'conversion_id' => $conversion->id,
                 ]);
 
                 return $conversion->fresh();
@@ -457,7 +453,7 @@ class QuoteInvoiceConversionService
                     'status' => 'failed',
                     'error_log' => [['error' => $e->getMessage(), 'timestamp' => now()]],
                 ]);
-                
+
                 throw $e;
             }
         });
@@ -472,7 +468,7 @@ class QuoteInvoiceConversionService
             ->where('status', 'contract_signed')
             ->first();
 
-        if (!$conversion) {
+        if (! $conversion) {
             return;
         }
 
@@ -491,14 +487,14 @@ class QuoteInvoiceConversionService
             // Update quote status
             if ($conversion->quote) {
                 $conversion->quote->update([
-                    'converted_invoice_id' => $invoice->id
+                    'converted_invoice_id' => $invoice->id,
                 ]);
             }
 
             Log::info('Signed contract conversion completed', [
                 'contract_id' => $contract->id,
                 'invoice_id' => $invoice->id,
-                'conversion_id' => $conversion->id
+                'conversion_id' => $conversion->id,
             ]);
         });
     }
@@ -508,7 +504,7 @@ class QuoteInvoiceConversionService
      */
     public function processMilestoneCompletion(ContractMilestone $milestone): ?Invoice
     {
-        if (!$milestone->isBillable() || !$milestone->isCompleted()) {
+        if (! $milestone->isBillable() || ! $milestone->isCompleted()) {
             return null;
         }
 
@@ -520,18 +516,18 @@ class QuoteInvoiceConversionService
             if ($conversion) {
                 $invoiceIds = $conversion->integration_data['milestone_invoices'] ?? [];
                 $invoiceIds[] = $invoice->id;
-                
+
                 $conversion->update([
                     'integration_data' => array_merge($conversion->integration_data ?? [], [
-                        'milestone_invoices' => $invoiceIds
-                    ])
+                        'milestone_invoices' => $invoiceIds,
+                    ]),
                 ]);
             }
 
             Log::info('Milestone invoice generated', [
                 'milestone_id' => $milestone->id,
                 'invoice_id' => $invoice->id,
-                'amount' => $invoice->amount
+                'amount' => $invoice->amount,
             ]);
 
             return $invoice;
@@ -543,11 +539,11 @@ class QuoteInvoiceConversionService
      */
     protected function validateQuoteForConversion(Quote $quote): void
     {
-        if (!$quote->isAccepted()) {
+        if (! $quote->isAccepted()) {
             throw new \Exception('Quote must be accepted before conversion');
         }
 
-        if (!$quote->isFullyApproved()) {
+        if (! $quote->isFullyApproved()) {
             throw new \Exception('Quote must be fully approved before conversion');
         }
 
@@ -560,9 +556,9 @@ class QuoteInvoiceConversionService
      * Create invoice from quote
      */
     protected function createInvoiceFromQuote(
-        Quote $quote, 
+        Quote $quote,
         array $options = [],
-        Contract $contract = null
+        ?Contract $contract = null
     ): Invoice {
         $invoiceData = [
             'client_id' => $quote->client_id,
@@ -616,7 +612,7 @@ class QuoteInvoiceConversionService
     protected function mapVoipServices(Quote $quote): array
     {
         $mapping = [];
-        
+
         foreach ($quote->voipItems as $item) {
             $mapping[] = [
                 'quote_item_id' => $item->id,
@@ -638,7 +634,7 @@ class QuoteInvoiceConversionService
     protected function selectOptimalTemplate(Quote $quote, array $contractData): \App\Domains\Contract\Models\ContractTemplate
     {
         $templateType = $contractData['template_type'] ?? $this->determineOptimalTemplateType($quote);
-        
+
         return \App\Domains\Contract\Models\ContractTemplate::where('company_id', $quote->company_id)
             ->where('template_type', $templateType)
             ->where('status', 'active')
@@ -653,11 +649,11 @@ class QuoteInvoiceConversionService
     {
         if ($quote->hasVoIPServices()) {
             $voipItems = $quote->voipItems;
-            
+
             if ($voipItems->contains('service_type', 'hosted_pbx')) {
                 return 'service_agreement';
             }
-            
+
             if ($voipItems->contains('service_type', 'equipment_lease')) {
                 return 'equipment_lease';
             }
@@ -678,7 +674,6 @@ class QuoteInvoiceConversionService
     /**
      * Additional helper methods would be implemented here...
      */
-    
     protected function createMilestoneBillingSchedule(Contract $contract, Quote $quote, array $milestoneSchedule): void
     {
         // Implementation for milestone billing schedule
@@ -702,13 +697,13 @@ class QuoteInvoiceConversionService
     protected function createServiceContract(Quote $quote, array $config): Contract
     {
         // Implementation for service contract creation
-        return new Contract();
+        return new Contract;
     }
 
     protected function createEquipmentContract(Quote $quote, array $config): Contract
     {
         // Implementation for equipment contract creation
-        return new Contract();
+        return new Contract;
     }
 
     protected function createImmediateInvoice(Quote $quote, array $config): Invoice
@@ -758,6 +753,7 @@ class QuoteInvoiceConversionService
     protected function requiresProvisioning(string $serviceType): bool
     {
         $provisioningTypes = ['hosted_pbx', 'sip_trunking', 'did_numbers'];
+
         return in_array($serviceType, $provisioningTypes);
     }
 }

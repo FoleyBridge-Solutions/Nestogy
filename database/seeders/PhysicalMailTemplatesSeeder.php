@@ -13,8 +13,8 @@ class PhysicalMailTemplatesSeeder extends Seeder
      */
     public function run(): void
     {
-        $builder = new PhysicalMailTemplateBuilder();
-        
+        $builder = new PhysicalMailTemplateBuilder;
+
         // Standard Business Letter Template
         PhysicalMailTemplate::updateOrCreate(
             ['name' => 'Standard Business Letter'],
@@ -22,7 +22,7 @@ class PhysicalMailTemplatesSeeder extends Seeder
                 'type' => 'letter',
                 'content' => $builder->generateBusinessLetter([
                     'primary_color' => '#1a56db',
-                    'title' => 'Business Letter'
+                    'title' => 'Business Letter',
                 ]),
                 'description' => 'Professional business letter with proper margins for PostGrid address placement',
                 'variables' => ['date', 'body', 'to', 'from'],
@@ -30,11 +30,11 @@ class PhysicalMailTemplatesSeeder extends Seeder
                 'metadata' => [
                     'safe_for_postgrid' => true,
                     'margin_top_inches' => 4,
-                    'template_version' => '1.0'
-                ]
+                    'template_version' => '1.0',
+                ],
             ]
         );
-        
+
         // Invoice Template
         PhysicalMailTemplate::updateOrCreate(
             ['name' => 'Invoice Template'],
@@ -42,22 +42,22 @@ class PhysicalMailTemplatesSeeder extends Seeder
                 'type' => 'letter',
                 'content' => $builder->generateInvoiceTemplate([
                     'primary_color' => '#1a56db',
-                    'title' => 'Invoice'
+                    'title' => 'Invoice',
                 ]),
                 'description' => 'Invoice template with itemized billing and payment instructions',
                 'variables' => [
                     'invoice_number', 'invoice_date', 'due_date', 'amount_due',
-                    'line_items', 'total_amount', 'payment_instructions', 'to', 'from'
+                    'line_items', 'total_amount', 'payment_instructions', 'to', 'from',
                 ],
                 'is_active' => true,
                 'metadata' => [
                     'safe_for_postgrid' => true,
                     'margin_top_inches' => 4,
-                    'template_version' => '1.0'
-                ]
+                    'template_version' => '1.0',
+                ],
             ]
         );
-        
+
         // Statement Template
         PhysicalMailTemplate::updateOrCreate(
             ['name' => 'Account Statement'],
@@ -66,17 +66,17 @@ class PhysicalMailTemplatesSeeder extends Seeder
                 'content' => $this->getStatementTemplate($builder),
                 'description' => 'Monthly account statement with transaction history',
                 'variables' => [
-                    'statement_date', 'account_number', 'balance', 'transactions', 'to', 'from'
+                    'statement_date', 'account_number', 'balance', 'transactions', 'to', 'from',
                 ],
                 'is_active' => true,
                 'metadata' => [
                     'safe_for_postgrid' => true,
                     'margin_top_inches' => 4,
-                    'template_version' => '1.0'
-                ]
+                    'template_version' => '1.0',
+                ],
             ]
         );
-        
+
         // Past Due Notice Template
         PhysicalMailTemplate::updateOrCreate(
             ['name' => 'Past Due Notice'],
@@ -85,17 +85,17 @@ class PhysicalMailTemplatesSeeder extends Seeder
                 'content' => $this->getPastDueTemplate($builder),
                 'description' => 'Past due payment reminder notice',
                 'variables' => [
-                    'invoice_number', 'amount_due', 'days_overdue', 'due_date', 'to', 'from'
+                    'invoice_number', 'amount_due', 'days_overdue', 'due_date', 'to', 'from',
                 ],
                 'is_active' => true,
                 'metadata' => [
                     'safe_for_postgrid' => true,
                     'margin_top_inches' => 4,
-                    'template_version' => '1.0'
-                ]
+                    'template_version' => '1.0',
+                ],
             ]
         );
-        
+
         // Welcome Letter Template
         PhysicalMailTemplate::updateOrCreate(
             ['name' => 'Welcome Letter'],
@@ -104,17 +104,17 @@ class PhysicalMailTemplatesSeeder extends Seeder
                 'content' => $this->getWelcomeTemplate($builder),
                 'description' => 'New customer welcome letter',
                 'variables' => [
-                    'customer_name', 'account_number', 'services', 'to', 'from'
+                    'customer_name', 'account_number', 'services', 'to', 'from',
                 ],
                 'is_active' => true,
                 'metadata' => [
                     'safe_for_postgrid' => true,
                     'margin_top_inches' => 4,
-                    'template_version' => '1.0'
-                ]
+                    'template_version' => '1.0',
+                ],
             ]
         );
-        
+
         // Contract Template
         PhysicalMailTemplate::updateOrCreate(
             ['name' => 'Service Contract'],
@@ -123,20 +123,20 @@ class PhysicalMailTemplatesSeeder extends Seeder
                 'content' => $this->getContractTemplate($builder),
                 'description' => 'Service agreement contract',
                 'variables' => [
-                    'contract_number', 'start_date', 'end_date', 'terms', 'to', 'from'
+                    'contract_number', 'start_date', 'end_date', 'terms', 'to', 'from',
                 ],
                 'is_active' => true,
                 'metadata' => [
                     'safe_for_postgrid' => true,
                     'margin_top_inches' => 4,
-                    'template_version' => '1.0'
-                ]
+                    'template_version' => '1.0',
+                ],
             ]
         );
-        
+
         $this->command->info('Physical mail templates seeded successfully.');
     }
-    
+
     private function getStatementTemplate(PhysicalMailTemplateBuilder $builder): string
     {
         $content = '
@@ -174,10 +174,10 @@ class PhysicalMailTemplatesSeeder extends Seeder
             <p class="text-center">Thank you for your business!</p>
         </div>
         ';
-        
+
         return $builder->buildTemplate($content, 'statement');
     }
-    
+
     private function getPastDueTemplate(PhysicalMailTemplateBuilder $builder): string
     {
         $content = '
@@ -209,10 +209,10 @@ class PhysicalMailTemplatesSeeder extends Seeder
             <p class="signature-title">{{from.companyName}}</p>
         </div>
         ';
-        
+
         return $builder->buildTemplate($content, 'notice', ['primary_color' => '#dc2626']);
     }
-    
+
     private function getWelcomeTemplate(PhysicalMailTemplateBuilder $builder): string
     {
         $content = '
@@ -254,10 +254,10 @@ class PhysicalMailTemplatesSeeder extends Seeder
             <p class="signature-title">{{from.companyName}}</p>
         </div>
         ';
-        
+
         return $builder->buildTemplate($content, 'letter');
     }
-    
+
     private function getContractTemplate(PhysicalMailTemplateBuilder $builder): string
     {
         $content = '
@@ -302,7 +302,7 @@ class PhysicalMailTemplatesSeeder extends Seeder
             </table>
         </div>
         ';
-        
+
         return $builder->buildTemplate($content, 'letter');
     }
 }

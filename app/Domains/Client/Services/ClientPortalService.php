@@ -2,28 +2,22 @@
 
 namespace App\Domains\Client\Services;
 
-use App\Models\Client;
-use App\Models\ClientPortalSession;
-use App\Models\ClientPortalAccess;
-use App\Models\ClientDocument;
-use App\Models\PortalNotification;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\PaymentMethod;
-use App\Models\AutoPayment;
-use App\Domains\Security\Services\PortalAuthService;
 use App\Domains\Financial\Services\PortalPaymentService;
+use App\Domains\Security\Services\PortalAuthService;
+use App\Models\Client;
+use App\Models\ClientDocument;
+use App\Models\Payment;
+use App\Models\PortalNotification;
+use Exception;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Carbon;
-use Illuminate\Http\UploadedFile;
-use Exception;
 
 /**
  * Client Portal Service
- * 
+ *
  * Comprehensive service for managing client portal functionality including:
  * - Portal dashboard and analytics
  * - Service history and contract management
@@ -41,14 +35,16 @@ use Exception;
 class ClientPortalService
 {
     protected PortalAuthService $authService;
+
     protected PortalPaymentService $paymentService;
+
     protected array $config;
 
     public function __construct(PortalAuthService $authService, PortalPaymentService $paymentService)
     {
         $this->authService = $authService;
         $this->paymentService = $paymentService;
-        
+
         $this->config = config('portal.general', [
             'session_timeout' => 7200, // 2 hours
             'max_document_size' => 10 * 1024 * 1024, // 10MB
@@ -68,9 +64,9 @@ class ClientPortalService
     public function getDashboardData(Client $client): array
     {
         $cacheKey = "portal_dashboard_{$client->id}";
-        
+
         return Cache::remember($cacheKey, $this->config['dashboard_cache_ttl'], function () use ($client) {
-            
+
             $data = [
                 'client_info' => $this->getClientInfo($client),
                 'account_summary' => $this->getAccountSummary($client),
@@ -141,7 +137,7 @@ class ClientPortalService
         } catch (Exception $e) {
             Log::error('Service history retrieval error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to retrieve service history');
@@ -154,7 +150,7 @@ class ClientPortalService
     public function getSupportTickets(Client $client, array $filters = []): array
     {
         try {
-            if (!$this->config['support_integration']) {
+            if (! $this->config['support_integration']) {
                 return $this->successResponse('Support integration disabled', ['tickets' => []]);
             }
 
@@ -195,7 +191,7 @@ class ClientPortalService
         } catch (Exception $e) {
             Log::error('Support tickets retrieval error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to retrieve support tickets');
@@ -208,19 +204,19 @@ class ClientPortalService
     public function createSupportTicket(Client $client, array $ticketData): array
     {
         try {
-            if (!$this->config['support_integration']) {
+            if (! $this->config['support_integration']) {
                 return $this->failResponse('Support integration disabled');
             }
 
             $validation = $this->validateTicketData($ticketData);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->failResponse($validation['message']);
             }
 
             // Placeholder implementation for ticket creation
             // This would integrate with actual support ticket system
             $ticketId = rand(1000, 9999);
-            $ticketNumber = 'TKT-' . date('Y') . '-' . str_pad($ticketId, 6, '0', STR_PAD_LEFT);
+            $ticketNumber = 'TKT-'.date('Y').'-'.str_pad($ticketId, 6, '0', STR_PAD_LEFT);
 
             // Create notification
             $this->createNotification($client, 'support_ticket_created', 'Support Ticket Created',
@@ -242,7 +238,7 @@ class ClientPortalService
         } catch (Exception $e) {
             Log::error('Support ticket creation error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to create support ticket');
@@ -273,7 +269,7 @@ class ClientPortalService
             if (isset($filters['search'])) {
                 $query->where(function ($q) use ($filters) {
                     $q->where('name', 'like', "%{$filters['search']}%")
-                      ->orWhere('description', 'like', "%{$filters['search']}%");
+                        ->orWhere('description', 'like', "%{$filters['search']}%");
                 });
             }
 
@@ -322,7 +318,7 @@ class ClientPortalService
         } catch (Exception $e) {
             Log::error('Document retrieval error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to retrieve documents');
@@ -337,15 +333,15 @@ class ClientPortalService
         try {
             // Validate file
             $validation = $this->validateDocumentUpload($file);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->failResponse($validation['message']);
             }
 
             return DB::transaction(function () use ($client, $file, $metadata) {
-                
+
                 // Generate unique filename
                 $filename = $this->generateDocumentFilename($file);
-                
+
                 // Store file
                 $path = $file->storeAs(
                     "client-documents/{$client->company_id}/{$client->id}",
@@ -373,7 +369,7 @@ class ClientPortalService
                         'access_logging' => true,
                         'download_limit' => $metadata['download_limit'] ?? null,
                     ],
-                    'expires_at' => isset($metadata['expires_days']) 
+                    'expires_at' => isset($metadata['expires_days'])
                         ? Carbon::now()->addDays($metadata['expires_days'])
                         : null,
                     'uploaded_by' => 'client',
@@ -401,7 +397,7 @@ class ClientPortalService
         } catch (Exception $e) {
             Log::error('Document upload error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to upload document');
@@ -478,7 +474,7 @@ class ClientPortalService
         } catch (Exception $e) {
             Log::error('Notifications retrieval error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to retrieve notifications');
@@ -495,11 +491,11 @@ class ClientPortalService
                 ->where('id', $notificationId)
                 ->first();
 
-            if (!$notification) {
+            if (! $notification) {
                 return $this->failResponse('Notification not found');
             }
 
-            if (!$notification->isRead()) {
+            if (! $notification->isRead()) {
                 $notification->markAsRead();
 
                 Log::info('Notification marked as read', [
@@ -514,7 +510,7 @@ class ClientPortalService
             Log::error('Notification mark as read error', [
                 'notification_id' => $notificationId,
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to mark notification as read');
@@ -528,12 +524,12 @@ class ClientPortalService
     {
         try {
             $validation = $this->validateProfileData($profileData);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->failResponse($validation['message']);
             }
 
             return DB::transaction(function () use ($client, $profileData) {
-                
+
                 // Update client basic information
                 $clientUpdates = [];
                 if (isset($profileData['company_name'])) {
@@ -546,7 +542,7 @@ class ClientPortalService
                     $clientUpdates['phone'] = $profileData['phone'];
                 }
 
-                if (!empty($clientUpdates)) {
+                if (! empty($clientUpdates)) {
                     $client->update($clientUpdates);
                 }
 
@@ -588,7 +584,7 @@ class ClientPortalService
         } catch (Exception $e) {
             Log::error('Profile update error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to update profile');
@@ -601,13 +597,13 @@ class ClientPortalService
     public function getUsageAnalytics(Client $client, array $filters = []): array
     {
         try {
-            if (!$this->config['analytics_enabled']) {
+            if (! $this->config['analytics_enabled']) {
                 return $this->successResponse('Analytics disabled', ['analytics' => []]);
             }
 
             $startDate = $filters['start_date'] ?? Carbon::now()->subDays(30);
             $endDate = $filters['end_date'] ?? Carbon::now();
-            
+
             $analytics = [
                 'portal_usage' => $this->getPortalUsageAnalytics($client, $startDate, $endDate),
                 'service_usage' => $this->getServiceUsageAnalytics($client, $startDate, $endDate),
@@ -629,7 +625,7 @@ class ClientPortalService
         } catch (Exception $e) {
             Log::error('Usage analytics error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->failResponse('Unable to retrieve usage analytics');
@@ -753,7 +749,7 @@ class ClientPortalService
                     'date' => Carbon::now()->subDays(2),
                     'status' => 'open',
                     'metadata' => ['ticket_id' => 1],
-                ]
+                ],
             ]);
             $activities = $activities->merge($tickets);
         }
@@ -808,7 +804,7 @@ class ClientPortalService
                 'date' => Carbon::now()->addDays(30),
                 'priority' => 'normal',
                 'action_url' => '#',
-            ]
+            ],
         ]);
         $items = $items->merge($serviceRenewals);
 
@@ -837,7 +833,7 @@ class ClientPortalService
 
     private function getSupportSummary(Client $client): array
     {
-        if (!$this->config['support_integration']) {
+        if (! $this->config['support_integration']) {
             return ['enabled' => false];
         }
 
@@ -853,7 +849,7 @@ class ClientPortalService
 
     private function getUsageSummary(Client $client): array
     {
-        if (!$this->config['usage_tracking_enabled']) {
+        if (! $this->config['usage_tracking_enabled']) {
             return ['enabled' => false];
         }
 
@@ -929,7 +925,7 @@ class ClientPortalService
             'browser_info' => [
                 'browser' => 'Chrome',
                 'version' => '120.0',
-                'os' => 'Windows 10'
+                'os' => 'Windows 10',
             ],
         ];
     }
@@ -976,7 +972,7 @@ class ClientPortalService
             $errors[] = 'Description is required';
         }
 
-        if (isset($ticketData['priority']) && !in_array($ticketData['priority'], ['low', 'normal', 'high', 'urgent'])) {
+        if (isset($ticketData['priority']) && ! in_array($ticketData['priority'], ['low', 'normal', 'high', 'urgent'])) {
             $errors[] = 'Invalid priority level';
         }
 
@@ -994,7 +990,7 @@ class ClientPortalService
             $errors[] = 'File size exceeds maximum allowed size';
         }
 
-        if (!in_array($file->getClientOriginalExtension(), $this->config['allowed_document_types'])) {
+        if (! in_array($file->getClientOriginalExtension(), $this->config['allowed_document_types'])) {
             $errors[] = 'File type not allowed';
         }
 
@@ -1007,8 +1003,9 @@ class ClientPortalService
     private function generateDocumentFilename(UploadedFile $file): string
     {
         $extension = $file->getClientOriginalExtension();
-        $hash = hash('sha256', $file->getContent() . time());
-        return substr($hash, 0, 16) . '.' . $extension;
+        $hash = hash('sha256', $file->getContent().time());
+
+        return substr($hash, 0, 16).'.'.$extension;
     }
 
     private function validateProfileData(array $profileData): array
@@ -1023,7 +1020,7 @@ class ClientPortalService
             $errors[] = 'Contact name cannot be empty';
         }
 
-        if (isset($profileData['phone']) && !preg_match('/^[\d\s\-\+\(\)]+$/', $profileData['phone'])) {
+        if (isset($profileData['phone']) && ! preg_match('/^[\d\s\-\+\(\)]+$/', $profileData['phone'])) {
             $errors[] = 'Invalid phone number format';
         }
 
@@ -1071,7 +1068,7 @@ class ClientPortalService
 
     private function getSupportAnalytics(Client $client, Carbon $startDate, Carbon $endDate): array
     {
-        if (!$this->config['support_integration']) {
+        if (! $this->config['support_integration']) {
             return ['enabled' => false];
         }
 
@@ -1141,7 +1138,7 @@ class ClientPortalService
         ], $data);
     }
 
-    private function failResponse(string $message, string $errorCode = null): array
+    private function failResponse(string $message, ?string $errorCode = null): array
     {
         $response = [
             'success' => false,

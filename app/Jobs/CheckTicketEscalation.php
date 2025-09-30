@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Check Ticket Escalation Job
- * 
+ *
  * Monitors urgent tickets for escalation needs based on response time
  * and resolution SLAs. Triggers escalation actions when thresholds are met.
  */
@@ -60,6 +60,7 @@ class CheckTicketEscalation implements ShouldQueue
                     'ticket_id' => $this->ticket->id,
                     'status' => $this->ticket->status,
                 ]);
+
                 return;
             }
 
@@ -92,7 +93,7 @@ class CheckTicketEscalation implements ShouldQueue
         $ticketAge = now()->diffInMinutes($this->ticket->created_at);
 
         // Check response time SLA
-        if (!$this->hasFirstResponse() && $ticketAge > $slaThresholds['response_time']) {
+        if (! $this->hasFirstResponse() && $ticketAge > $slaThresholds['response_time']) {
             return 'response_overdue';
         }
 
@@ -207,7 +208,7 @@ class CheckTicketEscalation implements ShouldQueue
 
         if ($newPriority !== $this->ticket->priority) {
             $this->ticket->update(['priority' => $newPriority]);
-            
+
             Log::info('Ticket priority escalated', [
                 'ticket_id' => $this->ticket->id,
                 'old_priority' => $this->ticket->priority,
@@ -250,7 +251,7 @@ class CheckTicketEscalation implements ShouldQueue
 
         if ($seniorTechs->isNotEmpty()) {
             $assignee = $seniorTechs->random();
-            
+
             $this->ticket->update([
                 'assigned_to' => $assignee->id,
                 'assigned_at' => now(),
@@ -311,8 +312,8 @@ class CheckTicketEscalation implements ShouldQueue
     {
         return [
             'escalation-check',
-            'ticket:' . $this->ticket->id,
-            'priority:' . $this->ticket->priority,
+            'ticket:'.$this->ticket->id,
+            'priority:'.$this->ticket->priority,
         ];
     }
 }

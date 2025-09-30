@@ -2,17 +2,15 @@
 
 namespace App\Domains\Marketing\Controllers;
 
-use App\Http\Controllers\Controller;
-
-use App\Domains\Marketing\Models\MarketingCampaign;
-use App\Domains\Marketing\Models\CampaignSequence;
-use App\Domains\Marketing\Models\CampaignEnrollment;
-use App\Domains\Marketing\Services\CampaignEmailService;
-use App\Domains\Lead\Models\Lead;
 use App\Domains\Core\Controllers\BaseResourceController;
+use App\Domains\Lead\Models\Lead;
+use App\Domains\Marketing\Models\CampaignEnrollment;
+use App\Domains\Marketing\Models\CampaignSequence;
+use App\Domains\Marketing\Models\MarketingCampaign;
+use App\Domains\Marketing\Services\CampaignEmailService;
 use App\Models\Contact;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class CampaignController extends BaseResourceController
@@ -59,16 +57,16 @@ class CampaignController extends BaseResourceController
         }
 
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('description', 'like', '%'.$request->search.'%');
             });
         }
 
         // Apply sorting
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
-        
+
         if (in_array($sortField, ['created_at', 'start_date', 'total_recipients', 'total_converted'])) {
             $query->orderBy($sortField, $sortDirection);
         }
@@ -81,7 +79,7 @@ class CampaignController extends BaseResourceController
                 'filters' => [
                     'statuses' => MarketingCampaign::getStatuses(),
                     'types' => MarketingCampaign::getTypes(),
-                ]
+                ],
             ]);
         }
 
@@ -121,7 +119,7 @@ class CampaignController extends BaseResourceController
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Campaign created successfully',
-                'campaign' => $campaign->load(['createdBy'])
+                'campaign' => $campaign->load(['createdBy']),
             ], 201);
         }
 
@@ -139,12 +137,12 @@ class CampaignController extends BaseResourceController
 
         $campaign->load([
             'createdBy',
-            'sequences' => function($query) {
+            'sequences' => function ($query) {
                 $query->orderBy('step_number');
             },
-            'enrollments' => function($query) {
+            'enrollments' => function ($query) {
                 $query->with(['lead', 'contact'])->latest();
-            }
+            },
         ]);
 
         // Get campaign metrics
@@ -153,7 +151,7 @@ class CampaignController extends BaseResourceController
         if (request()->expectsJson()) {
             return response()->json([
                 'campaign' => $campaign,
-                'metrics' => $metrics
+                'metrics' => $metrics,
             ]);
         }
 
@@ -168,7 +166,7 @@ class CampaignController extends BaseResourceController
         $campaign = MarketingCampaign::findOrFail($id);
         $this->authorize('update', $campaign);
 
-        if (!$campaign->canBeEdited()) {
+        if (! $campaign->canBeEdited()) {
             return redirect()->route('marketing.campaigns.show', $campaign)
                 ->with('error', 'Campaign cannot be edited in current status');
         }
@@ -184,10 +182,11 @@ class CampaignController extends BaseResourceController
         $campaign = MarketingCampaign::findOrFail($id);
         $this->authorize('update', $campaign);
 
-        if (!$campaign->canBeEdited()) {
+        if (! $campaign->canBeEdited()) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Campaign cannot be edited in current status'], 400);
             }
+
             return back()->with('error', 'Campaign cannot be edited in current status');
         }
 
@@ -207,7 +206,7 @@ class CampaignController extends BaseResourceController
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Campaign updated successfully',
-                'campaign' => $campaign->load(['createdBy'])
+                'campaign' => $campaign->load(['createdBy']),
             ]);
         }
 
@@ -228,6 +227,7 @@ class CampaignController extends BaseResourceController
             if (request()->expectsJson()) {
                 return response()->json(['error' => 'Only draft campaigns can be deleted'], 400);
             }
+
             return back()->with('error', 'Only draft campaigns can be deleted');
         }
 
@@ -254,7 +254,7 @@ class CampaignController extends BaseResourceController
             if (request()->expectsJson()) {
                 return response()->json([
                     'message' => 'Campaign started successfully',
-                    'campaign' => $campaign->refresh()
+                    'campaign' => $campaign->refresh(),
                 ]);
             }
 
@@ -263,6 +263,7 @@ class CampaignController extends BaseResourceController
             if (request()->expectsJson()) {
                 return response()->json(['error' => $e->getMessage()], 400);
             }
+
             return back()->with('error', $e->getMessage());
         }
     }
@@ -281,7 +282,7 @@ class CampaignController extends BaseResourceController
             if (request()->expectsJson()) {
                 return response()->json([
                     'message' => 'Campaign paused successfully',
-                    'campaign' => $campaign->refresh()
+                    'campaign' => $campaign->refresh(),
                 ]);
             }
 
@@ -290,6 +291,7 @@ class CampaignController extends BaseResourceController
             if (request()->expectsJson()) {
                 return response()->json(['error' => $e->getMessage()], 400);
             }
+
             return back()->with('error', $e->getMessage());
         }
     }
@@ -307,7 +309,7 @@ class CampaignController extends BaseResourceController
         if (request()->expectsJson()) {
             return response()->json([
                 'message' => 'Campaign completed successfully',
-                'campaign' => $campaign->refresh()
+                'campaign' => $campaign->refresh(),
             ]);
         }
 
@@ -323,7 +325,7 @@ class CampaignController extends BaseResourceController
         $this->authorize('view', $campaign);
 
         $clonedCampaign = $campaign->replicate();
-        $clonedCampaign->name = $campaign->name . ' (Copy)';
+        $clonedCampaign->name = $campaign->name.' (Copy)';
         $clonedCampaign->status = MarketingCampaign::STATUS_DRAFT;
         $clonedCampaign->created_by_user_id = auth()->id();
         $clonedCampaign->start_date = null;
@@ -338,7 +340,7 @@ class CampaignController extends BaseResourceController
         if (request()->expectsJson()) {
             return response()->json([
                 'message' => 'Campaign cloned successfully',
-                'campaign' => $clonedCampaign->load(['createdBy'])
+                'campaign' => $clonedCampaign->load(['createdBy']),
             ]);
         }
 
@@ -354,7 +356,7 @@ class CampaignController extends BaseResourceController
         $campaign = MarketingCampaign::findOrFail($id);
         $this->authorize('update', $campaign);
 
-        if (!$campaign->canBeEdited()) {
+        if (! $campaign->canBeEdited()) {
             return response()->json(['error' => 'Campaign cannot be edited in current status'], 400);
         }
 
@@ -377,7 +379,7 @@ class CampaignController extends BaseResourceController
 
         return response()->json([
             'message' => 'Sequence added successfully',
-            'sequence' => $sequence
+            'sequence' => $sequence,
         ]);
     }
 
@@ -411,7 +413,7 @@ class CampaignController extends BaseResourceController
 
         return response()->json([
             'message' => "Enrolled {$enrolledCount} leads in campaign",
-            'enrolled_count' => $enrolledCount
+            'enrolled_count' => $enrolledCount,
         ]);
     }
 
@@ -445,7 +447,7 @@ class CampaignController extends BaseResourceController
 
         return response()->json([
             'message' => "Enrolled {$enrolledCount} contacts in campaign",
-            'enrolled_count' => $enrolledCount
+            'enrolled_count' => $enrolledCount,
         ]);
     }
 
@@ -494,7 +496,7 @@ class CampaignController extends BaseResourceController
         $this->authorize('update', $campaign);
 
         $validated = $request->validate([
-            'test_email' => 'required|email'
+            'test_email' => 'required|email',
         ]);
 
         $sent = $this->campaignEmailService->sendTestEmail($sequence, $validated['test_email']);

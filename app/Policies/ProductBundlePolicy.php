@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\ProductBundle;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ProductBundlePolicy
 {
@@ -21,7 +20,7 @@ class ProductBundlePolicy
      */
     public function view(User $user, ProductBundle $productBundle): bool
     {
-        return $this->belongsToUserCompany($user, $productBundle) && 
+        return $this->belongsToUserCompany($user, $productBundle) &&
                $user->getRole() >= User::ROLE_ACCOUNTANT;
     }
 
@@ -38,7 +37,7 @@ class ProductBundlePolicy
      */
     public function update(User $user, ProductBundle $productBundle): bool
     {
-        return $this->belongsToUserCompany($user, $productBundle) && 
+        return $this->belongsToUserCompany($user, $productBundle) &&
                $user->getRole() >= User::ROLE_TECH;
     }
 
@@ -47,7 +46,7 @@ class ProductBundlePolicy
      */
     public function delete(User $user, ProductBundle $productBundle): bool
     {
-        return $this->belongsToUserCompany($user, $productBundle) && 
+        return $this->belongsToUserCompany($user, $productBundle) &&
                $user->getRole() >= User::ROLE_TECH;
     }
 
@@ -56,7 +55,7 @@ class ProductBundlePolicy
      */
     public function restore(User $user, ProductBundle $productBundle): bool
     {
-        return $this->belongsToUserCompany($user, $productBundle) && 
+        return $this->belongsToUserCompany($user, $productBundle) &&
                $user->getRole() >= User::ROLE_ADMIN;
     }
 
@@ -65,7 +64,7 @@ class ProductBundlePolicy
      */
     public function forceDelete(User $user, ProductBundle $productBundle): bool
     {
-        return $this->belongsToUserCompany($user, $productBundle) && 
+        return $this->belongsToUserCompany($user, $productBundle) &&
                $user->getRole() >= User::ROLE_ADMIN;
     }
 

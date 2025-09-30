@@ -7,7 +7,7 @@ use App\Domains\Ticket\Models\Ticket;
 
 /**
  * SLA Breach Notification Strategy
- * 
+ *
  * Handles critical notifications when SLA breaches occur.
  * Ensures immediate escalation to supervisors and management.
  */
@@ -18,7 +18,7 @@ class SlaBreachStrategy implements NotificationStrategyInterface
      */
     public function execute(Ticket $ticket, array $eventData = []): array
     {
-        if (!$this->shouldExecute($ticket, $eventData)) {
+        if (! $this->shouldExecute($ticket, $eventData)) {
             return ['skipped' => true, 'reason' => 'Strategy execution conditions not met'];
         }
 
@@ -63,7 +63,7 @@ class SlaBreachStrategy implements NotificationStrategyInterface
             $recipients['email'][] = $ticket->assignee;
             $recipients['slack'][] = $ticket->assignee;
             $recipients['sms'][] = $ticket->assignee;
-            
+
             // Notify assignee's supervisor
             if ($ticket->assignee->supervisor) {
                 $recipients['email'][] = $ticket->assignee->supervisor;
@@ -107,6 +107,7 @@ class SlaBreachStrategy implements NotificationStrategyInterface
     public function getSubject(Ticket $ticket, array $eventData = []): string
     {
         $breachType = $eventData['breach_type'] ?? 'SLA';
+
         return "🚨 {$breachType} BREACH: #{$ticket->ticket_number} - IMMEDIATE ACTION REQUIRED";
     }
 
@@ -117,37 +118,37 @@ class SlaBreachStrategy implements NotificationStrategyInterface
     {
         $breachType = $eventData['breach_type'] ?? 'SLA';
         $breachDetails = $eventData['breach_details'] ?? [];
-        
+
         $message = "⚠️ CRITICAL: {$breachType} BREACH DETECTED ⚠️\n\n";
         $message .= "A service level agreement has been breached and requires immediate attention.\n\n";
-        
+
         $message .= "Ticket Details:\n";
         $message .= "• Number: #{$ticket->ticket_number}\n";
         $message .= "• Subject: {$ticket->subject}\n";
         $message .= "• Priority: {$ticket->priority}\n";
         $message .= "• Status: {$ticket->status}\n";
         $message .= "• Created: {$ticket->created_at->format('M d, Y H:i')}\n";
-        
+
         if ($ticket->client) {
             $message .= "• Client: {$ticket->client->display_name}\n";
         }
-        
+
         if ($ticket->assignee) {
             $message .= "• Assigned to: {$ticket->assignee->name}\n";
         }
 
         // Add SLA breach details
-        if (!empty($breachDetails)) {
+        if (! empty($breachDetails)) {
             $message .= "\nBreach Details:\n";
-            
+
             if (isset($breachDetails['response_time_exceeded'])) {
                 $message .= "• Response Time: EXCEEDED (Target: {$breachDetails['target_response_time']})\n";
             }
-            
+
             if (isset($breachDetails['resolution_time_exceeded'])) {
                 $message .= "• Resolution Time: EXCEEDED (Target: {$breachDetails['target_resolution_time']})\n";
             }
-            
+
             if (isset($breachDetails['time_exceeded_by'])) {
                 $message .= "• Time Exceeded By: {$breachDetails['time_exceeded_by']}\n";
             }
@@ -186,7 +187,7 @@ class SlaBreachStrategy implements NotificationStrategyInterface
     public function shouldExecute(Ticket $ticket, array $eventData = []): bool
     {
         // Must have breach type specified
-        if (!isset($eventData['breach_type'])) {
+        if (! isset($eventData['breach_type'])) {
             return false;
         }
 
@@ -217,6 +218,7 @@ class SlaBreachStrategy implements NotificationStrategyInterface
     protected function watcherWantsSlaNotifications($watcher): bool
     {
         $preferences = $watcher->notification_preferences ?? [];
+
         return $preferences['sla_breach'] ?? true; // Default to true for SLA breaches
     }
 

@@ -2,23 +2,23 @@
 
 namespace App\Domains\Ticket\Models;
 
-use App\Traits\BelongsToCompany;
 use App\Models\User;
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * Ticket Time Entry Model
- * 
+ *
  * Represents time tracking entries for tickets with billable hours,
  * rates, and work descriptions for accurate project billing.
  */
 class TicketTimeEntry extends Model
 {
-    use HasFactory, BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'ticket_id',
@@ -81,7 +81,9 @@ class TicketTimeEntry extends Model
     // ===========================================
 
     const TYPE_MANUAL = 'manual';
+
     const TYPE_TIMER = 'timer';
+
     const TYPE_IMPORT = 'import';
 
     // ===========================================
@@ -122,24 +124,24 @@ class TicketTimeEntry extends Model
      */
     public function getTotalCost(): float
     {
-        if (!$this->billable || !$this->hourly_rate) {
+        if (! $this->billable || ! $this->hourly_rate) {
             return 0.00;
         }
 
         return round($this->hours_worked * $this->hourly_rate, 2);
     }
 
-
     /**
      * Calculate hours worked from started_at/ended_at times if available
      */
     public function calculateHoursFromStartedTimes(): ?float
     {
-        if (!$this->started_at || !$this->ended_at) {
+        if (! $this->started_at || ! $this->ended_at) {
             return null;
         }
 
         $diff = $this->ended_at->diffInMinutes($this->started_at);
+
         return round($diff / 60, 2);
     }
 
@@ -161,7 +163,7 @@ class TicketTimeEntry extends Model
      */
     public function stopTimer(): float
     {
-        if (!$this->started_at) {
+        if (! $this->started_at) {
             throw new \Exception('Timer was not started for this entry.');
         }
 
@@ -172,22 +174,20 @@ class TicketTimeEntry extends Model
 
         return $this->hours_worked;
     }
-    
+
     /**
      * Get elapsed time in minutes for active timer
-     * 
-     * @return int
      */
     public function getElapsedTime(): int
     {
-        if (!$this->started_at || $this->ended_at) {
+        if (! $this->started_at || $this->ended_at) {
             return 0;
         }
-        
+
         $start = Carbon::parse($this->started_at);
         $now = now();
         $pausedMinutes = $this->paused_duration ?? 0;
-        
+
         return (int) max(0, $start->diffInMinutes($now) - $pausedMinutes);
     }
 
@@ -196,9 +196,9 @@ class TicketTimeEntry extends Model
      */
     public function isTimerRunning(): bool
     {
-        return $this->entry_type === self::TYPE_TIMER 
-            && $this->started_at 
-            && !$this->ended_at;
+        return $this->entry_type === self::TYPE_TIMER
+            && $this->started_at
+            && ! $this->ended_at;
     }
 
     /**
@@ -243,11 +243,11 @@ class TicketTimeEntry extends Model
         if ($this->work_date) {
             return $this->work_date;
         }
-        
+
         if ($this->started_at) {
             return \Carbon\Carbon::parse($this->started_at->toDateString());
         }
-        
+
         return $this->created_at ? \Carbon\Carbon::parse($this->created_at->toDateString()) : \Carbon\Carbon::now();
     }
 
@@ -303,7 +303,7 @@ class TicketTimeEntry extends Model
     {
         return $query->whereBetween('work_date', [
             now()->startOfWeek(),
-            now()->endOfWeek()
+            now()->endOfWeek(),
         ]);
     }
 
@@ -311,7 +311,7 @@ class TicketTimeEntry extends Model
     {
         return $query->whereBetween('work_date', [
             now()->startOfMonth(),
-            now()->endOfMonth()
+            now()->endOfMonth(),
         ]);
     }
 
@@ -382,7 +382,7 @@ class TicketTimeEntry extends Model
             'total_hours' => $entries->sum('hours_worked'),
             'billable_hours' => $entries->where('billable', true)->sum('hours_worked'),
             'non_billable_hours' => $entries->where('billable', false)->sum('hours_worked'),
-            'total_cost' => $entries->sum(fn($entry) => $entry->getTotalCost()),
+            'total_cost' => $entries->sum(fn ($entry) => $entry->getTotalCost()),
             'entries_count' => $entries->count(),
             'tickets_worked' => $entries->pluck('ticket_id')->unique()->count(),
         ];
@@ -420,12 +420,12 @@ class TicketTimeEntry extends Model
         // Auto-calculate hours from times if not provided
         static::saving(function ($entry) {
             // Calculate hours from started_at/ended_at if not provided
-            if (!$entry->hours_worked && $entry->started_at && $entry->ended_at) {
+            if (! $entry->hours_worked && $entry->started_at && $entry->ended_at) {
                 $entry->hours_worked = $entry->calculateHoursFromStartedTimes();
             }
 
             // Set work_date from started_at if not provided
-            if (!$entry->work_date && $entry->started_at) {
+            if (! $entry->work_date && $entry->started_at) {
                 $entry->work_date = $entry->started_at->toDateString();
             }
         });

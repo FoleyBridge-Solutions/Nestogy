@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
-use Spatie\LaravelPdf\Facades\Pdf as SpatiePdf;
 use App\Contracts\Services\PdfServiceInterface;
 use App\Domains\Core\Services\PdfService;
+use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
+use Illuminate\Support\ServiceProvider;
+use Spatie\LaravelPdf\Facades\Pdf as SpatiePdf;
 
 class PdfServiceProvider extends ServiceProvider
 {
@@ -17,9 +17,9 @@ class PdfServiceProvider extends ServiceProvider
     {
         // Register PDF Service
         $this->app->singleton(PdfServiceInterface::class, function ($app) {
-            return new PdfService();
+            return new PdfService;
         });
-        
+
         // Also bind the concrete class for backward compatibility
         $this->app->singleton(PdfService::class, function ($app) {
             return $app[PdfServiceInterface::class];
@@ -59,10 +59,10 @@ class PdfServiceProvider extends ServiceProvider
     {
         if (config('pdf.default') === 'dompdf') {
             $options = config('pdf.drivers.dompdf.options', []);
-            
+
             // Set DomPDF options
             foreach ($options['defines'] ?? [] as $key => $value) {
-                if (!defined($key)) {
+                if (! defined($key)) {
                     define($key, $value);
                 }
             }

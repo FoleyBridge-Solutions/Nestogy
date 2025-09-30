@@ -28,7 +28,7 @@ class MarketingCampaignPolicy
             return false;
         }
 
-        return $user->can('view-campaigns') || 
+        return $user->can('view-campaigns') ||
                $user->can('manage-campaigns') ||
                $campaign->created_by_user_id === $user->id;
     }
@@ -52,11 +52,11 @@ class MarketingCampaignPolicy
         }
 
         // Can't edit campaigns that are active unless you have manage permission
-        if ($campaign->status === MarketingCampaign::STATUS_ACTIVE && !$user->can('manage-campaigns')) {
+        if ($campaign->status === MarketingCampaign::STATUS_ACTIVE && ! $user->can('manage-campaigns')) {
             return false;
         }
 
-        return $user->can('edit-campaigns') || 
+        return $user->can('edit-campaigns') ||
                $user->can('manage-campaigns') ||
                $campaign->created_by_user_id === $user->id;
     }
@@ -72,7 +72,7 @@ class MarketingCampaignPolicy
         }
 
         // Can only delete draft campaigns unless you have manage permission
-        if ($campaign->status !== MarketingCampaign::STATUS_DRAFT && !$user->can('manage-campaigns')) {
+        if ($campaign->status !== MarketingCampaign::STATUS_DRAFT && ! $user->can('manage-campaigns')) {
             return false;
         }
 
@@ -89,7 +89,7 @@ class MarketingCampaignPolicy
             return false;
         }
 
-        return $user->can('control-campaigns') || 
+        return $user->can('control-campaigns') ||
                $user->can('manage-campaigns') ||
                $campaign->created_by_user_id === $user->id;
     }
@@ -104,7 +104,7 @@ class MarketingCampaignPolicy
             return false;
         }
 
-        return $user->can('enroll-campaigns') || 
+        return $user->can('enroll-campaigns') ||
                $user->can('manage-campaigns') ||
                $campaign->created_by_user_id === $user->id;
     }
@@ -119,7 +119,7 @@ class MarketingCampaignPolicy
             return false;
         }
 
-        return $user->can('view-campaign-analytics') || 
+        return $user->can('view-campaign-analytics') ||
                $user->can('manage-campaigns') ||
                $campaign->created_by_user_id === $user->id;
     }
@@ -147,7 +147,7 @@ class MarketingCampaignPolicy
             return false;
         }
 
-        return $user->can('test-campaigns') || 
+        return $user->can('test-campaigns') ||
                $user->can('manage-campaigns') ||
                $campaign->created_by_user_id === $user->id;
     }

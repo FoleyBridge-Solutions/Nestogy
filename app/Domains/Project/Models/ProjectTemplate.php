@@ -2,18 +2,18 @@
 
 namespace App\Domains\Project\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * ProjectTemplate Model
- * 
+ *
  * Manages project templates for quick project creation with predefined
  * tasks, milestones, and team structures.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $name
@@ -88,12 +88,19 @@ class ProjectTemplate extends Model
      * Template categories
      */
     const CATEGORY_DEVELOPMENT = 'development';
+
     const CATEGORY_DESIGN = 'design';
+
     const CATEGORY_MARKETING = 'marketing';
+
     const CATEGORY_CONSULTING = 'consulting';
+
     const CATEGORY_MAINTENANCE = 'maintenance';
+
     const CATEGORY_RESEARCH = 'research';
+
     const CATEGORY_GENERAL = 'general';
+
     const CATEGORY_CUSTOM = 'custom';
 
     /**
@@ -125,7 +132,7 @@ class ProjectTemplate extends Model
      */
     public function getCategoryLabel(): string
     {
-        return match($this->category) {
+        return match ($this->category) {
             self::CATEGORY_DEVELOPMENT => 'Software Development',
             self::CATEGORY_DESIGN => 'Design & Creative',
             self::CATEGORY_MARKETING => 'Marketing & Advertising',
@@ -192,7 +199,7 @@ class ProjectTemplate extends Model
     public function copyToProject(Project $project): void
     {
         // Copy milestones
-        if (!empty($this->milestone_templates)) {
+        if (! empty($this->milestone_templates)) {
             foreach ($this->milestone_templates as $milestoneTemplate) {
                 $milestoneData = [
                     'project_id' => $project->id,
@@ -219,7 +226,7 @@ class ProjectTemplate extends Model
         }
 
         // Copy tasks
-        if (!empty($this->task_templates)) {
+        if (! empty($this->task_templates)) {
             $createdTasks = [];
 
             foreach ($this->task_templates as $taskTemplate) {
@@ -249,7 +256,7 @@ class ProjectTemplate extends Model
                     $milestoneTemplate = collect($this->milestone_templates)
                         ->where('id', $taskTemplate['milestone_template_id'])
                         ->first();
-                    
+
                     if ($milestoneTemplate && isset($milestoneTemplate['created_id'])) {
                         $taskData['milestone_id'] = $milestoneTemplate['created_id'];
                     }
@@ -261,7 +268,7 @@ class ProjectTemplate extends Model
 
             // Create task dependencies
             foreach ($this->task_templates as $taskTemplate) {
-                if (!empty($taskTemplate['dependencies'])) {
+                if (! empty($taskTemplate['dependencies'])) {
                     $task = $createdTasks[$taskTemplate['id']] ?? null;
                     if ($task) {
                         foreach ($taskTemplate['dependencies'] as $dependencyId) {
@@ -276,14 +283,14 @@ class ProjectTemplate extends Model
         }
 
         // Copy team roles
-        if (!empty($this->role_templates)) {
+        if (! empty($this->role_templates)) {
             foreach ($this->role_templates as $roleTemplate) {
                 // Role templates are just suggestions - actual users need to be assigned later
                 // Store as project metadata for reference
                 $project->update([
                     'custom_fields' => array_merge($project->custom_fields ?? [], [
-                        'suggested_roles' => $this->role_templates
-                    ])
+                        'suggested_roles' => $this->role_templates,
+                    ]),
                 ]);
             }
         }
@@ -296,11 +303,11 @@ class ProjectTemplate extends Model
     {
         $attributes = $this->toArray();
         unset($attributes['id'], $attributes['created_at'], $attributes['updated_at'], $attributes['deleted_at']);
-        
-        $attributes['name'] = $newName ?: 'Copy of ' . $attributes['name'];
+
+        $attributes['name'] = $newName ?: 'Copy of '.$attributes['name'];
         $attributes['usage_count'] = 0;
         $attributes['created_by'] = auth()->id();
-        
+
         return ProjectTemplate::create($attributes);
     }
 
@@ -389,7 +396,7 @@ class ProjectTemplate extends Model
     public function getTemplateData(): array
     {
         $data = $this->default_settings ?? [];
-        
+
         // Add template-specific defaults
         if ($this->estimated_duration_days) {
             $data['start_date'] = $data['start_date'] ?? now()->format('Y-m-d');
@@ -445,9 +452,9 @@ class ProjectTemplate extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('description', 'like', '%' . $search . '%')
-              ->orWhere('category', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('description', 'like', '%'.$search.'%')
+                ->orWhere('category', 'like', '%'.$search.'%');
         });
     }
 
@@ -459,7 +466,7 @@ class ProjectTemplate extends Model
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category' => 'required|in:' . implode(',', self::getAvailableCategories()),
+            'category' => 'required|in:'.implode(',', self::getAvailableCategories()),
             'default_settings' => 'nullable|array',
             'task_templates' => 'nullable|array',
             'milestone_templates' => 'nullable|array',
@@ -498,11 +505,11 @@ class ProjectTemplate extends Model
 
         // Set created_by for new templates
         static::creating(function ($template) {
-            if (!$template->created_by && auth()->user()) {
+            if (! $template->created_by && auth()->user()) {
                 $template->created_by = auth()->user()->id;
             }
 
-            if (!$template->company_id && auth()->user()) {
+            if (! $template->company_id && auth()->user()) {
                 $template->company_id = auth()->user()->company_id;
             }
 

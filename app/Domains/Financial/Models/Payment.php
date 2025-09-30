@@ -2,12 +2,12 @@
 
 namespace App\Domains\Financial\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
@@ -61,35 +61,55 @@ class Payment extends Model
      * Payment status constants
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_REFUNDED = 'refunded';
+
     const STATUS_PARTIAL_REFUND = 'partial_refund';
+
     const STATUS_CHARGEBACK = 'chargeback';
 
     /**
      * Payment method constants
      */
     const METHOD_CASH = 'cash';
+
     const METHOD_CHECK = 'check';
+
     const METHOD_CREDIT_CARD = 'credit_card';
+
     const METHOD_DEBIT_CARD = 'debit_card';
+
     const METHOD_BANK_TRANSFER = 'bank_transfer';
+
     const METHOD_PAYPAL = 'paypal';
+
     const METHOD_STRIPE = 'stripe';
+
     const METHOD_SQUARE = 'square';
+
     const METHOD_ACH = 'ach';
+
     const METHOD_WIRE_TRANSFER = 'wire_transfer';
 
     /**
      * Gateway constants
      */
     const GATEWAY_MANUAL = 'manual';
+
     const GATEWAY_STRIPE = 'stripe';
+
     const GATEWAY_PAYPAL = 'paypal';
+
     const GATEWAY_SQUARE = 'square';
+
     const GATEWAY_AUTHORIZE_NET = 'authorize_net';
 
     /**
@@ -220,15 +240,15 @@ class Payment extends Model
     public function getNetAmountAttribute(): float
     {
         $net = (float) $this->amount;
-        
+
         if ($this->gateway_fee) {
             $net -= (float) $this->gateway_fee;
         }
-        
+
         if ($this->refund_amount) {
             $net -= (float) $this->refund_amount;
         }
-        
+
         return $net;
     }
 
@@ -237,7 +257,7 @@ class Payment extends Model
      */
     public function getFormattedAmountAttribute(): string
     {
-        return '$' . number_format($this->amount, 2);
+        return '$'.number_format($this->amount, 2);
     }
 
     /**

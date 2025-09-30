@@ -2,9 +2,9 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
 use App\Models\Category;
 use App\Models\Company;
+use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
 {
@@ -20,28 +20,28 @@ class CategorySeeder extends Seeder
 
         foreach ($companies as $company) {
             $this->command->info("  Creating categories for {$company->name}...");
-            
+
             // Invoice categories
             $this->createInvoiceCategories($company->id);
-            
+
             // Expense categories
             $this->createExpenseCategories($company->id);
-            
-            // Income categories  
+
+            // Income categories
             $this->createIncomeCategories($company->id);
-            
+
             // Ticket categories
             $this->createTicketCategories($company->id);
-            
+
             // Product categories
             $this->createProductCategories($company->id);
-            
+
             // Asset categories
             $this->createAssetCategories($company->id);
-            
+
             // Quote categories
             $this->createQuoteCategories($company->id);
-            
+
             // Recurring categories
             $this->createRecurringCategories($company->id);
         }
@@ -69,12 +69,12 @@ class CategorySeeder extends Seeder
             Category::updateOrCreate(
                 [
                     'company_id' => $companyId,
-                    'name' => $category['name'], 
-                    'type' => Category::TYPE_INVOICE
+                    'name' => $category['name'],
+                    'type' => Category::TYPE_INVOICE,
                 ],
                 array_merge($category, [
                     'company_id' => $companyId,
-                    'type' => Category::TYPE_INVOICE
+                    'type' => Category::TYPE_INVOICE,
                 ])
             );
         }
@@ -105,12 +105,12 @@ class CategorySeeder extends Seeder
             Category::updateOrCreate(
                 [
                     'company_id' => $companyId,
-                    'name' => $category['name'], 
-                    'type' => Category::TYPE_EXPENSE
+                    'name' => $category['name'],
+                    'type' => Category::TYPE_EXPENSE,
                 ],
                 array_merge($category, [
                     'company_id' => $companyId,
-                    'type' => Category::TYPE_EXPENSE
+                    'type' => Category::TYPE_EXPENSE,
                 ])
             );
         }
@@ -137,12 +137,12 @@ class CategorySeeder extends Seeder
             Category::updateOrCreate(
                 [
                     'company_id' => $companyId,
-                    'name' => $category['name'], 
-                    'type' => Category::TYPE_INCOME
+                    'name' => $category['name'],
+                    'type' => Category::TYPE_INCOME,
                 ],
                 array_merge($category, [
                     'company_id' => $companyId,
-                    'type' => Category::TYPE_INCOME
+                    'type' => Category::TYPE_INCOME,
                 ])
             );
         }
@@ -173,12 +173,12 @@ class CategorySeeder extends Seeder
             Category::updateOrCreate(
                 [
                     'company_id' => $companyId,
-                    'name' => $category['name'], 
-                    'type' => Category::TYPE_TICKET
+                    'name' => $category['name'],
+                    'type' => Category::TYPE_TICKET,
                 ],
                 array_merge($category, [
                     'company_id' => $companyId,
-                    'type' => Category::TYPE_TICKET
+                    'type' => Category::TYPE_TICKET,
                 ])
             );
         }
@@ -205,12 +205,12 @@ class CategorySeeder extends Seeder
             Category::updateOrCreate(
                 [
                     'company_id' => $companyId,
-                    'name' => $category['name'], 
-                    'type' => Category::TYPE_PRODUCT
+                    'name' => $category['name'],
+                    'type' => Category::TYPE_PRODUCT,
                 ],
                 array_merge($category, [
                     'company_id' => $companyId,
-                    'type' => Category::TYPE_PRODUCT
+                    'type' => Category::TYPE_PRODUCT,
                 ])
             );
         }
@@ -241,12 +241,12 @@ class CategorySeeder extends Seeder
             Category::updateOrCreate(
                 [
                     'company_id' => $companyId,
-                    'name' => $category['name'], 
-                    'type' => Category::TYPE_ASSET
+                    'name' => $category['name'],
+                    'type' => Category::TYPE_ASSET,
                 ],
                 array_merge($category, [
                     'company_id' => $companyId,
-                    'type' => Category::TYPE_ASSET
+                    'type' => Category::TYPE_ASSET,
                 ])
             );
         }
@@ -271,12 +271,12 @@ class CategorySeeder extends Seeder
             Category::updateOrCreate(
                 [
                     'company_id' => $companyId,
-                    'name' => $category['name'], 
-                    'type' => Category::TYPE_QUOTE
+                    'name' => $category['name'],
+                    'type' => Category::TYPE_QUOTE,
                 ],
                 array_merge($category, [
                     'company_id' => $companyId,
-                    'type' => Category::TYPE_QUOTE
+                    'type' => Category::TYPE_QUOTE,
                 ])
             );
         }
@@ -300,12 +300,12 @@ class CategorySeeder extends Seeder
             Category::updateOrCreate(
                 [
                     'company_id' => $companyId,
-                    'name' => $category['name'], 
-                    'type' => Category::TYPE_RECURRING
+                    'name' => $category['name'],
+                    'type' => Category::TYPE_RECURRING,
                 ],
                 array_merge($category, [
                     'company_id' => $companyId,
-                    'type' => Category::TYPE_RECURRING
+                    'type' => Category::TYPE_RECURRING,
                 ])
             );
         }

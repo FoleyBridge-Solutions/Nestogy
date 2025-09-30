@@ -5,7 +5,6 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientDocument;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +15,7 @@ use Illuminate\Validation\Rule;
 class DocumentController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of documents for the selected client
      */
@@ -23,7 +23,7 @@ class DocumentController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -31,15 +31,15 @@ class DocumentController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('original_filename', 'like', "%{$search}%")
-                  ->orWhere('tags', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('original_filename', 'like', "%{$search}%")
+                    ->orWhere('tags', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -61,8 +61,8 @@ class DocumentController extends Controller
         }
 
         $documents = $query->orderBy('created_at', 'desc')
-                          ->paginate(20)
-                          ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $categories = ClientDocument::getCategories();
 
@@ -75,8 +75,8 @@ class DocumentController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $categories = ClientDocument::getCategories();
@@ -99,7 +99,7 @@ class DocumentController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category' => 'required|in:' . implode(',', array_keys(ClientDocument::getCategories())),
+            'category' => 'required|in:'.implode(',', array_keys(ClientDocument::getCategories())),
             'file' => 'required|file|max:51200', // 50MB max
             'is_confidential' => 'boolean',
             'expires_at' => 'nullable|date|after:today',
@@ -108,14 +108,14 @@ class DocumentController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $file = $request->file('file');
         $originalFilename = $file->getClientOriginalName();
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $filePath = 'clients/documents/' . $filename;
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
+        $filePath = 'clients/documents/'.$filename;
 
         // Store the file
         $file->storeAs('clients/documents', $filename);
@@ -143,12 +143,12 @@ class DocumentController extends Controller
             'tags' => $tags,
             'version' => 1,
         ]);
-        
+
         $document->company_id = auth()->user()->company_id;
         $document->save();
 
         return redirect()->route('clients.documents.standalone.index')
-                        ->with('success', 'Document uploaded successfully.');
+            ->with('success', 'Document uploaded successfully.');
     }
 
     /**
@@ -159,7 +159,7 @@ class DocumentController extends Controller
         $this->authorize('view', $document);
 
         $document->load('client', 'uploader', 'versions');
-        
+
         // Update access timestamp
         $document->update(['accessed_at' => now()]);
 
@@ -174,8 +174,8 @@ class DocumentController extends Controller
         $this->authorize('update', $document);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $categories = ClientDocument::getCategories();
 
@@ -199,7 +199,7 @@ class DocumentController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category' => 'required|in:' . implode(',', array_keys(ClientDocument::getCategories())),
+            'category' => 'required|in:'.implode(',', array_keys(ClientDocument::getCategories())),
             'is_confidential' => 'boolean',
             'expires_at' => 'nullable|date|after:today',
             'tags' => 'nullable|string',
@@ -207,8 +207,8 @@ class DocumentController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process tags
@@ -227,7 +227,7 @@ class DocumentController extends Controller
         $document->save();
 
         return redirect()->route('clients.documents.standalone.index')
-                        ->with('success', 'Document updated successfully.');
+            ->with('success', 'Document updated successfully.');
     }
 
     /**
@@ -240,7 +240,7 @@ class DocumentController extends Controller
         $document->delete(); // The model's boot method will handle file deletion
 
         return redirect()->route('clients.documents.standalone.index')
-                        ->with('success', 'Document deleted successfully.');
+            ->with('success', 'Document deleted successfully.');
     }
 
     /**
@@ -250,7 +250,7 @@ class DocumentController extends Controller
     {
         $this->authorize('view', $document);
 
-        if (!$document->fileExists()) {
+        if (! $document->fileExists()) {
             abort(404, 'File not found');
         }
 
@@ -274,14 +274,14 @@ class DocumentController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $file = $request->file('file');
         $originalFilename = $file->getClientOriginalName();
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $filePath = 'clients/documents/' . $filename;
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
+        $filePath = 'clients/documents/'.$filename;
 
         // Store the file
         $file->storeAs('clients/documents', $filename);
@@ -312,12 +312,12 @@ class DocumentController extends Controller
             'version' => $nextVersion,
             'parent_document_id' => $document->parent_document_id ?: $document->id,
         ]);
-        
+
         $newVersion->company_id = auth()->user()->company_id;
         $newVersion->save();
 
         return redirect()->route('clients.documents.standalone.show', $newVersion)
-                        ->with('success', 'New document version uploaded successfully.');
+            ->with('success', 'New document version uploaded successfully.');
     }
 
     /**
@@ -326,16 +326,16 @@ class DocumentController extends Controller
     public function export(Request $request)
     {
         $query = ClientDocument::with(['client', 'uploader'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('original_filename', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('original_filename', 'like', "%{$search}%");
             });
         }
 
@@ -353,16 +353,16 @@ class DocumentController extends Controller
 
         $documents = $query->orderBy('created_at', 'desc')->get();
 
-        $filename = 'documents_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'documents_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($documents) {
+        $callback = function () use ($documents) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Document Name',
@@ -376,7 +376,7 @@ class DocumentController extends Controller
                 'Confidential',
                 'Expires At',
                 'Tags',
-                'Version'
+                'Version',
             ]);
 
             // CSV data
@@ -396,7 +396,7 @@ class DocumentController extends Controller
                     $document->version,
                 ]);
             }
-            
+
             fclose($file);
         };
 

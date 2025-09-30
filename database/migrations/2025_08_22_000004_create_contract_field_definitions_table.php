@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('contract_field_definitions', function (Blueprint $table) {
             $table->id();
-            
+
             // Multi-tenancy
             $table->unsignedBigInteger('company_id')->index();
-            
+
             // Field definition
             $table->string('field_slug')->index(); // Field identifier
             $table->string('field_type'); // text, select, date, client_selector, etc.
@@ -33,21 +33,21 @@ return new class extends Migration
             $table->string('default_value')->nullable();
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
-            
+
             $table->timestamps();
-            
+
             // Foreign key constraints
             $table->foreign('company_id')
                 ->references('id')
                 ->on('companies')
                 ->onDelete('cascade');
-            
+
             // Indexes
             $table->index(['company_id', 'field_slug']);
             $table->index(['company_id', 'field_type']);
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'sort_order']);
-            
+
             // Unique constraint
             $table->unique(['company_id', 'field_slug']);
         });

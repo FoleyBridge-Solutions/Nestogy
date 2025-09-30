@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * ProcessVoIPTaxCompliance Job
- * 
+ *
  * Handles VoIP tax compliance processing and reporting for recurring billing.
  */
 class ProcessVoIPTaxCompliance implements ShouldQueue
@@ -21,10 +21,13 @@ class ProcessVoIPTaxCompliance implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 180; // 3 minutes
+
     public $tries = 2;
+
     public $maxExceptions = 1;
 
     protected $companyId;
+
     protected $taxCalculations;
 
     /**
@@ -47,7 +50,7 @@ class ProcessVoIPTaxCompliance implements ShouldQueue
         try {
             Log::info('Starting VoIP tax compliance processing', [
                 'company_id' => $this->companyId,
-                'calculations_count' => count($this->taxCalculations)
+                'calculations_count' => count($this->taxCalculations),
             ]);
 
             // Process compliance requirements
@@ -68,11 +71,11 @@ class ProcessVoIPTaxCompliance implements ShouldQueue
                 $complianceResults
             );
 
-            if (!empty($violations)) {
+            if (! empty($violations)) {
                 Log::warning('VoIP tax compliance violations detected', [
                     'company_id' => $this->companyId,
                     'violations_count' => count($violations),
-                    'violations' => $violations
+                    'violations' => $violations,
                 ]);
 
                 // Dispatch notification job for violations
@@ -82,14 +85,14 @@ class ProcessVoIPTaxCompliance implements ShouldQueue
             Log::info('VoIP tax compliance processing completed', [
                 'company_id' => $this->companyId,
                 'processed_calculations' => count($this->taxCalculations),
-                'violations_found' => count($violations)
+                'violations_found' => count($violations),
             ]);
 
         } catch (\Exception $e) {
             Log::error('VoIP tax compliance processing failed', [
                 'company_id' => $this->companyId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             throw $e;
@@ -105,7 +108,7 @@ class ProcessVoIPTaxCompliance implements ShouldQueue
             'company_id' => $this->companyId,
             'calculations_count' => count($this->taxCalculations),
             'error' => $exception->getMessage(),
-            'attempts' => $this->attempts()
+            'attempts' => $this->attempts(),
         ]);
     }
 
@@ -131,7 +134,7 @@ class ProcessVoIPTaxCompliance implements ShouldQueue
         return [
             'tax-compliance',
             'voip-tax',
-            'company:' . $this->companyId
+            'company:'.$this->companyId,
         ];
     }
 }

@@ -2,24 +2,25 @@
 
 namespace App\Domains\Report\Services;
 
-use App\Models\Client;
 use App\Domains\Financial\Models\Payment;
-use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Knowledge\Models\KbArticleView;
 use App\Domains\Knowledge\Services\TicketDeflectionService;
+use App\Domains\Ticket\Models\Ticket;
+use App\Models\Client;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 /**
  * Dashboard Service
- * 
+ *
  * Dynamic dashboard generation with configurable widgets
  */
 class DashboardService
 {
     protected WidgetService $widgetService;
+
     protected TicketDeflectionService $deflectionService;
 
     public function __construct(
@@ -39,7 +40,7 @@ class DashboardService
         Carbon $endDate
     ): array {
         $cacheKey = "executive_dashboard:{$companyId}:{$startDate->format('Y-m-d')}:{$endDate->format('Y-m-d')}";
-        
+
         return Cache::remember($cacheKey, 300, function () use ($companyId, $startDate, $endDate) {
             return [
                 'financial_metrics' => $this->getFinancialMetrics($companyId, $startDate, $endDate),
@@ -66,7 +67,7 @@ class DashboardService
         Carbon $endDate
     ): array {
         $cacheKey = "service_dashboard:{$companyId}:{$startDate->format('Y-m-d')}:{$endDate->format('Y-m-d')}";
-        
+
         return Cache::remember($cacheKey, 300, function () use ($companyId, $startDate, $endDate) {
             return [
                 'ticket_metrics' => $this->getDetailedTicketMetrics($companyId, $startDate, $endDate),
@@ -88,7 +89,7 @@ class DashboardService
         Carbon $endDate
     ): array {
         $cacheKey = "financial_dashboard:{$companyId}:{$startDate->format('Y-m-d')}:{$endDate->format('Y-m-d')}";
-        
+
         return Cache::remember($cacheKey, 300, function () use ($companyId, $startDate, $endDate) {
             return [
                 'revenue_metrics' => $this->getRevenueMetrics($companyId, $startDate, $endDate),
@@ -110,7 +111,7 @@ class DashboardService
         Carbon $endDate
     ): array {
         $cacheKey = "client_dashboard:{$client->id}:{$startDate->format('Y-m-d')}:{$endDate->format('Y-m-d')}";
-        
+
         return Cache::remember($cacheKey, 300, function () use ($client, $startDate, $endDate) {
             return [
                 'service_summary' => $this->getClientServiceSummary($client, $startDate, $endDate),
@@ -129,7 +130,7 @@ class DashboardService
     protected function getFinancialMetrics(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $previousPeriod = $startDate->copy()->subDays($startDate->diffInDays($endDate));
-        
+
         // Current period revenue
         $currentRevenue = Payment::where('company_id', $companyId)
             ->whereBetween('payment_date', [$startDate, $endDate])
@@ -155,12 +156,12 @@ class DashboardService
         return [
             'current_revenue' => $currentRevenue,
             'previous_revenue' => $previousRevenue,
-            'revenue_growth' => $previousRevenue > 0 
-                ? (($currentRevenue - $previousRevenue) / $previousRevenue) * 100 
+            'revenue_growth' => $previousRevenue > 0
+                ? (($currentRevenue - $previousRevenue) / $previousRevenue) * 100
                 : 0,
             'mrr' => $mrr,
-            'mrr_growth' => $previousMrr > 0 
-                ? (($mrr - $previousMrr) / $previousMrr) * 100 
+            'mrr_growth' => $previousMrr > 0
+                ? (($mrr - $previousMrr) / $previousMrr) * 100
                 : 0,
             'outstanding_amount' => $outstandingAmount,
             'average_deal_size' => $this->calculateAverageDealSize($companyId, $startDate, $endDate),
@@ -178,7 +179,7 @@ class DashboardService
 
         $totalTickets = $tickets->count();
         $resolvedTickets = $tickets->whereNotNull('resolved_at')->count();
-        
+
         $avgResolutionTime = DB::table('tickets')
             ->where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -193,8 +194,8 @@ class DashboardService
             'resolved_tickets' => $resolvedTickets,
             'resolution_rate' => $totalTickets > 0 ? ($resolvedTickets / $totalTickets) * 100 : 0,
             'avg_resolution_time_hours' => round($avgResolutionTime ?? 0, 2),
-            'sla_compliance' => $totalTickets > 0 
-                ? (($totalTickets - $slaBreaches) / $totalTickets) * 100 
+            'sla_compliance' => $totalTickets > 0
+                ? (($totalTickets - $slaBreaches) / $totalTickets) * 100
                 : 100,
             'first_response_time' => $this->calculateFirstResponseTime($companyId, $startDate, $endDate),
             'customer_satisfaction' => $this->calculateSatisfactionScore($companyId, $startDate, $endDate),
@@ -207,7 +208,7 @@ class DashboardService
     protected function getClientMetrics(int $companyId, Carbon $startDate, Carbon $endDate): array
     {
         $totalClients = Client::where('company_id', $companyId)->count();
-        
+
         $newClients = Client::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
@@ -299,7 +300,7 @@ class DashboardService
         while ($current <= $endDate) {
             $dateKey = $current->format('Y-m-d');
             $days[] = $current->format('M j');
-            
+
             // Use pre-fetched data instead of queries
             $revenueData[] = (float) ($revenueByDate[$dateKey] ?? 0);
             $ticketData[] = (int) ($ticketsByDate[$dateKey] ?? 0);
@@ -376,7 +377,7 @@ class DashboardService
     protected function calculateMRR(int $companyId, ?Carbon $date = null): float
     {
         $date = $date ?? now();
-        
+
         return DB::table('client_recurring_invoices')
             ->join('clients', 'client_recurring_invoices.client_id', '=', 'clients.id')
             ->where('clients.company_id', $companyId)

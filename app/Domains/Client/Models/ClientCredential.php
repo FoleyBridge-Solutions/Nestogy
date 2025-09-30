@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class ClientCredential extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -113,9 +113,9 @@ class ClientCredential extends Model
      */
     public function scopeNotExpired($query)
     {
-        return $query->where(function($q) {
+        return $query->where(function ($q) {
             $q->whereNull('expires_at')
-              ->orWhere('expires_at', '>', now());
+                ->orWhere('expires_at', '>', now());
         });
     }
 
@@ -125,7 +125,7 @@ class ClientCredential extends Model
     public function scopeExpired($query)
     {
         return $query->whereNotNull('expires_at')
-                    ->where('expires_at', '<=', now());
+            ->where('expires_at', '<=', now());
     }
 
     /**
@@ -134,7 +134,7 @@ class ClientCredential extends Model
     public function scopeExpiringSoon($query, $days = 30)
     {
         return $query->whereNotNull('expires_at')
-                    ->whereBetween('expires_at', [now(), now()->addDays($days)]);
+            ->whereBetween('expires_at', [now(), now()->addDays($days)]);
     }
 
     /**
@@ -158,8 +158,8 @@ class ClientCredential extends Model
      */
     public function isExpiringSoon($days = 30)
     {
-        return $this->expires_at && 
-               $this->expires_at->isFuture() && 
+        return $this->expires_at &&
+               $this->expires_at->isFuture() &&
                $this->expires_at->diffInDays(now()) <= $days;
     }
 
@@ -168,18 +168,18 @@ class ClientCredential extends Model
      */
     public function getStatusAttribute()
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return 'inactive';
         }
-        
+
         if ($this->isExpired()) {
             return 'expired';
         }
-        
+
         if ($this->isExpiringSoon()) {
             return 'expiring_soon';
         }
-        
+
         return 'active';
     }
 

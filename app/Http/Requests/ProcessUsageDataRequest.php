@@ -24,7 +24,7 @@ class ProcessUsageDataRequest extends FormRequest
             'processing_date' => 'nullable|date',
             'overwrite_existing' => 'nullable|boolean',
             'validate_only' => 'nullable|boolean',
-            
+
             // CDR Records
             'cdr_records' => 'required_if:data_source,cdr_records|array',
             'cdr_records.*.id' => 'nullable|string',
@@ -35,7 +35,7 @@ class ProcessUsageDataRequest extends FormRequest
             'cdr_records.*.service_type' => 'nullable|string|max:100',
             'cdr_records.*.call_type' => 'nullable|string|max:50',
             'cdr_records.*.rate' => 'nullable|numeric|min:0',
-            
+
             // Usage File
             'usage_file' => 'required_if:data_source,usage_file|file|mimes:csv,txt,json,xml|max:10240',
             'file_format' => 'required_if:data_source,usage_file|in:csv,json,xml,custom',
@@ -45,7 +45,7 @@ class ProcessUsageDataRequest extends FormRequest
             'file_mapping.service_column' => 'nullable|string',
             'file_mapping.rate_column' => 'nullable|string',
             'skip_header_rows' => 'nullable|integer|min:0|max:10',
-            
+
             // Manual Usage
             'manual_usage' => 'required_if:data_source,manual_usage|array',
             'manual_usage.*.service_type' => 'required|string|max:100',
@@ -55,7 +55,7 @@ class ProcessUsageDataRequest extends FormRequest
             'manual_usage.*.rate' => 'nullable|numeric|min:0',
             'manual_usage.*.cost' => 'nullable|numeric|min:0',
             'manual_usage.*.description' => 'nullable|string|max:255',
-            
+
             // API Import
             'api_endpoint' => 'required_if:data_source,api_import|url',
             'api_credentials' => 'nullable|array',
@@ -66,7 +66,7 @@ class ProcessUsageDataRequest extends FormRequest
             'date_range' => 'nullable|array',
             'date_range.start' => 'nullable|date',
             'date_range.end' => 'nullable|date|after_or_equal:date_range.start',
-            
+
             // Processing Options
             'processing_options' => 'nullable|array',
             'processing_options.apply_rates' => 'nullable|boolean',
@@ -76,7 +76,7 @@ class ProcessUsageDataRequest extends FormRequest
             'processing_options.validate_numbers' => 'nullable|boolean',
             'processing_options.minimum_duration' => 'nullable|integer|min:0',
             'processing_options.round_duration' => 'nullable|in:none,up,down,nearest',
-            
+
             // Filtering Options
             'filters' => 'nullable|array',
             'filters.date_from' => 'nullable|date',
@@ -87,7 +87,7 @@ class ProcessUsageDataRequest extends FormRequest
             'filters.max_duration' => 'nullable|integer|min:0',
             'filters.number_patterns' => 'nullable|array',
             'filters.number_patterns.*' => 'string|max:50',
-            
+
             // Notification settings
             'notifications' => 'nullable|array',
             'notifications.send_completion_email' => 'nullable|boolean',
@@ -108,7 +108,7 @@ class ProcessUsageDataRequest extends FormRequest
             'processing_date.date' => 'Processing date must be a valid date.',
             'overwrite_existing.boolean' => 'Overwrite existing must be true or false.',
             'validate_only.boolean' => 'Validate only must be true or false.',
-            
+
             // CDR Records messages
             'cdr_records.required_if' => 'CDR records are required when data source is cdr_records.',
             'cdr_records.array' => 'CDR records must be an array.',
@@ -121,7 +121,7 @@ class ProcessUsageDataRequest extends FormRequest
             'cdr_records.*.duration.required' => 'Duration is required for each CDR record.',
             'cdr_records.*.duration.integer' => 'Duration must be an integer.',
             'cdr_records.*.duration.min' => 'Duration must be 0 or greater.',
-            
+
             // Usage File messages
             'usage_file.required_if' => 'Usage file is required when data source is usage_file.',
             'usage_file.file' => 'Usage file must be a valid file.',
@@ -131,7 +131,7 @@ class ProcessUsageDataRequest extends FormRequest
             'file_format.in' => 'Invalid file format. Must be csv, json, xml, or custom.',
             'skip_header_rows.integer' => 'Skip header rows must be an integer.',
             'skip_header_rows.max' => 'Cannot skip more than 10 header rows.',
-            
+
             // Manual Usage messages
             'manual_usage.required_if' => 'Manual usage data is required when data source is manual_usage.',
             'manual_usage.array' => 'Manual usage must be an array.',
@@ -141,22 +141,22 @@ class ProcessUsageDataRequest extends FormRequest
             'manual_usage.*.usage_amount.required' => 'Usage amount is required for each manual usage entry.',
             'manual_usage.*.usage_amount.numeric' => 'Usage amount must be a number.',
             'manual_usage.*.usage_amount.min' => 'Usage amount must be 0 or greater.',
-            
+
             // API Import messages
             'api_endpoint.required_if' => 'API endpoint is required when data source is api_import.',
             'api_endpoint.url' => 'API endpoint must be a valid URL.',
             'date_range.end.after_or_equal' => 'End date must be on or after the start date.',
-            
+
             // Processing Options messages
             'processing_options.minimum_duration.integer' => 'Minimum duration must be an integer.',
             'processing_options.round_duration.in' => 'Round duration must be none, up, down, or nearest.',
-            
+
             // Filtering messages
             'filters.date_to.after_or_equal' => 'Filter end date must be on or after the start date.',
             'filters.service_types.array' => 'Service types filter must be an array.',
             'filters.min_duration.integer' => 'Minimum duration filter must be an integer.',
             'filters.max_duration.integer' => 'Maximum duration filter must be an integer.',
-            
+
             // Notification messages
             'notifications.email_recipients.*.email' => 'Each email recipient must be a valid email address.',
             'notifications.webhook_url.url' => 'Webhook URL must be a valid URL.',
@@ -197,7 +197,7 @@ class ProcessUsageDataRequest extends FormRequest
         ]);
 
         // Set default processing date if not provided
-        if (!$this->has('processing_date') || empty($this->input('processing_date'))) {
+        if (! $this->has('processing_date') || empty($this->input('processing_date'))) {
             $this->merge(['processing_date' => now()->toDateString()]);
         }
 
@@ -225,7 +225,7 @@ class ProcessUsageDataRequest extends FormRequest
         }
 
         // Set default skip header rows for CSV files
-        if ($this->input('file_format') === 'csv' && !$this->has('skip_header_rows')) {
+        if ($this->input('file_format') === 'csv' && ! $this->has('skip_header_rows')) {
             $this->merge(['skip_header_rows' => 1]);
         }
     }

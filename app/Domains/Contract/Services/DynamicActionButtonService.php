@@ -2,8 +2,8 @@
 
 namespace App\Domains\Contract\Services;
 
-use App\Domains\Contract\Models\ContractActionButton;
 use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractActionButton;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -60,7 +60,7 @@ class DynamicActionButtonService
             return 'danger';
         }
 
-        if (str_contains($button->button_class, 'btn-primary') || 
+        if (str_contains($button->button_class, 'btn-primary') ||
             str_contains($button->button_class, 'btn-success')) {
             return 'primary';
         }
@@ -81,7 +81,7 @@ class DynamicActionButtonService
 
         $html = '';
         $containerClass = $layout === 'vertical' ? 'btn-group-vertical' : 'btn-group';
-        
+
         $html .= "<div class=\"{$containerClass}\" role=\"group\">";
 
         foreach ($buttons as $button) {
@@ -100,9 +100,9 @@ class DynamicActionButtonService
     {
         $url = $button->generateActionUrl($contract);
         $jsConfig = json_encode($button->getJavaScriptConfig($contract));
-        
+
         $icon = $button->icon ? "<i class=\"{$button->icon}\"></i> " : '';
-        
+
         $attributes = [
             'class' => $button->button_class,
             'data-action-config' => htmlspecialchars($jsConfig),
@@ -118,7 +118,7 @@ class DynamicActionButtonService
         }
 
         $attributeString = collect($attributes)
-            ->map(fn($value, $key) => "{$key}=\"{$value}\"")
+            ->map(fn ($value, $key) => "{$key}=\"{$value}\"")
             ->implode(' ');
 
         return "<{$tag} {$attributeString}>{$icon}{$button->label}</{$tag}>";
@@ -332,13 +332,13 @@ JS;
 
         foreach ($defaultButtons as $buttonData) {
             $buttonData['company_id'] = $this->companyId;
-            
+
             // Check if button already exists
             $exists = ContractActionButton::where('company_id', $this->companyId)
                 ->where('slug', $buttonData['slug'])
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 ContractActionButton::create($buttonData);
                 $created++;
             }
@@ -355,14 +355,16 @@ JS;
         try {
             $button = ContractActionButton::where('company_id', $this->companyId)
                 ->findOrFail($buttonId);
-                
+
             $button->update($data);
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to update action button', [
                 'button_id' => $buttonId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -376,12 +378,14 @@ JS;
             ContractActionButton::where('company_id', $this->companyId)
                 ->where('id', $buttonId)
                 ->delete();
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to delete action button', [
                 'button_id' => $buttonId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -397,11 +401,13 @@ JS;
                     ->where('id', $buttonId)
                     ->update(['sort_order' => ($index + 1) * 10]);
             }
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to reorder action buttons', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -415,28 +421,28 @@ JS;
             'route' => [
                 'label' => 'Navigate to Route',
                 'description' => 'Navigate to another page',
-                'config_fields' => ['route', 'parameters']
+                'config_fields' => ['route', 'parameters'],
             ],
             'ajax' => [
                 'label' => 'AJAX Request',
                 'description' => 'Perform an AJAX request',
-                'config_fields' => ['url', 'method', 'data']
+                'config_fields' => ['url', 'method', 'data'],
             ],
             'modal' => [
                 'label' => 'Show Modal',
                 'description' => 'Display a modal dialog',
-                'config_fields' => ['modal']
+                'config_fields' => ['modal'],
             ],
             'status_change' => [
                 'label' => 'Change Status',
                 'description' => 'Change contract status',
-                'config_fields' => ['status']
+                'config_fields' => ['status'],
             ],
             'download' => [
                 'label' => 'Download File',
                 'description' => 'Download a file',
-                'config_fields' => ['download_url']
-            ]
+                'config_fields' => ['download_url'],
+            ],
         ];
     }
 }

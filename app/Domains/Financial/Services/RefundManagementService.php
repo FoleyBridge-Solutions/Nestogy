@@ -2,27 +2,21 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\RefundRequest;
-use App\Models\RefundTransaction;
+use App\Domains\Contract\Models\Contract;
 use App\Models\CreditNote;
 use App\Models\Payment;
-use App\Models\Client;
-use App\Models\Invoice;
-use App\Models\User;
-use App\Domains\Contract\Models\Contract;
-use App\Domains\Financial\Services\VoIPTaxReversalService;
-use App\Domains\Financial\Services\PaymentGatewayService;
+use App\Models\RefundRequest;
+use App\Models\RefundTransaction;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Collection;
-use Carbon\Carbon;
-use Exception;
 
 /**
  * Refund Management Service
- * 
+ *
  * Comprehensive refund processing service that handles:
  * - Multi-gateway refund processing (Stripe, PayPal, Authorize.Net)
  * - Complex VoIP billing refund scenarios
@@ -36,6 +30,7 @@ use Exception;
 class RefundManagementService
 {
     protected ?VoIPTaxReversalService $voipTaxService;
+
     protected ?object $gatewayService;
 
     public function __construct(
@@ -81,8 +76,8 @@ class RefundManagementService
                 'sla_hours' => $this->calculateSlaHours($creditNote, $options),
                 'metadata' => array_merge($options, [
                     'created_from_credit_note' => true,
-                    'credit_note_number' => $creditNote->number
-                ])
+                    'credit_note_number' => $creditNote->number,
+                ]),
             ];
 
             // Handle equipment return scenarios
@@ -114,7 +109,7 @@ class RefundManagementService
                 'refund_request_id' => $refundRequest->id,
                 'credit_note_id' => $creditNote->id,
                 'amount' => $refundRequest->requested_amount,
-                'method' => $refundMethod
+                'method' => $refundMethod,
             ]);
 
             return $refundRequest;
@@ -126,7 +121,7 @@ class RefundManagementService
      */
     public function processRefund(RefundRequest $refundRequest): RefundTransaction
     {
-        if (!$refundRequest->canBeProcessed()) {
+        if (! $refundRequest->canBeProcessed()) {
             throw new Exception('Refund request cannot be processed in current status');
         }
 
@@ -162,12 +157,12 @@ class RefundManagementService
     ): array {
         $prorationData = [];
 
-        if (!$creditNote->contract_id) {
+        if (! $creditNote->contract_id) {
             return $prorationData;
         }
 
         $contract = Contract::find($creditNote->contract_id);
-        if (!$contract) {
+        if (! $contract) {
             return $prorationData;
         }
 
@@ -180,7 +175,7 @@ class RefundManagementService
 
         $totalDays = Carbon::parse($contract->contract_start_date)->diffInDays($servicePeriodEnd);
         $unusedDays = Carbon::parse($cancellationDate)->diffInDays($servicePeriodEnd);
-        
+
         $prorationRatio = $unusedDays / $totalDays;
         $prorationAmount = $creditNote->subtotal * $prorationRatio;
 
@@ -204,8 +199,8 @@ class RefundManagementService
                 'original_amount' => $creditNote->subtotal,
                 'prorated_amount' => $prorationAmount,
                 'early_termination_fee' => $earlyTerminationFee,
-                'net_refund' => max(0, $prorationAmount - $earlyTerminationFee)
-            ]
+                'net_refund' => max(0, $prorationAmount - $earlyTerminationFee),
+            ],
         ];
 
         return $prorationData;
@@ -224,7 +219,7 @@ class RefundManagementService
             'condition_adjustment_percentage' => $this->calculateConditionAdjustment($equipmentData['condition'] ?? 'good'),
             'equipment_received' => $equipmentData['received'] ?? false,
             'equipment_received_date' => $equipmentData['received_date'] ?? null,
-            'tracking_number' => $equipmentData['tracking_number'] ?? null
+            'tracking_number' => $equipmentData['tracking_number'] ?? null,
         ];
 
         // Adjust refund amount based on equipment condition
@@ -233,7 +228,7 @@ class RefundManagementService
 
         return array_merge($equipmentReturn, [
             'requested_amount' => $adjustedAmount,
-            'condition_adjustment_amount' => $creditNote->total_amount - $adjustedAmount
+            'condition_adjustment_amount' => $creditNote->total_amount - $adjustedAmount,
         ]);
     }
 
@@ -251,19 +246,19 @@ class RefundManagementService
             case 'service_cancellation':
                 $voipRefundData = $this->processVoipServiceCancellation($creditNote, $options);
                 break;
-            
+
             case 'porting_failure':
                 $voipRefundData = $this->processPortingFailureRefund($creditNote, $options);
                 break;
-            
+
             case 'service_quality':
                 $voipRefundData = $this->processSlaBreachRefund($creditNote, $options);
                 break;
-            
+
             case 'international_dispute':
                 $voipRefundData = $this->processInternationalDisputeRefund($creditNote, $options);
                 break;
-            
+
             case 'regulatory_adjustment':
                 $voipRefundData = $this->processRegulatoryAdjustment($creditNote, $options);
                 break;
@@ -303,8 +298,8 @@ class RefundManagementService
                 'metadata' => [
                     'chargeback_id' => $chargebackData['chargeback_id'] ?? null,
                     'reason_code' => $chargebackData['reason_code'] ?? null,
-                    'created_from_chargeback' => true
-                ]
+                    'created_from_chargeback' => true,
+                ],
             ]);
 
             // Update payment status
@@ -312,7 +307,7 @@ class RefundManagementService
                 'status' => 'chargeback',
                 'chargeback_amount' => $chargebackData['amount'],
                 'chargeback_reason' => $chargebackData['reason'],
-                'chargeback_date' => now()
+                'chargeback_date' => now(),
             ]);
 
             // Create chargeback dispute record
@@ -325,7 +320,7 @@ class RefundManagementService
                 'payment_id' => $payment->id,
                 'refund_request_id' => $refundRequest->id,
                 'amount' => $chargebackData['amount'],
-                'reason' => $chargebackData['reason']
+                'reason' => $chargebackData['reason'],
             ]);
 
             return $refundRequest;
@@ -341,33 +336,33 @@ class RefundManagementService
             'successful' => [],
             'failed' => [],
             'total_processed' => 0,
-            'total_amount' => 0
+            'total_amount' => 0,
         ];
 
         foreach ($refundRequests as $refundRequest) {
             try {
                 $transaction = $this->processRefund($refundRequest);
-                
+
                 $results['successful'][] = [
                     'refund_request_id' => $refundRequest->id,
                     'transaction_id' => $transaction->id,
-                    'amount' => $refundRequest->approved_amount ?? $refundRequest->requested_amount
+                    'amount' => $refundRequest->approved_amount ?? $refundRequest->requested_amount,
                 ];
-                
+
                 $results['total_amount'] += $refundRequest->approved_amount ?? $refundRequest->requested_amount;
-                
+
             } catch (Exception $e) {
                 $results['failed'][] = [
                     'refund_request_id' => $refundRequest->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
-                
+
                 Log::error('Bulk refund failed', [
                     'refund_request_id' => $refundRequest->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
-            
+
             $results['total_processed']++;
         }
 
@@ -387,7 +382,7 @@ class RefundManagementService
         if (isset($filters['date_range'])) {
             $query->whereBetween('requested_at', [
                 $filters['date_range']['start'],
-                $filters['date_range']['end']
+                $filters['date_range']['end'],
             ]);
         }
 
@@ -408,22 +403,22 @@ class RefundManagementService
                 'approved_amount' => $refunds->sum('approved_amount'),
                 'processed_amount' => $refunds->sum('processed_amount'),
                 'average_processing_time' => $refunds->avg('processing_time_hours'),
-                'sla_breach_rate' => $refunds->where('sla_breached', true)->count() / max($refunds->count(), 1) * 100
+                'sla_breach_rate' => $refunds->where('sla_breached', true)->count() / max($refunds->count(), 1) * 100,
             ],
             'by_status' => $refunds->groupBy('status')->map->count(),
             'by_type' => $refunds->groupBy('refund_type')->map->count(),
             'by_reason' => $refunds->groupBy('reason_code')->map->count(),
-            'by_month' => $refunds->groupBy(fn($r) => $r->requested_at->format('Y-m'))->map->count(),
+            'by_month' => $refunds->groupBy(fn ($r) => $r->requested_at->format('Y-m'))->map->count(),
             'top_clients' => $refunds->groupBy('client_id')
-                ->map(fn($group) => [
+                ->map(fn ($group) => [
                     'client' => $group->first()->client->name,
                     'count' => $group->count(),
-                    'total_amount' => $group->sum('requested_amount')
+                    'total_amount' => $group->sum('requested_amount'),
                 ])
                 ->sortByDesc('total_amount')
                 ->take(10)
                 ->values(),
-            'gateway_performance' => $this->getGatewayPerformanceMetrics($refunds)
+            'gateway_performance' => $this->getGatewayPerformanceMetrics($refunds),
         ];
     }
 
@@ -437,7 +432,7 @@ class RefundManagementService
                 ->where('status', 'completed')
                 ->orderBy('created_at', 'desc')
                 ->first();
-            
+
             return $payment?->id;
         }
 
@@ -446,14 +441,14 @@ class RefundManagementService
 
     private function determineRefundType(CreditNote $creditNote): string
     {
-        return match($creditNote->reason_code) {
+        return match ($creditNote->reason_code) {
             'equipment_return' => RefundRequest::TYPE_EQUIPMENT_RETURN,
             'service_cancellation' => RefundRequest::TYPE_CANCELLATION_REFUND,
             'billing_error' => RefundRequest::TYPE_BILLING_ERROR_REFUND,
             'goodwill' => RefundRequest::TYPE_GOODWILL_REFUND,
             'chargeback' => RefundRequest::TYPE_CHARGEBACK_REFUND,
-            default => $creditNote->type === 'full_refund' ? 
-                RefundRequest::TYPE_FULL_REFUND : 
+            default => $creditNote->type === 'full_refund' ?
+                RefundRequest::TYPE_FULL_REFUND :
                 RefundRequest::TYPE_PARTIAL_REFUND
         };
     }
@@ -488,7 +483,7 @@ class RefundManagementService
 
     private function calculateSlaHours(CreditNote $creditNote, array $options): int
     {
-        return match($creditNote->reason_code) {
+        return match ($creditNote->reason_code) {
             'chargeback' => 24,
             'porting_failure' => 48,
             'service_quality' => 72,
@@ -514,7 +509,7 @@ class RefundManagementService
 
     private function calculateConditionAdjustment(string $condition): float
     {
-        return match($condition) {
+        return match ($condition) {
             'new' => 0,
             'excellent' => 5,
             'good' => 10,
@@ -543,7 +538,7 @@ class RefundManagementService
             'gateway' => $this->getGatewayForMethod($refundRequest->refund_method),
             'processing_fee' => $this->calculateProcessingFee($refundRequest),
             'gateway_fee' => $this->calculateGatewayFee($refundRequest),
-            'initiated_at' => now()
+            'initiated_at' => now(),
         ]);
     }
 
@@ -559,21 +554,21 @@ class RefundManagementService
                     $transaction->refundRequest
                 );
             }
-            
+
             // Fallback when gateway service is not available
             return [
                 'success' => true,
                 'response' => [
-                    'transaction_id' => 'MOCK_' . uniqid(),
+                    'transaction_id' => 'MOCK_'.uniqid(),
                     'status_code' => '200',
-                    'message' => 'Refund processed (mock)'
-                ]
+                    'message' => 'Refund processed (mock)',
+                ],
             ];
         } catch (Exception $e) {
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
-                'response' => null
+                'response' => null,
             ];
         }
     }
@@ -683,7 +678,7 @@ class RefundManagementService
 
     private function getTransactionType(string $refundMethod): string
     {
-        return match($refundMethod) {
+        return match ($refundMethod) {
             RefundRequest::METHOD_CREDIT_CARD => RefundTransaction::TYPE_CREDIT_CARD_REFUND,
             RefundRequest::METHOD_ACH => RefundTransaction::TYPE_ACH_REFUND,
             RefundRequest::METHOD_PAYPAL => RefundTransaction::TYPE_PAYPAL_REFUND,
@@ -696,7 +691,7 @@ class RefundManagementService
 
     private function getGatewayForMethod(string $refundMethod): string
     {
-        return match($refundMethod) {
+        return match ($refundMethod) {
             RefundRequest::METHOD_STRIPE => RefundTransaction::GATEWAY_STRIPE,
             RefundRequest::METHOD_PAYPAL => RefundTransaction::GATEWAY_PAYPAL,
             default => RefundTransaction::GATEWAY_MANUAL

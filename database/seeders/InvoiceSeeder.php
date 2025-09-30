@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
 use App\Models\Client;
 use App\Models\Company;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class InvoiceSeeder extends Seeder
 {
@@ -16,12 +16,13 @@ class InvoiceSeeder extends Seeder
         // Skip if invoices already exist
         if (Invoice::count() > 0) {
             $this->command->info('Invoices already exist, skipping seeder.');
+
             return;
         }
-        
+
         // Get the first company (or create one if none exists)
         $company = Company::first();
-        if (!$company) {
+        if (! $company) {
             $company = Company::create([
                 'name' => 'Demo Company',
                 'email' => 'demo@company.com',
@@ -36,7 +37,7 @@ class InvoiceSeeder extends Seeder
 
         // Get or create some clients
         $clients = Client::where('company_id', $company->id)->take(3)->get();
-        
+
         if ($clients->count() < 3) {
             // Create some demo clients if we don't have enough
             $clientData = [
@@ -60,7 +61,7 @@ class InvoiceSeeder extends Seeder
                 );
                 $clients->push($client);
             }
-            
+
             $clients = $clients->take(3);
         }
 
@@ -76,7 +77,7 @@ class InvoiceSeeder extends Seeder
                 'items' => [
                     ['description' => 'Monthly Managed Services', 'quantity' => 1, 'price' => 2500.00],
                     ['description' => 'Emergency Support (3 hours)', 'quantity' => 3, 'price' => 150.00],
-                ]
+                ],
             ],
             [
                 'client' => $clients[1],
@@ -87,9 +88,9 @@ class InvoiceSeeder extends Seeder
                 'items' => [
                     ['description' => 'Server Maintenance', 'quantity' => 1, 'price' => 1800.00],
                     ['description' => 'Backup Solution Setup', 'quantity' => 1, 'price' => 750.00],
-                ]
+                ],
             ],
-            
+
             // Current/recent invoices
             [
                 'client' => $clients[2],
@@ -101,7 +102,7 @@ class InvoiceSeeder extends Seeder
                 'items' => [
                     ['description' => 'Network Security Audit', 'quantity' => 1, 'price' => 3500.00],
                     ['description' => 'Firewall Configuration', 'quantity' => 1, 'price' => 850.00],
-                ]
+                ],
             ],
             [
                 'client' => $clients[0],
@@ -112,9 +113,9 @@ class InvoiceSeeder extends Seeder
                 'items' => [
                     ['description' => 'Cloud Migration Services', 'quantity' => 40, 'price' => 125.00],
                     ['description' => 'Training Session', 'quantity' => 2, 'price' => 500.00],
-                ]
+                ],
             ],
-            
+
             // Draft invoices
             [
                 'client' => $clients[1],
@@ -125,7 +126,7 @@ class InvoiceSeeder extends Seeder
                 'items' => [
                     ['description' => 'Software License Renewal', 'quantity' => 25, 'price' => 45.00],
                     ['description' => 'Implementation Support', 'quantity' => 8, 'price' => 175.00],
-                ]
+                ],
             ],
             [
                 'client' => $clients[2],
@@ -136,9 +137,9 @@ class InvoiceSeeder extends Seeder
                 'items' => [
                     ['description' => 'Quarterly IT Review', 'quantity' => 1, 'price' => 950.00],
                     ['description' => 'Hardware Procurement', 'quantity' => 1, 'price' => 4200.00],
-                ]
+                ],
             ],
-            
+
             // More paid invoices
             [
                 'client' => $clients[0],
@@ -149,7 +150,7 @@ class InvoiceSeeder extends Seeder
                 'paid_date' => Carbon::now()->subDays(35),
                 'items' => [
                     ['description' => 'Annual Support Contract', 'quantity' => 1, 'price' => 12000.00],
-                ]
+                ],
             ],
             [
                 'client' => $clients[1],
@@ -161,7 +162,7 @@ class InvoiceSeeder extends Seeder
                 'items' => [
                     ['description' => 'Email Migration Project', 'quantity' => 1, 'price' => 3750.00],
                     ['description' => 'User Training', 'quantity' => 15, 'price' => 85.00],
-                ]
+                ],
             ],
         ];
 
@@ -170,24 +171,24 @@ class InvoiceSeeder extends Seeder
             foreach ($data['items'] as $item) {
                 $subtotal += $item['quantity'] * $item['price'];
             }
-            
+
             $tax = $subtotal * 0.08; // 8% tax
             $total = $subtotal + $tax;
-            
+
             // Extract number from invoice number (e.g., INV-2024-001 -> 1)
             preg_match('/(\d+)$/', $data['invoice_number'], $matches);
-            $invoiceNumber = isset($matches[1]) ? (int)$matches[1] : rand(1000, 9999);
-            
+            $invoiceNumber = isset($matches[1]) ? (int) $matches[1] : rand(1000, 9999);
+
             // Get first category or create a default one
             $category = \App\Models\Category::first();
-            if (!$category) {
+            if (! $category) {
                 $category = \App\Models\Category::create([
                     'company_id' => $company->id,
                     'name' => 'Services',
                     'type' => 'income',
                 ]);
             }
-            
+
             $invoice = Invoice::create([
                 'company_id' => $company->id,
                 'client_id' => $data['client']->id,
@@ -202,7 +203,7 @@ class InvoiceSeeder extends Seeder
                 'note' => 'Thank you for your business! Payment due within 30 days.',
                 'currency_code' => 'USD',
             ]);
-            
+
             // Create invoice items
             $order = 1;
             foreach ($data['items'] as $item) {
@@ -220,7 +221,7 @@ class InvoiceSeeder extends Seeder
                 ]);
             }
         }
-        
-        $this->command->info('Created ' . count($invoiceData) . ' sample invoices with items.');
+
+        $this->command->info('Created '.count($invoiceData).' sample invoices with items.');
     }
 }

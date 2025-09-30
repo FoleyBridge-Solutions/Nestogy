@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * Credit Note Item Model
- * 
+ *
  * Represents individual line items within a credit note,
  * supporting complex VoIP billing scenarios, tax calculations,
  * equipment returns, and proration adjustments.
@@ -33,7 +33,7 @@ class CreditNoteItem extends Model
         'remaining_credit', 'fully_credited', 'equipment_details', 'equipment_condition',
         'condition_adjustment', 'serial_number', 'equipment_returned', 'return_date',
         'gl_account_code', 'revenue_account_code', 'tax_account_code', 'accounting_entries',
-        'sort_order', 'metadata'
+        'sort_order', 'metadata',
     ];
 
     protected $casts = [
@@ -78,42 +78,68 @@ class CreditNoteItem extends Model
         'return_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Item Types
     const TYPE_PRODUCT = 'product';
+
     const TYPE_SERVICE = 'service';
+
     const TYPE_VOIP_SERVICE = 'voip_service';
+
     const TYPE_EQUIPMENT = 'equipment';
+
     const TYPE_INSTALLATION = 'installation';
+
     const TYPE_MAINTENANCE = 'maintenance';
+
     const TYPE_REGULATORY_FEE = 'regulatory_fee';
+
     const TYPE_TAX_ADJUSTMENT = 'tax_adjustment';
+
     const TYPE_DISCOUNT = 'discount';
+
     const TYPE_OTHER = 'other';
 
     // VoIP Service Types
     const VOIP_LOCAL_SERVICE = 'local_service';
+
     const VOIP_LONG_DISTANCE = 'long_distance';
+
     const VOIP_INTERNATIONAL = 'international';
+
     const VOIP_TOLL_FREE = 'toll_free';
+
     const VOIP_DIRECTORY_ASSISTANCE = 'directory_assistance';
+
     const VOIP_EQUIPMENT_RENTAL = 'equipment_rental';
+
     const VOIP_INSTALLATION_FEE = 'installation_fee';
+
     const VOIP_ACTIVATION_FEE = 'activation_fee';
+
     const VOIP_REGULATORY_FEE = 'regulatory_fee';
+
     const VOIP_E911_FEE = 'e911_fee';
+
     const VOIP_USF_FEE = 'usf_fee';
+
     const VOIP_NUMBER_PORTING = 'number_porting';
+
     const VOIP_OTHER = 'other';
 
     // Equipment Conditions
     const CONDITION_NEW = 'new';
+
     const CONDITION_EXCELLENT = 'excellent';
+
     const CONDITION_GOOD = 'good';
+
     const CONDITION_FAIR = 'fair';
+
     const CONDITION_POOR = 'poor';
+
     const CONDITION_DAMAGED = 'damaged';
 
     /**
@@ -145,6 +171,7 @@ class CreditNoteItem extends Model
     public function scopeForCompany($query, $companyId = null)
     {
         $companyId = $companyId ?? Auth::user()?->company_id;
+
         return $query->where('company_id', $companyId);
     }
 
@@ -193,11 +220,11 @@ class CreditNoteItem extends Model
     public function calculateTotal(): float
     {
         $subtotal = $this->quantity * $this->unit_price - $this->discount_amount;
-        
+
         if ($this->tax_inclusive) {
             return $subtotal;
         }
-        
+
         return $subtotal + $this->tax_amount;
     }
 
@@ -206,11 +233,12 @@ class CreditNoteItem extends Model
      */
     public function calculateProrationAmount(): float
     {
-        if (!$this->is_prorated || !$this->proration_days || !$this->total_period_days) {
+        if (! $this->is_prorated || ! $this->proration_days || ! $this->total_period_days) {
             return $this->line_total;
         }
 
         $prorationRatio = $this->proration_days / $this->total_period_days;
+
         return $this->line_total * $prorationRatio;
     }
 
@@ -219,7 +247,7 @@ class CreditNoteItem extends Model
      */
     public function calculateConditionAdjustment(): float
     {
-        if (!$this->equipment_condition || $this->condition_adjustment == 0) {
+        if (! $this->equipment_condition || $this->condition_adjustment == 0) {
             return 0;
         }
 
@@ -231,12 +259,12 @@ class CreditNoteItem extends Model
      */
     public function getNetCreditAmount(): float
     {
-        $baseAmount = $this->is_prorated ? 
-            $this->calculateProrationAmount() : 
+        $baseAmount = $this->is_prorated ?
+            $this->calculateProrationAmount() :
             $this->line_total;
 
         $conditionAdjustment = $this->calculateConditionAdjustment();
-        
+
         return $baseAmount - $conditionAdjustment;
     }
 
@@ -266,7 +294,7 @@ class CreditNoteItem extends Model
             self::VOIP_E911_FEE => 'E911 Fee',
             self::VOIP_USF_FEE => 'USF Fee',
             self::VOIP_NUMBER_PORTING => 'Number Porting',
-            self::VOIP_OTHER => 'Other'
+            self::VOIP_OTHER => 'Other',
         ];
     }
 
@@ -281,7 +309,7 @@ class CreditNoteItem extends Model
             self::CONDITION_GOOD => 'Good',
             self::CONDITION_FAIR => 'Fair',
             self::CONDITION_POOR => 'Poor',
-            self::CONDITION_DAMAGED => 'Damaged'
+            self::CONDITION_DAMAGED => 'Damaged',
         ];
     }
 
@@ -300,7 +328,7 @@ class CreditNoteItem extends Model
             self::TYPE_REGULATORY_FEE => 'Regulatory Fee',
             self::TYPE_TAX_ADJUSTMENT => 'Tax Adjustment',
             self::TYPE_DISCOUNT => 'Discount',
-            self::TYPE_OTHER => 'Other'
+            self::TYPE_OTHER => 'Other',
         ];
     }
 
@@ -309,7 +337,7 @@ class CreditNoteItem extends Model
      */
     public function formatAmount(float $amount): string
     {
-        return number_format($amount, 2) . ' ' . ($this->creditNote->currency_code ?? 'USD');
+        return number_format($amount, 2).' '.($this->creditNote->currency_code ?? 'USD');
     }
 
     /**
@@ -334,35 +362,35 @@ class CreditNoteItem extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($item) {
-            if (!$item->company_id) {
+            if (! $item->company_id) {
                 $item->company_id = Auth::user()?->company_id;
             }
-            
+
             // Auto-calculate line total if not provided
-            if (!$item->line_total) {
+            if (! $item->line_total) {
                 $subtotal = $item->quantity * $item->unit_price - ($item->discount_amount ?? 0);
-                $item->line_total = $item->tax_inclusive ? 
-                    $subtotal : 
+                $item->line_total = $item->tax_inclusive ?
+                    $subtotal :
                     $subtotal + ($item->tax_amount ?? 0);
             }
-            
+
             // Initialize remaining credit
-            if (!$item->remaining_credit) {
+            if (! $item->remaining_credit) {
                 $item->remaining_credit = $item->line_total;
             }
         });
-        
+
         static::updating(function ($item) {
             // Recalculate line total if quantity or price changed
             if ($item->isDirty(['quantity', 'unit_price', 'discount_amount', 'tax_amount'])) {
                 $subtotal = $item->quantity * $item->unit_price - ($item->discount_amount ?? 0);
-                $item->line_total = $item->tax_inclusive ? 
-                    $subtotal : 
+                $item->line_total = $item->tax_inclusive ?
+                    $subtotal :
                     $subtotal + ($item->tax_amount ?? 0);
             }
-            
+
             // Update fully_credited status
             if ($item->isDirty('credited_amount')) {
                 $item->remaining_credit = $item->line_total - $item->credited_amount;

@@ -2,21 +2,18 @@
 
 namespace App\Domains\Project\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Project\Models\Project;
-use App\Domains\Project\Models\ProjectTemplate;
 use App\Domains\Project\Models\ProjectMember;
 use App\Domains\Project\Models\ProjectMilestone;
-use App\Domains\Project\Services\ProjectService;
+use App\Domains\Project\Models\ProjectTemplate;
 use App\Domains\Project\Repositories\ProjectRepository;
+use App\Domains\Project\Services\ProjectService;
+use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class ProjectController extends Controller
 {
@@ -75,7 +72,7 @@ class ProjectController extends Controller
 
         // Apply team member filter
         if ($memberId = $request->get('member_id')) {
-            $query->whereHas('members', function($q) use ($memberId) {
+            $query->whereHas('members', function ($q) use ($memberId) {
                 $q->where('user_id', $memberId)->where('is_active', true);
             });
         }
@@ -103,7 +100,7 @@ class ProjectController extends Controller
         // Apply sorting
         $sortBy = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
-        
+
         if (in_array($sortBy, ['name', 'status', 'priority', 'due', 'created_at', 'progress_percentage'])) {
             $query->orderBy($sortBy, $sortDirection);
         }
@@ -121,20 +118,20 @@ class ProjectController extends Controller
 
         // Get filter options
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $managers = User::where('company_id', auth()->user()->company_id)
-                       ->orderBy('name')
-                       ->get();
+            ->orderBy('name')
+            ->get();
 
         $members = User::where('company_id', auth()->user()->company_id)
-                      ->whereHas('projectMembers', function($q) {
-                          $q->whereNull('left_at');
-                      })
-                      ->distinct()
-                      ->orderBy('name')
-                      ->get();
+            ->whereHas('projectMembers', function ($q) {
+                $q->whereNull('left_at');
+            })
+            ->distinct()
+            ->orderBy('name')
+            ->get();
 
         // Calculate statistics
         $statistics = $this->calculateStatistics();
@@ -148,7 +145,7 @@ class ProjectController extends Controller
     protected function timelineView($query, Request $request)
     {
         $projects = $query->with(['tasks', 'milestones'])->get();
-        
+
         // Prepare timeline data
         $timelineData = $projects->map(function ($project) {
             return [
@@ -190,7 +187,7 @@ class ProjectController extends Controller
     protected function kanbanView($query, Request $request)
     {
         $projects = $query->get();
-        
+
         $kanbanColumns = [
             Project::STATUS_PLANNING => 'Planning',
             Project::STATUS_ACTIVE => 'Active',
@@ -215,18 +212,18 @@ class ProjectController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $managers = User::where('company_id', auth()->user()->company_id)
-                       ->orderBy('name')
-                       ->get();
+            ->orderBy('name')
+            ->get();
 
         $templates = ProjectTemplate::where('company_id', auth()->user()->company_id)
-                                   ->orWhere('is_public', true)
-                                   ->active()
-                                   ->orderBy('name')
-                                   ->get();
+            ->orWhere('is_public', true)
+            ->active()
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $selectedTemplateId = $request->get('template_id');
@@ -245,12 +242,12 @@ class ProjectController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         DB::beginTransaction();
-        
+
         try {
             $projectData = $request->all();
             $projectData['company_id'] = auth()->user()->company_id;
@@ -281,13 +278,14 @@ class ProjectController extends Controller
             DB::commit();
 
             return redirect()->route('projects.show', $project)
-                           ->with('success', 'Project created successfully.');
+                ->with('success', 'Project created successfully.');
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return redirect()->back()
-                           ->withErrors(['error' => 'Failed to create project: ' . $e->getMessage()])
-                           ->withInput();
+                ->withErrors(['error' => 'Failed to create project: '.$e->getMessage()])
+                ->withInput();
         }
     }
 
@@ -312,12 +310,12 @@ class ProjectController extends Controller
         $this->authorize('update', $project);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $managers = User::where('company_id', auth()->user()->company_id)
-                       ->orderBy('name')
-                       ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('projects.edit', compact('project', 'clients', 'managers'));
     }
@@ -333,15 +331,15 @@ class ProjectController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $project->fill($request->all());
         $project->save();
 
         return redirect()->route('projects.show', $project)
-                        ->with('success', 'Project updated successfully.');
+            ->with('success', 'Project updated successfully.');
     }
 
     /**
@@ -352,7 +350,7 @@ class ProjectController extends Controller
         $this->authorize('delete', $project);
 
         DB::beginTransaction();
-        
+
         try {
             // Archive related entities
             $project->tasks()->delete();
@@ -364,12 +362,13 @@ class ProjectController extends Controller
             DB::commit();
 
             return redirect()->route('projects.index')
-                           ->with('success', 'Project deleted successfully.');
+                ->with('success', 'Project deleted successfully.');
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return redirect()->back()
-                           ->withErrors(['error' => 'Failed to delete project: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to delete project: '.$e->getMessage()]);
         }
     }
 
@@ -381,7 +380,7 @@ class ProjectController extends Controller
         $this->authorize('update', $project);
 
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:' . implode(',', Project::getAvailableStatuses()),
+            'status' => 'required|in:'.implode(',', Project::getAvailableStatuses()),
             'reason' => 'nullable|string|max:500',
         ]);
 
@@ -444,7 +443,7 @@ class ProjectController extends Controller
         }
 
         DB::beginTransaction();
-        
+
         try {
             $newProject = $project->replicate();
             $newProject->name = $request->get('name');
@@ -502,9 +501,10 @@ class ProjectController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to clone project: ' . $e->getMessage(),
+                'message' => 'Failed to clone project: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -536,16 +536,16 @@ class ProjectController extends Controller
 
         $projects = $query->orderBy('name')->get();
 
-        $filename = 'projects_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'projects_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($projects) {
+        $callback = function () use ($projects) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Project Code',
@@ -563,13 +563,13 @@ class ProjectController extends Controller
                 'Team Size',
                 'Tasks Count',
                 'Health Status',
-                'Created At'
+                'Created At',
             ]);
 
             // CSV data
             foreach ($projects as $project) {
                 $health = $project->getHealthStatus();
-                
+
                 fputcsv($file, [
                     $project->project_code,
                     $project->name,
@@ -580,16 +580,16 @@ class ProjectController extends Controller
                     $project->manager?->name ?? 'N/A',
                     $project->start_date?->format('Y-m-d') ?? 'N/A',
                     $project->due?->format('Y-m-d') ?? 'N/A',
-                    $project->getCalculatedProgress() . '%',
-                    $project->budget ? ($project->budget_currency ?? 'USD') . ' ' . number_format($project->budget, 2) : 'N/A',
-                    $project->actual_cost ? ($project->budget_currency ?? 'USD') . ' ' . number_format($project->actual_cost, 2) : 'N/A',
+                    $project->getCalculatedProgress().'%',
+                    $project->budget ? ($project->budget_currency ?? 'USD').' '.number_format($project->budget, 2) : 'N/A',
+                    $project->actual_cost ? ($project->budget_currency ?? 'USD').' '.number_format($project->actual_cost, 2) : 'N/A',
                     $project->members()->active()->count(),
                     $project->tasks()->count(),
                     $health['status'],
                     $project->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -602,7 +602,7 @@ class ProjectController extends Controller
     public function getDashboardData(Request $request)
     {
         $statistics = $this->calculateStatistics();
-        
+
         $recentProjects = Project::with(['client', 'manager'])
             ->where('company_id', auth()->user()->company_id)
             ->latest()
@@ -632,9 +632,9 @@ class ProjectController extends Controller
     protected function calculateStatistics(): array
     {
         $companyId = auth()->user()->company_id;
-        
+
         $baseQuery = Project::where('company_id', $companyId);
-        
+
         return [
             'total' => (clone $baseQuery)->count(),
             'active' => (clone $baseQuery)->active()->count(),
@@ -643,22 +643,22 @@ class ProjectController extends Controller
             'due_soon' => (clone $baseQuery)->dueSoon()->count(),
             'on_hold' => (clone $baseQuery)->byStatus(Project::STATUS_ON_HOLD)->count(),
             'planning' => (clone $baseQuery)->byStatus(Project::STATUS_PLANNING)->count(),
-            
+
             // Priority breakdown
             'high_priority' => (clone $baseQuery)->byPriority(Project::PRIORITY_HIGH)->active()->count(),
             'critical_priority' => (clone $baseQuery)->byPriority(Project::PRIORITY_CRITICAL)->active()->count(),
-            
+
             // Health status
-            'healthy' => (clone $baseQuery)->active()->get()->filter(function($p) {
+            'healthy' => (clone $baseQuery)->active()->get()->filter(function ($p) {
                 return $p->getHealthStatus()['status'] === 'good';
             })->count(),
-            'warning' => (clone $baseQuery)->active()->get()->filter(function($p) {
+            'warning' => (clone $baseQuery)->active()->get()->filter(function ($p) {
                 return $p->getHealthStatus()['status'] === 'warning';
             })->count(),
-            'critical' => (clone $baseQuery)->active()->get()->filter(function($p) {
+            'critical' => (clone $baseQuery)->active()->get()->filter(function ($p) {
                 return $p->getHealthStatus()['status'] === 'critical';
             })->count(),
-            
+
             // Financial
             'total_budget' => (clone $baseQuery)->sum('budget') ?? 0,
             'total_actual_cost' => (clone $baseQuery)->sum('actual_cost') ?? 0,

@@ -4,10 +4,10 @@ namespace App\Domains\Client\Services;
 
 use App\Models\Client;
 use App\Models\ClientLicense;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class ClientLicenseService
 {
@@ -19,24 +19,24 @@ class ClientLicenseService
         $query = $client->licenses();
 
         // Apply filters
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
-        if (!empty($filters['vendor'])) {
+        if (! empty($filters['vendor'])) {
             $query->where('vendor', $filters['vendor']);
         }
 
-        if (!empty($filters['expiring_soon'])) {
+        if (! empty($filters['expiring_soon'])) {
             $query->where('expiry_date', '<=', Carbon::now()->addDays(30))
-                  ->where('expiry_date', '>=', Carbon::now());
+                ->where('expiry_date', '>=', Carbon::now());
         }
 
-        if (!empty($filters['expired'])) {
+        if (! empty($filters['expired'])) {
             $query->where('expiry_date', '<', Carbon::now());
         }
 
@@ -73,7 +73,7 @@ class ClientLicenseService
     public function createLicense(Client $client, array $data): ClientLicense
     {
         DB::beginTransaction();
-        
+
         try {
             $license = $client->licenses()->create([
                 'name' => $data['name'],
@@ -104,19 +104,19 @@ class ClientLicenseService
             }
 
             DB::commit();
-            
+
             Log::info('License created for client', [
                 'client_id' => $client->id,
-                'license_id' => $license->id
+                'license_id' => $license->id,
             ]);
 
             return $license;
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create license', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -128,11 +128,11 @@ class ClientLicenseService
     public function updateLicense(ClientLicense $license, array $data): ClientLicense
     {
         DB::beginTransaction();
-        
+
         try {
             $oldExpiryDate = $license->expiry_date;
             $oldAutoRenew = $license->auto_renew;
-            
+
             $license->update([
                 'name' => $data['name'] ?? $license->name,
                 'type' => $data['type'] ?? $license->type,
@@ -164,16 +164,16 @@ class ClientLicenseService
             }
 
             DB::commit();
-            
+
             Log::info('License updated', ['license_id' => $license->id]);
 
             return $license->fresh();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update license', [
                 'license_id' => $license->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -187,17 +187,17 @@ class ClientLicenseService
         try {
             // Cancel any renewal reminders
             $this->cancelRenewalReminder($license);
-            
+
             $license->delete();
-            
+
             Log::info('License deleted', ['license_id' => $license->id]);
-            
+
             return true;
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to delete license', [
                 'license_id' => $license->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -209,11 +209,11 @@ class ClientLicenseService
     public function renewLicense(ClientLicense $license, array $renewalData = []): ClientLicense
     {
         DB::beginTransaction();
-        
+
         try {
-            $newExpiryDate = $renewalData['expiry_date'] ?? 
+            $newExpiryDate = $renewalData['expiry_date'] ??
                 Carbon::parse($license->expiry_date)->addYear();
-            
+
             $license->update([
                 'expiry_date' => $newExpiryDate,
                 'renewal_date' => Carbon::now(),
@@ -241,19 +241,19 @@ class ClientLicenseService
             }
 
             DB::commit();
-            
+
             Log::info('License renewed', [
                 'license_id' => $license->id,
-                'new_expiry' => $newExpiryDate
+                'new_expiry' => $newExpiryDate,
             ]);
 
             return $license->fresh();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to renew license', [
                 'license_id' => $license->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -272,13 +272,13 @@ class ClientLicenseService
         foreach ($expiredLicenses as $license) {
             $license->update(['status' => 'expired']);
             $count++;
-            
+
             // Send expiration notification
             $this->sendExpirationNotification($license);
         }
 
         Log::info('Updated expired licenses', ['count' => $count]);
-        
+
         return $count;
     }
 
@@ -291,14 +291,14 @@ class ClientLicenseService
             'total_seats' => $license->seats,
             'used_seats' => $license->seats_used,
             'available_seats' => $license->seats - $license->seats_used,
-            'utilization_percentage' => $license->seats > 0 
-                ? round(($license->seats_used / $license->seats) * 100, 2) 
+            'utilization_percentage' => $license->seats > 0
+                ? round(($license->seats_used / $license->seats) * 100, 2)
                 : 0,
-            'days_until_expiry' => $license->expiry_date 
-                ? Carbon::now()->diffInDays($license->expiry_date, false) 
+            'days_until_expiry' => $license->expiry_date
+                ? Carbon::now()->diffInDays($license->expiry_date, false)
                 : null,
-            'is_expired' => $license->expiry_date 
-                ? Carbon::now()->isAfter($license->expiry_date) 
+            'is_expired' => $license->expiry_date
+                ? Carbon::now()->isAfter($license->expiry_date)
                 : false,
         ];
 
@@ -318,7 +318,7 @@ class ClientLicenseService
         }
 
         DB::beginTransaction();
-        
+
         try {
             // Store seat assignments (would need a license_assignments table)
             foreach ($userIds as $userId) {
@@ -333,23 +333,23 @@ class ClientLicenseService
 
             // Update used seats count
             $license->update([
-                'seats_used' => $license->seats_used + $requiredSeats
+                'seats_used' => $license->seats_used + $requiredSeats,
             ]);
 
             DB::commit();
-            
+
             Log::info('License seats assigned', [
                 'license_id' => $license->id,
-                'assigned_count' => $requiredSeats
+                'assigned_count' => $requiredSeats,
             ]);
 
             return $license->fresh();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to assign license seats', [
                 'license_id' => $license->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -361,7 +361,7 @@ class ClientLicenseService
     public function getLicenseCostAnalysis(Client $client, string $period = 'year'): array
     {
         $licenses = $client->licenses;
-        
+
         $totalCost = 0;
         $recurringCost = 0;
         $oneTimeCost = 0;
@@ -380,14 +380,14 @@ class ClientLicenseService
 
             // Group by vendor
             $vendor = $license->vendor ?? 'Unknown';
-            if (!isset($costByVendor[$vendor])) {
+            if (! isset($costByVendor[$vendor])) {
                 $costByVendor[$vendor] = 0;
             }
             $costByVendor[$vendor] += $annualCost;
 
             // Group by type
             $type = $license->type ?? 'Unknown';
-            if (!isset($costByType[$type])) {
+            if (! isset($costByType[$type])) {
                 $costByType[$type] = 0;
             }
             $costByType[$type] += $annualCost;
@@ -410,7 +410,7 @@ class ClientLicenseService
      */
     protected function calculateAnnualCost(ClientLicense $license): float
     {
-        if (!$license->renewal_cost) {
+        if (! $license->renewal_cost) {
             return 0;
         }
 
@@ -441,7 +441,7 @@ class ClientLicenseService
         // For now, just log the intent
         Log::info('Renewal reminder scheduled', [
             'license_id' => $license->id,
-            'renewal_date' => $license->renewal_date
+            'renewal_date' => $license->renewal_date,
         ]);
     }
 
@@ -452,7 +452,7 @@ class ClientLicenseService
     {
         // This would cancel scheduled jobs
         Log::info('Renewal reminder cancelled', [
-            'license_id' => $license->id
+            'license_id' => $license->id,
         ]);
     }
 
@@ -463,7 +463,7 @@ class ClientLicenseService
     {
         // This would send email/notification
         Log::info('Expiration notification sent', [
-            'license_id' => $license->id
+            'license_id' => $license->id,
         ]);
     }
 }

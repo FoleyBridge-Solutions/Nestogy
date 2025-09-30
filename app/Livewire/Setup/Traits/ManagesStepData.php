@@ -11,13 +11,13 @@ trait ManagesStepData
         session()->put('setup.current_step', $this->currentStep);
         session()->put('setup.completed_steps', $this->completedSteps);
     }
-    
+
     protected function loadStepData(): void
     {
         // Restore current step and completed steps
         $this->currentStep = session()->get('setup.current_step', 1);
         $this->completedSteps = session()->get('setup.completed_steps', []);
-        
+
         // Load data for all steps
         for ($i = 1; $i <= $this->totalSteps; $i++) {
             if ($data = session()->get("setup.step{$i}")) {
@@ -25,10 +25,10 @@ trait ManagesStepData
             }
         }
     }
-    
+
     protected function getStepData(): array
     {
-        return match($this->currentStep) {
+        return match ($this->currentStep) {
             1 => [
                 'company_name' => $this->company_name,
                 'company_email' => $this->company_email,
@@ -86,7 +86,7 @@ trait ManagesStepData
             default => [],
         };
     }
-    
+
     protected function hydrateStepData(int $step, array $data): void
     {
         switch ($step) {
@@ -102,7 +102,7 @@ trait ManagesStepData
                 $this->company_website = $data['company_website'] ?? '';
                 $this->currency = $data['currency'] ?? 'USD';
                 break;
-                
+
             case 2:
                 $this->smtp_host = $data['smtp_host'] ?? '';
                 $this->smtp_port = $data['smtp_port'] ?? '587';
@@ -112,7 +112,7 @@ trait ManagesStepData
                 $this->mail_from_email = $data['mail_from_email'] ?? '';
                 $this->mail_from_name = $data['mail_from_name'] ?? '';
                 break;
-                
+
             case 3:
                 $this->timezone = $data['timezone'] ?? 'America/New_York';
                 $this->date_format = $data['date_format'] ?? 'Y-m-d';
@@ -129,7 +129,7 @@ trait ManagesStepData
                     'reporting' => true,
                 ];
                 break;
-                
+
             case 4:
                 $this->business_hours_start = $data['business_hours_start'] ?? '09:00';
                 $this->business_hours_end = $data['business_hours_end'] ?? '17:00';
@@ -146,7 +146,7 @@ trait ManagesStepData
                 $this->invoice_starting_number = $data['invoice_starting_number'] ?? 1000;
                 $this->invoice_late_fee_percent = $data['invoice_late_fee_percent'] ?? 1.5;
                 break;
-                
+
             case 5:
                 $this->admin_name = $data['admin_name'] ?? '';
                 $this->admin_email = $data['admin_email'] ?? '';
@@ -157,7 +157,7 @@ trait ManagesStepData
                 break;
         }
     }
-    
+
     protected function clearSetupSession(): void
     {
         for ($i = 1; $i <= $this->totalSteps; $i++) {
@@ -166,7 +166,7 @@ trait ManagesStepData
         session()->forget('setup.current_step');
         session()->forget('setup.completed_steps');
     }
-    
+
     protected function loadDefaults(): void
     {
         // Set default values for all properties
@@ -180,7 +180,7 @@ trait ManagesStepData
         $this->company_country = 'United States';
         $this->company_website = '';
         $this->currency = 'USD';
-        
+
         $this->smtp_host = '';
         $this->smtp_port = '587';
         $this->smtp_encryption = 'tls';
@@ -188,7 +188,7 @@ trait ManagesStepData
         $this->smtp_password = '';
         $this->mail_from_email = '';
         $this->mail_from_name = '';
-        
+
         $this->timezone = 'America/New_York';
         $this->date_format = 'Y-m-d';
         $this->theme = 'blue';
@@ -203,7 +203,7 @@ trait ManagesStepData
             'contracts' => true,
             'reporting' => true,
         ];
-        
+
         $this->business_hours_start = '09:00';
         $this->business_hours_end = '17:00';
         $this->rate_standard = 150;
@@ -218,7 +218,7 @@ trait ManagesStepData
         $this->invoice_prefix = 'INV-';
         $this->invoice_starting_number = 1000;
         $this->invoice_late_fee_percent = 1.5;
-        
+
         $this->admin_name = '';
         $this->admin_email = '';
         $this->admin_password = '';

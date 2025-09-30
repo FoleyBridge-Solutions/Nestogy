@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Product Tax Data Model
- * 
+ *
  * Stores category-specific tax data and calculated taxes for products/services.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $product_id
@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ProductTaxData extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -113,10 +113,10 @@ class ProductTaxData extends Model
      */
     public function isCalculationRecent(int $minutes = 60): bool
     {
-        if (!$this->last_calculated_at) {
+        if (! $this->last_calculated_at) {
             return false;
         }
-        
+
         return $this->last_calculated_at->diffInMinutes(now()) < $minutes;
     }
 

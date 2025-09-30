@@ -2,17 +2,17 @@
 
 namespace App\Domains\Report\Controllers\Report;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Report\Services\ExecutiveReportService;
 use App\Domains\Report\Services\ExportService;
+use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
-use Carbon\Carbon;
 
 /**
  * Quarterly Business Review (QBR) Controller
- * 
+ *
  * Generate comprehensive quarterly reports for executives and clients
  */
 class QBRController extends Controller
@@ -31,10 +31,10 @@ class QBRController extends Controller
     public function index(Request $request): View
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Get available quarters
         $availableQuarters = $this->getAvailableQuarters();
-        
+
         // Get recent QBRs
         $recentReports = $this->getRecentQBRs($companyId);
 
@@ -50,7 +50,7 @@ class QBRController extends Controller
     public function generate(Request $request): View
     {
         $request->validate([
-            'year' => 'required|integer|min:2020|max:' . (now()->year + 1),
+            'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
             'quarter' => 'required|integer|min:1|max:4',
         ]);
 
@@ -84,7 +84,7 @@ class QBRController extends Controller
     public function preview(Request $request): JsonResponse
     {
         $request->validate([
-            'year' => 'required|integer|min:2020|max:' . (now()->year + 1),
+            'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
             'quarter' => 'required|integer|min:1|max:4',
         ]);
 
@@ -125,7 +125,7 @@ class QBRController extends Controller
     public function export(Request $request)
     {
         $request->validate([
-            'year' => 'required|integer|min:2020|max:' . (now()->year + 1),
+            'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
             'quarter' => 'required|integer|min:1|max:4',
             'format' => 'required|string|in:pdf,excel,powerpoint',
             'template' => 'string|in:executive,client,detailed',
@@ -148,7 +148,7 @@ class QBRController extends Controller
                 $quarterEnd
             );
 
-            $filename = "QBR-Q{$quarter}-{$year}-" . now()->format('Y-m-d');
+            $filename = "QBR-Q{$quarter}-{$year}-".now()->format('Y-m-d');
 
             switch ($format) {
                 case 'pdf':
@@ -174,7 +174,7 @@ class QBRController extends Controller
     public function data(Request $request): JsonResponse
     {
         $request->validate([
-            'year' => 'required|integer|min:2020|max:' . (now()->year + 1),
+            'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
             'quarter' => 'required|integer|min:1|max:4',
         ]);
 
@@ -220,7 +220,7 @@ class QBRController extends Controller
         try {
             // Implementation for scheduling QBR generation
             // This would integrate with the ReportSchedulerService
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'QBR generation scheduled successfully',
@@ -246,7 +246,7 @@ class QBRController extends Controller
         for ($i = 0; $i < 8; $i++) {
             $year = $currentYear;
             $quarter = $currentQuarter - $i;
-            
+
             if ($quarter <= 0) {
                 $quarter += 4;
                 $year--;
@@ -319,7 +319,7 @@ class QBRController extends Controller
     {
         $pdf = app('dompdf.wrapper')->loadView("reports.qbr.pdf.{$template}", compact('qbrData'));
         $pdf->setPaper('A4', 'portrait');
-        
+
         return $pdf->download("{$filename}.pdf");
     }
 
@@ -335,8 +335,8 @@ class QBRController extends Controller
                 'Financial Performance',
                 'Service Performance',
                 'Client Analytics',
-                'Raw Data'
-            ]
+                'Raw Data',
+            ],
         ]);
     }
 

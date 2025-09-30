@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Location Model
- * 
+ *
  * Represents physical locations for clients.
  * Each location can have assets, contacts, and networks associated with it.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string|null $description
@@ -37,7 +37,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Location extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -155,8 +155,8 @@ class Location extends Model
     {
         $parts = array_filter([
             $this->address,
-            $this->city && $this->state && $this->zip ? 
-                $this->city . ', ' . $this->state . ' ' . $this->zip : null,
+            $this->city && $this->state && $this->zip ?
+                $this->city.', '.$this->state.' '.$this->zip : null,
             $this->country && $this->country !== 'US' ? $this->country : null,
         ]);
 
@@ -169,7 +169,7 @@ class Location extends Model
     public function getDisplayNameAttribute(): string
     {
         $name = $this->name;
-        
+
         if ($this->isPrimary()) {
             $name .= ' (Primary Location)';
         }
@@ -183,7 +183,7 @@ class Location extends Model
     public function getPhotoUrl(): ?string
     {
         if ($this->photo) {
-            return asset('storage/locations/' . $this->photo);
+            return asset('storage/locations/'.$this->photo);
         }
 
         return null;
@@ -194,7 +194,7 @@ class Location extends Model
      */
     public function hasPhoto(): bool
     {
-        return !empty($this->photo);
+        return ! empty($this->photo);
     }
 
     /**
@@ -210,7 +210,7 @@ class Location extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -275,9 +275,9 @@ class Location extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('address', 'like', '%' . $search . '%')
-              ->orWhere('city', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('address', 'like', '%'.$search.'%')
+                ->orWhere('city', 'like', '%'.$search.'%');
         });
     }
 
@@ -340,8 +340,8 @@ class Location extends Model
             if ($location->primary) {
                 // Set all other locations for this client as non-primary
                 static::where('client_id', $location->client_id)
-                      ->where('id', '!=', $location->id)
-                      ->update(['primary' => false]);
+                    ->where('id', '!=', $location->id)
+                    ->update(['primary' => false]);
             }
         });
 

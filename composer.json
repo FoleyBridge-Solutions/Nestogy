@@ -88,7 +88,14 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
-        ]
+        ],
+        "test:unit": "phpunit --testsuite=Unit",
+        "test:feature": "phpunit --testsuite=Feature",
+        "test:integration": "phpunit --testsuite=Integration",
+        "test:financial": "phpunit --testsuite=Financial",
+        "test:quick": "phpunit --testsuite=Quick",
+        "test:coverage": "phpunit --coverage-html coverage/html",
+        "test:parallel": "php artisan test --parallel"
     },
     "extra": {
         "laravel": {

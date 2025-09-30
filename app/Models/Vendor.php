@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Vendor Model
- * 
+ *
  * Represents vendors/suppliers that provide services or products.
  * Vendors can be client-specific or global templates.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string|null $description
@@ -145,13 +145,13 @@ class Vendor extends Model
      */
     public function getFormattedPhone(): ?string
     {
-        if (!$this->phone) {
+        if (! $this->phone) {
             return null;
         }
 
         $phone = $this->phone;
         if ($this->extension) {
-            $phone .= ' ext. ' . $this->extension;
+            $phone .= ' ext. '.$this->extension;
         }
 
         return $phone;
@@ -186,7 +186,7 @@ class Vendor extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -202,7 +202,7 @@ class Vendor extends Model
      */
     public function isClientSpecific(): bool
     {
-        return !is_null($this->client_id);
+        return ! is_null($this->client_id);
     }
 
     /**
@@ -210,7 +210,7 @@ class Vendor extends Model
      */
     public function isFromTemplate(): bool
     {
-        return !is_null($this->template_id);
+        return ! is_null($this->template_id);
     }
 
     /**
@@ -219,7 +219,7 @@ class Vendor extends Model
     public function getDisplayName(): string
     {
         if ($this->code) {
-            return $this->name . ' (' . $this->code . ')';
+            return $this->name.' ('.$this->code.')';
         }
 
         return $this->name;
@@ -270,7 +270,7 @@ class Vendor extends Model
      */
     public function createInstance(int $clientId, array $overrides = []): self
     {
-        if (!$this->isTemplate()) {
+        if (! $this->isTemplate()) {
             throw new \InvalidArgumentException('Can only create instances from template vendors');
         }
 
@@ -324,11 +324,11 @@ class Vendor extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('description', 'like', '%' . $search . '%')
-              ->orWhere('contact_name', 'like', '%' . $search . '%')
-              ->orWhere('email', 'like', '%' . $search . '%')
-              ->orWhere('code', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('description', 'like', '%'.$search.'%')
+                ->orWhere('contact_name', 'like', '%'.$search.'%')
+                ->orWhere('email', 'like', '%'.$search.'%')
+                ->orWhere('code', 'like', '%'.$search.'%');
         });
     }
 
@@ -389,7 +389,7 @@ class Vendor extends Model
 
         // Update accessed_at when vendor is retrieved
         static::retrieved(function ($vendor) {
-            if (!$vendor->wasRecentlyCreated) {
+            if (! $vendor->wasRecentlyCreated) {
                 $vendor->updateAccessedAt();
             }
         });

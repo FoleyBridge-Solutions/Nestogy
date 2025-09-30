@@ -9,16 +9,20 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Tactical RMM API Client
- * 
+ *
  * Handles HTTP communication with Tactical RMM API.
  * Provides methods for authentication and API calls.
  */
 class TacticalRmmApiClient
 {
     protected RmmIntegration $integration;
+
     protected string $baseUrl;
+
     protected string $apiKey;
+
     protected int $timeout;
+
     protected int $retryTimes;
 
     public function __construct(RmmIntegration $integration)
@@ -76,14 +80,14 @@ class TacticalRmmApiClient
     protected function makeRequest(string $method, string $endpoint, array $data = [], array $params = []): array
     {
         try {
-            $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
-            
+            $url = $this->baseUrl.'/'.ltrim($endpoint, '/');
+
             Log::debug('TacticalRMM API Request', [
                 'method' => $method,
                 'url' => $url,
                 'integration_id' => $this->integration->id,
-                'has_data' => !empty($data),
-                'has_params' => !empty($params),
+                'has_data' => ! empty($data),
+                'has_params' => ! empty($params),
             ]);
 
             $response = Http::withHeaders([
@@ -91,15 +95,15 @@ class TacticalRmmApiClient
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
             ])
-            ->timeout($this->timeout)
-            ->retry($this->retryTimes, 1000) // Retry with 1 second delay
-            ->when($method === 'GET', function ($http) use ($params) {
-                return $http->withOptions(['query' => $params]);
-            })
-            ->when(in_array($method, ['POST', 'PUT', 'PATCH']), function ($http) use ($data) {
-                return $http->withBody(json_encode($data), 'application/json');
-            })
-            ->send($method, $url);
+                ->timeout($this->timeout)
+                ->retry($this->retryTimes, 1000) // Retry with 1 second delay
+                ->when($method === 'GET', function ($http) use ($params) {
+                    return $http->withOptions(['query' => $params]);
+                })
+                ->when(in_array($method, ['POST', 'PUT', 'PATCH']), function ($http) use ($data) {
+                    return $http->withBody(json_encode($data), 'application/json');
+                })
+                ->send($method, $url);
 
             return $this->handleResponse($response, $endpoint);
 
@@ -127,7 +131,7 @@ class TacticalRmmApiClient
     {
         $statusCode = $response->status();
         $body = $response->body();
-        
+
         Log::debug('TacticalRMM API Response', [
             'endpoint' => $endpoint,
             'status_code' => $statusCode,
@@ -138,9 +142,9 @@ class TacticalRmmApiClient
         // Handle successful responses
         if ($response->successful()) {
             $data = $response->json();
-            
+
             // Log raw response if JSON parsing fails
-            if ($data === null && !empty($body)) {
+            if ($data === null && ! empty($body)) {
                 Log::warning('TacticalRMM API: JSON parsing failed', [
                     'endpoint' => $endpoint,
                     'integration_id' => $this->integration->id,
@@ -148,7 +152,7 @@ class TacticalRmmApiClient
                     'content_type' => $response->header('Content-Type'),
                 ]);
             }
-            
+
             return [
                 'success' => true,
                 'data' => $data,
@@ -212,7 +216,7 @@ class TacticalRmmApiClient
         try {
             // Test connection using the root endpoint or dashboard info
             $response = $this->get('/core/dashinfo/');
-            
+
             if ($response['success']) {
                 return [
                     'success' => true,
@@ -232,7 +236,7 @@ class TacticalRmmApiClient
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Connection test failed: ' . $e->getMessage(),
+                'message' => 'Connection test failed: '.$e->getMessage(),
             ];
         }
     }
@@ -264,7 +268,7 @@ class TacticalRmmApiClient
      */
     public function hasValidCredentials(): bool
     {
-        return !empty($this->baseUrl) && !empty($this->apiKey);
+        return ! empty($this->baseUrl) && ! empty($this->apiKey);
     }
 
     /**
@@ -273,6 +277,7 @@ class TacticalRmmApiClient
     public function setTimeout(int $seconds): self
     {
         $this->timeout = $seconds;
+
         return $this;
     }
 
@@ -282,6 +287,7 @@ class TacticalRmmApiClient
     public function setRetryTimes(int $times): self
     {
         $this->retryTimes = $times;
+
         return $this;
     }
 

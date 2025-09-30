@@ -9,14 +9,15 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 
-class ClientsImport implements ToCollection, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading
+class ClientsImport implements ToCollection, WithBatchInserts, WithChunkReading, WithHeadingRow, WithValidation
 {
     private $rowCount = 0;
+
     private $user;
 
     public function __construct()
@@ -57,7 +58,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithValidation, Wit
                 ]);
 
                 // Create primary contact if provided
-                if (!empty($row['contact_name']) || !empty($row['contact_email'])) {
+                if (! empty($row['contact_name']) || ! empty($row['contact_email'])) {
                     $contact = Contact::create([
                         'company_id' => $this->user->company_id,
                         'client_id' => $client->id,
@@ -70,7 +71,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithValidation, Wit
                 }
 
                 // Create primary location if provided
-                if (!empty($row['location_address']) || !empty($row['location_name'])) {
+                if (! empty($row['location_address']) || ! empty($row['location_name'])) {
                     $location = Location::create([
                         'company_id' => $this->user->company_id,
                         'client_id' => $client->id,

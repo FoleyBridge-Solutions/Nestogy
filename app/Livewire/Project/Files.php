@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Project;
 
-use Livewire\Component;
 use App\Domains\Project\Models\Project;
+use Livewire\Component;
 
 class Files extends Component
 {
@@ -17,6 +17,7 @@ class Files extends Component
     public function render()
     {
         $files = $this->project->files;
+
         return view('livewire.project.files', compact('files'));
     }
 }

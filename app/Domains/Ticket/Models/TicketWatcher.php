@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Ticket Watcher Model
- * 
+ *
  * Represents users who are watching a ticket for updates and notifications.
  * Supports email notifications for ticket changes and replies.
  */
 class TicketWatcher extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'ticket_id',
@@ -57,12 +57,12 @@ class TicketWatcher extends Model
      */
     public function shouldNotifyFor(string $eventType): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
         $preferences = $this->notification_preferences ?? [];
-        
+
         // Default to true if no preferences set
         if (empty($preferences)) {
             return true;
@@ -77,7 +77,7 @@ class TicketWatcher extends Model
     public function enableNotifications(array $eventTypes): void
     {
         $preferences = $this->notification_preferences ?? [];
-        
+
         foreach ($eventTypes as $type) {
             $preferences[$type] = true;
         }
@@ -91,7 +91,7 @@ class TicketWatcher extends Model
     public function disableNotifications(array $eventTypes): void
     {
         $preferences = $this->notification_preferences ?? [];
-        
+
         foreach ($eventTypes as $type) {
             $preferences[$type] = false;
         }
@@ -116,7 +116,7 @@ class TicketWatcher extends Model
      */
     public function isInternalUser(): bool
     {
-        return !is_null($this->user_id);
+        return ! is_null($this->user_id);
     }
 
     /**
@@ -124,7 +124,7 @@ class TicketWatcher extends Model
      */
     public function isExternalEmail(): bool
     {
-        return is_null($this->user_id) && !is_null($this->email);
+        return is_null($this->user_id) && ! is_null($this->email);
     }
 
     // ===========================================
@@ -249,7 +249,7 @@ class TicketWatcher extends Model
 
         // Set default notification preferences
         static::creating(function ($watcher) {
-            if (!$watcher->notification_preferences) {
+            if (! $watcher->notification_preferences) {
                 $watcher->notification_preferences = self::getDefaultNotificationPreferences();
             }
         });
@@ -266,7 +266,7 @@ class TicketWatcher extends Model
                     'user_id' => $watcher->user_id,
                     'is_active' => true,
                 ]);
-                
+
                 return false; // Cancel creation
             }
         });

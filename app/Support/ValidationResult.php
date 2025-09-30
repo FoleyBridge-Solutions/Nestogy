@@ -8,8 +8,11 @@ namespace App\Support;
 class ValidationResult
 {
     protected bool $valid;
+
     protected array $errors;
+
     protected array $warnings;
+
     protected array $metadata;
 
     public function __construct(bool $valid = true, array $errors = [], array $warnings = [], array $metadata = [])
@@ -49,7 +52,7 @@ class ValidationResult
      */
     public function isInvalid(): bool
     {
-        return !$this->valid;
+        return ! $this->valid;
     }
 
     /**
@@ -83,6 +86,7 @@ class ValidationResult
     {
         $this->errors[] = $error;
         $this->valid = false;
+
         return $this;
     }
 
@@ -92,6 +96,7 @@ class ValidationResult
     public function addWarning(string $warning): self
     {
         $this->warnings[] = $warning;
+
         return $this;
     }
 
@@ -101,6 +106,7 @@ class ValidationResult
     public function addMetadata(string $key, $value): self
     {
         $this->metadata[$key] = $value;
+
         return $this;
     }
 
@@ -112,11 +118,11 @@ class ValidationResult
         $this->errors = array_merge($this->errors, $other->getErrors());
         $this->warnings = array_merge($this->warnings, $other->getWarnings());
         $this->metadata = array_merge($this->metadata, $other->getMetadata());
-        
-        if (!$other->isValid()) {
+
+        if (! $other->isValid()) {
             $this->valid = false;
         }
-        
+
         return $this;
     }
 
@@ -125,7 +131,7 @@ class ValidationResult
      */
     public function hasErrors(): bool
     {
-        return !empty($this->errors);
+        return ! empty($this->errors);
     }
 
     /**
@@ -133,7 +139,7 @@ class ValidationResult
      */
     public function hasWarnings(): bool
     {
-        return !empty($this->warnings);
+        return ! empty($this->warnings);
     }
 
     /**

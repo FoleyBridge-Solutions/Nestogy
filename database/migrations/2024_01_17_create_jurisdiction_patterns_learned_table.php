@@ -20,7 +20,7 @@ return new class extends Migration
             $table->json('pattern_data')->nullable();
             $table->timestamp('discovered_at');
             $table->timestamps();
-            
+
             // Indexes for fast lookups
             $table->index('authority_name');
             $table->index('authority_id');

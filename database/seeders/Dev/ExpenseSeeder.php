@@ -2,13 +2,13 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
-use App\Models\Expense;
-use App\Models\Company;
 use App\Models\Category;
-use App\Models\Vendor;
+use App\Models\Company;
+use App\Models\Expense;
 use App\Models\User;
+use App\Models\Vendor;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class ExpenseSeeder extends Seeder
 {
@@ -18,18 +18,18 @@ class ExpenseSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('Creating 2 years of expense history...');
-        
+
         $companies = Company::where('id', '>', 1)->get();
         $totalExpenses = 0;
-        
+
         foreach ($companies as $company) {
             $this->command->info("  Creating expenses for {$company->name}...");
-            
+
             // Get or create expense categories
             $categories = Category::where('company_id', $company->id)
                 ->where('type', 'expense')
                 ->get();
-            
+
             if ($categories->isEmpty()) {
                 $expenseCategories = [
                     'Office Supplies',
@@ -43,24 +43,24 @@ class ExpenseSeeder extends Seeder
                     'Training & Education',
                     'Insurance',
                 ];
-                
+
                 foreach ($expenseCategories as $catName) {
                     $categories->push(Category::create([
                         'company_id' => $company->id,
                         'name' => $catName,
                         'type' => 'expense',
-                        'color' => fake()->hexColor()
+                        'color' => fake()->hexColor(),
                     ]));
                 }
             }
-            
+
             $vendors = Vendor::where('company_id', $company->id)->get();
             $users = User::where('company_id', $company->id)->get();
-            
+
             if ($users->isEmpty()) {
                 continue;
             }
-            
+
             // Define recurring monthly expenses
             $recurringExpenses = [
                 ['name' => 'Office Rent', 'amount_range' => [2000, 5000], 'category' => 'Rent & Utilities'],
@@ -71,29 +71,29 @@ class ExpenseSeeder extends Seeder
                 ['name' => 'Adobe Creative Cloud', 'amount_range' => [200, 1000], 'category' => 'Software Subscriptions'],
                 ['name' => 'Professional Liability Insurance', 'amount_range' => [500, 2000], 'category' => 'Insurance'],
             ];
-            
+
             // Generate recurring expenses for past 24 months
             foreach ($recurringExpenses as $recurringExpense) {
                 $category = $categories->firstWhere('name', $recurringExpense['category']);
-                if (!$category) {
+                if (! $category) {
                     $category = $categories->first();
                 }
-                
+
                 $baseAmount = fake()->numberBetween($recurringExpense['amount_range'][0], $recurringExpense['amount_range'][1]);
-                
+
                 for ($month = 0; $month < 24; $month++) {
                     $expenseDate = Carbon::now()->subMonths($month)->startOfMonth()->addDays(rand(1, 28));
-                    
+
                     // Add some variation to monthly amounts
                     $amount = $baseAmount * fake()->randomFloat(2, 0.95, 1.05);
-                    
+
                     Expense::create([
                         'company_id' => $company->id,
                         'category_id' => $category->id,
                         'vendor_id' => $vendors->isNotEmpty() ? $vendors->random()->id : null,
                         'user_id' => $users->random()->id,
                         'name' => $recurringExpense['name'],
-                        'description' => "Monthly {$recurringExpense['name']} - " . $expenseDate->format('F Y'),
+                        'description' => "Monthly {$recurringExpense['name']} - ".$expenseDate->format('F Y'),
                         'amount' => $amount,
                         'date' => $expenseDate,
                         'payment_method' => fake()->randomElement(['credit_card', 'bank_transfer', 'check', 'cash']),
@@ -103,11 +103,11 @@ class ExpenseSeeder extends Seeder
                         'created_at' => $expenseDate,
                         'updated_at' => fake()->dateTimeBetween($expenseDate, 'now'),
                     ]);
-                    
+
                     $totalExpenses++;
                 }
             }
-            
+
             // Generate random one-time expenses
             $oneTimeExpenseTemplates = [
                 ['name' => 'Laptop Purchase', 'amount_range' => [800, 2500], 'category' => 'Hardware Purchases'],
@@ -124,19 +124,19 @@ class ExpenseSeeder extends Seeder
                 ['name' => 'Legal Consultation', 'amount_range' => [500, 3000], 'category' => 'Professional Services'],
                 ['name' => 'Accounting Services', 'amount_range' => [300, 2000], 'category' => 'Professional Services'],
             ];
-            
+
             // Generate 50-100 random one-time expenses over 2 years
             $numOneTimeExpenses = rand(50, 100);
-            
+
             for ($i = 0; $i < $numOneTimeExpenses; $i++) {
                 $template = fake()->randomElement($oneTimeExpenseTemplates);
                 $category = $categories->firstWhere('name', $template['category']);
-                if (!$category) {
+                if (! $category) {
                     $category = $categories->first();
                 }
-                
+
                 $expenseDate = fake()->dateTimeBetween('-2 years', 'now');
-                
+
                 Expense::create([
                     'company_id' => $company->id,
                     'category_id' => $category->id,
@@ -151,18 +151,18 @@ class ExpenseSeeder extends Seeder
                     'receipt_path' => fake()->optional(0.3)->filePath(),
                     'is_recurring' => false,
                     'is_billable' => fake()->boolean(30),
-                    'status' => Carbon::parse($expenseDate)->isFuture() ? 'pending' : 
+                    'status' => Carbon::parse($expenseDate)->isFuture() ? 'pending' :
                               fake()->randomElement(['paid', 'paid', 'paid', 'approved', 'reimbursed']),
                     'created_at' => $expenseDate,
                     'updated_at' => fake()->dateTimeBetween($expenseDate, 'now'),
                 ]);
-                
+
                 $totalExpenses++;
             }
-            
+
             $this->command->info("    ✓ Created expenses for {$company->name}");
         }
-        
+
         $this->command->info("Created {$totalExpenses} expenses with 2 years of history.");
     }
 }

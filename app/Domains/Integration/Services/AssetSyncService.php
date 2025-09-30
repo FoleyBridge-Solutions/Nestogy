@@ -4,23 +4,21 @@ namespace App\Domains\Integration\Services;
 
 use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Models\RmmIntegration;
-use App\Domains\Integration\Services\RmmServiceInterface;
-use App\Domains\Integration\Services\RmmServiceFactory;
 use App\Models\Asset;
 use App\Models\Client;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Asset Sync Service
- * 
+ *
  * Handles bidirectional synchronization between Nestogy assets and RMM systems.
  * Provides comprehensive device management without needing to access RMM directly.
  */
 class AssetSyncService
 {
     protected RmmServiceFactory $rmmFactory;
-    
+
     public function __construct(RmmServiceFactory $rmmFactory)
     {
         $this->rmmFactory = $rmmFactory;
@@ -63,7 +61,7 @@ class AssetSyncService
             $rmmService = $this->rmmFactory->make($integration);
             $agentsResponse = $rmmService->getAgents();
 
-            if (!$agentsResponse['success']) {
+            if (! $agentsResponse['success']) {
                 Log::error('Failed to get agents from RMM', [
                     'integration_id' => $integration->id,
                     'error' => $agentsResponse['error'] ?? 'Unknown error',
@@ -122,38 +120,38 @@ class AssetSyncService
     {
         return DB::transaction(function () use ($integration, $rmmService, $agentData) {
             $agentId = $agentData['id'];
-            
+
             // Get comprehensive device inventory
             $inventoryResult = $rmmService->getFullDeviceInventory($agentId);
-            
-            if (!$inventoryResult['success']) {
-                throw new \Exception("Failed to get device inventory: " . ($inventoryResult['errors']['agent'] ?? 'Unknown error'));
+
+            if (! $inventoryResult['success']) {
+                throw new \Exception('Failed to get device inventory: '.($inventoryResult['errors']['agent'] ?? 'Unknown error'));
             }
-            
+
             $inventory = $inventoryResult['data'];
-            
+
             // Find or create device mapping
             $mapping = $this->findOrCreateDeviceMapping($integration, $agentData);
-            
+
             // Find or create asset
             $asset = $this->findOrCreateAsset($mapping, $inventory);
-            
+
             // Update asset with comprehensive data
             $this->updateAssetFromInventory($asset, $inventory);
-            
+
             // Update device mapping with latest sync data
             $mapping->updateSyncData([
                 'last_full_sync' => now()->toISOString(),
                 'inventory_data' => $inventory,
                 'sync_source' => 'comprehensive_sync',
             ]);
-            
+
             Log::info('Asset synced successfully', [
                 'asset_id' => $asset->id,
                 'rmm_agent_id' => $agentId,
                 'integration_id' => $integration->id,
             ]);
-            
+
             return $asset;
         });
     }
@@ -165,7 +163,7 @@ class AssetSyncService
     {
         // Find device mappings for this asset
         $mappings = DeviceMapping::where('asset_id', $asset->id)->get();
-        
+
         if ($mappings->isEmpty()) {
             return [
                 'success' => false,
@@ -181,16 +179,16 @@ class AssetSyncService
             try {
                 $integration = $mapping->integration;
                 $rmmService = $this->rmmFactory->make($integration);
-                
+
                 $result = $this->updateRmmDevice($rmmService, $mapping, $asset);
                 $results[$integration->name] = $result;
-                
+
                 if ($result['success']) {
                     $successCount++;
                 } else {
                     $errorCount++;
                 }
-                
+
             } catch (\Exception $e) {
                 $errorCount++;
                 $results[$mapping->integration->name] = [
@@ -214,8 +212,8 @@ class AssetSyncService
     public function executeRemoteCommand(Asset $asset, string $command, array $options = []): array
     {
         $mapping = DeviceMapping::where('asset_id', $asset->id)->first();
-        
-        if (!$mapping) {
+
+        if (! $mapping) {
             return [
                 'success' => false,
                 'error' => 'No RMM mapping found for this asset',
@@ -224,9 +222,9 @@ class AssetSyncService
 
         try {
             $rmmService = $this->rmmFactory->create($mapping->integration);
-            
+
             $result = $rmmService->runCommand($mapping->rmm_device_id, $command, $options);
-            
+
             // Log the command execution
             Log::info('Remote command executed', [
                 'asset_id' => $asset->id,
@@ -234,16 +232,16 @@ class AssetSyncService
                 'success' => $result['success'],
                 'task_id' => $result['task_id'] ?? null,
             ]);
-            
+
             return $result;
-            
+
         } catch (\Exception $e) {
             Log::error('Remote command execution failed', [
                 'asset_id' => $asset->id,
                 'command' => $command,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -257,8 +255,8 @@ class AssetSyncService
     public function manageService(Asset $asset, string $serviceName, string $action): array
     {
         $mapping = DeviceMapping::where('asset_id', $asset->id)->first();
-        
-        if (!$mapping) {
+
+        if (! $mapping) {
             return [
                 'success' => false,
                 'error' => 'No RMM mapping found for this asset',
@@ -268,14 +266,14 @@ class AssetSyncService
         try {
             $rmmService = $this->rmmFactory->create($mapping->integration);
             $agentId = $mapping->rmm_device_id;
-            
+
             $result = match ($action) {
                 'start' => $rmmService->startService($agentId, $serviceName),
                 'stop' => $rmmService->stopService($agentId, $serviceName),
                 'restart' => $rmmService->restartService($agentId, $serviceName),
                 default => throw new \InvalidArgumentException("Invalid service action: {$action}"),
             };
-            
+
             // Log the service management action
             Log::info('Service management executed', [
                 'asset_id' => $asset->id,
@@ -283,9 +281,9 @@ class AssetSyncService
                 'action' => $action,
                 'success' => $result['success'],
             ]);
-            
+
             return $result;
-            
+
         } catch (\Exception $e) {
             Log::error('Service management failed', [
                 'asset_id' => $asset->id,
@@ -293,7 +291,7 @@ class AssetSyncService
                 'action' => $action,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -307,8 +305,8 @@ class AssetSyncService
     public function installWindowsUpdates(Asset $asset, array $updateIds = []): array
     {
         $mapping = DeviceMapping::where('asset_id', $asset->id)->first();
-        
-        if (!$mapping) {
+
+        if (! $mapping) {
             return [
                 'success' => false,
                 'error' => 'No RMM mapping found for this asset',
@@ -317,9 +315,9 @@ class AssetSyncService
 
         try {
             $rmmService = $this->rmmFactory->create($mapping->integration);
-            
+
             $result = $rmmService->installUpdates($mapping->rmm_device_id, $updateIds);
-            
+
             // Log the update installation
             Log::info('Windows updates installation initiated', [
                 'asset_id' => $asset->id,
@@ -327,15 +325,15 @@ class AssetSyncService
                 'success' => $result['success'],
                 'task_id' => $result['task_id'] ?? null,
             ]);
-            
+
             return $result;
-            
+
         } catch (\Exception $e) {
             Log::error('Windows updates installation failed', [
                 'asset_id' => $asset->id,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -349,8 +347,8 @@ class AssetSyncService
     public function rebootDevice(Asset $asset, array $options = []): array
     {
         $mapping = DeviceMapping::where('asset_id', $asset->id)->first();
-        
-        if (!$mapping) {
+
+        if (! $mapping) {
             return [
                 'success' => false,
                 'error' => 'No RMM mapping found for this asset',
@@ -359,9 +357,9 @@ class AssetSyncService
 
         try {
             $rmmService = $this->rmmFactory->create($mapping->integration);
-            
+
             $result = $rmmService->rebootAgent($mapping->rmm_device_id, $options);
-            
+
             // Log the reboot action
             Log::info('Device reboot initiated', [
                 'asset_id' => $asset->id,
@@ -369,15 +367,15 @@ class AssetSyncService
                 'success' => $result['success'],
                 'task_id' => $result['task_id'] ?? null,
             ]);
-            
+
             return $result;
-            
+
         } catch (\Exception $e) {
             Log::error('Device reboot failed', [
                 'asset_id' => $asset->id,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -391,8 +389,8 @@ class AssetSyncService
     public function getDeviceStatus(Asset $asset): array
     {
         $mapping = DeviceMapping::where('asset_id', $asset->id)->first();
-        
-        if (!$mapping) {
+
+        if (! $mapping) {
             return [
                 'success' => false,
                 'error' => 'No RMM mapping found for this asset',
@@ -403,46 +401,46 @@ class AssetSyncService
         try {
             $rmmService = $this->rmmFactory->create($mapping->integration);
             $agentId = $mapping->rmm_device_id;
-            
+
             // Get comprehensive current status
             $status = [];
-            
+
             // Basic agent info
             $agentInfo = $rmmService->getAgent($agentId);
             if ($agentInfo['success']) {
                 $status['agent'] = $agentInfo['data'];
             }
-            
+
             // Performance metrics
             $performance = $rmmService->getDevicePerformance($agentId);
             if ($performance['success']) {
                 $status['performance'] = $performance['data'];
             }
-            
+
             // Current processes
             $processes = $rmmService->getDeviceProcesses($agentId);
             if ($processes['success']) {
                 $status['processes'] = array_slice($processes['data'], 0, 10); // Top 10 processes
             }
-            
+
             // Connectivity test
             $ping = $rmmService->pingDevice($agentId);
             if ($ping['success']) {
                 $status['connectivity'] = $ping['data'];
             }
-            
+
             return [
                 'success' => true,
                 'data' => $status,
                 'last_updated' => now()->toISOString(),
             ];
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to get device status', [
                 'asset_id' => $asset->id,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -458,10 +456,10 @@ class AssetSyncService
     {
         $deviceId = $agentData['id'];
         $deviceName = $agentData['hostname'] ?? 'Unknown Device';
-        
+
         // Try to resolve client
         $clientId = $this->resolveClientId($integration, $agentData);
-        
+
         return DeviceMapping::updateOrCreateMapping(
             $integration->id,
             $deviceId,
@@ -484,7 +482,7 @@ class AssetSyncService
         }
 
         $agentData = $inventory['agent'] ?? [];
-        
+
         // Create new asset
         $asset = Asset::create([
             'company_id' => $mapping->integration->company_id,
@@ -525,13 +523,13 @@ class AssetSyncService
         ];
 
         // Add hardware information if available
-        if (!empty($hardwareData['cpu']['model'])) {
-            $updateData['description'] = "CPU: {$hardwareData['cpu']['model']}, RAM: " . 
-                ($hardwareData['memory']['total_gb'] ?? 'Unknown') . " GB";
+        if (! empty($hardwareData['cpu']['model'])) {
+            $updateData['description'] = "CPU: {$hardwareData['cpu']['model']}, RAM: ".
+                ($hardwareData['memory']['total_gb'] ?? 'Unknown').' GB';
         }
 
         // Update the asset
-        $asset->update(array_filter($updateData, fn($value) => $value !== null));
+        $asset->update(array_filter($updateData, fn ($value) => $value !== null));
     }
 
     /**
@@ -545,9 +543,9 @@ class AssetSyncService
             if ($asset->description) {
                 $note .= " - {$asset->description}";
             }
-            
+
             $result = $rmmService->addAgentNote($mapping->rmm_device_id, $note);
-            
+
             if ($result['success']) {
                 $mapping->updateSyncData([
                     'last_push_to_rmm' => now()->toISOString(),
@@ -558,9 +556,9 @@ class AssetSyncService
                     ],
                 ]);
             }
-            
+
             return $result;
-            
+
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -575,12 +573,12 @@ class AssetSyncService
     protected function resolveClientId(RmmIntegration $integration, array $agentData): int
     {
         $clientName = $agentData['client'] ?? 'Unknown';
-        
+
         // Try to find existing client
         $client = Client::where('company_id', $integration->company_id)
             ->where(function ($query) use ($clientName) {
                 $query->where('name', $clientName)
-                      ->orWhere('company_name', $clientName);
+                    ->orWhere('company_name', $clientName);
             })
             ->first();
 

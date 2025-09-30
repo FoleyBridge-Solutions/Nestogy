@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientService;
 use App\Models\User;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +14,7 @@ use Illuminate\Validation\Rule;
 class ServiceController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of services for the selected client
      */
@@ -22,7 +22,7 @@ class ServiceController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -30,15 +30,15 @@ class ServiceController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('service_type', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('service_type', 'like', "%{$search}%")
+                    ->orWhere('category', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -76,12 +76,12 @@ class ServiceController extends Controller
         }
 
         $services = $query->orderBy('name')
-                         ->paginate(20)
-                         ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $technicians = User::where('company_id', auth()->user()->company_id)
-                          ->orderBy('name')
-                          ->get();
+            ->orderBy('name')
+            ->get();
 
         $serviceTypes = ClientService::getServiceTypes();
         $serviceCategories = ClientService::getServiceCategories();
@@ -102,12 +102,12 @@ class ServiceController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $technicians = User::where('company_id', auth()->user()->company_id)
-                          ->orderBy('name')
-                          ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $serviceTypes = ClientService::getServiceTypes();
@@ -118,9 +118,9 @@ class ServiceController extends Controller
         $priorityLevels = ClientService::getPriorityLevels();
 
         return view('clients.services.create', compact(
-            'clients', 
+            'clients',
             'technicians',
-            'selectedClientId', 
+            'selectedClientId',
             'serviceTypes',
             'serviceCategories',
             'serviceStatuses',
@@ -145,13 +145,13 @@ class ServiceController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'service_type' => 'required|in:' . implode(',', array_keys(ClientService::getServiceTypes())),
-            'category' => 'nullable|in:' . implode(',', array_keys(ClientService::getServiceCategories())),
-            'status' => 'required|in:' . implode(',', array_keys(ClientService::getServiceStatuses())),
+            'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
+            'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'renewal_date' => 'nullable|date',
-            'billing_cycle' => 'nullable|in:' . implode(',', array_keys(ClientService::getBillingCycles())),
+            'billing_cycle' => 'nullable|in:'.implode(',', array_keys(ClientService::getBillingCycles())),
             'monthly_cost' => 'nullable|numeric|min:0|max:999999.99',
             'setup_cost' => 'nullable|numeric|min:0|max:999999.99',
             'total_contract_value' => 'nullable|numeric|min:0|max:9999999.99',
@@ -159,8 +159,8 @@ class ServiceController extends Controller
             'auto_renewal' => 'boolean',
             'contract_terms' => 'nullable|string',
             'sla_terms' => 'nullable|string',
-            'service_level' => 'nullable|in:' . implode(',', array_keys(ClientService::getServiceLevels())),
-            'priority_level' => 'nullable|in:' . implode(',', array_keys(ClientService::getPriorityLevels())),
+            'service_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceLevels())),
+            'priority_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getPriorityLevels())),
             'assigned_technician' => [
                 'nullable',
                 'exists:users,id',
@@ -193,21 +193,21 @@ class ServiceController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $serviceData = $request->all();
-        
+
         // Process array fields
         if ($request->service_hours) {
             $serviceData['service_hours'] = json_decode($request->service_hours, true) ?: [];
         }
-        
+
         if ($request->performance_metrics) {
             $serviceData['performance_metrics'] = json_decode($request->performance_metrics, true) ?: [];
         }
-        
+
         if ($request->tags) {
             $serviceData['tags'] = array_map('trim', explode(',', $request->tags));
         }
@@ -217,7 +217,7 @@ class ServiceController extends Controller
         $service->save();
 
         return redirect()->route('clients.services.standalone.index')
-                        ->with('success', 'Service created successfully.');
+            ->with('success', 'Service created successfully.');
     }
 
     /**
@@ -240,12 +240,12 @@ class ServiceController extends Controller
         $this->authorize('update', $service);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $technicians = User::where('company_id', auth()->user()->company_id)
-                          ->orderBy('name')
-                          ->get();
+            ->orderBy('name')
+            ->get();
 
         $serviceTypes = ClientService::getServiceTypes();
         $serviceCategories = ClientService::getServiceCategories();
@@ -256,7 +256,7 @@ class ServiceController extends Controller
 
         return view('clients.services.edit', compact(
             'service',
-            'clients', 
+            'clients',
             'technicians',
             'serviceTypes',
             'serviceCategories',
@@ -284,13 +284,13 @@ class ServiceController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'service_type' => 'required|in:' . implode(',', array_keys(ClientService::getServiceTypes())),
-            'category' => 'nullable|in:' . implode(',', array_keys(ClientService::getServiceCategories())),
-            'status' => 'required|in:' . implode(',', array_keys(ClientService::getServiceStatuses())),
+            'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
+            'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'renewal_date' => 'nullable|date',
-            'billing_cycle' => 'nullable|in:' . implode(',', array_keys(ClientService::getBillingCycles())),
+            'billing_cycle' => 'nullable|in:'.implode(',', array_keys(ClientService::getBillingCycles())),
             'monthly_cost' => 'nullable|numeric|min:0|max:999999.99',
             'setup_cost' => 'nullable|numeric|min:0|max:999999.99',
             'total_contract_value' => 'nullable|numeric|min:0|max:9999999.99',
@@ -298,8 +298,8 @@ class ServiceController extends Controller
             'auto_renewal' => 'boolean',
             'contract_terms' => 'nullable|string',
             'sla_terms' => 'nullable|string',
-            'service_level' => 'nullable|in:' . implode(',', array_keys(ClientService::getServiceLevels())),
-            'priority_level' => 'nullable|in:' . implode(',', array_keys(ClientService::getPriorityLevels())),
+            'service_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceLevels())),
+            'priority_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getPriorityLevels())),
             'assigned_technician' => [
                 'nullable',
                 'exists:users,id',
@@ -332,21 +332,21 @@ class ServiceController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $serviceData = $request->all();
-        
+
         // Process array fields
         if ($request->service_hours) {
             $serviceData['service_hours'] = json_decode($request->service_hours, true) ?: [];
         }
-        
+
         if ($request->performance_metrics) {
             $serviceData['performance_metrics'] = json_decode($request->performance_metrics, true) ?: [];
         }
-        
+
         if ($request->tags) {
             $serviceData['tags'] = array_map('trim', explode(',', $request->tags));
         }
@@ -355,7 +355,7 @@ class ServiceController extends Controller
         $service->save();
 
         return redirect()->route('clients.services.standalone.index')
-                        ->with('success', 'Service updated successfully.');
+            ->with('success', 'Service updated successfully.');
     }
 
     /**
@@ -368,7 +368,7 @@ class ServiceController extends Controller
         $service->delete();
 
         return redirect()->route('clients.services.standalone.index')
-                        ->with('success', 'Service deleted successfully.');
+            ->with('success', 'Service deleted successfully.');
     }
 
     /**
@@ -377,15 +377,15 @@ class ServiceController extends Controller
     public function export(Request $request)
     {
         $query = ClientService::with(['client', 'technician'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('service_type', 'like', "%{$search}%");
+                    ->orWhere('service_type', 'like', "%{$search}%");
             });
         }
 
@@ -407,16 +407,16 @@ class ServiceController extends Controller
 
         $services = $query->orderBy('name')->get();
 
-        $filename = 'services_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'services_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($services) {
+        $callback = function () use ($services) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Service Name',
@@ -432,7 +432,7 @@ class ServiceController extends Controller
                 'Service Level',
                 'Priority',
                 'Last Review',
-                'Client Satisfaction'
+                'Client Satisfaction',
             ]);
 
             // CSV data
@@ -454,7 +454,7 @@ class ServiceController extends Controller
                     $service->client_satisfaction,
                 ]);
             }
-            
+
             fclose($file);
         };
 

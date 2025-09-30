@@ -4,10 +4,10 @@ namespace App\Domains\Asset\Exceptions;
 
 use App\Exceptions\BaseException;
 use App\Exceptions\BusinessException;
-use App\Exceptions\ValidationException as BaseValidationException;
 use App\Exceptions\NotFoundException as BaseNotFoundException;
 use App\Exceptions\PermissionException as BasePermissionException;
 use App\Exceptions\ServiceException;
+use App\Exceptions\ValidationException as BaseValidationException;
 
 /**
  * Base Asset Exception
@@ -175,7 +175,7 @@ class AssetImportException extends AssetException
     public function __construct(string $message, array $failedRows = [], array $context = [])
     {
         $this->failedRows = $failedRows;
-        
+
         parent::__construct(
             $message,
             422,

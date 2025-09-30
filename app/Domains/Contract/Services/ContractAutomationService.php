@@ -3,18 +3,17 @@
 namespace App\Domains\Contract\Services;
 
 use App\Domains\Contract\Models\Contract;
+use App\Domains\Contract\Models\ContractAssetAssignment;
+use App\Domains\Contract\Models\ContractBillingCalculation;
+use App\Domains\Contract\Models\ContractContactAssignment;
 use App\Models\Asset;
 use App\Models\Contact;
-use App\Domains\Contract\Models\ContractAssetAssignment;
-use App\Domains\Contract\Models\ContractContactAssignment;
-use App\Domains\Contract\Models\ContractBillingCalculation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * ContractAutomationService
- * 
+ *
  * Handles automated behaviors for programmable contracts including:
  * - Auto-assignment of assets and contacts
  * - Automated billing calculations
@@ -30,13 +29,13 @@ class ContractAutomationService
     {
         Log::info('Processing new asset for contract automation', [
             'asset_id' => $asset->id,
-            'client_id' => $asset->client_id
+            'client_id' => $asset->client_id,
         ]);
 
         // Find active contracts for this client with auto-assignment enabled
         $contracts = Contract::where('client_id', $asset->client_id)
             ->where('status', Contract::STATUS_ACTIVE)
-            ->whereHas('template', function($query) {
+            ->whereHas('template', function ($query) {
                 $query->whereJsonContains('automation_settings->auto_assign_new_assets', true);
             })
             ->with('template')
@@ -54,13 +53,13 @@ class ContractAutomationService
     {
         Log::info('Processing new contact for contract automation', [
             'contact_id' => $contact->id,
-            'client_id' => $contact->client_id
+            'client_id' => $contact->client_id,
         ]);
 
         // Find active contracts for this client with auto-assignment enabled
         $contracts = Contract::where('client_id', $contact->client_id)
             ->where('status', Contract::STATUS_ACTIVE)
-            ->whereHas('template', function($query) {
+            ->whereHas('template', function ($query) {
                 $query->whereJsonContains('automation_settings->auto_assign_new_contacts', true);
             })
             ->with('template')
@@ -101,7 +100,7 @@ class ContractAutomationService
         Log::info('Auto-assigned asset to contract', [
             'contract_id' => $contract->id,
             'asset_id' => $asset->id,
-            'monthly_rate' => $rate
+            'monthly_rate' => $rate,
         ]);
 
         // Trigger billing recalculation
@@ -124,7 +123,7 @@ class ContractAutomationService
 
         // Get default access tier and rate
         $defaultTier = $this->getDefaultContactTier($contract);
-        if (!$defaultTier) {
+        if (! $defaultTier) {
             return;
         }
 
@@ -143,7 +142,7 @@ class ContractAutomationService
             'contract_id' => $contract->id,
             'contact_id' => $contact->id,
             'access_tier' => $defaultTier['name'],
-            'monthly_rate' => $defaultTier['rate']
+            'monthly_rate' => $defaultTier['rate'],
         ]);
 
         // Trigger billing recalculation
@@ -155,7 +154,7 @@ class ContractAutomationService
      */
     protected function getAssetBillingRate(Contract $contract, Asset $asset)
     {
-        if (!$contract->template || !$contract->template->asset_billing_rules) {
+        if (! $contract->template || ! $contract->template->asset_billing_rules) {
             return 0;
         }
 
@@ -176,7 +175,7 @@ class ContractAutomationService
      */
     protected function getDefaultContactTier(Contract $contract)
     {
-        if (!$contract->template || !$contract->template->contact_billing_rules) {
+        if (! $contract->template || ! $contract->template->contact_billing_rules) {
             return null;
         }
 
@@ -188,17 +187,18 @@ class ContractAutomationService
             if (isset($tier['is_default']) && $tier['is_default']) {
                 return [
                     'name' => $tier['name'],
-                    'rate' => (float) ($tier['monthly_rate'] ?? 0)
+                    'rate' => (float) ($tier['monthly_rate'] ?? 0),
                 ];
             }
         }
 
         // If no default tier, use the first one
-        if (!empty($accessTiers)) {
+        if (! empty($accessTiers)) {
             $firstTier = reset($accessTiers);
+
             return [
                 'name' => $firstTier['name'],
-                'rate' => (float) ($firstTier['monthly_rate'] ?? 0)
+                'rate' => (float) ($firstTier['monthly_rate'] ?? 0),
             ];
         }
 
@@ -210,7 +210,7 @@ class ContractAutomationService
      */
     public function triggerBillingRecalculation(Contract $contract)
     {
-        if (!$this->shouldAutoCalculateBilling($contract)) {
+        if (! $this->shouldAutoCalculateBilling($contract)) {
             return;
         }
 
@@ -219,7 +219,7 @@ class ContractAutomationService
         } catch (\Exception $e) {
             Log::error('Failed to recalculate billing for contract', [
                 'contract_id' => $contract->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -229,11 +229,12 @@ class ContractAutomationService
      */
     protected function shouldAutoCalculateBilling(Contract $contract)
     {
-        if (!$contract->template || !$contract->template->automation_settings) {
+        if (! $contract->template || ! $contract->template->automation_settings) {
             return false;
         }
 
         $settings = $contract->template->automation_settings;
+
         return $settings['auto_generate_invoices'] ?? false;
     }
 
@@ -243,7 +244,7 @@ class ContractAutomationService
     public function calculateBillingForPeriod(Contract $contract, string $billingPeriod)
     {
         DB::beginTransaction();
-        
+
         try {
             // Check if calculation already exists for this period
             $existingCalculation = ContractBillingCalculation::where('contract_id', $contract->id)
@@ -253,6 +254,7 @@ class ContractAutomationService
             if ($existingCalculation && $existingCalculation->status !== 'draft') {
                 // Don't recalculate finalized periods
                 DB::rollBack();
+
                 return $existingCalculation;
             }
 
@@ -275,14 +277,14 @@ class ContractAutomationService
             $calculation = ContractBillingCalculation::updateOrCreate(
                 [
                     'contract_id' => $contract->id,
-                    'billing_period' => $billingPeriod
+                    'billing_period' => $billingPeriod,
                 ],
                 [
                     'asset_billing_amount' => $assetBilling,
                     'contact_billing_amount' => $contactBilling,
                     'total_amount' => $totalAmount,
                     'calculated_at' => now(),
-                    'status' => 'calculated'
+                    'status' => 'calculated',
                 ]
             );
 
@@ -293,7 +295,7 @@ class ContractAutomationService
                 'billing_period' => $billingPeriod,
                 'asset_billing' => $assetBilling,
                 'contact_billing' => $contactBilling,
-                'total_amount' => $totalAmount
+                'total_amount' => $totalAmount,
             ]);
 
             return $calculation;
@@ -346,14 +348,14 @@ class ContractAutomationService
     public function processMonthlyBilling()
     {
         $currentPeriod = now()->format('Y-m');
-        
+
         Log::info('Starting monthly billing automation', [
-            'period' => $currentPeriod
+            'period' => $currentPeriod,
         ]);
 
         // Get all active contracts with automated billing
         $contracts = Contract::where('status', Contract::STATUS_ACTIVE)
-            ->whereHas('template', function($query) {
+            ->whereHas('template', function ($query) {
                 $query->whereJsonContains('automation_settings->auto_generate_invoices', true);
             })
             ->with('template')
@@ -370,7 +372,7 @@ class ContractAutomationService
                 $errorCount++;
                 Log::error('Failed to process monthly billing for contract', [
                     'contract_id' => $contract->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -378,13 +380,13 @@ class ContractAutomationService
         Log::info('Monthly billing automation completed', [
             'period' => $currentPeriod,
             'processed' => $processedCount,
-            'errors' => $errorCount
+            'errors' => $errorCount,
         ]);
 
         return [
             'processed' => $processedCount,
             'errors' => $errorCount,
-            'period' => $currentPeriod
+            'period' => $currentPeriod,
         ];
     }
 
@@ -393,7 +395,7 @@ class ContractAutomationService
      */
     public function executeAutomationWorkflows(Contract $contract, string $trigger)
     {
-        if (!$contract->template || !$contract->template->automation_settings) {
+        if (! $contract->template || ! $contract->template->automation_settings) {
             return;
         }
 
@@ -403,15 +405,15 @@ class ContractAutomationService
             case 'contract_activated':
                 $this->handleContractActivatedWorkflow($contract, $settings);
                 break;
-                
+
             case 'billing_calculated':
                 $this->handleBillingCalculatedWorkflow($contract, $settings);
                 break;
-                
+
             case 'asset_added':
                 $this->handleAssetAddedWorkflow($contract, $settings);
                 break;
-                
+
             case 'contact_added':
                 $this->handleContactAddedWorkflow($contract, $settings);
                 break;
@@ -449,7 +451,7 @@ class ContractAutomationService
         if ($settings['auto_generate_invoices'] ?? false) {
             // This would integrate with your invoicing system
             Log::info('Auto-invoice generation triggered', [
-                'contract_id' => $contract->id
+                'contract_id' => $contract->id,
             ]);
         }
     }
@@ -461,7 +463,7 @@ class ContractAutomationService
     {
         // Additional automation when assets are added
         Log::info('Asset added workflow triggered', [
-            'contract_id' => $contract->id
+            'contract_id' => $contract->id,
         ]);
     }
 
@@ -472,7 +474,7 @@ class ContractAutomationService
     {
         // Additional automation when contacts are added
         Log::info('Contact added workflow triggered', [
-            'contract_id' => $contract->id
+            'contract_id' => $contract->id,
         ]);
     }
 }

@@ -3,18 +3,18 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * Client Portal Access Model
- * 
+ *
  * Manages access control and permissions for client portal users.
  * Controls feature access, security settings, and compliance requirements.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -78,7 +78,7 @@ use Carbon\Carbon;
  */
 class ClientPortalAccess extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -211,8 +211,11 @@ class ClientPortalAccess extends Model
      * Access level constants
      */
     const ACCESS_FULL = 'full';
+
     const ACCESS_LIMITED = 'limited';
+
     const ACCESS_BILLING_ONLY = 'billing_only';
+
     const ACCESS_VIEW_ONLY = 'view_only';
 
     /**
@@ -294,11 +297,12 @@ class ClientPortalAccess extends Model
      */
     public function isPasswordExpired(): bool
     {
-        if (!$this->password_expiry_days || !$this->last_password_change_at) {
+        if (! $this->password_expiry_days || ! $this->last_password_change_at) {
             return false;
         }
 
         $expiryDate = $this->last_password_change_at->addDays($this->password_expiry_days);
+
         return Carbon::now()->gt($expiryDate);
     }
 
@@ -307,7 +311,7 @@ class ClientPortalAccess extends Model
      */
     public function hasPermission(string $permission): bool
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return false;
         }
 
@@ -325,7 +329,7 @@ class ClientPortalAccess extends Model
      */
     public function canAccessFeature(string $feature): bool
     {
-        if (!$this->isEnabled()) {
+        if (! $this->isEnabled()) {
             return false;
         }
 
@@ -354,7 +358,7 @@ class ClientPortalAccess extends Model
         }
 
         // If whitelist is set, IP must be in it
-        if (is_array($this->ip_whitelist) && !empty($this->ip_whitelist)) {
+        if (is_array($this->ip_whitelist) && ! empty($this->ip_whitelist)) {
             return in_array($ipAddress, $this->ip_whitelist);
         }
 
@@ -372,7 +376,7 @@ class ClientPortalAccess extends Model
         }
 
         // If allowed countries is set, country must be in it
-        if (is_array($this->allowed_countries) && !empty($this->allowed_countries)) {
+        if (is_array($this->allowed_countries) && ! empty($this->allowed_countries)) {
             return in_array($countryCode, $this->allowed_countries);
         }
 
@@ -382,24 +386,24 @@ class ClientPortalAccess extends Model
     /**
      * Check if current time is within allowed access hours.
      */
-    public function isTimeAllowed(Carbon $time = null): bool
+    public function isTimeAllowed(?Carbon $time = null): bool
     {
         $time = $time ?? Carbon::now($this->timezone);
-        
-        if (!is_array($this->time_restrictions) || empty($this->time_restrictions)) {
+
+        if (! is_array($this->time_restrictions) || empty($this->time_restrictions)) {
             return true;
         }
 
         $dayOfWeek = strtolower($time->englishDayOfWeek);
         $currentTime = $time->format('H:i');
 
-        if (!isset($this->time_restrictions[$dayOfWeek])) {
+        if (! isset($this->time_restrictions[$dayOfWeek])) {
             return true;
         }
 
         $restrictions = $this->time_restrictions[$dayOfWeek];
-        
-        if (!isset($restrictions['start']) || !isset($restrictions['end'])) {
+
+        if (! isset($restrictions['start']) || ! isset($restrictions['end'])) {
             return true;
         }
 
@@ -412,13 +416,13 @@ class ClientPortalAccess extends Model
     public function incrementFailedAttempts(): void
     {
         $this->increment('failed_login_attempts');
-        
+
         $maxAttempts = config('portal.max_login_attempts', 5);
         $lockDuration = config('portal.login_lock_duration', 30); // minutes
-        
+
         if ($this->failed_login_attempts >= $maxAttempts) {
             $this->update([
-                'account_locked_until' => Carbon::now()->addMinutes($lockDuration)
+                'account_locked_until' => Carbon::now()->addMinutes($lockDuration),
             ]);
         }
     }
@@ -480,25 +484,25 @@ class ClientPortalAccess extends Model
                     'view_invoices', 'pay_invoices', 'view_payments', 'manage_payment_methods',
                     'view_documents', 'download_documents', 'submit_tickets', 'view_tickets',
                     'view_contracts', 'manage_profile', 'setup_autopay', 'schedule_payments',
-                    'setup_payment_plans', 'dispute_charges', 'request_service_changes'
+                    'setup_payment_plans', 'dispute_charges', 'request_service_changes',
                 ];
-                
+
             case self::ACCESS_LIMITED:
                 return [
                     'view_invoices', 'pay_invoices', 'view_payments', 'manage_payment_methods',
-                    'view_documents', 'submit_tickets', 'view_tickets', 'manage_profile'
+                    'view_documents', 'submit_tickets', 'view_tickets', 'manage_profile',
                 ];
-                
+
             case self::ACCESS_BILLING_ONLY:
                 return [
-                    'view_invoices', 'pay_invoices', 'view_payments', 'manage_payment_methods'
+                    'view_invoices', 'pay_invoices', 'view_payments', 'manage_payment_methods',
                 ];
-                
+
             case self::ACCESS_VIEW_ONLY:
                 return [
-                    'view_invoices', 'view_payments', 'view_documents', 'view_tickets'
+                    'view_invoices', 'view_payments', 'view_documents', 'view_tickets',
                 ];
-                
+
             default:
                 return [];
         }
@@ -525,6 +529,7 @@ class ClientPortalAccess extends Model
     private function hasAccessLevelPermission(string $permission): bool
     {
         $permissions = $this->getDefaultPermissions();
+
         return in_array($permission, $permissions);
     }
 
@@ -541,7 +546,7 @@ class ClientPortalAccess extends Model
             'service_changes' => ['full'],
         ];
 
-        if (!isset($featureMap[$feature])) {
+        if (! isset($featureMap[$feature])) {
             return false;
         }
 
@@ -554,7 +559,7 @@ class ClientPortalAccess extends Model
     public function scopeEnabled($query)
     {
         return $query->where('portal_enabled', true)
-                    ->whereNull('access_revoked_at');
+            ->whereNull('access_revoked_at');
     }
 
     /**
@@ -581,12 +586,12 @@ class ClientPortalAccess extends Model
         parent::boot();
 
         static::creating(function ($access) {
-            if (!$access->access_granted_at && $access->portal_enabled) {
+            if (! $access->access_granted_at && $access->portal_enabled) {
                 $access->access_granted_at = Carbon::now();
             }
 
             // Set default permissions based on access level
-            if (!$access->permissions) {
+            if (! $access->permissions) {
                 $access->permissions = $access->getDefaultPermissions();
             }
         });

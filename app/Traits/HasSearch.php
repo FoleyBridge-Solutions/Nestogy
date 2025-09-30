@@ -30,7 +30,7 @@ trait HasSearch
     protected function addRelationshipSearch(Builder $query, string $field, string $term): void
     {
         [$relation, $column] = explode('.', $field, 2);
-        
+
         $query->orWhereHas($relation, function (Builder $q) use ($column, $term) {
             $q->where($column, 'like', "%{$term}%");
         });
@@ -66,10 +66,10 @@ trait HasSearch
 
         $searchableFields = $this->getSearchableFields();
         $columns = implode(',', array_filter($searchableFields, function ($field) {
-            return !str_contains($field, '.');
+            return ! str_contains($field, '.');
         }));
 
-        if (!empty($columns)) {
+        if (! empty($columns)) {
             return $query->whereRaw("MATCH({$columns}) AGAINST(? IN BOOLEAN MODE)", [$term]);
         }
 

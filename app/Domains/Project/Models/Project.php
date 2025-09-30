@@ -2,20 +2,20 @@
 
 namespace App\Domains\Project\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * Enhanced Project Model
- * 
+ *
  * Enterprise-grade project management with comprehensive lifecycle management,
  * task dependencies, team management, timeline tracking, and reporting capabilities.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $project_code
@@ -95,31 +95,47 @@ class Project extends Model
      * Project status enumeration
      */
     const STATUS_PLANNING = 'planning';
+
     const STATUS_ACTIVE = 'active';
+
     const STATUS_ON_HOLD = 'on_hold';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_ARCHIVED = 'archived';
 
     /**
      * Project priority enumeration
      */
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_URGENT = 'urgent';
+
     const PRIORITY_CRITICAL = 'critical';
 
     /**
      * Project categories
      */
     const CATEGORY_DEVELOPMENT = 'development';
+
     const CATEGORY_DESIGN = 'design';
+
     const CATEGORY_MARKETING = 'marketing';
+
     const CATEGORY_MAINTENANCE = 'maintenance';
+
     const CATEGORY_CONSULTING = 'consulting';
+
     const CATEGORY_SUPPORT = 'support';
+
     const CATEGORY_RESEARCH = 'research';
+
     const CATEGORY_OTHER = 'other';
 
     /**
@@ -184,8 +200,8 @@ class Project extends Model
     public function teamMembers(): BelongsToMany
     {
         return $this->belongsToMany(\App\Models\User::class, 'project_members', 'project_id', 'user_id')
-                    ->withPivot(['role', 'hourly_rate', 'can_edit', 'can_manage_tasks', 'joined_at'])
-                    ->withTimestamps();
+            ->withPivot(['role', 'hourly_rate', 'can_edit', 'can_manage_tasks', 'joined_at'])
+            ->withTimestamps();
     }
 
     /**
@@ -249,7 +265,7 @@ class Project extends Model
      */
     public function getStatusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PLANNING => 'Planning',
             self::STATUS_ACTIVE => 'Active',
             self::STATUS_ON_HOLD => 'On Hold',
@@ -265,7 +281,7 @@ class Project extends Model
      */
     public function getPriorityLabel(): string
     {
-        return match($this->priority) {
+        return match ($this->priority) {
             self::PRIORITY_LOW => 'Low',
             self::PRIORITY_NORMAL => 'Normal',
             self::PRIORITY_HIGH => 'High',
@@ -312,10 +328,10 @@ class Project extends Model
      */
     public function isOverdue(): bool
     {
-        if (!$this->due || $this->isCompleted()) {
+        if (! $this->due || $this->isCompleted()) {
             return false;
         }
-        
+
         return Carbon::now()->gt($this->due);
     }
 
@@ -324,11 +340,11 @@ class Project extends Model
      */
     public function isDueSoon(int $days = 7): bool
     {
-        if (!$this->due || $this->isCompleted()) {
+        if (! $this->due || $this->isCompleted()) {
             return false;
         }
-        
-        return Carbon::now()->diffInDays($this->due, false) <= $days && 
+
+        return Carbon::now()->diffInDays($this->due, false) <= $days &&
                Carbon::now()->lte($this->due);
     }
 
@@ -337,10 +353,10 @@ class Project extends Model
      */
     public function getDaysUntilDue(): ?int
     {
-        if (!$this->due) {
+        if (! $this->due) {
             return null;
         }
-        
+
         return Carbon::now()->diffInDays($this->due, false);
     }
 
@@ -349,7 +365,7 @@ class Project extends Model
      */
     public function getPlannedDurationInDays(): ?int
     {
-        if (!$this->start_date || !$this->due) {
+        if (! $this->start_date || ! $this->due) {
             return null;
         }
 
@@ -361,11 +377,12 @@ class Project extends Model
      */
     public function getActualDurationInDays(): ?int
     {
-        if (!$this->actual_start_date) {
+        if (! $this->actual_start_date) {
             return null;
         }
 
         $endDate = $this->actual_end_date ?: Carbon::now();
+
         return $this->actual_start_date->diffInDays($endDate);
     }
 
@@ -375,7 +392,7 @@ class Project extends Model
     public function getCalculatedProgress(): float
     {
         $totalTasks = $this->tasks()->count();
-        
+
         if ($totalTasks === 0) {
             return $this->isCompleted() ? 100.0 : (float) ($this->progress_percentage ?? 0);
         }
@@ -411,7 +428,7 @@ class Project extends Model
         // Progress health
         $progress = $this->getCalculatedProgress();
         $expectedProgress = $this->getExpectedProgress();
-        
+
         if ($expectedProgress && $progress < ($expectedProgress - 20)) {
             $health['status'] = $health['status'] === 'critical' ? 'critical' : 'warning';
             $health['issues'][] = 'Behind schedule';
@@ -436,7 +453,7 @@ class Project extends Model
      */
     public function getExpectedProgress(): ?float
     {
-        if (!$this->start_date || !$this->due) {
+        if (! $this->start_date || ! $this->due) {
             return null;
         }
 
@@ -446,7 +463,7 @@ class Project extends Model
         }
 
         $daysPassed = $this->start_date->diffInDays(Carbon::now());
-        
+
         if ($daysPassed <= 0) {
             return 0;
         }
@@ -525,8 +542,8 @@ class Project extends Model
     public function markAsActive(): void
     {
         $updates = ['status' => self::STATUS_ACTIVE];
-        
-        if (!$this->actual_start_date) {
+
+        if (! $this->actual_start_date) {
             $updates['actual_start_date'] = now();
         }
 
@@ -607,8 +624,8 @@ class Project extends Model
     public function scopeOverdue($query)
     {
         return $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED])
-                    ->whereNotNull('due')
-                    ->where('due', '<', Carbon::now());
+            ->whereNotNull('due')
+            ->where('due', '<', Carbon::now());
     }
 
     /**
@@ -617,9 +634,9 @@ class Project extends Model
     public function scopeDueSoon($query, int $days = 7)
     {
         return $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED])
-                    ->whereNotNull('due')
-                    ->where('due', '>=', Carbon::now())
-                    ->where('due', '<=', Carbon::now()->addDays($days));
+            ->whereNotNull('due')
+            ->where('due', '>=', Carbon::now())
+            ->where('due', '<=', Carbon::now()->addDays($days));
     }
 
     /**
@@ -628,10 +645,10 @@ class Project extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('description', 'like', '%' . $search . '%')
-              ->orWhere('project_code', 'like', '%' . $search . '%')
-              ->orWhere('category', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('description', 'like', '%'.$search.'%')
+                ->orWhere('project_code', 'like', '%'.$search.'%')
+                ->orWhere('category', 'like', '%'.$search.'%');
         });
     }
 
@@ -691,15 +708,15 @@ class Project extends Model
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'required|in:' . implode(',', self::getAvailableStatuses()),
-            'priority' => 'required|in:' . implode(',', self::getAvailablePriorities()),
+            'status' => 'required|in:'.implode(',', self::getAvailableStatuses()),
+            'priority' => 'required|in:'.implode(',', self::getAvailablePriorities()),
             'client_id' => 'nullable|integer|exists:clients,id',
             'manager_id' => 'nullable|integer|exists:users,id',
             'start_date' => 'nullable|date',
             'due' => 'nullable|date|after_or_equal:start_date',
             'budget' => 'nullable|numeric|min:0',
             'budget_currency' => 'nullable|string|size:3',
-            'category' => 'nullable|in:' . implode(',', self::getAvailableCategories()),
+            'category' => 'nullable|in:'.implode(',', self::getAvailableCategories()),
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'is_billable' => 'boolean',
@@ -763,12 +780,12 @@ class Project extends Model
 
         // Auto-generate project code for new projects
         static::creating(function ($project) {
-            if (!$project->project_code) {
+            if (! $project->project_code) {
                 $project->project_code = static::generateProjectCode($project->company_id);
             }
 
             // Set company_id from authenticated user if not set
-            if (!$project->company_id && auth()->user()) {
+            if (! $project->company_id && auth()->user()) {
                 $project->company_id = auth()->user()->company_id;
             }
         });
@@ -777,7 +794,7 @@ class Project extends Model
         static::updating(function ($project) {
             if ($project->isDirty('status') && $project->status === self::STATUS_COMPLETED) {
                 $project->progress_percentage = 100;
-                if (!$project->actual_end_date) {
+                if (! $project->actual_end_date) {
                     $project->actual_end_date = now();
                 }
             }
@@ -790,10 +807,10 @@ class Project extends Model
     protected static function generateProjectCode(int $companyId): string
     {
         $year = date('Y');
-        $prefix = 'PRJ-' . $year . '-';
-        
+        $prefix = 'PRJ-'.$year.'-';
+
         $lastProject = static::where('company_id', $companyId)
-            ->where('project_code', 'like', $prefix . '%')
+            ->where('project_code', 'like', $prefix.'%')
             ->orderBy('project_code', 'desc')
             ->first();
 
@@ -804,6 +821,6 @@ class Project extends Model
             $newNumber = 1;
         }
 
-        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix.str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }

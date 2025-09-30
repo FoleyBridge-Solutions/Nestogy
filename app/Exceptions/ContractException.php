@@ -8,14 +8,16 @@ use Illuminate\Http\Response;
 
 /**
  * ContractException
- * 
+ *
  * Custom exception class for contract-related errors with comprehensive
  * error handling, logging, and user-friendly messaging.
  */
 class ContractException extends Exception
 {
     protected array $context;
+
     protected string $userMessage;
+
     protected int $statusCode;
 
     public function __construct(
@@ -27,7 +29,7 @@ class ContractException extends Exception
         int $statusCode = 500
     ) {
         parent::__construct($message, $code, $previous);
-        
+
         $this->context = $context;
         $this->userMessage = $userMessage ?: 'An error occurred while processing your contract request.';
         $this->statusCode = $statusCode;
@@ -63,6 +65,7 @@ class ContractException extends Exception
     public function setContext(array $context): self
     {
         $this->context = array_merge($this->context, $context);
+
         return $this;
     }
 
@@ -95,7 +98,7 @@ class ContractException extends Exception
      */
     public function report(): void
     {
-        \Log::error('Contract Exception: ' . $this->getMessage(), [
+        \Log::error('Contract Exception: '.$this->getMessage(), [
             'exception' => get_class($this),
             'message' => $this->getMessage(),
             'file' => $this->getFile(),

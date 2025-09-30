@@ -17,18 +17,18 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->foreignId('client_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name')->nullable();
-            
+
             // Pricing Model
             $table->enum('pricing_model', ['fixed', 'tiered', 'volume', 'usage', 'package', 'custom'])->default('fixed');
             $table->enum('discount_type', ['percentage', 'fixed', 'override'])->nullable();
             $table->decimal('discount_value', 10, 2)->nullable();
             $table->decimal('price_override', 10, 2)->nullable();
-            
+
             // Quantity Rules
             $table->integer('min_quantity')->nullable();
             $table->integer('max_quantity')->nullable();
             $table->integer('quantity_increment')->default(1);
-            
+
             // Time-based Rules
             $table->dateTime('valid_from')->nullable();
             $table->dateTime('valid_until')->nullable();
@@ -36,24 +36,24 @@ return new class extends Migration
             $table->json('applicable_hours')->nullable(); // Hours of day
             $table->boolean('is_promotional')->default(false);
             $table->string('promo_code')->nullable();
-            
+
             // Conditions
             $table->json('conditions')->nullable(); // Complex rule conditions
             $table->integer('priority')->default(0); // Higher priority rules apply first
             $table->boolean('is_active')->default(true);
             $table->boolean('is_combinable')->default(false); // Can combine with other rules
-            
+
             // Usage Tracking
             $table->integer('max_uses')->nullable();
             $table->integer('uses_count')->default(0);
             $table->integer('max_uses_per_client')->nullable();
-            
+
             // Approval
             $table->boolean('requires_approval')->default(false);
             $table->decimal('approval_threshold', 10, 2)->nullable();
-            
+
             $table->timestamps();
-            
+
             // Indexes
             $table->index(['company_id', 'product_id', 'is_active']);
             $table->index(['company_id', 'client_id']);

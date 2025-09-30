@@ -2,8 +2,8 @@
 
 namespace App\Domains\Asset\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Asset\Models\AssetDepreciation;
+use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -17,18 +17,18 @@ class DepreciationController extends Controller
     public function index(Request $request)
     {
         $query = AssetDepreciation::with(['asset.client'])
-            ->whereHas('asset', function($q) {
+            ->whereHas('asset', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('method', 'like', "%{$search}%")
-                  ->orWhereHas('asset', function($assetQuery) use ($search) {
-                      $assetQuery->where('name', 'like', "%{$search}%")
-                                 ->orWhere('serial', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('asset', function ($assetQuery) use ($search) {
+                        $assetQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('serial', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -43,12 +43,12 @@ class DepreciationController extends Controller
         }
 
         $depreciations = $query->orderBy('created_at', 'desc')
-                              ->paginate(20)
-                              ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $assets = Asset::where('company_id', auth()->user()->company_id)
-                      ->orderBy('name')
-                      ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('assets.depreciations.index', compact('depreciations', 'assets'));
     }
@@ -59,8 +59,8 @@ class DepreciationController extends Controller
     public function create(Request $request)
     {
         $assets = Asset::where('company_id', auth()->user()->company_id)
-                      ->orderBy('name')
-                      ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedAssetId = $request->get('asset_id');
 
@@ -91,20 +91,20 @@ class DepreciationController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $depreciation = new AssetDepreciation($request->all());
         $depreciation->company_id = auth()->user()->company_id;
-        
+
         // Calculate annual depreciation based on method
         $depreciation->calculateAnnualDepreciation();
-        
+
         $depreciation->save();
 
         return redirect()->route('assets.depreciations.index')
-                        ->with('success', 'Depreciation record created successfully.');
+            ->with('success', 'Depreciation record created successfully.');
     }
 
     /**
@@ -130,8 +130,8 @@ class DepreciationController extends Controller
         $this->authorize('update', $depreciation);
 
         $assets = Asset::where('company_id', auth()->user()->company_id)
-                      ->orderBy('name')
-                      ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('assets.depreciations.edit', compact('depreciation', 'assets'));
     }
@@ -162,19 +162,19 @@ class DepreciationController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $depreciation->fill($request->all());
-        
+
         // Recalculate annual depreciation
         $depreciation->calculateAnnualDepreciation();
-        
+
         $depreciation->save();
 
         return redirect()->route('assets.depreciations.index')
-                        ->with('success', 'Depreciation record updated successfully.');
+            ->with('success', 'Depreciation record updated successfully.');
     }
 
     /**
@@ -187,7 +187,7 @@ class DepreciationController extends Controller
         $depreciation->delete();
 
         return redirect()->route('assets.depreciations.index')
-                        ->with('success', 'Depreciation record deleted successfully.');
+            ->with('success', 'Depreciation record deleted successfully.');
     }
 
     /**
@@ -196,13 +196,13 @@ class DepreciationController extends Controller
     public function export(Request $request)
     {
         $query = AssetDepreciation::with(['asset.client'])
-            ->whereHas('asset', function($q) {
+            ->whereHas('asset', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('method', 'like', "%{$search}%");
             });
         }
@@ -217,16 +217,16 @@ class DepreciationController extends Controller
 
         $depreciations = $query->orderBy('created_at', 'desc')->get();
 
-        $filename = 'asset_depreciations_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'asset_depreciations_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($depreciations) {
+        $callback = function () use ($depreciations) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Asset Name',
@@ -240,7 +240,7 @@ class DepreciationController extends Controller
                 'Accumulated Depreciation',
                 'Book Value',
                 'Start Date',
-                'Notes'
+                'Notes',
             ]);
 
             // CSV data
@@ -249,18 +249,18 @@ class DepreciationController extends Controller
                     $depreciation->asset->name,
                     $depreciation->asset->serial,
                     $depreciation->asset->client->name ?? '',
-                    '$' . number_format($depreciation->original_cost, 2),
-                    $depreciation->salvage_value ? '$' . number_format($depreciation->salvage_value, 2) : '',
+                    '$'.number_format($depreciation->original_cost, 2),
+                    $depreciation->salvage_value ? '$'.number_format($depreciation->salvage_value, 2) : '',
                     $depreciation->useful_life_years,
                     ucfirst(str_replace('_', ' ', $depreciation->method)),
-                    '$' . number_format($depreciation->annual_depreciation, 2),
-                    '$' . number_format($depreciation->accumulated_depreciation, 2),
-                    '$' . number_format($depreciation->current_book_value, 2),
+                    '$'.number_format($depreciation->annual_depreciation, 2),
+                    '$'.number_format($depreciation->accumulated_depreciation, 2),
+                    '$'.number_format($depreciation->current_book_value, 2),
                     $depreciation->start_date?->format('Y-m-d'),
                     $depreciation->notes,
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -273,21 +273,21 @@ class DepreciationController extends Controller
     public function report(Request $request)
     {
         $query = AssetDepreciation::with(['asset.client'])
-            ->whereHas('asset', function($q) {
+            ->whereHas('asset', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         $year = $request->get('year', date('Y'));
-        
+
         // Get depreciation data for the specified year
         $depreciations = $query->get();
-        
+
         $reportData = [
             'total_original_cost' => $depreciations->sum('original_cost'),
             'total_accumulated_depreciation' => $depreciations->sum('accumulated_depreciation'),
             'total_book_value' => $depreciations->sum('current_book_value'),
             'annual_depreciation' => $depreciations->sum('annual_depreciation'),
-            'by_method' => $depreciations->groupBy('method')->map(function($group) {
+            'by_method' => $depreciations->groupBy('method')->map(function ($group) {
                 return [
                     'count' => $group->count(),
                     'total_cost' => $group->sum('original_cost'),
@@ -310,6 +310,6 @@ class DepreciationController extends Controller
         $depreciation->save();
 
         return redirect()->back()
-                        ->with('success', 'Depreciation recalculated successfully.');
+            ->with('success', 'Depreciation recalculated successfully.');
     }
 }

@@ -5,19 +5,19 @@ namespace App\Domains\Knowledge\Services;
 use App\Domains\Knowledge\Models\KbArticle;
 use App\Domains\Knowledge\Models\KbArticleView;
 use App\Domains\Ticket\Models\Ticket;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 /**
  * Ticket Deflection Service
- * 
+ *
  * Tracks and measures knowledge base ticket deflection effectiveness
  */
 class TicketDeflectionService
 {
     protected ArticleSearchService $searchService;
+
     protected KnowledgeBaseService $kbService;
 
     public function __construct(
@@ -33,8 +33,8 @@ class TicketDeflectionService
      */
     public function getSuggestedArticlesForTicket(string $subject, string $description = ''): array
     {
-        $query = $subject . ' ' . $description;
-        
+        $query = $subject.' '.$description;
+
         // Get relevant articles
         $suggestedArticles = $this->searchService->search($query, [
             'limit' => 5,
@@ -63,7 +63,7 @@ class TicketDeflectionService
         ?int $contactId = null
     ): void {
         $article = KbArticle::find($articleId);
-        if (!$article) {
+        if (! $article) {
             return;
         }
 
@@ -95,7 +95,7 @@ class TicketDeflectionService
         ?string $originalQuery = null
     ): void {
         // Mark any views of suggested articles as leading to tickets
-        if (!empty($suggestedArticleIds)) {
+        if (! empty($suggestedArticleIds)) {
             KbArticleView::whereIn('article_id', $suggestedArticleIds)
                 ->where('ip_address', request()->ip())
                 ->where('created_at', '>=', now()->subHour()) // Within last hour
@@ -116,7 +116,7 @@ class TicketDeflectionService
                 'deflection_attempted' => true,
                 'suggested_articles' => $suggestedArticleIds,
                 'original_search_query' => $originalQuery,
-            ])
+            ]),
         ]);
 
         // Clear caches
@@ -174,7 +174,7 @@ class TicketDeflectionService
             ->where('views_count', '>=', $minViews)
             ->where(function ($query) use ($maxDeflectionRate) {
                 $query->where('deflection_rate', '<', $maxDeflectionRate)
-                      ->orWhereNull('deflection_rate');
+                    ->orWhereNull('deflection_rate');
             })
             ->with(['category', 'feedback' => function ($query) {
                 $query->notHelpful()->latest()->limit(5);
@@ -193,13 +193,13 @@ class TicketDeflectionService
         Carbon $endDate
     ): array {
         $analytics = $this->getDeflectionAnalytics($companyId, $startDate, $endDate);
-        
+
         $totalTickets = Ticket::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
 
         $currentDeflectionRate = $analytics['overall_deflection_rate'];
-        
+
         // Calculate potential improvements
         $potentialScenarios = [
             'improved_content' => 0.75, // 75% deflection with better articles
@@ -211,7 +211,7 @@ class TicketDeflectionService
             $deflectedTickets = $analytics['total_deflection_attempts'] * ($rate / 100);
             $remainingTickets = $totalTickets - $deflectedTickets + $analytics['tickets_created_after_viewing'];
             $reduction = $totalTickets - $remainingTickets;
-            
+
             $scenarios[$scenario] = [
                 'deflection_rate' => $rate * 100,
                 'tickets_deflected' => $deflectedTickets,
@@ -239,7 +239,7 @@ class TicketDeflectionService
     {
         // This could be expanded to store deflection attempts in a separate table
         // For now, we'll rely on article views and ticket metadata
-        
+
         foreach ($suggestedArticles as $article) {
             // Pre-create view record to track deflection attempts
             // Will be updated if user actually views the article
@@ -260,27 +260,27 @@ class TicketDeflectionService
 
         foreach ($articles as $article) {
             $score = 0;
-            
+
             // Base score from views
             $score += min($article->views_count / 100, 10);
-            
+
             // Helpfulness score
             if ($article->helpful_count + $article->not_helpful_count > 0) {
                 $helpfulnessRatio = $article->helpful_count / ($article->helpful_count + $article->not_helpful_count);
                 $score += $helpfulnessRatio * 20;
             }
-            
+
             // Deflection rate score
             if ($article->deflection_rate !== null) {
                 $score += ($article->deflection_rate / 100) * 30;
             }
-            
+
             // Recency score (newer articles get slight boost)
             $daysSinceUpdate = now()->diffInDays($article->updated_at);
             if ($daysSinceUpdate < 30) {
                 $score += (30 - $daysSinceUpdate) / 30 * 5;
             }
-            
+
             $totalScore += $score;
             $count++;
         }
@@ -296,7 +296,7 @@ class TicketDeflectionService
         $totalViews = $article->views()->count();
         $viewsWithSearch = $article->views()->whereNotNull('search_query')->count();
         $viewsLedToTickets = $article->views()->ledToTicket()->count();
-        
+
         if ($viewsWithSearch > 0) {
             $deflectionRate = (($viewsWithSearch - $viewsLedToTickets) / $viewsWithSearch) * 100;
             $article->update(['deflection_rate' => round($deflectionRate, 2)]);
@@ -345,15 +345,15 @@ class TicketDeflectionService
                 'total_deflection_attempts' => $viewsWithSearch,
                 'successful_deflections' => max(0, $successfulDeflections),
                 'tickets_created_after_viewing' => $viewsLedToTickets,
-                'overall_deflection_rate' => $viewsWithSearch > 0 
-                    ? round(($successfulDeflections / $viewsWithSearch) * 100, 2) 
+                'overall_deflection_rate' => $viewsWithSearch > 0
+                    ? round(($successfulDeflections / $viewsWithSearch) * 100, 2)
                     : 0,
             ],
             'ticket_metrics' => [
                 'total_tickets_created' => $totalTickets,
                 'tickets_with_deflection_attempt' => $ticketsWithDeflectionAttempt,
-                'deflection_attempt_rate' => $totalTickets > 0 
-                    ? round(($ticketsWithDeflectionAttempt / $totalTickets) * 100, 2) 
+                'deflection_attempt_rate' => $totalTickets > 0
+                    ? round(($ticketsWithDeflectionAttempt / $totalTickets) * 100, 2)
                     : 0,
             ],
             'estimated_savings' => [
@@ -383,12 +383,12 @@ class TicketDeflectionService
                 },
                 'views as period_deflections' => function ($query) use ($startDate, $endDate) {
                     $query->whereBetween('viewed_at', [$startDate, $endDate])
-                          ->whereNotNull('search_query')
-                          ->where('led_to_ticket', false);
+                        ->whereNotNull('search_query')
+                        ->where('led_to_ticket', false);
                 },
                 'views as period_tickets' => function ($query) use ($startDate, $endDate) {
                     $query->whereBetween('viewed_at', [$startDate, $endDate])
-                          ->where('led_to_ticket', true);
+                        ->where('led_to_ticket', true);
                 },
             ])
             ->with(['category'])
@@ -398,9 +398,10 @@ class TicketDeflectionService
             ->limit($limit)
             ->get()
             ->map(function ($article) {
-                $article->period_deflection_rate = $article->period_views > 0 
+                $article->period_deflection_rate = $article->period_views > 0
                     ? round(($article->period_deflections / $article->period_views) * 100, 2)
                     : 0;
+
                 return $article;
             });
     }
@@ -411,10 +412,10 @@ class TicketDeflectionService
     protected function generateImprovementRecommendations(array $analytics): array
     {
         $recommendations = [];
-        
+
         $deflectionRate = $analytics['deflection_metrics']['overall_deflection_rate'];
         $attemptRate = $analytics['ticket_metrics']['deflection_attempt_rate'];
-        
+
         if ($deflectionRate < 30) {
             $recommendations[] = [
                 'priority' => 'high',
@@ -423,7 +424,7 @@ class TicketDeflectionService
                 'action' => 'Review low-performing articles and update content based on user feedback.',
             ];
         }
-        
+
         if ($attemptRate < 50) {
             $recommendations[] = [
                 'priority' => 'high',
@@ -432,7 +433,7 @@ class TicketDeflectionService
                 'action' => 'Improve article suggestions in ticket creation flow and enhance search functionality.',
             ];
         }
-        
+
         if ($analytics['kb_metrics']['average_time_spent'] < 60) {
             $recommendations[] = [
                 'priority' => 'medium',
@@ -441,7 +442,7 @@ class TicketDeflectionService
                 'action' => 'Improve article formatting, add visuals, and break content into digestible sections.',
             ];
         }
-        
+
         return $recommendations;
     }
 

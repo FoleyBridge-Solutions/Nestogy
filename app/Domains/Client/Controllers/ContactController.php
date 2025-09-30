@@ -2,17 +2,14 @@
 
 namespace App\Domains\Client\Controllers;
 
+use App\Domains\Client\Services\PortalInvitationService;
+use App\Domains\Core\Services\NavigationService;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Contact;
-use App\Models\Vendor;
-use App\Domains\Core\Services\NavigationService;
-use App\Domains\Client\Services\PortalInvitationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
 class ContactController extends Controller
 {
@@ -23,7 +20,7 @@ class ContactController extends Controller
     {
         $this->middleware('auth');
         $this->middleware('company');
-        
+
         // Apply permission-based middleware
         $this->middleware('permission:clients.contacts.view')->only(['index', 'show']);
         $this->middleware('permission:clients.contacts.manage')->only(['create', 'store', 'edit', 'update']);
@@ -38,16 +35,16 @@ class ContactController extends Controller
     {
         // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
         // Authorize client access
         $this->authorize('view', $client);
-        
+
         // Additional authorization check
-        if (!auth()->user()->hasPermission('clients.contacts.view')) {
+        if (! auth()->user()->hasPermission('clients.contacts.view')) {
             abort(403, 'Insufficient permissions to view contacts');
         }
 
@@ -56,12 +53,12 @@ class ContactController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('department', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('department', 'like', "%{$search}%");
             });
         }
 
@@ -84,9 +81,9 @@ class ContactController extends Controller
         }
 
         $contacts = $query->orderBy('primary', 'desc')
-                         ->orderBy('name')
-                         ->paginate(20)
-                         ->appends($request->query());
+            ->orderBy('name')
+            ->paginate(20)
+            ->appends($request->query());
 
         // Return JSON for AJAX requests
         if ($request->wantsJson() || $request->ajax()) {
@@ -103,16 +100,16 @@ class ContactController extends Controller
     {
         // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
         // Authorize client access
         $this->authorize('view', $client);
-        
+
         // Additional authorization check
-        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+        if (! auth()->user()->hasPermission('clients.contacts.manage')) {
             abort(403, 'Insufficient permissions to create contacts');
         }
 
@@ -126,16 +123,16 @@ class ContactController extends Controller
     {
         // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
         // Authorize client access
         $this->authorize('view', $client);
-        
+
         // Additional authorization check
-        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+        if (! auth()->user()->hasPermission('clients.contacts.manage')) {
             abort(403, 'Insufficient permissions to create contacts');
         }
 
@@ -149,25 +146,25 @@ class ContactController extends Controller
             'mobile' => 'nullable|string|max:50',
             'department' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
-            
+
             // Contact Types
             'primary' => 'boolean',
             'important' => 'boolean',
             'billing' => 'boolean',
             'technical' => 'boolean',
-            
+
             // Relationships
             'location_id' => 'nullable|integer|exists:locations,id',
             'vendor_id' => 'nullable|integer|exists:vendors,id',
-            
+
             // Photo
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $contact = new Contact($request->all());
@@ -178,12 +175,12 @@ class ContactController extends Controller
         // If this is set as primary, unset other primary contacts for this client
         if ($contact->primary) {
             Contact::where('client_id', $client->id)
-                        ->where('id', '!=', $contact->id)
-                        ->update(['primary' => false]);
+                ->where('id', '!=', $contact->id)
+                ->update(['primary' => false]);
         }
 
         return redirect()->route('clients.contacts.index')
-                        ->with('success', 'Contact created successfully.');
+            ->with('success', 'Contact created successfully.');
     }
 
     /**
@@ -193,8 +190,8 @@ class ContactController extends Controller
     {
         // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
@@ -202,13 +199,13 @@ class ContactController extends Controller
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
         }
-        
+
         // Authorize client access
         $this->authorize('view', $client);
         $this->authorize('view', $contact);
-        
+
         // Additional permission check
-        if (!auth()->user()->hasPermission('clients.contacts.view')) {
+        if (! auth()->user()->hasPermission('clients.contacts.view')) {
             abort(403, 'Insufficient permissions to view contacts');
         }
 
@@ -224,8 +221,8 @@ class ContactController extends Controller
     {
         // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
@@ -233,13 +230,13 @@ class ContactController extends Controller
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('update', $contact);
-        
+
         // Additional permission check
-        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+        if (! auth()->user()->hasPermission('clients.contacts.manage')) {
             abort(403, 'Insufficient permissions to edit contacts');
         }
 
@@ -253,8 +250,8 @@ class ContactController extends Controller
     {
         // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
@@ -262,13 +259,13 @@ class ContactController extends Controller
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('update', $contact);
-        
+
         // Additional permission check
-        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+        if (! auth()->user()->hasPermission('clients.contacts.manage')) {
             abort(403, 'Insufficient permissions to update contacts');
         }
 
@@ -282,20 +279,20 @@ class ContactController extends Controller
             'mobile' => 'nullable|string|max:50',
             'department' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
-            
+
             // Contact Types
             'primary' => 'boolean',
             'important' => 'boolean',
             'billing' => 'boolean',
             'technical' => 'boolean',
-            
+
             // Relationships
             'location_id' => 'nullable|integer|exists:locations,id',
             'vendor_id' => 'nullable|integer|exists:vendors,id',
-            
+
             // Photo
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            
+
             // Portal Access
             'has_portal_access' => 'boolean',
             'auth_method' => 'nullable|in:none,password,pin',
@@ -303,11 +300,11 @@ class ContactController extends Controller
             'pin' => 'nullable|string|min:4|max:10|regex:/^[0-9]+$/',
             'must_change_password' => 'boolean',
             'email_verified_at' => 'nullable|boolean',
-            
+
             // Portal Permissions
             'portal_permissions' => 'nullable|array',
             'portal_permissions.*' => 'string',
-            
+
             // Security Settings
             'session_timeout_minutes' => 'nullable|integer|min:5|max:480',
             'allowed_ip_addresses' => 'nullable|array',
@@ -316,8 +313,8 @@ class ContactController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $contact->fill($request->all());
@@ -326,12 +323,12 @@ class ContactController extends Controller
         // If this is set as primary, unset other primary contacts for this client
         if ($contact->primary) {
             Contact::where('client_id', $client->id)
-                        ->where('id', '!=', $contact->id)
-                        ->update(['primary' => false]);
+                ->where('id', '!=', $contact->id)
+                ->update(['primary' => false]);
         }
 
         return redirect()->route('clients.contacts.index')
-                        ->with('success', 'Contact updated successfully.');
+            ->with('success', 'Contact updated successfully.');
     }
 
     /**
@@ -341,8 +338,8 @@ class ContactController extends Controller
     {
         // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
@@ -350,20 +347,20 @@ class ContactController extends Controller
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('delete', $contact);
-        
+
         // Additional permission check
-        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+        if (! auth()->user()->hasPermission('clients.contacts.manage')) {
             abort(403, 'Insufficient permissions to delete contacts');
         }
 
         $contact->delete();
 
         return redirect()->route('clients.contacts.index')
-                        ->with('success', 'Contact deleted successfully.');
+            ->with('success', 'Contact deleted successfully.');
     }
 
     /**
@@ -373,21 +370,21 @@ class ContactController extends Controller
     {
         // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
         // Authorize client access
         $this->authorize('view', $client);
-        
+
         // Authorization check for export permission
-        if (!auth()->user()->hasPermission('clients.contacts.export')) {
+        if (! auth()->user()->hasPermission('clients.contacts.export')) {
             abort(403, 'Insufficient permissions to export contact data');
         }
-        
+
         // Additional gate check for sensitive data export
-        if (!auth()->user()->can('export-client-data')) {
+        if (! auth()->user()->can('export-client-data')) {
             abort(403, 'Export permissions denied');
         }
 
@@ -395,12 +392,12 @@ class ContactController extends Controller
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('department', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('department', 'like', "%{$search}%");
             });
         }
 
@@ -423,16 +420,16 @@ class ContactController extends Controller
 
         $contacts = $query->orderBy('primary', 'desc')->orderBy('name')->get();
 
-        $filename = 'contacts_' . $client->name . '_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'contacts_'.$client->name.'_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($contacts, $client) {
+        $callback = function () use ($contacts, $client) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Contact Name',
@@ -447,7 +444,7 @@ class ContactController extends Controller
                 'Billing',
                 'Technical',
                 'Important',
-                'Notes'
+                'Notes',
             ]);
 
             // CSV data
@@ -468,13 +465,13 @@ class ContactController extends Controller
                     $contact->notes,
                 ]);
             }
-            
+
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
     }
-    
+
     /**
      * Update portal access settings for a contact
      */
@@ -485,19 +482,19 @@ class ContactController extends Controller
             if ($contact->client_id !== $client->id) {
                 return response()->json(['error' => 'Contact not found for this client'], 404);
             }
-            
+
             // Skip policy checks for now and add simple permission check
-            if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+            if (! auth()->user()->hasPermission('clients.contacts.manage')) {
                 return response()->json(['error' => 'Insufficient permissions'], 403);
             }
-            
+
             // Log the incoming request for debugging
             \Log::info('Portal access update request', [
                 'contact_id' => $contact->id,
                 'client_id' => $client->id,
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
-            
+
             $validator = Validator::make($request->all(), [
                 'has_portal_access' => 'boolean',
                 'auth_method' => 'nullable|in:none,password,pin',
@@ -506,26 +503,27 @@ class ContactController extends Controller
                 'must_change_password' => 'boolean',
                 'email_verified' => 'boolean',
             ]);
-            
+
             if ($validator->fails()) {
                 \Log::error('Portal access validation failed', ['errors' => $validator->errors()]);
+
                 return response()->json(['errors' => $validator->errors()], 422);
             }
-            
+
             $contact->has_portal_access = $request->boolean('has_portal_access');
-            
+
             if ($contact->has_portal_access) {
                 $contact->auth_method = $request->input('auth_method', 'none');
-                
+
                 if ($request->filled('password')) {
                     $contact->password_hash = Hash::make($request->input('password'));
                     $contact->password_changed_at = now();
                 }
-                
+
                 if ($request->filled('pin') && $contact->auth_method === 'pin') {
                     $contact->pin = Hash::make($request->input('pin'));
                 }
-                
+
                 $contact->must_change_password = $request->boolean('must_change_password');
                 $contact->email_verified_at = $request->boolean('email_verified') ? now() : null;
             } else {
@@ -534,30 +532,30 @@ class ContactController extends Controller
                 $contact->pin = null;
                 $contact->must_change_password = false;
             }
-            
+
             $contact->save();
-            
+
             \Log::info('Portal access updated successfully', ['contact_id' => $contact->id]);
-            
+
             return response()->json([
                 'message' => 'Portal access updated successfully',
                 'data' => [
                     'has_portal_access' => $contact->has_portal_access,
-                    'auth_method' => $contact->auth_method
-                ]
+                    'auth_method' => $contact->auth_method,
+                ],
             ]);
-            
+
         } catch (\Exception $e) {
             \Log::error('Error updating portal access', [
                 'contact_id' => $contact->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
-            return response()->json(['error' => 'Internal server error: ' . $e->getMessage()], 500);
+
+            return response()->json(['error' => 'Internal server error: '.$e->getMessage()], 500);
         }
     }
-    
+
     /**
      * Update security settings for a contact
      */
@@ -567,31 +565,31 @@ class ContactController extends Controller
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('update', $contact);
-        
+
         $validator = Validator::make($request->all(), [
             'session_timeout_minutes' => 'nullable|integer|min:5|max:480',
             'allowed_ips' => 'nullable|array',
             'allowed_ips.*' => 'nullable|string',
         ]);
-        
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        
+
         $contact->session_timeout_minutes = $request->input('session_timeout_minutes', 30);
-        
+
         $allowedIps = array_filter($request->input('allowed_ips', []));
         $contact->allowed_ip_addresses = $allowedIps;
-        
+
         $contact->save();
-        
+
         return response()->json(['message' => 'Security settings updated successfully']);
     }
-    
+
     /**
      * Update portal permissions for a contact
      */
@@ -601,28 +599,28 @@ class ContactController extends Controller
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('update', $contact);
-        
+
         $validator = Validator::make($request->all(), [
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
         ]);
-        
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        
+
         $permissions = array_filter($request->input('permissions', []));
         $contact->portal_permissions = $permissions;
-        
+
         $contact->save();
-        
+
         return response()->json(['message' => 'Permissions updated successfully']);
     }
-    
+
     /**
      * Lock a contact account
      */
@@ -632,17 +630,17 @@ class ContactController extends Controller
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('update', $contact);
-        
+
         $contact->locked_until = now()->addMinutes(30);
         $contact->save();
-        
+
         return response()->json(['message' => 'Account locked successfully']);
     }
-    
+
     /**
      * Unlock a contact account
      */
@@ -652,17 +650,17 @@ class ContactController extends Controller
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('update', $contact);
-        
+
         $contact->locked_until = null;
         $contact->save();
-        
+
         return response()->json(['message' => 'Account unlocked successfully']);
     }
-    
+
     /**
      * Reset failed login attempts
      */
@@ -672,17 +670,17 @@ class ContactController extends Controller
         if ($contact->client_id !== $client->id) {
             abort(404, 'Contact not found for this client');
         }
-        
+
         // Authorize access
         $this->authorize('view', $client);
         $this->authorize('update', $contact);
-        
+
         $contact->failed_login_count = 0;
         $contact->save();
-        
+
         return response()->json(['message' => 'Failed login attempts reset successfully']);
     }
-    
+
     /**
      * Send portal invitation to contact
      */
@@ -690,31 +688,31 @@ class ContactController extends Controller
     {
         // Get client from navigation service
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client || $contact->client_id !== $client->id) {
+
+        if (! $client || $contact->client_id !== $client->id) {
             return response()->json(['error' => 'Contact not found for this client'], 404);
         }
-        
+
         // Check permissions
-        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+        if (! auth()->user()->hasPermission('clients.contacts.manage')) {
             return response()->json(['error' => 'Insufficient permissions'], 403);
         }
-        
+
         // Send invitation
         $invitationService = app(PortalInvitationService::class);
         $result = $invitationService->sendInvitation($contact, auth()->user());
-        
-        if (!$result['success']) {
+
+        if (! $result['success']) {
             return response()->json(['error' => $result['message']], 400);
         }
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Invitation sent successfully',
             'expires_at' => $result['data']['expires_at'],
         ]);
     }
-    
+
     /**
      * Resend portal invitation to contact
      */
@@ -722,31 +720,31 @@ class ContactController extends Controller
     {
         // Get client from navigation service
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client || $contact->client_id !== $client->id) {
+
+        if (! $client || $contact->client_id !== $client->id) {
             return response()->json(['error' => 'Contact not found for this client'], 404);
         }
-        
+
         // Check permissions
-        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+        if (! auth()->user()->hasPermission('clients.contacts.manage')) {
             return response()->json(['error' => 'Insufficient permissions'], 403);
         }
-        
+
         // Resend invitation
         $invitationService = app(PortalInvitationService::class);
         $result = $invitationService->resendInvitation($contact, auth()->user());
-        
-        if (!$result['success']) {
+
+        if (! $result['success']) {
             return response()->json(['error' => $result['message']], 400);
         }
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Invitation resent successfully',
             'expires_at' => $result['data']['expires_at'],
         ]);
     }
-    
+
     /**
      * Revoke portal invitation for contact
      */
@@ -754,24 +752,24 @@ class ContactController extends Controller
     {
         // Get client from navigation service
         $client = app(NavigationService::class)->getSelectedClient();
-        
-        if (!$client || $contact->client_id !== $client->id) {
+
+        if (! $client || $contact->client_id !== $client->id) {
             return response()->json(['error' => 'Contact not found for this client'], 404);
         }
-        
+
         // Check permissions
-        if (!auth()->user()->hasPermission('clients.contacts.manage')) {
+        if (! auth()->user()->hasPermission('clients.contacts.manage')) {
             return response()->json(['error' => 'Insufficient permissions'], 403);
         }
-        
+
         // Revoke invitation
         $invitationService = app(PortalInvitationService::class);
         $result = $invitationService->revokeInvitation($contact, auth()->user());
-        
-        if (!$result['success']) {
+
+        if (! $result['success']) {
             return response()->json(['error' => $result['message']], 400);
         }
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Invitation revoked successfully',

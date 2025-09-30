@@ -5,13 +5,13 @@ namespace App\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Throwable;
 
 /**
  * Exception Handling Middleware
- * 
+ *
  * Provides additional context and logging for requests that result in exceptions.
  * Works in conjunction with the global exception handler.
  */
@@ -31,18 +31,18 @@ class ExceptionHandlingMiddleware
 
         try {
             $response = $next($request);
-            
+
             // Log successful requests in debug mode
             if (config('app.debug') && config('app.log_successful_requests', false)) {
                 $this->logSuccessfulRequest($request, $response, $startTime);
             }
-            
+
             return $response;
-            
+
         } catch (Throwable $exception) {
             // Add additional context to the exception
             $this->addExceptionContext($exception, $request, $startTime);
-            
+
             // Re-throw to let the global handler process it
             throw $exception;
         }
@@ -61,8 +61,8 @@ class ExceptionHandlingMiddleware
             'user_agent' => $request->userAgent(),
             'user_id' => auth()->id(),
             'company_id' => auth()->user()?->company_id,
-            'execution_time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms',
-            'memory_usage' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . 'MB',
+            'execution_time' => round((microtime(true) - $startTime) * 1000, 2).'ms',
+            'memory_usage' => round(memory_get_peak_usage(true) / 1024 / 1024, 2).'MB',
         ];
 
         // Add route information if available
@@ -75,7 +75,7 @@ class ExceptionHandlingMiddleware
         }
 
         // Add sanitized request data for POST/PUT/PATCH requests
-        if (!$request->isMethod('GET')) {
+        if (! $request->isMethod('GET')) {
             $context['request_data'] = $this->sanitizeRequestData($request->all());
         }
 
@@ -99,14 +99,14 @@ class ExceptionHandlingMiddleware
     private function logSuccessfulRequest(Request $request, Response $response, float $startTime): void
     {
         $executionTime = round((microtime(true) - $startTime) * 1000, 2);
-        
+
         Log::debug('Request completed', [
             'request_id' => $request->header('X-Request-ID'),
             'method' => $request->method(),
             'url' => $request->url(),
             'status_code' => $response->getStatusCode(),
-            'execution_time' => $executionTime . 'ms',
-            'memory_usage' => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . 'MB',
+            'execution_time' => $executionTime.'ms',
+            'memory_usage' => round(memory_get_peak_usage(true) / 1024 / 1024, 2).'MB',
             'user_id' => auth()->id(),
             'company_id' => auth()->user()?->company_id,
         ]);

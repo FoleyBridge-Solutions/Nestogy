@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ClientDocument extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -92,7 +92,7 @@ class ClientDocument extends Model
         if ($this->parent_document_id) {
             return $this->parentDocument->versions()->latest('version')->first();
         }
-        
+
         return $this->versions()->latest('version')->first() ?: $this;
     }
 
@@ -125,9 +125,9 @@ class ClientDocument extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where(function($q) {
+        return $query->where(function ($q) {
             $q->whereNull('expires_at')
-              ->orWhere('expires_at', '>', now());
+                ->orWhere('expires_at', '>', now());
         });
     }
 
@@ -153,17 +153,17 @@ class ClientDocument extends Model
     public function getFileSizeHumanAttribute()
     {
         $bytes = $this->file_size;
-        
+
         if ($bytes >= 1073741824) {
-            $bytes = number_format($bytes / 1073741824, 2) . ' GB';
+            $bytes = number_format($bytes / 1073741824, 2).' GB';
         } elseif ($bytes >= 1048576) {
-            $bytes = number_format($bytes / 1048576, 2) . ' MB';
+            $bytes = number_format($bytes / 1048576, 2).' MB';
         } elseif ($bytes >= 1024) {
-            $bytes = number_format($bytes / 1024, 2) . ' KB';
+            $bytes = number_format($bytes / 1024, 2).' KB';
         } elseif ($bytes > 1) {
-            $bytes = $bytes . ' bytes';
+            $bytes = $bytes.' bytes';
         } elseif ($bytes == 1) {
-            $bytes = $bytes . ' byte';
+            $bytes = $bytes.' byte';
         } else {
             $bytes = '0 bytes';
         }
@@ -185,7 +185,7 @@ class ClientDocument extends Model
     public function getFileIconAttribute()
     {
         $extension = strtolower($this->file_extension);
-        
+
         $icons = [
             'pdf' => '📄',
             'doc' => '📝',
@@ -244,7 +244,7 @@ class ClientDocument extends Model
      */
     public function getStoragePathAttribute()
     {
-        return storage_path('app/' . $this->file_path);
+        return storage_path('app/'.$this->file_path);
     }
 
     /**

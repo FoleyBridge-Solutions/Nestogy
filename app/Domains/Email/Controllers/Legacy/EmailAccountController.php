@@ -2,11 +2,11 @@
 
 namespace App\Domains\Email\Controllers\Legacy;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Email\Models\EmailAccount;
 use App\Domains\Email\Services\EmailProviderService;
-use App\Domains\Email\Services\OAuthTokenManager;
 use App\Domains\Email\Services\EmailProviderValidationService;
+use App\Domains\Email\Services\OAuthTokenManager;
+use App\Http\Controllers\Controller;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +16,9 @@ use Illuminate\Support\Str;
 class EmailAccountController extends Controller
 {
     protected EmailProviderService $providerService;
+
     protected OAuthTokenManager $tokenManager;
+
     protected EmailProviderValidationService $validationService;
 
     public function __construct(
@@ -76,12 +78,12 @@ class EmailAccountController extends Controller
         $user = Auth::user();
 
         // Check if company has OAuth provider configured
-        if (!in_array($company->email_provider_type, ['microsoft365', 'google_workspace'])) {
+        if (! in_array($company->email_provider_type, ['microsoft365', 'google_workspace'])) {
             return redirect()->back()->with('error', 'No OAuth provider configured for this company');
         }
 
         // Check if email domain is allowed
-        if (!$this->validationService->validateEmailDomain($company, $request->email)) {
+        if (! $this->validationService->validateEmailDomain($company, $request->email)) {
             return redirect()->back()->with('error', 'Email domain not allowed for this company\'s email provider');
         }
 
@@ -122,7 +124,7 @@ class EmailAccountController extends Controller
                 'user_id' => $user->id,
             ]);
 
-            return redirect()->back()->with('error', 'Failed to initiate OAuth connection: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to initiate OAuth connection: '.$e->getMessage());
         }
     }
 
@@ -165,9 +167,9 @@ class EmailAccountController extends Controller
 
         // Validate account configuration
         $validationErrors = $this->validationService->validateEmailAccountConfig($request->all(), $company);
-        if (!empty($validationErrors)) {
+        if (! empty($validationErrors)) {
             return redirect()->back()
-                ->with('error', 'Validation failed: ' . implode(', ', $validationErrors))
+                ->with('error', 'Validation failed: '.implode(', ', $validationErrors))
                 ->withInput();
         }
 
@@ -286,6 +288,4 @@ class EmailAccountController extends Controller
             return redirect()->back()->with('error', 'Failed to refresh OAuth tokens');
         }
     }
-
-
 }

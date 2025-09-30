@@ -27,15 +27,15 @@ class UpdateExpiredInvitations extends Command
     public function handle(PortalInvitationService $invitationService): int
     {
         $this->info('Checking for expired portal invitations...');
-        
+
         $expired = $invitationService->updateExpiredInvitations();
-        
+
         if ($expired > 0) {
             $this->info("Updated {$expired} expired invitation(s).");
         } else {
             $this->info('No expired invitations found.');
         }
-        
+
         return Command::SUCCESS;
     }
 }

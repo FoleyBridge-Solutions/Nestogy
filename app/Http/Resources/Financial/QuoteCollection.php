@@ -21,7 +21,6 @@ class QuoteCollection extends ResourceCollection
     /**
      * Transform the resource collection into an array.
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -54,7 +53,6 @@ class QuoteCollection extends ResourceCollection
     /**
      * Get additional data that should be returned with the resource array.
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function with(Request $request): array
@@ -71,10 +69,6 @@ class QuoteCollection extends ResourceCollection
 
     /**
      * Customize the outgoing response for the resource.
-     *
-     * @param Request $request
-     * @param \Illuminate\Http\JsonResponse $response
-     * @return void
      */
     public function withResponse(Request $request, \Illuminate\Http\JsonResponse $response): void
     {
@@ -109,11 +103,11 @@ class QuoteCollection extends ResourceCollection
 
         foreach ($this->collection as $quote) {
             $totalValue += (float) $quote->total_amount;
-            
+
             // Count by status
             $status = $quote->status;
             $statusCounts[$status] = ($statusCounts[$status] ?? 0) + 1;
-            
+
             // Count by currency
             $currency = $quote->currency_code;
             $currencyCounts[$currency] = ($currencyCounts[$currency] ?? 0) + 1;
@@ -134,7 +128,6 @@ class QuoteCollection extends ResourceCollection
     /**
      * Get applied filters from request
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     protected function getAppliedFilters(Request $request): array
@@ -175,7 +168,6 @@ class QuoteCollection extends ResourceCollection
     /**
      * Create a simplified collection for dashboard widgets
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArrayDashboard(Request $request): array
@@ -203,7 +195,6 @@ class QuoteCollection extends ResourceCollection
     /**
      * Create an export-friendly format
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArrayExport(Request $request): array

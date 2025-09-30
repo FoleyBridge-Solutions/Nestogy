@@ -2,17 +2,18 @@
 
 namespace App\Domains\Product\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\ProductBundle;
-use App\Models\Client;
 use App\Domains\Financial\Services\ProductPricingService;
 use App\Domains\Financial\Services\ProductSearchService;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\Client;
+use App\Models\ProductBundle;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class BundleController extends Controller
 {
     protected ProductPricingService $pricingService;
+
     protected ProductSearchService $searchService;
 
     public function __construct(
@@ -29,21 +30,21 @@ class BundleController extends Controller
     public function search(Request $request): JsonResponse
     {
         $filters = $request->only([
-            'search', 'bundle_type', 'pricing_type', 'max_price'
+            'search', 'bundle_type', 'pricing_type', 'max_price',
         ]);
 
         try {
             $bundles = $this->searchService->searchBundles($filters);
-            
+
             return response()->json([
                 'success' => true,
-                'bundles' => $bundles
+                'bundles' => $bundles,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to search bundles',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -57,22 +58,22 @@ class BundleController extends Controller
         if ($bundle->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bundle not found'
+                'message' => 'Bundle not found',
             ], 404);
         }
 
         try {
             $bundle->load(['products']);
-            
+
             return response()->json([
                 'success' => true,
-                'bundle' => $bundle
+                'bundle' => $bundle,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load bundle details',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -86,7 +87,7 @@ class BundleController extends Controller
             'bundle_id' => 'required|integer|exists:product_bundles,id',
             'selected_products' => 'nullable|array',
             'selected_products.*' => 'integer|exists:products,id',
-            'client_id' => 'nullable|integer|exists:clients,id'
+            'client_id' => 'nullable|integer|exists:clients,id',
         ]);
 
         $bundle = ProductBundle::where('company_id', auth()->user()->company_id)
@@ -106,16 +107,16 @@ class BundleController extends Controller
                 $selectedProducts,
                 $client
             );
-            
+
             return response()->json([
                 'success' => true,
-                ...$pricing
+                ...$pricing,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to calculate bundle price',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 400);
         }
     }
@@ -128,7 +129,7 @@ class BundleController extends Controller
         $request->validate([
             'bundle_id' => 'required|integer|exists:product_bundles,id',
             'selected_products' => 'required|array',
-            'selected_products.*' => 'integer|exists:products,id'
+            'selected_products.*' => 'integer|exists:products,id',
         ]);
 
         $bundle = ProductBundle::where('company_id', auth()->user()->company_id)
@@ -136,17 +137,17 @@ class BundleController extends Controller
 
         try {
             $errors = $bundle->validateSelection($request->selected_products);
-            
+
             return response()->json([
                 'success' => true,
                 'valid' => empty($errors),
-                'errors' => $errors
+                'errors' => $errors,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to validate selection',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -160,35 +161,35 @@ class BundleController extends Controller
         if ($bundle->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bundle not found'
+                'message' => 'Bundle not found',
             ], 404);
         }
 
-        if (!$bundle->isConfigurable()) {
+        if (! $bundle->isConfigurable()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bundle is not configurable'
+                'message' => 'Bundle is not configurable',
             ], 400);
         }
 
         try {
             $bundle->load(['products']);
-            
+
             $requiredProducts = $bundle->getRequiredProducts();
             $optionalProducts = $bundle->getOptionalProducts();
-            
+
             return response()->json([
                 'success' => true,
                 'bundle' => $bundle,
                 'required_products' => $requiredProducts,
                 'optional_products' => $optionalProducts,
-                'is_configurable' => true
+                'is_configurable' => true,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load configurable options',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -204,16 +205,16 @@ class BundleController extends Controller
                 ->ordered()
                 ->with(['products'])
                 ->get();
-            
+
             return response()->json([
                 'success' => true,
-                'bundles' => $bundles
+                'bundles' => $bundles,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load bundles',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -227,23 +228,23 @@ class BundleController extends Controller
         if ($bundle->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bundle not found'
+                'message' => 'Bundle not found',
             ], 404);
         }
 
         try {
             $newBundle = $bundle->duplicate();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Bundle duplicated successfully',
-                'bundle' => $newBundle
+                'bundle' => $newBundle,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to duplicate bundle',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

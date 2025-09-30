@@ -1,11 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use App\Domains\Ticket\Models\SLA;
 use App\Models\Company;
 use App\Models\Setting;
-use App\Domains\Ticket\Models\SLA;
+use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
@@ -16,18 +14,19 @@ return new class extends Migration
     {
         // Migrate existing SLA data from settings to new SLA table
         $companies = Company::all();
-        
+
         foreach ($companies as $company) {
             $settings = $company->settings;
-            
-            if (!$settings) {
+
+            if (! $settings) {
                 // Create default SLA for companies without settings
                 $this->createDefaultSLA($company);
+
                 continue;
             }
-            
+
             $slaData = $settings->sla_definitions;
-            
+
             if ($slaData && is_array($slaData)) {
                 $this->migrateSLAFromSettings($company, $settings, $slaData);
             } else {
@@ -45,7 +44,7 @@ return new class extends Migration
         // Remove all migrated SLAs
         SLA::truncate();
     }
-    
+
     /**
      * Create default SLA for a company
      */
@@ -53,8 +52,8 @@ return new class extends Migration
     {
         SLA::create([
             'company_id' => $company->id,
-            'name' => $company->name . ' - Default SLA',
-            'description' => 'Default Service Level Agreement for ' . $company->name,
+            'name' => $company->name.' - Default SLA',
+            'description' => 'Default Service Level Agreement for '.$company->name,
             'is_default' => true,
             'is_active' => true,
             'critical_response_minutes' => 60,
@@ -82,7 +81,7 @@ return new class extends Migration
             'effective_from' => now()->toDateString(),
         ]);
     }
-    
+
     /**
      * Migrate SLA data from settings
      */
@@ -91,10 +90,10 @@ return new class extends Migration
         // Extract response and resolution times
         $responseTimes = $slaData['response_times'] ?? [];
         $resolutionTimes = $slaData['resolution_times'] ?? [];
-        
+
         SLA::create([
             'company_id' => $company->id,
-            'name' => $company->name . ' - Migrated SLA',
+            'name' => $company->name.' - Migrated SLA',
             'description' => 'SLA migrated from company settings',
             'is_default' => true,
             'is_active' => $slaData['enabled'] ?? true,
@@ -123,7 +122,7 @@ return new class extends Migration
             'effective_from' => now()->toDateString(),
         ]);
     }
-    
+
     /**
      * Get business hours start from settings
      */
@@ -133,10 +132,10 @@ return new class extends Migration
         if ($settings->business_hours && is_array($settings->business_hours)) {
             return $settings->business_hours['start'] ?? '09:00';
         }
-        
+
         return '09:00';
     }
-    
+
     /**
      * Get business hours end from settings
      */
@@ -146,10 +145,10 @@ return new class extends Migration
         if ($settings->business_hours && is_array($settings->business_hours)) {
             return $settings->business_hours['end'] ?? '17:00';
         }
-        
+
         return '17:00';
     }
-    
+
     /**
      * Get business days from SLA data or default
      */
@@ -158,7 +157,7 @@ return new class extends Migration
         if (isset($slaData['business_days']) && is_array($slaData['business_days'])) {
             return $slaData['business_days'];
         }
-        
+
         return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
     }
 };

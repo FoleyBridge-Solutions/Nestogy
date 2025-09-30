@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->json('customizations');
             $table->timestamps();
-            
+
             $table->unique('company_id');
             $table->index('company_id');
         });

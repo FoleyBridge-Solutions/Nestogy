@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
-use Illuminate\Http\Request;
 use App\Domains\Product\Services\SubscriptionService;
 use App\Exceptions\UserLimitExceededException;
+use Closure;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -32,7 +32,7 @@ class CheckSubscriptionLimits
     {
         $user = $request->user();
 
-        if (!$user || !$user->company) {
+        if (! $user || ! $user->company) {
             return $next($request);
         }
 
@@ -47,7 +47,7 @@ class CheckSubscriptionLimits
 
             if ($company) {
                 // Check if the company can add more users
-                if (!$this->subscriptionService->canAddUser($company)) {
+                if (! $this->subscriptionService->canAddUser($company)) {
                     $subscription = $company->subscription;
                     $planName = $subscription ? $subscription->getDisplayName() : 'current';
                     $limit = $subscription ? $subscription->max_users : 0;

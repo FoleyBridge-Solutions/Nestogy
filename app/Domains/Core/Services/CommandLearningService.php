@@ -4,15 +4,13 @@ namespace App\Domains\Core\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 /**
  * Command Learning Service
- * 
+ *
  * Provides machine learning capabilities for command system including:
  * - User pattern recognition
- * - Command success tracking  
+ * - Command success tracking
  * - Adaptive suggestions
  * - Performance optimization
  */
@@ -22,15 +20,20 @@ class CommandLearningService
      * Cache durations (in seconds)
      */
     const CACHE_USER_PATTERNS = 3600;      // 1 hour
+
     const CACHE_POPULAR_COMMANDS = 1800;   // 30 minutes
+
     const CACHE_ENTITY_POPULARITY = 600;   // 10 minutes
+
     const CACHE_SUGGESTIONS = 300;         // 5 minutes
 
     /**
      * Learning thresholds
      */
     const MIN_USAGE_FOR_PATTERN = 3;
+
     const MAX_USER_PATTERNS = 100;
+
     const MAX_POPULAR_COMMANDS = 50;
 
     /**
@@ -39,7 +42,7 @@ class CommandLearningService
     public static function recordSuccess(string $command, ParsedCommand $parsed, array $context = []): void
     {
         $userId = auth()->id();
-        if (!$userId) {
+        if (! $userId) {
             return;
         }
 
@@ -65,7 +68,7 @@ class CommandLearningService
     public static function recordFailure(string $command, ?ParsedCommand $parsed, array $context = [], string $reason = ''): void
     {
         $userId = auth()->id();
-        if (!$userId) {
+        if (! $userId) {
             return;
         }
 
@@ -91,8 +94,8 @@ class CommandLearningService
         $patterns = Cache::get($cacheKey, []);
 
         $patternKey = static::generatePatternKey($parsed);
-        
-        if (!isset($patterns[$patternKey])) {
+
+        if (! isset($patterns[$patternKey])) {
             $patterns[$patternKey] = [
                 'intent' => $parsed->getIntent(),
                 'entities' => $parsed->getEntities(),
@@ -110,7 +113,7 @@ class CommandLearningService
         } else {
             $patterns[$patternKey]['failure_count']++;
         }
-        
+
         $patterns[$patternKey]['last_used'] = now()->timestamp;
 
         // Keep only top patterns to prevent memory bloat
@@ -130,8 +133,8 @@ class CommandLearningService
         $commands = Cache::get($cacheKey, []);
 
         $commandKey = md5($command);
-        
-        if (!isset($commands[$commandKey])) {
+
+        if (! isset($commands[$commandKey])) {
             $commands[$commandKey] = [
                 'command' => $command,
                 'intent' => $parsed->getIntent(),
@@ -170,11 +173,11 @@ class CommandLearningService
     {
         $companyId = $context['company_id'] ?? auth()->user()->company_id;
         $cacheKey = "entity_popularity:{$companyId}";
-        
+
         $popularity = Cache::get($cacheKey, []);
 
         foreach ($parsed->getEntities() as $entity) {
-            if (!isset($popularity[$entity])) {
+            if (! isset($popularity[$entity])) {
                 $popularity[$entity] = [
                     'access_count' => 0,
                     'success_count' => 0,
@@ -199,15 +202,15 @@ class CommandLearningService
     {
         $userId = auth()->id();
         $cacheKey = "contextual_success:{$userId}";
-        
+
         $contextSuccess = Cache::get($cacheKey, []);
-        
+
         // Track context combinations that work well
         $contextKey = static::generateContextKey($context);
         $patternKey = static::generatePatternKey($parsed);
-        $combinationKey = $contextKey . ':' . $patternKey;
+        $combinationKey = $contextKey.':'.$patternKey;
 
-        if (!isset($contextSuccess[$combinationKey])) {
+        if (! isset($contextSuccess[$combinationKey])) {
             $contextSuccess[$combinationKey] = [
                 'context' => $context,
                 'pattern' => [
@@ -236,9 +239,9 @@ class CommandLearningService
         $cacheKey = 'command_failures';
         $failures = Cache::get($cacheKey, []);
 
-        $failureKey = md5($command . $reason);
-        
-        if (!isset($failures[$failureKey])) {
+        $failureKey = md5($command.$reason);
+
+        if (! isset($failures[$failureKey])) {
             $failures[$failureKey] = [
                 'command' => $command,
                 'reason' => $reason,
@@ -254,7 +257,7 @@ class CommandLearningService
 
         // Track context patterns for failures
         $contextPattern = static::generateContextKey($context);
-        if (!isset($failures[$failureKey]['context_patterns'][$contextPattern])) {
+        if (! isset($failures[$failureKey]['context_patterns'][$contextPattern])) {
             $failures[$failureKey]['context_patterns'][$contextPattern] = 0;
         }
         $failures[$failureKey]['context_patterns'][$contextPattern]++;
@@ -272,8 +275,8 @@ class CommandLearningService
      */
     public static function getPersonalizedSuggestions(int $userId, string $partial = '', array $context = []): array
     {
-        $cacheKey = "personalized_suggestions:{$userId}:" . md5($partial . serialize($context));
-        
+        $cacheKey = "personalized_suggestions:{$userId}:".md5($partial.serialize($context));
+
         return Cache::remember($cacheKey, static::CACHE_SUGGESTIONS, function () use ($userId, $partial, $context) {
             $suggestions = [];
 
@@ -305,6 +308,7 @@ class CommandLearningService
         // Filter successful patterns
         return array_filter($patterns, function ($pattern) {
             $successRate = $pattern['success_count'] / max(1, $pattern['success_count'] + $pattern['failure_count']);
+
             return $pattern['success_count'] >= static::MIN_USAGE_FOR_PATTERN && $successRate > 0.5;
         });
     }
@@ -319,7 +323,7 @@ class CommandLearningService
         foreach ($patterns as $pattern) {
             // Generate command suggestion from pattern
             $command = static::generateCommandFromPattern($pattern);
-            
+
             if (empty($partial) || str_contains(strtolower($command), strtolower($partial))) {
                 $suggestions[] = [
                     'text' => $command,
@@ -349,7 +353,7 @@ class CommandLearningService
             // Check if context matches
             if (str_starts_with($combinationKey, $currentContext)) {
                 $command = static::generateCommandFromPattern($data['pattern']);
-                
+
                 if (empty($partial) || str_contains(strtolower($command), strtolower($partial))) {
                     $suggestions[] = [
                         'text' => $command,
@@ -377,10 +381,10 @@ class CommandLearningService
 
         foreach ($commands as $commandData) {
             $command = $commandData['command'];
-            
+
             if (empty($partial) || str_contains(strtolower($command), strtolower($partial))) {
                 $successRate = $commandData['success_count'] / max(1, $commandData['usage_count']);
-                
+
                 if ($successRate > 0.6) { // Only suggest commands with good success rate
                     $suggestions[] = [
                         'text' => $command,
@@ -404,15 +408,15 @@ class CommandLearningService
         // Calculate final scores
         foreach ($suggestions as &$suggestion) {
             $score = $suggestion['confidence'];
-            
+
             // Boost exact matches
-            if (!empty($partial) && str_starts_with(strtolower($suggestion['text']), strtolower($partial))) {
+            if (! empty($partial) && str_starts_with(strtolower($suggestion['text']), strtolower($partial))) {
                 $score += 0.3;
             }
-            
+
             // Boost based on usage frequency
             $score += min(0.2, ($suggestion['usage_count'] ?? 0) / 50);
-            
+
             // Type-based adjustments
             switch ($suggestion['type']) {
                 case 'personal':
@@ -425,7 +429,7 @@ class CommandLearningService
                     $score += 0.05;
                     break;
             }
-            
+
             $suggestion['final_score'] = $score;
         }
 
@@ -444,11 +448,11 @@ class CommandLearningService
     {
         $entities = $parsed->getEntities();
         sort($entities);
-        
+
         $modifiers = $parsed->getModifiers();
         sort($modifiers);
-        
-        return $parsed->getIntent() . ':' . implode(',', $entities) . ':' . implode(',', $modifiers);
+
+        return $parsed->getIntent().':'.implode(',', $entities).':'.implode(',', $modifiers);
     }
 
     /**
@@ -457,19 +461,19 @@ class CommandLearningService
     protected static function generateContextKey(array $context): string
     {
         $key = [];
-        
+
         if (isset($context['client_id'])) {
-            $key[] = 'client:' . $context['client_id'];
+            $key[] = 'client:'.$context['client_id'];
         }
-        
+
         if (isset($context['domain'])) {
-            $key[] = 'domain:' . $context['domain'];
+            $key[] = 'domain:'.$context['domain'];
         }
-        
+
         if (isset($context['workflow'])) {
-            $key[] = 'workflow:' . $context['workflow'];
+            $key[] = 'workflow:'.$context['workflow'];
         }
-        
+
         return implode('|', $key);
     }
 
@@ -480,7 +484,7 @@ class CommandLearningService
     {
         $intent = strtolower($pattern['intent']);
         $entities = $pattern['entities'] ?? [];
-        
+
         $intentVerbs = [
             'CREATE' => 'create',
             'SHOW' => 'show',
@@ -488,13 +492,13 @@ class CommandLearningService
             'FIND' => 'find',
             'ACTION' => 'action',
         ];
-        
+
         $verb = $intentVerbs[$pattern['intent']] ?? $intent;
-        
-        if (!empty($entities)) {
-            return $verb . ' ' . implode(' ', $entities);
+
+        if (! empty($entities)) {
+            return $verb.' '.implode(' ', $entities);
         }
-        
+
         return $verb;
     }
 
@@ -505,14 +509,14 @@ class CommandLearningService
     {
         $total = $pattern['success_count'] + $pattern['failure_count'];
         $successRate = $pattern['success_count'] / max(1, $total);
-        
+
         // Factor in usage frequency
         $frequency = min(1.0, $pattern['success_count'] / 10);
-        
+
         // Factor in recency
         $daysSinceUse = (now()->timestamp - $pattern['last_used']) / 86400;
         $recency = max(0.1, 1.0 - ($daysSinceUse / 30)); // Decay over 30 days
-        
+
         return $successRate * 0.6 + $frequency * 0.3 + $recency * 0.1;
     }
 
@@ -525,7 +529,7 @@ class CommandLearningService
         uasort($patterns, function ($a, $b) {
             $scoreA = $a['success_count'] + ($a['last_used'] > (now()->timestamp - 86400) ? 5 : 0);
             $scoreB = $b['success_count'] + ($b['last_used'] > (now()->timestamp - 86400) ? 5 : 0);
-            
+
             return $scoreB <=> $scoreA;
         });
 
@@ -539,7 +543,7 @@ class CommandLearningService
     {
         // Remove patterns older than 30 days
         $cutoff = now()->timestamp - (30 * 24 * 3600);
-        
+
         return array_filter($patterns, function ($pattern) use ($cutoff) {
             return $pattern['last_used'] > $cutoff;
         });
@@ -549,10 +553,10 @@ class CommandLearningService
      * Log command execution for analytics
      */
     protected static function logCommandExecution(
-        string $command, 
-        ?ParsedCommand $parsed, 
-        array $context, 
-        bool $success, 
+        string $command,
+        ?ParsedCommand $parsed,
+        array $context,
+        bool $success,
         string $reason = ''
     ): void {
         if (config('app.debug') || config('command.analytics', false)) {
@@ -577,10 +581,10 @@ class CommandLearningService
     {
         // This would typically query a dedicated analytics table
         // For now, return summary from cache
-        
+
         $popularCommands = Cache::get('popular_commands', []);
         $failures = Cache::get('command_failures', []);
-        
+
         return [
             'popular_commands' => array_slice($popularCommands, 0, 10),
             'common_failures' => array_slice($failures, 0, 10),
@@ -648,7 +652,7 @@ class CommandLearningService
         try {
             if (config('cache.default') === 'redis') {
                 $keys = Cache::getRedis()->keys($pattern);
-                if (!empty($keys)) {
+                if (! empty($keys)) {
                     Cache::getRedis()->del($keys);
                 }
             }

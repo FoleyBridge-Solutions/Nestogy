@@ -2,18 +2,18 @@
 
 namespace App\Domains\Core\Controllers\Settings;
 
+use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
 use App\Http\Controllers\Controller;
 use App\Models\TaxApiSettings;
-use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 /**
  * Tax API Settings Controller
- * 
+ *
  * Manages configuration and settings for tax calculation API integrations
  */
 class TaxApiSettingsController extends Controller
@@ -24,19 +24,19 @@ class TaxApiSettingsController extends Controller
     public function index(): View
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Get all provider schemas
         $providers = TaxApiSettings::getAllProviderSchemas();
-        
+
         // Get current settings for each provider
         $currentSettings = TaxApiSettings::where('company_id', $companyId)->get()->keyBy('provider');
-        
+
         // Get usage statistics
         $usageStats = $this->getUsageStatistics($companyId);
-        
+
         // Test tax engine router status
         $routerStatus = $this->getRouterStatus($companyId);
-        
+
         return view('settings.tax-api', compact(
             'providers',
             'currentSettings',
@@ -51,14 +51,14 @@ class TaxApiSettingsController extends Controller
     public function show(string $provider): JsonResponse
     {
         $companyId = auth()->user()->company_id;
-        
+
         $schema = TaxApiSettings::getProviderSchema($provider);
         if (empty($schema['name'])) {
             return response()->json(['error' => 'Unknown provider'], 404);
         }
-        
+
         $settings = TaxApiSettings::getProviderSettings($companyId, $provider);
-        
+
         return response()->json([
             'provider' => $provider,
             'schema' => $schema,
@@ -81,37 +81,37 @@ class TaxApiSettingsController extends Controller
     public function update(Request $request, string $provider): JsonResponse
     {
         $companyId = auth()->user()->company_id;
-        
+
         $schema = TaxApiSettings::getProviderSchema($provider);
         if (empty($schema['name'])) {
             return response()->json(['error' => 'Unknown provider'], 404);
         }
-        
+
         // Build validation rules based on schema
         $rules = $this->buildValidationRules($schema);
-        
+
         try {
             $validator = Validator::make($request->all(), $rules);
-            
+
             if ($validator->fails()) {
                 return response()->json([
                     'error' => 'Validation failed',
                     'errors' => $validator->errors(),
                 ], 422);
             }
-            
+
             $validated = $validator->validated();
-            
+
             // Extract credentials and configuration
             $credentials = [];
             $configuration = [];
-            
+
             foreach ($schema['credentials'] as $key => $credentialSchema) {
                 if (isset($validated[$key])) {
                     $credentials[$key] = $validated[$key];
                 }
             }
-            
+
             foreach ($schema['configuration'] as $key => $configSchema) {
                 if (isset($validated[$key])) {
                     $configuration[$key] = $validated[$key];
@@ -119,7 +119,7 @@ class TaxApiSettingsController extends Controller
                     $configuration[$key] = $configSchema['default'];
                 }
             }
-            
+
             // Create or update settings
             $settings = TaxApiSettings::configureProvider(
                 $companyId,
@@ -128,13 +128,13 @@ class TaxApiSettingsController extends Controller
                 $configuration,
                 $validated['enabled'] ?? false
             );
-            
+
             // Test connection if enabled
             $connectionTest = null;
             if ($settings->enabled) {
                 $connectionTest = $settings->testConnection();
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => "Settings updated for {$schema['name']}",
@@ -145,7 +145,7 @@ class TaxApiSettingsController extends Controller
                 ],
                 'connection_test' => $connectionTest,
             ]);
-            
+
         } catch (ValidationException $e) {
             return response()->json([
                 'error' => 'Validation failed',
@@ -153,7 +153,7 @@ class TaxApiSettingsController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to update settings: ' . $e->getMessage(),
+                'error' => 'Failed to update settings: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -164,17 +164,17 @@ class TaxApiSettingsController extends Controller
     public function testConnection(string $provider): JsonResponse
     {
         $companyId = auth()->user()->company_id;
-        
+
         $settings = TaxApiSettings::getProviderSettings($companyId, $provider);
-        
-        if (!$settings) {
+
+        if (! $settings) {
             return response()->json([
                 'error' => 'Provider not configured',
             ], 404);
         }
-        
+
         $result = $settings->testConnection();
-        
+
         return response()->json($result);
     }
 
@@ -185,7 +185,7 @@ class TaxApiSettingsController extends Controller
     {
         $companyId = auth()->user()->company_id;
         $stats = $this->getUsageStatistics($companyId);
-        
+
         return response()->json($stats);
     }
 
@@ -195,18 +195,18 @@ class TaxApiSettingsController extends Controller
     public function resetUsage(string $provider): JsonResponse
     {
         $companyId = auth()->user()->company_id;
-        
+
         $settings = TaxApiSettings::getProviderSettings($companyId, $provider);
-        
-        if (!$settings) {
+
+        if (! $settings) {
             return response()->json([
                 'error' => 'Provider not configured',
             ], 404);
         }
-        
+
         $settings->resetMonthlyCounters();
         $settings->logAuditEvent('usage_reset', [], auth()->id());
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Usage counters reset successfully',
@@ -219,7 +219,7 @@ class TaxApiSettingsController extends Controller
     public function preview(Request $request): JsonResponse
     {
         $companyId = auth()->user()->company_id;
-        
+
         $validator = Validator::make($request->all(), [
             'amount' => 'required|numeric|min:0',
             'category_type' => 'string|nullable',
@@ -231,17 +231,17 @@ class TaxApiSettingsController extends Controller
             'vat_number' => 'string|nullable',
             'customer_country' => 'string|nullable',
         ]);
-        
+
         if ($validator->fails()) {
             return response()->json([
                 'error' => 'Invalid parameters',
                 'errors' => $validator->errors(),
             ], 422);
         }
-        
+
         try {
             $router = new TaxEngineRouter($companyId);
-            
+
             $params = [
                 'base_price' => $request->input('amount'),
                 'quantity' => 1,
@@ -250,18 +250,18 @@ class TaxApiSettingsController extends Controller
                 'vat_number' => $request->input('vat_number'),
                 'customer_country' => $request->input('customer_country'),
             ];
-            
+
             $result = $router->calculateTaxes($params);
-            
+
             return response()->json([
                 'success' => true,
                 'calculation' => $result,
                 'preview_mode' => true,
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Tax calculation failed: ' . $e->getMessage(),
+                'error' => 'Tax calculation failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -274,17 +274,17 @@ class TaxApiSettingsController extends Controller
         $rules = [
             'enabled' => 'boolean',
         ];
-        
+
         // Add credential validation rules
         foreach ($schema['credentials'] as $key => $credentialSchema) {
             $rule = [];
-            
+
             if ($credentialSchema['required']) {
                 $rule[] = 'required';
             } else {
                 $rule[] = 'nullable';
             }
-            
+
             switch ($credentialSchema['type']) {
                 case 'string':
                 case 'password':
@@ -300,20 +300,20 @@ class TaxApiSettingsController extends Controller
                     $rule[] = 'integer';
                     break;
             }
-            
+
             $rules[$key] = implode('|', $rule);
         }
-        
+
         // Add configuration validation rules
         foreach ($schema['configuration'] as $key => $configSchema) {
             $rule = [];
-            
+
             if ($configSchema['required']) {
                 $rule[] = 'required';
             } else {
                 $rule[] = 'nullable';
             }
-            
+
             switch ($configSchema['type']) {
                 case 'string':
                     $rule[] = 'string';
@@ -328,10 +328,10 @@ class TaxApiSettingsController extends Controller
                     $rule[] = 'integer';
                     break;
             }
-            
+
             $rules[$key] = implode('|', $rule);
         }
-        
+
         return $rules;
     }
 
@@ -341,7 +341,7 @@ class TaxApiSettingsController extends Controller
     protected function getUsageStatistics(int $companyId): array
     {
         $settings = TaxApiSettings::where('company_id', $companyId)->get();
-        
+
         $stats = [
             'total_providers' => $settings->count(),
             'active_providers' => $settings->where('enabled', true)->count(),
@@ -349,10 +349,10 @@ class TaxApiSettingsController extends Controller
             'total_monthly_cost' => $settings->sum('monthly_cost'),
             'providers' => [],
         ];
-        
+
         foreach ($settings as $setting) {
             $schema = TaxApiSettings::getProviderSchema($setting->provider);
-            
+
             $stats['providers'][$setting->provider] = [
                 'name' => $schema['name'],
                 'enabled' => $setting->enabled,
@@ -360,13 +360,13 @@ class TaxApiSettingsController extends Controller
                 'monthly_calls' => $setting->monthly_api_calls,
                 'monthly_limit' => $setting->monthly_limit,
                 'monthly_cost' => $setting->monthly_cost,
-                'usage_percentage' => $setting->monthly_limit ? 
+                'usage_percentage' => $setting->monthly_limit ?
                     round(($setting->monthly_api_calls / $setting->monthly_limit) * 100, 1) : null,
                 'last_api_call' => $setting->last_api_call,
                 'last_health_check' => $setting->last_health_check,
             ];
         }
-        
+
         return $stats;
     }
 
@@ -377,14 +377,14 @@ class TaxApiSettingsController extends Controller
     {
         try {
             $router = new TaxEngineRouter($companyId);
-            
+
             return [
                 'available' => true,
                 'company_id' => $companyId,
-                'api_enhancements' => $router->getApiClient('taxcloud') ? 
+                'api_enhancements' => $router->getApiClient('taxcloud') ?
                     $router->getApiClient('taxcloud')->getConfigurationStatus() : null,
             ];
-            
+
         } catch (\Exception $e) {
             return [
                 'available' => false,

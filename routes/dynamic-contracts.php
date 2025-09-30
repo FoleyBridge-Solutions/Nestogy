@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Middleware\DynamicRouteMiddleware;
-use App\Domains\Contract\Controllers\DynamicContractController;
 use App\Domains\Contract\Controllers\Api\DynamicContractApiController;
+use App\Domains\Contract\Controllers\DynamicContractController;
+use App\Http\Middleware\DynamicRouteMiddleware;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +21,7 @@ Route::middleware(['web', 'auth', 'company', DynamicRouteMiddleware::class])
     ->prefix('contracts')
     ->name('contracts.')
     ->group(function () {
-        
+
         // Default fallback routes - these will be overridden by dynamic routes
         Route::get('/', [DynamicContractController::class, 'index'])->name('index');
         Route::get('/create', [DynamicContractController::class, 'create'])->name('create');
@@ -44,7 +44,7 @@ Route::middleware(['web', 'auth', 'company', DynamicRouteMiddleware::class])
         // - contracts/service-agreements/{id}
         // - contracts/maintenance-contracts
         // - contracts/voip-services
-        
+
     });
 
 // API Routes for Dynamic Contracts
@@ -52,7 +52,7 @@ Route::middleware(['api', 'auth:sanctum', 'company'])
     ->prefix('api/contracts')
     ->name('api.contracts.')
     ->group(function () {
-        
+
         // Default API endpoints
         Route::get('/', [DynamicContractApiController::class, 'index'])->name('index');
         Route::post('/', [DynamicContractApiController::class, 'store'])->name('store');
@@ -72,7 +72,7 @@ Route::middleware(['api', 'auth:sanctum', 'company'])
 
         // Dynamic API routes will be registered here
         // Format: api/contracts/{type}
-        
+
     });
 
 // Admin routes for managing dynamic contract configuration
@@ -80,7 +80,7 @@ Route::middleware(['web', 'auth', 'company', 'can:manage-contracts'])
     ->prefix('admin/contracts')
     ->name('admin.contracts.')
     ->group(function () {
-        
+
         // Navigation management
         Route::get('/navigation', [DynamicContractController::class, 'navigationBuilder'])->name('navigation.index');
         Route::post('/navigation', [DynamicContractController::class, 'saveNavigation'])->name('navigation.store');
@@ -126,7 +126,7 @@ Route::middleware(['web', 'auth', 'company', 'can:manage-contracts'])
         Route::post('/rebuild-routes', [DynamicContractController::class, 'rebuildRoutes'])->name('rebuild-routes');
         Route::post('/clear-cache', [DynamicContractController::class, 'clearCache'])->name('clear-cache');
         Route::get('/system-status', [DynamicContractController::class, 'systemStatus'])->name('system-status');
-        
+
     });
 
 // Webhook routes for dynamic contract events
@@ -134,12 +134,12 @@ Route::middleware(['api', 'webhook-signature'])
     ->prefix('webhooks/contracts')
     ->name('webhooks.contracts.')
     ->group(function () {
-        
+
         Route::post('/status-changed', [DynamicContractController::class, 'statusChangedWebhook'])->name('status-changed');
         Route::post('/created', [DynamicContractController::class, 'createdWebhook'])->name('created');
         Route::post('/updated', [DynamicContractController::class, 'updatedWebhook'])->name('updated');
         Route::post('/deleted', [DynamicContractController::class, 'deletedWebhook'])->name('deleted');
         Route::post('/expired', [DynamicContractController::class, 'expiredWebhook'])->name('expired');
         Route::post('/renewal-due', [DynamicContractController::class, 'renewalDueWebhook'])->name('renewal-due');
-        
+
     });

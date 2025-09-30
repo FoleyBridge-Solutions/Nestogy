@@ -2,42 +2,56 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
+use App\Domains\Ticket\Models\TicketComment;
 use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Domains\Ticket\Models\TimeEntryTemplate;
-use App\Domains\Ticket\Models\TicketComment;
-use App\Domains\Ticket\Services\TimeTrackingService;
 use App\Domains\Ticket\Services\CommentService;
+use App\Domains\Ticket\Services\TimeTrackingService;
+use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
-use Flux\Flux;
+use Livewire\Component;
 
 class TimerCompletionModal extends Component
 {
     // Modal state
     public $showModal = false;
+
     public $showDiscardConfirmation = false;
+
     public $timerId = null;
+
     public $activeTimer = null;
 
     // Timer data
     public $ticketId = null;
+
     public $ticketNumber = null;
+
     public $ticketSubject = null;
+
     public $elapsedMinutes = 0;
+
     public $elapsedHours = 0;
+
     public $elapsedDisplay = '00:00:00';
 
     // Form fields
     public $workDescription = '';
+
     public $workType = 'general_support';
+
     public $isBillable = true;
+
     public $selectedTemplateId = null;
+
     public $addCommentToTicket = true;
 
     // Smart suggestions
     public $suggestedTemplates = [];
+
     public $suggestedWorkType = 'general_support';
+
     public $rateInfo = [];
 
     // Work type options
@@ -59,11 +73,12 @@ class TimerCompletionModal extends Component
             // Load the timer
             $this->activeTimer = TicketTimeEntry::with('ticket')->find($timerId);
 
-            if (!$this->activeTimer) {
+            if (! $this->activeTimer) {
                 Flux::toast(
                     text: 'Timer not found',
                     variant: 'danger'
                 );
+
                 return;
             }
 
@@ -73,6 +88,7 @@ class TimerCompletionModal extends Component
                     text: 'You can only stop your own timers',
                     variant: 'danger'
                 );
+
                 return;
             }
 
@@ -91,7 +107,7 @@ class TimerCompletionModal extends Component
             $this->loadSmartSuggestions();
 
             // Pre-fill work description if timer already has one
-            if ($this->activeTimer->description && $this->activeTimer->description !== 'Working on ticket #' . $this->ticketNumber) {
+            if ($this->activeTimer->description && $this->activeTimer->description !== 'Working on ticket #'.$this->ticketNumber) {
                 $this->workDescription = $this->activeTimer->description;
             }
 
@@ -108,7 +124,7 @@ class TimerCompletionModal extends Component
 
         } catch (\Exception $e) {
             Flux::toast(
-                text: 'Failed to load timer: ' . $e->getMessage(),
+                text: 'Failed to load timer: '.$e->getMessage(),
                 variant: 'danger'
             );
         }
@@ -141,7 +157,7 @@ class TimerCompletionModal extends Component
             })->toArray();
 
             // Set suggested work type from best matching template
-            if (!empty($this->suggestedTemplates)) {
+            if (! empty($this->suggestedTemplates)) {
                 $this->suggestedWorkType = $this->suggestedTemplates[0]['work_type'];
             }
         }
@@ -199,7 +215,7 @@ class TimerCompletionModal extends Component
                 $commentContent = "⏱️ **Time Entry Logged** ({$hours} hours / {$minutes} minutes)\n\n";
                 $commentContent .= "**Work Performed:** {$this->workDescription}\n";
                 $commentContent .= "**Work Type:** {$workTypeLabel}\n";
-                $commentContent .= "**Billable:** " . ($this->isBillable ? 'Yes' : 'No');
+                $commentContent .= '**Billable:** '.($this->isBillable ? 'Yes' : 'No');
 
                 if ($this->isBillable && $result->amount > 0) {
                     $commentContent .= " (Amount: \${$result->amount})";
@@ -216,8 +232,8 @@ class TimerCompletionModal extends Component
                         'metadata' => [
                             'time_entry_id' => $result->id,
                             'auto_generated' => true,
-                            'type' => 'timer_completion'
-                        ]
+                            'type' => 'timer_completion',
+                        ],
                     ]
                 );
             }
@@ -262,7 +278,7 @@ class TimerCompletionModal extends Component
 
         } catch (\Exception $e) {
             Flux::toast(
-                text: 'Failed to stop timer: ' . $e->getMessage(),
+                text: 'Failed to stop timer: '.$e->getMessage(),
                 variant: 'danger'
             );
         }

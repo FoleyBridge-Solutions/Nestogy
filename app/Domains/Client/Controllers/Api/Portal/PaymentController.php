@@ -2,20 +2,19 @@
 
 namespace App\Domains\Client\Controllers\Api\Portal;
 
+use App\Domains\Financial\Services\PortalPaymentService;
 use App\Http\Controllers\Controller;
-
+use App\Models\AutoPayment;
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
-use App\Models\AutoPayment;
-use App\Domains\Financial\Services\PortalPaymentService;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Validator;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Portal Payment Controller
- * 
+ *
  * Handles payment-related functionality including:
  * - Payment processing and history
  * - Payment method management
@@ -26,7 +25,7 @@ use Exception;
 class PaymentController extends PortalApiController
 {
     protected PortalPaymentService $paymentService;
-    
+
     public function __construct(PortalPaymentService $paymentService, \App\Services\ClientPortalService $portalService, \App\Domains\Security\Services\PortalAuthService $authService)
     {
         parent::__construct($portalService, $authService);
@@ -40,12 +39,12 @@ class PaymentController extends PortalApiController
     {
         try {
             $client = $this->requireAuthentication();
-            
+
             $this->applyRateLimit('payment_history', 60, 60);
             $this->logActivity('payment_history_view');
 
             $filters = $this->getFilterParams($request, [
-                'start_date', 'end_date', 'status', 'payment_method_id'
+                'start_date', 'end_date', 'status', 'payment_method_id',
             ]);
 
             $paymentHistory = $this->paymentService->getPaymentHistory($client, $filters);
@@ -65,9 +64,9 @@ class PaymentController extends PortalApiController
         try {
             $client = $this->requireAuthentication();
             $this->requirePermission('make_payments');
-            
+
             $this->applyRateLimit('process_payment', 5, 300); // 5 payments per 5 minutes
-            
+
             // Validate request
             $validator = Validator::make($request->all(), [
                 'invoice_id' => 'required|integer|exists:invoices,id',
@@ -88,7 +87,7 @@ class PaymentController extends PortalApiController
                 ->where('client_id', $client->id)
                 ->first();
 
-            if (!$invoice) {
+            if (! $invoice) {
                 return $this->errorResponse('Invoice not found or access denied', 404);
             }
 
@@ -96,7 +95,7 @@ class PaymentController extends PortalApiController
                 ->where('client_id', $client->id)
                 ->first();
 
-            if (!$paymentMethod) {
+            if (! $paymentMethod) {
                 return $this->errorResponse('Payment method not found or access denied', 404);
             }
 
@@ -129,7 +128,7 @@ class PaymentController extends PortalApiController
     {
         try {
             $client = $this->requireAuthentication();
-            
+
             $this->applyRateLimit('payment_methods', 120, 60);
             $this->logActivity('payment_methods_view');
 
@@ -168,9 +167,9 @@ class PaymentController extends PortalApiController
         try {
             $client = $this->requireAuthentication();
             $this->requirePermission('manage_payment_methods');
-            
+
             $this->applyRateLimit('add_payment_method', 10, 3600); // 10 per hour
-            
+
             // Validate request based on payment method type
             $validator = Validator::make($request->all(), [
                 'type' => 'required|string|in:credit_card,debit_card,bank_account,digital_wallet',
@@ -178,25 +177,25 @@ class PaymentController extends PortalApiController
                 'name' => 'nullable|string|max:255',
                 'description' => 'nullable|string|max:500',
                 'is_default' => 'boolean',
-                
+
                 // Card fields
                 'card_number' => 'required_if:type,credit_card,debit_card|string',
                 'card_exp_month' => 'required_if:type,credit_card,debit_card|integer|between:1,12',
-                'card_exp_year' => 'required_if:type,credit_card,debit_card|integer|min:' . date('Y'),
+                'card_exp_year' => 'required_if:type,credit_card,debit_card|integer|min:'.date('Y'),
                 'card_cvc' => 'required_if:type,credit_card,debit_card|string|min:3|max:4',
                 'card_holder_name' => 'required_if:type,credit_card,debit_card|string|max:255',
-                
+
                 // Bank account fields
                 'bank_account_number' => 'required_if:type,bank_account|string',
                 'bank_routing_number' => 'required_if:type,bank_account|string',
                 'bank_account_type' => 'required_if:type,bank_account|string|in:checking,savings',
                 'bank_account_holder_name' => 'required_if:type,bank_account|string|max:255',
                 'bank_name' => 'nullable|string|max:255',
-                
+
                 // Digital wallet fields
                 'wallet_type' => 'required_if:type,digital_wallet|string|in:paypal,apple_pay,google_pay',
                 'wallet_email' => 'required_if:wallet_type,paypal|email',
-                
+
                 // Billing address
                 'billing_name' => 'nullable|string|max:255',
                 'billing_address_line1' => 'nullable|string|max:255',
@@ -231,14 +230,14 @@ class PaymentController extends PortalApiController
         try {
             $client = $this->requireAuthentication();
             $this->requirePermission('manage_payment_methods');
-            
+
             $this->applyRateLimit('update_payment_method', 20, 3600);
-            
+
             $paymentMethod = PaymentMethod::where('id', $paymentMethodId)
                 ->where('client_id', $client->id)
                 ->first();
 
-            if (!$paymentMethod) {
+            if (! $paymentMethod) {
                 return $this->errorResponse('Payment method not found', 404);
             }
 
@@ -248,10 +247,10 @@ class PaymentController extends PortalApiController
                 'description' => 'nullable|string|max:500',
                 'is_default' => 'boolean',
                 'is_active' => 'boolean',
-                
+
                 // Limited updates allowed for security
                 'card_exp_month' => 'nullable|integer|between:1,12',
-                'card_exp_year' => 'nullable|integer|min:' . date('Y'),
+                'card_exp_year' => 'nullable|integer|min:'.date('Y'),
                 'billing_name' => 'nullable|string|max:255',
                 'billing_address_line1' => 'nullable|string|max:255',
                 'billing_city' => 'nullable|string|max:100',
@@ -301,14 +300,14 @@ class PaymentController extends PortalApiController
         try {
             $client = $this->requireAuthentication();
             $this->requirePermission('manage_payment_methods');
-            
+
             $this->applyRateLimit('delete_payment_method', 10, 3600);
-            
+
             $paymentMethod = PaymentMethod::where('id', $paymentMethodId)
                 ->where('client_id', $client->id)
                 ->first();
 
-            if (!$paymentMethod) {
+            if (! $paymentMethod) {
                 return $this->errorResponse('Payment method not found', 404);
             }
 
@@ -343,9 +342,9 @@ class PaymentController extends PortalApiController
         try {
             $client = $this->requireAuthentication();
             $this->requirePermission('manage_auto_payments');
-            
+
             $this->applyRateLimit('setup_auto_payment', 5, 3600);
-            
+
             // Validate request
             $validator = Validator::make($request->all(), [
                 'payment_method_id' => 'required|integer|exists:payment_methods,id',
@@ -372,7 +371,7 @@ class PaymentController extends PortalApiController
                 ->where('client_id', $client->id)
                 ->first();
 
-            if (!$paymentMethod) {
+            if (! $paymentMethod) {
                 return $this->errorResponse('Payment method not found', 404);
             }
 
@@ -397,7 +396,7 @@ class PaymentController extends PortalApiController
     {
         try {
             $client = $this->requireAuthentication();
-            
+
             $this->applyRateLimit('auto_payments', 60, 60);
             $this->logActivity('auto_payments_view');
 
@@ -440,12 +439,12 @@ class PaymentController extends PortalApiController
         try {
             $client = $this->requireAuthentication();
             $this->requirePermission('manage_auto_payments');
-            
+
             $autoPayment = AutoPayment::where('id', $autoPaymentId)
                 ->where('client_id', $client->id)
                 ->first();
 
-            if (!$autoPayment) {
+            if (! $autoPayment) {
                 return $this->errorResponse('Auto-payment not found', 404);
             }
 
@@ -496,12 +495,12 @@ class PaymentController extends PortalApiController
         try {
             $client = $this->requireAuthentication();
             $this->requirePermission('manage_auto_payments');
-            
+
             $autoPayment = AutoPayment::where('id', $autoPaymentId)
                 ->where('client_id', $client->id)
                 ->first();
 
-            if (!$autoPayment) {
+            if (! $autoPayment) {
                 return $this->errorResponse('Auto-payment not found', 404);
             }
 
@@ -528,15 +527,15 @@ class PaymentController extends PortalApiController
     {
         try {
             $client = $this->requireAuthentication();
-            
+
             $this->applyRateLimit('payment_receipt', 60, 60);
-            
+
             $payment = $client->payments()
                 ->where('id', $paymentId)
                 ->with(['invoice', 'paymentMethod'])
                 ->first();
 
-            if (!$payment) {
+            if (! $payment) {
                 return $this->errorResponse('Payment not found', 404);
             }
 

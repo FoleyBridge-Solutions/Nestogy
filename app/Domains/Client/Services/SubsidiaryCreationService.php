@@ -2,20 +2,20 @@
 
 namespace App\Domains\Client\Services;
 
+use App\Domains\Core\Services\BaseService;
+use App\Models\Company;
+use App\Models\CompanyHierarchy;
+use App\Models\SubsidiaryPermission;
+use App\Models\User;
+use App\Models\UserSetting;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Company;
-use App\Models\CompanyHierarchy;
-use App\Models\User;
-use App\Models\UserSetting;
-use App\Models\SubsidiaryPermission;
-use App\Domains\Core\Services\BaseService;
 
 /**
  * SubsidiaryCreationService
- * 
+ *
  * Handles the complex process of creating subsidiary companies including
  * hierarchy setup, user management, permission inheritance, and billing configuration.
  */
@@ -35,41 +35,41 @@ class SubsidiaryCreationService extends BaseService
     {
         return DB::transaction(function () use ($data, $parentCompanyId) {
             $parentCompany = Company::findOrFail($parentCompanyId);
-            
+
             // Validate parent company can create subsidiaries
             $this->validateSubsidiaryCreation($parentCompany, $data);
-            
+
             // Create the subsidiary company
             $subsidiary = $this->createSubsidiaryCompany($data, $parentCompany);
-            
+
             // Add to hierarchy
             CompanyHierarchy::addToHierarchy($parentCompanyId, $subsidiary->id, 'subsidiary');
-            
+
             // Create admin user if requested
-            if (!empty($data['create_admin']) && $data['create_admin']) {
+            if (! empty($data['create_admin']) && $data['create_admin']) {
                 $this->createSubsidiaryAdmin($subsidiary, $data);
             }
-            
+
             // Handle permission inheritance
-            if (!empty($data['inherit_permissions']) && $data['inherit_permissions']) {
+            if (! empty($data['inherit_permissions']) && $data['inherit_permissions']) {
                 $this->inheritPermissions($subsidiary);
             }
-            
+
             // Set up initial permissions
-            if (!empty($data['initial_permissions'])) {
+            if (! empty($data['initial_permissions'])) {
                 $this->setupInitialPermissions($subsidiary, $data['initial_permissions']);
             }
-            
+
             // Configure billing relationship
             $this->configureBilling($subsidiary, $parentCompany, $data);
-            
+
             Log::info('Subsidiary company created successfully', [
                 'subsidiary_id' => $subsidiary->id,
                 'subsidiary_name' => $subsidiary->name,
                 'parent_company_id' => $parentCompanyId,
                 'created_by' => Auth::id(),
             ]);
-            
+
             return $subsidiary->load(['parentCompany', 'users', 'childCompanies']);
         });
     }
@@ -81,29 +81,29 @@ class SubsidiaryCreationService extends BaseService
     {
         return DB::transaction(function () use ($subsidiary, $data) {
             // Handle hierarchy move if requested
-            if (!empty($data['move_to_parent'])) {
+            if (! empty($data['move_to_parent'])) {
                 $this->moveSubsidiary($subsidiary, (int) $data['move_to_parent']);
                 unset($data['move_to_parent']);
             }
-            
+
             // Handle status changes
-            if (isset($data['is_active']) && !$data['is_active']) {
+            if (isset($data['is_active']) && ! $data['is_active']) {
                 $data['suspended_at'] = now();
                 $data['suspension_reason'] = $data['suspension_reason'] ?? 'Administrative action';
             } elseif (isset($data['is_active']) && $data['is_active']) {
                 $data['suspended_at'] = null;
                 $data['suspension_reason'] = null;
             }
-            
+
             // Update the company
             $subsidiary->update($data);
-            
+
             Log::info('Subsidiary company updated successfully', [
                 'subsidiary_id' => $subsidiary->id,
                 'subsidiary_name' => $subsidiary->name,
                 'updated_by' => Auth::id(),
             ]);
-            
+
             return $subsidiary->fresh(['parentCompany', 'users', 'childCompanies']);
         });
     }
@@ -120,24 +120,24 @@ class SubsidiaryCreationService extends BaseService
                     'Cannot remove subsidiary with active child companies.'
                 );
             }
-            
+
             // Check if subsidiary has active users
             if ($subsidiary->users()->where('status', true)->exists()) {
                 throw new \InvalidArgumentException(
                     'Cannot remove subsidiary with active users.'
                 );
             }
-            
+
             // Revoke all permissions
             $subsidiary->grantedPermissions()->update(['is_active' => false]);
             $subsidiary->receivedPermissions()->update(['is_active' => false]);
-            
+
             // Revoke cross-company access
             $subsidiary->crossCompanyUsers()->update(['is_active' => false]);
-            
+
             // Remove from hierarchy
             CompanyHierarchy::removeFromHierarchy($subsidiary->id);
-            
+
             // Optionally deactivate the company instead of deleting
             $subsidiary->update([
                 'is_active' => false,
@@ -146,13 +146,13 @@ class SubsidiaryCreationService extends BaseService
                 'parent_company_id' => null,
                 'company_type' => 'root', // Convert back to root company
             ]);
-            
+
             Log::info('Subsidiary removed from hierarchy', [
                 'subsidiary_id' => $subsidiary->id,
                 'subsidiary_name' => $subsidiary->name,
                 'removed_by' => Auth::id(),
             ]);
-            
+
             return true;
         });
     }
@@ -164,23 +164,23 @@ class SubsidiaryCreationService extends BaseService
     {
         return DB::transaction(function () use ($subsidiary, $newParentId) {
             $newParent = Company::findOrFail($newParentId);
-            
+
             // Validate the move
             $this->validateSubsidiaryMove($subsidiary, $newParent);
-            
+
             // Move in hierarchy
             $moved = CompanyHierarchy::moveCompany($subsidiary->id, $newParentId);
-            
+
             if ($moved) {
                 // Update company record
                 $subsidiary->update([
                     'parent_company_id' => $newParentId,
                     'organizational_level' => $newParent->organizational_level + 1,
                 ]);
-                
+
                 // Re-inherit permissions from new parent
                 $this->inheritPermissions($subsidiary);
-                
+
                 Log::info('Subsidiary moved in hierarchy', [
                     'subsidiary_id' => $subsidiary->id,
                     'old_parent_id' => $subsidiary->parent_company_id,
@@ -188,7 +188,7 @@ class SubsidiaryCreationService extends BaseService
                     'moved_by' => Auth::id(),
                 ]);
             }
-            
+
             return $moved;
         });
     }
@@ -198,23 +198,23 @@ class SubsidiaryCreationService extends BaseService
      */
     protected function validateSubsidiaryCreation(Company $parentCompany, array $data): void
     {
-        if (!$parentCompany->canCreateSubsidiaries()) {
+        if (! $parentCompany->canCreateSubsidiaries()) {
             throw new \InvalidArgumentException(
                 'Parent company is not allowed to create subsidiaries.'
             );
         }
-        
+
         if ($parentCompany->hasReachedMaxSubsidiaryDepth()) {
             throw new \InvalidArgumentException(
                 'Parent company has reached maximum subsidiary depth.'
             );
         }
-        
+
         // Check for name conflicts within the same parent
         $existingSubsidiary = $parentCompany->childCompanies()
             ->where('name', $data['name'])
             ->exists();
-            
+
         if ($existingSubsidiary) {
             throw new \InvalidArgumentException(
                 'A subsidiary with this name already exists under the parent company.'
@@ -239,7 +239,7 @@ class SubsidiaryCreationService extends BaseService
             'country' => $data['country'] ?? $parentCompany->country,
             'currency' => $data['currency'] ?? $parentCompany->currency,
             'locale' => $data['locale'] ?? $parentCompany->locale,
-            
+
             // Hierarchy fields
             'parent_company_id' => $parentCompany->id,
             'company_type' => 'subsidiary',
@@ -248,12 +248,12 @@ class SubsidiaryCreationService extends BaseService
             'billing_type' => $data['billing_type'] ?? 'parent_billed',
             'billing_parent_id' => $data['billing_type'] === 'parent_billed' ? $parentCompany->id : null,
             'can_create_subsidiaries' => $data['can_create_subsidiaries'] ?? false,
-            'max_subsidiary_depth' => $data['max_subsidiary_depth'] ?? 
+            'max_subsidiary_depth' => $data['max_subsidiary_depth'] ??
                 max(0, $parentCompany->max_subsidiary_depth - 1),
             'subsidiary_settings' => $data['subsidiary_settings'] ?? null,
             'is_active' => true,
         ];
-        
+
         return Company::create($subsidiaryData);
     }
 
@@ -270,22 +270,22 @@ class SubsidiaryCreationService extends BaseService
             'status' => true,
             'email_verified_at' => now(),
         ];
-        
+
         $admin = User::create($adminData);
-        
+
         // Create user settings with subsidiary admin role
         UserSetting::createDefaultForUser(
             $admin->id,
             UserSetting::ROLE_SUBSIDIARY_ADMIN,
             $subsidiary->id
         );
-        
+
         Log::info('Subsidiary admin user created', [
             'user_id' => $admin->id,
             'subsidiary_id' => $subsidiary->id,
             'created_by' => Auth::id(),
         ]);
-        
+
         return $admin;
     }
 
@@ -295,7 +295,7 @@ class SubsidiaryCreationService extends BaseService
     protected function inheritPermissions(Company $subsidiary): void
     {
         SubsidiaryPermission::inheritPermissions($subsidiary->id);
-        
+
         Log::info('Permissions inherited for subsidiary', [
             'subsidiary_id' => $subsidiary->id,
         ]);
@@ -307,7 +307,7 @@ class SubsidiaryCreationService extends BaseService
     protected function setupInitialPermissions(Company $subsidiary, array $permissions): void
     {
         $parentCompanyId = $subsidiary->parent_company_id;
-        
+
         foreach ($permissions as $permission) {
             SubsidiaryPermission::grantPermission([
                 'granter_company_id' => $parentCompanyId,
@@ -320,7 +320,7 @@ class SubsidiaryCreationService extends BaseService
                 'notes' => 'Initial permission granted during subsidiary creation',
             ]);
         }
-        
+
         Log::info('Initial permissions set up for subsidiary', [
             'subsidiary_id' => $subsidiary->id,
             'permissions_count' => count($permissions),
@@ -333,25 +333,25 @@ class SubsidiaryCreationService extends BaseService
     protected function configureBilling(Company $subsidiary, Company $parentCompany, array $data): void
     {
         $billingType = $data['billing_type'] ?? 'parent_billed';
-        
+
         switch ($billingType) {
             case 'parent_billed':
                 // Subsidiary billing goes through parent
                 $subsidiary->update([
                     'billing_parent_id' => $parentCompany->id,
                 ]);
-                
+
                 // Create client record under Company 1 if parent is billed through Company 1
                 if ($parentCompany->getEffectiveBillingParent()->id === 1) {
                     $this->createBillingClientRecord($subsidiary, $parentCompany);
                 }
                 break;
-                
+
             case 'independent':
                 // Subsidiary handles its own billing
                 $this->createBillingClientRecord($subsidiary);
                 break;
-                
+
             case 'shared':
                 // Shared billing pool with parent
                 $subsidiary->update([
@@ -359,7 +359,7 @@ class SubsidiaryCreationService extends BaseService
                 ]);
                 break;
         }
-        
+
         Log::info('Billing configured for subsidiary', [
             'subsidiary_id' => $subsidiary->id,
             'billing_type' => $billingType,
@@ -369,13 +369,13 @@ class SubsidiaryCreationService extends BaseService
     /**
      * Create a client record for billing purposes.
      */
-    protected function createBillingClientRecord(Company $subsidiary, Company $parentCompany = null): void
+    protected function createBillingClientRecord(Company $subsidiary, ?Company $parentCompany = null): void
     {
         $clientData = [
             'company_id' => 1, // Always under Company 1 for billing
-            'name' => $subsidiary->name . ' (Admin)',
+            'name' => $subsidiary->name.' (Admin)',
             'company_name' => $subsidiary->name,
-            'email' => $subsidiary->email ?? ($parentCompany?->email ?? 'admin@' . strtolower(str_replace(' ', '', $subsidiary->name)) . '.com'),
+            'email' => $subsidiary->email ?? ($parentCompany?->email ?? 'admin@'.strtolower(str_replace(' ', '', $subsidiary->name)).'.com'),
             'phone' => $subsidiary->phone ?? $parentCompany?->phone,
             'address' => $subsidiary->address ?? $parentCompany?->address,
             'city' => $subsidiary->city ?? $parentCompany?->city,
@@ -386,12 +386,12 @@ class SubsidiaryCreationService extends BaseService
             'type' => 'subsidiary_company',
             'company_link_id' => $subsidiary->id,
         ];
-        
+
         $client = \App\Models\Client::create($clientData);
-        
+
         // Link back to subsidiary
         $subsidiary->update(['client_record_id' => $client->id]);
-        
+
         Log::info('Billing client record created for subsidiary', [
             'subsidiary_id' => $subsidiary->id,
             'client_id' => $client->id,
@@ -407,31 +407,31 @@ class SubsidiaryCreationService extends BaseService
         if ($subsidiary->id === $newParent->id) {
             throw new \InvalidArgumentException('Cannot move company to itself.');
         }
-        
+
         // Cannot move to a descendant (circular reference)
         if (CompanyHierarchy::isDescendant($newParent->id, $subsidiary->id)) {
             throw new \InvalidArgumentException('Cannot move company to one of its descendants.');
         }
-        
+
         // New parent must allow subsidiary creation
-        if (!$newParent->canCreateSubsidiaries()) {
+        if (! $newParent->canCreateSubsidiaries()) {
             throw new \InvalidArgumentException('Target parent company cannot have subsidiaries.');
         }
-        
+
         // Check depth limits
         $newDepth = $newParent->organizational_level + 1;
         $subsidiaryTreeDepth = $this->getSubsidiaryTreeDepth($subsidiary->id);
-        
+
         if (($newDepth + $subsidiaryTreeDepth) > $newParent->max_subsidiary_depth) {
             throw new \InvalidArgumentException('Move would exceed maximum subsidiary depth.');
         }
-        
+
         // Check for name conflicts
         $existingSubsidiary = $newParent->childCompanies()
             ->where('name', $subsidiary->name)
             ->where('id', '!=', $subsidiary->id)
             ->exists();
-            
+
         if ($existingSubsidiary) {
             throw new \InvalidArgumentException(
                 'A subsidiary with this name already exists under the target parent.'
@@ -445,6 +445,7 @@ class SubsidiaryCreationService extends BaseService
     protected function getSubsidiaryTreeDepth(int $companyId): int
     {
         $descendants = CompanyHierarchy::getDescendants($companyId);
+
         return $descendants->max('depth') ?: 0;
     }
 
@@ -454,7 +455,7 @@ class SubsidiaryCreationService extends BaseService
     public function createCompleteSubsidiary(array $data, int $parentCompanyId): array
     {
         $subsidiary = $this->createSubsidiary($data, $parentCompanyId);
-        
+
         // Get additional information for response
         $result = [
             'subsidiary' => $subsidiary,
@@ -466,18 +467,18 @@ class SubsidiaryCreationService extends BaseService
                 ->active()
                 ->count(),
         ];
-        
+
         // Add admin user info if created
         $adminUser = $subsidiary->users()
             ->whereHas('settings', function ($query) {
                 $query->where('role', UserSetting::ROLE_SUBSIDIARY_ADMIN);
             })
             ->first();
-            
+
         if ($adminUser) {
             $result['admin_user'] = $adminUser;
         }
-        
+
         return $result;
     }
 }

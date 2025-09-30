@@ -14,7 +14,6 @@ class QuoteResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -24,12 +23,12 @@ class QuoteResource extends JsonResource
             'quote_number' => $this->getFullNumber(),
             'status' => $this->status,
             'status_label' => $this->getStatusLabelAttribute(),
-            
+
             // Basic information
             'date' => $this->date?->format('Y-m-d'),
             'expire_date' => $this->expire?->format('Y-m-d'),
             'currency_code' => $this->currency_code,
-            
+
             // Client information (when loaded)
             'client' => $this->whenLoaded('client', function () {
                 return [
@@ -40,7 +39,7 @@ class QuoteResource extends JsonResource
                     'phone' => $this->client->phone,
                 ];
             }),
-            
+
             // Category information (when loaded)
             'category' => $this->whenLoaded('category', function () {
                 return [
@@ -49,7 +48,7 @@ class QuoteResource extends JsonResource
                     'slug' => $this->category->slug,
                 ];
             }),
-            
+
             // User information (when loaded)
             'user' => $this->whenLoaded('creator', function () {
                 return [
@@ -58,12 +57,12 @@ class QuoteResource extends JsonResource
                     'email' => $this->creator->email,
                 ];
             }),
-            
+
             // Content
             'scope' => $this->scope,
             'note' => $this->note,
             'terms_conditions' => $this->terms_conditions,
-            
+
             // Pricing
             'subtotal' => $this->formatCurrency($this->getSubtotal()),
             'discount_type' => $this->discount_type ?? 'percentage',
@@ -71,7 +70,7 @@ class QuoteResource extends JsonResource
             'discount_calculated' => $this->formatCurrency($this->getDiscountAmount()),
             'tax_amount' => $this->formatCurrency($this->getTotalTax()),
             'total_amount' => $this->formatCurrency($this->amount),
-            
+
             // Raw pricing values for calculations
             'pricing_raw' => [
                 'subtotal' => (float) $this->getSubtotal(),
@@ -79,25 +78,25 @@ class QuoteResource extends JsonResource
                 'tax_amount' => (float) $this->getTotalTax(),
                 'total_amount' => (float) $this->amount,
             ],
-            
+
             // Configuration
             'voip_config' => $this->voip_config,
             'pricing_model' => $this->pricing_model,
-            
+
             // Items (when loaded)
             'items' => $this->when(
-                $this->relationLoaded('items'), 
+                $this->relationLoaded('items'),
                 QuoteItemResource::collection($this->items)
             ),
             'items_count' => $this->whenCounted('items'),
-            
+
             // Computed values
             'is_expired' => $this->isExpired(),
             'days_until_expiry' => $this->getDaysUntilExpiration(),
             'can_edit' => $this->canEditQuote(),
             'can_delete' => $this->canDeleteQuote(),
             'has_items' => $this->getItemsCount() > 0,
-            
+
             // URLs
             'urls' => [
                 'show' => route('financial.quotes.show', $this->id),
@@ -105,13 +104,13 @@ class QuoteResource extends JsonResource
                 'pdf' => route('financial.quotes.pdf', $this->id),
                 'duplicate' => route('financial.quotes.duplicate', $this->id),
             ],
-            
+
             // Timestamps
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
             'created_at_human' => $this->created_at?->diffForHumans(),
             'updated_at_human' => $this->updated_at?->diffForHumans(),
-            
+
             // Company context
             'company_id' => $this->company_id,
         ];
@@ -120,7 +119,6 @@ class QuoteResource extends JsonResource
     /**
      * Get additional data that should be returned with the resource array.
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function with(Request $request): array
@@ -136,10 +134,6 @@ class QuoteResource extends JsonResource
 
     /**
      * Customize the outgoing response for the resource.
-     *
-     * @param Request $request
-     * @param \Illuminate\Http\JsonResponse $response
-     * @return void
      */
     public function withResponse(Request $request, \Illuminate\Http\JsonResponse $response): void
     {
@@ -149,9 +143,6 @@ class QuoteResource extends JsonResource
 
     /**
      * Format currency value
-     *
-     * @param float|null $amount
-     * @return string
      */
     protected function formatCurrency(?float $amount): string
     {
@@ -164,12 +155,10 @@ class QuoteResource extends JsonResource
 
     /**
      * Get status label
-     *
-     * @return string
      */
     protected function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'draft' => 'Draft',
             'sent' => 'Sent',
             'viewed' => 'Viewed',
@@ -183,12 +172,10 @@ class QuoteResource extends JsonResource
 
     /**
      * Check if quote is expired
-     *
-     * @return bool
      */
     protected function isExpired(): bool
     {
-        if (!$this->expire) {
+        if (! $this->expire) {
             return false;
         }
 
@@ -197,12 +184,10 @@ class QuoteResource extends JsonResource
 
     /**
      * Get days until expiry
-     *
-     * @return int|null
      */
     protected function getDaysUntilExpiry(): ?int
     {
-        if (!$this->expire) {
+        if (! $this->expire) {
             return null;
         }
 
@@ -211,46 +196,41 @@ class QuoteResource extends JsonResource
 
     /**
      * Check if user can edit this quote
-     *
-     * @return bool
      */
     protected function canEditQuote(): bool
     {
         // Basic permission check - expand based on business rules
         $user = auth()->user();
-        return in_array($this->status, ['draft', 'sent']) && 
+
+        return in_array($this->status, ['draft', 'sent']) &&
                $user && $this->company_id === $user->company_id;
     }
 
     /**
      * Check if user can delete this quote
-     *
-     * @return bool
      */
     protected function canDeleteQuote(): bool
     {
         // Basic permission check - expand based on business rules
         $user = auth()->user();
-        return $this->status === 'draft' && 
+
+        return $this->status === 'draft' &&
                $user && $this->company_id === $user->company_id;
     }
 
     /**
      * Get items count for quote
-     *
-     * @return int
      */
     protected function getItemsCount(): int
     {
-        return $this->relationLoaded('items') ? 
-               $this->items->count() : 
+        return $this->relationLoaded('items') ?
+               $this->items->count() :
                ($this->items_count ?? 0);
     }
 
     /**
      * Create a minimal resource for listing views
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArrayMinimal(Request $request): array
@@ -277,13 +257,12 @@ class QuoteResource extends JsonResource
     /**
      * Create a detailed resource for single quote views
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArrayDetailed(Request $request): array
     {
         $baseArray = $this->toArray($request);
-        
+
         // Add additional detailed information
         $baseArray['activity_log'] = $this->whenLoaded('activities', function () {
             return $this->activities->map(function ($activity) {

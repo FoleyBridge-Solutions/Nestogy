@@ -21,10 +21,10 @@ return new class extends Migration
             $table->json('variable_overrides')->nullable(); // Template-specific variable overrides
             $table->json('metadata')->nullable(); // Additional template-specific clause metadata
             $table->timestamps();
-            
+
             // Unique constraint to prevent duplicate clause assignments
             $table->unique(['template_id', 'clause_id']);
-            
+
             // Indexes for performance
             $table->index(['template_id', 'sort_order']);
             $table->index(['clause_id', 'template_id']);

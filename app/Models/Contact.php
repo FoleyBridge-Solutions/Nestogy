@@ -4,19 +4,19 @@ namespace App\Models;
 
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 
 /**
  * Contact Model
- * 
+ *
  * Represents contacts associated with clients and locations.
  * Contacts can have different roles (primary, billing, technical) and authentication capabilities.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string|null $title
@@ -46,7 +46,7 @@ use Illuminate\Support\Facades\Hash;
  */
 class Contact extends Authenticatable
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, Notifiable;
+    use BelongsToCompany, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -193,7 +193,9 @@ class Contact extends Authenticatable
      * Authentication methods
      */
     const AUTH_PASSWORD = 'password';
+
     const AUTH_PIN = 'pin';
+
     const AUTH_NONE = 'none';
 
     /**
@@ -280,7 +282,7 @@ class Contact extends Authenticatable
         if ($this->location_id && $this->location) {
             // Create a pseudo-address object from location data
             $locationAddress = (object) [
-                'id' => 'location_' . $this->location->id,
+                'id' => 'location_'.$this->location->id,
                 'display_name' => $this->location->display_name,
                 'formatted_address' => $this->location->formatted_address,
                 'phone' => $this->location->phone,
@@ -305,11 +307,11 @@ class Contact extends Authenticatable
     public function getPhotoUrl(): string
     {
         if ($this->photo) {
-            return asset('storage/contacts/' . $this->photo);
+            return asset('storage/contacts/'.$this->photo);
         }
-        
+
         if ($this->email) {
-            return 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($this->email))) . '?d=identicon&s=150';
+            return 'https://www.gravatar.com/avatar/'.md5(strtolower(trim($this->email))).'?d=identicon&s=150';
         }
 
         return asset('images/default-avatar.png');
@@ -329,7 +331,7 @@ class Contact extends Authenticatable
     public function getFullNameWithTitle(): string
     {
         if ($this->title) {
-            return $this->name . ' (' . $this->title . ')';
+            return $this->name.' ('.$this->title.')';
         }
 
         return $this->name;
@@ -348,13 +350,13 @@ class Contact extends Authenticatable
      */
     public function getFormattedPhone(): ?string
     {
-        if (!$this->phone) {
+        if (! $this->phone) {
             return null;
         }
 
         $phone = $this->phone;
         if ($this->extension) {
-            $phone .= ' ext. ' . $this->extension;
+            $phone .= ' ext. '.$this->extension;
         }
 
         return $phone;
@@ -365,7 +367,7 @@ class Contact extends Authenticatable
      */
     public function hasPhoto(): bool
     {
-        return !empty($this->photo);
+        return ! empty($this->photo);
     }
 
     /**
@@ -405,7 +407,7 @@ class Contact extends Authenticatable
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -413,7 +415,7 @@ class Contact extends Authenticatable
      */
     public function canAuthenticate(): bool
     {
-        return !empty($this->auth_method) && $this->auth_method !== self::AUTH_NONE;
+        return ! empty($this->auth_method) && $this->auth_method !== self::AUTH_NONE;
     }
 
     /**
@@ -421,8 +423,8 @@ class Contact extends Authenticatable
      */
     public function hasValidResetToken(): bool
     {
-        return !empty($this->password_reset_token) && 
-               $this->token_expire && 
+        return ! empty($this->password_reset_token) &&
+               $this->token_expire &&
                $this->token_expire->isFuture();
     }
 
@@ -453,7 +455,7 @@ class Contact extends Authenticatable
      */
     public function verifyPassword(string $password): bool
     {
-        return $this->auth_method === self::AUTH_PASSWORD && 
+        return $this->auth_method === self::AUTH_PASSWORD &&
                Hash::check($password, $this->password_hash);
     }
 
@@ -462,7 +464,7 @@ class Contact extends Authenticatable
      */
     public function verifyPin(string $pin): bool
     {
-        return $this->auth_method === self::AUTH_PIN && 
+        return $this->auth_method === self::AUTH_PIN &&
                Hash::check($pin, $this->pin);
     }
 
@@ -472,7 +474,7 @@ class Contact extends Authenticatable
     public function generateResetToken(): string
     {
         $token = bin2hex(random_bytes(32));
-        
+
         $this->update([
             'password_reset_token' => Hash::make($token),
             'token_expire' => now()->addHours(24),
@@ -495,11 +497,19 @@ class Contact extends Authenticatable
     public function getRoles(): array
     {
         $roles = [];
-        
-        if ($this->primary) $roles[] = 'Primary';
-        if ($this->billing) $roles[] = 'Billing';
-        if ($this->technical) $roles[] = 'Technical';
-        if ($this->important) $roles[] = 'Important';
+
+        if ($this->primary) {
+            $roles[] = 'Primary';
+        }
+        if ($this->billing) {
+            $roles[] = 'Billing';
+        }
+        if ($this->technical) {
+            $roles[] = 'Technical';
+        }
+        if ($this->important) {
+            $roles[] = 'Important';
+        }
 
         return $roles;
     }
@@ -510,6 +520,7 @@ class Contact extends Authenticatable
     public function getRolesString(): string
     {
         $roles = $this->getRoles();
+
         return implode(', ', $roles) ?: 'General';
     }
 
@@ -559,10 +570,10 @@ class Contact extends Authenticatable
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('email', 'like', '%' . $search . '%')
-              ->orWhere('phone', 'like', '%' . $search . '%')
-              ->orWhere('title', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('email', 'like', '%'.$search.'%')
+                ->orWhere('phone', 'like', '%'.$search.'%')
+                ->orWhere('title', 'like', '%'.$search.'%');
         });
     }
 
@@ -588,7 +599,7 @@ class Contact extends Authenticatable
     public function scopeWithAuth($query)
     {
         return $query->whereNotNull('auth_method')
-                    ->where('auth_method', '!=', self::AUTH_NONE);
+            ->where('auth_method', '!=', self::AUTH_NONE);
     }
 
     /**
@@ -637,7 +648,7 @@ class Contact extends Authenticatable
             self::AUTH_PIN => 'PIN',
         ];
     }
-    
+
     /**
      * Get the password for authentication (Laravel expects 'password' attribute).
      */
@@ -645,7 +656,7 @@ class Contact extends Authenticatable
     {
         return $this->password_hash;
     }
-    
+
     /**
      * Get the password attribute (accessor for Laravel auth).
      */
@@ -653,7 +664,7 @@ class Contact extends Authenticatable
     {
         return $this->password_hash;
     }
-    
+
     /**
      * Set the password attribute (mutator for Laravel auth).
      */
@@ -661,18 +672,18 @@ class Contact extends Authenticatable
     {
         $this->attributes['password_hash'] = Hash::make($value);
     }
-    
+
     /**
      * Find contact by email for authentication.
      */
     public static function findByEmail($email)
     {
         return static::where('email', $email)
-                    ->where('has_portal_access', true)
-                    ->with('client')
-                    ->first();
+            ->where('has_portal_access', true)
+            ->with('client')
+            ->first();
     }
-    
+
     /**
      * Check if the contact account is locked.
      */
@@ -680,20 +691,20 @@ class Contact extends Authenticatable
     {
         return $this->locked_until && $this->locked_until->isFuture();
     }
-    
+
     /**
      * Increment failed login attempts.
      */
     public function incrementFailedLoginAttempts(): void
     {
         $this->increment('failed_login_count');
-        
+
         // Lock account after 5 failed attempts
         if ($this->failed_login_count >= 5) {
             $this->update(['locked_until' => now()->addMinutes(30)]);
         }
     }
-    
+
     /**
      * Reset failed login attempts on successful login.
      */
@@ -704,7 +715,7 @@ class Contact extends Authenticatable
             'locked_until' => null,
         ]);
     }
-    
+
     /**
      * Update login information after successful authentication.
      */
@@ -715,21 +726,21 @@ class Contact extends Authenticatable
             'last_login_ip' => $ipAddress,
             'login_count' => ($this->login_count ?? 0) + 1,
         ]);
-        
+
         $this->resetFailedLoginAttempts();
     }
-    
+
     /**
      * Check if the contact can access the client portal.
      */
     public function canAccessPortal(): bool
     {
-        return $this->has_portal_access && 
-               !$this->isLocked() && 
-               $this->client && 
-               ($this->client->status === 'active' || !$this->client->trashed());
+        return $this->has_portal_access &&
+               ! $this->isLocked() &&
+               $this->client &&
+               ($this->client->status === 'active' || ! $this->client->trashed());
     }
-    
+
     /**
      * Check if the invitation is valid.
      */
@@ -740,16 +751,16 @@ class Contact extends Authenticatable
                $this->invitation_expires_at &&
                $this->invitation_expires_at->isFuture();
     }
-    
+
     /**
      * Check if the invitation has expired.
      */
     public function isInvitationExpired(): bool
     {
-        return $this->invitation_expires_at && 
+        return $this->invitation_expires_at &&
                $this->invitation_expires_at->isPast();
     }
-    
+
     /**
      * Get the user who sent the invitation.
      */
@@ -757,7 +768,7 @@ class Contact extends Authenticatable
     {
         return $this->belongsTo(User::class, 'invitation_sent_by');
     }
-    
+
     /**
      * Mark invitation as accepted.
      */

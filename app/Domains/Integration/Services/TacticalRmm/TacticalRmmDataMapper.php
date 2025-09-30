@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Tactical RMM Data Mapper
- * 
+ *
  * Maps data from Tactical RMM API responses to standardized internal format.
  * Provides consistent data structure across different RMM providers.
  */
@@ -67,16 +67,16 @@ class TacticalRmmDataMapper
         if ($clients === null || empty($clients)) {
             return [];
         }
-        
+
         // Log the raw client data structure for debugging
-        if (!empty($clients)) {
+        if (! empty($clients)) {
             Log::debug('TacticalRMM: Raw client data structure', [
                 'client_count' => count($clients),
                 'first_client_keys' => array_keys($clients[0] ?? []),
                 'sample_client' => array_slice($clients, 0, 1), // First client for structure analysis
             ]);
         }
-        
+
         return array_map([$this, 'mapClient'], $clients);
     }
 
@@ -87,10 +87,10 @@ class TacticalRmmDataMapper
     {
         // Handle different possible field names for client ID
         $clientId = $client['id'] ?? $client['pk'] ?? $client['client_id'] ?? null;
-        
+
         // Handle different possible field names for client name
         $clientName = $client['name'] ?? $client['client_name'] ?? $client['client'] ?? 'Unknown Client';
-        
+
         // Handle sites count - could be array or integer
         $sitesCount = 0;
         if (isset($client['sites'])) {
@@ -98,16 +98,16 @@ class TacticalRmmDataMapper
         } elseif (isset($client['sites_count'])) {
             $sitesCount = (int) $client['sites_count'];
         }
-        
+
         // Handle agents count
         $agentsCount = $client['agents_count'] ?? $client['agent_count'] ?? 0;
         if (isset($client['agents']) && is_array($client['agents'])) {
             $agentsCount = count($client['agents']);
         }
-        
+
         // Handle creation time with different possible field names
         $creationTime = $client['creation_time'] ?? $client['created_at'] ?? $client['date_created'] ?? null;
-        
+
         return [
             'id' => $clientId,
             'name' => $clientName,
@@ -398,7 +398,7 @@ class TacticalRmmDataMapper
      */
     protected function parseDateTime(?string $datetime): ?Carbon
     {
-        if (!$datetime) {
+        if (! $datetime) {
             return null;
         }
 
@@ -436,8 +436,8 @@ class TacticalRmmDataMapper
             'total' => $response['count'] ?? count($response),
             'page' => $response['page'] ?? 1,
             'per_page' => $response['per_page'] ?? count($response),
-            'has_next' => !empty($response['next']),
-            'has_previous' => !empty($response['previous']),
+            'has_next' => ! empty($response['next']),
+            'has_previous' => ! empty($response['previous']),
             'next_url' => $response['next'] ?? null,
             'previous_url' => $response['previous'] ?? null,
         ];
@@ -577,7 +577,7 @@ class TacticalRmmDataMapper
         }
 
         // Handle empty or non-array cases
-        if (!is_array($graphics) || empty($graphics)) {
+        if (! is_array($graphics) || empty($graphics)) {
             return [];
         }
 
@@ -906,11 +906,13 @@ class TacticalRmmDataMapper
 
         if ($days > 0) {
             $hours = $hours % 24;
+
             return "{$days} days, {$hours} hours";
         }
 
         if ($hours > 0) {
             $minutes = $minutes % 60;
+
             return "{$hours} hours, {$minutes} minutes";
         }
 

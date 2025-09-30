@@ -2,15 +2,15 @@
 
 namespace App\Domains\Client\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientRecurringInvoice extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'client_id',
@@ -45,7 +45,7 @@ class ClientRecurringInvoice extends Model
         'paused_at',
         'paused_reason',
         'cancelled_at',
-        'cancelled_reason'
+        'cancelled_reason',
     ];
 
     protected $casts = [
@@ -63,7 +63,7 @@ class ClientRecurringInvoice extends Model
         'line_items' => 'array',
         'metadata' => 'array',
         'paused_at' => 'datetime',
-        'cancelled_at' => 'datetime'
+        'cancelled_at' => 'datetime',
     ];
 
     protected $dates = [
@@ -72,7 +72,7 @@ class ClientRecurringInvoice extends Model
         'next_invoice_date',
         'last_invoice_date',
         'paused_at',
-        'cancelled_at'
+        'cancelled_at',
     ];
 
     /**
@@ -105,8 +105,8 @@ class ClientRecurringInvoice extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active')
-                    ->whereNull('cancelled_at')
-                    ->whereNull('paused_at');
+            ->whereNull('cancelled_at')
+            ->whereNull('paused_at');
     }
 
     /**
@@ -115,7 +115,7 @@ class ClientRecurringInvoice extends Model
     public function scopePaused($query)
     {
         return $query->where('status', 'paused')
-                    ->whereNotNull('paused_at');
+            ->whereNotNull('paused_at');
     }
 
     /**
@@ -124,7 +124,7 @@ class ClientRecurringInvoice extends Model
     public function scopeCancelled($query)
     {
         return $query->where('status', 'cancelled')
-                    ->whereNotNull('cancelled_at');
+            ->whereNotNull('cancelled_at');
     }
 
     /**
@@ -133,7 +133,7 @@ class ClientRecurringInvoice extends Model
     public function scopeDue($query)
     {
         return $query->active()
-                    ->where('next_invoice_date', '<=', now()->toDateString());
+            ->where('next_invoice_date', '<=', now()->toDateString());
     }
 
     /**
@@ -142,10 +142,10 @@ class ClientRecurringInvoice extends Model
     public function scopeUpcoming($query, $days = 30)
     {
         return $query->active()
-                    ->whereBetween('next_invoice_date', [
-                        now()->toDateString(),
-                        now()->addDays($days)->toDateString()
-                    ]);
+            ->whereBetween('next_invoice_date', [
+                now()->toDateString(),
+                now()->addDays($days)->toDateString(),
+            ]);
     }
 
     /**
@@ -161,7 +161,7 @@ class ClientRecurringInvoice extends Model
             'quarterly' => 'Quarterly',
             'semiannually' => 'Semi-annually',
             'annually' => 'Annually',
-            'custom' => 'Custom Interval'
+            'custom' => 'Custom Interval',
         ];
     }
 
@@ -175,7 +175,7 @@ class ClientRecurringInvoice extends Model
             'active' => 'Active',
             'paused' => 'Paused',
             'cancelled' => 'Cancelled',
-            'expired' => 'Expired'
+            'expired' => 'Expired',
         ];
     }
 
@@ -192,7 +192,7 @@ class ClientRecurringInvoice extends Model
             'AUD' => 'Australian Dollar (A$)',
             'JPY' => 'Japanese Yen (¥)',
             'CNY' => 'Chinese Yuan (¥)',
-            'INR' => 'Indian Rupee (₹)'
+            'INR' => 'Indian Rupee (₹)',
         ];
     }
 
@@ -201,8 +201,8 @@ class ClientRecurringInvoice extends Model
      */
     public function isActive()
     {
-        return $this->status === 'active' 
-            && is_null($this->cancelled_at) 
+        return $this->status === 'active'
+            && is_null($this->cancelled_at)
             && is_null($this->paused_at);
     }
 
@@ -211,7 +211,7 @@ class ClientRecurringInvoice extends Model
      */
     public function isPaused()
     {
-        return $this->status === 'paused' && !is_null($this->paused_at);
+        return $this->status === 'paused' && ! is_null($this->paused_at);
     }
 
     /**
@@ -219,7 +219,7 @@ class ClientRecurringInvoice extends Model
      */
     public function isCancelled()
     {
-        return $this->status === 'cancelled' && !is_null($this->cancelled_at);
+        return $this->status === 'cancelled' && ! is_null($this->cancelled_at);
     }
 
     /**
@@ -227,8 +227,8 @@ class ClientRecurringInvoice extends Model
      */
     public function isDue()
     {
-        return $this->isActive() 
-            && $this->next_invoice_date 
+        return $this->isActive()
+            && $this->next_invoice_date
             && $this->next_invoice_date->lte(now()->toDate());
     }
 
@@ -246,7 +246,8 @@ class ClientRecurringInvoice extends Model
     public function getFormattedAmountAttribute()
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($this->amount, 2);
+
+        return $symbol.number_format($this->amount, 2);
     }
 
     /**
@@ -255,7 +256,8 @@ class ClientRecurringInvoice extends Model
     public function getFormattedTotalAmountAttribute()
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($this->total_amount, 2);
+
+        return $symbol.number_format($this->total_amount, 2);
     }
 
     /**
@@ -271,7 +273,7 @@ class ClientRecurringInvoice extends Model
             'AUD' => 'A$',
             'JPY' => '¥',
             'CNY' => '¥',
-            'INR' => '₹'
+            'INR' => '₹',
         ];
 
         return $symbols[$this->currency] ?? $this->currency;
@@ -283,15 +285,15 @@ class ClientRecurringInvoice extends Model
     public function getFrequencyDescriptionAttribute()
     {
         $base = self::getFrequencies()[$this->frequency] ?? $this->frequency;
-        
+
         if ($this->frequency === 'custom' && $this->interval_count > 1) {
-            return "Every {$this->interval_count} " . str_plural('day', $this->interval_count);
+            return "Every {$this->interval_count} ".str_plural('day', $this->interval_count);
         }
-        
+
         if ($this->interval_count > 1) {
-            return "Every {$this->interval_count} " . str_plural(strtolower($base), $this->interval_count);
+            return "Every {$this->interval_count} ".str_plural(strtolower($base), $this->interval_count);
         }
-        
+
         return $base;
     }
 
@@ -300,10 +302,10 @@ class ClientRecurringInvoice extends Model
      */
     public function getNextInvoiceDateHumanAttribute()
     {
-        if (!$this->next_invoice_date) {
+        if (! $this->next_invoice_date) {
             return 'Not scheduled';
         }
-        
+
         return $this->next_invoice_date->format('M j, Y');
     }
 
@@ -312,10 +314,10 @@ class ClientRecurringInvoice extends Model
      */
     public function getDaysUntilNextInvoiceAttribute()
     {
-        if (!$this->next_invoice_date) {
+        if (! $this->next_invoice_date) {
             return null;
         }
-        
+
         return now()->diffInDays($this->next_invoice_date, false);
     }
 
@@ -327,7 +329,7 @@ class ClientRecurringInvoice extends Model
         return [
             'invoice_count' => $this->invoice_count ?? 0,
             'total_revenue' => $this->total_revenue ?? 0,
-            'average_per_invoice' => $this->invoice_count > 0 ? ($this->total_revenue / $this->invoice_count) : 0
+            'average_per_invoice' => $this->invoice_count > 0 ? ($this->total_revenue / $this->invoice_count) : 0,
         ];
     }
 
@@ -336,16 +338,16 @@ class ClientRecurringInvoice extends Model
      */
     public function calculateNextInvoiceDate($fromDate = null)
     {
-        if (!$fromDate) {
+        if (! $fromDate) {
             $fromDate = $this->last_invoice_date ?: $this->start_date;
         }
-        
-        if (!$fromDate) {
+
+        if (! $fromDate) {
             return null;
         }
-        
+
         $date = Carbon::parse($fromDate);
-        
+
         switch ($this->frequency) {
             case 'daily':
                 $date->addDays($this->interval_count ?: 1);
@@ -378,7 +380,7 @@ class ClientRecurringInvoice extends Model
                 $date->addDays($this->interval_count ?: 1);
                 break;
         }
-        
+
         return $date->toDate();
     }
 
@@ -389,7 +391,7 @@ class ClientRecurringInvoice extends Model
     {
         $this->next_invoice_date = $this->calculateNextInvoiceDate();
         $this->save();
-        
+
         return $this->next_invoice_date;
     }
 
@@ -402,7 +404,7 @@ class ClientRecurringInvoice extends Model
         $this->paused_at = now();
         $this->paused_reason = $reason;
         $this->save();
-        
+
         return true;
     }
 
@@ -416,7 +418,7 @@ class ClientRecurringInvoice extends Model
         $this->paused_reason = null;
         $this->updateNextInvoiceDate();
         $this->save();
-        
+
         return true;
     }
 
@@ -429,7 +431,7 @@ class ClientRecurringInvoice extends Model
         $this->cancelled_at = now();
         $this->cancelled_reason = $reason;
         $this->save();
-        
+
         return true;
     }
 
@@ -438,7 +440,7 @@ class ClientRecurringInvoice extends Model
      */
     public function generateInvoice()
     {
-        if (!$this->isDue()) {
+        if (! $this->isDue()) {
             return false;
         }
 
@@ -460,7 +462,7 @@ class ClientRecurringInvoice extends Model
             'payment_instructions' => $this->payment_instructions,
             'line_items' => $this->line_items,
             'auto_send' => $this->auto_send,
-            'company_id' => $this->company_id
+            'company_id' => $this->company_id,
         ];
 
         $invoice = ClientInvoice::create($invoiceData);
@@ -487,7 +489,7 @@ class ClientRecurringInvoice extends Model
     {
         $prefix = $this->invoice_prefix ?: 'REC';
         $count = $this->invoice_count + 1;
-        
-        return $prefix . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.'-'.str_pad($count, 4, '0', STR_PAD_LEFT);
     }
 }

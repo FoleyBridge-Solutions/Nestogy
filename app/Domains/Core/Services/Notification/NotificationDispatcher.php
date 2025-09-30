@@ -2,8 +2,8 @@
 
 namespace App\Domains\Core\Services\Notification;
 
-use App\Domains\Core\Services\Notification\Contracts\NotificationDispatcherInterface;
 use App\Domains\Core\Services\Notification\Contracts\NotificationChannelInterface;
+use App\Domains\Core\Services\Notification\Contracts\NotificationDispatcherInterface;
 use App\Domains\Core\Services\Notification\Contracts\NotificationStrategyInterface;
 use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Support\Collection;
@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Queue;
 
 /**
  * Notification Dispatcher Service
- * 
+ *
  * Orchestrates the entire notification system using composition pattern.
  * Coordinates strategies and channels to deliver notifications efficiently.
- * 
+ *
  * This is a perfect example of composition over inheritance:
  * - Composes multiple strategies rather than inheriting behavior
  * - Composes multiple channels rather than being tied to one
@@ -47,7 +47,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
     {
         $this->strategies = collect();
         $this->channels = collect();
-        
+
         // Auto-register default channels and strategies
         $this->registerDefaultChannels();
         $this->registerDefaultStrategies();
@@ -72,10 +72,11 @@ class NotificationDispatcher implements NotificationDispatcherInterface
         try {
             // Get strategies for this event type
             $strategies = $this->getStrategiesForEvent($eventType);
-            
+
             if ($strategies->isEmpty()) {
                 $results['skipped'] = true;
                 $results['reason'] = "No strategies found for event type: {$eventType}";
+
                 return $results;
             }
 
@@ -83,27 +84,28 @@ class NotificationDispatcher implements NotificationDispatcherInterface
             foreach ($strategies as $strategy) {
                 try {
                     $strategyResult = $strategy->execute($ticket, $eventData);
-                    
+
                     if (isset($strategyResult['skipped']) && $strategyResult['skipped']) {
                         Log::info('Notification strategy skipped', [
                             'strategy' => get_class($strategy),
                             'event_type' => $eventType,
                             'ticket_id' => $ticket->id,
-                            'reason' => $strategyResult['reason'] ?? 'Unknown'
+                            'reason' => $strategyResult['reason'] ?? 'Unknown',
                         ]);
+
                         continue;
                     }
 
                     $results['strategies_executed']++;
-                    
+
                     // Send notifications through specified channels
                     $channelResults = $this->sendThroughChannels($strategyResult);
-                    
+
                     // Aggregate results
                     $results['notifications_sent'] += $channelResults['sent'];
                     $results['notifications_failed'] += $channelResults['failed'];
                     $results['channels_used'] = array_unique(array_merge(
-                        $results['channels_used'], 
+                        $results['channels_used'],
                         $channelResults['channels_used']
                     ));
                     $results['errors'] = array_merge($results['errors'], $channelResults['errors']);
@@ -112,14 +114,14 @@ class NotificationDispatcher implements NotificationDispatcherInterface
                     $results['notifications_failed']++;
                     $results['errors'][] = [
                         'strategy' => get_class($strategy),
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
 
                     Log::error('Notification strategy failed', [
                         'strategy' => get_class($strategy),
                         'event_type' => $eventType,
                         'ticket_id' => $ticket->id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -132,17 +134,17 @@ class NotificationDispatcher implements NotificationDispatcherInterface
                 'ticket_id' => $ticket->id,
                 'strategies_executed' => $results['strategies_executed'],
                 'notifications_sent' => $results['notifications_sent'],
-                'notifications_failed' => $results['notifications_failed']
+                'notifications_failed' => $results['notifications_failed'],
             ]);
 
         } catch (\Exception $e) {
             $results['error'] = $e->getMessage();
             $results['notifications_failed']++;
-            
+
             Log::error('Notification dispatch failed', [
                 'event_type' => $eventType,
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -155,6 +157,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
     public function registerStrategy(NotificationStrategyInterface $strategy): self
     {
         $this->strategies->put($strategy->getEventType(), $strategy);
+
         return $this;
     }
 
@@ -164,6 +167,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
     public function registerChannel(NotificationChannelInterface $channel): self
     {
         $this->channels->put($channel->getName(), $channel);
+
         return $this;
     }
 
@@ -212,7 +216,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
         foreach ($tickets as $ticket) {
             try {
                 $ticketResult = $this->dispatch($eventType, $ticket, $eventData);
-                
+
                 $results['tickets_processed']++;
                 $results['total_notifications_sent'] += $ticketResult['notifications_sent'] ?? 0;
                 $results['total_notifications_failed'] += $ticketResult['notifications_failed'] ?? 0;
@@ -221,7 +225,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
             } catch (\Exception $e) {
                 $results['errors'][] = [
                     'ticket_id' => $ticket->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -236,7 +240,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
     {
         try {
             $job = new \App\Jobs\ProcessNotificationJob($eventType, $ticket->id, $eventData);
-            
+
             if ($delayInMinutes > 0) {
                 Queue::later(now()->addMinutes($delayInMinutes), $job);
             } else {
@@ -244,11 +248,11 @@ class NotificationDispatcher implements NotificationDispatcherInterface
             }
 
             $this->statistics['queued']++;
-            
+
             Log::info('Notification queued', [
                 'event_type' => $eventType,
                 'ticket_id' => $ticket->id,
-                'delay_minutes' => $delayInMinutes
+                'delay_minutes' => $delayInMinutes,
             ]);
 
             return true;
@@ -257,7 +261,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
             Log::error('Failed to queue notification', [
                 'event_type' => $eventType,
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -270,7 +274,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
     public function getStatistics(array $filters = []): array
     {
         $stats = $this->statistics;
-        
+
         // Add channel and strategy information
         $stats['available_channels'] = $this->getAvailableChannels()->keys()->toArray();
         $stats['registered_strategies'] = $this->strategies->keys()->toArray();
@@ -289,7 +293,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
             'sent' => 0,
             'failed' => 0,
             'channels_used' => [],
-            'errors' => []
+            'errors' => [],
         ];
 
         $channels = $strategyResult['channels'] ?? ['email'];
@@ -300,31 +304,33 @@ class NotificationDispatcher implements NotificationDispatcherInterface
 
         foreach ($channels as $channelName) {
             $channel = $this->getChannel($channelName);
-            
-            if (!$channel) {
+
+            if (! $channel) {
                 $results['errors'][] = "Channel not found: {$channelName}";
+
                 continue;
             }
 
-            if (!$channel->isAvailable()) {
+            if (! $channel->isAvailable()) {
                 $results['errors'][] = "Channel not available: {$channelName}";
+
                 continue;
             }
 
             $channelRecipients = $recipients[$channelName] ?? [];
-            
+
             if (empty($channelRecipients)) {
                 continue; // No recipients for this channel
             }
 
             try {
                 $channelResult = $channel->send($channelRecipients, $subject, $message, $data);
-                
+
                 $results['sent'] += $channelResult['sent'] ?? 0;
                 $results['failed'] += $channelResult['failed'] ?? 0;
                 $results['channels_used'][] = $channelName;
-                
-                if (!empty($channelResult['errors'])) {
+
+                if (! empty($channelResult['errors'])) {
                     $results['errors'] = array_merge($results['errors'], $channelResult['errors']);
                 }
 
@@ -332,7 +338,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
                 $results['failed'] += count($channelRecipients);
                 $results['errors'][] = [
                     'channel' => $channelName,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -345,9 +351,9 @@ class NotificationDispatcher implements NotificationDispatcherInterface
      */
     protected function registerDefaultChannels(): void
     {
-        $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\EmailChannel());
-        $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\SmsChannel());
-        $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\SlackChannel());
+        $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\EmailChannel);
+        $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\SmsChannel);
+        $this->registerChannel(new \App\Domains\Core\Services\Notification\Channels\SlackChannel);
     }
 
     /**
@@ -355,9 +361,9 @@ class NotificationDispatcher implements NotificationDispatcherInterface
      */
     protected function registerDefaultStrategies(): void
     {
-        $this->registerStrategy(new \App\Domains\Core\Services\Notification\Strategies\TicketCreatedStrategy());
-        $this->registerStrategy(new \App\Domains\Core\Services\Notification\Strategies\TicketStatusChangedStrategy());
-        $this->registerStrategy(new \App\Domains\Core\Services\Notification\Strategies\SlaBreachStrategy());
+        $this->registerStrategy(new \App\Domains\Core\Services\Notification\Strategies\TicketCreatedStrategy);
+        $this->registerStrategy(new \App\Domains\Core\Services\Notification\Strategies\TicketStatusChangedStrategy);
+        $this->registerStrategy(new \App\Domains\Core\Services\Notification\Strategies\SlaBreachStrategy);
     }
 
     /**
@@ -367,7 +373,7 @@ class NotificationDispatcher implements NotificationDispatcherInterface
     {
         $this->statistics['sent'] += $results['notifications_sent'] ?? 0;
         $this->statistics['failed'] += $results['notifications_failed'] ?? 0;
-        
+
         if (isset($results['skipped']) && $results['skipped']) {
             $this->statistics['skipped']++;
         }
@@ -392,13 +398,13 @@ class NotificationDispatcher implements NotificationDispatcherInterface
     public function getChannelInfo(): array
     {
         $info = [];
-        
+
         foreach ($this->channels as $name => $channel) {
             $info[$name] = [
                 'name' => $channel->getName(),
                 'available' => $channel->isAvailable(),
                 'required_config' => $channel->getRequiredConfig(),
-                'class' => get_class($channel)
+                'class' => get_class($channel),
             ];
         }
 
@@ -411,12 +417,12 @@ class NotificationDispatcher implements NotificationDispatcherInterface
     public function getStrategyInfo(): array
     {
         $info = [];
-        
+
         foreach ($this->strategies as $eventType => $strategy) {
             $info[$eventType] = [
                 'event_type' => $strategy->getEventType(),
                 'priority' => $strategy->getPriority(),
-                'class' => get_class($strategy)
+                'class' => get_class($strategy),
             ];
         }
 

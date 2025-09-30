@@ -101,12 +101,12 @@ class GenerateRecurringInvoicesRequest extends FormRequest
         ]);
 
         // Set default billing date to today if not provided
-        if (!$this->has('billing_date') || empty($this->input('billing_date'))) {
+        if (! $this->has('billing_date') || empty($this->input('billing_date'))) {
             $this->merge(['billing_date' => now()->toDateString()]);
         }
 
         // Set default batch size if not provided
-        if (!$this->has('batch_size') || empty($this->input('batch_size'))) {
+        if (! $this->has('batch_size') || empty($this->input('batch_size'))) {
             $this->merge(['batch_size' => 100]);
         }
 

@@ -40,12 +40,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        
+
         'client' => [
             'driver' => 'session',
             'provider' => 'contacts',
         ],
-        
+
         'sanctum' => [
             'driver' => 'sanctum',
             'provider' => 'users',
@@ -74,7 +74,7 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
-        
+
         'contacts' => [
             'driver' => 'eloquent',
             'model' => App\Models\Contact::class,
@@ -112,7 +112,7 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
-        
+
         'contacts' => [
             'provider' => 'contacts',
             'table' => 'password_reset_tokens',

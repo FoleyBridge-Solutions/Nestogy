@@ -3,20 +3,20 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 /**
  * Client Portal Session Model
- * 
+ *
  * Manages secure client authentication sessions for the portal.
  * Supports multi-factor authentication, device tracking, and security monitoring.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -50,7 +50,7 @@ use Carbon\Carbon;
  */
 class ClientPortalSession extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -123,22 +123,29 @@ class ClientPortalSession extends Model
      * Session status constants
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_EXPIRED = 'expired';
+
     const STATUS_REVOKED = 'revoked';
+
     const STATUS_SUSPENDED = 'suspended';
 
     /**
      * Device type constants
      */
     const DEVICE_WEB = 'web';
+
     const DEVICE_MOBILE = 'mobile';
+
     const DEVICE_TABLET = 'tablet';
 
     /**
      * Two-factor methods
      */
     const TWO_FACTOR_SMS = 'sms';
+
     const TWO_FACTOR_EMAIL = 'email';
+
     const TWO_FACTOR_AUTHENTICATOR = 'authenticator';
 
     /**
@@ -170,7 +177,7 @@ class ClientPortalSession extends Model
      */
     public static function generateSessionToken(): string
     {
-        return Hash::make(Str::random(64) . microtime(true));
+        return Hash::make(Str::random(64).microtime(true));
     }
 
     /**
@@ -178,7 +185,7 @@ class ClientPortalSession extends Model
      */
     public static function generateRefreshToken(): string
     {
-        return Hash::make(Str::random(64) . microtime(true));
+        return Hash::make(Str::random(64).microtime(true));
     }
 
     /**
@@ -186,9 +193,9 @@ class ClientPortalSession extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === self::STATUS_ACTIVE && 
-               !$this->isExpired() && 
-               !$this->isRevoked();
+        return $this->status === self::STATUS_ACTIVE &&
+               ! $this->isExpired() &&
+               ! $this->isRevoked();
     }
 
     /**
@@ -204,7 +211,7 @@ class ClientPortalSession extends Model
      */
     public function isRevoked(): bool
     {
-        return $this->status === self::STATUS_REVOKED || 
+        return $this->status === self::STATUS_REVOKED ||
                $this->revoked_at !== null;
     }
 
@@ -229,7 +236,7 @@ class ClientPortalSession extends Model
      */
     public function requiresTwoFactor(): bool
     {
-        return !$this->two_factor_verified && 
+        return ! $this->two_factor_verified &&
                $this->client->portalAccess?->require_two_factor === true;
     }
 
@@ -256,7 +263,7 @@ class ClientPortalSession extends Model
     /**
      * Revoke the session.
      */
-    public function revoke(string $reason = null): bool
+    public function revoke(?string $reason = null): bool
     {
         return $this->update([
             'status' => self::STATUS_REVOKED,
@@ -288,10 +295,10 @@ class ClientPortalSession extends Model
     /**
      * Extend session expiration.
      */
-    public function extendSession(int $minutes = null): bool
+    public function extendSession(?int $minutes = null): bool
     {
         $minutes = $minutes ?? config('portal.session_lifetime', 120);
-        
+
         return $this->update([
             'expires_at' => Carbon::now()->addMinutes($minutes),
         ]);
@@ -322,7 +329,7 @@ class ClientPortalSession extends Model
      */
     public function getDurationMinutes(): int
     {
-        if (!$this->last_activity_at) {
+        if (! $this->last_activity_at) {
             return 0;
         }
 
@@ -334,11 +341,12 @@ class ClientPortalSession extends Model
      */
     public function getTimeUntilExpiration(): ?int
     {
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return null;
         }
 
         $minutes = Carbon::now()->diffInMinutes($this->expires_at, false);
+
         return $minutes > 0 ? $minutes : 0;
     }
 
@@ -366,11 +374,11 @@ class ClientPortalSession extends Model
         $score = 0;
 
         // Base score
-        if (!$this->two_factor_verified) {
+        if (! $this->two_factor_verified) {
             $score += 30;
         }
 
-        if (!$this->is_trusted_device) {
+        if (! $this->is_trusted_device) {
             $score += 20;
         }
 
@@ -401,7 +409,7 @@ class ClientPortalSession extends Model
     public function scopeActive($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
-                    ->where('expires_at', '>', Carbon::now());
+            ->where('expires_at', '>', Carbon::now());
     }
 
     /**
@@ -410,7 +418,7 @@ class ClientPortalSession extends Model
     public function scopeExpired($query)
     {
         return $query->where('expires_at', '<=', Carbon::now())
-                    ->orWhere('status', self::STATUS_EXPIRED);
+            ->orWhere('status', self::STATUS_EXPIRED);
     }
 
     /**
@@ -420,7 +428,7 @@ class ClientPortalSession extends Model
     {
         return $query->where(function ($q) {
             $q->where('expires_at', '<=', Carbon::now()->subDays(7))
-              ->orWhere('status', self::STATUS_REVOKED);
+                ->orWhere('status', self::STATUS_REVOKED);
         });
     }
 
@@ -456,20 +464,20 @@ class ClientPortalSession extends Model
         parent::boot();
 
         static::creating(function ($session) {
-            if (!$session->session_token) {
+            if (! $session->session_token) {
                 $session->session_token = self::generateSessionToken();
             }
-            
-            if (!$session->refresh_token) {
+
+            if (! $session->refresh_token) {
                 $session->refresh_token = self::generateRefreshToken();
             }
 
-            if (!$session->expires_at) {
+            if (! $session->expires_at) {
                 $minutes = config('portal.session_lifetime', 120);
                 $session->expires_at = Carbon::now()->addMinutes($minutes);
             }
 
-            if (!$session->refresh_expires_at) {
+            if (! $session->refresh_expires_at) {
                 $minutes = config('portal.refresh_lifetime', 10080); // 7 days
                 $session->refresh_expires_at = Carbon::now()->addMinutes($minutes);
             }

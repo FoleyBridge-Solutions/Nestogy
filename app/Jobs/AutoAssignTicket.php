@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Auto Assign Ticket Job
- * 
+ *
  * Automatically assigns tickets to technicians based on workload,
  * client assignments, and availability.
  */
@@ -59,6 +59,7 @@ class AutoAssignTicket implements ShouldQueue
                     'ticket_id' => $this->ticket->id,
                     'assigned_to' => $this->ticket->assigned_to,
                 ]);
+
                 return;
             }
 
@@ -117,7 +118,7 @@ class AutoAssignTicket implements ShouldQueue
 
         // Sort by score (highest first) and return best match
         $best = $scored->sortByDesc('score')->first();
-        
+
         return $best['technician'];
     }
 
@@ -132,14 +133,14 @@ class AutoAssignTicket implements ShouldQueue
         $openTickets = Ticket::where('assigned_to', $technician->id)
             ->whereIn('status', ['Open', 'In Progress'])
             ->count();
-        
+
         $score += max(0, 20 - $openTickets); // Max 20 points, reduced by open tickets
 
         // Factor 2: Client familiarity (has worked on tickets for this client)
         $clientTickets = Ticket::where('assigned_to', $technician->id)
             ->where('client_id', $this->ticket->client_id)
             ->count();
-        
+
         if ($clientTickets > 0) {
             $score += 15; // Bonus for client familiarity
         }
@@ -205,8 +206,8 @@ class AutoAssignTicket implements ShouldQueue
     {
         return [
             'auto-assignment',
-            'ticket:' . $this->ticket->id,
-            'priority:' . $this->ticket->priority,
+            'ticket:'.$this->ticket->id,
+            'priority:'.$this->ticket->priority,
         ];
     }
 }

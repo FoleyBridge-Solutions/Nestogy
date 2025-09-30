@@ -3,60 +3,63 @@
 namespace App\Domains\Contract\Services;
 
 use App\Domains\Contract\Models\Contract;
-use App\Domains\Contract\Models\ContractTemplate;
-use App\Models\Quote;
-use App\Models\Client;
-use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Contract\Models\ContractMilestone;
-use App\Domains\Contract\Services\ContractClauseService;
+use App\Domains\Contract\Models\ContractSignature;
+use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Core\Services\TemplateVariableMapper;
+use App\Models\Client;
+use App\Models\Quote;
+use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 
 /**
  * ContractGenerationService
- * 
+ *
  * Enterprise contract generation service with template-based creation,
  * VoIP-specific features, digital signature integration, and compliance tracking.
  */
 class ContractGenerationService
 {
     protected $pdfService;
+
     protected $signatureService;
+
     protected $templateEngine;
+
     protected $clauseService;
+
     protected $variableMapper;
 
     public function __construct(
-        PdfService $pdfService = null,
-        DigitalSignatureService $signatureService = null,
-        ContractClauseService $clauseService = null,
-        \App\Domains\Core\Services\TemplateVariableMapper $variableMapper = null
+        ?PdfService $pdfService = null,
+        ?DigitalSignatureService $signatureService = null,
+        ?ContractClauseService $clauseService = null,
+        ?\App\Domains\Core\Services\TemplateVariableMapper $variableMapper = null
     ) {
         $this->pdfService = $pdfService;
         $this->signatureService = $signatureService;
-        $this->clauseService = $clauseService ?: new ContractClauseService();
-        $this->variableMapper = $variableMapper ?: new \App\Domains\Core\Services\TemplateVariableMapper();
+        $this->clauseService = $clauseService ?: new ContractClauseService;
+        $this->variableMapper = $variableMapper ?: new \App\Domains\Core\Services\TemplateVariableMapper;
     }
 
     /**
      * Generate contract from quote using template
      */
     public function generateFromQuote(
-        Quote $quote, 
-        ContractTemplate $template, 
+        Quote $quote,
+        ContractTemplate $template,
         array $customizations = []
     ): Contract {
         return DB::transaction(function () use ($quote, $template, $customizations) {
             Log::info('Starting contract generation from quote', [
                 'quote_id' => $quote->id,
                 'template_id' => $template->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Validate quote is eligible for contract generation
@@ -86,7 +89,7 @@ class ContractGenerationService
             Log::info('Contract generated successfully', [
                 'contract_id' => $contract->id,
                 'contract_number' => $contract->contract_number,
-                'quote_id' => $quote->id
+                'quote_id' => $quote->id,
             ]);
 
             return $contract->fresh();
@@ -105,7 +108,7 @@ class ContractGenerationService
             Log::info('Starting contract generation from template', [
                 'client_id' => $client->id,
                 'template_id' => $template->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Build contract data from template defaults and provided data
@@ -125,7 +128,7 @@ class ContractGenerationService
 
             Log::info('Contract generated from template', [
                 'contract_id' => $contract->id,
-                'contract_number' => $contract->contract_number
+                'contract_number' => $contract->contract_number,
             ]);
 
             return $contract->fresh();
@@ -139,7 +142,7 @@ class ContractGenerationService
     {
         return DB::transaction(function () use ($contractData) {
             Log::info('Creating custom contract', [
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Add default values and validation
@@ -149,13 +152,13 @@ class ContractGenerationService
             $contract = Contract::create($processedData);
 
             // Setup basic signature requirements if not specified
-            if (!isset($contractData['skip_signatures'])) {
+            if (! isset($contractData['skip_signatures'])) {
                 $this->setupBasicSignatureRequirements($contract);
             }
 
             Log::info('Custom contract created', [
                 'contract_id' => $contract->id,
-                'contract_number' => $contract->contract_number
+                'contract_number' => $contract->contract_number,
             ]);
 
             return $contract;
@@ -168,7 +171,7 @@ class ContractGenerationService
     public function generateContractDocument(Contract $contract, array $options = []): string
     {
         Log::info('Generating contract document', [
-            'contract_id' => $contract->id
+            'contract_id' => $contract->id,
         ]);
 
         // Load contract with all necessary relationships
@@ -179,9 +182,9 @@ class ContractGenerationService
             'template',
             'contractMilestones',
             'signatures',
-            'schedules' => function($query) {
+            'schedules' => function ($query) {
                 $query->where('status', 'active')->orderBy('schedule_letter');
-            }
+            },
         ]);
 
         // Get template content or use default
@@ -194,8 +197,8 @@ class ContractGenerationService
         Log::info('Content processed for PDF generation', [
             'contract_id' => $contract->id,
             'content_length' => strlen($processedContent),
-            'has_content' => !empty(trim($processedContent)),
-            'content_preview' => substr($processedContent, 0, 200) . '...'
+            'has_content' => ! empty(trim($processedContent)),
+            'content_preview' => substr($processedContent, 0, 200).'...',
         ]);
 
         if (empty(trim($processedContent))) {
@@ -210,14 +213,14 @@ class ContractGenerationService
         $newMetadata = array_merge($currentMetadata, [
             'document_path' => $pdfPath,
             'last_generated' => now()->toISOString(),
-            'generation_options' => $options
+            'generation_options' => $options,
         ]);
-        
+
         $contract->update(['metadata' => $newMetadata]);
 
         Log::info('Contract document generated', [
             'contract_id' => $contract->id,
-            'document_path' => $pdfPath
+            'document_path' => $pdfPath,
         ]);
 
         return $pdfPath;
@@ -231,11 +234,11 @@ class ContractGenerationService
         return DB::transaction(function () use ($contract, $changes) {
             Log::info('Regenerating contract', [
                 'contract_id' => $contract->id,
-                'changes' => array_keys($changes)
+                'changes' => array_keys($changes),
             ]);
 
             // Apply changes if provided
-            if (!empty($changes)) {
+            if (! empty($changes)) {
                 $contract->update($changes);
             }
 
@@ -253,7 +256,7 @@ class ContractGenerationService
             }
 
             Log::info('Contract regenerated', [
-                'contract_id' => $contract->id
+                'contract_id' => $contract->id,
             ]);
 
             return $contract->fresh();
@@ -265,18 +268,18 @@ class ContractGenerationService
      */
     protected function validateQuoteEligibility(Quote $quote): void
     {
-        if (!$quote->isAccepted()) {
+        if (! $quote->isAccepted()) {
             throw new \Exception('Quote must be accepted before generating contract');
         }
 
         if ($quote->isConverted() && $quote->convertedInvoice) {
             Log::warning('Quote already converted to invoice', [
                 'quote_id' => $quote->id,
-                'invoice_id' => $quote->converted_invoice_id
+                'invoice_id' => $quote->converted_invoice_id,
             ]);
         }
 
-        if (!$quote->isFullyApproved()) {
+        if (! $quote->isFullyApproved()) {
             throw new \Exception('Quote must be fully approved before generating contract');
         }
     }
@@ -317,7 +320,7 @@ class ContractGenerationService
         // Apply template defaults
         if ($template->default_values) {
             foreach ($template->default_values as $key => $value) {
-                if (!isset($customizations[$key]) && !isset($defaultData[$key])) {
+                if (! isset($customizations[$key]) && ! isset($defaultData[$key])) {
                     $defaultData[$key] = $value;
                 }
             }
@@ -358,7 +361,7 @@ class ContractGenerationService
         $defaultData = array_merge($defaultData, $contractData);
 
         // Calculate end date if not provided
-        if (!isset($defaultData['end_date']) && isset($defaultData['term_months'])) {
+        if (! isset($defaultData['end_date']) && isset($defaultData['term_months'])) {
             $defaultData['end_date'] = Carbon::parse($defaultData['start_date'])->addMonths($defaultData['term_months']);
         }
 
@@ -383,7 +386,7 @@ class ContractGenerationService
         $processedData = array_merge($defaultData, $contractData);
 
         // Calculate end date if not provided but term_months is
-        if (!isset($processedData['end_date']) && isset($processedData['term_months']) && isset($processedData['start_date'])) {
+        if (! isset($processedData['end_date']) && isset($processedData['term_months']) && isset($processedData['start_date'])) {
             $processedData['end_date'] = Carbon::parse($processedData['start_date'])->addMonths($processedData['term_months']);
         }
 
@@ -395,7 +398,7 @@ class ContractGenerationService
      */
     protected function generateVoipConfiguration(Contract $contract, Quote $quote): void
     {
-        if (!$quote->hasVoIPServices()) {
+        if (! $quote->hasVoIPServices()) {
             return;
         }
 
@@ -403,7 +406,7 @@ class ContractGenerationService
             'services' => [],
             'equipment' => [],
             'service_levels' => [],
-            'compliance' => []
+            'compliance' => [],
         ];
 
         // Map quote VoIP items to contract services
@@ -414,7 +417,7 @@ class ContractGenerationService
                 'quantity' => $item->quantity,
                 'monthly_cost' => $item->price,
                 'setup_cost' => $item->setup_cost ?? 0,
-                'specifications' => $item->voip_specifications ?? []
+                'specifications' => $item->voip_specifications ?? [],
             ];
 
             $voipConfig['services'][] = $serviceConfig;
@@ -429,7 +432,7 @@ class ContractGenerationService
         $contract->update([
             'voip_specifications' => $voipConfig,
             'sla_terms' => $this->generateDetailedSLA($quote),
-            'compliance_requirements' => $this->generateComplianceTracking($quote)
+            'compliance_requirements' => $this->generateComplianceTracking($quote),
         ]);
     }
 
@@ -468,7 +471,7 @@ class ContractGenerationService
                 'milestone_value' => $milestone['value'] ?? 0,
                 'billable' => $milestone['billable'] ?? false,
                 'sort_order' => $index + 1,
-                'created_by' => Auth::id()
+                'created_by' => Auth::id(),
             ]);
         }
     }
@@ -476,10 +479,10 @@ class ContractGenerationService
     /**
      * Setup signature requirements
      */
-    protected function setupSignatureRequirements(Contract $contract, ContractTemplate $template = null): void
+    protected function setupSignatureRequirements(Contract $contract, ?ContractTemplate $template = null): void
     {
         $signatureSettings = $template->signature_settings ?? [];
-        
+
         // Default signatures: client and company
         $defaultSignatories = [
             [
@@ -488,7 +491,7 @@ class ContractGenerationService
                 'signatory_email' => $contract->client->email,
                 'signatory_title' => $contract->client->title ?? 'Authorized Representative',
                 'signing_order' => 1,
-                'is_required' => true
+                'is_required' => true,
             ],
             [
                 'signatory_type' => 'company',
@@ -496,8 +499,8 @@ class ContractGenerationService
                 'signatory_email' => Auth::user()->email,
                 'signatory_title' => 'Authorized Representative',
                 'signing_order' => 2,
-                'is_required' => true
-            ]
+                'is_required' => true,
+            ],
         ];
 
         // Add custom signatories from template
@@ -519,7 +522,7 @@ class ContractGenerationService
                 'signing_order' => $signatory['signing_order'],
                 'is_required' => $signatory['is_required'] ?? true,
                 'expires_at' => now()->addDays($signatureSettings['expiration_days'] ?? 30),
-                'created_by' => Auth::id()
+                'created_by' => Auth::id(),
             ]);
         }
     }
@@ -541,7 +544,7 @@ class ContractGenerationService
             'signing_order' => 1,
             'is_required' => true,
             'expires_at' => now()->addDays(30),
-            'created_by' => Auth::id()
+            'created_by' => Auth::id(),
         ]);
 
         // Company signature
@@ -556,7 +559,7 @@ class ContractGenerationService
             'signing_order' => 2,
             'is_required' => true,
             'expires_at' => now()->addDays(30),
-            'created_by' => Auth::id()
+            'created_by' => Auth::id(),
         ]);
     }
 
@@ -565,7 +568,7 @@ class ContractGenerationService
      */
     protected function initializeComplianceTracking(Contract $contract, Quote $quote): void
     {
-        if (!$quote->hasVoIPServices()) {
+        if (! $quote->hasVoIPServices()) {
             return;
         }
 
@@ -574,18 +577,18 @@ class ContractGenerationService
                 'fcc_compliance' => true,
                 'e911_requirements' => $this->requiresE911($quote),
                 'cpni_protection' => true,
-                'accessibility_compliance' => true
+                'accessibility_compliance' => true,
             ],
             'data_protection' => [
                 'privacy_policy_required' => true,
                 'data_retention_policy' => true,
-                'breach_notification' => true
+                'breach_notification' => true,
             ],
             'service_requirements' => [
                 'uptime_sla' => $this->getUptimeSLA($quote),
                 'response_time_sla' => $this->getResponseTimeSLA($quote),
-                'resolution_time_sla' => $this->getResolutionTimeSLA($quote)
-            ]
+                'resolution_time_sla' => $this->getResolutionTimeSLA($quote),
+            ],
         ];
 
         // Add industry-specific compliance if detected
@@ -607,7 +610,7 @@ class ContractGenerationService
     {
         $baseTitle = $template->name;
         $clientName = $quote->client->name;
-        
+
         return "{$baseTitle} - {$clientName}";
     }
 
@@ -620,7 +623,7 @@ class ContractGenerationService
             'total_contract_value' => $quote->amount,
             'currency' => $quote->currency_code,
             'discount' => $quote->getDiscountAmount(),
-            'line_items' => []
+            'line_items' => [],
         ];
 
         // Add quote items to pricing structure
@@ -633,7 +636,7 @@ class ContractGenerationService
                 'total_price' => $item->subtotal,
                 'service_type' => $item->service_type,
                 'is_recurring' => $item->is_recurring ?? false,
-                'recurring_period' => $item->recurring_period ?? 'monthly'
+                'recurring_period' => $item->recurring_period ?? 'monthly',
             ];
         }
 
@@ -644,7 +647,7 @@ class ContractGenerationService
         $pricing['breakdown'] = [
             'one_time' => $oneTimeTotal,
             'recurring_monthly' => $recurringTotal,
-            'recurring_annual' => $recurringTotal * 12
+            'recurring_annual' => $recurringTotal * 12,
         ];
 
         return $pricing;
@@ -658,6 +661,7 @@ class ContractGenerationService
         if ($contract->template && $contract->template->clauses()->exists()) {
             // Generate content from clauses
             $variables = $this->buildTemplateVariables($contract);
+
             return $this->clauseService->generateContractFromClauses($contract->template, $variables);
         }
 
@@ -674,13 +678,13 @@ class ContractGenerationService
             'contract_id' => $contract->id,
             'template_id' => $contract->template->id ?? null,
             'content_length' => strlen($templateContent),
-            'schedule_count' => $contract->schedules ? $contract->schedules->count() : 0
+            'schedule_count' => $contract->schedules ? $contract->schedules->count() : 0,
         ]);
-        
+
         // Template content is already processed from clauses in getTemplateContent()
         // Append schedules to the content
         $contentWithSchedules = $this->appendSchedulesToContent($templateContent, $contract);
-        
+
         // Since template content is already HTML, wrap it properly instead of converting
         return $this->wrapContentAsHtml($contentWithSchedules);
     }
@@ -690,14 +694,15 @@ class ContractGenerationService
      */
     protected function appendSchedulesToContent(string $content, Contract $contract): string
     {
-        if (!$contract->schedules || $contract->schedules->isEmpty()) {
+        if (! $contract->schedules || $contract->schedules->isEmpty()) {
             Log::info('No schedules to append for contract', ['contract_id' => $contract->id]);
+
             return $content;
         }
 
         Log::info('Appending schedules to contract content', [
             'contract_id' => $contract->id,
-            'schedule_count' => $contract->schedules->count()
+            'schedule_count' => $contract->schedules->count(),
         ]);
 
         $scheduleContent = "\n\n<div style=\"page-break-before: always;\"></div>\n";
@@ -705,12 +710,12 @@ class ContractGenerationService
         $scheduleContent .= "<h1>CONTRACT SCHEDULES</h1>\n";
 
         foreach ($contract->schedules->sortBy('schedule_letter') as $schedule) {
-            $scheduleContent .= $this->generateScheduleContent($schedule) . "\n\n";
+            $scheduleContent .= $this->generateScheduleContent($schedule)."\n\n";
         }
 
         $scheduleContent .= "</div>\n";
 
-        return $content . $scheduleContent;
+        return $content.$scheduleContent;
     }
 
     /**
@@ -720,15 +725,15 @@ class ContractGenerationService
     {
         // Create HTML-formatted schedule header
         $content = "\n<div class=\"schedule-section\">\n";
-        $content .= "<h2>" . strtoupper($schedule->title) . "</h2>\n";
-        
+        $content .= '<h2>'.strtoupper($schedule->title)."</h2>\n";
+
         if ($schedule->description) {
-            $content .= "<p><em>" . $schedule->description . "</em></p>\n";
+            $content .= '<p><em>'.$schedule->description."</em></p>\n";
         }
 
         // If the schedule already has content, use that instead of generating new content
-        if (!empty($schedule->content)) {
-            $content .= $this->convertMarkdownToHtml($schedule->content) . "\n";
+        if (! empty($schedule->content)) {
+            $content .= $this->convertMarkdownToHtml($schedule->content)."\n";
         } else {
             // Only generate content if no pre-existing content is available
             // Add schedule-specific content based on type
@@ -746,6 +751,7 @@ class ContractGenerationService
         }
 
         $content .= "</div>\n";
+
         return $content;
     }
 
@@ -754,37 +760,37 @@ class ContractGenerationService
      */
     protected function generateInfrastructureScheduleContent($schedule): string
     {
-        $content = "";
+        $content = '';
         $data = $schedule->variable_values ?? [];
 
-        if (!empty($data['supportedAssetTypes'])) {
+        if (! empty($data['supportedAssetTypes'])) {
             $content .= "SUPPORTED ASSET TYPES:\n";
             foreach ($data['supportedAssetTypes'] as $assetType) {
-                $content .= "  - " . ucwords(str_replace('_', ' ', $assetType)) . "\n";
+                $content .= '  - '.ucwords(str_replace('_', ' ', $assetType))."\n";
             }
             $content .= "\n";
         }
 
-        if (!empty($data['sla'])) {
+        if (! empty($data['sla'])) {
             $sla = $data['sla'];
             $content .= "SERVICE LEVEL AGREEMENTS:\n";
-            $content .= "  Service Tier: " . ucfirst($sla['serviceTier'] ?? 'Standard') . "\n";
-            $content .= "  Response Time: " . ($sla['responseTimeHours'] ?? 'N/A') . " hours\n";
-            $content .= "  Resolution Time: " . ($sla['resolutionTimeHours'] ?? 'N/A') . " hours\n";
-            $content .= "  Uptime Target: " . ($sla['uptimePercentage'] ?? 'N/A') . "%\n\n";
+            $content .= '  Service Tier: '.ucfirst($sla['serviceTier'] ?? 'Standard')."\n";
+            $content .= '  Response Time: '.($sla['responseTimeHours'] ?? 'N/A')." hours\n";
+            $content .= '  Resolution Time: '.($sla['resolutionTimeHours'] ?? 'N/A')." hours\n";
+            $content .= '  Uptime Target: '.($sla['uptimePercentage'] ?? 'N/A')."%\n\n";
         }
 
-        if (!empty($data['coverageRules'])) {
+        if (! empty($data['coverageRules'])) {
             $coverage = $data['coverageRules'];
             $content .= "COVERAGE AND SUPPORT:\n";
-            $content .= "  Business Hours: " . ($coverage['businessHours'] ?? 'N/A') . "\n";
-            if (!empty($coverage['emergencyResponseTime'])) {
-                $content .= "  Emergency Response: " . $coverage['emergencyResponseTime'] . " hour(s)\n";
+            $content .= '  Business Hours: '.($coverage['businessHours'] ?? 'N/A')."\n";
+            if (! empty($coverage['emergencyResponseTime'])) {
+                $content .= '  Emergency Response: '.$coverage['emergencyResponseTime']." hour(s)\n";
             }
-            if (!empty($coverage['includeRemoteSupport'])) {
+            if (! empty($coverage['includeRemoteSupport'])) {
                 $content .= "  Remote Support: Included\n";
             }
-            if (!empty($coverage['includeOnsiteSupport'])) {
+            if (! empty($coverage['includeOnsiteSupport'])) {
                 $content .= "  Onsite Support: Included\n";
             }
             $content .= "\n";
@@ -794,65 +800,65 @@ class ContractGenerationService
     }
 
     /**
-     * Generate pricing schedule content  
+     * Generate pricing schedule content
      */
     protected function generatePricingScheduleContent($schedule): string
     {
-        $content = "";
+        $content = '';
         $data = $schedule->variable_values ?? [];
 
-        if (!empty($data['billingModel'])) {
-            $content .= "BILLING MODEL: " . ucwords(str_replace('_', ' ', $data['billingModel'])) . "\n\n";
+        if (! empty($data['billingModel'])) {
+            $content .= 'BILLING MODEL: '.ucwords(str_replace('_', ' ', $data['billingModel']))."\n\n";
         }
 
-        if (!empty($data['basePricing'])) {
+        if (! empty($data['basePricing'])) {
             $base = $data['basePricing'];
             $hasBasePricing = false;
             $basePricingContent = "BASE PRICING:\n";
-            
-            if (!empty($base['monthlyBase']) && $base['monthlyBase'] > 0) {
-                $basePricingContent .= "  Monthly Base Fee: $" . number_format($base['monthlyBase'], 2) . "\n";
+
+            if (! empty($base['monthlyBase']) && $base['monthlyBase'] > 0) {
+                $basePricingContent .= '  Monthly Base Fee: $'.number_format($base['monthlyBase'], 2)."\n";
                 $hasBasePricing = true;
             }
-            if (!empty($base['setupFee']) && $base['setupFee'] > 0) {
-                $basePricingContent .= "  Setup Fee: $" . number_format($base['setupFee'], 2) . "\n";
+            if (! empty($base['setupFee']) && $base['setupFee'] > 0) {
+                $basePricingContent .= '  Setup Fee: $'.number_format($base['setupFee'], 2)."\n";
                 $hasBasePricing = true;
             }
-            if (!empty($base['hourlyRate']) && $base['hourlyRate'] > 0) {
-                $basePricingContent .= "  Hourly Rate: $" . number_format($base['hourlyRate'], 2) . "\n";
+            if (! empty($base['hourlyRate']) && $base['hourlyRate'] > 0) {
+                $basePricingContent .= '  Hourly Rate: $'.number_format($base['hourlyRate'], 2)."\n";
                 $hasBasePricing = true;
             }
-            
+
             if ($hasBasePricing) {
-                $content .= $basePricingContent . "\n";
+                $content .= $basePricingContent."\n";
             }
         }
 
-        if (!empty($data['assetTypePricing'])) {
+        if (! empty($data['assetTypePricing'])) {
             $content .= "PER-ASSET MONTHLY PRICING:\n";
             foreach ($data['assetTypePricing'] as $assetType => $pricing) {
-                if (!empty($pricing['enabled']) && !empty($pricing['price'])) {
+                if (! empty($pricing['enabled']) && ! empty($pricing['price'])) {
                     $assetName = ucwords(str_replace('_', ' ', $assetType));
-                    $content .= "  " . $assetName . ": $" . number_format($pricing['price'], 2) . "/month\n";
-                    
+                    $content .= '  '.$assetName.': $'.number_format($pricing['price'], 2)."/month\n";
+
                     // Include services if available
-                    if (!empty($pricing['includedServices'])) {
+                    if (! empty($pricing['includedServices'])) {
                         $services = is_array($pricing['includedServices']) ? implode(', ', $pricing['includedServices']) : $pricing['includedServices'];
-                        $content .= "    Included Services: " . $services . "\n";
+                        $content .= '    Included Services: '.$services."\n";
                     }
                 }
             }
             $content .= "\n";
         }
 
-        if (!empty($data['paymentTerms'])) {
+        if (! empty($data['paymentTerms'])) {
             $terms = $data['paymentTerms'];
             $content .= "PAYMENT TERMS:\n";
-            if (!empty($terms['billingFrequency'])) {
-                $content .= "  Billing Frequency: " . ucfirst($terms['billingFrequency']) . "\n";
+            if (! empty($terms['billingFrequency'])) {
+                $content .= '  Billing Frequency: '.ucfirst($terms['billingFrequency'])."\n";
             }
-            if (!empty($terms['terms'])) {
-                $content .= "  Payment Terms: " . str_replace('_', ' ', $terms['terms']) . "\n";
+            if (! empty($terms['terms'])) {
+                $content .= '  Payment Terms: '.str_replace('_', ' ', $terms['terms'])."\n";
             }
             $content .= "\n";
         }
@@ -865,10 +871,11 @@ class ContractGenerationService
      */
     protected function generateTermsScheduleContent($schedule): string
     {
-        $content = "";
+        $content = '';
         if ($schedule->content) {
-            $content .= $schedule->content . "\n";
+            $content .= $schedule->content."\n";
         }
+
         return $content;
     }
 
@@ -879,7 +886,7 @@ class ContractGenerationService
     {
         // Convert markdown to HTML
         $html = $markdown;
-        
+
         // Convert headers
         $html = preg_replace('/^# (.+)$/m', '<h1>$1</h1>', $html);
         $html = preg_replace('/^## (.+)$/m', '<h2>$1</h2>', $html);
@@ -887,43 +894,43 @@ class ContractGenerationService
         $html = preg_replace('/^#### (.+)$/m', '<h4>$1</h4>', $html);
         $html = preg_replace('/^##### (.+)$/m', '<h5>$1</h5>', $html);
         $html = preg_replace('/^###### (.+)$/m', '<h6>$1</h6>', $html);
-        
+
         // Convert bold and italic
         $html = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $html);
         $html = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $html);
         $html = preg_replace('/`(.+?)`/', '<code>$1</code>', $html);
-        
+
         // Convert unordered lists
         $html = preg_replace('/^[\-\*\+] (.+)$/m', '<li>$1</li>', $html);
-        
-        // Convert ordered lists  
+
+        // Convert ordered lists
         $html = preg_replace('/^\d+\. (.+)$/m', '<li>$1</li>', $html);
-        
+
         // Wrap consecutive <li> tags in <ul> tags
         $html = preg_replace('/(<li>.*<\/li>\s*)+/s', '<ul>$0</ul>', $html);
-        
+
         // Convert markdown tables to HTML tables
         $html = $this->convertMarkdownTables($html);
-        
+
         // Convert line breaks to paragraphs
         $paragraphs = explode("\n\n", $html);
         $html = '';
         foreach ($paragraphs as $paragraph) {
             $paragraph = trim($paragraph);
-            if (!empty($paragraph) && !preg_match('/^<[h1-6ul]/', $paragraph)) {
-                $html .= '<p>' . $paragraph . '</p>' . "\n";
+            if (! empty($paragraph) && ! preg_match('/^<[h1-6ul]/', $paragraph)) {
+                $html .= '<p>'.$paragraph.'</p>'."\n";
             } else {
-                $html .= $paragraph . "\n";
+                $html .= $paragraph."\n";
             }
         }
-        
+
         // Clean up extra whitespace
         $html = preg_replace('/\n+/', "\n", $html);
         $html = trim($html);
-        
+
         return $html;
     }
-    
+
     /**
      * Convert markdown tables to HTML tables
      */
@@ -933,37 +940,38 @@ class ContractGenerationService
         $lines = explode("\n", $content);
         $result = [];
         $i = 0;
-        
+
         while ($i < count($lines)) {
             $line = trim($lines[$i]);
-            
+
             // Check if this line looks like a table row (starts and ends with |)
             if (preg_match('/^\|.*\|$/', $line)) {
                 $tableLines = [];
                 $tableStartIndex = $i;
-                
+
                 // Collect all consecutive table lines
                 while ($i < count($lines) && preg_match('/^\|.*\|$/', trim($lines[$i]))) {
                     $tableLines[] = trim($lines[$i]);
                     $i++;
                 }
-                
+
                 // Check if we have at least a header row
                 if (count($tableLines) >= 1) {
                     $htmlTable = $this->buildHtmlTable($tableLines);
                     $result[] = $htmlTable;
+
                     continue; // Skip the increment at the end since we already advanced $i
                 }
             }
-            
+
             // Not a table line, add as-is
             $result[] = $lines[$i];
             $i++;
         }
-        
+
         return implode("\n", $result);
     }
-    
+
     /**
      * Build HTML table from markdown table lines
      */
@@ -972,39 +980,39 @@ class ContractGenerationService
         if (empty($tableLines)) {
             return '';
         }
-        
-        $html = '<table class="schedule-table">' . "\n";
-        
+
+        $html = '<table class="schedule-table">'."\n";
+
         // Process each row
         for ($i = 0; $i < count($tableLines); $i++) {
             $line = $tableLines[$i];
-            
+
             // Skip separator lines (like |----|----|)
             if (preg_match('/^\|[\s\-:]*\|$/', $line)) {
                 continue;
             }
-            
+
             // Parse table cells
             $cells = $this->parseTableCells($line);
-            
+
             // Determine if this is a header row (first non-separator row)
             $isHeader = ($i === 0 || ($i === 1 && preg_match('/^\|[\s\-:]*\|$/', $tableLines[0])));
-            
+
             $tag = $isHeader ? 'th' : 'td';
-            $html .= '  <tr>' . "\n";
-            
+            $html .= '  <tr>'."\n";
+
             foreach ($cells as $cell) {
-                $html .= "    <{$tag}>" . trim($cell) . "</{$tag}>" . "\n";
+                $html .= "    <{$tag}>".trim($cell)."</{$tag}>"."\n";
             }
-            
-            $html .= '  </tr>' . "\n";
+
+            $html .= '  </tr>'."\n";
         }
-        
+
         $html .= '</table>';
-        
+
         return $html;
     }
-    
+
     /**
      * Parse table cells from a markdown table row
      */
@@ -1013,10 +1021,10 @@ class ContractGenerationService
         // Remove leading and trailing | characters
         $line = preg_replace('/^\|/', '', $line);
         $line = preg_replace('/\|$/', '', $line);
-        
+
         // Split by | and trim each cell
         $cells = array_map('trim', explode('|', $line));
-        
+
         return $cells;
     }
 
@@ -1145,7 +1153,7 @@ class ContractGenerationService
     </style>
 </head>
 <body>
-' . $htmlContent . '
+'.$htmlContent.'
 </body>
 </html>';
     }
@@ -1255,19 +1263,20 @@ class ContractGenerationService
         $inSchedule = false;
         $inTable = false;
         $tableHeaders = [];
-        
+
         foreach ($lines as $line) {
             $line = trim($line);
-            
+
             // Skip empty lines but add spacing
             if (empty($line)) {
                 $html .= '<br>';
+
                 continue;
             }
-            
+
             // Main title (all caps, first significant line)
-            if (preg_match('/^[A-Z\s]{10,}$/', $line) && !$inSchedule) {
-                $html .= '<h1>' . htmlspecialchars($line) . '</h1>';
+            if (preg_match('/^[A-Z\s]{10,}$/', $line) && ! $inSchedule) {
+                $html .= '<h1>'.htmlspecialchars($line).'</h1>';
             }
             // Schedule headers (SCHEDULE A, B, C, etc.)
             elseif (preg_match('/^SCHEDULE [A-Z]/', $line)) {
@@ -1275,20 +1284,20 @@ class ContractGenerationService
                     $html .= '</table>';
                     $inTable = false;
                 }
-                $html .= '<div class="page-break schedule"><h2>' . htmlspecialchars($line) . '</h2>';
+                $html .= '<div class="page-break schedule"><h2>'.htmlspecialchars($line).'</h2>';
                 $inSchedule = true;
             }
             // Section headers (numbered or lettered sections)
             elseif (preg_match('/^(\d+\.|\([a-z]\)|\([0-9]+\)|[A-Z]\.)\s+[A-Z]/', $line)) {
-                $html .= '<h3>' . htmlspecialchars($line) . '</h3>';
+                $html .= '<h3>'.htmlspecialchars($line).'</h3>';
             }
             // Detect table headers (lines with multiple | separators)
-            elseif (substr_count($line, '|') >= 2 && !$inTable) {
+            elseif (substr_count($line, '|') >= 2 && ! $inTable) {
                 $tableHeaders = array_map('trim', explode('|', $line));
                 $html .= '<table><thead><tr>';
                 foreach ($tableHeaders as $header) {
-                    if (!empty($header)) {
-                        $html .= '<th>' . htmlspecialchars($header) . '</th>';
+                    if (! empty($header)) {
+                        $html .= '<th>'.htmlspecialchars($header).'</th>';
                     }
                 }
                 $html .= '</tr></thead><tbody>';
@@ -1299,8 +1308,8 @@ class ContractGenerationService
                 $cells = array_map('trim', explode('|', $line));
                 $html .= '<tr>';
                 foreach ($cells as $cell) {
-                    if (!empty($cell)) {
-                        $html .= '<td>' . htmlspecialchars($cell) . '</td>';
+                    if (! empty($cell)) {
+                        $html .= '<td>'.htmlspecialchars($cell).'</td>';
                     }
                 }
                 $html .= '</tr>';
@@ -1309,15 +1318,15 @@ class ContractGenerationService
             elseif ($inTable && (empty($line) || substr_count($line, '|') < 2)) {
                 $html .= '</tbody></table>';
                 $inTable = false;
-                if (!empty($line)) {
-                    $html .= '<p>' . htmlspecialchars($line) . '</p>';
+                if (! empty($line)) {
+                    $html .= '<p>'.htmlspecialchars($line).'</p>';
                 }
             }
             // Signature lines
             elseif (preg_match('/^(CLIENT|COMPANY|SERVICE PROVIDER):\s*_+/', $line)) {
                 $html .= '<div class="signature-section">';
                 $html .= '<div class="signature-block">';
-                $html .= '<p><strong>' . htmlspecialchars($line) . '</strong></p>';
+                $html .= '<p><strong>'.htmlspecialchars($line).'</strong></p>';
                 $html .= '<div class="signature-line"></div>';
                 $html .= '<p>Date: _______________</p>';
                 $html .= '</div>';
@@ -1329,18 +1338,18 @@ class ContractGenerationService
                 $line = htmlspecialchars($line);
                 $line = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $line);
                 $line = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $line);
-                
-                $html .= '<p>' . $line . '</p>';
+
+                $html .= '<p>'.$line.'</p>';
             }
         }
-        
+
         // Close any open table
         if ($inTable) {
             $html .= '</tbody></table>';
         }
-        
+
         $html .= '</body></html>';
-        
+
         return $html;
     }
 
@@ -1351,10 +1360,10 @@ class ContractGenerationService
     {
         // Use the TemplateVariableMapper for template-aware variable generation
         $baseVariables = $this->variableMapper->generateVariables($contract);
-        
+
         // Add variables from schedule data
         $scheduleVariables = $this->extractVariablesFromSchedules($contract);
-        
+
         // Merge and prioritize schedule variables over base variables
         return array_merge($baseVariables, $scheduleVariables);
     }
@@ -1365,13 +1374,13 @@ class ContractGenerationService
     protected function extractVariablesFromSchedules(Contract $contract): array
     {
         $variables = [];
-        
-        if (!$contract->schedules) {
+
+        if (! $contract->schedules) {
             return $variables;
         }
 
         foreach ($contract->schedules as $schedule) {
-            if (!$schedule->variable_values) {
+            if (! $schedule->variable_values) {
                 continue;
             }
 
@@ -1379,23 +1388,23 @@ class ContractGenerationService
 
             // Extract infrastructure/SLA variables (Schedule A)
             if ($schedule->schedule_type === 'A') {
-                if (!empty($data['sla']['serviceTier'])) {
+                if (! empty($data['sla']['serviceTier'])) {
                     $variables['service_tier'] = $data['sla']['serviceTier'];
                 }
-                if (!empty($data['sla']['responseTimeHours'])) {
+                if (! empty($data['sla']['responseTimeHours'])) {
                     $variables['response_time_hours'] = $data['sla']['responseTimeHours'];
                 }
-                if (!empty($data['sla']['resolutionTimeHours'])) {
+                if (! empty($data['sla']['resolutionTimeHours'])) {
                     $variables['resolution_time_hours'] = $data['sla']['resolutionTimeHours'];
                 }
-                if (!empty($data['sla']['uptimePercentage'])) {
+                if (! empty($data['sla']['uptimePercentage'])) {
                     $variables['uptime_percentage'] = $data['sla']['uptimePercentage'];
                 }
-                if (!empty($data['coverageRules']['businessHours'])) {
+                if (! empty($data['coverageRules']['businessHours'])) {
                     $variables['business_hours'] = $data['coverageRules']['businessHours'];
                 }
-                if (!empty($data['supportedAssetTypes'])) {
-                    $variables['supported_asset_types'] = implode(', ', array_map(function($type) {
+                if (! empty($data['supportedAssetTypes'])) {
+                    $variables['supported_asset_types'] = implode(', ', array_map(function ($type) {
                         return ucwords(str_replace('_', ' ', $type));
                     }, $data['supportedAssetTypes']));
                 }
@@ -1403,23 +1412,23 @@ class ContractGenerationService
 
             // Extract pricing variables (Schedule B)
             if ($schedule->schedule_type === 'B') {
-                if (!empty($data['billingModel'])) {
+                if (! empty($data['billingModel'])) {
                     $variables['billing_model'] = $data['billingModel'];
                 }
-                if (!empty($data['basePricing']['monthlyBase'])) {
+                if (! empty($data['basePricing']['monthlyBase'])) {
                     $variables['monthly_base_fee'] = $data['basePricing']['monthlyBase'];
                 }
-                if (!empty($data['basePricing']['setupFee'])) {
+                if (! empty($data['basePricing']['setupFee'])) {
                     $variables['setup_fee'] = $data['basePricing']['setupFee'];
                 }
-                if (!empty($data['basePricing']['hourlyRate'])) {
+                if (! empty($data['basePricing']['hourlyRate'])) {
                     $variables['hourly_rate'] = $data['basePricing']['hourlyRate'];
                 }
 
                 // Extract asset pricing (use first available as default)
-                if (!empty($data['assetTypePricing'])) {
+                if (! empty($data['assetTypePricing'])) {
                     $firstAsset = array_values($data['assetTypePricing'])[0] ?? null;
-                    if ($firstAsset && !empty($firstAsset['price'])) {
+                    if ($firstAsset && ! empty($firstAsset['price'])) {
                         $variables['per_asset_rate'] = $firstAsset['price'];
                     }
                 }
@@ -1437,11 +1446,11 @@ class ContractGenerationService
         // Add default values for commonly missing variables
         $variables['else'] = '';
         $variables['item'] = '';
-        
+
         Log::info('Extracted variables from schedules', [
             'contract_id' => $contract->id,
             'extracted_count' => count($variables),
-            'variables' => array_keys($variables)
+            'variables' => array_keys($variables),
         ]);
 
         return $variables;
@@ -1457,7 +1466,7 @@ class ContractGenerationService
         }
 
         // Fallback to DomPDF with improved options for HTML rendering
-        $options = new Options();
+        $options = new Options;
         $options->set('defaultFont', 'Times-Roman');
         $options->set('isRemoteEnabled', true);
         $options->set('isPhpEnabled', false);
@@ -1470,22 +1479,22 @@ class ContractGenerationService
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
-        $filename = "contract-{$contract->contract_number}-" . time() . ".pdf";
+        $filename = "contract-{$contract->contract_number}-".time().'.pdf';
         $path = "contracts/{$contract->company_id}/{$filename}";
-        
+
         // Generate PDF content
         $pdfContent = $dompdf->output();
-        
+
         // Debug: Check if PDF content was generated
         if (empty($pdfContent)) {
             throw new \Exception('PDF content is empty - generation failed');
         }
-        
+
         Log::info('PDF content generated', [
             'content_size' => strlen($pdfContent),
-            'path' => $path
+            'path' => $path,
         ]);
-        
+
         // Save PDF to configured storage (S3)
         Storage::put($path, $pdfContent);
 
@@ -1495,14 +1504,13 @@ class ContractGenerationService
     /**
      * Additional helper methods for VoIP-specific functionality
      */
-    
     protected function generateSLATerms(Quote $quote): array
     {
         return [
             'uptime_guarantee' => '99.9%',
             'response_time' => '4 hours',
             'resolution_time' => '24 hours',
-            'maintenance_window' => 'Sunday 2:00 AM - 6:00 AM EST'
+            'maintenance_window' => 'Sunday 2:00 AM - 6:00 AM EST',
         ];
     }
 
@@ -1512,7 +1520,7 @@ class ContractGenerationService
             'e911_compliance' => true,
             'fcc_regulations' => true,
             'data_privacy' => true,
-            'service_quality' => true
+            'service_quality' => true,
         ];
     }
 
@@ -1526,7 +1534,7 @@ class ContractGenerationService
                 'description' => 'Configure VoIP services and settings',
                 'type' => 'service_activation',
                 'days_offset' => 0,
-                'billable' => false
+                'billable' => false,
             ];
 
             $milestones[] = [
@@ -1535,7 +1543,7 @@ class ContractGenerationService
                 'type' => 'equipment_delivery',
                 'days_offset' => 7,
                 'billable' => true,
-                'value' => $this->calculateEquipmentValue($quote)
+                'value' => $this->calculateEquipmentValue($quote),
             ];
 
             $milestones[] = [
@@ -1543,7 +1551,7 @@ class ContractGenerationService
                 'description' => 'Activate VoIP services and perform testing',
                 'type' => 'go_live',
                 'days_offset' => 14,
-                'billable' => false
+                'billable' => false,
             ];
         }
 
@@ -1553,33 +1561,49 @@ class ContractGenerationService
     protected function calculateMilestoneDate(Carbon $startDate, array $milestone): Carbon
     {
         $daysOffset = $milestone['days_offset'] ?? 0;
+
         return $startDate->copy()->addDays($daysOffset);
     }
-
 
     // Additional helper methods
     protected function formatAddress(Client $client): string
     {
         $address = [];
-        if ($client->address) $address[] = $client->address;
-        if ($client->city) $address[] = $client->city;
-        if ($client->state) $address[] = $client->state;
-        if ($client->postal_code) $address[] = $client->postal_code;
-        
+        if ($client->address) {
+            $address[] = $client->address;
+        }
+        if ($client->city) {
+            $address[] = $client->city;
+        }
+        if ($client->state) {
+            $address[] = $client->state;
+        }
+        if ($client->postal_code) {
+            $address[] = $client->postal_code;
+        }
+
         return implode(', ', $address) ?: 'Address on file';
     }
 
     protected function formatCompanyAddress($company): string
     {
         $address = [];
-        if ($company->address) $address[] = $company->address;
-        if ($company->city) $address[] = $company->city;
-        if ($company->state) $address[] = $company->state;
-        
+        if ($company->address) {
+            $address[] = $company->address;
+        }
+        if ($company->city) {
+            $address[] = $company->city;
+        }
+        if ($company->state) {
+            $address[] = $company->state;
+        }
+
         // Handle different zip field names (Company uses 'zip', Client might use 'postal_code')
         $zipCode = $company->zip ?? $company->postal_code ?? null;
-        if ($zipCode) $address[] = $zipCode;
-        
+        if ($zipCode) {
+            $address[] = $zipCode;
+        }
+
         return implode(', ', $address) ?: 'Address on file';
     }
 
@@ -1588,16 +1612,16 @@ class ContractGenerationService
         // Extract short name from company name
         // "FoleyBridge Solutions" -> "FoleyBridge"
         $words = explode(' ', $companyName);
-        
+
         // If multiple words, try to get a meaningful short name
         if (count($words) > 1) {
             // Remove common suffixes
             $suffixes = ['Solutions', 'Inc', 'LLC', 'Corp', 'Corporation', 'Company', 'Ltd', 'Limited'];
-            $words = array_filter($words, function($word) use ($suffixes) {
-                return !in_array($word, $suffixes);
+            $words = array_filter($words, function ($word) use ($suffixes) {
+                return ! in_array($word, $suffixes);
             });
         }
-        
+
         // Return first word or combination of first words
         return count($words) > 1 ? implode('', array_slice($words, 0, 2)) : $words[0];
     }
@@ -1611,7 +1635,7 @@ class ContractGenerationService
             $infraSchedule = $contract->schedules->where('schedule_type', 'infrastructure')->first();
             if ($infraSchedule && isset($infraSchedule->schedule_data['supportedAssetTypes'])) {
                 $supportedTypes = $infraSchedule->schedule_data['supportedAssetTypes'];
-                
+
                 // Check if any of the target asset types are supported
                 foreach ($targetAssetTypes as $targetType) {
                     if (in_array($targetType, $supportedTypes)) {
@@ -1620,48 +1644,47 @@ class ContractGenerationService
                 }
             }
         }
-        
+
         return false;
     }
 
-    
     protected function formatVoipServices(Contract $contract): string
     {
-        if (!$contract->voip_specifications) {
+        if (! $contract->voip_specifications) {
             return '';
         }
-        
-        $services = is_string($contract->voip_specifications) 
-            ? json_decode($contract->voip_specifications, true) 
+
+        $services = is_string($contract->voip_specifications)
+            ? json_decode($contract->voip_specifications, true)
             : $contract->voip_specifications;
-            
-        if (!$services || !isset($services['services'])) {
+
+        if (! $services || ! isset($services['services'])) {
             return '';
         }
-        
+
         $formatted = "<h3>VoIP Services Included:</h3>\n<ul>\n";
         foreach ($services['services'] as $service) {
             $formatted .= "<li>{$service['service_name']} (Quantity: {$service['quantity']})</li>\n";
         }
         $formatted .= "</ul>\n";
-        
+
         return $formatted;
     }
-    
+
     protected function formatSLATerms(Contract $contract): string
     {
-        if (!$contract->sla_terms) {
+        if (! $contract->sla_terms) {
             return '';
         }
-        
-        $sla = is_string($contract->sla_terms) 
-            ? json_decode($contract->sla_terms, true) 
+
+        $sla = is_string($contract->sla_terms)
+            ? json_decode($contract->sla_terms, true)
             : $contract->sla_terms;
-            
-        if (!$sla) {
+
+        if (! $sla) {
             return '';
         }
-        
+
         $formatted = "<h3>Service Level Agreement:</h3>\n<ul>\n";
         if (isset($sla['uptime_guarantee'])) {
             $formatted .= "<li>Uptime Guarantee: {$sla['uptime_guarantee']}</li>\n";
@@ -1673,24 +1696,24 @@ class ContractGenerationService
             $formatted .= "<li>Resolution Time: {$sla['resolution_time']}</li>\n";
         }
         $formatted .= "</ul>\n";
-        
+
         return $formatted;
     }
-    
+
     protected function formatComplianceTerms(Contract $contract): string
     {
-        if (!$contract->compliance_requirements) {
+        if (! $contract->compliance_requirements) {
             return '';
         }
-        
-        $compliance = is_string($contract->compliance_requirements) 
-            ? json_decode($contract->compliance_requirements, true) 
+
+        $compliance = is_string($contract->compliance_requirements)
+            ? json_decode($contract->compliance_requirements, true)
             : $contract->compliance_requirements;
-            
-        if (!$compliance) {
+
+        if (! $compliance) {
             return '';
         }
-        
+
         $formatted = "<h3>Compliance Requirements:</h3>\n<ul>\n";
         if (isset($compliance['regulatory']['fcc_compliance']) && $compliance['regulatory']['fcc_compliance']) {
             $formatted .= "<li>FCC Compliance Required</li>\n";
@@ -1699,22 +1722,61 @@ class ContractGenerationService
             $formatted .= "<li>Privacy Policy Compliance</li>\n";
         }
         $formatted .= "</ul>\n";
-        
+
         return $formatted;
     }
-    protected function requiresE911(Quote $quote): bool { return true; }
-    protected function getUptimeSLA(Quote $quote): string { return '99.9%'; }
-    protected function getResponseTimeSLA(Quote $quote): string { return '4 hours'; }
-    protected function getResolutionTimeSLA(Quote $quote): string { return '24 hours'; }
-    protected function requiresHIPAACompliance(Client $client): bool { return false; }
-    protected function requiresPCICompliance(Quote $quote): bool { return false; }
-    protected function calculateEquipmentValue(Quote $quote): float { return 0; }
+
+    protected function requiresE911(Quote $quote): bool
+    {
+        return true;
+    }
+
+    protected function getUptimeSLA(Quote $quote): string
+    {
+        return '99.9%';
+    }
+
+    protected function getResponseTimeSLA(Quote $quote): string
+    {
+        return '4 hours';
+    }
+
+    protected function getResolutionTimeSLA(Quote $quote): string
+    {
+        return '24 hours';
+    }
+
+    protected function requiresHIPAACompliance(Client $client): bool
+    {
+        return false;
+    }
+
+    protected function requiresPCICompliance(Quote $quote): bool
+    {
+        return false;
+    }
+
+    protected function calculateEquipmentValue(Quote $quote): float
+    {
+        return 0;
+    }
+
     protected function updateVoipConfiguration(Contract $contract): void {}
+
     protected function updateContractMilestones(Contract $contract, array $milestones): void {}
+
     protected function applyTemplateConfigurations(Contract $contract, ContractTemplate $template): void {}
-    protected function generateDetailedSLA(Quote $quote): array { return []; }
-    protected function generateComplianceTracking(Quote $quote): array { return []; }
-    
+
+    protected function generateDetailedSLA(Quote $quote): array
+    {
+        return [];
+    }
+
+    protected function generateComplianceTracking(Quote $quote): array
+    {
+        return [];
+    }
+
     /**
      * Generate unique contract number
      */
@@ -1722,15 +1784,15 @@ class ContractGenerationService
     {
         // Get company ID from the authenticated user or fallback
         $companyId = Auth::user()->company_id ?? auth()->user()->company_id ?? 1;
-        
+
         // Generate a unique contract number using database transaction for race condition safety
         return DB::transaction(function () use ($prefix, $companyId) {
             // Get the highest existing number for this company and prefix
             $lastNumber = Contract::where('company_id', $companyId)
-                ->where('contract_number', 'like', $prefix . '-%')
+                ->where('contract_number', 'like', $prefix.'-%')
                 ->orderBy('contract_number', 'desc')
                 ->value('contract_number');
-            
+
             if ($lastNumber) {
                 // Extract the numeric part and increment
                 $parts = explode('-', $lastNumber);
@@ -1738,16 +1800,16 @@ class ContractGenerationService
             } else {
                 $nextNumber = 1;
             }
-            
+
             // Format with leading zeros
             $contractNumber = sprintf('%s-%04d', $prefix, $nextNumber);
-            
+
             // Double-check uniqueness in case of concurrent requests
             while (Contract::where('contract_number', $contractNumber)->exists()) {
                 $nextNumber++;
                 $contractNumber = sprintf('%s-%04d', $prefix, $nextNumber);
             }
-            
+
             return $contractNumber;
         });
     }

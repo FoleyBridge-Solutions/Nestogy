@@ -8,6 +8,7 @@ use Livewire\Component;
 class ForgotPassword extends Component
 {
     public string $email = '';
+
     public ?string $status = null;
 
     protected function rules()

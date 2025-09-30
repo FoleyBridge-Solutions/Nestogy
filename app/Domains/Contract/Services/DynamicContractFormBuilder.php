@@ -2,16 +2,14 @@
 
 namespace App\Domains\Contract\Services;
 
-use App\Domains\Contract\Models\ContractTypeDefinition;
-use App\Domains\Contract\Models\ContractFormSection;
-use App\Domains\Contract\Models\ContractTypeFormMapping;
 use App\Domains\Contract\Models\ContractFieldDefinition;
-use Illuminate\Support\Collection;
+use App\Domains\Contract\Models\ContractTypeDefinition;
+use App\Domains\Contract\Models\ContractTypeFormMapping;
 use Illuminate\Support\Facades\Auth;
 
 /**
  * DynamicContractFormBuilder
- * 
+ *
  * Builds dynamic forms for contract creation and editing based on
  * company-specific configuration and contract type definitions.
  */
@@ -23,7 +21,7 @@ class DynamicContractFormBuilder
     public function buildCreateForm(string $contractType): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -31,7 +29,7 @@ class DynamicContractFormBuilder
             ->where('slug', $contractType)
             ->first();
 
-        if (!$typeDefinition) {
+        if (! $typeDefinition) {
             throw new \Exception("Contract type '{$contractType}' not found");
         }
 
@@ -44,7 +42,7 @@ class DynamicContractFormBuilder
     public function buildEditForm($contract): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -52,12 +50,12 @@ class DynamicContractFormBuilder
             ->where('slug', $contract->contract_type)
             ->first();
 
-        if (!$typeDefinition) {
+        if (! $typeDefinition) {
             throw new \Exception("Contract type '{$contract->contract_type}' not found");
         }
 
         $formDefinition = $this->buildFormDefinition($typeDefinition, 'edit', $contract);
-        
+
         // Pre-populate with existing contract data
         $formDefinition['values'] = $this->extractContractValues($contract, $formDefinition['sections']);
 
@@ -70,7 +68,7 @@ class DynamicContractFormBuilder
     public function buildFilterForm(string $contractType): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -78,7 +76,7 @@ class DynamicContractFormBuilder
             ->where('slug', $contractType)
             ->first();
 
-        if (!$typeDefinition) {
+        if (! $typeDefinition) {
             return [];
         }
 
@@ -124,12 +122,12 @@ class DynamicContractFormBuilder
 
         foreach ($formMappings as $mapping) {
             $section = $mapping->section;
-            if (!$section || !$section->is_active) {
+            if (! $section || ! $section->is_active) {
                 continue;
             }
 
             // Check if section should be visible
-            if (!$mapping->shouldBeVisible()) {
+            if (! $mapping->shouldBeVisible()) {
                 continue;
             }
 
@@ -147,17 +145,17 @@ class DynamicContractFormBuilder
 
             // Get fields for this section
             $fields = $section->getOrderedFields();
-            
+
             foreach ($fields as $field) {
                 // Apply field overrides from mapping
                 $fieldData = $mapping->applyFieldOverrides($field);
-                
+
                 // Add to section
                 $sectionData['fields'][] = $this->buildFieldDefinition($fieldData, $mode);
-                
+
                 // Add validation rules
                 $validationRules[$field->field_slug] = $field->getValidationRules();
-                
+
                 // Add default value if set
                 if ($field->default_value !== null) {
                     $defaultValues[$field->field_slug] = $field->default_value;
@@ -205,11 +203,11 @@ class DynamicContractFormBuilder
             case ContractFieldDefinition::TYPE_CLIENT_SELECTOR:
                 $field['ajax_url'] = route('api.clients.search');
                 break;
-                
+
             case ContractFieldDefinition::TYPE_ASSET_SELECTOR:
                 $field['ajax_url'] = route('api.assets.search');
                 break;
-                
+
             case ContractFieldDefinition::TYPE_USER_SELECTOR:
                 $field['ajax_url'] = route('api.users.search');
                 break;
@@ -224,17 +222,17 @@ class DynamicContractFormBuilder
     protected function extractContractValues($contract, array $sections): array
     {
         $values = [];
-        
+
         // Get all field slugs from sections
         foreach ($sections as $section) {
             foreach ($section['fields'] as $field) {
                 $fieldSlug = $field['field_slug'];
-                
+
                 // Try to get value from contract
                 if (isset($contract->{$fieldSlug})) {
                     $values[$fieldSlug] = $contract->{$fieldSlug};
                 }
-                
+
                 // Handle special mappings
                 switch ($fieldSlug) {
                     case 'client_id':
@@ -246,7 +244,7 @@ class DynamicContractFormBuilder
                     case 'end_date':
                         $values[$fieldSlug] = $contract->end_date?->format('Y-m-d');
                         break;
-                    // Add more field mappings as needed
+                        // Add more field mappings as needed
                 }
             }
         }
@@ -261,9 +259,9 @@ class DynamicContractFormBuilder
     {
         $formDefinition = $this->buildCreateForm($contractType);
         $validationRules = $formDefinition['validation_rules'] ?? [];
-        
+
         $validator = validator($data, $validationRules);
-        
+
         if ($validator->fails()) {
             return [
                 'valid' => false,
@@ -283,7 +281,7 @@ class DynamicContractFormBuilder
     public function renderField(array $fieldDefinition, $value = null): string
     {
         $componentName = $this->getFieldComponent($fieldDefinition['field_type']);
-        
+
         return view("components.contract-fields.{$componentName}", [
             'field' => $fieldDefinition,
             'value' => $value,

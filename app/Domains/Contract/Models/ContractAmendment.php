@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * ContractAmendment Model
- * 
+ *
  * Tracks all changes and amendments to contracts throughout their lifecycle.
  * Critical for maintaining audit trail and compliance requirements.
- * 
+ *
  * @property int $id
  * @property int $contract_id
  * @property int $company_id
@@ -34,7 +34,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class ContractAmendment extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -79,18 +79,26 @@ class ContractAmendment extends Model
      * Amendment type constants
      */
     const TYPE_RENEWAL = 'renewal';
+
     const TYPE_PRICING = 'pricing';
+
     const TYPE_TERM = 'term';
+
     const TYPE_SLA = 'sla';
+
     const TYPE_SCOPE = 'scope';
+
     const TYPE_GENERAL = 'general';
 
     /**
      * Amendment status constants
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_APPLIED = 'applied';
+
     const STATUS_REJECTED = 'rejected';
 
     /**

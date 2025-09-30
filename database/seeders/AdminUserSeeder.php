@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use App\Models\User;
-use Carbon\Carbon;
 use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class AdminUserSeeder extends Seeder
@@ -34,7 +34,7 @@ class AdminUserSeeder extends Seeder
 
         // Assign admin role to the admin user
         Bouncer::assign('admin')->to($adminUser);
-        
+
         $this->command->info('Admin user seeded successfully!');
         $this->command->info('Email: admin@nestogy.com');
         $this->command->info('Password: Admin@123456');

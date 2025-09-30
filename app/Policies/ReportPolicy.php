@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ReportPolicy
 {
@@ -30,7 +29,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.financial',
-            'financial.view'
+            'financial.view',
         ]);
     }
 
@@ -41,7 +40,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.tickets',
-            'tickets.view'
+            'tickets.view',
         ]);
     }
 
@@ -52,7 +51,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.assets',
-            'assets.view'
+            'assets.view',
         ]);
     }
 
@@ -63,7 +62,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.clients',
-            'clients.view'
+            'clients.view',
         ]);
     }
 
@@ -74,7 +73,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.projects',
-            'projects.view'
+            'projects.view',
         ]);
     }
 
@@ -85,7 +84,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.users',
-            'users.view'
+            'users.view',
         ]);
     }
 
@@ -96,7 +95,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.view',
-            'system.settings.manage'
+            'system.settings.manage',
         ]) || $user->isAdmin();
     }
 
@@ -124,7 +123,7 @@ class ReportPolicy
         return $user->canAny([
             'reports.financial',
             'financial.view',
-            'financial.manage'
+            'financial.manage',
         ]);
     }
 
@@ -136,7 +135,7 @@ class ReportPolicy
         return $user->canAny([
             'reports.financial',
             'financial.expenses.view',
-            'financial.expenses.approve'
+            'financial.expenses.approve',
         ]);
     }
 
@@ -147,7 +146,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.financial',
-            'financial.manage'
+            'financial.manage',
         ]) || $user->isAdmin();
     }
 
@@ -159,7 +158,7 @@ class ReportPolicy
         return $user->canAny([
             'reports.tickets',
             'tickets.view',
-            'projects.view'
+            'projects.view',
         ]);
     }
 
@@ -172,7 +171,7 @@ class ReportPolicy
             'reports.users',
             'users.manage',
             'tickets.manage',
-            'projects.manage'
+            'projects.manage',
         ]) || $user->isAdmin();
     }
 
@@ -184,7 +183,7 @@ class ReportPolicy
         return $user->canAny([
             'reports.assets',
             'assets.maintenance.view',
-            'assets.view'
+            'assets.view',
         ]);
     }
 
@@ -196,7 +195,7 @@ class ReportPolicy
         return $user->canAny([
             'reports.assets',
             'assets.warranties.view',
-            'assets.view'
+            'assets.view',
         ]);
     }
 
@@ -208,7 +207,7 @@ class ReportPolicy
         return $user->canAny([
             'reports.assets',
             'assets.depreciations.view',
-            'assets.view'
+            'assets.view',
         ]);
     }
 
@@ -219,7 +218,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.tickets',
-            'tickets.manage'
+            'tickets.manage',
         ]) || $user->isAdmin();
     }
 
@@ -231,7 +230,7 @@ class ReportPolicy
         return $user->canAny([
             'reports.clients',
             'clients.manage',
-            'tickets.manage'
+            'tickets.manage',
         ]);
     }
 
@@ -242,7 +241,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.users',
-            'users.manage'
+            'users.manage',
         ]) || $user->isAdmin();
     }
 
@@ -253,7 +252,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.export',
-            'system.settings.manage'
+            'system.settings.manage',
         ]) || $user->isAdmin();
     }
 
@@ -288,7 +287,7 @@ class ReportPolicy
     {
         return $user->canAny([
             'reports.export',
-            'system.settings.manage'
+            'system.settings.manage',
         ]) || $user->isAdmin();
     }
 

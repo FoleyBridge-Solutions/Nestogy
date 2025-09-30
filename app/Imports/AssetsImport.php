@@ -5,23 +5,26 @@ namespace App\Imports;
 use App\Models\Asset;
 use App\Models\Contact;
 use App\Models\Location;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Concerns\SkipsErrors;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Concerns\SkipsOnError;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsOnError;
-use Maatwebsite\Excel\Concerns\SkipsErrors;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
-use Maatwebsite\Excel\Concerns\SkipsFailures;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 
-class AssetsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnError, SkipsOnFailure
+class AssetsImport implements SkipsOnError, SkipsOnFailure, ToModel, WithHeadingRow, WithValidation
 {
     use SkipsErrors, SkipsFailures;
 
     protected $clientId;
+
     protected $companyId;
+
     protected $importedCount = 0;
+
     protected $skippedCount = 0;
 
     public function __construct($clientId)
@@ -40,17 +43,18 @@ class AssetsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnEr
 
         if ($existingAsset) {
             $this->skippedCount++;
+
             return null;
         }
 
         // Find contact if specified
         $contactId = null;
-        if (!empty($row['assigned_to'])) {
+        if (! empty($row['assigned_to'])) {
             $contact = Contact::where('name', $row['assigned_to'])
                 ->where('client_id', $this->clientId)
                 ->where('company_id', $this->companyId)
                 ->first();
-            
+
             if ($contact) {
                 $contactId = $contact->id;
             }
@@ -58,12 +62,12 @@ class AssetsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnEr
 
         // Find location if specified
         $locationId = null;
-        if (!empty($row['location'])) {
+        if (! empty($row['location'])) {
             $location = Location::where('name', $row['location'])
                 ->where('client_id', $this->clientId)
                 ->where('company_id', $this->companyId)
                 ->first();
-            
+
             if ($location) {
                 $locationId = $location->id;
             }
@@ -107,7 +111,7 @@ class AssetsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnEr
         return [
             'name.required' => 'Asset name is required',
             'type.required' => 'Asset type is required',
-            'type.in' => 'Asset type must be one of: ' . implode(', ', Asset::TYPES),
+            'type.in' => 'Asset type must be one of: '.implode(', ', Asset::TYPES),
             'make.required' => 'Asset make/manufacturer is required',
         ];
     }

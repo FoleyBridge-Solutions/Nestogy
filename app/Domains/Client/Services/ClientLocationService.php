@@ -37,10 +37,10 @@ class ClientLocationService
     public function createLocation(Client $client, array $data): Location
     {
         DB::beginTransaction();
-        
+
         try {
             // If this is set as primary, unset other primary locations
-            if (!empty($data['is_primary']) && $data['is_primary']) {
+            if (! empty($data['is_primary']) && $data['is_primary']) {
                 $client->locations()->update(['is_primary' => false]);
             }
 
@@ -67,24 +67,24 @@ class ClientLocationService
             ]);
 
             // Geocode if address provided but no coordinates
-            if (!empty($data['address']) && empty($data['latitude'])) {
+            if (! empty($data['address']) && empty($data['latitude'])) {
                 $this->geocodeLocation($location);
             }
 
             DB::commit();
-            
+
             Log::info('Location created for client', [
                 'client_id' => $client->id,
-                'location_id' => $location->id
+                'location_id' => $location->id,
             ]);
 
             return $location;
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create location', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -96,12 +96,12 @@ class ClientLocationService
     public function updateLocation(Location $location, array $data): Location
     {
         DB::beginTransaction();
-        
+
         try {
             $oldAddress = $location->address;
-            
+
             // If setting as primary, unset other primary locations for this client
-            if (!empty($data['is_primary']) && $data['is_primary'] && !$location->is_primary) {
+            if (! empty($data['is_primary']) && $data['is_primary'] && ! $location->is_primary) {
                 Location::where('client_id', $location->client_id)
                     ->where('id', '!=', $location->id)
                     ->update(['is_primary' => false]);
@@ -133,16 +133,16 @@ class ClientLocationService
             }
 
             DB::commit();
-            
+
             Log::info('Location updated', ['location_id' => $location->id]);
 
             return $location->fresh();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update location', [
                 'location_id' => $location->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -159,7 +159,7 @@ class ClientLocationService
                 $nextLocation = Location::where('client_id', $location->client_id)
                     ->where('id', '!=', $location->id)
                     ->first();
-                    
+
                 if ($nextLocation) {
                     $nextLocation->update(['is_primary' => true]);
                 }
@@ -171,15 +171,15 @@ class ClientLocationService
             }
 
             $location->delete();
-            
+
             Log::info('Location deleted', ['location_id' => $location->id]);
-            
+
             return true;
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to delete location', [
                 'location_id' => $location->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -228,20 +228,20 @@ class ClientLocationService
     {
         // Haversine formula for distance calculation
         $radiusKm = $radiusMiles * 1.60934;
-        
-        return Location::selectRaw("*, 
+
+        return Location::selectRaw('*, 
             ( 6371 * acos( cos( radians(?) ) *
               cos( radians( latitude ) ) *
               cos( radians( longitude ) - radians(?) ) +
               sin( radians(?) ) *
-              sin( radians( latitude ) ) ) ) AS distance", 
+              sin( radians( latitude ) ) ) ) AS distance',
             [$latitude, $longitude, $latitude])
             ->havingRaw('( 6371 * acos( cos( radians(?) ) *
               cos( radians( latitude ) ) *
               cos( radians( longitude ) - radians(?) ) +
               sin( radians(?) ) *
-              sin( radians( latitude ) ) ) ) < ?', 
-            [$latitude, $longitude, $latitude, $radiusKm])
+              sin( radians( latitude ) ) ) ) < ?',
+                [$latitude, $longitude, $latitude, $radiusKm])
             ->orderBy('distance')
             ->get();
     }
@@ -259,7 +259,7 @@ class ClientLocationService
                 $location->city,
                 $location->state,
                 $location->zip,
-                $location->country
+                $location->country,
             ]));
 
             // In production, call geocoding API here
@@ -268,16 +268,16 @@ class ClientLocationService
             //     'latitude' => $coords['lat'],
             //     'longitude' => $coords['lng']
             // ]);
-            
+
             Log::info('Location geocoding skipped (no API configured)', [
                 'location_id' => $location->id,
-                'address' => $fullAddress
+                'address' => $fullAddress,
             ]);
-            
+
         } catch (\Exception $e) {
             Log::warning('Failed to geocode location', [
                 'location_id' => $location->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -356,37 +356,37 @@ class ClientLocationService
                     $failed[] = [
                         'index' => $index,
                         'data' => $locationData,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
                 }
             }
 
             if (empty($failed)) {
                 DB::commit();
-                
+
                 Log::info('Bulk location import completed', [
                     'client_id' => $client->id,
-                    'imported_count' => count($imported)
+                    'imported_count' => count($imported),
                 ]);
             } else {
                 DB::rollBack();
-                
+
                 Log::warning('Bulk location import failed', [
                     'client_id' => $client->id,
-                    'failed_count' => count($failed)
+                    'failed_count' => count($failed),
                 ]);
             }
 
             return [
                 'imported' => $imported,
-                'failed' => $failed
+                'failed' => $failed,
             ];
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Bulk location import error', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }

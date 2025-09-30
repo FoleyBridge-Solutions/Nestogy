@@ -30,7 +30,7 @@ class FinancialSettingsService extends BaseSettingsService
                     'reminder_days_before' => 'nullable|array',
                     'reminder_days_after' => 'nullable|array',
                 ];
-                
+
             case 'invoicing':
                 return [
                     'invoice_footer' => 'nullable|string|max:1000',
@@ -43,7 +43,7 @@ class FinancialSettingsService extends BaseSettingsService
                     'minimum_payment_amount' => 'nullable|numeric|min:0',
                     'invoice_template' => 'nullable|string',
                 ];
-                
+
             case 'taxes':
                 return [
                     'tax_enabled' => 'boolean',
@@ -56,7 +56,7 @@ class FinancialSettingsService extends BaseSettingsService
                     'voip_tax_enabled' => 'boolean',
                     'voip_tax_api_key' => 'nullable|string',
                 ];
-                
+
             case 'payment_gateways':
                 return [
                     'stripe_enabled' => 'boolean',
@@ -70,7 +70,7 @@ class FinancialSettingsService extends BaseSettingsService
                     'check_enabled' => 'boolean',
                     'cash_enabled' => 'boolean',
                 ];
-                
+
             default:
                 return [];
         }
@@ -81,22 +81,22 @@ class FinancialSettingsService extends BaseSettingsService
      */
     protected function processBeforeSave(string $category, array $data): array
     {
-        if ($category === 'taxes' && !empty($data['voip_tax_api_key'])) {
-            if (!$this->isEncrypted($data['voip_tax_api_key'])) {
+        if ($category === 'taxes' && ! empty($data['voip_tax_api_key'])) {
+            if (! $this->isEncrypted($data['voip_tax_api_key'])) {
                 $data['voip_tax_api_key'] = Crypt::encryptString($data['voip_tax_api_key']);
             }
         }
-        
+
         if ($category === 'payment_gateways') {
             // Encrypt payment gateway credentials
             $encryptFields = ['stripe_secret_key', 'paypal_secret'];
             foreach ($encryptFields as $field) {
-                if (!empty($data[$field]) && !$this->isEncrypted($data[$field])) {
+                if (! empty($data[$field]) && ! $this->isEncrypted($data[$field])) {
                     $data[$field] = Crypt::encryptString($data[$field]);
                 }
             }
         }
-        
+
         return $data;
     }
 
@@ -107,6 +107,7 @@ class FinancialSettingsService extends BaseSettingsService
     {
         try {
             Crypt::decryptString($value);
+
             return true;
         } catch (\Exception $e) {
             return false;
@@ -130,7 +131,7 @@ class FinancialSettingsService extends BaseSettingsService
                     'reminder_days_before' => [7, 3, 1],
                     'reminder_days_after' => [1, 7, 14, 30],
                 ];
-                
+
             case 'invoicing':
                 return [
                     'show_tax_id' => true,
@@ -138,7 +139,7 @@ class FinancialSettingsService extends BaseSettingsService
                     'attach_pdf' => true,
                     'allow_partial_payments' => false,
                 ];
-                
+
             case 'taxes':
                 return [
                     'tax_enabled' => true,
@@ -149,7 +150,7 @@ class FinancialSettingsService extends BaseSettingsService
                     'tax_inclusive' => false,
                     'voip_tax_enabled' => false,
                 ];
-                
+
             case 'payment_gateways':
                 return [
                     'stripe_enabled' => false,
@@ -159,7 +160,7 @@ class FinancialSettingsService extends BaseSettingsService
                     'check_enabled' => true,
                     'cash_enabled' => true,
                 ];
-                
+
             default:
                 return [];
         }
@@ -177,28 +178,28 @@ class FinancialSettingsService extends BaseSettingsService
                     'description' => 'Configure billing cycles and payment terms',
                     'icon' => 'calculator',
                 ];
-                
+
             case 'invoicing':
                 return [
                     'name' => 'Invoicing',
                     'description' => 'Invoice templates and settings',
                     'icon' => 'document-text',
                 ];
-                
+
             case 'taxes':
                 return [
                     'name' => 'Tax Settings',
                     'description' => 'Configure tax rates and VoIP taxes',
                     'icon' => 'receipt-percent',
                 ];
-                
+
             case 'payment_gateways':
                 return [
                     'name' => 'Payment Gateways',
                     'description' => 'Configure payment processors',
                     'icon' => 'credit-card',
                 ];
-                
+
             default:
                 return [];
         }

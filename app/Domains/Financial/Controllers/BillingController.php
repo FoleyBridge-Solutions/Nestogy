@@ -2,20 +2,18 @@
 
 namespace App\Domains\Financial\Controllers;
 
+use App\Domains\Core\Services\StripeSubscriptionService;
 use App\Http\Controllers\Controller;
-
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\SubscriptionPlan;
-use App\Domains\Core\Services\StripeSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 /**
  * BillingController
- * 
+ *
  * Handles customer self-service billing portal for tenant companies.
  * Allows customers to view their subscription, change plans, update payment methods, etc.
  */
@@ -35,11 +33,11 @@ class BillingController extends Controller
     public function index()
     {
         $company = Auth::user()->company;
-        
+
         // Get the billing client record (in Company 1)
         $client = $company->clientRecord;
-        
-        if (!$client) {
+
+        if (! $client) {
             // This company doesn't have billing set up
             return view('billing.not-setup');
         }
@@ -67,7 +65,7 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client) {
+        if (! $client) {
             abort(404);
         }
 
@@ -91,7 +89,7 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client) {
+        if (! $client) {
             abort(404);
         }
 
@@ -108,7 +106,7 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client || !$client->subscriptionPlan) {
+        if (! $client || ! $client->subscriptionPlan) {
             abort(404);
         }
 
@@ -133,15 +131,15 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client || !$client->stripe_subscription_id) {
+        if (! $client || ! $client->stripe_subscription_id) {
             return redirect()->route('billing.index')
                 ->withErrors(['error' => 'No active subscription found.']);
         }
 
         $newPlan = SubscriptionPlan::findOrFail($request->subscription_plan_id);
-        
+
         // Check if user can change to this plan (business rules)
-        if (!$this->canChangeToPlan($client, $newPlan)) {
+        if (! $this->canChangeToPlan($client, $newPlan)) {
             return redirect()->back()
                 ->withErrors(['error' => 'Cannot change to the selected plan at this time.']);
         }
@@ -149,7 +147,7 @@ class BillingController extends Controller
         try {
             // Update Stripe subscription
             $this->stripeService->updateSubscription(
-                $client->stripe_subscription_id, 
+                $client->stripe_subscription_id,
                 $newPlan->stripe_price_id
             );
 
@@ -161,7 +159,7 @@ class BillingController extends Controller
                 'client_id' => $client->id,
                 'old_plan' => $client->subscriptionPlan->name,
                 'new_plan' => $newPlan->name,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->route('billing.index')
@@ -173,7 +171,7 @@ class BillingController extends Controller
                 'client_id' => $client->id,
                 'new_plan_id' => $newPlan->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->back()
@@ -189,7 +187,7 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client) {
+        if (! $client) {
             abort(404);
         }
 
@@ -214,7 +212,7 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client || !$client->stripe_subscription_id) {
+        if (! $client || ! $client->stripe_subscription_id) {
             return redirect()->route('billing.index')
                 ->withErrors(['error' => 'No active subscription found.']);
         }
@@ -228,7 +226,7 @@ class BillingController extends Controller
                 'client_id' => $client->id,
                 'reason' => $request->reason,
                 'feedback' => $request->feedback,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->route('billing.index')
@@ -239,7 +237,7 @@ class BillingController extends Controller
                 'company_id' => $company->id,
                 'client_id' => $client->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->back()
@@ -255,7 +253,7 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client || !$client->stripe_subscription_id) {
+        if (! $client || ! $client->stripe_subscription_id) {
             return redirect()->route('billing.index')
                 ->withErrors(['error' => 'No subscription found.']);
         }
@@ -267,7 +265,7 @@ class BillingController extends Controller
             Log::info('Customer reactivated subscription', [
                 'company_id' => $company->id,
                 'client_id' => $client->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->route('billing.index')
@@ -278,7 +276,7 @@ class BillingController extends Controller
                 'company_id' => $company->id,
                 'client_id' => $client->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->back()
@@ -294,14 +292,14 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client || !$client->stripe_customer_id) {
+        if (! $client || ! $client->stripe_customer_id) {
             return redirect()->route('billing.payment-methods')
                 ->withErrors(['error' => 'Billing portal is not available.']);
         }
 
         try {
             $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
-            
+
             $session = $stripe->billingPortal->sessions->create([
                 'customer' => $client->stripe_customer_id,
                 'return_url' => route('billing.index'),
@@ -314,7 +312,7 @@ class BillingController extends Controller
                 'company_id' => $company->id,
                 'client_id' => $client->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return redirect()->back()
@@ -330,7 +328,7 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client) {
+        if (! $client) {
             abort(404);
         }
 
@@ -349,7 +347,7 @@ class BillingController extends Controller
         $company = Auth::user()->company;
         $client = $company->clientRecord;
 
-        if (!$client) {
+        if (! $client) {
             abort(404);
         }
 
@@ -382,9 +380,9 @@ class BillingController extends Controller
     {
         // Add business logic for plan changes
         // For example: prevent downgrades if current usage exceeds new plan limits
-        
+
         $company = $client->linkedCompany;
-        if (!$company) {
+        if (! $company) {
             return false;
         }
 

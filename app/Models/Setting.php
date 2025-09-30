@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Setting Model
- * 
+ *
  * Represents system-wide configuration settings for each company.
  * Includes SMTP, IMAP, invoice, ticket, and system preferences.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $current_database_version
@@ -120,7 +120,7 @@ class Setting extends Model
         'company_id',
         'current_database_version',
         'start_page',
-        
+
         // General & Company Settings
         'company_logo',
         'company_colors',
@@ -138,7 +138,7 @@ class Setting extends Model
         'company_currency',
         'custom_fields',
         'localization_settings',
-        
+
         // Security & Access Control
         'password_min_length',
         'password_require_special',
@@ -197,7 +197,7 @@ class Setting extends Model
         'login_message',
         'login_key_required',
         'login_key_secret',
-        
+
         // Email & Communication
         'smtp_host',
         'smtp_port',
@@ -229,7 +229,7 @@ class Setting extends Model
         'communication_preferences',
         'quiet_hours_start',
         'quiet_hours_end',
-        
+
         // Billing & Financial Management
         'default_transfer_from_account',
         'default_transfer_to_account',
@@ -281,7 +281,7 @@ class Setting extends Model
         'recurring_auto_send_invoice',
         'send_invoice_reminders',
         'invoice_overdue_reminders',
-        
+
         // RMM & Monitoring Integrations
         'connectwise_automate_settings',
         'datto_rmm_settings',
@@ -297,7 +297,7 @@ class Setting extends Model
         'remote_access_settings',
         'auto_create_tickets_from_alerts',
         'alert_to_ticket_mapping',
-        
+
         // Ticketing & Service Desk
         'ticket_prefix',
         'ticket_next_number',
@@ -323,7 +323,7 @@ class Setting extends Model
         'ticket_automation_rules',
         'multichannel_settings',
         'queue_management_settings',
-        
+
         // Project Management
         'project_templates',
         'project_standardization_settings',
@@ -339,7 +339,7 @@ class Setting extends Model
         'change_request_workflows',
         'project_collaboration_settings',
         'document_management_settings',
-        
+
         // Asset & Inventory Management
         'asset_discovery_rules',
         'asset_lifecycle_settings',
@@ -354,7 +354,7 @@ class Setting extends Model
         'mobile_asset_management_enabled',
         'asset_relationship_settings',
         'asset_compliance_settings',
-        
+
         // Client Portal & Self-Service
         'client_portal_enable',
         'portal_branding_settings',
@@ -369,7 +369,7 @@ class Setting extends Model
         'portal_sso_settings',
         'portal_mobile_settings',
         'portal_dashboard_settings',
-        
+
         // Automation & Workflows
         'business_rule_engine_settings',
         'workflow_automation_templates',
@@ -381,7 +381,7 @@ class Setting extends Model
         'notification_automation_settings',
         'approval_process_automation',
         'document_generation_automation',
-        
+
         // Compliance & Regulatory
         'soc2_compliance_enabled',
         'soc2_settings',
@@ -397,7 +397,7 @@ class Setting extends Model
         'risk_assessment_settings',
         'vendor_compliance_settings',
         'incident_response_settings',
-        
+
         // Backup & Disaster Recovery
         'backup_policies',
         'backup_schedules',
@@ -410,7 +410,7 @@ class Setting extends Model
         'cloud_backup_settings',
         'ransomware_protection_settings',
         'recovery_documentation_settings',
-        
+
         // Performance & System Optimization
         'system_resource_monitoring',
         'performance_tuning_settings',
@@ -422,7 +422,7 @@ class Setting extends Model
         'search_optimization_settings',
         'mobile_performance_settings',
         'system_health_monitoring',
-        
+
         // Reporting & Analytics
         'custom_dashboard_settings',
         'report_templates',
@@ -435,7 +435,7 @@ class Setting extends Model
         'export_delivery_settings',
         'data_warehouse_settings',
         'business_intelligence_settings',
-        
+
         // Notifications & Alerts
         'multichannel_notification_settings',
         'alert_escalation_policies',
@@ -448,7 +448,7 @@ class Setting extends Model
         'webhook_notification_settings',
         'custom_notification_rules',
         'notification_localization_settings',
-        
+
         // API & Integration Management
         'api_key_management_settings',
         'api_rate_limiting_settings',
@@ -461,7 +461,7 @@ class Setting extends Model
         'custom_connector_settings',
         'marketplace_integration_settings',
         'legacy_system_bridge_settings',
-        
+
         // Mobile & Remote Access
         'mobile_app_settings',
         'offline_mode_settings',
@@ -473,7 +473,7 @@ class Setting extends Model
         'mobile_feature_settings',
         'mobile_sync_settings',
         'mobile_battery_optimization',
-        
+
         // Training & Documentation
         'knowledge_base_settings',
         'training_module_settings',
@@ -485,7 +485,7 @@ class Setting extends Model
         'external_training_integration_settings',
         'documentation_versioning_settings',
         'search_discovery_settings',
-        
+
         // System Settings
         'enable_cron',
         'cron_key',
@@ -534,14 +534,14 @@ class Setting extends Model
      */
     protected $casts = [
         'company_id' => 'integer',
-        
+
         // General & Company Settings
         'company_colors' => 'array',
         'business_hours' => 'array',
         'company_holidays' => 'array',
         'custom_fields' => 'array',
         'localization_settings' => 'array',
-        
+
         // Security & Access Control
         'password_min_length' => 'integer',
         'password_require_special' => 'boolean',
@@ -563,7 +563,7 @@ class Setting extends Model
         'audit_logging_enabled' => 'boolean',
         'audit_retention_days' => 'integer',
         'login_key_required' => 'boolean',
-        
+
         // Email & Communication
         'smtp_port' => 'integer',
         'smtp_auth_required' => 'boolean',
@@ -583,7 +583,7 @@ class Setting extends Model
         'communication_preferences' => 'array',
         'quiet_hours_start' => 'datetime:H:i',
         'quiet_hours_end' => 'datetime:H:i',
-        
+
         // Billing & Financial Management
         'default_transfer_from_account' => 'integer',
         'default_transfer_to_account' => 'integer',
@@ -622,7 +622,7 @@ class Setting extends Model
         'quote_next_number' => 'integer',
         'recurring_auto_send_invoice' => 'boolean',
         'send_invoice_reminders' => 'boolean',
-        
+
         // RMM & Monitoring Integrations
         'connectwise_automate_settings' => 'array',
         'datto_rmm_settings' => 'array',
@@ -638,7 +638,7 @@ class Setting extends Model
         'remote_access_settings' => 'array',
         'auto_create_tickets_from_alerts' => 'boolean',
         'alert_to_ticket_mapping' => 'array',
-        
+
         // Ticketing & Service Desk
         'ticket_next_number' => 'integer',
         'ticket_email_parse' => 'boolean',
@@ -660,7 +660,7 @@ class Setting extends Model
         'ticket_automation_rules' => 'array',
         'multichannel_settings' => 'array',
         'queue_management_settings' => 'array',
-        
+
         // Project Management
         'project_templates' => 'array',
         'project_standardization_settings' => 'array',
@@ -676,7 +676,7 @@ class Setting extends Model
         'change_request_workflows' => 'array',
         'project_collaboration_settings' => 'array',
         'document_management_settings' => 'array',
-        
+
         // Asset & Inventory Management
         'asset_discovery_rules' => 'array',
         'asset_lifecycle_settings' => 'array',
@@ -691,7 +691,7 @@ class Setting extends Model
         'mobile_asset_management_enabled' => 'boolean',
         'asset_relationship_settings' => 'array',
         'asset_compliance_settings' => 'array',
-        
+
         // Client Portal & Self-Service
         'client_portal_enable' => 'boolean',
         'portal_branding_settings' => 'array',
@@ -706,7 +706,7 @@ class Setting extends Model
         'portal_sso_settings' => 'array',
         'portal_mobile_settings' => 'array',
         'portal_dashboard_settings' => 'array',
-        
+
         // Automation & Workflows
         'business_rule_engine_settings' => 'array',
         'workflow_automation_templates' => 'array',
@@ -718,7 +718,7 @@ class Setting extends Model
         'notification_automation_settings' => 'array',
         'approval_process_automation' => 'array',
         'document_generation_automation' => 'array',
-        
+
         // Compliance & Regulatory
         'soc2_compliance_enabled' => 'boolean',
         'soc2_settings' => 'array',
@@ -734,7 +734,7 @@ class Setting extends Model
         'risk_assessment_settings' => 'array',
         'vendor_compliance_settings' => 'array',
         'incident_response_settings' => 'array',
-        
+
         // Backup & Disaster Recovery
         'backup_policies' => 'array',
         'backup_schedules' => 'array',
@@ -747,7 +747,7 @@ class Setting extends Model
         'cloud_backup_settings' => 'array',
         'ransomware_protection_settings' => 'array',
         'recovery_documentation_settings' => 'array',
-        
+
         // Performance & System Optimization
         'system_resource_monitoring' => 'array',
         'performance_tuning_settings' => 'array',
@@ -759,7 +759,7 @@ class Setting extends Model
         'search_optimization_settings' => 'array',
         'mobile_performance_settings' => 'array',
         'system_health_monitoring' => 'array',
-        
+
         // Reporting & Analytics
         'custom_dashboard_settings' => 'array',
         'report_templates' => 'array',
@@ -772,7 +772,7 @@ class Setting extends Model
         'export_delivery_settings' => 'array',
         'data_warehouse_settings' => 'array',
         'business_intelligence_settings' => 'array',
-        
+
         // Notifications & Alerts
         'multichannel_notification_settings' => 'array',
         'alert_escalation_policies' => 'array',
@@ -785,7 +785,7 @@ class Setting extends Model
         'webhook_notification_settings' => 'array',
         'custom_notification_rules' => 'array',
         'notification_localization_settings' => 'array',
-        
+
         // API & Integration Management
         'api_key_management_settings' => 'array',
         'api_rate_limiting_settings' => 'array',
@@ -798,7 +798,7 @@ class Setting extends Model
         'custom_connector_settings' => 'array',
         'marketplace_integration_settings' => 'array',
         'legacy_system_bridge_settings' => 'array',
-        
+
         // Mobile & Remote Access
         'mobile_app_settings' => 'array',
         'offline_mode_settings' => 'array',
@@ -810,7 +810,7 @@ class Setting extends Model
         'mobile_feature_settings' => 'array',
         'mobile_sync_settings' => 'array',
         'mobile_battery_optimization' => 'array',
-        
+
         // Training & Documentation
         'knowledge_base_settings' => 'array',
         'training_module_settings' => 'array',
@@ -822,7 +822,7 @@ class Setting extends Model
         'external_training_integration_settings' => 'array',
         'documentation_versioning_settings' => 'array',
         'search_discovery_settings' => 'array',
-        
+
         // System Settings
         'enable_cron' => 'boolean',
         'enable_alert_domain_expire' => 'boolean',
@@ -831,7 +831,7 @@ class Setting extends Model
         'module_enable_itdoc' => 'boolean',
         'module_enable_accounting' => 'boolean',
         'module_enable_ticketing' => 'boolean',
-        
+
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -849,7 +849,7 @@ class Setting extends Model
      */
     public function hasSmtpConfiguration(): bool
     {
-        return !empty($this->smtp_host) && !empty($this->smtp_port);
+        return ! empty($this->smtp_host) && ! empty($this->smtp_port);
     }
 
     /**
@@ -857,7 +857,7 @@ class Setting extends Model
      */
     public function hasImapConfiguration(): bool
     {
-        return !empty($this->imap_host) && !empty($this->imap_port);
+        return ! empty($this->imap_host) && ! empty($this->imap_port);
     }
 
     /**
@@ -873,29 +873,32 @@ class Setting extends Model
      */
     public function isModuleEnabled(string $module): bool
     {
-        $field = 'module_enable_' . $module;
+        $field = 'module_enable_'.$module;
+
         return $this->$field === true;
     }
-    
+
     /**
      * Check if compliance feature is enabled.
      */
     public function isComplianceEnabled(string $compliance): bool
     {
-        $field = $compliance . '_compliance_enabled';
+        $field = $compliance.'_compliance_enabled';
+
         return $this->$field === true;
     }
-    
+
     /**
      * Check if integration is configured.
      */
     public function hasIntegrationConfiguration(string $integration): bool
     {
-        $field = $integration . '_settings';
+        $field = $integration.'_settings';
         $settings = $this->$field;
-        return !empty($settings) && is_array($settings) && !empty(array_filter($settings));
+
+        return ! empty($settings) && is_array($settings) && ! empty(array_filter($settings));
     }
-    
+
     /**
      * Check if payment gateway is configured.
      */
@@ -903,7 +906,7 @@ class Setting extends Model
     {
         return $this->hasIntegrationConfiguration($gateway);
     }
-    
+
     /**
      * Check if RMM integration is configured.
      */
@@ -914,7 +917,7 @@ class Setting extends Model
                $this->hasIntegrationConfiguration('ninja_rmm') ||
                $this->hasIntegrationConfiguration('kaseya_vsa');
     }
-    
+
     /**
      * Check if monitoring integration is configured.
      */
@@ -924,7 +927,7 @@ class Setting extends Model
                $this->hasIntegrationConfiguration('prtg') ||
                $this->hasIntegrationConfiguration('solarwinds');
     }
-    
+
     /**
      * Check if accounting integration is configured.
      */
@@ -934,7 +937,7 @@ class Setting extends Model
                $this->hasIntegrationConfiguration('xero') ||
                $this->hasIntegrationConfiguration('sage');
     }
-    
+
     /**
      * Get security compliance status.
      */
@@ -947,39 +950,39 @@ class Setting extends Model
             'gdpr' => $this->gdpr_compliance_enabled,
         ];
     }
-    
+
     /**
      * Get enabled integrations.
      */
     public function getEnabledIntegrations(): array
     {
         $integrations = [];
-        
+
         $integrationFields = [
             'connectwise_automate', 'datto_rmm', 'ninja_rmm', 'kaseya_vsa',
             'auvik', 'prtg', 'solarwinds', 'stripe', 'square', 'paypal',
-            'authorize_net', 'quickbooks', 'xero', 'sage'
+            'authorize_net', 'quickbooks', 'xero', 'sage',
         ];
-        
+
         foreach ($integrationFields as $integration) {
             if ($this->hasIntegrationConfiguration($integration)) {
                 $integrations[] = $integration;
             }
         }
-        
+
         return $integrations;
     }
-    
+
     /**
      * Check if two-factor authentication is properly configured.
      */
     public function isTwoFactorProperlyConfigured(): bool
     {
-        return $this->two_factor_enabled && 
-               !empty($this->two_factor_methods) && 
+        return $this->two_factor_enabled &&
+               ! empty($this->two_factor_methods) &&
                is_array($this->two_factor_methods);
     }
-    
+
     /**
      * Check if password policy is strong.
      */
@@ -991,7 +994,7 @@ class Setting extends Model
                $this->password_require_uppercase &&
                $this->password_expiry_days <= 90;
     }
-    
+
     /**
      * Get portal configuration status.
      */
@@ -1014,6 +1017,7 @@ class Setting extends Model
     {
         $number = $this->invoice_next_number ?: 1;
         $this->update(['invoice_next_number' => $number + 1]);
+
         return $number;
     }
 
@@ -1024,6 +1028,7 @@ class Setting extends Model
     {
         $number = $this->quote_next_number ?: 1;
         $this->update(['quote_next_number' => $number + 1]);
+
         return $number;
     }
 
@@ -1034,6 +1039,7 @@ class Setting extends Model
     {
         $number = $this->ticket_next_number ?: 1;
         $this->update(['ticket_next_number' => $number + 1]);
+
         return $number;
     }
 
@@ -1042,7 +1048,7 @@ class Setting extends Model
      */
     public function getFormattedHourlyRate(): string
     {
-        return '$' . number_format($this->default_hourly_rate, 2) . '/hr';
+        return '$'.number_format($this->default_hourly_rate, 2).'/hr';
     }
 
     /**
@@ -1061,7 +1067,7 @@ class Setting extends Model
             'corporate' => 'Corporate',
         ];
     }
-    
+
     /**
      * Get available currencies.
      */
@@ -1080,7 +1086,7 @@ class Setting extends Model
             'BRL' => 'Brazilian Real',
         ];
     }
-    
+
     /**
      * Get available languages.
      */
@@ -1099,7 +1105,7 @@ class Setting extends Model
             'ja' => 'Japanese',
         ];
     }
-    
+
     /**
      * Get available date formats.
      */
@@ -1114,7 +1120,7 @@ class Setting extends Model
             'j F Y' => 'D Month YYYY (31 December 2024)',
         ];
     }
-    
+
     /**
      * Get available time formats.
      */
@@ -1127,7 +1133,7 @@ class Setting extends Model
             'g:i A' => '12-hour (11:59 PM)',
         ];
     }
-    
+
     /**
      * Get available two-factor methods.
      */
@@ -1141,7 +1147,7 @@ class Setting extends Model
             'hardware_token' => 'Hardware Security Key',
         ];
     }
-    
+
     /**
      * Get available encryption methods.
      */
@@ -1182,7 +1188,7 @@ class Setting extends Model
             'company_id' => 'required|integer|exists:companies,id',
             'current_database_version' => 'required|string|max:10',
             'start_page' => 'required|string|max:255',
-            
+
             // General & Company
             'company_logo' => 'nullable|string|max:255',
             'company_colors' => 'nullable|array',
@@ -1198,7 +1204,7 @@ class Setting extends Model
             'company_holidays' => 'nullable|array',
             'company_language' => 'nullable|string|size:2',
             'company_currency' => 'nullable|string|size:3',
-            
+
             // Security
             'password_min_length' => 'integer|min:6|max:32',
             'password_require_special' => 'boolean',
@@ -1218,7 +1224,7 @@ class Setting extends Model
             'allowed_countries' => 'nullable|array',
             'audit_logging_enabled' => 'boolean',
             'audit_retention_days' => 'integer|min:90|max:2555',
-            
+
             // Email & Communication
             'smtp_host' => 'nullable|string|max:255',
             'smtp_port' => 'nullable|integer|min:1|max:65535',
@@ -1237,7 +1243,7 @@ class Setting extends Model
             'imap_encryption' => 'nullable|in:tls,ssl,none',
             'imap_username' => 'nullable|string|max:255',
             'imap_password' => 'nullable|string|max:255',
-            
+
             // Financial
             'default_net_terms' => 'nullable|integer|min:0|max:365',
             'default_hourly_rate' => 'numeric|min:0|max:9999.99',
@@ -1253,7 +1259,7 @@ class Setting extends Model
             'quote_next_number' => 'nullable|integer|min:1',
             'recurring_auto_send_invoice' => 'boolean',
             'send_invoice_reminders' => 'boolean',
-            
+
             // Ticketing
             'ticket_prefix' => 'nullable|string|max:10',
             'ticket_next_number' => 'nullable|integer|min:1',
@@ -1264,14 +1270,14 @@ class Setting extends Model
             'auto_create_tickets_from_alerts' => 'boolean',
             'time_tracking_enabled' => 'boolean',
             'customer_satisfaction_enabled' => 'boolean',
-            
+
             // Project Management
             'project_time_tracking_enabled' => 'boolean',
-            
+
             // Assets
             'barcode_scanning_enabled' => 'boolean',
             'mobile_asset_management_enabled' => 'boolean',
-            
+
             // Portal
             'client_portal_enable' => 'boolean',
             'portal_self_service_tickets' => 'boolean',
@@ -1279,17 +1285,17 @@ class Setting extends Model
             'portal_invoice_access' => 'boolean',
             'portal_payment_processing' => 'boolean',
             'portal_asset_visibility' => 'boolean',
-            
+
             // Compliance
             'soc2_compliance_enabled' => 'boolean',
             'hipaa_compliance_enabled' => 'boolean',
             'pci_compliance_enabled' => 'boolean',
             'gdpr_compliance_enabled' => 'boolean',
-            
+
             // Backup & Recovery
             'recovery_time_objective' => 'nullable|integer|min:1|max:8760',
             'recovery_point_objective' => 'nullable|integer|min:1|max:1440',
-            
+
             // System
             'theme' => 'required|string|in:blue,green,red,purple,orange,dark',
             'timezone' => 'required|string|max:255',
@@ -1316,37 +1322,37 @@ class Setting extends Model
             if ($setting->enable_cron && empty($setting->cron_key)) {
                 $setting->cron_key = bin2hex(random_bytes(32));
             }
-            
+
             // Encrypt sensitive settings
-            if (!empty($setting->smtp_password) && !str_starts_with($setting->smtp_password, 'eyJpdiI6')) {
+            if (! empty($setting->smtp_password) && ! str_starts_with($setting->smtp_password, 'eyJpdiI6')) {
                 $setting->smtp_password = encrypt($setting->smtp_password);
             }
-            
-            if (!empty($setting->imap_password) && !str_starts_with($setting->imap_password, 'eyJpdiI6')) {
+
+            if (! empty($setting->imap_password) && ! str_starts_with($setting->imap_password, 'eyJpdiI6')) {
                 $setting->imap_password = encrypt($setting->imap_password);
             }
-            
+
             // Set default values for new settings
             if (empty($setting->company_country)) {
                 $setting->company_country = 'US';
             }
-            
+
             if (empty($setting->company_language)) {
                 $setting->company_language = 'en';
             }
-            
+
             if (empty($setting->company_currency)) {
                 $setting->company_currency = 'USD';
             }
-            
+
             if (empty($setting->password_min_length)) {
                 $setting->password_min_length = 8;
             }
-            
+
             if (empty($setting->session_timeout_minutes)) {
                 $setting->session_timeout_minutes = 480;
             }
-            
+
             if (empty($setting->audit_retention_days)) {
                 $setting->audit_retention_days = 365;
             }
@@ -1359,6 +1365,7 @@ class Setting extends Model
     public function getPaypalEnabledAttribute(): bool
     {
         $settings = $this->paypal_settings ?? [];
+
         return $settings['enabled'] ?? false;
     }
 
@@ -1368,6 +1375,7 @@ class Setting extends Model
     public function getStripeEnabledAttribute(): bool
     {
         $settings = $this->stripe_settings ?? [];
+
         return $settings['enabled'] ?? false;
     }
 
@@ -1377,6 +1385,7 @@ class Setting extends Model
     public function getSquareEnabledAttribute(): bool
     {
         $settings = $this->square_settings ?? [];
+
         return $settings['enabled'] ?? false;
     }
 
@@ -1386,6 +1395,7 @@ class Setting extends Model
     public function getAuthorizeNetEnabledAttribute(): bool
     {
         $settings = $this->authorize_net_settings ?? [];
+
         return $settings['enabled'] ?? false;
     }
 
@@ -1395,6 +1405,7 @@ class Setting extends Model
     public function getPaypalClientIdAttribute(): ?string
     {
         $settings = $this->paypal_settings ?? [];
+
         return $settings['client_id'] ?? null;
     }
 
@@ -1404,6 +1415,7 @@ class Setting extends Model
     public function getStripePublishableKeyAttribute(): ?string
     {
         $settings = $this->stripe_settings ?? [];
+
         return $settings['publishable_key'] ?? null;
     }
 
@@ -1413,6 +1425,7 @@ class Setting extends Model
     public function getAchEnabledAttribute(): bool
     {
         $settings = $this->ach_settings ?? [];
+
         return $settings['enabled'] ?? false;
     }
 
@@ -1422,6 +1435,7 @@ class Setting extends Model
     public function getAchBankNameAttribute(): ?string
     {
         $settings = $this->ach_settings ?? [];
+
         return $settings['bank_name'] ?? null;
     }
 
@@ -1431,6 +1445,7 @@ class Setting extends Model
     public function getAchRoutingNumberAttribute(): ?string
     {
         $settings = $this->ach_settings ?? [];
+
         return $settings['routing_number'] ?? null;
     }
 
@@ -1440,6 +1455,7 @@ class Setting extends Model
     public function getAchAccountNumberAttribute(): ?string
     {
         $settings = $this->ach_settings ?? [];
+
         return $settings['account_number'] ?? null;
     }
 
@@ -1449,6 +1465,7 @@ class Setting extends Model
     public function getWireEnabledAttribute(): bool
     {
         $settings = $this->wire_settings ?? [];
+
         return $settings['enabled'] ?? false;
     }
 
@@ -1458,6 +1475,7 @@ class Setting extends Model
     public function getWireBankNameAttribute(): ?string
     {
         $settings = $this->wire_settings ?? [];
+
         return $settings['bank_name'] ?? null;
     }
 
@@ -1467,6 +1485,7 @@ class Setting extends Model
     public function getWireSwiftCodeAttribute(): ?string
     {
         $settings = $this->wire_settings ?? [];
+
         return $settings['swift_code'] ?? null;
     }
 
@@ -1476,6 +1495,7 @@ class Setting extends Model
     public function getWireAccountNumberAttribute(): ?string
     {
         $settings = $this->wire_settings ?? [];
+
         return $settings['account_number'] ?? null;
     }
 
@@ -1485,6 +1505,7 @@ class Setting extends Model
     public function getCheckEnabledAttribute(): bool
     {
         $settings = $this->check_settings ?? [];
+
         return $settings['enabled'] ?? false;
     }
 
@@ -1494,6 +1515,7 @@ class Setting extends Model
     public function getCheckPaytoNameAttribute(): ?string
     {
         $settings = $this->check_settings ?? [];
+
         return $settings['payto_name'] ?? null;
     }
 
@@ -1503,6 +1525,7 @@ class Setting extends Model
     public function getCheckMailingAddressAttribute(): ?string
     {
         $settings = $this->check_settings ?? [];
+
         return $settings['mailing_address'] ?? null;
     }
 }

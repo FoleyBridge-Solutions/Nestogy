@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * DashboardWidget Model
- * 
+ *
  * Manages customizable dashboard widgets with configuration, positioning,
  * and user-specific settings.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int|null $user_id
@@ -43,7 +43,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class DashboardWidget extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'dashboard_widgets';
 
@@ -100,24 +100,40 @@ class DashboardWidget extends Model
 
     // Widget Types
     const TYPE_KPI_CARD = 'kpi_card';
+
     const TYPE_REVENUE_CHART = 'revenue_chart';
+
     const TYPE_TABLE = 'table';
+
     const TYPE_GAUGE = 'gauge';
+
     const TYPE_PIE_CHART = 'pie_chart';
+
     const TYPE_BAR_CHART = 'bar_chart';
+
     const TYPE_LINE_CHART = 'line_chart';
+
     const TYPE_AREA_CHART = 'area_chart';
+
     const TYPE_HEATMAP = 'heatmap';
+
     const TYPE_TREND_ANALYSIS = 'trend_analysis';
+
     const TYPE_CASH_FLOW_GAUGE = 'cash_flow_gauge';
+
     const TYPE_SERVICE_BREAKDOWN = 'service_breakdown';
+
     const TYPE_CUSTOMER_TABLE = 'customer_table';
 
     // Dashboard Types
     const DASHBOARD_EXECUTIVE = 'executive';
+
     const DASHBOARD_REVENUE = 'revenue';
+
     const DASHBOARD_OPERATIONS = 'operations';
+
     const DASHBOARD_CUSTOMER = 'customer';
+
     const DASHBOARD_FORECASTING = 'forecasting';
 
     /**
@@ -141,8 +157,8 @@ class DashboardWidget extends Model
      */
     public function shouldAutoRefresh(): bool
     {
-        return $this->is_active && 
-               isset($this->refresh_settings['auto_refresh']) && 
+        return $this->is_active &&
+               isset($this->refresh_settings['auto_refresh']) &&
                $this->refresh_settings['auto_refresh'] === true;
     }
 
@@ -160,7 +176,7 @@ class DashboardWidget extends Model
     public function canBeViewedBy(User $user): bool
     {
         // Company-wide widgets
-        if (!$this->user_id) {
+        if (! $this->user_id) {
             return $user->company_id === $this->company_id;
         }
 
@@ -192,7 +208,7 @@ class DashboardWidget extends Model
     /**
      * Update widget position
      */
-    public function updatePosition(int $row, int $column, int $width = null, int $height = null): void
+    public function updatePosition(int $row, int $column, ?int $width = null, ?int $height = null): void
     {
         $this->update([
             'grid_row' => $row,
@@ -217,12 +233,12 @@ class DashboardWidget extends Model
     /**
      * Clone widget for another user or dashboard
      */
-    public function cloneForUser(int $userId, string $dashboardType = null, int $createdBy = null): self
+    public function cloneForUser(int $userId, ?string $dashboardType = null, ?int $createdBy = null): self
     {
         $clone = $this->replicate();
         $clone->user_id = $userId;
         $clone->dashboard_type = $dashboardType ?? $this->dashboard_type;
-        $clone->widget_name = $this->widget_name . ' (Copy)';
+        $clone->widget_name = $this->widget_name.' (Copy)';
         $clone->is_default = false;
         $clone->created_by = $createdBy;
         $clone->save();
@@ -261,7 +277,7 @@ class DashboardWidget extends Model
     {
         return $query->where(function ($q) use ($userId) {
             $q->where('user_id', $userId)
-              ->orWhereNull('user_id'); // Include company-wide widgets
+                ->orWhereNull('user_id'); // Include company-wide widgets
         });
     }
 
@@ -279,8 +295,8 @@ class DashboardWidget extends Model
     public function scopeOrderByPosition($query)
     {
         return $query->orderBy('sort_order')
-                    ->orderBy('grid_row')
-                    ->orderBy('grid_column');
+            ->orderBy('grid_row')
+            ->orderBy('grid_column');
     }
 
     /**

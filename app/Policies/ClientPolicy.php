@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Client;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ClientPolicy
 {
@@ -18,28 +17,28 @@ class ClientPolicy
         if ($user->isA('super-admin')) {
             return true;
         }
-        
+
         // Admins have full access to all clients in their company
         if ($user->isA('admin')) {
             return true;
         }
-        
+
         // For technicians - check if they have any client restrictions
         if ($user->isA('technician') && $client) {
             // If technician has NO client assignments, they can access all clients
             if ($user->assignedClients()->count() === 0) {
                 return null; // Fall through to permission checks
             }
-            
+
             // If technician has client assignments, only allow access to assigned clients
-            if (!$user->isAssignedToClient($client->id)) {
+            if (! $user->isAssignedToClient($client->id)) {
                 return false; // Explicitly deny access to non-assigned clients
             }
         }
-        
+
         return null; // Fall through to specific permission checks
     }
-    
+
     /**
      * Determine whether the user can view any models.
      */
@@ -57,7 +56,7 @@ class ClientPolicy
         if ($user->can('clients.*') || $user->can('clients.view')) {
             return $this->sameCompany($user, $client);
         }
-        
+
         return false;
     }
 
@@ -250,10 +249,10 @@ class ClientPolicy
      */
     private function sameCompany(User $user, ?Client $client = null): bool
     {
-        if (!$client) {
+        if (! $client) {
             return true; // For general operations without specific client
         }
-        
+
         return $user->company_id === $client->company_id;
     }
 }

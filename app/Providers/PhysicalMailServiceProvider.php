@@ -2,11 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Domains\PhysicalMail\Services\PostGridClient;
 use App\Domains\PhysicalMail\Services\CompanyAwarePostGridClient;
 use App\Domains\PhysicalMail\Services\PhysicalMailService;
-use App\Models\PhysicalMailSettings;
+use App\Domains\PhysicalMail\Services\PostGridClient;
+use Illuminate\Support\ServiceProvider;
 
 class PhysicalMailServiceProvider extends ServiceProvider
 {
@@ -23,14 +22,14 @@ class PhysicalMailServiceProvider extends ServiceProvider
                     return new CompanyAwarePostGridClient(auth()->user()->company_id);
                 } catch (\Exception $e) {
                     // Fall back to regular client with env config
-                    return new PostGridClient();
+                    return new PostGridClient;
                 }
             }
-            
+
             // Default to env config for console commands, jobs, etc.
-            return new PostGridClient();
+            return new PostGridClient;
         });
-        
+
         // Register PhysicalMailService as singleton
         $this->app->singleton(PhysicalMailService::class);
     }

@@ -2,30 +2,33 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
-use Livewire\Component;
-use Livewire\Attributes\On;
-use Livewire\Attributes\Lazy;
-use App\Models\Invoice;
-use App\Models\User;
+use App\Domains\Core\Services\DashboardCacheService;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\Client;
+use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\User;
 use App\Traits\LazyLoadable;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
-use App\Domains\Core\Services\DashboardCacheService;
+use Livewire\Attributes\Lazy;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 #[Lazy]
-class KpiGrid extends Component  
+class KpiGrid extends Component
 {
     use LazyLoadable;
-    
+
     public array $kpis = [];
+
     public bool $loading = true;
+
     public string $period = 'month'; // month, quarter, year, all
+
     protected ?string $revenueRecognitionMethod = null;
-    
+
     public function mount(string $period = 'month')
     {
         if (in_array($period, ['month', 'quarter', 'year', 'all'], true)) {
@@ -34,11 +37,11 @@ class KpiGrid extends Component
         $this->trackLoadTime('mount');
         $this->loadKpis();
     }
-    
+
     #[On('set-kpi-period')]
     public function setPeriod(string $period): void
     {
-        if (!in_array($period, ['month', 'quarter', 'year', 'all'], true)) {
+        if (! in_array($period, ['month', 'quarter', 'year', 'all'], true)) {
             return;
         }
 
@@ -56,7 +59,7 @@ class KpiGrid extends Component
             $this->loading = false;
         }
     }
-    
+
     #[On('refresh-kpi-grid')]
     public function loadKpis()
     {
@@ -71,7 +74,7 @@ class KpiGrid extends Component
         // Use centralized cache service to get all invoice stats at once
         $currentStats = DashboardCacheService::getInvoiceStats($companyId, $startDate, $endDate);
         $previousStats = DashboardCacheService::getInvoiceStats($companyId, $previousStartDate, $previousEndDate);
-        
+
         // Calculate revenue based on recognition method
         if ($method === 'cash') {
             $paymentStats = DashboardCacheService::getPaymentStats($companyId, $startDate, $endDate);
@@ -84,35 +87,35 @@ class KpiGrid extends Component
         }
 
         $revenueChange = $this->calculatePercentageChange($totalRevenue, $previousRevenue);
-            
+
         // Pending Invoices - get from cached stats
         $pendingInvoices = ($currentStats['draft_amount'] ?? 0) + ($currentStats['sent_amount'] ?? 0);
         $pendingCount = ($currentStats['draft_count'] ?? 0) + ($currentStats['sent_count'] ?? 0);
-            
+
         // Active Clients - use cached stats
         $clientStats = DashboardCacheService::getClientStats($companyId, $endDate);
         $activeClients = $clientStats['active_count'] ?? 0;
-        
+
         // Calculate new clients based on period
-        $newClientsThisPeriod = match($this->period) {
+        $newClientsThisPeriod = match ($this->period) {
             'month' => $clientStats['new_this_month'] ?? 0,
             'quarter' => $clientStats['new_this_quarter'] ?? 0,
             default => Client::where('company_id', $companyId)
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->count()
         };
-                
+
         // Open Tickets
         $openTickets = Ticket::where($baseQuery)
             ->whereIn('status', ['open', 'in_progress', 'waiting'])
             ->count();
-            
+
         // Critical Tickets
         $criticalTickets = Ticket::where($baseQuery)
             ->where('priority', 'critical')
             ->whereIn('status', ['open', 'in_progress'])
             ->count();
-            
+
         // Overdue Invoices (current as of end date)
         $overdueInvoices = Invoice::where($baseQuery)
             ->whereIn('status', ['overdue', 'Overdue'])
@@ -124,9 +127,9 @@ class KpiGrid extends Component
             ->whereIn('status', ['overdue', 'Overdue'])
             ->where('due_date', '<', $previousEndDate)
             ->sum('amount');
-        
+
         $overdueChange = $this->calculatePercentageChange($overdueInvoices, $previousOverdue);
-            
+
         // Average Resolution Time with trend
         $avgResolutionHours = $this->calculateAverageResolutionTime($companyId, $startDate, $endDate);
         $previousAvgResolution = $this->calculateAverageResolutionTime($companyId, $previousStartDate, $previousEndDate);
@@ -136,33 +139,33 @@ class KpiGrid extends Component
         $satisfaction = $this->calculateCustomerSatisfaction($companyId, $startDate, $endDate);
         $previousSatisfaction = $this->calculateCustomerSatisfaction($companyId, $previousStartDate, $previousEndDate);
         $satisfactionChange = round($satisfaction - $previousSatisfaction, 1);
-        
+
         // Team Utilization
         $utilization = $this->calculateTeamUtilization($companyId);
-        
-        $periodLabel = match($this->period) {
+
+        $periodLabel = match ($this->period) {
             'quarter' => 'Quarterly',
             'year' => 'Yearly',
             'all' => 'Total',
             default => 'Monthly'
         };
-        
-        $comparisonLabel = match($this->period) {
+
+        $comparisonLabel = match ($this->period) {
             'quarter' => 'vs last quarter',
             'year' => 'vs last year',
             'all' => 'all time',
             default => 'vs last month'
         };
-        
+
         $kpis = [
             [
-                'label' => $periodLabel . ' Revenue',
+                'label' => $periodLabel.' Revenue',
                 'value' => $totalRevenue,
                 'format' => 'currency',
                 'icon' => 'currency-dollar',
                 'color' => 'green',
                 'trend' => $revenueChange >= 0 ? 'up' : 'down',
-                'trendValue' => ($revenueChange >= 0 ? '+' : '') . $revenueChange . '%',
+                'trendValue' => ($revenueChange >= 0 ? '+' : '').$revenueChange.'%',
                 'description' => $comparisonLabel,
                 'previousValue' => $previousRevenue,
             ],
@@ -173,8 +176,8 @@ class KpiGrid extends Component
                 'icon' => 'document-text',
                 'color' => 'blue',
                 'trend' => 'stable',
-                'trendValue' => $pendingCount . ' invoices',
-                'description' => 'awaiting payment'
+                'trendValue' => $pendingCount.' invoices',
+                'description' => 'awaiting payment',
             ],
             [
                 'label' => 'Active Clients',
@@ -183,8 +186,8 @@ class KpiGrid extends Component
                 'icon' => 'user-group',
                 'color' => 'purple',
                 'trend' => $newClientsThisPeriod > 0 ? 'up' : 'stable',
-                'trendValue' => $newClientsThisPeriod > 0 ? '+' . $newClientsThisPeriod : '0',
-                'description' => 'new this ' . ($this->period === 'all' ? 'period' : $this->period)
+                'trendValue' => $newClientsThisPeriod > 0 ? '+'.$newClientsThisPeriod : '0',
+                'description' => 'new this '.($this->period === 'all' ? 'period' : $this->period),
             ],
             [
                 'label' => 'Open Tickets',
@@ -193,8 +196,8 @@ class KpiGrid extends Component
                 'icon' => 'ticket',
                 'color' => 'orange',
                 'trend' => $criticalTickets > 0 ? 'warning' : 'stable',
-                'trendValue' => $criticalTickets . ' critical',
-                'description' => 'requiring attention'
+                'trendValue' => $criticalTickets.' critical',
+                'description' => 'requiring attention',
             ],
             [
                 'label' => 'Overdue Amount',
@@ -203,7 +206,7 @@ class KpiGrid extends Component
                 'icon' => 'exclamation-triangle',
                 'color' => 'red',
                 'trend' => $overdueChange < 0 ? 'down' : ($overdueChange > 0 ? 'up' : 'stable'),
-                'trendValue' => ($overdueChange >= 0 ? '+' : '') . $overdueChange . '%',
+                'trendValue' => ($overdueChange >= 0 ? '+' : '').$overdueChange.'%',
                 'description' => $comparisonLabel,
                 'previousValue' => $previousOverdue,
             ],
@@ -214,7 +217,7 @@ class KpiGrid extends Component
                 'icon' => 'clock',
                 'color' => 'indigo',
                 'trend' => $resolutionChange < 0 ? 'up' : ($resolutionChange > 0 ? 'down' : 'stable'),
-                'trendValue' => ($resolutionChange > 0 ? '+' : '') . $resolutionChange . ' hrs',
+                'trendValue' => ($resolutionChange > 0 ? '+' : '').$resolutionChange.' hrs',
                 'description' => $comparisonLabel,
                 'previousValue' => $previousAvgResolution,
             ],
@@ -225,7 +228,7 @@ class KpiGrid extends Component
                 'icon' => 'star',
                 'color' => 'yellow',
                 'trend' => $satisfactionChange > 0 ? 'up' : ($satisfactionChange < 0 ? 'down' : 'stable'),
-                'trendValue' => ($satisfactionChange >= 0 ? '+' : '') . $satisfactionChange,
+                'trendValue' => ($satisfactionChange >= 0 ? '+' : '').$satisfactionChange,
                 'description' => 'out of 5.0',
                 'previousValue' => $previousSatisfaction,
             ],
@@ -236,11 +239,11 @@ class KpiGrid extends Component
                 'icon' => 'chart-bar',
                 'color' => 'teal',
                 'trend' => $utilization > 80 ? 'warning' : ($utilization < 40 ? 'low' : 'stable'),
-                'trendValue' => $utilization . '%',
-                'description' => 'capacity used'
+                'trendValue' => $utilization.'%',
+                'description' => 'capacity used',
             ],
         ];
-        
+
         $this->kpis = $kpis;
         $this->loading = false;
     }
@@ -271,6 +274,7 @@ class KpiGrid extends Component
         if ($previous == 0) {
             return $current > 0 ? 100 : 0;
         }
+
         return round((($current - $previous) / $previous) * 100, 1);
     }
 
@@ -280,7 +284,7 @@ class KpiGrid extends Component
             $date = $date ?? now();
             $startOfMonth = $date->copy()->startOfMonth();
             $endOfMonth = $date->copy()->endOfMonth();
-            
+
             // Calculate average resolution time from resolved tickets
             $avgTime = Ticket::where('company_id', $companyId)
                 ->whereIn('status', ['resolved', 'closed'])
@@ -295,11 +299,11 @@ class KpiGrid extends Component
         } catch (\Exception $e) {
             // Fallback: use updated_at if resolved_at doesn't exist
             try {
-                if (!$startDate || !$endDate) {
+                if (! $startDate || ! $endDate) {
                     $startDate = now()->startOfMonth();
                     $endDate = now()->endOfMonth();
                 }
-                
+
                 $avgTime = Ticket::where('company_id', $companyId)
                     ->whereIn('status', ['resolved', 'closed'])
                     ->whereBetween('updated_at', [$startDate, $endDate])
@@ -317,21 +321,21 @@ class KpiGrid extends Component
     protected function calculateCustomerSatisfaction($companyId, $startDate = null, $endDate = null)
     {
         try {
-            if (!$startDate || !$endDate) {
+            if (! $startDate || ! $endDate) {
                 $startDate = now()->startOfMonth();
                 $endDate = now()->endOfMonth();
             }
-            
+
             // Get resolved tickets in the period
             $resolvedTickets = Ticket::where('company_id', $companyId)
                 ->whereIn('status', ['resolved', 'closed'])
                 ->whereBetween('updated_at', [$startDate, $endDate])
                 ->get();
-            
+
             if ($resolvedTickets->count() === 0) {
                 return 0;
             }
-            
+
             // Calculate average satisfaction score based on resolution time
             $totalScore = 0;
             foreach ($resolvedTickets as $ticket) {
@@ -339,14 +343,15 @@ class KpiGrid extends Component
                 $score = $this->calculateTicketSatisfactionScore($ticket, $resolutionTime);
                 $totalScore += $score;
             }
-            
+
             $averageScore = $totalScore / $resolvedTickets->count();
+
             return round($averageScore, 1);
         } catch (\Exception $e) {
             return 0;
         }
     }
-    
+
     protected function calculateTicketSatisfactionScore($ticket, $resolutionTime)
     {
         // Simple scoring algorithm based on resolution time and ticket priority
@@ -380,7 +385,7 @@ class KpiGrid extends Component
             // Get number of active technicians
             $activeTechnicians = User::where('company_id', $companyId)
                 ->where('status', true)
-                ->whereHas('roles', function($query) {
+                ->whereHas('roles', function ($query) {
                     $query->whereIn('name', ['technician', 'manager', 'admin']);
                 })
                 ->count();
@@ -402,7 +407,7 @@ class KpiGrid extends Component
     protected function getDateRanges()
     {
         $now = now();
-        
+
         switch ($this->period) {
             case 'quarter':
                 $startDate = $now->copy()->startOfQuarter();
@@ -410,21 +415,21 @@ class KpiGrid extends Component
                 $previousStartDate = $now->copy()->subQuarter()->startOfQuarter();
                 $previousEndDate = $now->copy()->subQuarter()->endOfQuarter();
                 break;
-                
+
             case 'year':
                 $startDate = $now->copy()->startOfYear();
                 $endDate = $now->copy()->endOfYear();
                 $previousStartDate = $now->copy()->subYear()->startOfYear();
                 $previousEndDate = $now->copy()->subYear()->endOfYear();
                 break;
-                
+
             case 'all':
                 $startDate = Carbon::parse('2000-01-01'); // Or company creation date
                 $endDate = $now->copy()->endOfDay();
                 $previousStartDate = Carbon::parse('1999-01-01'); // Will result in 0 for comparison
                 $previousEndDate = Carbon::parse('1999-12-31');
                 break;
-                
+
             case 'month':
             default:
                 $startDate = $now->copy()->startOfMonth();
@@ -433,10 +438,10 @@ class KpiGrid extends Component
                 $previousEndDate = $now->copy()->subMonth()->endOfMonth();
                 break;
         }
-        
+
         return [$startDate, $endDate, $previousStartDate, $previousEndDate];
     }
-    
+
     public function render()
     {
         return view('livewire.dashboard.widgets.kpi-grid');

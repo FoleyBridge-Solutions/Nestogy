@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * CompanyCustomization Model
- * 
+ *
  * Stores company-specific customizations including colors, fonts, and branding.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property array $customizations
@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class CompanyCustomization extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -86,19 +86,19 @@ class CompanyCustomization extends Model
     /**
      * Get a color value with fallback to default.
      */
-    public function getColor(string $path, string $fallback = null): string
+    public function getColor(string $path, ?string $fallback = null): string
     {
         $colors = $this->customizations['colors'] ?? [];
         $keys = explode('.', $path);
-        
+
         $value = $colors;
         foreach ($keys as $key) {
-            if (!isset($value[$key])) {
+            if (! isset($value[$key])) {
                 return $fallback ?: data_get(self::DEFAULT_COLORS, $path, '#3b82f6');
             }
             $value = $value[$key];
         }
-        
+
         return $value ?: ($fallback ?: data_get(self::DEFAULT_COLORS, $path, '#3b82f6'));
     }
 
@@ -118,6 +118,7 @@ class CompanyCustomization extends Model
     public function getColors(): array
     {
         $colors = $this->customizations['colors'] ?? [];
+
         return array_merge_recursive(self::DEFAULT_COLORS, $colors);
     }
 
@@ -128,13 +129,13 @@ class CompanyCustomization extends Model
     {
         $colors = $this->getColors();
         $properties = [];
-        
+
         foreach ($colors as $colorName => $shades) {
             foreach ($shades as $shade => $value) {
                 $properties[] = "--{$colorName}-{$shade}: {$value}";
             }
         }
-        
+
         return implode(";\n  ", $properties);
     }
 
@@ -154,7 +155,7 @@ class CompanyCustomization extends Model
     public function applyColorPreset(string $preset): void
     {
         $presets = self::getColorPresets();
-        
+
         if (isset($presets[$preset])) {
             $this->setColors($presets[$preset]);
         }

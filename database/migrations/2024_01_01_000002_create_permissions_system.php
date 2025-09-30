@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->boolean('is_system')->default(false); // System permissions cannot be deleted
             $table->timestamps();
-            
+
             $table->index(['domain', 'action']);
         });
 
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->foreignId('role_id')->constrained()->onDelete('cascade');
             $table->foreignId('permission_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            
+
             $table->unique(['role_id', 'permission_id']);
         });
 
@@ -53,7 +53,7 @@ return new class extends Migration
             $table->foreignId('role_id')->constrained()->onDelete('cascade');
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'role_id', 'company_id']);
             $table->index(['user_id', 'company_id']);
         });
@@ -66,7 +66,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->boolean('granted')->default(true); // true = granted, false = denied
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'permission_id', 'company_id']);
             $table->index(['user_id', 'company_id']);
         });
@@ -96,7 +96,7 @@ return new class extends Migration
             $table->dropForeign(['group_id']);
             $table->dropColumn('group_id');
         });
-        
+
         Schema::dropIfExists('permission_groups');
         Schema::dropIfExists('user_permissions');
         Schema::dropIfExists('user_roles');

@@ -25,7 +25,7 @@ return new class extends Migration
             $table->text('escalation_reason')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'queue_position']);
             $table->index(['sla_deadline']);

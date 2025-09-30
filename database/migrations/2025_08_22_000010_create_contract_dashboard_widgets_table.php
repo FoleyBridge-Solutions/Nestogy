@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('contract_dashboard_widgets', function (Blueprint $table) {
             $table->id();
-            
+
             // Multi-tenancy
             $table->unsignedBigInteger('company_id')->index();
-            
+
             // Widget configuration
             $table->string('widget_slug')->index();
             $table->string('widget_type'); // summary, chart, table, metric, etc.
@@ -33,21 +33,21 @@ return new class extends Migration
             $table->integer('height')->default(1); // Grid height
             $table->json('permissions')->nullable(); // Required permissions
             $table->boolean('is_active')->default(true);
-            
+
             $table->timestamps();
-            
+
             // Foreign key constraints
             $table->foreign('company_id')
                 ->references('id')
                 ->on('companies')
                 ->onDelete('cascade');
-            
+
             // Indexes
             $table->index(['company_id', 'widget_slug']);
             $table->index(['company_id', 'widget_type']);
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'position_x', 'position_y']);
-            
+
             // Unique constraint
             $table->unique(['company_id', 'widget_slug']);
         });

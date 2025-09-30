@@ -13,16 +13,16 @@ class IntegrationFactory extends Factory
     public function definition(): array
     {
         $provider = $this->faker->randomElement(['connectwise', 'datto', 'ninja', 'generic']);
-        
+
         return [
             'uuid' => Str::uuid(),
             'company_id' => 1, // Will be overridden in tests
             'provider' => $provider,
-            'name' => $this->faker->company . ' ' . ucfirst($provider) . ' Integration',
+            'name' => $this->faker->company.' '.ucfirst($provider).' Integration',
             'api_endpoint' => $this->faker->url,
-            'webhook_url' => $this->faker->url . '/webhook',
+            'webhook_url' => $this->faker->url.'/webhook',
             'credentials_encrypted' => encrypt(json_encode([
-                'api_key' => 'test-api-key-' . Str::random(32),
+                'api_key' => 'test-api-key-'.Str::random(32),
                 'secret' => Str::random(64),
             ])),
             'field_mappings' => Integration::getDefaultFieldMappings($provider),
@@ -50,7 +50,7 @@ class IntegrationFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'provider' => 'connectwise',
-            'name' => $this->faker->company . ' ConnectWise Integration',
+            'name' => $this->faker->company.' ConnectWise Integration',
             'field_mappings' => Integration::getDefaultFieldMappings('connectwise'),
             'alert_rules' => Integration::getDefaultAlertRules('connectwise'),
         ]);
@@ -60,7 +60,7 @@ class IntegrationFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'provider' => 'datto',
-            'name' => $this->faker->company . ' Datto Integration',
+            'name' => $this->faker->company.' Datto Integration',
             'field_mappings' => Integration::getDefaultFieldMappings('datto'),
             'alert_rules' => Integration::getDefaultAlertRules('datto'),
         ]);
@@ -70,7 +70,7 @@ class IntegrationFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'provider' => 'ninja',
-            'name' => $this->faker->company . ' NinjaOne Integration',
+            'name' => $this->faker->company.' NinjaOne Integration',
             'field_mappings' => Integration::getDefaultFieldMappings('ninja'),
             'alert_rules' => Integration::getDefaultAlertRules('ninja'),
         ]);
@@ -80,7 +80,7 @@ class IntegrationFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'provider' => 'generic',
-            'name' => $this->faker->company . ' Generic RMM Integration',
+            'name' => $this->faker->company.' Generic RMM Integration',
             'field_mappings' => Integration::getDefaultFieldMappings('generic'),
             'alert_rules' => Integration::getDefaultAlertRules('generic'),
         ]);

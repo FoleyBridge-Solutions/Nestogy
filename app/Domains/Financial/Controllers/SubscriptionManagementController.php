@@ -2,18 +2,18 @@
 
 namespace App\Domains\Financial\Controllers;
 
+use App\Domains\Core\Services\StripeSubscriptionService;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\SubscriptionPlan;
-use App\Domains\Core\Services\StripeSubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 /**
  * SubscriptionManagementController
- * 
+ *
  * Allows Company 1 super-admins to manage all tenant subscriptions,
  * view billing information, handle trials, and manage customer accounts.
  */
@@ -51,10 +51,10 @@ class SubscriptionManagementController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('company_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhereHas('linkedCompany', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('linkedCompany', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -81,7 +81,7 @@ class SubscriptionManagementController extends Controller
         Gate::authorize('manage-subscriptions');
 
         // Ensure this is a SaaS customer
-        if ($client->company_id !== 1 || !$client->company_link_id) {
+        if ($client->company_id !== 1 || ! $client->company_link_id) {
             abort(404);
         }
 
@@ -130,7 +130,7 @@ class SubscriptionManagementController extends Controller
             Log::info('Tenant company created from existing client', [
                 'client_id' => $client->id,
                 'company_id' => $company->id,
-                'admin_user' => auth()->id()
+                'admin_user' => auth()->id(),
             ]);
 
             return redirect()->route('admin.subscriptions.show', $client)
@@ -140,7 +140,7 @@ class SubscriptionManagementController extends Controller
             Log::error('Failed to create tenant from client', [
                 'client_id' => $client->id,
                 'error' => $e->getMessage(),
-                'admin_user' => auth()->id()
+                'admin_user' => auth()->id(),
             ]);
 
             return redirect()->back()->withErrors(['error' => 'Failed to create tenant company.']);
@@ -158,7 +158,7 @@ class SubscriptionManagementController extends Controller
             'subscription_plan_id' => 'required|exists:subscription_plans,id',
         ]);
 
-        if ($client->company_id !== 1 || !$client->company_link_id) {
+        if ($client->company_id !== 1 || ! $client->company_link_id) {
             return redirect()->back()->withErrors(['error' => 'Invalid subscription for plan change.']);
         }
 
@@ -177,7 +177,7 @@ class SubscriptionManagementController extends Controller
                 'client_id' => $client->id,
                 'old_plan' => $client->subscription_plan_id,
                 'new_plan' => $newPlan->id,
-                'admin_user' => auth()->id()
+                'admin_user' => auth()->id(),
             ]);
 
             return redirect()->back()->with('success', 'Subscription plan updated successfully.');
@@ -187,7 +187,7 @@ class SubscriptionManagementController extends Controller
                 'client_id' => $client->id,
                 'new_plan' => $newPlan->id,
                 'error' => $e->getMessage(),
-                'admin_user' => auth()->id()
+                'admin_user' => auth()->id(),
             ]);
 
             return redirect()->back()->withErrors(['error' => 'Failed to change subscription plan.']);
@@ -206,7 +206,7 @@ class SubscriptionManagementController extends Controller
             'reason' => 'nullable|string|max:500',
         ]);
 
-        if ($client->company_id !== 1 || !$client->stripe_subscription_id) {
+        if ($client->company_id !== 1 || ! $client->stripe_subscription_id) {
             return redirect()->back()->withErrors(['error' => 'Invalid subscription for cancellation.']);
         }
 
@@ -226,7 +226,7 @@ class SubscriptionManagementController extends Controller
                 $client->linkedCompany->update([
                     'is_active' => false,
                     'suspended_at' => now(),
-                    'suspension_reason' => 'Subscription canceled by admin: ' . ($request->reason ?? 'No reason provided'),
+                    'suspension_reason' => 'Subscription canceled by admin: '.($request->reason ?? 'No reason provided'),
                 ]);
             }
 
@@ -234,17 +234,17 @@ class SubscriptionManagementController extends Controller
                 'client_id' => $client->id,
                 'immediately' => $immediately,
                 'reason' => $request->reason,
-                'admin_user' => auth()->id()
+                'admin_user' => auth()->id(),
             ]);
 
-            return redirect()->back()->with('success', 
+            return redirect()->back()->with('success',
                 $immediately ? 'Subscription canceled immediately.' : 'Subscription will cancel at period end.');
 
         } catch (\Exception $e) {
             Log::error('Failed to cancel subscription', [
                 'client_id' => $client->id,
                 'error' => $e->getMessage(),
-                'admin_user' => auth()->id()
+                'admin_user' => auth()->id(),
             ]);
 
             return redirect()->back()->withErrors(['error' => 'Failed to cancel subscription.']);
@@ -258,13 +258,13 @@ class SubscriptionManagementController extends Controller
     {
         Gate::authorize('manage-subscriptions');
 
-        if ($client->company_id !== 1 || !$client->company_link_id) {
+        if ($client->company_id !== 1 || ! $client->company_link_id) {
             return redirect()->back()->withErrors(['error' => 'Invalid subscription for reactivation.']);
         }
 
         try {
             // Create new subscription in Stripe if needed
-            if (!$client->stripe_subscription_id || $client->subscription_status === 'canceled') {
+            if (! $client->stripe_subscription_id || $client->subscription_status === 'canceled') {
                 // This would require creating a new subscription
                 // For now, just reactivate locally and let admin handle Stripe manually
                 $client->update([
@@ -284,7 +284,7 @@ class SubscriptionManagementController extends Controller
 
             Log::info('Subscription reactivated by admin', [
                 'client_id' => $client->id,
-                'admin_user' => auth()->id()
+                'admin_user' => auth()->id(),
             ]);
 
             return redirect()->back()->with('success', 'Subscription reactivated successfully.');
@@ -293,7 +293,7 @@ class SubscriptionManagementController extends Controller
             Log::error('Failed to reactivate subscription', [
                 'client_id' => $client->id,
                 'error' => $e->getMessage(),
-                'admin_user' => auth()->id()
+                'admin_user' => auth()->id(),
             ]);
 
             return redirect()->back()->withErrors(['error' => 'Failed to reactivate subscription.']);
@@ -311,7 +311,7 @@ class SubscriptionManagementController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
-        if ($client->company_id !== 1 || !$client->linkedCompany) {
+        if ($client->company_id !== 1 || ! $client->linkedCompany) {
             return redirect()->back()->withErrors(['error' => 'Invalid tenant for suspension.']);
         }
 
@@ -325,7 +325,7 @@ class SubscriptionManagementController extends Controller
             'client_id' => $client->id,
             'company_id' => $client->linkedCompany->id,
             'reason' => $request->reason,
-            'admin_user' => auth()->id()
+            'admin_user' => auth()->id(),
         ]);
 
         return redirect()->back()->with('success', 'Tenant company suspended.');
@@ -338,7 +338,7 @@ class SubscriptionManagementController extends Controller
     {
         Gate::authorize('manage-subscriptions');
 
-        if ($client->company_id !== 1 || !$client->linkedCompany) {
+        if ($client->company_id !== 1 || ! $client->linkedCompany) {
             return redirect()->back()->withErrors(['error' => 'Invalid tenant for reactivation.']);
         }
 
@@ -351,7 +351,7 @@ class SubscriptionManagementController extends Controller
         Log::info('Tenant company reactivated by admin', [
             'client_id' => $client->id,
             'company_id' => $client->linkedCompany->id,
-            'admin_user' => auth()->id()
+            'admin_user' => auth()->id(),
         ]);
 
         return redirect()->back()->with('success', 'Tenant company reactivated.');
@@ -379,10 +379,10 @@ class SubscriptionManagementController extends Controller
         $subscriptions = $query->get();
 
         $csv = "Company,Email,Plan,Status,Trial Ends,Next Billing,Total Users,Created\n";
-        
+
         foreach ($subscriptions as $subscription) {
             $csv .= sprintf(
-                '"%s","%s","%s","%s","%s","%s","%s","%s"' . "\n",
+                '"%s","%s","%s","%s","%s","%s","%s","%s"'."\n",
                 str_replace('"', '""', $subscription->company_name),
                 $subscription->email,
                 $subscription->subscriptionPlan->name ?? 'None',
@@ -396,7 +396,7 @@ class SubscriptionManagementController extends Controller
 
         return response($csv)
             ->header('Content-Type', 'text/csv')
-            ->header('Content-Disposition', 'attachment; filename="subscriptions-' . date('Y-m-d') . '.csv"');
+            ->header('Content-Disposition', 'attachment; filename="subscriptions-'.date('Y-m-d').'.csv"');
     }
 
     /**
@@ -415,21 +415,21 @@ class SubscriptionManagementController extends Controller
                 ->sum(function ($client) {
                     return $client->subscriptionPlan?->price_monthly ?? 0;
                 }),
-            
+
             'total_customers' => Client::where('company_id', 1)->whereNotNull('company_link_id')->count(),
-            
+
             'trial_conversions' => Client::where('company_id', 1)
                 ->whereNotNull('company_link_id')
                 ->where('subscription_status', 'active')
                 ->whereNotNull('trial_ends_at')
                 ->count(),
-            
+
             'churn_rate' => $this->calculateChurnRate(),
-            
+
             'plan_distribution' => SubscriptionPlan::withCount(['clients' => function ($query) {
                 $query->where('company_id', 1)
-                      ->whereNotNull('company_link_id')
-                      ->where('subscription_status', 'active');
+                    ->whereNotNull('company_link_id')
+                    ->where('subscription_status', 'active');
             }])->get(),
         ];
 
@@ -449,7 +449,7 @@ class SubscriptionManagementController extends Controller
             ->where('created_at', '<', $startOfMonth)
             ->where(function ($query) use ($startOfMonth) {
                 $query->whereNull('subscription_canceled_at')
-                      ->orWhere('subscription_canceled_at', '>=', $startOfMonth);
+                    ->orWhere('subscription_canceled_at', '>=', $startOfMonth);
             })
             ->count();
 

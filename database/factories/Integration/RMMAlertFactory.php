@@ -14,17 +14,17 @@ class RMMAlertFactory extends Factory
     {
         $severity = $this->faker->randomElement(['urgent', 'high', 'normal', 'low']);
         $alertType = $this->faker->randomElement([
-            'Performance', 'Service', 'Security', 'Backup', 'Disk Space', 
-            'Network', 'Hardware', 'Software', 'Monitoring', 'Maintenance'
+            'Performance', 'Service', 'Security', 'Backup', 'Disk Space',
+            'Network', 'Hardware', 'Software', 'Monitoring', 'Maintenance',
         ]);
-        
-        $deviceId = 'DEV-' . $this->faker->numberBetween(1000, 9999);
+
+        $deviceId = 'DEV-'.$this->faker->numberBetween(1000, 9999);
         $message = $this->generateAlertMessage($alertType);
-        
+
         return [
             'uuid' => Str::uuid(),
             'integration_id' => 1, // Will be overridden in tests
-            'external_alert_id' => 'ALERT-' . $this->faker->numerify('######'),
+            'external_alert_id' => 'ALERT-'.$this->faker->numerify('######'),
             'device_id' => $deviceId,
             'asset_id' => $this->faker->optional(0.6)->numberBetween(1, 100),
             'alert_type' => $alertType,
@@ -207,6 +207,7 @@ class RMMAlertFactory extends Factory
         ];
 
         $typeMessages = $messages[$alertType] ?? ['System alert'];
+
         return $this->faker->randomElement($typeMessages);
     }
 
@@ -223,7 +224,7 @@ class RMMAlertFactory extends Factory
                 'cpu_usage' => $this->faker->numberBetween(10, 100),
                 'memory_usage' => $this->faker->numberBetween(20, 95),
                 'disk_usage' => $this->faker->numberBetween(30, 90),
-                'uptime' => $this->faker->numberBetween(1, 8760) . ' hours',
+                'uptime' => $this->faker->numberBetween(1, 8760).' hours',
             ],
         ];
     }

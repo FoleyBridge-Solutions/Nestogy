@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Product Model
- * 
+ *
  * Represents products/services that can be added to invoices and quotes.
  * Supports pricing, tax rates, and categorization.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string|null $description
@@ -33,7 +33,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Product extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -116,7 +116,6 @@ class Product extends Model
         'deleted_at' => 'datetime',
     ];
 
-
     /**
      * Get the tax rate for this product.
      */
@@ -124,7 +123,7 @@ class Product extends Model
     {
         return $this->belongsTo(Tax::class);
     }
-    
+
     /**
      * Get the tax profile that determines calculation requirements.
      */
@@ -154,7 +153,7 @@ class Product extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->deleted_at);
+        return ! is_null($this->deleted_at);
     }
 
     /**
@@ -172,7 +171,6 @@ class Product extends Model
     {
         $this->attributes['base_price'] = $value;
     }
-
 
     /**
      * Get formatted price.
@@ -196,7 +194,8 @@ class Product extends Model
     public function formatCurrency(float $amount): string
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($amount, 2);
+
+        return $symbol.number_format($amount, 2);
     }
 
     /**
@@ -221,7 +220,7 @@ class Product extends Model
      */
     public function getPriceWithTax(): float
     {
-        if (!$this->tax) {
+        if (! $this->tax) {
             return $this->base_price;
         }
 
@@ -241,7 +240,7 @@ class Product extends Model
      */
     public function getTaxAmount(): float
     {
-        if (!$this->tax) {
+        if (! $this->tax) {
             return 0;
         }
 
@@ -261,7 +260,7 @@ class Product extends Model
      */
     public function getProfitMargin(): ?float
     {
-        if (!$this->cost || $this->cost <= 0) {
+        if (! $this->cost || $this->cost <= 0) {
             return null;
         }
 
@@ -274,7 +273,8 @@ class Product extends Model
     public function getFormattedProfitMargin(): string
     {
         $margin = $this->getProfitMargin();
-        return $margin !== null ? number_format($margin, 2) . '%' : 'N/A';
+
+        return $margin !== null ? number_format($margin, 2).'%' : 'N/A';
     }
 
     /**
@@ -282,7 +282,7 @@ class Product extends Model
      */
     public function getMarkupPercentage(): ?float
     {
-        if (!$this->cost || $this->cost <= 0) {
+        if (! $this->cost || $this->cost <= 0) {
             return null;
         }
 
@@ -295,7 +295,8 @@ class Product extends Model
     public function getFormattedMarkupPercentage(): string
     {
         $markup = $this->getMarkupPercentage();
-        return $markup !== null ? number_format($markup, 2) . '%' : 'N/A';
+
+        return $markup !== null ? number_format($markup, 2).'%' : 'N/A';
     }
 
     /**
@@ -303,7 +304,7 @@ class Product extends Model
      */
     public function hasTax(): bool
     {
-        return !is_null($this->tax_id) && $this->tax && $this->tax->percent > 0;
+        return ! is_null($this->tax_id) && $this->tax && $this->tax->percent > 0;
     }
 
     /**
@@ -311,7 +312,7 @@ class Product extends Model
      */
     public function hasCost(): bool
     {
-        return !is_null($this->cost) && $this->cost > 0;
+        return ! is_null($this->cost) && $this->cost > 0;
     }
 
     /**
@@ -352,8 +353,8 @@ class Product extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('description', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('description', 'like', '%'.$search.'%');
         });
     }
 
@@ -411,7 +412,7 @@ class Product extends Model
     public function scopeOrderByUsage($query, string $direction = 'desc')
     {
         return $query->withCount('invoiceItems')
-                    ->orderBy('invoice_items_count', $direction);
+            ->orderBy('invoice_items_count', $direction);
     }
 
     /**
@@ -483,7 +484,7 @@ class Product extends Model
      */
     public function getFormattedUnitType(): string
     {
-        return match($this->unit_type) {
+        return match ($this->unit_type) {
             'hours' => 'per hour',
             'days' => 'per day',
             'weeks' => 'per week',
@@ -501,17 +502,17 @@ class Product extends Model
      */
     public function getBillingCycleDescription(): string
     {
-        if (!$this->isSubscription()) {
+        if (! $this->isSubscription()) {
             return 'N/A';
         }
 
         $interval = $this->billing_interval ?: 1;
         $cycle = $this->billing_cycle ?: 'month';
-        
+
         if ($interval === 1) {
             return "Every {$cycle}";
         }
-        
+
         return "Every {$interval} {$cycle}s";
     }
 
@@ -520,10 +521,10 @@ class Product extends Model
      */
     public function getRequiredTaxFields(): array
     {
-        if (!$this->taxProfile) {
+        if (! $this->taxProfile) {
             return [];
         }
-        
+
         return $this->taxProfile->required_fields ?? [];
     }
 
@@ -532,7 +533,7 @@ class Product extends Model
      */
     public function requiresTaxData(): bool
     {
-        return !empty($this->getRequiredTaxFields());
+        return ! empty($this->getRequiredTaxFields());
     }
 
     /**
@@ -540,10 +541,10 @@ class Product extends Model
      */
     public function getTaxEngineType(): string
     {
-        if (!$this->taxProfile) {
+        if (! $this->taxProfile) {
             return 'general';
         }
-        
+
         return $this->taxProfile->profile_type ?? 'general';
     }
 

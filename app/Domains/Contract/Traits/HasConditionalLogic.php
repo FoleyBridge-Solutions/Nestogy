@@ -4,7 +4,7 @@ namespace App\Domains\Contract\Traits;
 
 /**
  * HasConditionalLogic Trait
- * 
+ *
  * Provides common conditional logic evaluation for form sections and mappings.
  * Eliminates duplication of conditional visibility logic.
  */
@@ -20,7 +20,7 @@ trait HasConditionalLogic
         }
 
         foreach ($conditionalLogic as $condition) {
-            if (!$this->evaluateCondition($condition, $formData)) {
+            if (! $this->evaluateCondition($condition, $formData)) {
                 return false;
             }
         }
@@ -37,7 +37,7 @@ trait HasConditionalLogic
         $operator = $condition['operator'] ?? '=';
         $value = $condition['value'] ?? null;
 
-        if (!$field || !isset($formData[$field])) {
+        if (! $field || ! isset($formData[$field])) {
             return true; // Skip conditions for missing fields
         }
 
@@ -47,43 +47,43 @@ trait HasConditionalLogic
             case '=':
             case '==':
                 return $fieldValue == $value;
-                
+
             case '!=':
                 return $fieldValue != $value;
-                
+
             case 'in':
-                return in_array($fieldValue, (array)$value);
-                
+                return in_array($fieldValue, (array) $value);
+
             case 'not_in':
-                return !in_array($fieldValue, (array)$value);
-                
+                return ! in_array($fieldValue, (array) $value);
+
             case 'empty':
                 return empty($fieldValue);
-                
+
             case 'not_empty':
-                return !empty($fieldValue);
-                
+                return ! empty($fieldValue);
+
             case '>':
                 return is_numeric($fieldValue) && is_numeric($value) && $fieldValue > $value;
-                
+
             case '<':
                 return is_numeric($fieldValue) && is_numeric($value) && $fieldValue < $value;
-                
+
             case '>=':
                 return is_numeric($fieldValue) && is_numeric($value) && $fieldValue >= $value;
-                
+
             case '<=':
                 return is_numeric($fieldValue) && is_numeric($value) && $fieldValue <= $value;
-                
+
             case 'contains':
                 return is_string($fieldValue) && str_contains($fieldValue, $value);
-                
+
             case 'starts_with':
                 return is_string($fieldValue) && str_starts_with($fieldValue, $value);
-                
+
             case 'ends_with':
                 return is_string($fieldValue) && str_ends_with($fieldValue, $value);
-                
+
             default:
                 return true; // Unknown operators default to true
         }
@@ -95,6 +95,7 @@ trait HasConditionalLogic
     public function shouldBeVisible(array $formData = []): bool
     {
         $conditionalLogic = $this->conditional_logic ?? [];
+
         return $this->evaluateConditionalLogic($conditionalLogic, $formData);
     }
 }

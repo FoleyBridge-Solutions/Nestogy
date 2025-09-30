@@ -5,14 +5,16 @@ namespace App\Domains\Core\Services;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\MediaLibrary\HasMedia;
 use Intervention\Image\Facades\Image;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class FileUploadService
 {
     protected array $config;
+
     protected array $allowedTypes;
+
     protected int $maxFileSize;
 
     public function __construct()
@@ -29,7 +31,7 @@ class FileUploadService
     {
         // Validate file
         $validation = $this->validateFile($file, $collection);
-        if (!$validation['valid']) {
+        if (! $validation['valid']) {
             return [
                 'success' => false,
                 'error' => $validation['error'],
@@ -42,7 +44,7 @@ class FileUploadService
                 // Use Spatie Media Library
                 $media = $model->addMediaFromRequest('file')
                     ->toMediaCollection($collection);
-                
+
                 return [
                     'success' => true,
                     'file' => [
@@ -59,7 +61,7 @@ class FileUploadService
                 // Direct file storage
                 $filename = $this->generateFilename($file);
                 $path = $file->storeAs($collection, $filename, $this->config['disk_name']);
-                
+
                 return [
                     'success' => true,
                     'file' => [
@@ -76,7 +78,7 @@ class FileUploadService
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'error' => 'Upload failed: ' . $e->getMessage(),
+                'error' => 'Upload failed: '.$e->getMessage(),
                 'file' => $file->getClientOriginalName(),
             ];
         }
@@ -88,7 +90,7 @@ class FileUploadService
     public function uploadMultiple(array $files, string $collection = 'default', ?HasMedia $model = null): array
     {
         $results = [];
-        
+
         foreach ($files as $file) {
             if ($file instanceof UploadedFile) {
                 $results[] = $this->upload($file, $collection, $model);
@@ -104,7 +106,7 @@ class FileUploadService
     public function validateFile(UploadedFile $file, string $collection = 'default'): array
     {
         // Check if file is valid
-        if (!$file->isValid()) {
+        if (! $file->isValid()) {
             return [
                 'valid' => false,
                 'error' => 'Invalid file upload.',
@@ -116,24 +118,24 @@ class FileUploadService
         if ($file->getSize() > $maxSize) {
             return [
                 'valid' => false,
-                'error' => 'File size exceeds maximum allowed size of ' . $this->formatBytes($maxSize) . '.',
+                'error' => 'File size exceeds maximum allowed size of '.$this->formatBytes($maxSize).'.',
             ];
         }
 
         // Check file type
         $allowedTypes = $this->config['allowed_file_types'][$collection] ?? $this->allowedTypes;
         $extension = strtolower($file->getClientOriginalExtension());
-        
-        if (!in_array($extension, $allowedTypes)) {
+
+        if (! in_array($extension, $allowedTypes)) {
             return [
                 'valid' => false,
-                'error' => 'File type not allowed. Allowed types: ' . implode(', ', $allowedTypes),
+                'error' => 'File type not allowed. Allowed types: '.implode(', ', $allowedTypes),
             ];
         }
 
         // Additional security checks
         $mimeType = $file->getMimeType();
-        if (!$this->isAllowedMimeType($mimeType, $extension)) {
+        if (! $this->isAllowedMimeType($mimeType, $extension)) {
             return [
                 'valid' => false,
                 'error' => 'File type validation failed.',
@@ -151,8 +153,8 @@ class FileUploadService
         $extension = $file->getClientOriginalExtension();
         $basename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $basename = Str::slug($basename);
-        
-        return $basename . '_' . time() . '_' . Str::random(8) . '.' . $extension;
+
+        return $basename.'_'.time().'_'.Str::random(8).'.'.$extension;
     }
 
     /**
@@ -199,19 +201,19 @@ class FileUploadService
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
-        
+
         $bytes /= pow(1024, $pow);
-        
-        return round($bytes, 2) . ' ' . $units[$pow];
+
+        return round($bytes, 2).' '.$units[$pow];
     }
 
     /**
      * Delete file
      */
-    public function delete(string $path, string $disk = null): bool
+    public function delete(string $path, ?string $disk = null): bool
     {
         $disk = $disk ?? $this->config['disk_name'];
-        
+
         try {
             return Storage::disk($disk)->delete($path);
         } catch (\Exception $e) {
@@ -220,6 +222,7 @@ class FileUploadService
                 'disk' => $disk,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -227,52 +230,56 @@ class FileUploadService
     /**
      * Get file URL
      */
-    public function getUrl(string $path, string $disk = null): string
+    public function getUrl(string $path, ?string $disk = null): string
     {
         $disk = $disk ?? $this->config['disk_name'];
+
         return Storage::disk($disk)->url($path);
     }
 
     /**
      * Check if file exists
      */
-    public function exists(string $path, string $disk = null): bool
+    public function exists(string $path, ?string $disk = null): bool
     {
         $disk = $disk ?? $this->config['disk_name'];
+
         return Storage::disk($disk)->exists($path);
     }
 
     /**
      * Get file size
      */
-    public function getSize(string $path, string $disk = null): int
+    public function getSize(string $path, ?string $disk = null): int
     {
         $disk = $disk ?? $this->config['disk_name'];
+
         return Storage::disk($disk)->size($path);
     }
 
     /**
      * Create image thumbnail
      */
-    public function createThumbnail(string $path, int $width = 300, int $height = 300, string $disk = null): ?string
+    public function createThumbnail(string $path, int $width = 300, int $height = 300, ?string $disk = null): ?string
     {
         $disk = $disk ?? $this->config['disk_name'];
-        
+
         try {
             $fullPath = Storage::disk($disk)->path($path);
             $thumbnailPath = str_replace('.', '_thumb.', $path);
             $thumbnailFullPath = Storage::disk($disk)->path($thumbnailPath);
-            
+
             $image = Image::make($fullPath);
             $image->fit($width, $height);
             $image->save($thumbnailFullPath);
-            
+
             return $thumbnailPath;
         } catch (\Exception $e) {
             logger()->error('Failed to create thumbnail', [
                 'path' => $path,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }

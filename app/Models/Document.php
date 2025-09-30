@@ -5,13 +5,13 @@ namespace App\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -110,15 +110,15 @@ class Document extends Model
      */
     public function getFormattedFileSizeAttribute()
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return 'Unknown';
         }
 
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $bytes = $this->file_size;
         $factor = floor((strlen($bytes) - 1) / 3);
-        
-        return sprintf("%.2f", $bytes / pow(1024, $factor)) . ' ' . @$units[$factor];
+
+        return sprintf('%.2f', $bytes / pow(1024, $factor)).' '.@$units[$factor];
     }
 
     /**

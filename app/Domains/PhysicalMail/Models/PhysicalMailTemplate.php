@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PhysicalMailTemplate extends Model
 {
-    use HasFactory, HasUuids, HasPostGridIntegration;
+    use HasFactory, HasPostGridIntegration, HasUuids;
 
     protected $table = 'physical_mail_templates';
 
@@ -73,12 +73,12 @@ class PhysicalMailTemplate extends Model
      */
     public function extractVariables(): array
     {
-        if (!$this->content) {
+        if (! $this->content) {
             return [];
         }
 
         preg_match_all('/\{\{([^}]+)\}\}/', $this->content, $matches);
-        
+
         return array_unique($matches[1] ?? []);
     }
 

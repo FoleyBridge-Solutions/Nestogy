@@ -28,7 +28,7 @@ class LeadPolicy
             return false;
         }
 
-        return $user->can('view-leads') || 
+        return $user->can('view-leads') ||
                $user->can('manage-leads') ||
                $lead->assigned_user_id === $user->id;
     }
@@ -51,7 +51,7 @@ class LeadPolicy
             return false;
         }
 
-        return $user->can('edit-leads') || 
+        return $user->can('edit-leads') ||
                $user->can('manage-leads') ||
                $lead->assigned_user_id === $user->id;
     }
@@ -79,7 +79,7 @@ class LeadPolicy
             return false;
         }
 
-        return $user->can('convert-leads') || 
+        return $user->can('convert-leads') ||
                $user->can('manage-leads') ||
                $lead->assigned_user_id === $user->id;
     }
@@ -107,7 +107,7 @@ class LeadPolicy
             return false;
         }
 
-        return $user->can('manage-leads') || 
+        return $user->can('manage-leads') ||
                $user->can('score-leads') ||
                $lead->assigned_user_id === $user->id;
     }

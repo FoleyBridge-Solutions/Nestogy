@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * PermissionMiddleware
- * 
+ *
  * Handles permission-based access control using the new permissions system.
  * Supports both specific permissions and role-based access.
  */
@@ -26,18 +26,18 @@ class PermissionMiddleware
     {
         $guard = $guard ?: config('auth.defaults.guard');
 
-        if (!Auth::guard($guard)->check()) {
+        if (! Auth::guard($guard)->check()) {
             return $this->unauthorized($request, 'Authentication required');
         }
 
         $user = Auth::guard($guard)->user();
 
         // Check if user has the required permission
-        if (!$this->hasPermission($user, $permission)) {
+        if (! $this->hasPermission($user, $permission)) {
             return $this->forbidden($request, "Missing required permission: {$permission}");
         }
 
-        // Store permission info in request for easy access  
+        // Store permission info in request for easy access
         $request->attributes->set('required_permission', $permission);
         $request->attributes->set('user_permissions', $user->getAllPermissions()->pluck('name')->toArray());
 
@@ -52,12 +52,14 @@ class PermissionMiddleware
         // Handle multiple permissions (separated by |)
         if (str_contains($permission, '|')) {
             $permissions = explode('|', $permission);
+
             return $user->hasAnyPermission($permissions);
         }
 
         // Handle multiple permissions (all required, separated by &)
         if (str_contains($permission, '&')) {
             $permissions = explode('&', $permission);
+
             return $user->hasAllPermissions($permissions);
         }
 
@@ -95,7 +97,7 @@ class PermissionMiddleware
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => $message,
-                'error' => 'Unauthenticated'
+                'error' => 'Unauthenticated',
             ], 401);
         }
 
@@ -110,7 +112,7 @@ class PermissionMiddleware
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => $message,
-                'error' => 'Insufficient permissions'
+                'error' => 'Insufficient permissions',
             ], 403);
         }
 

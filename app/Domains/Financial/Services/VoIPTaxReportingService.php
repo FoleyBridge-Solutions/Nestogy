@@ -3,27 +3,23 @@
 namespace App\Domains\Financial\Services;
 
 use App\Models\Invoice;
-use App\Models\Quote;
-use App\Models\InvoiceItem;
-use App\Models\VoIPTaxRate;
-use App\Models\TaxJurisdiction;
-use App\Models\TaxCategory;
 use App\Models\TaxExemption;
 use App\Models\TaxExemptionUsage;
-use App\Models\Client;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
+use App\Models\TaxJurisdiction;
+use App\Models\VoIPTaxRate;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * VoIP Tax Reporting Service
- * 
+ *
  * Comprehensive reporting system for VoIP tax data analysis,
  * regulatory compliance, and business intelligence.
  */
 class VoIPTaxReportingService
 {
     protected int $companyId;
+
     protected array $config;
 
     public function __construct(int $companyId, array $config = [])
@@ -61,24 +57,24 @@ class VoIPTaxReportingService
 
         // Get all invoices with VoIP services in the period
         $invoices = $this->getInvoicesForPeriod($startDate, $endDate, $filters);
-        
+
         // Calculate overall summary
         $report['summary'] = $this->calculateOverallSummary($invoices);
-        
+
         // Breakdown by jurisdiction
         $report['breakdown_by_jurisdiction'] = $this->getJurisdictionBreakdown($invoices);
-        
+
         // Breakdown by service type
         $report['breakdown_by_service_type'] = $this->getServiceTypeBreakdown($invoices);
-        
+
         // Breakdown by tax type
         $report['breakdown_by_tax_type'] = $this->getTaxTypeBreakdown($invoices);
-        
+
         // Monthly trends (if period is more than one month)
         if ($startDate->diffInMonths($endDate) >= 1) {
             $report['monthly_trends'] = $this->getMonthlyTrends($startDate, $endDate, $filters);
         }
-        
+
         // Top clients by tax paid
         $report['top_clients'] = $this->getTopClientsByTax($invoices);
 
@@ -91,7 +87,7 @@ class VoIPTaxReportingService
     public function generateJurisdictionReport(int $jurisdictionId, Carbon $startDate, Carbon $endDate): array
     {
         $jurisdiction = TaxJurisdiction::findOrFail($jurisdictionId);
-        
+
         $report = [
             'report_type' => 'jurisdiction_specific',
             'company_id' => $this->companyId,
@@ -136,7 +132,7 @@ class VoIPTaxReportingService
         // Get tax collections for this jurisdiction
         $invoices = $this->getInvoicesForPeriod($startDate, $endDate);
         $collections = $this->getJurisdictionCollections($invoices, $jurisdiction->name);
-        
+
         $report['collections'] = [
             'total_base_amount' => $collections['base_amount'],
             'total_tax_amount' => $collections['tax_amount'],
@@ -150,7 +146,7 @@ class VoIPTaxReportingService
             ->whereBetween('used_at', [$startDate, $endDate])
             ->whereHas('taxExemption', function ($query) use ($jurisdictionId) {
                 $query->where('tax_jurisdiction_id', $jurisdictionId)
-                      ->orWhere('is_blanket_exemption', true);
+                    ->orWhere('is_blanket_exemption', true);
             })
             ->with(['taxExemption', 'client'])
             ->get();
@@ -201,10 +197,10 @@ class VoIPTaxReportingService
         ];
 
         $invoices = $this->getInvoicesForPeriod($startDate, $endDate);
-        
+
         // Analyze each service type
         $serviceTypes = ['local', 'long_distance', 'international', 'voip_fixed', 'voip_nomadic', 'data', 'equipment'];
-        
+
         foreach ($serviceTypes as $serviceType) {
             $analysis = $this->analyzeServiceType($invoices, $serviceType);
             if ($analysis['transaction_count'] > 0) {
@@ -274,6 +270,7 @@ class VoIPTaxReportingService
             ->groupBy('client_id')
             ->map(function ($group) {
                 $client = $group->first()->client;
+
                 return [
                     'client_id' => $client->id,
                     'client_name' => $client->name ?? 'Unknown',
@@ -288,8 +285,8 @@ class VoIPTaxReportingService
         $report['certificate_status'] = [
             'total_certificates' => $allExemptions->count(),
             'active' => $allExemptions->where('status', TaxExemption::STATUS_ACTIVE)->count(),
-            'expired' => $allExemptions->filter(fn($e) => $e->isExpired())->count(),
-            'expiring_soon' => $allExemptions->filter(fn($e) => $e->isExpiringSoon())->count(),
+            'expired' => $allExemptions->filter(fn ($e) => $e->isExpired())->count(),
+            'expiring_soon' => $allExemptions->filter(fn ($e) => $e->isExpiringSoon())->count(),
             'needs_verification' => $allExemptions->where('verification_status', TaxExemption::VERIFICATION_PENDING)->count(),
         ];
 
@@ -460,8 +457,8 @@ class VoIPTaxReportingService
                 if ($item->voip_tax_data && isset($item->voip_tax_data['tax_breakdown'])) {
                     foreach ($item->voip_tax_data['tax_breakdown'] as $tax) {
                         $jurisdiction = $tax['jurisdiction'] ?? 'Unknown';
-                        
-                        if (!isset($breakdown[$jurisdiction])) {
+
+                        if (! isset($breakdown[$jurisdiction])) {
                             $breakdown[$jurisdiction] = [
                                 'jurisdiction_name' => $jurisdiction,
                                 'base_amount' => 0,
@@ -496,8 +493,8 @@ class VoIPTaxReportingService
         foreach ($invoices as $invoice) {
             foreach ($invoice->voipItems as $item) {
                 $serviceType = $item->service_type;
-                
-                if (!isset($breakdown[$serviceType])) {
+
+                if (! isset($breakdown[$serviceType])) {
                     $breakdown[$serviceType] = [
                         'service_type' => $serviceType,
                         'base_amount' => 0,
@@ -533,8 +530,8 @@ class VoIPTaxReportingService
                 if ($item->voip_tax_data && isset($item->voip_tax_data['tax_breakdown'])) {
                     foreach ($item->voip_tax_data['tax_breakdown'] as $tax) {
                         $taxType = $tax['tax_type'] ?? 'unknown';
-                        
-                        if (!isset($breakdown[$taxType])) {
+
+                        if (! isset($breakdown[$taxType])) {
                             $breakdown[$taxType] = [
                                 'tax_type' => $taxType,
                                 'base_amount' => 0,
@@ -570,7 +567,7 @@ class VoIPTaxReportingService
             $clientId = $invoice->client_id;
             $clientName = $invoice->client->name ?? 'Unknown';
 
-            if (!isset($clients[$clientId])) {
+            if (! isset($clients[$clientId])) {
                 $clients[$clientId] = [
                     'client_id' => $clientId,
                     'client_name' => $clientName,
@@ -639,7 +636,7 @@ class VoIPTaxReportingService
             ->where('status', TaxExemption::STATUS_EXPIRED)
             ->orWhere(function ($query) {
                 $query->whereNotNull('expiry_date')
-                      ->where('expiry_date', '<', now());
+                    ->where('expiry_date', '<', now());
             })
             ->count();
 
@@ -685,18 +682,57 @@ class VoIPTaxReportingService
      */
     protected function formatCurrency(float $amount): string
     {
-        return $this->config['currency_symbol'] . number_format($amount, $this->config['precision']);
+        return $this->config['currency_symbol'].number_format($amount, $this->config['precision']);
     }
 
     // Additional helper methods would be implemented here...
-    protected function getMonthlyTrends($startDate, $endDate, $filters) { return []; }
-    protected function getJurisdictionCollections($invoices, $jurisdictionName) { return []; }
-    protected function generateFilingSummary($jurisdiction, $collections, $exemptions, $startDate, $endDate) { return []; }
-    protected function analyzeServiceType($invoices, $serviceType) { return []; }
-    protected function getServiceTypeComparison($serviceTypes) { return []; }
-    protected function getServiceTypeTrends($startDate, $endDate) { return []; }
-    protected function analyzeTaxRateUsage($rate, $invoices) { return []; }
-    protected function analyzeRateChanges($startDate, $endDate) { return []; }
-    protected function generateRateRecommendations($utilization) { return []; }
-    protected function getTopJurisdictions($invoices, $limit) { return []; }
+    protected function getMonthlyTrends($startDate, $endDate, $filters)
+    {
+        return [];
+    }
+
+    protected function getJurisdictionCollections($invoices, $jurisdictionName)
+    {
+        return [];
+    }
+
+    protected function generateFilingSummary($jurisdiction, $collections, $exemptions, $startDate, $endDate)
+    {
+        return [];
+    }
+
+    protected function analyzeServiceType($invoices, $serviceType)
+    {
+        return [];
+    }
+
+    protected function getServiceTypeComparison($serviceTypes)
+    {
+        return [];
+    }
+
+    protected function getServiceTypeTrends($startDate, $endDate)
+    {
+        return [];
+    }
+
+    protected function analyzeTaxRateUsage($rate, $invoices)
+    {
+        return [];
+    }
+
+    protected function analyzeRateChanges($startDate, $endDate)
+    {
+        return [];
+    }
+
+    protected function generateRateRecommendations($utilization)
+    {
+        return [];
+    }
+
+    protected function getTopJurisdictions($invoices, $limit)
+    {
+        return [];
+    }
 }

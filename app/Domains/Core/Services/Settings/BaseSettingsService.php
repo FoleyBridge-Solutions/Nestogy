@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 abstract class BaseSettingsService
 {
     protected string $domain;
+
     protected ?int $companyId;
 
     public function __construct(?int $companyId = null)
@@ -16,7 +17,7 @@ abstract class BaseSettingsService
         // Don't try to get company_id in constructor, defer until needed
         $this->companyId = $companyId;
     }
-    
+
     /**
      * Get the company ID, either from constructor or current user
      */
@@ -24,12 +25,12 @@ abstract class BaseSettingsService
     {
         if ($this->companyId === null) {
             $user = auth()->user();
-            if (!$user) {
+            if (! $user) {
                 throw new \Exception('No authenticated user found');
             }
             $this->companyId = $user->company_id;
         }
-        
+
         return $this->companyId;
     }
 
@@ -48,10 +49,10 @@ abstract class BaseSettingsService
     {
         // Validate the data
         $validated = $this->validateSettings($category, $data);
-        
+
         // Process before saving (encryption, etc.)
         $processed = $this->processBeforeSave($category, $validated);
-        
+
         // Save to database
         $config = SettingsConfiguration::saveSettings(
             $this->getCompanyId(),
@@ -59,10 +60,10 @@ abstract class BaseSettingsService
             $category,
             $processed
         );
-        
+
         // Post-save actions (clear cache, etc.)
         $this->afterSave($category, $config);
-        
+
         return $config;
     }
 
@@ -72,17 +73,17 @@ abstract class BaseSettingsService
     protected function validateSettings(string $category, array $data): array
     {
         $rules = $this->getValidationRules($category);
-        
+
         if (empty($rules)) {
             return $data;
         }
-        
+
         $validator = Validator::make($data, $rules, $this->getValidationMessages($category));
-        
+
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
-        
+
         return $validator->validated();
     }
 

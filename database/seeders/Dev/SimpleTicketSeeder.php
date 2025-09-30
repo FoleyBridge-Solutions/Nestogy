@@ -2,38 +2,36 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
-use App\Models\Ticket;
-use App\Models\Company;
 use App\Models\Client;
+use App\Models\Company;
+use App\Models\Ticket;
 use App\Models\User;
-use App\Models\Contact;
-use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class SimpleTicketSeeder extends Seeder
 {
     public function run(): void
     {
         $this->command->info('Creating tickets (simplified)...');
-        
+
         $companies = Company::where('id', '>', 1)->get();
         $totalTickets = 0;
-        
+
         foreach ($companies as $company) {
             $clients = Client::where('company_id', $company->id)->limit(20)->get();
             $users = User::where('company_id', $company->id)->get();
-            
+
             if ($clients->isEmpty() || $users->isEmpty()) {
                 continue;
             }
-            
+
             foreach ($clients as $client) {
                 // Create 5-10 tickets per client
                 $numTickets = rand(5, 10);
-                
+
                 for ($i = 0; $i < $numTickets; $i++) {
                     $createdAt = fake()->dateTimeBetween('-6 months', 'now');
-                    
+
                     Ticket::create([
                         'company_id' => $company->id,
                         'client_id' => $client->id,
@@ -52,14 +50,14 @@ class SimpleTicketSeeder extends Seeder
                         'created_at' => $createdAt,
                         'updated_at' => fake()->dateTimeBetween($createdAt, 'now'),
                     ]);
-                    
+
                     $totalTickets++;
                 }
             }
-            
+
             $this->command->info("  Created tickets for {$company->name}");
         }
-        
+
         $this->command->info("Created {$totalTickets} tickets total.");
     }
 }

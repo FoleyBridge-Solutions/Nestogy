@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Contact;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ContactPolicy
 {
@@ -17,7 +16,7 @@ class ContactPolicy
         if ($user->isAdmin()) {
             return true;
         }
-        
+
         return $user->can('clients.contacts.view') && $this->sameCompany($user);
     }
 
@@ -30,7 +29,7 @@ class ContactPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $contact)) {
             return true;
         }
-        
+
         return $user->can('clients.contacts.view') && $this->sameCompany($user, $contact);
     }
 
@@ -43,7 +42,7 @@ class ContactPolicy
         if ($user->isAdmin()) {
             return true;
         }
-        
+
         return $user->can('clients.contacts.manage');
     }
 
@@ -56,7 +55,7 @@ class ContactPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $contact)) {
             return true;
         }
-        
+
         return $user->can('clients.contacts.manage') && $this->sameCompany($user, $contact);
     }
 
@@ -69,7 +68,7 @@ class ContactPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $contact)) {
             return true;
         }
-        
+
         return $user->can('clients.contacts.manage') && $this->sameCompany($user, $contact);
     }
 
@@ -82,7 +81,7 @@ class ContactPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $contact)) {
             return true;
         }
-        
+
         return $user->can('clients.contacts.manage') && $this->sameCompany($user, $contact);
     }
 
@@ -95,7 +94,7 @@ class ContactPolicy
         if ($user->isAdmin() && $this->sameCompany($user, $contact)) {
             return true;
         }
-        
+
         return $user->can('clients.contacts.manage') && $this->sameCompany($user, $contact);
     }
 
@@ -108,7 +107,7 @@ class ContactPolicy
         if ($user->isAdmin()) {
             return true;
         }
-        
+
         return $user->can('clients.contacts.export');
     }
 
@@ -117,10 +116,10 @@ class ContactPolicy
      */
     private function sameCompany(User $user, ?Contact $contact = null): bool
     {
-        if (!$contact) {
+        if (! $contact) {
             return true; // For general operations without specific contact
         }
-        
+
         return $user->company_id === $contact->company_id;
     }
 }

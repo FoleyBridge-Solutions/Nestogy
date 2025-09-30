@@ -2,12 +2,12 @@
 
 namespace App\Domains\PhysicalMail\Controllers;
 
-use App\Domains\PhysicalMail\Models\PhysicalMailOrder;
-use App\Http\Controllers\Controller;
-use App\Domains\PhysicalMail\Services\PhysicalMailService;
 use App\Domains\Core\Services\NavigationService;
-use Illuminate\Http\Request;
+use App\Domains\PhysicalMail\Models\PhysicalMailOrder;
+use App\Domains\PhysicalMail\Services\PhysicalMailService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PhysicalMailController extends Controller
@@ -32,39 +32,39 @@ class PhysicalMailController extends Controller
         ]);
 
         // Get selected client from session if no explicit client_id provided
-        if (!isset($validated['client_id'])) {
+        if (! isset($validated['client_id'])) {
             $selectedClient = NavigationService::getSelectedClient();
             if ($selectedClient) {
                 $validated['client_id'] = $selectedClient->id;
             }
         }
-        
+
         // If requesting location data for map view
         if ($request->boolean('include_locations')) {
             $query = PhysicalMailOrder::with(['client', 'createdBy'])
                 ->whereNotNull('tracking_number')
                 ->whereNotIn('status', ['cancelled', 'failed']);
-                
+
             if (isset($validated['status'])) {
                 $query->where('status', $validated['status']);
             }
-            
+
             if (isset($validated['client_id'])) {
                 $query->where('client_id', $validated['client_id']);
             }
-            
+
             if (isset($validated['date_from'])) {
                 $query->where('created_at', '>=', $validated['date_from']);
             }
-            
+
             if (isset($validated['date_to'])) {
                 $query->where('created_at', '<=', $validated['date_to']);
             }
-            
+
             $orders = $query->limit(100)->get();
-            
+
             // Transform for map display
-            $mapData = $orders->map(function($order) {
+            $mapData = $orders->map(function ($order) {
                 return [
                     'id' => $order->id,
                     'tracking_number' => $order->tracking_number,
@@ -72,41 +72,41 @@ class PhysicalMailController extends Controller
                     'client' => [
                         'name' => $order->client?->name ?? 'Unknown',
                     ],
-                    'address' => $order->formatted_address ?? 
+                    'address' => $order->formatted_address ??
                         ($order->to_city ? "{$order->to_address_line1}, {$order->to_city}, {$order->to_state}" : 'Unknown location'),
                     'lat' => $order->latitude,
                     'lng' => $order->longitude,
                 ];
             });
-            
+
             return response()->json(['data' => $mapData]);
         }
 
         // Use provided client_id, or session client, or return all if none
         $clientId = $validated['client_id'] ?? null;
-        
+
         if ($clientId) {
             $orders = $this->mailService->getByClient($clientId, $validated);
         } else {
             // Return all orders for the company if no specific client
             $query = PhysicalMailOrder::where('company_id', Auth::user()->company_id);
-            
+
             if (isset($validated['status'])) {
                 $query->where('status', $validated['status']);
             }
-            
+
             if (isset($validated['mailable_type'])) {
                 $query->where('mailable_type', $validated['mailable_type']);
             }
-            
+
             if (isset($validated['date_from'])) {
                 $query->where('created_at', '>=', $validated['date_from']);
             }
-            
+
             if (isset($validated['date_to'])) {
                 $query->where('created_at', '<=', $validated['date_to']);
             }
-            
+
             $orders = $query->paginate($validated['per_page'] ?? 20);
         }
 
@@ -146,9 +146,9 @@ class PhysicalMailController extends Controller
         ]);
 
         // Ensure either template or content is provided
-        if (!isset($validated['template']) && !isset($validated['content']) && !isset($validated['pdf'])) {
+        if (! isset($validated['template']) && ! isset($validated['content']) && ! isset($validated['pdf'])) {
             return response()->json([
-                'error' => 'Either template, content, or pdf must be provided'
+                'error' => 'Either template, content, or pdf must be provided',
             ], 422);
         }
 
@@ -174,7 +174,7 @@ class PhysicalMailController extends Controller
             ]);
 
             return response()->json([
-                'error' => 'Failed to send mail: ' . $e->getMessage()
+                'error' => 'Failed to send mail: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -199,9 +199,9 @@ class PhysicalMailController extends Controller
      */
     public function cancel(PhysicalMailOrder $order): JsonResponse
     {
-        if (!$order->canBeCancelled()) {
+        if (! $order->canBeCancelled()) {
             return response()->json([
-                'error' => 'Order cannot be cancelled in current status: ' . $order->status
+                'error' => 'Order cannot be cancelled in current status: '.$order->status,
             ], 422);
         }
 
@@ -216,12 +216,12 @@ class PhysicalMailController extends Controller
             }
 
             return response()->json([
-                'error' => 'Failed to cancel order'
+                'error' => 'Failed to cancel order',
             ], 500);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -256,11 +256,11 @@ class PhysicalMailController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 422);
         }
     }
-    
+
     /**
      * Test PostGrid connection
      */
@@ -268,19 +268,19 @@ class PhysicalMailController extends Controller
     {
         try {
             $postgrid = app(\App\Domains\PhysicalMail\Services\PostGridClient::class);
-            
+
             // Try to list templates (lightweight API call)
             $response = $postgrid->list('templates', ['limit' => 1]);
-            
+
             return response()->json([
                 'success' => true,
                 'mode' => $postgrid->isTestMode() ? 'test' : 'live',
-                'message' => 'PostGrid API connection successful'
+                'message' => 'PostGrid API connection successful',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -299,11 +299,11 @@ class PhysicalMailController extends Controller
 
         try {
             $invoice = \App\Domains\Financial\Models\Invoice::findOrFail($validated['invoice_id']);
-            
+
             // Check if invoice has physical mail trait
-            if (!method_exists($invoice, 'sendByMail')) {
+            if (! method_exists($invoice, 'sendByMail')) {
                 return response()->json([
-                    'error' => 'Invoice does not support physical mail'
+                    'error' => 'Invoice does not support physical mail',
                 ], 422);
             }
 
@@ -317,11 +317,11 @@ class PhysicalMailController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to send invoice: ' . $e->getMessage()
+                'error' => 'Failed to send invoice: '.$e->getMessage(),
             ], 500);
         }
     }
-    
+
     /**
      * Display the physical mail dashboard (web view)
      */
@@ -329,31 +329,31 @@ class PhysicalMailController extends Controller
     {
         // Get selected client from session
         $selectedClient = NavigationService::getSelectedClient();
-        
+
         // Build base query with optional client filtering
         $baseQuery = PhysicalMailOrder::query();
         if ($selectedClient) {
             $baseQuery->where('client_id', $selectedClient->id);
         }
-        
+
         $stats = [
             'total' => (clone $baseQuery)->count(),
             'month' => (clone $baseQuery)->whereMonth('created_at', now()->month)->count(),
             'pending' => (clone $baseQuery)->whereIn('status', ['pending', 'processing'])->count(),
             'delivered' => (clone $baseQuery)->where('status', 'delivered')->count(),
         ];
-        
+
         $recentOrders = (clone $baseQuery)->with(['client', 'createdBy'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-        
+
         $activeDomain = 'physical-mail';
         $activeSection = 'dashboard';
-        
+
         return view('physical-mail.index', compact('stats', 'recentOrders', 'activeDomain', 'activeSection', 'selectedClient'));
     }
-    
+
     /**
      * Display the send mail form (web view)
      */
@@ -361,13 +361,13 @@ class PhysicalMailController extends Controller
     {
         // Get selected client from session
         $selectedClient = NavigationService::getSelectedClient();
-        
+
         $activeDomain = 'physical-mail';
         $activeSection = 'send';
-        
+
         return view('physical-mail.send', compact('activeDomain', 'activeSection', 'selectedClient'));
     }
-    
+
     /**
      * Display the tracking page (web view)
      */
@@ -375,23 +375,23 @@ class PhysicalMailController extends Controller
     {
         // Get selected client from session
         $selectedClient = NavigationService::getSelectedClient();
-        
+
         // Build query with optional client filtering
         $query = PhysicalMailOrder::with(['client', 'createdBy'])
             ->whereNotNull('tracking_number');
-            
+
         if ($selectedClient) {
             $query->where('client_id', $selectedClient->id);
         }
-        
+
         $orders = $query->orderBy('created_at', 'desc')->paginate(20);
-        
+
         $activeDomain = 'physical-mail';
         $activeSection = 'tracking';
-        
+
         return view('physical-mail.tracking', compact('orders', 'activeDomain', 'activeSection', 'selectedClient'));
     }
-    
+
     /**
      * Display the templates page (web view)
      */
@@ -399,15 +399,15 @@ class PhysicalMailController extends Controller
     {
         // Get selected client from session
         $selectedClient = NavigationService::getSelectedClient();
-        
+
         $templates = collect(); // TODO: Load from database when template model is created
-        
+
         $activeDomain = 'physical-mail';
         $activeSection = 'templates';
-        
+
         return view('physical-mail.templates', compact('templates', 'activeDomain', 'activeSection', 'selectedClient'));
     }
-    
+
     /**
      * Display the contacts page (web view)
      */
@@ -415,12 +415,12 @@ class PhysicalMailController extends Controller
     {
         // Get selected client from session
         $selectedClient = NavigationService::getSelectedClient();
-        
+
         $contacts = collect(); // TODO: Load from database when contact model is created
-        
+
         $activeDomain = 'physical-mail';
         $activeSection = 'contacts';
-        
+
         return view('physical-mail.contacts', compact('contacts', 'activeDomain', 'activeSection', 'selectedClient'));
     }
 }

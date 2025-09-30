@@ -7,7 +7,7 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Ticket Notification Mail
- * 
+ *
  * Mailable class for ticket notifications sent through the EmailChannel.
  */
 class TicketNotificationMail extends Mailable
@@ -33,7 +33,7 @@ class TicketNotificationMail extends Mailable
         $template = $this->notificationData['template'] ?? 'emails.tickets.default';
 
         return $this->subject($subject)
-                    ->view($template)
-                    ->with($this->notificationData);
+            ->view($template)
+            ->with($this->notificationData);
     }
 }

@@ -2,14 +2,14 @@
 
 namespace App\Domains\Financial\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Domains\Financial\Models\Expense;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Financial\Models\Payment;
-use App\Domains\Financial\Models\Expense;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
+use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class ReportController extends Controller
 {
@@ -17,7 +17,7 @@ class ReportController extends Controller
     {
         $period = $request->get('period', 'month');
         $startDate = $this->getStartDate($period);
-        
+
         $revenueData = Invoice::where('status', 'paid')
             ->where('paid_date', '>=', $startDate)
             ->select(
@@ -32,7 +32,7 @@ class ReportController extends Controller
         $totalRevenue = $revenueData->sum('revenue');
         $avgInvoiceValue = $revenueData->avg('revenue');
         $growthRate = $this->calculateGrowthRate($period);
-        
+
         $topClients = Invoice::where('status', 'paid')
             ->where('paid_date', '>=', $startDate)
             ->select('client_id', DB::raw('SUM(total) as total_revenue'))
@@ -56,25 +56,25 @@ class ReportController extends Controller
     {
         $period = $request->get('period', 'month');
         $startDate = $this->getStartDate($period);
-        
+
         $revenue = Invoice::where('status', 'paid')
             ->where('paid_date', '>=', $startDate)
             ->sum('total');
-            
+
         $expenses = Expense::where('date', '>=', $startDate)
             ->where('status', 'approved')
             ->sum('amount');
-            
+
         $grossProfit = $revenue - $expenses;
         $profitMargin = $revenue > 0 ? ($grossProfit / $revenue) * 100 : 0;
-        
+
         $expensesByCategory = Expense::where('date', '>=', $startDate)
             ->where('status', 'approved')
             ->select('category', DB::raw('SUM(amount) as total'))
             ->groupBy('category')
             ->orderBy('total', 'desc')
             ->get();
-            
+
         $monthlyPL = $this->getMonthlyProfitLoss($startDate);
 
         return view('financial.reports.profit-loss', compact(
@@ -92,20 +92,20 @@ class ReportController extends Controller
     {
         $period = $request->get('period', 'month');
         $startDate = $this->getStartDate($period);
-        
+
         $cashInflows = Payment::where('payment_date', '>=', $startDate)
             ->where('status', 'completed')
             ->sum('amount');
-            
+
         $cashOutflows = Expense::where('date', '>=', $startDate)
             ->where('status', 'paid')
             ->sum('amount');
-            
+
         $netCashFlow = $cashInflows - $cashOutflows;
-        
+
         $dailyCashFlow = $this->getDailyCashFlow($startDate);
         $projectedCashFlow = $this->projectCashFlow();
-        
+
         return view('financial.reports.cash-flow', compact(
             'cashInflows',
             'cashOutflows',
@@ -123,13 +123,13 @@ class ReportController extends Controller
             '1-30' => ['min' => 1, 'max' => 30],
             '31-60' => ['min' => 31, 'max' => 60],
             '61-90' => ['min' => 61, 'max' => 90],
-            'over_90' => ['min' => 91, 'max' => null]
+            'over_90' => ['min' => 91, 'max' => null],
         ];
-        
+
         $agingData = [];
         foreach ($agingBuckets as $bucket => $range) {
             $query = Invoice::where('status', '!=', 'paid');
-            
+
             if ($range['min'] === 0) {
                 $query->where('due_date', '>=', Carbon::now());
             } elseif ($range['max'] === null) {
@@ -137,17 +137,17 @@ class ReportController extends Controller
             } else {
                 $query->whereBetween('due_date', [
                     Carbon::now()->subDays($range['max']),
-                    Carbon::now()->subDays($range['min'])
+                    Carbon::now()->subDays($range['min']),
                 ]);
             }
-            
+
             $agingData[$bucket] = [
                 'count' => $query->count(),
                 'total' => $query->sum('balance_due'),
-                'invoices' => $query->with('client')->get()
+                'invoices' => $query->with('client')->get(),
             ];
         }
-        
+
         $totalOutstanding = collect($agingData)->sum('total');
         $avgDaysOutstanding = $this->calculateAvgDaysOutstanding();
 
@@ -162,7 +162,7 @@ class ReportController extends Controller
     {
         $year = $request->get('year', Carbon::now()->year);
         $quarter = $request->get('quarter', Carbon::now()->quarter);
-        
+
         $taxData = Invoice::whereYear('invoice_date', $year)
             ->where('status', 'paid')
             ->select(
@@ -173,7 +173,7 @@ class ReportController extends Controller
             )
             ->groupBy('quarter')
             ->get();
-            
+
         $totalTaxCollected = $taxData->sum('tax_collected');
         $taxByJurisdiction = $this->getTaxByJurisdiction($year);
         $taxFilings = $this->getTaxFilings($year);
@@ -190,7 +190,7 @@ class ReportController extends Controller
 
     private function getStartDate($period): Carbon
     {
-        return match($period) {
+        return match ($period) {
             'week' => Carbon::now()->subWeek(),
             'month' => Carbon::now()->subMonth(),
             'quarter' => Carbon::now()->subQuarter(),

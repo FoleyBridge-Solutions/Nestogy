@@ -7,7 +7,7 @@ use Carbon\Carbon;
 
 /**
  * Billing Schedule Service
- * 
+ *
  * Focused service responsible only for generating billing schedules.
  * Demonstrates Single Responsibility Principle from composition pattern.
  */
@@ -23,14 +23,14 @@ class BillingScheduleService
 
         for ($i = 0; $i < $periods; $i++) {
             $billingDate = $this->getNextBillingDate($currentDate, $product->billing_cycle);
-            
+
             $schedule[] = [
                 'period' => $i + 1,
                 'billing_date' => $billingDate->format('Y-m-d'),
                 'due_date' => $billingDate->copy()->addDays($product->payment_terms ?? 30)->format('Y-m-d'),
                 'amount' => $product->base_price,
                 'billing_cycle' => $product->billing_cycle,
-                'description' => $this->generatePeriodDescription($product, $billingDate)
+                'description' => $this->generatePeriodDescription($product, $billingDate),
             ];
 
             $currentDate = $billingDate;
@@ -49,14 +49,14 @@ class BillingScheduleService
 
         foreach ($customAmounts as $period => $amount) {
             $billingDate = $this->getNextBillingDate($currentDate, $product->billing_cycle);
-            
+
             $schedule[] = [
                 'period' => $period,
                 'billing_date' => $billingDate->format('Y-m-d'),
                 'due_date' => $billingDate->copy()->addDays($product->payment_terms ?? 30)->format('Y-m-d'),
                 'amount' => $amount,
                 'billing_cycle' => $product->billing_cycle,
-                'description' => $this->generatePeriodDescription($product, $billingDate)
+                'description' => $this->generatePeriodDescription($product, $billingDate),
             ];
 
             $currentDate = $billingDate;
@@ -70,7 +70,7 @@ class BillingScheduleService
      */
     public function getNextBillingDate(Carbon $currentDate, string $billingCycle): Carbon
     {
-        return match($billingCycle) {
+        return match ($billingCycle) {
             'weekly' => $currentDate->copy()->addWeek(),
             'monthly' => $currentDate->copy()->addMonth(),
             'quarterly' => $currentDate->copy()->addMonths(3),
@@ -85,7 +85,7 @@ class BillingScheduleService
      */
     public function getBillingCycleDays(string $billingCycle): int
     {
-        return match($billingCycle) {
+        return match ($billingCycle) {
             'weekly' => 7,
             'monthly' => 30,
             'quarterly' => 90,
@@ -100,16 +100,16 @@ class BillingScheduleService
      */
     public function generatePeriodDescription(Product $product, Carbon $billingDate): string
     {
-        $period = match($product->billing_cycle) {
-            'weekly' => 'Week of ' . $billingDate->format('M d, Y'),
+        $period = match ($product->billing_cycle) {
+            'weekly' => 'Week of '.$billingDate->format('M d, Y'),
             'monthly' => $billingDate->format('F Y'),
-            'quarterly' => 'Q' . $billingDate->quarter . ' ' . $billingDate->year,
-            'semi-annually' => ($billingDate->month <= 6 ? 'First' : 'Second') . ' Half ' . $billingDate->year,
-            'annually' => 'Year ' . $billingDate->year,
+            'quarterly' => 'Q'.$billingDate->quarter.' '.$billingDate->year,
+            'semi-annually' => ($billingDate->month <= 6 ? 'First' : 'Second').' Half '.$billingDate->year,
+            'annually' => 'Year '.$billingDate->year,
             default => $billingDate->format('M d, Y')
         };
 
-        return $product->name . ' - ' . $period;
+        return $product->name.' - '.$period;
     }
 
     /**
@@ -127,10 +127,10 @@ class BillingScheduleService
     {
         return [
             'weekly' => 'Weekly',
-            'monthly' => 'Monthly', 
+            'monthly' => 'Monthly',
             'quarterly' => 'Quarterly',
             'semi-annually' => 'Semi-Annually',
-            'annually' => 'Annually'
+            'annually' => 'Annually',
         ];
     }
 }

@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 /**
  * Credit Note Approval Model
- * 
+ *
  * Manages multi-level approval workflows for credit notes,
  * supporting delegation, escalation, emergency approvals,
  * and comprehensive SLA tracking.
@@ -41,7 +41,7 @@ class CreditNoteApproval extends Model
         'requires_documentation', 'documentation_complete', 'compliance_verification',
         'policy_version', 'applicable_policies', 'rule_violations', 'policy_exception',
         'jurisdiction', 'regulatory_requirements', 'cross_border_approval',
-        'approval_source', 'ip_address', 'user_agent', 'session_data', 'metadata'
+        'approval_source', 'ip_address', 'user_agent', 'session_data', 'metadata',
     ];
 
     protected $casts = [
@@ -109,38 +109,57 @@ class CreditNoteApproval extends Model
         'bypassed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Approval Levels
     const LEVEL_SUPERVISOR = 'supervisor';
+
     const LEVEL_MANAGER = 'manager';
+
     const LEVEL_FINANCE_MANAGER = 'finance_manager';
+
     const LEVEL_CONTROLLER = 'controller';
+
     const LEVEL_CFO = 'cfo';
+
     const LEVEL_EXECUTIVE = 'executive';
+
     const LEVEL_LEGAL = 'legal';
 
     // Status
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_ESCALATED = 'escalated';
+
     const STATUS_BYPASSED = 'bypassed';
+
     const STATUS_EXPIRED = 'expired';
+
     const STATUS_CANCELLED = 'cancelled';
 
     // Approval Types
     const TYPE_MANUAL = 'manual';
+
     const TYPE_AUTOMATIC = 'automatic';
+
     const TYPE_DELEGATED = 'delegated';
+
     const TYPE_ESCALATED = 'escalated';
+
     const TYPE_EMERGENCY = 'emergency';
 
     // Risk Levels
     const RISK_LOW = 'low';
+
     const RISK_MEDIUM = 'medium';
+
     const RISK_HIGH = 'high';
+
     const RISK_CRITICAL = 'critical';
 
     /**
@@ -197,6 +216,7 @@ class CreditNoteApproval extends Model
     public function scopeForCompany($query, $companyId = null)
     {
         $companyId = $companyId ?? Auth::user()?->company_id;
+
         return $query->where('company_id', $companyId);
     }
 
@@ -238,7 +258,7 @@ class CreditNoteApproval extends Model
     public function scopeOverdue($query)
     {
         return $query->where('sla_deadline', '<', now())
-                    ->where('status', self::STATUS_PENDING);
+            ->where('status', self::STATUS_PENDING);
     }
 
     public function scopeEscalated($query)
@@ -294,7 +314,7 @@ class CreditNoteApproval extends Model
      */
     public function isExpired(): bool
     {
-        return $this->status === self::STATUS_EXPIRED || 
+        return $this->status === self::STATUS_EXPIRED ||
                ($this->sla_deadline && $this->sla_deadline < now());
     }
 
@@ -303,16 +323,16 @@ class CreditNoteApproval extends Model
      */
     public function isSlaBreached(): bool
     {
-        return $this->sla_deadline && $this->sla_deadline < now() && 
+        return $this->sla_deadline && $this->sla_deadline < now() &&
                $this->status === self::STATUS_PENDING;
     }
 
     /**
      * Approve the request
      */
-    public function approve(string $reason = null, array $evidence = []): bool
+    public function approve(?string $reason = null, array $evidence = []): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -320,13 +340,13 @@ class CreditNoteApproval extends Model
         $this->approved_at = now();
         $this->approval_reason = $reason;
         $this->response_time_hours = $this->calculateResponseTime();
-        
-        if (!empty($evidence)) {
+
+        if (! empty($evidence)) {
             $this->approval_evidence = $evidence;
         }
 
         $this->save();
-        
+
         $this->createAuditEntry('approved', $reason);
         $this->sendApprovalNotifications();
 
@@ -338,7 +358,7 @@ class CreditNoteApproval extends Model
      */
     public function reject(string $reason): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -346,9 +366,9 @@ class CreditNoteApproval extends Model
         $this->rejected_at = now();
         $this->rejection_reason = $reason;
         $this->response_time_hours = $this->calculateResponseTime();
-        
+
         $this->save();
-        
+
         $this->createAuditEntry('rejected', $reason);
         $this->sendRejectionNotifications();
 
@@ -358,9 +378,9 @@ class CreditNoteApproval extends Model
     /**
      * Escalate to higher authority
      */
-    public function escalate(User $escalatedTo, string $reason, User $escalatedBy = null): bool
+    public function escalate(User $escalatedTo, string $reason, ?User $escalatedBy = null): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -370,9 +390,9 @@ class CreditNoteApproval extends Model
         $this->escalated_at = now();
         $this->escalation_reason = $reason;
         $this->status = self::STATUS_ESCALATED;
-        
+
         $this->save();
-        
+
         $this->createAuditEntry('escalated', $reason);
         $this->sendEscalationNotifications();
 
@@ -384,7 +404,7 @@ class CreditNoteApproval extends Model
      */
     public function delegate(User $delegateTo, string $reason, ?Carbon $expiry = null): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -395,9 +415,9 @@ class CreditNoteApproval extends Model
         $this->delegation_reason = $reason;
         $this->delegation_expiry = $expiry;
         $this->approver_id = $delegateTo->id; // Change the approver
-        
+
         $this->save();
-        
+
         $this->createAuditEntry('delegated', $reason);
         $this->sendDelegationNotifications();
 
@@ -409,7 +429,7 @@ class CreditNoteApproval extends Model
      */
     public function bypass(User $bypassedBy, string $reason): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -418,9 +438,9 @@ class CreditNoteApproval extends Model
         $this->bypassed_at = now();
         $this->bypass_reason = $reason;
         $this->status = self::STATUS_BYPASSED;
-        
+
         $this->save();
-        
+
         $this->createAuditEntry('bypassed', $reason);
         $this->sendBypassNotifications();
 
@@ -432,7 +452,7 @@ class CreditNoteApproval extends Model
      */
     public function autoApprove(array $rules, string $reason): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -443,9 +463,9 @@ class CreditNoteApproval extends Model
         $this->approved_at = now();
         $this->approval_type = self::TYPE_AUTOMATIC;
         $this->response_time_hours = $this->calculateResponseTime();
-        
+
         $this->save();
-        
+
         $this->createAuditEntry('auto_approved', $reason);
 
         return true;
@@ -456,7 +476,7 @@ class CreditNoteApproval extends Model
      */
     public function calculateResponseTime(): ?int
     {
-        if (!$this->requested_at) {
+        if (! $this->requested_at) {
             return null;
         }
 
@@ -468,7 +488,7 @@ class CreditNoteApproval extends Model
      */
     public function sendReminder(): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -486,7 +506,7 @@ class CreditNoteApproval extends Model
      */
     public function checkConditions(): bool
     {
-        if (!$this->conditional_approval || !$this->approval_conditions) {
+        if (! $this->conditional_approval || ! $this->approval_conditions) {
             return true;
         }
 
@@ -498,7 +518,7 @@ class CreditNoteApproval extends Model
         $this->conditions_met = $conditionsMet;
         $this->save();
 
-        return !in_array(false, $conditionsMet);
+        return ! in_array(false, $conditionsMet);
     }
 
     /**
@@ -508,12 +528,12 @@ class CreditNoteApproval extends Model
     {
         return [
             self::LEVEL_SUPERVISOR => 'Supervisor',
-            self::LEVEL_MANAGER => 'Manager', 
+            self::LEVEL_MANAGER => 'Manager',
             self::LEVEL_FINANCE_MANAGER => 'Finance Manager',
             self::LEVEL_CONTROLLER => 'Controller',
             self::LEVEL_CFO => 'CFO',
             self::LEVEL_EXECUTIVE => 'Executive',
-            self::LEVEL_LEGAL => 'Legal'
+            self::LEVEL_LEGAL => 'Legal',
         ];
     }
 
@@ -526,7 +546,7 @@ class CreditNoteApproval extends Model
             self::RISK_LOW => 'Low',
             self::RISK_MEDIUM => 'Medium',
             self::RISK_HIGH => 'High',
-            self::RISK_CRITICAL => 'Critical'
+            self::RISK_CRITICAL => 'Critical',
         ];
     }
 
@@ -535,7 +555,7 @@ class CreditNoteApproval extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'yellow',
             self::STATUS_APPROVED => 'green',
             self::STATUS_REJECTED => 'red',
@@ -552,7 +572,7 @@ class CreditNoteApproval extends Model
      */
     public function getRiskColorAttribute(): string
     {
-        return match($this->risk_level) {
+        return match ($this->risk_level) {
             self::RISK_LOW => 'green',
             self::RISK_MEDIUM => 'yellow',
             self::RISK_HIGH => 'orange',
@@ -612,27 +632,27 @@ class CreditNoteApproval extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($approval) {
-            if (!$approval->company_id) {
+            if (! $approval->company_id) {
                 $approval->company_id = Auth::user()?->company_id;
             }
-            
-            if (!$approval->requested_at) {
+
+            if (! $approval->requested_at) {
                 $approval->requested_at = now();
             }
-            
+
             // Set default SLA deadline
-            if (!$approval->sla_deadline) {
+            if (! $approval->sla_deadline) {
                 $approval->sla_deadline = now()->addHours($approval->sla_hours ?? 24);
             }
         });
-        
+
         static::updating(function ($approval) {
             // Check for SLA breach
-            if ($approval->sla_deadline < now() && 
+            if ($approval->sla_deadline < now() &&
                 $approval->status === self::STATUS_PENDING &&
-                !$approval->sla_breached) {
+                ! $approval->sla_breached) {
                 $approval->sla_breached = true;
             }
         });

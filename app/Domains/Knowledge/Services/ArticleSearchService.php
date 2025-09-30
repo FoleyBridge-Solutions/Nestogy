@@ -4,14 +4,14 @@ namespace App\Domains\Knowledge\Services;
 
 use App\Domains\Knowledge\Models\KbArticle;
 use App\Domains\Knowledge\Models\KbCategory;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Article Search Service
- * 
+ *
  * Advanced search functionality for knowledge base articles with relevance scoring
  */
 class ArticleSearchService
@@ -32,15 +32,15 @@ class ArticleSearchService
         ];
 
         $options = array_merge($defaults, $options);
-        
+
         $cacheKey = $this->generateCacheKey($query, $options);
-        
+
         if ($options['use_cache']) {
             return Cache::remember($cacheKey, 300, function () use ($query, $options) {
                 return $this->performSearch($query, $options);
             });
         }
-        
+
         return $this->performSearch($query, $options);
     }
 
@@ -54,7 +54,7 @@ class ArticleSearchService
         }
 
         return Cache::remember(
-            "kb_suggestions:" . md5($partialQuery) . ":{$limit}",
+            'kb_suggestions:'.md5($partialQuery).":{$limit}",
             600, // 10 minutes cache
             function () use ($partialQuery, $limit) {
                 return $this->generateSuggestions($partialQuery, $limit);
@@ -68,7 +68,7 @@ class ArticleSearchService
     public function searchWithFacets(string $query, array $options = []): array
     {
         $results = $this->search($query, $options);
-        
+
         $facets = [
             'categories' => $this->getCategoryFacets($query, $options),
             'tags' => $this->getTagFacets($query, $options),
@@ -93,23 +93,23 @@ class ArticleSearchService
             1800, // 30 minutes cache
             function () use ($article, $limit) {
                 $similarArticles = collect();
-                
+
                 // Find articles with similar tags
                 if ($article->tags) {
                     $tagSimilar = $this->findByTags($article->tags, $article->id, $limit);
                     $similarArticles = $similarArticles->merge($tagSimilar);
                 }
-                
+
                 // Find articles in same category
                 if ($article->category_id) {
                     $categorySimilar = $this->findByCategory($article->category_id, $article->id, $limit);
                     $similarArticles = $similarArticles->merge($categorySimilar);
                 }
-                
+
                 // Find articles with similar content
                 $contentSimilar = $this->findByContent($article, $limit);
                 $similarArticles = $similarArticles->merge($contentSimilar);
-                
+
                 // Remove duplicates and score by similarity
                 return $this->rankSimilarArticles($similarArticles, $article)
                     ->take($limit);
@@ -126,7 +126,7 @@ class ArticleSearchService
         if ($this->hasScoutConfigured()) {
             return $this->searchWithScout($query, $options);
         }
-        
+
         // Fallback to database full-text search
         return $this->searchWithDatabase($query, $options);
     }
@@ -137,22 +137,22 @@ class ArticleSearchService
     protected function searchWithScout(string $query, array $options): Collection
     {
         $search = KbArticle::search($query);
-        
+
         if ($options['company_id']) {
             $search->where('company_id', $options['company_id']);
         }
-        
+
         if ($options['status']) {
             $search->where('status', $options['status']);
         }
-        
+
         if ($options['visibility']) {
-            $visibilities = is_array($options['visibility']) 
-                ? $options['visibility'] 
+            $visibilities = is_array($options['visibility'])
+                ? $options['visibility']
                 : [$options['visibility']];
             $search->whereIn('visibility', $visibilities);
         }
-        
+
         return $search->take($options['limit'])->get()->load(['category', 'author']);
     }
 
@@ -170,8 +170,8 @@ class ArticleSearchService
         }
 
         if ($options['visibility']) {
-            $visibilities = is_array($options['visibility']) 
-                ? $options['visibility'] 
+            $visibilities = is_array($options['visibility'])
+                ? $options['visibility']
                 : [$options['visibility']];
             $builder->whereIn('visibility', $visibilities);
         }
@@ -183,11 +183,11 @@ class ArticleSearchService
         // Full-text search if MySQL supports it
         if ($this->supportsFullText()) {
             $builder->whereRaw(
-                "MATCH(title, content, excerpt) AGAINST(? IN NATURAL LANGUAGE MODE)",
+                'MATCH(title, content, excerpt) AGAINST(? IN NATURAL LANGUAGE MODE)',
                 [$query]
             );
             $builder->selectRaw(
-                "*, MATCH(title, content, excerpt) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance_score",
+                '*, MATCH(title, content, excerpt) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance_score',
                 [$query]
             );
             $builder->orderBy('relevance_score', 'desc');
@@ -197,11 +197,11 @@ class ArticleSearchService
             $builder->where(function ($q) use ($terms) {
                 foreach ($terms as $term) {
                     $q->orWhere('title', 'LIKE', "%{$term}%")
-                      ->orWhere('content', 'LIKE', "%{$term}%")
-                      ->orWhere('excerpt', 'LIKE', "%{$term}%");
+                        ->orWhere('content', 'LIKE', "%{$term}%")
+                        ->orWhere('excerpt', 'LIKE', "%{$term}%");
                 }
             });
-            
+
             // Simple relevance scoring
             $builder->selectRaw("
                 *, 
@@ -215,7 +215,7 @@ class ArticleSearchService
         }
 
         // Tag filtering
-        if (!empty($options['tags'])) {
+        if (! empty($options['tags'])) {
             $builder->where(function ($q) use ($options) {
                 foreach ($options['tags'] as $tag) {
                     $q->orWhereJsonContains('tags', $tag);
@@ -224,7 +224,7 @@ class ArticleSearchService
         }
 
         $builder->orderBy('views_count', 'desc')
-               ->orderBy('helpful_count', 'desc');
+            ->orderBy('helpful_count', 'desc');
 
         return $builder->limit($options['limit'])->get();
     }
@@ -235,16 +235,16 @@ class ArticleSearchService
     protected function generateSuggestions(string $partialQuery, int $limit): array
     {
         $suggestions = [];
-        
+
         // Title-based suggestions
         $titleSuggestions = KbArticle::published()
             ->where('title', 'LIKE', "%{$partialQuery}%")
             ->pluck('title')
             ->take($limit)
             ->toArray();
-        
+
         $suggestions = array_merge($suggestions, $titleSuggestions);
-        
+
         // Tag-based suggestions
         $tagSuggestions = KbArticle::published()
             ->whereJsonContains('tags', $partialQuery)
@@ -256,18 +256,18 @@ class ArticleSearchService
             ->unique()
             ->take($limit - count($suggestions))
             ->toArray();
-        
+
         $suggestions = array_merge($suggestions, $tagSuggestions);
-        
+
         // Category-based suggestions
         $categorySuggestions = KbCategory::active()
             ->where('name', 'LIKE', "%{$partialQuery}%")
             ->pluck('name')
             ->take($limit - count($suggestions))
             ->toArray();
-        
+
         $suggestions = array_merge($suggestions, $categorySuggestions);
-        
+
         return array_slice(array_unique($suggestions), 0, $limit);
     }
 
@@ -277,7 +277,7 @@ class ArticleSearchService
     protected function getCategoryFacets(string $query, array $options): array
     {
         $baseQuery = $this->getBaseSearchQuery($query, $options);
-        
+
         return $baseQuery->join('kb_categories', 'kb_articles.category_id', '=', 'kb_categories.id')
             ->select('kb_categories.id', 'kb_categories.name', DB::raw('COUNT(*) as count'))
             ->groupBy('kb_categories.id', 'kb_categories.name')
@@ -292,10 +292,10 @@ class ArticleSearchService
     protected function getTagFacets(string $query, array $options): array
     {
         $baseQuery = $this->getBaseSearchQuery($query, $options);
-        
+
         $articles = $baseQuery->whereNotNull('tags')->get();
         $tagCounts = [];
-        
+
         foreach ($articles as $article) {
             if ($article->tags) {
                 foreach ($article->tags as $tag) {
@@ -303,9 +303,9 @@ class ArticleSearchService
                 }
             }
         }
-        
+
         arsort($tagCounts);
-        
+
         return array_slice($tagCounts, 0, 10);
     }
 
@@ -315,7 +315,7 @@ class ArticleSearchService
     protected function getAuthorFacets(string $query, array $options): array
     {
         $baseQuery = $this->getBaseSearchQuery($query, $options);
-        
+
         return $baseQuery->join('users', 'kb_articles.author_id', '=', 'users.id')
             ->select('users.id', 'users.name', DB::raw('COUNT(*) as count'))
             ->groupBy('users.id', 'users.name')
@@ -331,13 +331,13 @@ class ArticleSearchService
     {
         $query = KbArticle::published()
             ->where('id', '!=', $excludeId);
-        
+
         $query->where(function ($q) use ($tags) {
             foreach ($tags as $tag) {
                 $q->orWhereJsonContains('tags', $tag);
             }
         });
-        
+
         return $query->limit($limit)->get();
     }
 
@@ -359,22 +359,22 @@ class ArticleSearchService
     protected function findByContent(KbArticle $article, int $limit): Collection
     {
         // Extract key terms from the article content
-        $terms = $this->extractKeyTerms($article->title . ' ' . strip_tags($article->content));
-        
+        $terms = $this->extractKeyTerms($article->title.' '.strip_tags($article->content));
+
         if (empty($terms)) {
             return collect();
         }
-        
+
         $query = KbArticle::published()
             ->where('id', '!=', $article->id);
-        
+
         $query->where(function ($q) use ($terms) {
             foreach ($terms as $term) {
                 $q->orWhere('title', 'LIKE', "%{$term}%")
-                  ->orWhere('content', 'LIKE', "%{$term}%");
+                    ->orWhere('content', 'LIKE', "%{$term}%");
             }
         });
-        
+
         return $query->limit($limit)->get();
     }
 
@@ -386,29 +386,30 @@ class ArticleSearchService
         return $articles->unique('id')
             ->map(function ($article) use ($baseArticle) {
                 $score = 0;
-                
+
                 // Tag similarity
                 if ($baseArticle->tags && $article->tags) {
                     $commonTags = array_intersect($baseArticle->tags, $article->tags);
                     $score += count($commonTags) * 3;
                 }
-                
+
                 // Category similarity
                 if ($baseArticle->category_id === $article->category_id) {
                     $score += 5;
                 }
-                
+
                 // View count similarity (popularity)
                 if ($article->views_count > 0) {
                     $score += min($article->views_count / 100, 2);
                 }
-                
+
                 // Helpfulness similarity
                 if ($article->helpful_count > 0) {
                     $score += min($article->helpful_count / 10, 2);
                 }
-                
+
                 $article->similarity_score = $score;
+
                 return $article;
             })
             ->sortByDesc('similarity_score');
@@ -421,20 +422,20 @@ class ArticleSearchService
     {
         $text = strtolower(strip_tags($text));
         $words = str_word_count($text, 1);
-        
+
         // Remove common stop words
         $stopWords = ['the', 'is', 'at', 'which', 'on', 'and', 'a', 'an', 'as', 'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'must', 'can', 'shall', 'with', 'from', 'they', 'them', 'their', 'this', 'that', 'these', 'those'];
         $words = array_diff($words, $stopWords);
-        
+
         // Filter words with minimum length
         $words = array_filter($words, function ($word) {
             return strlen($word) >= 3;
         });
-        
+
         // Count frequencies
         $wordCounts = array_count_values($words);
         arsort($wordCounts);
-        
+
         return array_slice(array_keys($wordCounts), 0, $limit);
     }
 
@@ -450,8 +451,8 @@ class ArticleSearchService
         }
 
         if ($options['visibility']) {
-            $visibilities = is_array($options['visibility']) 
-                ? $options['visibility'] 
+            $visibilities = is_array($options['visibility'])
+                ? $options['visibility']
                 : [$options['visibility']];
             $builder->whereIn('visibility', $visibilities);
         }
@@ -464,7 +465,7 @@ class ArticleSearchService
      */
     protected function generateCacheKey(string $query, array $options): string
     {
-        return 'kb_search:' . md5($query . serialize($options));
+        return 'kb_search:'.md5($query.serialize($options));
     }
 
     /**
@@ -472,7 +473,7 @@ class ArticleSearchService
      */
     protected function hasScoutConfigured(): bool
     {
-        return class_exists('\Laravel\Scout\Searchable') && 
+        return class_exists('\Laravel\Scout\Searchable') &&
                config('scout.driver') !== null &&
                in_array(\Laravel\Scout\Searchable::class, class_uses_recursive(KbArticle::class));
     }

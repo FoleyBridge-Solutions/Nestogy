@@ -2,28 +2,33 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Domains\Ticket\Models\TicketComment;
-use App\Domains\Ticket\Services\TimeTrackingService;
 use App\Domains\Ticket\Services\CommentService;
+use App\Domains\Ticket\Services\TimeTrackingService;
+use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
-use Flux\Flux;
+use Livewire\Component;
 
 class TimerBatchCompletionModal extends Component
 {
     // Modal state
     public $showModal = false;
+
     public $activeTimers = [];
+
     public $timerDetails = [];
 
     // Batch options
     public $applyToAll = false;
+
     public $batchDescription = '';
+
     public $batchWorkType = 'general_support';
+
     public $batchIsBillable = true;
+
     public $batchAddComment = true;
 
     // Individual timer settings
@@ -31,7 +36,9 @@ class TimerBatchCompletionModal extends Component
 
     // Processing state
     public $isProcessing = false;
+
     public $processedCount = 0;
+
     public $totalCount = 0;
 
     // Work type options
@@ -59,6 +66,7 @@ class TimerBatchCompletionModal extends Component
                     text: 'No active timers found',
                     variant: 'warning'
                 );
+
                 return;
             }
 
@@ -83,7 +91,7 @@ class TimerBatchCompletionModal extends Component
 
                 // Initialize individual settings
                 $this->individualSettings[$timer->id] = [
-                    'description' => $timer->description ?? "Worked on ticket #" . ($timer->ticket->number ?? $timer->ticket_id),
+                    'description' => $timer->description ?? 'Worked on ticket #'.($timer->ticket->number ?? $timer->ticket_id),
                     'work_type' => $timer->work_type ?? 'general_support',
                     'is_billable' => $timer->billable ?? true,
                     'add_comment' => true,
@@ -95,7 +103,7 @@ class TimerBatchCompletionModal extends Component
 
         } catch (\Exception $e) {
             Flux::toast(
-                text: 'Failed to load active timers: ' . $e->getMessage(),
+                text: 'Failed to load active timers: '.$e->getMessage(),
                 variant: 'danger'
             );
         }
@@ -172,7 +180,7 @@ class TimerBatchCompletionModal extends Component
                     $commentContent = "⏱️ **Time Entry Logged** ({$hours} hours / {$minutes} minutes)\n\n";
                     $commentContent .= "**Work Performed:** {$description}\n";
                     $commentContent .= "**Work Type:** {$workTypeLabel}\n";
-                    $commentContent .= "**Billable:** " . ($isBillable ? 'Yes' : 'No');
+                    $commentContent .= '**Billable:** '.($isBillable ? 'Yes' : 'No');
 
                     if ($isBillable && $result->amount > 0) {
                         $commentContent .= " (Amount: \${$result->amount})";
@@ -190,7 +198,7 @@ class TimerBatchCompletionModal extends Component
                                 'auto_generated' => true,
                                 'type' => 'timer_completion',
                                 'batch_stop' => true,
-                            ]
+                            ],
                         ]
                     );
                 }
@@ -235,7 +243,7 @@ class TimerBatchCompletionModal extends Component
             DB::rollBack();
 
             Flux::toast(
-                text: 'Failed to stop timers: ' . $e->getMessage(),
+                text: 'Failed to stop timers: '.$e->getMessage(),
                 variant: 'danger'
             );
 

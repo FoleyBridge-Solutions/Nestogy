@@ -2,19 +2,19 @@
 
 namespace App\Domains\Client\Controllers\Api\Portal;
 
+use App\Domains\Security\Services\PortalAuthService;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
-use App\Domains\Security\Services\PortalAuthService;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Portal Authentication Controller
- * 
+ *
  * Handles authentication-related functionality including:
  * - Client login and logout
  * - Multi-factor authentication
@@ -26,7 +26,7 @@ use Exception;
 class AuthController extends Controller
 {
     protected PortalAuthService $authService;
-    
+
     public function __construct(PortalAuthService $authService)
     {
         $this->authService = $authService;
@@ -39,9 +39,10 @@ class AuthController extends Controller
     {
         try {
             // Apply rate limiting
-            $key = 'portal-login:' . $request->ip();
+            $key = 'portal-login:'.$request->ip();
             if (RateLimiter::tooManyAttempts($key, 5)) {
                 $retryAfter = RateLimiter::availableIn($key);
+
                 return $this->errorResponse("Too many login attempts. Try again in {$retryAfter} seconds.", 429);
             }
 
@@ -55,6 +56,7 @@ class AuthController extends Controller
 
             if ($validator->fails()) {
                 RateLimiter::hit($key, 300); // 5 minute penalty for invalid requests
+
                 return $this->validationErrorResponse($validator->errors()->toArray());
             }
 
@@ -70,8 +72,9 @@ class AuthController extends Controller
                 ]
             );
 
-            if (!$authResult['success']) {
+            if (! $authResult['success']) {
                 RateLimiter::hit($key, 300);
+
                 return $this->errorResponse($authResult['message'], 401);
             }
 
@@ -103,9 +106,10 @@ class AuthController extends Controller
     {
         try {
             // Apply rate limiting
-            $key = 'portal-mfa:' . $request->ip();
+            $key = 'portal-mfa:'.$request->ip();
             if (RateLimiter::tooManyAttempts($key, 10)) {
                 $retryAfter = RateLimiter::availableIn($key);
+
                 return $this->errorResponse("Too many MFA attempts. Try again in {$retryAfter} seconds.", 429);
             }
 
@@ -118,6 +122,7 @@ class AuthController extends Controller
 
             if ($validator->fails()) {
                 RateLimiter::hit($key, 60);
+
                 return $this->validationErrorResponse($validator->errors()->toArray());
             }
 
@@ -129,8 +134,9 @@ class AuthController extends Controller
                 'expires_at' => now()->addHours(2),
             ];
 
-            if (!$mfaResult['success']) {
+            if (! $mfaResult['success']) {
                 RateLimiter::hit($key, 60);
+
                 return $this->errorResponse($mfaResult['message'], 401);
             }
 
@@ -154,8 +160,8 @@ class AuthController extends Controller
     {
         try {
             $sessionId = $request->get('session_id') ?? $request->header('X-Portal-Session');
-            
-            if (!$sessionId) {
+
+            if (! $sessionId) {
                 return $this->errorResponse('Session ID required', 400);
             }
 
@@ -175,8 +181,8 @@ class AuthController extends Controller
     {
         try {
             $portalSession = $request->get('portal_session');
-            
-            if (!$portalSession) {
+
+            if (! $portalSession) {
                 return $this->errorResponse('Not authenticated', 401);
             }
 
@@ -216,9 +222,10 @@ class AuthController extends Controller
     {
         try {
             // Apply rate limiting
-            $key = 'portal-forgot:' . $request->ip();
+            $key = 'portal-forgot:'.$request->ip();
             if (RateLimiter::tooManyAttempts($key, 3)) {
                 $retryAfter = RateLimiter::availableIn($key);
+
                 return $this->errorResponse("Too many reset attempts. Try again in {$retryAfter} seconds.", 429);
             }
 
@@ -253,9 +260,10 @@ class AuthController extends Controller
     {
         try {
             // Apply rate limiting
-            $key = 'portal-reset:' . $request->ip();
+            $key = 'portal-reset:'.$request->ip();
             if (RateLimiter::tooManyAttempts($key, 5)) {
                 $retryAfter = RateLimiter::availableIn($key);
+
                 return $this->errorResponse("Too many reset attempts. Try again in {$retryAfter} seconds.", 429);
             }
 
@@ -269,14 +277,16 @@ class AuthController extends Controller
 
             if ($validator->fails()) {
                 RateLimiter::hit($key, 60);
+
                 return $this->validationErrorResponse($validator->errors()->toArray());
             }
 
             // Placeholder implementation
             $resetResult = ['success' => true, 'message' => 'Password reset successful'];
 
-            if (!$resetResult['success']) {
+            if (! $resetResult['success']) {
                 RateLimiter::hit($key, 60);
+
                 return $this->errorResponse($resetResult['message'], 400);
             }
 
@@ -296,14 +306,15 @@ class AuthController extends Controller
     {
         try {
             $portalSession = $request->get('portal_session');
-            if (!$portalSession) {
+            if (! $portalSession) {
                 return $this->errorResponse('Authentication required', 401);
             }
 
             // Apply rate limiting
-            $key = 'portal-change-password:' . $portalSession->client_id;
+            $key = 'portal-change-password:'.$portalSession->client_id;
             if (RateLimiter::tooManyAttempts($key, 3)) {
                 $retryAfter = RateLimiter::availableIn($key);
+
                 return $this->errorResponse("Too many attempts. Try again in {$retryAfter} seconds.", 429);
             }
 
@@ -324,8 +335,9 @@ class AuthController extends Controller
                 $validator->validated()['new_password']
             );
 
-            if (!$changeResult['success']) {
+            if (! $changeResult['success']) {
                 RateLimiter::hit($key, 300);
+
                 return $this->errorResponse($changeResult['message'], 400);
             }
 
@@ -345,13 +357,13 @@ class AuthController extends Controller
     {
         try {
             $portalSession = $request->get('portal_session');
-            if (!$portalSession) {
+            if (! $portalSession) {
                 return $this->errorResponse('Authentication required', 401);
             }
 
             $refreshResult = $this->authService->refreshSession($portalSession->id);
 
-            if (!$refreshResult['success']) {
+            if (! $refreshResult['success']) {
                 return $this->errorResponse($refreshResult['message'], 400);
             }
 
@@ -375,7 +387,7 @@ class AuthController extends Controller
             'timestamp' => now()->toISOString(),
         ];
 
-        if (!empty($data)) {
+        if (! empty($data)) {
             $response['data'] = $data;
         }
 
@@ -390,7 +402,7 @@ class AuthController extends Controller
             'timestamp' => now()->toISOString(),
         ];
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             $response['errors'] = $errors;
         }
 

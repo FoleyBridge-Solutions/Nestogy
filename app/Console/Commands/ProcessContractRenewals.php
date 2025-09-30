@@ -2,14 +2,14 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Domains\Contract\Services\ContractLifecycleService;
+use App\Mail\ContractRenewalSummary;
 use App\Models\Company;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\ContractRenewalSummary;
 
 /**
  * ProcessContractRenewals Command
@@ -23,8 +23,11 @@ class ProcessContractRenewals extends Command
 
     // Class constants to reduce duplication
     private const STATUS_ACTIVE = 'active';
+
     private const STATUS_RENEWED = 'renewed';
+
     private const DEFAULT_DAYS_AHEAD = 30;
+
     private const MSG_RENEWAL_START = 'Processing contract renewals...';
 
     /**
@@ -49,22 +52,16 @@ class ProcessContractRenewals extends Command
 
     /**
      * The contract lifecycle service.
-     *
-     * @var ContractLifecycleService
      */
     protected ContractLifecycleService $contractService;
 
     /**
      * Tracking for detailed logging
-     *
-     * @var array
      */
     protected array $processingLog = [];
 
     /**
      * Create a new command instance.
-     *
-     * @param ContractLifecycleService $contractService
      */
     public function __construct(ContractLifecycleService $contractService)
     {
@@ -80,7 +77,7 @@ class ProcessContractRenewals extends Command
     public function handle()
     {
         $startTime = microtime(true);
-        $this->info('Starting contract renewal processing at ' . Carbon::now()->toDateTimeString());
+        $this->info('Starting contract renewal processing at '.Carbon::now()->toDateTimeString());
 
         $isDryRun = $this->option('dry-run');
         $companyId = $this->option('company');
@@ -94,7 +91,7 @@ class ProcessContractRenewals extends Command
         }
 
         // Check if already run today (unless forced)
-        if (!$forceRun && !$isDryRun) {
+        if (! $forceRun && ! $isDryRun) {
             $lastRun = DB::table('job_runs')
                 ->where('job_name', 'process_contract_renewals')
                 ->whereDate('run_date', Carbon::today())
@@ -102,6 +99,7 @@ class ProcessContractRenewals extends Command
 
             if ($lastRun) {
                 $this->info('Contract renewals already processed today. Use --force to run again.');
+
                 return Command::SUCCESS;
             }
         }
@@ -112,6 +110,7 @@ class ProcessContractRenewals extends Command
                 $companies = Company::where('id', $companyId)->get();
                 if ($companies->isEmpty()) {
                     $this->error("Company with ID {$companyId} not found.");
+
                     return Command::FAILURE;
                 }
             } else {
@@ -148,7 +147,7 @@ class ProcessContractRenewals extends Command
                 $totalResults['notifications_30'] += $companyResults['notifications_30'];
                 $totalResults['revenue_impact'] += $companyResults['revenue_impact'];
 
-                if (!empty($companyResults['errors'])) {
+                if (! empty($companyResults['errors'])) {
                     $totalResults['errors'] = array_merge($totalResults['errors'], $companyResults['errors']);
                 }
             }
@@ -161,7 +160,7 @@ class ProcessContractRenewals extends Command
             $this->displaySummary($totalResults, $isDryRun);
 
             // Record job run (unless dry run)
-            if (!$isDryRun) {
+            if (! $isDryRun) {
                 $this->recordJobRun($totalResults);
             }
 
@@ -176,7 +175,7 @@ class ProcessContractRenewals extends Command
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('Error processing contract renewals: ' . $e->getMessage());
+            $this->error('Error processing contract renewals: '.$e->getMessage());
             Log::error('Contract renewal processing failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -188,12 +187,6 @@ class ProcessContractRenewals extends Command
 
     /**
      * Process contracts for a single company
-     *
-     * @param Company $company
-     * @param bool $isDryRun
-     * @param array $notificationDays
-     * @param bool $verboseLogging
-     * @return array
      */
     protected function processCompany(Company $company, bool $isDryRun, array $notificationDays, bool $verboseLogging): array
     {
@@ -233,7 +226,7 @@ class ProcessContractRenewals extends Command
                     $results['errors'][] = [
                         'company_id' => $company->id,
                         'contract_id' => $result['contract_id'],
-                        'error' => $result['error'] ?? 'Unknown error'
+                        'error' => $result['error'] ?? 'Unknown error',
                     ];
 
                     if ($verboseLogging) {
@@ -261,9 +254,9 @@ class ProcessContractRenewals extends Command
                                 $results['notifications_30']++;
                                 break;
                             default:
-        // No action needed
-        break;
-}
+                                // No action needed
+                                break;
+                        }
 
                         if ($verboseLogging) {
                             $this->info("  ✉ Sent {$days}-day notification for contract {$notification['contract_id']} to {$notification['recipient']}");
@@ -275,9 +268,9 @@ class ProcessContractRenewals extends Command
         } catch (\Exception $e) {
             $results['errors'][] = [
                 'company_id' => $company->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
-            $this->error("  Error processing company {$company->id}: " . $e->getMessage());
+            $this->error("  Error processing company {$company->id}: ".$e->getMessage());
         }
 
         return $results;
@@ -285,10 +278,6 @@ class ProcessContractRenewals extends Command
 
     /**
      * Display processing summary
-     *
-     * @param array $results
-     * @param bool $isDryRun
-     * @return void
      */
     protected function displaySummary(array $results, bool $isDryRun): void
     {
@@ -301,42 +290,39 @@ class ProcessContractRenewals extends Command
             $this->warn('  [DRY RUN - No actual changes were made]');
         }
 
-        $this->info('  Companies Processed: ' . $results['companies_processed']);
-        $this->info('  Contracts Checked:   ' . $results['contracts_checked']);
+        $this->info('  Companies Processed: '.$results['companies_processed']);
+        $this->info('  Contracts Checked:   '.$results['contracts_checked']);
         $this->newLine();
 
         $this->info('  RENEWALS:');
-        $this->info('    • Renewed:         ' . $results['renewed']);
-        $this->info('    • Price Escalated: ' . $results['escalated']);
-        $this->info('    • Failed:          ' . $results['failed']);
-        $this->info('    • Revenue Impact:  $' . number_format($results['revenue_impact'], 2));
+        $this->info('    • Renewed:         '.$results['renewed']);
+        $this->info('    • Price Escalated: '.$results['escalated']);
+        $this->info('    • Failed:          '.$results['failed']);
+        $this->info('    • Revenue Impact:  $'.number_format($results['revenue_impact'], 2));
         $this->newLine();
 
         $this->info('  NOTIFICATIONS:');
-        $this->info('    • 90-day notices:  ' . $results['notifications_90']);
-        $this->info('    • 60-day notices:  ' . $results['notifications_60']);
-        $this->info('    • self::DEFAULT_TIMEOUT-day notices:  ' . $results['notifications_30']);
+        $this->info('    • 90-day notices:  '.$results['notifications_90']);
+        $this->info('    • 60-day notices:  '.$results['notifications_60']);
+        $this->info('    • self::DEFAULT_TIMEOUT-day notices:  '.$results['notifications_30']);
         $this->newLine();
 
-        if (!empty($results['errors'])) {
-            $this->error('  ERRORS (' . count($results['errors']) . '):');
+        if (! empty($results['errors'])) {
+            $this->error('  ERRORS ('.count($results['errors']).'):');
             foreach (array_slice($results['errors'], 0, 5) as $error) {
-                $this->error('    • Contract ' . $error['contract_id'] . ': ' . $error['error']);
+                $this->error('    • Contract '.$error['contract_id'].': '.$error['error']);
             }
             if (count($results['errors']) > 5) {
-                $this->error('    ... and ' . (count($results['errors']) - 5) . ' more errors');
+                $this->error('    ... and '.(count($results['errors']) - 5).' more errors');
             }
         }
 
-        $this->info('  Execution Time: ' . $results['execution_time'] . ' seconds');
+        $this->info('  Execution Time: '.$results['execution_time'].' seconds');
         $this->info('═══════════════════════════════════════════════════════════');
     }
 
     /**
      * Record job run in database
-     *
-     * @param array $results
-     * @return void
      */
     protected function recordJobRun(array $results): void
     {
@@ -352,11 +338,6 @@ class ProcessContractRenewals extends Command
 
     /**
      * Send email summary of processing results
-     *
-     * @param string $email
-     * @param array $results
-     * @param bool $isDryRun
-     * @return void
      */
     protected function sendEmailSummary(string $email, array $results, bool $isDryRun): void
     {
@@ -364,7 +345,7 @@ class ProcessContractRenewals extends Command
             Mail::to($email)->send(new ContractRenewalSummary($results, $isDryRun));
             $this->info("Summary email sent to {$email}");
         } catch (\Exception $e) {
-            $this->error("Failed to send summary email: " . $e->getMessage());
+            $this->error('Failed to send summary email: '.$e->getMessage());
         }
     }
 }

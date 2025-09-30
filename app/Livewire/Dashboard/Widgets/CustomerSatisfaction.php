@@ -2,20 +2,21 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
-use Livewire\Component;
-use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 class CustomerSatisfaction extends Component
 {
     public array $data = [];
+
     public bool $loading = true;
-    
+
     public function mount()
     {
         $this->loadData();
     }
-    
+
     #[On('refresh-customersatisfaction')]
     public function loadData()
     {
@@ -35,30 +36,30 @@ class CustomerSatisfaction extends Component
                     'value' => $stats['average_score'],
                     'type' => 'rating',
                     'icon' => 'star',
-                    'trend' => 0 // Could be calculated from historical data
+                    'trend' => 0, // Could be calculated from historical data
                 ],
                 [
                     'label' => 'Total Responses',
                     'value' => $stats['total_responses'],
                     'type' => 'number',
                     'icon' => 'users',
-                    'trend' => 0
+                    'trend' => 0,
                 ],
                 [
                     'label' => 'Satisfaction Rate',
                     'value' => $stats['satisfaction_rate'],
                     'type' => 'percentage',
                     'icon' => 'face-smile',
-                    'trend' => 0
+                    'trend' => 0,
                 ],
                 [
                     'label' => 'Response Rate',
                     'value' => $stats['total_responses'] > 0 ? 100 : 0, // Simplified
                     'type' => 'percentage',
                     'icon' => 'chart-bar',
-                    'trend' => 0
-                ]
-            ]
+                    'trend' => 0,
+                ],
+            ],
         ];
 
         $this->loading = false;
@@ -86,7 +87,7 @@ class CustomerSatisfaction extends Component
                 'comment' => $ticket->subject, // Using subject as comment for now
                 'ticket_number' => $ticket->id,
                 'date' => $ticket->updated_at->format('M j, Y'),
-                'resolution_time' => $resolutionTime . ' hours'
+                'resolution_time' => $resolutionTime.' hours',
             ];
         })->toArray();
     }
@@ -102,7 +103,7 @@ class CustomerSatisfaction extends Component
                 'average_score' => 0,
                 'total_responses' => 0,
                 'satisfaction_rate' => 0,
-                'trend' => 'stable'
+                'trend' => 'stable',
             ];
         }
 
@@ -124,6 +125,7 @@ class CustomerSatisfaction extends Component
         $satisfiedTickets = $recentTickets->filter(function ($ticket) {
             $resolutionTime = $ticket->resolved_at ? $ticket->resolved_at->diffInHours($ticket->created_at) : 24;
             $score = $this->calculateTicketSatisfactionScore($ticket, $resolutionTime);
+
             return $score >= 4.0;
         })->count();
 
@@ -133,7 +135,7 @@ class CustomerSatisfaction extends Component
             'average_score' => round($averageScore, 1),
             'total_responses' => $recentTickets->count(),
             'satisfaction_rate' => round($satisfactionRate, 1),
-            'trend' => 'stable' // Could be calculated based on historical data
+            'trend' => 'stable', // Could be calculated based on historical data
         ];
     }
 
@@ -161,10 +163,19 @@ class CustomerSatisfaction extends Component
 
     protected function getSatisfactionLabel($score)
     {
-        if ($score >= 4.5) return 'Very Satisfied';
-        if ($score >= 4.0) return 'Satisfied';
-        if ($score >= 3.0) return 'Neutral';
-        if ($score >= 2.0) return 'Dissatisfied';
+        if ($score >= 4.5) {
+            return 'Very Satisfied';
+        }
+        if ($score >= 4.0) {
+            return 'Satisfied';
+        }
+        if ($score >= 3.0) {
+            return 'Neutral';
+        }
+        if ($score >= 2.0) {
+            return 'Dissatisfied';
+        }
+
         return 'Very Dissatisfied';
     }
 

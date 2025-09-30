@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Domains\Project\Models\Project;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ProjectPolicy
 {
@@ -21,12 +20,12 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        if (!$user->can('projects.view') && !$user->can('projects.*')) {
+        if (! $user->can('projects.view') && ! $user->can('projects.*')) {
             return false;
         }
 
         // Check if user belongs to same company
-        if (!$this->sameCompany($user, $project)) {
+        if (! $this->sameCompany($user, $project)) {
             return false;
         }
 
@@ -57,11 +56,11 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        if (!$user->can('projects.edit') && !$user->can('projects.*')) {
+        if (! $user->can('projects.edit') && ! $user->can('projects.*')) {
             return false;
         }
 
-        if (!$this->sameCompany($user, $project)) {
+        if (! $this->sameCompany($user, $project)) {
             return false;
         }
 
@@ -79,11 +78,11 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        if (!$user->can('projects.delete') && !$user->can('projects.*')) {
+        if (! $user->can('projects.delete') && ! $user->can('projects.*')) {
             return false;
         }
 
-        if (!$this->sameCompany($user, $project)) {
+        if (! $this->sameCompany($user, $project)) {
             return false;
         }
 
@@ -126,7 +125,7 @@ class ProjectPolicy
      */
     public function viewTasks(User $user, Project $project): bool
     {
-        if (!$user->can('projects.tasks.view')) {
+        if (! $user->can('projects.tasks.view')) {
             return false;
         }
 
@@ -138,11 +137,11 @@ class ProjectPolicy
      */
     public function manageTasks(User $user, Project $project): bool
     {
-        if (!$user->can('projects.tasks.manage')) {
+        if (! $user->can('projects.tasks.manage')) {
             return false;
         }
 
-        if (!$this->sameCompany($user, $project)) {
+        if (! $this->sameCompany($user, $project)) {
             return false;
         }
 
@@ -174,7 +173,7 @@ class ProjectPolicy
      */
     public function viewMembers(User $user, Project $project): bool
     {
-        if (!$user->can('projects.members.view')) {
+        if (! $user->can('projects.members.view')) {
             return false;
         }
 
@@ -186,11 +185,11 @@ class ProjectPolicy
      */
     public function manageMembers(User $user, Project $project): bool
     {
-        if (!$user->can('projects.members.manage')) {
+        if (! $user->can('projects.members.manage')) {
             return false;
         }
 
-        if (!$this->sameCompany($user, $project)) {
+        if (! $this->sameCompany($user, $project)) {
             return false;
         }
 
@@ -250,7 +249,7 @@ class ProjectPolicy
      */
     public function manageSettings(User $user, Project $project): bool
     {
-        if (!$this->sameCompany($user, $project)) {
+        if (! $this->sameCompany($user, $project)) {
             return false;
         }
 
@@ -284,7 +283,7 @@ class ProjectPolicy
      */
     public function viewReports(User $user, Project $project): bool
     {
-        if (!$user->canAny(['projects.view', 'reports.projects'])) {
+        if (! $user->canAny(['projects.view', 'reports.projects'])) {
             return false;
         }
 
@@ -298,7 +297,7 @@ class ProjectPolicy
     {
         return $user->company_id === $project->company_id;
     }
-    
+
     /**
      * Check if user has a specific project permission or wildcard.
      */

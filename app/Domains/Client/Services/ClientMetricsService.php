@@ -5,19 +5,19 @@ namespace App\Domains\Client\Services;
 use App\Models\Client;
 use App\Models\Ticket;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ClientMetricsService
 {
     protected $metricsCache = [];
-    
+
     public function getMetrics(Client $client): array
     {
         // Use request-level cache to avoid duplicate queries within the same request
-        $cacheKey = 'client_metrics_' . $client->id . '_' . request()->fingerprint();
-        
-        return Cache::remember($cacheKey, 1, function() use ($client) {
+        $cacheKey = 'client_metrics_'.$client->id.'_'.request()->fingerprint();
+
+        return Cache::remember($cacheKey, 1, function () use ($client) {
             // Store calculated values to avoid recalculating in other methods
             $this->metricsCache[$client->id] = [
                 'sla_compliance' => $this->calculateSlaCompliance($client),
@@ -28,13 +28,13 @@ class ClientMetricsService
                 'ticket_stats' => $this->getTicketStats($client),
                 'project_stats' => $this->getProjectStats($client),
             ];
-            
+
             // Calculate total monthly cost after services are fetched
             $this->metricsCache[$client->id]['total_monthly_cost'] = $this->calculateMonthlyServiceCost(
-                $client, 
+                $client,
                 $this->metricsCache[$client->id]['active_services']
             );
-            
+
             return $this->metricsCache[$client->id];
         });
     }
@@ -50,7 +50,7 @@ class ClientMetricsService
                 ->where('created_at', '>=', now()->subMonths(3))
                 ->select('id', 'created_at', 'closed_at', 'priority')
                 ->get();
-            
+
             $this->metricsCache[$client->id]['tickets_for_sla'] = $tickets;
         }
 
@@ -65,16 +65,16 @@ class ClientMetricsService
             $createdAt = Carbon::parse($ticket->created_at);
             $closedAt = Carbon::parse($ticket->closed_at);
             $resolutionHours = $createdAt->diffInHours($closedAt);
-            
+
             // Define SLA based on priority
-            $slaHours = match($ticket->priority) {
+            $slaHours = match ($ticket->priority) {
                 'critical' => 4,
                 'high' => 8,
                 'medium' => 24,
                 'low' => 48,
                 default => 24,
             };
-            
+
             if ($resolutionHours <= $slaHours) {
                 $slaMetTickets++;
             }
@@ -86,10 +86,10 @@ class ClientMetricsService
     protected function calculateSatisfactionScore(Client $client): float
     {
         // Use cached ticket IDs to avoid duplicate query
-        $ticketIds = Cache::remember('client_ticket_ids_' . $client->id, 1, function() use ($client) {
+        $ticketIds = Cache::remember('client_ticket_ids_'.$client->id, 1, function () use ($client) {
             return $client->tickets()->pluck('id');
         });
-        
+
         // Check if we have a ticket_ratings table or satisfaction field
         $ratings = DB::table('ticket_ratings')
             ->whereIn('ticket_id', $ticketIds)
@@ -109,19 +109,19 @@ class ClientMetricsService
                 now()->subMonths(3),
                 now()->subMonths(3),
                 $client->id,
-                $client->company_id
+                $client->company_id,
             ]);
-                
+
             if ($ticketCounts->total_tickets === 0) {
                 return 0.0;
             }
-            
+
             // Base satisfaction on resolution rate + SLA compliance
             $resolutionRate = ($ticketCounts->resolved_tickets / $ticketCounts->total_tickets) * 100;
-            $slaCompliance = isset($this->metricsCache[$client->id]['sla_compliance']) 
+            $slaCompliance = isset($this->metricsCache[$client->id]['sla_compliance'])
                 ? $this->metricsCache[$client->id]['sla_compliance']
                 : $this->calculateSlaCompliance($client);
-            
+
             return round(($resolutionRate * 0.6 + $slaCompliance * 0.4), 1);
         }
 
@@ -155,9 +155,9 @@ class ClientMetricsService
         $avgHours = $totalHours / $tickets->count();
 
         if ($avgHours < 24) {
-            return round($avgHours, 1) . ' hrs';
+            return round($avgHours, 1).' hrs';
         } else {
-            return round($avgHours / 24, 1) . ' days';
+            return round($avgHours / 24, 1).' days';
         }
     }
 
@@ -173,20 +173,20 @@ class ClientMetricsService
     protected function getActiveServices(Client $client): array
     {
         $services = [];
-        
+
         // Get services from active contracts
         $contracts = $client->contracts()
             ->where('status', 'active')
-            ->with('products')
             ->get();
 
         foreach ($contracts as $contract) {
-            foreach ($contract->products as $product) {
+            // Extract services from contract data
+            if ($contract->billing_model && $contract->billing_model !== 'fixed') {
                 $services[] = [
-                    'name' => $product->name,
-                    'quantity' => $product->pivot->quantity ?? 1,
-                    'price' => $product->pivot->price ?? $product->price,
-                    'billing_cycle' => $product->billing_cycle ?? 'monthly',
+                    'name' => $contract->title,
+                    'quantity' => 1,
+                    'price' => $contract->getMonthlyRecurringRevenue(),
+                    'billing_cycle' => 'monthly',
                 ];
             }
         }
@@ -221,14 +221,14 @@ class ClientMetricsService
 
         foreach ($services as $service) {
             $monthlyAmount = $service['price'] * $service['quantity'];
-            
+
             // Convert to monthly if different billing cycle
             if ($service['billing_cycle'] === 'yearly') {
                 $monthlyAmount = $monthlyAmount / 12;
             } elseif ($service['billing_cycle'] === 'quarterly') {
                 $monthlyAmount = $monthlyAmount / 3;
             }
-            
+
             $totalMonthly += $monthlyAmount;
         }
 
@@ -238,7 +238,7 @@ class ClientMetricsService
     protected function getTicketStats(Client $client): array
     {
         $now = now();
-        
+
         return [
             'open' => $client->tickets()->whereIn('status', ['open', 'pending'])->count(),
             'in_progress' => $client->tickets()->where('status', 'in_progress')->count(),

@@ -21,33 +21,33 @@ class AssetService
             ->whereNull('archived_at');
 
         // Apply search filter
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('serial', 'like', "%{$search}%")
-                  ->orWhere('model', 'like', "%{$search}%")
-                  ->orWhere('make', 'like', "%{$search}%");
+                    ->orWhere('serial', 'like', "%{$search}%")
+                    ->orWhere('model', 'like', "%{$search}%")
+                    ->orWhere('make', 'like', "%{$search}%");
             });
         }
 
         // Apply type filter
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
         // Apply status filter
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // Apply client filter
-        if (!empty($filters['client_id'])) {
+        if (! empty($filters['client_id'])) {
             $query->where('client_id', $filters['client_id']);
         }
 
         // Apply location filter
-        if (!empty($filters['location_id'])) {
+        if (! empty($filters['location_id'])) {
             $query->where('location_id', $filters['location_id']);
         }
 
@@ -62,13 +62,13 @@ class AssetService
     public function create(array $data): Asset
     {
         $data['company_id'] = Auth::user()->company_id;
-        
+
         return DB::transaction(function () use ($data) {
             $asset = Asset::create($data);
-            
+
             // Track the creation in audit log if needed
             $this->logAssetActivity($asset, 'created');
-            
+
             return $asset;
         });
     }
@@ -80,10 +80,10 @@ class AssetService
     {
         return DB::transaction(function () use ($asset, $data) {
             $asset->update($data);
-            
+
             // Track the update in audit log if needed
             $this->logAssetActivity($asset, 'updated');
-            
+
             return $asset->fresh();
         });
     }
@@ -96,10 +96,10 @@ class AssetService
         return DB::transaction(function () use ($asset) {
             $asset->archived_at = now();
             $result = $asset->save();
-            
+
             // Track the archival in audit log if needed
             $this->logAssetActivity($asset, 'archived');
-            
+
             return $result;
         });
     }
@@ -171,7 +171,7 @@ class AssetService
         $query = Asset::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
             ->where('status', $status);
-        
+
         return $query->with(['client', 'location'])
             ->orderBy('name')
             ->get();
@@ -198,13 +198,13 @@ class AssetService
         return DB::transaction(function () use ($asset, $status) {
             $oldStatus = $asset->status;
             $asset->update(['status' => $status]);
-            
+
             // Track the status change in audit log
             $this->logAssetActivity($asset, 'status_changed', [
                 'from' => $oldStatus,
-                'to' => $status
+                'to' => $status,
             ]);
-            
+
             return $asset;
         });
     }
@@ -217,13 +217,13 @@ class AssetService
         return DB::transaction(function () use ($asset, $clientId) {
             $oldClientId = $asset->client_id;
             $asset->update(['client_id' => $clientId]);
-            
+
             // Track the assignment in audit log
             $this->logAssetActivity($asset, 'client_assigned', [
                 'from_client_id' => $oldClientId,
-                'to_client_id' => $clientId
+                'to_client_id' => $clientId,
             ]);
-            
+
             return $asset;
         });
     }
@@ -235,22 +235,22 @@ class AssetService
     {
         return DB::transaction(function () use ($asset, $checkOut, $contactId) {
             $data = [
-                'status' => $checkOut ? 'Deployed' : 'Ready To Deploy'
+                'status' => $checkOut ? 'Deployed' : 'Ready To Deploy',
             ];
-            
+
             if ($checkOut && $contactId) {
                 $data['contact_id'] = $contactId;
-            } elseif (!$checkOut) {
+            } elseif (! $checkOut) {
                 $data['contact_id'] = null;
             }
-            
+
             $asset->update($data);
-            
+
             // Track the check in/out in audit log
             $this->logAssetActivity($asset, $checkOut ? 'checked_out' : 'checked_in', [
-                'contact_id' => $contactId
+                'contact_id' => $contactId,
             ]);
-            
+
             return $asset;
         });
     }
@@ -261,7 +261,7 @@ class AssetService
     public function getAnalytics(): array
     {
         $companyId = Auth::user()->company_id;
-        
+
         return [
             'total_assets' => Asset::where('company_id', $companyId)
                 ->whereNull('archived_at')
@@ -303,11 +303,11 @@ class AssetService
     {
         $query = Asset::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at');
-            
+
         foreach ($criteria as $field => $value) {
             $query->where($field, $value);
         }
-        
+
         return $query->first();
     }
 
@@ -327,7 +327,7 @@ class AssetService
             'depreciations',
             'tickets',
             'documents',
-            'files'
+            'files',
         ]);
     }
 
@@ -367,19 +367,19 @@ class AssetService
             ->where('type', '!=', 'Server'); // Exclude servers from check-in/out operations
 
         // Apply filters
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
-        if (!empty($filters['client_id'])) {
+        if (! empty($filters['client_id'])) {
             $query->where('client_id', $filters['client_id']);
         }
 
-        if (!empty($filters['location_id'])) {
+        if (! empty($filters['location_id'])) {
             $query->where('location_id', $filters['location_id']);
         }
 
@@ -396,7 +396,7 @@ class AssetService
         $results = [
             'success' => 0,
             'failed' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         foreach ($assetIds as $assetId) {
@@ -409,7 +409,7 @@ class AssetService
                 $results['success']++;
             } catch (\Exception $e) {
                 $results['failed']++;
-                $results['errors'][] = "Asset ID {$assetId}: " . $e->getMessage();
+                $results['errors'][] = "Asset ID {$assetId}: ".$e->getMessage();
             }
         }
 
@@ -422,12 +422,12 @@ class AssetService
     public function getCheckInOutMetrics(): array
     {
         $analytics = $this->getAnalytics();
-        
+
         return [
             'available_count' => $analytics['available_assets'],
-            'checked_out_count' => $analytics['deployed_assets'], 
+            'checked_out_count' => $analytics['deployed_assets'],
             'total_count' => $analytics['total_assets'],
-            'utilization_rate' => $analytics['total_assets'] > 0 
+            'utilization_rate' => $analytics['total_assets'] > 0
                 ? round(($analytics['deployed_assets'] / $analytics['total_assets']) * 100, 1)
                 : 0,
             'assets_by_type' => $analytics['assets_by_type'],
@@ -445,7 +445,7 @@ class AssetService
     {
         if ($asset->status === 'Deployed' && $asset->contact_id) {
             return 'checked_out';
-        } elseif ($asset->status === 'Ready To Deploy' && !$asset->contact_id) {
+        } elseif ($asset->status === 'Ready To Deploy' && ! $asset->contact_id) {
             return 'checked_in';
         } elseif ($asset->wasRecentlyCreated) {
             return 'created';
@@ -461,7 +461,7 @@ class AssetService
     {
         // Implementation would depend on your audit logging system
         // This could integrate with Laravel's activity log package or custom audit system
-        
+
         // Example implementation:
         // activity()
         //     ->performedOn($asset)

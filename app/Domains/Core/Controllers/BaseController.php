@@ -3,21 +3,21 @@
 namespace App\Domains\Core\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Foundation\Http\FormRequest;
 
 abstract class BaseController extends Controller
 {
     protected string $modelClass;
+
     protected string $serviceClass;
+
     protected string $resourceName;
+
     protected string $viewPrefix;
+
     protected array $eagerLoadRelations = [];
 
     public function __construct()
@@ -40,7 +40,7 @@ abstract class BaseController extends Controller
 
         $filters = $this->getFilters($request);
         $service = app($this->serviceClass);
-        
+
         if (method_exists($service, 'getPaginated')) {
             $items = $service->getPaginated($filters, $request->get('per_page', 25));
         } else {
@@ -64,7 +64,7 @@ abstract class BaseController extends Controller
     {
         $this->authorize('view', $model);
 
-        if (!empty($this->eagerLoadRelations)) {
+        if (! empty($this->eagerLoadRelations)) {
             $model->load($this->eagerLoadRelations);
         }
 
@@ -94,7 +94,7 @@ abstract class BaseController extends Controller
         try {
             $service = app($this->serviceClass);
             $data = $this->prepareStoreData($request->validated());
-            
+
             if (method_exists($service, 'create')) {
                 $model = $service->create($data);
             } else {
@@ -108,7 +108,7 @@ abstract class BaseController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => $this->getSuccessMessage('created'),
-                    'data' => $model
+                    'data' => $model,
                 ], 201);
             }
 
@@ -122,7 +122,7 @@ abstract class BaseController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $this->getErrorMessage('creation')
+                    'message' => $this->getErrorMessage('creation'),
                 ], 500);
             }
 
@@ -151,7 +151,7 @@ abstract class BaseController extends Controller
         try {
             $service = app($this->serviceClass);
             $data = $this->prepareUpdateData($request->validated(), $model);
-            
+
             if (method_exists($service, 'update')) {
                 $model = $service->update($model, $data);
             } else {
@@ -165,7 +165,7 @@ abstract class BaseController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => $this->getSuccessMessage('updated'),
-                    'data' => $model
+                    'data' => $model,
                 ]);
             }
 
@@ -179,7 +179,7 @@ abstract class BaseController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $this->getErrorMessage('update')
+                    'message' => $this->getErrorMessage('update'),
                 ], 500);
             }
 
@@ -196,7 +196,7 @@ abstract class BaseController extends Controller
         try {
             $service = app($this->serviceClass);
             $modelName = $this->getModelDisplayName($model);
-            
+
             if (method_exists($service, 'archive')) {
                 $service->archive($model);
                 $action = 'archived';
@@ -218,7 +218,7 @@ abstract class BaseController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => $this->getSuccessMessage($action)
+                    'message' => $this->getSuccessMessage($action),
                 ]);
             }
 
@@ -232,7 +232,7 @@ abstract class BaseController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $this->getErrorMessage('deletion')
+                    'message' => $this->getErrorMessage('deletion'),
                 ], 500);
             }
 
@@ -265,7 +265,7 @@ abstract class BaseController extends Controller
         $sortDirection = $request->get('direction', 'desc');
         $query->orderBy($sortBy, $sortDirection);
 
-        if (!empty($this->eagerLoadRelations)) {
+        if (! empty($this->eagerLoadRelations)) {
             $query->with($this->eagerLoadRelations);
         }
 
@@ -294,6 +294,7 @@ abstract class BaseController extends Controller
     protected function prepareStoreData(array $data): array
     {
         $data['company_id'] = Auth::user()->company_id;
+
         return $data;
     }
 
@@ -340,35 +341,37 @@ abstract class BaseController extends Controller
     protected function getSuccessMessage(string $action): string
     {
         $resourceName = ucfirst($this->getResourceSingularName());
+
         return "{$resourceName} {$action} successfully.";
     }
 
     protected function getErrorMessage(string $action): string
     {
         $resourceName = ucfirst($this->getResourceSingularName());
+
         return "Failed to {$action} {$resourceName}.";
     }
 
     protected function logActivity(Model $model, string $action, Request $request): void
     {
-        Log::info(ucfirst($this->getResourceSingularName()) . " {$action}", [
+        Log::info(ucfirst($this->getResourceSingularName())." {$action}", [
             'model_id' => $model->id,
             'model_type' => get_class($model),
             'user_id' => Auth::id(),
             'ip' => $request->ip(),
-            'user_agent' => $request->userAgent()
+            'user_agent' => $request->userAgent(),
         ]);
     }
 
     protected function logError(string $action, \Exception $e, Request $request, ?Model $model = null): void
     {
-        Log::error(ucfirst($this->getResourceSingularName()) . " {$action} failed", [
+        Log::error(ucfirst($this->getResourceSingularName())." {$action} failed", [
             'error' => $e->getMessage(),
             'model_id' => $model?->id,
             'model_type' => $model ? get_class($model) : $this->modelClass,
             'user_id' => Auth::id(),
             'ip' => $request->ip(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
     }
 }

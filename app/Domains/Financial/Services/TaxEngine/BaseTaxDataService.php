@@ -2,11 +2,11 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Exception;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Base Tax Data Service
@@ -17,9 +17,13 @@ use Exception;
 abstract class BaseTaxDataService implements TaxDataServiceInterface
 {
     protected ?int $companyId = null;
+
     protected array $config;
+
     protected string $stateCode;
+
     protected string $stateName;
+
     protected array $apiConfig;
 
     public function __construct(array $config = [])
@@ -42,6 +46,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
     public function setCompanyId(int $companyId): self
     {
         $this->companyId = $companyId;
+
         return $this;
     }
 
@@ -90,7 +95,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
      */
     protected function loadFromConfig(): array
     {
-        $configKey = strtolower($this->getStateCode()) . '_tax';
+        $configKey = strtolower($this->getStateCode()).'_tax';
         $config = config($configKey, []);
 
         return array_merge($this->getDefaultConfig(), $config);
@@ -117,8 +122,8 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
      */
     public function isConfigured(): bool
     {
-        return !empty($this->apiConfig['api_key']) &&
-               !empty($this->apiConfig['base_url']) &&
+        return ! empty($this->apiConfig['api_key']) &&
+               ! empty($this->apiConfig['base_url']) &&
                $this->apiConfig['enabled'];
     }
 
@@ -128,7 +133,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
     public function getConfigurationStatus(): array
     {
         $rateCount = DB::table('service_tax_rates')
-            ->where('source', $this->getStateCode() . '_official')
+            ->where('source', $this->getStateCode().'_official')
             ->where('is_active', 1)
             ->count();
 
@@ -139,7 +144,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
             'tax_rates' => $rateCount,
             'last_updated' => $this->apiConfig['last_updated'],
             'auto_update' => $this->apiConfig['auto_update'],
-            'source' => $this->getStateCode() . '_official',
+            'source' => $this->getStateCode().'_official',
             'cost' => 'FREE', // Most official sources are free
         ];
     }
@@ -152,7 +157,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
         try {
             $headers = array_merge([
                 'Accept' => 'application/json',
-                'User-Agent' => 'Nestogy-MSP/1.0'
+                'User-Agent' => 'Nestogy-MSP/1.0',
             ], $options['headers'] ?? []);
 
             if ($this->apiConfig['api_key']) {
@@ -187,7 +192,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
             Log::error("HTTP request failed for {$this->getStateCode()}", [
                 'url' => $url,
                 'method' => $method,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
@@ -208,7 +213,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
             'operation' => $operation,
         ], $params);
 
-        return 'tax_' . md5(json_encode($keyData));
+        return 'tax_'.md5(json_encode($keyData));
     }
 
     /**
@@ -216,7 +221,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
      */
     protected function getCachedData(string $key, callable $callback)
     {
-        if (!$this->config['enable_caching']) {
+        if (! $this->config['enable_caching']) {
             return $callback();
         }
 
@@ -233,9 +238,9 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
         // Clear cache entries matching pattern
         if (config('cache.default') === 'redis') {
             $prefix = config('cache.prefix', '');
-            $fullPattern = $prefix . $pattern;
+            $fullPattern = $prefix.$pattern;
             $keys = Cache::getRedis()->keys($fullPattern);
-            if (!empty($keys)) {
+            if (! empty($keys)) {
                 Cache::getRedis()->del($keys);
             }
         } else {
@@ -244,7 +249,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
 
         Log::info("Cache cleared for {$this->getStateCode()} tax service", [
             'company_id' => $this->companyId,
-            'pattern' => $pattern
+            'pattern' => $pattern,
         ]);
     }
 
@@ -295,7 +300,7 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
             'state_name' => $this->getStateName(),
             'service_type' => get_class($this),
             'configured' => $this->isConfigured(),
-            'api_configured' => !empty($this->apiConfig['api_key']),
+            'api_configured' => ! empty($this->apiConfig['api_key']),
             'last_updated' => $this->apiConfig['last_updated'],
             'auto_update' => $this->apiConfig['auto_update'],
         ];
@@ -303,10 +308,16 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
 
     // Abstract methods that must be implemented by concrete classes
     abstract public function getStateCode(): string;
+
     abstract public function getStateName(): string;
+
     abstract public function downloadTaxRates(): array;
+
     abstract public function downloadAddressData(?string $jurisdictionCode = null): array;
+
     abstract public function updateDatabaseWithRates(array $rates): array;
+
     abstract public function listAvailableFiles(): array;
+
     abstract public function downloadFile(string $filePath): array;
 }

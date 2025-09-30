@@ -1,9 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -14,16 +13,16 @@ return new class extends Migration
     {
         // Migrate existing permissions to Bouncer abilities
         $this->migratePermissions();
-        
+
         // Migrate existing roles to Bouncer roles
         $this->migrateRoles();
-        
+
         // Migrate role-permission relationships
         $this->migrateRolePermissions();
-        
+
         // Migrate user role assignments
         $this->migrateUserRoles();
-        
+
         // Migrate direct user permissions
         $this->migrateUserPermissions();
     }
@@ -35,22 +34,22 @@ return new class extends Migration
     {
         // Clear Bouncer tables (but don't drop them - they might be used elsewhere)
         DB::table('bouncer_permissions')->delete();
-        DB::table('bouncer_assigned_roles')->delete(); 
+        DB::table('bouncer_assigned_roles')->delete();
         DB::table('bouncer_roles')->delete();
         DB::table('bouncer_abilities')->delete();
     }
-    
+
     /**
      * Migrate existing permissions to Bouncer abilities.
      */
     private function migratePermissions(): void
     {
-        if (!Schema::hasTable('permissions')) {
+        if (! Schema::hasTable('permissions')) {
             return; // No existing permissions table
         }
-        
+
         $existingPermissions = DB::table('permissions')->get();
-        
+
         foreach ($existingPermissions as $permission) {
             // Convert to Bouncer ability
             $abilityData = [
@@ -59,25 +58,25 @@ return new class extends Migration
                 'created_at' => $permission->created_at ?? now(),
                 'updated_at' => $permission->updated_at ?? now(),
             ];
-            
+
             // Insert into Bouncer abilities table, ignore duplicates
             DB::table('bouncer_abilities')->insertOrIgnore($abilityData);
         }
-        
-        echo "Migrated " . $existingPermissions->count() . " permissions to Bouncer abilities.\n";
+
+        echo 'Migrated '.$existingPermissions->count()." permissions to Bouncer abilities.\n";
     }
-    
+
     /**
      * Migrate existing roles to Bouncer roles.
      */
     private function migrateRoles(): void
     {
-        if (!Schema::hasTable('roles')) {
+        if (! Schema::hasTable('roles')) {
             return; // No existing roles table
         }
-        
+
         $existingRoles = DB::table('roles')->get();
-        
+
         foreach ($existingRoles as $role) {
             $roleData = [
                 'name' => $role->slug, // Use slug as the role name
@@ -85,25 +84,25 @@ return new class extends Migration
                 'created_at' => $role->created_at ?? now(),
                 'updated_at' => $role->updated_at ?? now(),
             ];
-            
+
             // Insert into Bouncer roles table, ignore duplicates
             DB::table('bouncer_roles')->insertOrIgnore($roleData);
         }
-        
-        echo "Migrated " . $existingRoles->count() . " roles to Bouncer.\n";
+
+        echo 'Migrated '.$existingRoles->count()." roles to Bouncer.\n";
     }
-    
+
     /**
      * Migrate role-permission relationships.
      */
     private function migrateRolePermissions(): void
     {
-        if (!Schema::hasTable('role_permissions') || 
-            !Schema::hasTable('permissions') || 
-            !Schema::hasTable('roles')) {
+        if (! Schema::hasTable('role_permissions') ||
+            ! Schema::hasTable('permissions') ||
+            ! Schema::hasTable('roles')) {
             return;
         }
-        
+
         $rolePermissions = DB::table('role_permissions')
             ->join('roles', 'role_permissions.role_id', '=', 'roles.id')
             ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
@@ -113,15 +112,15 @@ return new class extends Migration
                 'role_permissions.created_at'
             )
             ->get();
-            
+
         // Get all companies to scope role permissions per company
         $companies = DB::table('companies')->pluck('id');
-            
+
         foreach ($rolePermissions as $rp) {
             // Find the Bouncer role and ability IDs
             $bouncerRole = DB::table('bouncer_roles')->where('name', $rp->role_slug)->first();
             $bouncerAbility = DB::table('bouncer_abilities')->where('name', $rp->permission_slug)->first();
-            
+
             if ($bouncerRole && $bouncerAbility) {
                 // Create permission record for each company scope
                 foreach ($companies as $companyId) {
@@ -135,19 +134,19 @@ return new class extends Migration
                 }
             }
         }
-        
-        echo "Migrated " . $rolePermissions->count() . " role-permission relationships across " . $companies->count() . " companies.\n";
+
+        echo 'Migrated '.$rolePermissions->count().' role-permission relationships across '.$companies->count()." companies.\n";
     }
-    
+
     /**
      * Migrate user role assignments with company scoping.
      */
     private function migrateUserRoles(): void
     {
-        if (!Schema::hasTable('user_roles')) {
+        if (! Schema::hasTable('user_roles')) {
             return;
         }
-        
+
         $userRoles = DB::table('user_roles')
             ->join('users', 'user_roles.user_id', '=', 'users.id')
             ->join('roles', 'user_roles.role_id', '=', 'roles.id')
@@ -158,10 +157,10 @@ return new class extends Migration
                 'user_roles.created_at'
             )
             ->get();
-            
+
         foreach ($userRoles as $userRole) {
             $bouncerRole = DB::table('bouncer_roles')->where('name', $userRole->role_slug)->first();
-            
+
             if ($bouncerRole) {
                 // Create Bouncer role assignment with company scope
                 DB::table('bouncer_assigned_roles')->insertOrIgnore([
@@ -174,19 +173,19 @@ return new class extends Migration
                 ]);
             }
         }
-        
-        echo "Migrated " . $userRoles->count() . " user role assignments.\n";
+
+        echo 'Migrated '.$userRoles->count()." user role assignments.\n";
     }
-    
+
     /**
      * Migrate direct user permissions.
      */
     private function migrateUserPermissions(): void
     {
-        if (!Schema::hasTable('user_permissions')) {
+        if (! Schema::hasTable('user_permissions')) {
             return;
         }
-        
+
         $userPermissions = DB::table('user_permissions')
             ->join('users', 'user_permissions.user_id', '=', 'users.id')
             ->join('permissions', 'user_permissions.permission_id', '=', 'permissions.id')
@@ -198,22 +197,22 @@ return new class extends Migration
                 'user_permissions.created_at'
             )
             ->get();
-            
+
         foreach ($userPermissions as $userPerm) {
             $bouncerAbility = DB::table('bouncer_abilities')->where('name', $userPerm->permission_slug)->first();
-            
+
             if ($bouncerAbility) {
                 // Create Bouncer permission assignment
                 DB::table('bouncer_permissions')->insertOrIgnore([
                     'ability_id' => $bouncerAbility->id,
                     'entity_id' => $userPerm->user_id,
                     'entity_type' => 'App\\Models\\User',
-                    'forbidden' => !$userPerm->granted, // Convert granted to forbidden logic
+                    'forbidden' => ! $userPerm->granted, // Convert granted to forbidden logic
                     'scope' => $userPerm->company_id, // Company-based scoping
                 ]);
             }
         }
-        
-        echo "Migrated " . $userPermissions->count() . " direct user permissions.\n";
+
+        echo 'Migrated '.$userPermissions->count()." direct user permissions.\n";
     }
 };

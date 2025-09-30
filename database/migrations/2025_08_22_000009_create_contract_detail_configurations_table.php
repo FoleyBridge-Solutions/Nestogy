@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('contract_detail_configurations', function (Blueprint $table) {
             $table->id();
-            
+
             // Multi-tenancy
             $table->unsignedBigInteger('company_id')->index();
-            
+
             // Detail view configuration
             $table->string('contract_type_slug')->index();
             $table->json('sections_config')->nullable(); // Sections to show and their configuration
@@ -28,19 +28,19 @@ return new class extends Migration
             $table->boolean('show_timeline')->default(true);
             $table->boolean('show_related_records')->default(true);
             $table->boolean('is_active')->default(true);
-            
+
             $table->timestamps();
-            
+
             // Foreign key constraints
             $table->foreign('company_id')
                 ->references('id')
                 ->on('companies')
                 ->onDelete('cascade');
-            
+
             // Indexes
             $table->index(['company_id', 'contract_type_slug']);
             $table->index(['company_id', 'is_active']);
-            
+
             // Unique constraint
             $table->unique(['company_id', 'contract_type_slug']);
         });

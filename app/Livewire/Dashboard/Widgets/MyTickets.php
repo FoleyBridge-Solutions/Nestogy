@@ -2,35 +2,39 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
-use Livewire\Component;
-use Livewire\Attributes\On;
 use App\Domains\Ticket\Models\Ticket;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 class MyTickets extends Component
 {
     public Collection $tickets;
+
     public bool $loading = true;
+
     public string $filter = 'assigned'; // assigned, created, watching
+
     public string $status = 'active'; // active, all, closed
+
     public int $limit = 10;
-    
+
     public function mount()
     {
         $this->tickets = collect();
         $this->loadTickets();
     }
-    
+
     #[On('refresh-my-tickets')]
     public function loadTickets()
     {
         $this->loading = true;
         $user = Auth::user();
         $companyId = $user->company_id;
-        
+
         $query = Ticket::where('company_id', $companyId);
-        
+
         // Filter by relationship to user
         switch ($this->filter) {
             case 'assigned':
@@ -44,7 +48,7 @@ class MyTickets extends Component
                 $query->where('assigned_to', $user->id); // Fallback to assigned
                 break;
         }
-        
+
         // Filter by status
         switch ($this->status) {
             case 'active':
@@ -53,9 +57,9 @@ class MyTickets extends Component
             case 'closed':
                 $query->whereIn('status', ['resolved', 'closed']);
                 break;
-            // 'all' doesn't add any filter
+                // 'all' doesn't add any filter
         }
-        
+
         $this->tickets = $query->with(['client', 'creator'])
             ->orderByRaw("CASE 
                 WHEN priority = 'critical' THEN 1 
@@ -66,10 +70,10 @@ class MyTickets extends Component
             ->orderBy('created_at', 'desc')
             ->limit($this->limit)
             ->get();
-            
+
         $this->loading = false;
     }
-    
+
     public function setFilter($filter)
     {
         if (in_array($filter, ['assigned', 'created', 'watching'])) {
@@ -77,7 +81,7 @@ class MyTickets extends Component
             $this->loadTickets();
         }
     }
-    
+
     public function setStatus($status)
     {
         if (in_array($status, ['active', 'all', 'closed'])) {
@@ -85,21 +89,21 @@ class MyTickets extends Component
             $this->loadTickets();
         }
     }
-    
+
     public function takeTicket($ticketId)
     {
         $ticket = Ticket::find($ticketId);
         if ($ticket && $ticket->company_id === Auth::user()->company_id) {
             $ticket->update([
                 'assigned_to' => Auth::id(),
-                'status' => 'In Progress'
+                'status' => 'In Progress',
             ]);
-            
+
             $this->loadTickets();
             $this->dispatch('ticket-taken', ['ticket_id' => $ticketId]);
         }
     }
-    
+
     public function updateStatus($ticketId, $newStatus)
     {
         $ticket = Ticket::find($ticketId);
@@ -107,18 +111,18 @@ class MyTickets extends Component
             $ticket->update(['status' => $newStatus]);
             $this->loadTickets();
             $this->dispatch('ticket-status-updated', [
-                'ticket_id' => $ticketId, 
-                'status' => $newStatus
+                'ticket_id' => $ticketId,
+                'status' => $newStatus,
             ]);
         }
     }
-    
+
     public function loadMore()
     {
         $this->limit += 10;
         $this->loadTickets();
     }
-    
+
     protected function getSafeRoute($name, $parameters = [])
     {
         try {

@@ -3,22 +3,21 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
-use App\Domains\Financial\Services\VoIPTaxService;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Recurring Invoice Model
- * 
+ *
  * Sophisticated recurring billing system with VoIP-specific features including
  * usage-based billing, tiered pricing, proration calculations, and tax integration.
  * Supports contract escalations, multi-service billing, and automated processing.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -64,7 +63,7 @@ use Illuminate\Support\Facades\Log;
  */
 class Recurring extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -161,46 +160,67 @@ class Recurring extends Model
      * Billing frequency constants
      */
     const FREQUENCY_WEEKLY = 'Weekly';
+
     const FREQUENCY_BIWEEKLY = 'Bi-Weekly';
+
     const FREQUENCY_MONTHLY = 'Monthly';
+
     const FREQUENCY_QUARTERLY = 'Quarterly';
+
     const FREQUENCY_BIANNUALLY = 'Bi-Annually';
+
     const FREQUENCY_ANNUALLY = 'Annually';
+
     const FREQUENCY_CUSTOM = 'Custom';
 
     /**
      * Billing type constants
      */
     const BILLING_TYPE_FIXED = 'fixed';
+
     const BILLING_TYPE_USAGE_BASED = 'usage_based';
+
     const BILLING_TYPE_TIERED = 'tiered';
+
     const BILLING_TYPE_HYBRID = 'hybrid';
 
     /**
      * Discount type constants
      */
     const DISCOUNT_TYPE_FIXED = 'fixed';
+
     const DISCOUNT_TYPE_PERCENTAGE = 'percentage';
 
     /**
      * Proration method constants
      */
     const PRORATION_DAILY = 'daily';
+
     const PRORATION_MONTHLY = 'monthly';
+
     const PRORATION_NONE = 'none';
 
     /**
      * VoIP service types for recurring billing
      */
     const SERVICE_HOSTED_PBX = 'hosted_pbx';
+
     const SERVICE_SIP_TRUNKING = 'sip_trunking';
+
     const SERVICE_PHONE_SYSTEM = 'phone_system';
+
     const SERVICE_INTERNET = 'internet';
+
     const SERVICE_SUPPORT = 'support';
+
     const SERVICE_EQUIPMENT_LEASE = 'equipment_lease';
+
     const SERVICE_LONG_DISTANCE = 'long_distance';
+
     const SERVICE_INTERNATIONAL = 'international';
+
     const SERVICE_E911 = 'e911';
+
     const SERVICE_NUMBER_PORTING = 'number_porting';
 
     /**
@@ -302,7 +322,8 @@ class Recurring extends Model
     public function getFullNumber(): string
     {
         $prefix = $this->prefix ?: 'REC';
-        return $prefix . '-' . str_pad($this->number, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.'-'.str_pad($this->number, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -318,7 +339,7 @@ class Recurring extends Model
      */
     public function isDue(): bool
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return false;
         }
 
@@ -354,11 +375,12 @@ class Recurring extends Model
      */
     public function isEscalationDue(): bool
     {
-        if (!$this->contract_escalation || !$this->escalation_months) {
+        if (! $this->contract_escalation || ! $this->escalation_months) {
             return false;
         }
 
         $lastEscalation = $this->last_escalation ?: $this->created_at;
+
         return Carbon::now()->gte($lastEscalation->addMonths($this->escalation_months));
     }
 
@@ -376,8 +398,8 @@ class Recurring extends Model
     public function calculateNextDate(?Carbon $fromDate = null): Carbon
     {
         $current = $fromDate ?: ($this->next_date ?: Carbon::now());
-        
-        return match($this->frequency) {
+
+        return match ($this->frequency) {
             self::FREQUENCY_WEEKLY => $current->addWeek(),
             self::FREQUENCY_BIWEEKLY => $current->addWeeks(2),
             self::FREQUENCY_MONTHLY => $current->addMonth(),
@@ -393,7 +415,7 @@ class Recurring extends Model
      */
     public function calculateProration(float $amount, Carbon $startDate, Carbon $endDate): float
     {
-        if (!$this->proration_enabled) {
+        if (! $this->proration_enabled) {
             return $amount;
         }
 
@@ -404,12 +426,14 @@ class Recurring extends Model
             case self::PRORATION_DAILY:
                 $totalDays = $billingPeriodStart->diffInDays($billingPeriodEnd);
                 $usedDays = $startDate->diffInDays($endDate);
+
                 return ($amount / $totalDays) * $usedDays;
 
             case self::PRORATION_MONTHLY:
                 if ($startDate->day > 15) {
                     return $amount * 0.5; // Half month
                 }
+
                 return $amount;
 
             default:
@@ -422,7 +446,7 @@ class Recurring extends Model
      */
     public function applyContractEscalation(): bool
     {
-        if (!$this->isEscalationDue()) {
+        if (! $this->isEscalationDue()) {
             return false;
         }
 
@@ -450,7 +474,7 @@ class Recurring extends Model
             'recurring_id' => $this->id,
             'old_amount' => $oldAmount,
             'new_amount' => $newAmount,
-            'escalation_percentage' => $this->escalation_percentage
+            'escalation_percentage' => $this->escalation_percentage,
         ]);
 
         return true;
@@ -472,7 +496,7 @@ class Recurring extends Model
         // $usageData = $this->usageData()
         //     ->whereBetween('usage_date', [$periodStart, $periodEnd])
         //     ->get();
-        
+
         // For now, get usage data from metadata
         $usageData = collect($this->metadata['usage_data'] ?? [])
             ->where('usage_date', '>=', $periodStart->toDateString())
@@ -484,12 +508,12 @@ class Recurring extends Model
         foreach ($this->service_tiers ?? [] as $tier) {
             $serviceUsage = $usageData->where('service_type', $tier['service_type'])->sum('usage_amount');
             $allowance = $tier['monthly_allowance'] ?? 0;
-            
+
             if ($serviceUsage > $allowance) {
                 $overage = $serviceUsage - $allowance;
                 $overageRate = $tier['overage_rate'] ?? 0;
                 $overageCharges = $overage * $overageRate;
-                
+
                 $totalUsageCharges += $overageCharges;
                 $breakdown[] = [
                     'service_type' => $tier['service_type'],
@@ -572,7 +596,7 @@ class Recurring extends Model
         // Calculate usage charges if applicable
         if (in_array($this->billing_type, [self::BILLING_TYPE_USAGE_BASED, self::BILLING_TYPE_HYBRID])) {
             $usageCharges = $this->calculateUsageCharges();
-            
+
             if ($usageCharges['total'] > 0) {
                 $invoice->items()->create([
                     'name' => 'Usage Charges',
@@ -610,7 +634,7 @@ class Recurring extends Model
         //     'usage_charges' => $usageCharges['total'] ?? 0,
         //     'tax_amount' => $invoice->getTotalTax(),
         // ]);
-        
+
         // For now, store billing history in metadata
         $billingHistory = $this->metadata['billing_history'] ?? [];
         $billingHistory[] = [
@@ -620,18 +644,18 @@ class Recurring extends Model
             'usage_charges' => $usageCharges['total'] ?? 0,
             'tax_amount' => $invoice->getTotalTax(),
         ];
-        
+
         $this->update([
             'metadata' => array_merge($this->metadata ?? [], [
-                'billing_history' => $billingHistory
-            ])
+                'billing_history' => $billingHistory,
+            ]),
         ]);
 
         Log::info('Recurring invoice generated', [
             'recurring_id' => $this->id,
             'invoice_id' => $invoice->id,
             'amount' => $invoice->amount,
-            'client_id' => $this->client_id
+            'client_id' => $this->client_id,
         ]);
 
         return $invoice;
@@ -649,17 +673,17 @@ class Recurring extends Model
             'id' => count($adjustments) + 1,
             'created_at' => now()->toISOString(),
         ]);
-        
+
         $this->update([
             'metadata' => array_merge($this->metadata ?? [], [
-                'proration_adjustments' => $adjustments
-            ])
+                'proration_adjustments' => $adjustments,
+            ]),
         ]);
 
         Log::info('Proration adjustment added', [
             'recurring_id' => $this->id,
             'adjustment_id' => count($adjustments),
-            'amount' => $adjustmentData['amount']
+            'amount' => $adjustmentData['amount'],
         ]);
 
         return end($adjustments);
@@ -671,12 +695,12 @@ class Recurring extends Model
     public function calculateTotals(): void
     {
         $subtotal = $this->items()->sum('subtotal');
-        $discount = $this->discount_type === self::DISCOUNT_TYPE_PERCENTAGE 
-            ? ($subtotal * $this->discount_amount) / 100 
+        $discount = $this->discount_type === self::DISCOUNT_TYPE_PERCENTAGE
+            ? ($subtotal * $this->discount_amount) / 100
             : $this->discount_amount;
-        
+
         $total = $subtotal - $discount;
-        
+
         $this->update(['amount' => $total]);
     }
 
@@ -694,7 +718,8 @@ class Recurring extends Model
     public function formatCurrency(float $amount): string
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($amount, 2);
+
+        return $symbol.number_format($amount, 2);
     }
 
     /**
@@ -729,7 +754,7 @@ class Recurring extends Model
 
         Log::info('Recurring billing paused', [
             'recurring_id' => $this->id,
-            'resume_date' => $resumeDate?->toDateString()
+            'resume_date' => $resumeDate?->toDateString(),
         ]);
     }
 
@@ -749,7 +774,7 @@ class Recurring extends Model
 
         Log::info('Recurring billing resumed', [
             'recurring_id' => $this->id,
-            'next_date' => $this->next_date->toDateString()
+            'next_date' => $this->next_date->toDateString(),
         ]);
     }
 
@@ -767,15 +792,15 @@ class Recurring extends Model
     public function scopeDue($query)
     {
         return $query->where('status', true)
-                    ->where('next_date', '<=', Carbon::now())
-                    ->where(function ($q) {
-                        $q->whereNull('end_date')
-                          ->orWhere('end_date', '>', Carbon::now());
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('max_invoices')
-                          ->orWhereRaw('invoices_generated < max_invoices');
-                    });
+            ->where('next_date', '<=', Carbon::now())
+            ->where(function ($q) {
+                $q->whereNull('end_date')
+                    ->orWhere('end_date', '>', Carbon::now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('max_invoices')
+                    ->orWhereRaw('invoices_generated < max_invoices');
+            });
     }
 
     /**
@@ -808,8 +833,8 @@ class Recurring extends Model
     public function scopeExpiringSoon($query, int $days = 30)
     {
         return $query->whereNotNull('end_date')
-                    ->where('end_date', '>=', Carbon::now())
-                    ->where('end_date', '<=', Carbon::now()->addDays($days));
+            ->where('end_date', '>=', Carbon::now())
+            ->where('end_date', '<=', Carbon::now()->addDays($days));
     }
 
     /**
@@ -860,7 +885,7 @@ class Recurring extends Model
     {
         return [
             self::FREQUENCY_WEEKLY => 'Weekly',
-            self::FREQUENCY_BIWEEKLY => 'Bi-Weekly', 
+            self::FREQUENCY_BIWEEKLY => 'Bi-Weekly',
             self::FREQUENCY_MONTHLY => 'Monthly',
             self::FREQUENCY_QUARTERLY => 'Quarterly',
             self::FREQUENCY_BIANNUALLY => 'Bi-Annually',
@@ -909,7 +934,7 @@ class Recurring extends Model
         parent::boot();
 
         static::creating(function ($recurring) {
-            if (!$recurring->number) {
+            if (! $recurring->number) {
                 $lastRecurring = static::where('company_id', $recurring->company_id)
                     ->where('prefix', $recurring->prefix)
                     ->orderBy('number', 'desc')
@@ -919,19 +944,19 @@ class Recurring extends Model
             }
 
             // Set default values
-            if (!$recurring->billing_type) {
+            if (! $recurring->billing_type) {
                 $recurring->billing_type = self::BILLING_TYPE_FIXED;
             }
 
-            if (!$recurring->discount_type) {
+            if (! $recurring->discount_type) {
                 $recurring->discount_type = self::DISCOUNT_TYPE_FIXED;
             }
 
-            if (!$recurring->proration_method) {
+            if (! $recurring->proration_method) {
                 $recurring->proration_method = self::PRORATION_DAILY;
             }
 
-            if (!$recurring->invoice_terms_days) {
+            if (! $recurring->invoice_terms_days) {
                 $recurring->invoice_terms_days = 30;
             }
         });
@@ -944,7 +969,7 @@ class Recurring extends Model
                 Log::info('Recurring billing is due for processing', [
                     'recurring_id' => $recurring->id,
                     'client_id' => $recurring->client_id,
-                    'next_date' => $recurring->next_date->toDateString()
+                    'next_date' => $recurring->next_date->toDateString(),
                 ]);
             }
         });

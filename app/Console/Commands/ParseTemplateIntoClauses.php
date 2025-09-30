@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Models\ContractClause;
+use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Services\ContractClauseService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +18,9 @@ class ParseTemplateIntoClauses extends Command
 
     // Class constants to reduce duplication
     private const CLAUSE_TYPE_STANDARD = 'standard';
+
     private const CLAUSE_TYPE_CUSTOM = 'custom';
+
     private const MSG_PARSE_START = 'Parsing template into clauses...';
 
     /**
@@ -73,11 +75,12 @@ class ParseTemplateIntoClauses extends Command
             $template = ContractTemplate::where('name', 'Recurring Support Services Agreement')->first();
         }
 
-        if (!$template) {
+        if (! $template) {
             $this->error('Template not found. Available templates:');
             ContractTemplate::all()->each(function ($t) {
                 $this->line("  {$t->id}: {$t->name}");
             });
+
             return 1;
         }
 
@@ -85,7 +88,7 @@ class ParseTemplateIntoClauses extends Command
         $this->info("Company ID: {$companyId}");
 
         if ($isDryRun) {
-            $this->warn("DRY RUN MODE - No changes will be made");
+            $this->warn('DRY RUN MODE - No changes will be made');
         }
 
         // Parse template into clauses
@@ -94,19 +97,19 @@ class ParseTemplateIntoClauses extends Command
 
             $parsedClauses = $this->parseRecurringServicesTemplate($template, $companyId);
 
-            $this->info("\nFound " . count($parsedClauses) . " clauses to create:");
+            $this->info("\nFound ".count($parsedClauses).' clauses to create:');
 
             $createdClauses = [];
             foreach ($parsedClauses as $index => $clauseData) {
                 $this->line(sprintf(
-                    "  %d. %s (%s) - %d variables",
+                    '  %d. %s (%s) - %d variables',
                     $index + 1,
                     $clauseData['name'],
                     $clauseData['category'],
                     count($clauseData['variables'])
                 ));
 
-                if (!$isDryRun) {
+                if (! $isDryRun) {
                     $clause = ContractClause::create($clauseData);
                     $createdClauses[] = $clause;
                     $this->info("    ✓ Created clause ID {$clause->id}");
@@ -114,7 +117,7 @@ class ParseTemplateIntoClauses extends Command
             }
 
             // Link clauses to template
-            if (!$isDryRun && !empty($createdClauses)) {
+            if (! $isDryRun && ! empty($createdClauses)) {
                 foreach ($createdClauses as $clause) {
                     $template->clauses()->attach($clause->id, [
                         'sort_order' => $clause->sort_order,
@@ -129,13 +132,14 @@ class ParseTemplateIntoClauses extends Command
                 $this->warn("\nDRY RUN completed - no changes made");
             } else {
                 DB::commit();
-                $this->info("\n✓ Successfully parsed template into " . count($createdClauses) . " clauses");
+                $this->info("\n✓ Successfully parsed template into ".count($createdClauses).' clauses');
             }
 
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->error("Error parsing template: " . $e->getMessage());
-            $this->error("Trace: " . $e->getTraceAsString());
+            $this->error('Error parsing template: '.$e->getMessage());
+            $this->error('Trace: '.$e->getTraceAsString());
+
             return 1;
         }
 
@@ -310,7 +314,7 @@ class ParseTemplateIntoClauses extends Command
         foreach ($clauseDefinitions as $clauseDef) {
             $clauseContent = $this->extractClauseContent($content, $clauseDef['start'], $clauseDef['end']);
 
-            if (!empty($clauseContent)) {
+            if (! empty($clauseContent)) {
                 $variables = $this->extractVariables($clauseContent);
 
                 $parsedClauses[] = [
@@ -328,7 +332,7 @@ class ParseTemplateIntoClauses extends Command
                     'version' => '1.0',
                     'applicable_contract_types' => ['managed_services'],
                     'metadata' => $clauseDef['metadata'] ?? null,
-                    'description' => 'System clause parsed from ' . $template->name,
+                    'description' => 'System clause parsed from '.$template->name,
                 ];
             }
         }

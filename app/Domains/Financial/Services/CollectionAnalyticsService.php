@@ -5,19 +5,16 @@ namespace App\Domains\Financial\Services;
 use App\Models\Client;
 use App\Models\DunningAction;
 use App\Models\DunningCampaign;
-use App\Models\PaymentPlan;
 use App\Models\Payment;
-use App\Models\CollectionNote;
-use App\Models\AccountHold;
+use App\Models\PaymentPlan;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Collection Analytics Service
- * 
+ *
  * Provides comprehensive collection performance analytics including
  * real-time dashboards, predictive analytics, campaign optimization,
  * performance metrics tracking, and ML-driven insights.
@@ -25,7 +22,9 @@ use Illuminate\Support\Facades\Cache;
 class CollectionAnalyticsService
 {
     protected CollectionManagementService $collectionService;
+
     protected string $cachePrefix = 'collection_analytics:';
+
     protected int $cacheTtl = 900; // 15 minutes
 
     // Key Performance Indicators
@@ -35,7 +34,7 @@ class CollectionAnalyticsService
         'cost_per_dollar_collected' => 0.15, // Target 15% cost ratio
         'payment_plan_success_rate' => 75.0, // Target 75% payment plan success
         'first_call_resolution' => 40.0,     // Target 40% FCR
-        'customer_retention' => 90.0         // Target 90% retention
+        'customer_retention' => 90.0,         // Target 90% retention
     ];
 
     public function __construct(CollectionManagementService $collectionService)
@@ -48,11 +47,11 @@ class CollectionAnalyticsService
      */
     public function generateDashboard(array $options = []): array
     {
-        $cacheKey = $this->cachePrefix . 'dashboard:' . md5(serialize($options));
-        
+        $cacheKey = $this->cachePrefix.'dashboard:'.md5(serialize($options));
+
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($options) {
             $dateRange = $this->getDateRange($options);
-            
+
             return [
                 'summary' => $this->getDashboardSummary($dateRange),
                 'kpi_metrics' => $this->getKpiMetrics($dateRange),
@@ -63,7 +62,7 @@ class CollectionAnalyticsService
                 'payment_plan_metrics' => $this->getPaymentPlanMetrics($dateRange),
                 'predictive_insights' => $this->getPredictiveInsights($dateRange),
                 'alerts' => $this->getPerformanceAlerts($dateRange),
-                'recommendations' => $this->getOptimizationRecommendations($dateRange)
+                'recommendations' => $this->getOptimizationRecommendations($dateRange),
             ];
         });
     }
@@ -78,23 +77,23 @@ class CollectionAnalyticsService
         $amountCollected = Payment::whereBetween('created_at', $dateRange)
             ->where('status', 'completed')
             ->sum('amount');
-        
+
         // Collection activity
         $totalActions = DunningAction::whereBetween('created_at', $dateRange)->count();
         $successfulActions = DunningAction::whereBetween('created_at', $dateRange)
             ->where('status', 'completed')
             ->whereNotNull('responded_at')
             ->count();
-        
+
         // Client metrics
         $totalClients = Client::whereHas('invoices', function ($query) {
             $query->where('status', '!=', 'paid');
         })->count();
-        
+
         $activeClients = Client::whereHas('dunningActions', function ($query) use ($dateRange) {
             $query->whereBetween('created_at', $dateRange);
         })->count();
-        
+
         $previousPeriod = $this->getPreviousPeriod($dateRange);
         $previousAmountCollected = Payment::whereBetween('created_at', $previousPeriod)
             ->where('status', 'completed')
@@ -110,8 +109,8 @@ class CollectionAnalyticsService
             'total_clients' => $totalClients,
             'active_clients' => $activeClients,
             'collection_efficiency' => $totalActions > 0 ? $amountCollected / $totalActions : 0,
-            'period_over_period_change' => $previousAmountCollected > 0 ? 
-                (($amountCollected - $previousAmountCollected) / $previousAmountCollected) * 100 : 0
+            'period_over_period_change' => $previousAmountCollected > 0 ?
+                (($amountCollected - $previousAmountCollected) / $previousAmountCollected) * 100 : 0,
         ];
     }
 
@@ -121,7 +120,7 @@ class CollectionAnalyticsService
     protected function getKpiMetrics(array $dateRange): array
     {
         $metrics = [];
-        
+
         // Collection Rate
         $totalBilled = DB::table('invoices')
             ->whereBetween('created_at', $dateRange)
@@ -129,12 +128,12 @@ class CollectionAnalyticsService
         $totalCollected = Payment::whereBetween('created_at', $dateRange)
             ->where('status', 'completed')
             ->sum('amount');
-        
+
         $metrics['collection_rate'] = [
             'value' => $totalBilled > 0 ? ($totalCollected / $totalBilled) * 100 : 0,
             'target' => $this->kpiTargets['collection_rate'],
             'status' => $this->getKpiStatus($totalBilled > 0 ? ($totalCollected / $totalBilled) * 100 : 0, $this->kpiTargets['collection_rate']),
-            'trend' => $this->calculateTrend('collection_rate', $dateRange)
+            'trend' => $this->calculateTrend('collection_rate', $dateRange),
         ];
 
         // Days Sales Outstanding (DSO)
@@ -143,7 +142,7 @@ class CollectionAnalyticsService
             'value' => $dso,
             'target' => $this->kpiTargets['days_sales_outstanding'],
             'status' => $this->getKpiStatus($dso, $this->kpiTargets['days_sales_outstanding'], 'lower_better'),
-            'trend' => $this->calculateTrend('dso', $dateRange)
+            'trend' => $this->calculateTrend('dso', $dateRange),
         ];
 
         // Cost per Dollar Collected
@@ -153,7 +152,7 @@ class CollectionAnalyticsService
             'value' => $costRatio,
             'target' => $this->kpiTargets['cost_per_dollar_collected'],
             'status' => $this->getKpiStatus($costRatio, $this->kpiTargets['cost_per_dollar_collected'], 'lower_better'),
-            'trend' => $this->calculateTrend('cost_ratio', $dateRange)
+            'trend' => $this->calculateTrend('cost_ratio', $dateRange),
         ];
 
         // Payment Plan Success Rate
@@ -162,7 +161,7 @@ class CollectionAnalyticsService
             'value' => $paymentPlanMetrics['success_rate'],
             'target' => $this->kpiTargets['payment_plan_success_rate'],
             'status' => $this->getKpiStatus($paymentPlanMetrics['success_rate'], $this->kpiTargets['payment_plan_success_rate']),
-            'trend' => $this->calculateTrend('payment_plan_success', $dateRange)
+            'trend' => $this->calculateTrend('payment_plan_success', $dateRange),
         ];
 
         // First Call Resolution Rate
@@ -171,7 +170,7 @@ class CollectionAnalyticsService
             'value' => $fcrRate,
             'target' => $this->kpiTargets['first_call_resolution'],
             'status' => $this->getKpiStatus($fcrRate, $this->kpiTargets['first_call_resolution']),
-            'trend' => $this->calculateTrend('fcr', $dateRange)
+            'trend' => $this->calculateTrend('fcr', $dateRange),
         ];
 
         return $metrics;
@@ -183,7 +182,7 @@ class CollectionAnalyticsService
     protected function getCollectionTrends(array $dateRange): array
     {
         $trends = [];
-        
+
         // Daily collection amounts
         $dailyCollections = Payment::whereBetween('created_at', $dateRange)
             ->where('status', 'completed')
@@ -212,15 +211,15 @@ class CollectionAnalyticsService
                 'date' => $dateKey,
                 'collections' => $dailyCollections[$dateKey]->total ?? 0,
                 'actions' => $dailyActions[$dateKey]->total ?? 0,
-                'efficiency' => ($dailyActions[$dateKey]->total ?? 0) > 0 ? 
-                    ($dailyCollections[$dateKey]->total ?? 0) / $dailyActions[$dateKey]->total : 0
+                'efficiency' => ($dailyActions[$dateKey]->total ?? 0) > 0 ?
+                    ($dailyCollections[$dateKey]->total ?? 0) / $dailyActions[$dateKey]->total : 0,
             ];
         }
 
         return [
             'daily_data' => $dates,
             'collection_velocity' => $this->calculateCollectionVelocity($dateRange),
-            'seasonal_patterns' => $this->identifySeasonalPatterns($dateRange)
+            'seasonal_patterns' => $this->identifySeasonalPatterns($dateRange),
         ];
     }
 
@@ -252,7 +251,7 @@ class CollectionAnalyticsService
                 'payments_generated' => $paymentsGenerated,
                 'conversion_rate' => $totalActions > 0 ? ($paymentsGenerated / $totalActions) * 100 : 0,
                 'avg_response_time' => $this->calculateAvgResponseTime($actions),
-                'cost_effectiveness' => $this->calculateCampaignCostEffectiveness($campaign, $dateRange)
+                'cost_effectiveness' => $this->calculateCampaignCostEffectiveness($campaign, $dateRange),
             ];
         }
 
@@ -274,7 +273,7 @@ class CollectionAnalyticsService
             'sms' => DunningAction::ACTION_SMS,
             'phone_call' => DunningAction::ACTION_PHONE_CALL,
             'letter' => DunningAction::ACTION_LETTER,
-            'portal_notification' => DunningAction::ACTION_PORTAL_NOTIFICATION
+            'portal_notification' => DunningAction::ACTION_PORTAL_NOTIFICATION,
         ];
 
         $effectiveness = [];
@@ -297,7 +296,7 @@ class CollectionAnalyticsService
                 'conversion_rate' => $totalActions > 0 ? ($paymentsGenerated / $totalActions) * 100 : 0,
                 'avg_cost_per_action' => $avgCost,
                 'roi' => $this->calculateChannelROI($channelName, $dateRange),
-                'optimal_timing' => $this->getOptimalTiming($channelName, $dateRange)
+                'optimal_timing' => $this->getOptimalTiming($channelName, $dateRange),
             ];
         }
 
@@ -320,7 +319,7 @@ class CollectionAnalyticsService
             '31_60' => ['min' => 31, 'max' => 60],
             '61_90' => ['min' => 61, 'max' => 90],
             '91_120' => ['min' => 91, 'max' => 120],
-            'over_120' => ['min' => 121, 'max' => 9999]
+            'over_120' => ['min' => 121, 'max' => 9999],
         ];
 
         $aging = [];
@@ -337,7 +336,7 @@ class CollectionAnalyticsService
                 'amount' => $query->sum('invoices.amount'),
                 'count' => $query->count(),
                 'avg_amount' => $query->avg('invoices.amount') ?? 0,
-                'collection_probability' => $this->getCollectionProbability($bucket)
+                'collection_probability' => $this->getCollectionProbability($bucket),
             ];
 
             $aging[$bucket] = $bucketData;
@@ -353,7 +352,7 @@ class CollectionAnalyticsService
             'buckets' => $aging,
             'total_outstanding' => $totalAmount,
             'weighted_avg_days' => $this->calculateWeightedAvgDays($aging),
-            'collection_risk_score' => $this->calculateCollectionRiskScore($aging)
+            'collection_risk_score' => $this->calculateCollectionRiskScore($aging),
         ];
     }
 
@@ -375,7 +374,7 @@ class CollectionAnalyticsService
             'total_recovered' => $paymentPlans->sum('amount_paid'),
             'recovery_rate' => 0,
             'by_duration' => [],
-            'by_amount_range' => []
+            'by_amount_range' => [],
         ];
 
         if ($metrics['total_plans'] > 0) {
@@ -389,9 +388,16 @@ class CollectionAnalyticsService
 
         // Performance by duration
         $durationGroups = $paymentPlans->groupBy(function ($plan) {
-            if ($plan->duration_months <= 3) return '1-3 months';
-            if ($plan->duration_months <= 6) return '4-6 months';
-            if ($plan->duration_months <= 12) return '7-12 months';
+            if ($plan->duration_months <= 3) {
+                return '1-3 months';
+            }
+            if ($plan->duration_months <= 6) {
+                return '4-6 months';
+            }
+            if ($plan->duration_months <= 12) {
+                return '7-12 months';
+            }
+
             return '12+ months';
         });
 
@@ -400,7 +406,7 @@ class CollectionAnalyticsService
             $metrics['by_duration'][$duration] = [
                 'total' => $plans->count(),
                 'completed' => $completed,
-                'success_rate' => $plans->count() > 0 ? ($completed / $plans->count()) * 100 : 0
+                'success_rate' => $plans->count() > 0 ? ($completed / $plans->count()) * 100 : 0,
             ];
         }
 
@@ -417,7 +423,7 @@ class CollectionAnalyticsService
             'risk_predictions' => $this->predictCollectionRisks($dateRange),
             'optimal_strategies' => $this->predictOptimalStrategies($dateRange),
             'seasonal_adjustments' => $this->predictSeasonalAdjustments($dateRange),
-            'capacity_planning' => $this->predictCapacityNeeds($dateRange)
+            'capacity_planning' => $this->predictCapacityNeeds($dateRange),
         ];
     }
 
@@ -437,7 +443,7 @@ class CollectionAnalyticsService
                     'severity' => 'high',
                     'message' => "KPI {$kpi} is critically below target",
                     'current_value' => $data['value'],
-                    'target_value' => $data['target']
+                    'target_value' => $data['target'],
                 ];
             }
         }
@@ -451,7 +457,7 @@ class CollectionAnalyticsService
                 'severity' => 'medium',
                 'message' => 'Collection rate dropped significantly compared to previous period',
                 'current_rate' => $currentRate,
-                'previous_rate' => $previousRate
+                'previous_rate' => $previousRate,
             ];
         }
 
@@ -462,7 +468,7 @@ class CollectionAnalyticsService
                 'type' => 'high_default_rate',
                 'severity' => 'high',
                 'message' => 'Payment plan default rate is unusually high',
-                'default_rate' => $defaultRate
+                'default_rate' => $defaultRate,
             ];
         }
 
@@ -486,7 +492,7 @@ class CollectionAnalyticsService
                 'type' => 'channel_optimization',
                 'priority' => 'medium',
                 'recommendation' => "Increase usage of {$bestChannel} (conversion rate: {$channelData[$bestChannel]['conversion_rate']}%) and reduce {$worstChannel} usage",
-                'potential_improvement' => $this->calculateChannelOptimizationBenefit($bestChannel, $worstChannel, $dateRange)
+                'potential_improvement' => $this->calculateChannelOptimizationBenefit($bestChannel, $worstChannel, $dateRange),
             ];
         }
 
@@ -496,20 +502,20 @@ class CollectionAnalyticsService
             $recommendations[] = [
                 'type' => 'timing_optimization',
                 'priority' => 'high',
-                'recommendation' => "Optimize communication timing based on success patterns",
+                'recommendation' => 'Optimize communication timing based on success patterns',
                 'optimal_times' => $timingAnalysis['optimal_times'],
-                'potential_improvement' => $timingAnalysis['improvement_potential'] . '%'
+                'potential_improvement' => $timingAnalysis['improvement_potential'].'%',
             ];
         }
 
         // Segmentation recommendations
         $segmentAnalysis = $this->analyzeClientSegmentation($dateRange);
-        if (!empty($segmentAnalysis['underperforming_segments'])) {
+        if (! empty($segmentAnalysis['underperforming_segments'])) {
             $recommendations[] = [
                 'type' => 'segmentation_optimization',
                 'priority' => 'high',
                 'recommendation' => 'Create targeted strategies for underperforming client segments',
-                'segments' => $segmentAnalysis['underperforming_segments']
+                'segments' => $segmentAnalysis['underperforming_segments'],
             ];
         }
 
@@ -527,20 +533,20 @@ class CollectionAnalyticsService
         return [
             'period' => [
                 'start' => $dateRange[0],
-                'end' => $dateRange[1]
+                'end' => $dateRange[1],
             ],
             'key_metrics' => [
                 'total_collected' => $dashboard['summary']['amount_collected'],
                 'collection_rate' => $dashboard['summary']['collection_rate'],
                 'active_clients' => $dashboard['summary']['active_clients'],
-                'success_rate' => $dashboard['summary']['action_success_rate']
+                'success_rate' => $dashboard['summary']['action_success_rate'],
             ],
             'performance_vs_targets' => $this->compareToTargets($dashboard['kpi_metrics']),
             'top_achievements' => $this->identifyTopAchievements($dashboard),
             'key_concerns' => $this->identifyKeyConcerns($dashboard),
             'strategic_recommendations' => array_slice($dashboard['recommendations'], 0, 3),
             'trend_analysis' => $this->summarizeTrends($dashboard['collection_trends']),
-            'next_period_forecast' => $dashboard['predictive_insights']['collection_forecast']
+            'next_period_forecast' => $dashboard['predictive_insights']['collection_forecast'],
         ];
     }
 
@@ -549,7 +555,7 @@ class CollectionAnalyticsService
     {
         return [
             $options['start_date'] ?? Carbon::now()->subDays(30)->toDateString(),
-            $options['end_date'] ?? Carbon::now()->toDateString()
+            $options['end_date'] ?? Carbon::now()->toDateString(),
         ];
     }
 
@@ -558,28 +564,42 @@ class CollectionAnalyticsService
         $start = Carbon::parse($dateRange[0]);
         $end = Carbon::parse($dateRange[1]);
         $days = $start->diffInDays($end);
-        
+
         return [
             $start->subDays($days + 1)->toDateString(),
-            $end->subDays($days + 1)->toDateString()
+            $end->subDays($days + 1)->toDateString(),
         ];
     }
 
     protected function getKpiStatus(float $actual, float $target, string $type = 'higher_better'): string
     {
         $ratio = $actual / $target;
-        
+
         if ($type === 'lower_better') {
-            if ($ratio <= 0.8) return 'excellent';
-            if ($ratio <= 1.0) return 'good';
-            if ($ratio <= 1.2) return 'warning';
+            if ($ratio <= 0.8) {
+                return 'excellent';
+            }
+            if ($ratio <= 1.0) {
+                return 'good';
+            }
+            if ($ratio <= 1.2) {
+                return 'warning';
+            }
+
             return 'critical';
         }
-        
+
         // Higher is better
-        if ($ratio >= 1.1) return 'excellent';
-        if ($ratio >= 0.9) return 'good';
-        if ($ratio >= 0.8) return 'warning';
+        if ($ratio >= 1.1) {
+            return 'excellent';
+        }
+        if ($ratio >= 0.9) {
+            return 'good';
+        }
+        if ($ratio >= 0.8) {
+            return 'warning';
+        }
+
         return 'critical';
     }
 
@@ -605,11 +625,11 @@ class CollectionAnalyticsService
     {
         $plans = PaymentPlan::whereBetween('created_at', $dateRange)->get();
         $completed = $plans->where('status', 'completed')->count();
-        
+
         return [
             'total' => $plans->count(),
             'completed' => $completed,
-            'success_rate' => $plans->count() > 0 ? ($completed / $plans->count()) * 100 : 0
+            'success_rate' => $plans->count() > 0 ? ($completed / $plans->count()) * 100 : 0,
         ];
     }
 
@@ -646,9 +666,9 @@ class CollectionAnalyticsService
             'sms' => 0.05,
             'phone_call' => 2.50,
             'letter' => 1.25,
-            'portal_notification' => 0.02
+            'portal_notification' => 0.02,
         ];
-        
+
         return $costs[$channel] ?? 0;
     }
 
@@ -670,9 +690,9 @@ class CollectionAnalyticsService
             '31_60' => 65.0,
             '61_90' => 45.0,
             '91_120' => 25.0,
-            'over_120' => 10.0
+            'over_120' => 10.0,
         ];
-        
+
         return $probabilities[$bucket] ?? 50.0;
     }
 
@@ -692,7 +712,7 @@ class CollectionAnalyticsService
             'next_30_days' => 125000,
             'next_60_days' => 235000,
             'next_90_days' => 340000,
-            'confidence' => 85
+            'confidence' => 85,
         ];
     }
 
@@ -723,14 +743,14 @@ class CollectionAnalyticsService
 
     protected function calculateChannelOptimizationBenefit(string $best, string $worst, array $dateRange): string
     {
-        return "12% increase in collections";
+        return '12% increase in collections';
     }
 
     protected function analyzeOptimalTiming(array $dateRange): array
     {
         return [
             'improvement_potential' => 15,
-            'optimal_times' => ['Tuesday' => 14, 'Wednesday' => 15]
+            'optimal_times' => ['Tuesday' => 14, 'Wednesday' => 15],
         ];
     }
 
@@ -738,7 +758,7 @@ class CollectionAnalyticsService
     {
         return [
             'underperforming_segments' => ['high_balance_low_payment', 'repeat_defaulters'],
-            'segment_performance' => []
+            'segment_performance' => [],
         ];
     }
 
@@ -750,40 +770,41 @@ class CollectionAnalyticsService
                 'actual' => $data['value'],
                 'target' => $data['target'],
                 'variance' => $data['value'] - $data['target'],
-                'status' => $data['status']
+                'status' => $data['status'],
             ];
         }
+
         return $comparison;
     }
 
     protected function identifyTopAchievements(array $dashboard): array
     {
         $achievements = [];
-        
+
         foreach ($dashboard['kpi_metrics'] as $kpi => $data) {
             if ($data['status'] === 'excellent') {
                 $achievements[] = "Exceeded target for {$kpi}";
             }
         }
-        
+
         return array_slice($achievements, 0, 3);
     }
 
     protected function identifyKeyConcerns(array $dashboard): array
     {
         $concerns = [];
-        
+
         foreach ($dashboard['kpi_metrics'] as $kpi => $data) {
             if ($data['status'] === 'critical') {
                 $concerns[] = "Critical performance in {$kpi}";
             }
         }
-        
+
         return array_slice($concerns, 0, 3);
     }
 
     protected function summarizeTrends(array $trends): string
     {
-        return "Collection velocity increasing with seasonal adjustments needed";
+        return 'Collection velocity increasing with seasonal adjustments needed';
     }
 }

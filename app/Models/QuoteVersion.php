@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * QuoteVersion Model
- * 
+ *
  * Tracks version history and changes for quotes.
  * Stores snapshots of quote data for audit and comparison purposes.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $quote_id
@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class QuoteVersion extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -89,7 +89,7 @@ class QuoteVersion extends Model
      */
     public function getVersionLabel(): string
     {
-        return 'v' . $this->version_number;
+        return 'v'.$this->version_number;
     }
 
     /**
@@ -97,7 +97,7 @@ class QuoteVersion extends Model
      */
     public function getChangesSummary(): array
     {
-        if (!$this->changes) {
+        if (! $this->changes) {
             return [];
         }
 
@@ -186,7 +186,7 @@ class QuoteVersion extends Model
     /**
      * Create version snapshot from quote.
      */
-    public static function createSnapshot(Quote $quote, array $changes = [], string $reason = null): QuoteVersion
+    public static function createSnapshot(Quote $quote, array $changes = [], ?string $reason = null): QuoteVersion
     {
         // Get the next version number
         $lastVersion = static::where('quote_id', $quote->id)

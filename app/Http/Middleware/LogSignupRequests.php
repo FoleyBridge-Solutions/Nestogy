@@ -22,11 +22,11 @@ class LogSignupRequests
                 'session_id' => session()->getId(),
             ]);
         }
-        
+
         $startTime = microtime(true);
         $response = $next($request);
         $duration = microtime(true) - $startTime;
-        
+
         if ($request->is('signup*')) {
             Log::info('SIGNUP REQUEST END', [
                 'url' => $request->fullUrl(),
@@ -36,7 +36,7 @@ class LogSignupRequests
                 'memory_usage' => memory_get_usage(true),
             ]);
         }
-        
+
         return $response;
     }
 }

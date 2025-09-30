@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ProductPolicy
 {
@@ -21,7 +20,7 @@ class ProductPolicy
      */
     public function view(User $user, Product $product): bool
     {
-        return $this->belongsToUserCompany($user, $product) && 
+        return $this->belongsToUserCompany($user, $product) &&
                $user->getRole() >= User::ROLE_ACCOUNTANT;
     }
 
@@ -38,7 +37,7 @@ class ProductPolicy
      */
     public function update(User $user, Product $product): bool
     {
-        return $this->belongsToUserCompany($user, $product) && 
+        return $this->belongsToUserCompany($user, $product) &&
                $user->getRole() >= User::ROLE_TECH;
     }
 
@@ -47,7 +46,7 @@ class ProductPolicy
      */
     public function delete(User $user, Product $product): bool
     {
-        return $this->belongsToUserCompany($user, $product) && 
+        return $this->belongsToUserCompany($user, $product) &&
                $user->getRole() >= User::ROLE_TECH;
     }
 
@@ -56,7 +55,7 @@ class ProductPolicy
      */
     public function restore(User $user, Product $product): bool
     {
-        return $this->belongsToUserCompany($user, $product) && 
+        return $this->belongsToUserCompany($user, $product) &&
                $user->getRole() >= User::ROLE_ADMIN;
     }
 
@@ -65,7 +64,7 @@ class ProductPolicy
      */
     public function forceDelete(User $user, Product $product): bool
     {
-        return $this->belongsToUserCompany($user, $product) && 
+        return $this->belongsToUserCompany($user, $product) &&
                $user->getRole() >= User::ROLE_ADMIN;
     }
 
@@ -74,7 +73,7 @@ class ProductPolicy
      */
     public function managePricing(User $user, Product $product): bool
     {
-        return $this->belongsToUserCompany($user, $product) && 
+        return $this->belongsToUserCompany($user, $product) &&
                $user->getRole() >= User::ROLE_TECH;
     }
 
@@ -83,7 +82,7 @@ class ProductPolicy
      */
     public function manageInventory(User $user, Product $product): bool
     {
-        return $this->belongsToUserCompany($user, $product) && 
+        return $this->belongsToUserCompany($user, $product) &&
                $user->getRole() >= User::ROLE_ACCOUNTANT;
     }
 

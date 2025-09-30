@@ -10,13 +10,13 @@ use Illuminate\Support\Str;
 
 /**
  * ContractTypeDefinition Model
- * 
+ *
  * Defines custom contract types per company, replacing hardcoded constants.
  * Each company can define their own contract types with custom configuration.
  */
 class ContractTypeDefinition extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'contract_type_definitions';
 

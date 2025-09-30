@@ -2,17 +2,17 @@
 
 namespace App\Domains\Asset\Models;
 
+use App\Models\Asset;
+use App\Models\User;
+use App\Models\Vendor;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Asset;
-use App\Models\User;
-use App\Models\Vendor;
 
 class AssetMaintenance extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'asset_maintenance';
 
@@ -142,8 +142,8 @@ class AssetMaintenance extends Model
     public function scopeOverdue($query)
     {
         return $query->where('scheduled_date', '<', now())
-                     ->where('status', '!=', 'completed')
-                     ->where('status', '!=', 'cancelled');
+            ->where('status', '!=', 'completed')
+            ->where('status', '!=', 'cancelled');
     }
 
     /**
@@ -152,7 +152,7 @@ class AssetMaintenance extends Model
     public function scopeDueSoon($query, $days = 7)
     {
         return $query->whereBetween('scheduled_date', [now(), now()->addDays($days)])
-                     ->where('status', 'scheduled');
+            ->where('status', 'scheduled');
     }
 
     /**
@@ -184,8 +184,8 @@ class AssetMaintenance extends Model
      */
     public function isOverdue()
     {
-        return $this->scheduled_date < now() && 
-               !in_array($this->status, ['completed', 'cancelled']);
+        return $this->scheduled_date < now() &&
+               ! in_array($this->status, ['completed', 'cancelled']);
     }
 
     /**
@@ -193,8 +193,8 @@ class AssetMaintenance extends Model
      */
     public function isDueSoon($days = 7)
     {
-        return $this->scheduled_date <= now()->addDays($days) && 
-               $this->scheduled_date >= now() && 
+        return $this->scheduled_date <= now()->addDays($days) &&
+               $this->scheduled_date >= now() &&
                $this->status === 'scheduled';
     }
 
@@ -244,6 +244,7 @@ class AssetMaintenance extends Model
         ];
 
         $status = $this->isOverdue() ? 'overdue' : $this->status;
+
         return $colors[$status] ?? 'secondary';
     }
 
@@ -267,7 +268,7 @@ class AssetMaintenance extends Model
      */
     public function getFormattedCostAttribute()
     {
-        return $this->cost ? '$' . number_format($this->cost, 2) : null;
+        return $this->cost ? '$'.number_format($this->cost, 2) : null;
     }
 
     /**
@@ -275,7 +276,7 @@ class AssetMaintenance extends Model
      */
     public function getDurationAttribute()
     {
-        if (!$this->completed_date || !$this->scheduled_date) {
+        if (! $this->completed_date || ! $this->scheduled_date) {
             return null;
         }
 

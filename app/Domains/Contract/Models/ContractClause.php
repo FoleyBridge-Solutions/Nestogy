@@ -8,16 +8,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
  * ContractClause Model
- * 
+ *
  * Represents reusable contract clauses that can be combined to build contracts.
  * Supports multi-tenancy, versioning, and conditional logic.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $name
@@ -40,7 +39,7 @@ use Illuminate\Support\Str;
  */
 class ContractClause extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -101,34 +100,53 @@ class ContractClause extends Model
      * Clause status enumeration
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_INACTIVE = 'inactive';
+
     const STATUS_ARCHIVED = 'archived';
 
     /**
      * Clause type enumeration
      */
     const TYPE_REQUIRED = 'required';
+
     const TYPE_CONDITIONAL = 'conditional';
+
     const TYPE_OPTIONAL = 'optional';
 
     /**
      * Clause categories
      */
     const CATEGORY_DEFINITIONS = 'definitions';
+
     const CATEGORY_SERVICES = 'services';
+
     const CATEGORY_FINANCIAL = 'financial';
+
     const CATEGORY_LEGAL = 'legal';
+
     const CATEGORY_ADMIN = 'admin';
+
     const CATEGORY_HEADER = 'header';
+
     const CATEGORY_SIGNATURE = 'signature';
+
     const CATEGORY_OBLIGATIONS = 'obligations';
+
     const CATEGORY_EXCLUSIONS = 'exclusions';
+
     const CATEGORY_WARRANTIES = 'warranties';
+
     const CATEGORY_CONFIDENTIALITY = 'confidentiality';
+
     const CATEGORY_COMPLIANCE = 'compliance';
+
     const CATEGORY_SLA = 'sla';
+
     const CATEGORY_DATA_PROTECTION = 'data_protection';
+
     const CATEGORY_INTELLECTUAL_PROPERTY = 'intellectual_property';
+
     const CATEGORY_CHANGE_MANAGEMENT = 'change_management';
 
     /**
@@ -137,9 +155,9 @@ class ContractClause extends Model
     public function templates(): BelongsToMany
     {
         return $this->belongsToMany(ContractTemplate::class, 'contract_template_clauses', 'clause_id', 'template_id')
-                    ->withPivot(['sort_order', 'is_required', 'conditions', 'variable_overrides', 'metadata'])
-                    ->withTimestamps()
-                    ->orderByPivot('sort_order');
+            ->withPivot(['sort_order', 'is_required', 'conditions', 'variable_overrides', 'metadata'])
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
     }
 
     /**
@@ -195,7 +213,7 @@ class ContractClause extends Model
      */
     public function appliesToContractType(string $contractType): bool
     {
-        if (!$this->applicable_contract_types) {
+        if (! $this->applicable_contract_types) {
             return true; // If no restrictions, applies to all
         }
 
@@ -208,6 +226,7 @@ class ContractClause extends Model
     public function getDependencies(): array
     {
         $metadata = $this->metadata ?? [];
+
         return $metadata['dependencies'] ?? [];
     }
 
@@ -217,6 +236,7 @@ class ContractClause extends Model
     public function getConflicts(): array
     {
         $metadata = $this->metadata ?? [];
+
         return $metadata['conflicts'] ?? [];
     }
 
@@ -225,7 +245,7 @@ class ContractClause extends Model
      */
     public function hasDependencies(): bool
     {
-        return !empty($this->getDependencies());
+        return ! empty($this->getDependencies());
     }
 
     /**
@@ -233,7 +253,7 @@ class ContractClause extends Model
      */
     public function hasConflicts(): bool
     {
-        return !empty($this->getConflicts());
+        return ! empty($this->getConflicts());
     }
 
     /**
@@ -263,43 +283,43 @@ class ContractClause extends Model
             'content_length' => strlen($this->content),
             'variable_count' => count($variables),
             'has_conditionals' => strpos($this->content, '{{#if') !== false,
-            'has_variables' => strpos($this->content, '{{') !== false
+            'has_variables' => strpos($this->content, '{{') !== false,
         ]);
-        
+
         $content = $this->content;
-        
+
         // Apply template-specific conditions if they exist
         $conditions = array_merge($this->getConditions(), $templateConditions);
-        
+
         // Process handlebars conditional blocks (always run for any content that contains them)
         if (strpos($content, '{{#if') !== false) {
             Log::info('🔄 Processing conditional blocks');
             $beforeConditional = $content;
             $content = $this->processConditionalBlocks($content, $variables);
-            
+
             if ($content !== $beforeConditional) {
                 Log::info('✅ Conditional blocks processed successfully');
             } else {
                 Log::warning('⚠️ Conditional blocks unchanged after processing');
             }
         }
-        
+
         // Process dynamic section numbers
         if (strpos($content, '{{section_') !== false) {
             Log::info('📝 Processing section numbers');
             $content = $this->processSectionNumbers($content, $sectionNumbers);
         }
-        
+
         // Process dynamic section references ({{section:category}} placeholders)
         if (strpos($content, '{{section:') !== false) {
             Log::info('🔗 Processing section references');
             $content = $this->processSectionReferences($content, $sectionMapping);
         }
-        
+
         // Process variable substitutions
         $beforeVariables = $content;
         $content = $this->processVariables($content, $variables);
-        
+
         // Check what variables were substituted
         $varsSubstituted = [];
         foreach ($variables as $key => $value) {
@@ -307,15 +327,15 @@ class ContractClause extends Model
                 $varsSubstituted[] = $key;
             }
         }
-        
+
         Log::info('✅ Clause processing complete', [
             'clause_id' => $this->id,
             'final_content_length' => strlen($content),
             'variables_substituted' => $varsSubstituted,
             'substituted_count' => count($varsSubstituted),
-            'has_remaining_variables' => preg_match('/\{\{[^}]+\}\}/', $content) === 1
+            'has_remaining_variables' => preg_match('/\{\{[^}]+\}\}/', $content) === 1,
         ]);
-        
+
         return $content;
     }
 
@@ -327,16 +347,16 @@ class ContractClause extends Model
         // Process conditionals recursively until no more are found
         $maxIterations = 10; // Prevent infinite loops
         $iteration = 0;
-        
+
         do {
             $previousContent = $content;
             $content = $this->processSingleConditionalPass($content, $variables);
             $iteration++;
         } while ($content !== $previousContent && $iteration < $maxIterations);
-        
+
         return $content;
     }
-    
+
     /**
      * Process a single pass of conditional blocks
      */
@@ -345,31 +365,35 @@ class ContractClause extends Model
         // Process conditionals from the outermost level first
         $result = $content;
         $processed = false;
-        
+
         // Find the first {{#if}} block
         while (preg_match('/\{\{#if\s+([^}]+)\}\}/', $result, $matches, PREG_OFFSET_CAPTURE)) {
             $condition = trim($matches[1][0]);
             $startPos = $matches[0][1];
             $startLength = strlen($matches[0][0]);
-            
+
             // Find the matching {{/if}} by counting nested levels
             $ifCount = 1;
             $pos = $startPos + $startLength;
             $elsePos = null;
             $endPos = null;
-            
+
             while ($pos < strlen($result) && $ifCount > 0) {
                 // Look for next {{#if}}, {{else}}, or {{/if}}
                 $nextIf = strpos($result, '{{#if', $pos);
                 $nextElse = strpos($result, '{{else}}', $pos);
                 $nextEndif = strpos($result, '{{/if}}', $pos);
-                
+
                 // Find the nearest occurrence
-                $positions = array_filter([$nextIf, $nextElse, $nextEndif], function($p) { return $p !== false; });
-                if (empty($positions)) break;
-                
+                $positions = array_filter([$nextIf, $nextElse, $nextEndif], function ($p) {
+                    return $p !== false;
+                });
+                if (empty($positions)) {
+                    break;
+                }
+
                 $nextPos = min($positions);
-                
+
                 if ($nextPos === $nextIf) {
                     $ifCount++;
                     $pos = $nextPos + 5; // Skip past {{#if
@@ -387,7 +411,7 @@ class ContractClause extends Model
                     $pos = $nextPos + 1;
                 }
             }
-            
+
             if ($endPos !== null) {
                 // Extract the content parts
                 if ($elsePos !== null) {
@@ -397,7 +421,7 @@ class ContractClause extends Model
                     $ifContent = substr($result, $startPos + $startLength, $endPos - ($startPos + $startLength));
                     $elseContent = '';
                 }
-                
+
                 // Evaluate the condition and choose content
                 $replacement = '';
                 if ($this->evaluateCondition($condition, $variables)) {
@@ -405,7 +429,7 @@ class ContractClause extends Model
                 } else {
                     $replacement = $elseContent;
                 }
-                
+
                 // Replace the entire block
                 $result = substr_replace($result, $replacement, $startPos, ($endPos + 7) - $startPos);
                 $processed = true;
@@ -414,10 +438,10 @@ class ContractClause extends Model
                 break;
             }
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Evaluate conditional expressions including comparisons
      */
@@ -426,27 +450,29 @@ class ContractClause extends Model
         // Handle AND operations (&&)
         if (strpos($condition, '&&') !== false) {
             $parts = array_map('trim', explode('&&', $condition));
-            
+
             foreach ($parts as $part) {
-                if (!$this->evaluateSingleCondition($part, $variables)) {
+                if (! $this->evaluateSingleCondition($part, $variables)) {
                     return false;
                 }
             }
+
             return true;
         }
-        
-        // Handle OR operations (||) 
+
+        // Handle OR operations (||)
         if (strpos($condition, '||') !== false) {
             $parts = array_map('trim', explode('||', $condition));
-            
+
             foreach ($parts as $part) {
                 if ($this->evaluateSingleCondition($part, $variables)) {
                     return true;
                 }
             }
+
             return false;
         }
-        
+
         // Single condition
         return $this->evaluateSingleCondition($condition, $variables);
     }
@@ -461,10 +487,10 @@ class ContractClause extends Model
             $leftSide = trim($matches[1]);
             $operator = $matches[2];
             $rightSide = trim($matches[3], '"\''); // Remove quotes from string literals
-            
+
             // Get the left side value from variables
             $leftValue = $variables[$leftSide] ?? null;
-            
+
             // Perform comparison
             switch ($operator) {
                 case '===':
@@ -477,9 +503,10 @@ class ContractClause extends Model
                     return $leftValue !== $rightSide;
             }
         }
-        
+
         // Handle simple variable existence/truthiness check
         $variable = trim($condition);
+
         return isset($variables[$variable]) && $this->isTruthy($variables[$variable]);
     }
 
@@ -491,21 +518,22 @@ class ContractClause extends Model
         foreach ($variables as $key => $value) {
             // Handle formatters like {{variable|upper}}
             $content = preg_replace_callback(
-                '/\{\{' . preg_quote($key) . '(\|([^}]+))?\}\}/',
+                '/\{\{'.preg_quote($key).'(\|([^}]+))?\}\}/',
                 function ($matches) use ($value) {
                     $formatter = $matches[2] ?? null;
+
                     return $this->applyFormatter($value, $formatter);
                 },
                 $content
             );
         }
-        
+
         // Process list generation patterns (e.g., {{#list asset_types}}...{{/list}})
         $content = $this->processListBlocks($content, $variables);
-        
+
         // Process conditional existence checks (e.g., {{#exists variable}})
         $content = $this->processExistenceBlocks($content, $variables);
-        
+
         return $content;
     }
 
@@ -516,21 +544,21 @@ class ContractClause extends Model
     {
         // Pattern to match {{#list variable}}template{{/list}} blocks
         $pattern = '/\{\{#list\s+([^}]+)\}\}(.*?)\{\{\/list\}\}/s';
-        
+
         return preg_replace_callback($pattern, function ($matches) use ($variables) {
             $variable = trim($matches[1]);
             $template = $matches[2];
-            
-            if (!isset($variables[$variable])) {
+
+            if (! isset($variables[$variable])) {
                 return '';
             }
-            
+
             $items = $this->getArrayFromVariable($variables[$variable]);
-            
+
             if (empty($items)) {
                 return '';
             }
-            
+
             $output = '';
             foreach ($items as $index => $item) {
                 $itemTemplate = $template;
@@ -539,7 +567,7 @@ class ContractClause extends Model
                 $itemTemplate = str_replace('{{index0}}', $index, $itemTemplate);
                 $output .= $itemTemplate;
             }
-            
+
             return $output;
         }, $content);
     }
@@ -551,16 +579,16 @@ class ContractClause extends Model
     {
         // Pattern to match {{#exists variable}}content{{/exists}} blocks
         $pattern = '/\{\{#exists\s+([^}]+)\}\}(.*?)\{\{\/exists\}\}/s';
-        
+
         return preg_replace_callback($pattern, function ($matches) use ($variables) {
             $variable = trim($matches[1]);
             $conditionalContent = $matches[2];
-            
+
             // Check if variable exists and has a non-empty value
-            if (isset($variables[$variable]) && !empty($variables[$variable])) {
+            if (isset($variables[$variable]) && ! empty($variables[$variable])) {
                 return $conditionalContent;
             }
-            
+
             return '';
         }, $content);
     }
@@ -573,22 +601,22 @@ class ContractClause extends Model
         if (is_array($value)) {
             return $value;
         }
-        
+
         if (is_string($value)) {
             // Handle comma-separated lists
             if (strpos($value, ',') !== false) {
                 return array_map('trim', explode(',', $value));
             }
-            
+
             // Handle "and" separated lists
             if (strpos($value, ' and ') !== false) {
                 return array_map('trim', explode(' and ', $value));
             }
-            
+
             // Single item
             return [$value];
         }
-        
+
         return [];
     }
 
@@ -599,18 +627,18 @@ class ContractClause extends Model
     {
         // Replace section number placeholders with actual numbers
         // New format: section_number, clause_number for subsection numbering
-        
+
         if (isset($sectionNumbers['section_number']) && isset($sectionNumbers['clause_number'])) {
             // Format: "1.1", "1.2", etc. for clauses within sections
-            $subsectionNumber = $sectionNumbers['section_number'] . '.' . $sectionNumbers['clause_number'];
+            $subsectionNumber = $sectionNumbers['section_number'].'.'.$sectionNumbers['clause_number'];
             $content = str_replace('{{subsection_number}}', $subsectionNumber, $content);
         }
-        
+
         // Legacy support for old placeholders
         foreach ($sectionNumbers as $placeholder => $number) {
-            $content = str_replace("{{" . $placeholder . "}}", $number, $content);
+            $content = str_replace('{{'.$placeholder.'}}', $number, $content);
         }
-        
+
         return $content;
     }
 
@@ -622,20 +650,20 @@ class ContractClause extends Model
         if (empty($sectionMapping)) {
             return $content;
         }
-        
+
         // Process {{section:category}} placeholders
         $pattern = '/\{\{section:([^}]+)\}\}/';
         $content = preg_replace_callback($pattern, function ($matches) use ($sectionMapping) {
             $category = trim($matches[1]);
-            
+
             if (isset($sectionMapping[$category])) {
                 return $sectionMapping[$category]['reference'];
             }
-            
+
             // Return a fallback if section not found
             return "[SECTION '{$category}' NOT FOUND]";
         }, $content);
-        
+
         return $content;
     }
 
@@ -645,6 +673,7 @@ class ContractClause extends Model
     public function getSectionNumberingInfo(): array
     {
         $metadata = $this->metadata ?? [];
+
         return $metadata['section_numbering'] ?? [
             'type' => 'none', // none, numbered, lettered, subsection
             'level' => 1, // 1 = main section, 2 = subsection, 3 = sub-subsection
@@ -659,6 +688,7 @@ class ContractClause extends Model
     public function createsSection(): bool
     {
         $numberingInfo = $this->getSectionNumberingInfo();
+
         return $numberingInfo['type'] !== 'none';
     }
 
@@ -668,6 +698,7 @@ class ContractClause extends Model
     public function getSectionLevel(): int
     {
         $numberingInfo = $this->getSectionNumberingInfo();
+
         return $numberingInfo['level'] ?? 1;
     }
 
@@ -676,10 +707,10 @@ class ContractClause extends Model
      */
     protected function applyFormatter($value, ?string $formatter): string
     {
-        if (!$formatter) {
+        if (! $formatter) {
             return (string) $value;
         }
-        
+
         switch (strtolower($formatter)) {
             case 'upper':
                 return strtoupper($value);
@@ -690,11 +721,11 @@ class ContractClause extends Model
             case 'capitalize':
                 return ucfirst($value);
             case 'currency':
-                return '$' . number_format((float) $value, 2);
+                return '$'.number_format((float) $value, 2);
             case 'number':
                 return number_format((float) $value);
             case 'percent':
-                return number_format((float) $value, 1) . '%';
+                return number_format((float) $value, 1).'%';
             case 'date':
                 return date('F j, Y', strtotime($value));
             case 'date_short':
@@ -711,31 +742,36 @@ class ContractClause extends Model
                 if (is_string($value) && strpos($value, ',') !== false) {
                     return $this->formatList(array_map('trim', explode(',', $value)));
                 }
+
                 return (string) $value;
             case 'bullet_list':
                 // Format as bullet list
                 if (is_array($value)) {
-                    return "- " . implode("\n- ", $value);
+                    return '- '.implode("\n- ", $value);
                 }
                 if (is_string($value) && strpos($value, ',') !== false) {
                     $items = array_map('trim', explode(',', $value));
-                    return "- " . implode("\n- ", $items);
+
+                    return '- '.implode("\n- ", $items);
                 }
-                return "- " . $value;
+
+                return '- '.$value;
             case 'hours':
                 // Format numbers as hour descriptions
                 $hours = (int) $value;
                 if ($hours === 1) {
                     return '1 hour';
                 }
-                return $hours . ' hours';
+
+                return $hours.' hours';
             case 'days':
                 // Format numbers as day descriptions
                 $days = (int) $value;
                 if ($days === 1) {
                     return '1 day';
                 }
-                return $days . ' days';
+
+                return $days.' days';
             case 'boolean_text':
                 // Convert boolean to Yes/No text
                 return $this->isTruthy($value) ? 'Yes' : 'No';
@@ -765,7 +801,8 @@ class ContractClause extends Model
         }
 
         $last = array_pop($items);
-        return implode(', ', $items) . ', and ' . $last;
+
+        return implode(', ', $items).', and '.$last;
     }
 
     /**
@@ -777,15 +814,16 @@ class ContractClause extends Model
             return $value;
         }
         if (is_string($value)) {
-            return !empty($value) && strtolower($value) !== 'false' && strtolower($value) !== 'no';
+            return ! empty($value) && strtolower($value) !== 'false' && strtolower($value) !== 'no';
         }
         if (is_numeric($value)) {
             return $value != 0;
         }
         if (is_array($value)) {
-            return !empty($value);
+            return ! empty($value);
         }
-        return !empty($value);
+
+        return ! empty($value);
     }
 
     /**
@@ -795,19 +833,19 @@ class ContractClause extends Model
     {
         $pattern = '/\{\{([^}#\/]+)\}\}/';
         preg_match_all($pattern, $this->content, $matches);
-        
+
         $variables = [];
         foreach ($matches[1] ?? [] as $match) {
             $variable = trim($match);
-            
+
             // Extract base variable name from formatted variables like "variable|formatter"
             if (strpos($variable, '|') !== false) {
                 $variable = trim(explode('|', $variable)[0]);
             }
-            
+
             $variables[] = $variable;
         }
-        
+
         return array_unique($variables);
     }
 
@@ -819,29 +857,29 @@ class ContractClause extends Model
     {
         $content = $this->content ?? '';
         $definedTerms = [];
-        
+
         // Skip if content is empty
         if (empty($content)) {
             return $definedTerms;
         }
-        
+
         // Common contract terms that typically need definitions
         $commonTerms = [
-            'Agreement', 'Business Hours', 'Confidential Information', 
+            'Agreement', 'Business Hours', 'Confidential Information',
             'Emergency Support', 'Force Majeure Event', 'Response Time',
             'Resolution Time', 'Service Levels', 'Service Tier',
             'Support Request', 'Support Services', 'Supported Infrastructure',
-            'Term', 'Client', 'Service Provider'
+            'Term', 'Client', 'Service Provider',
         ];
-        
+
         foreach ($commonTerms as $term) {
             // Look for the term used in a way that suggests it needs definition
             // (not just as part of other words)
-            if (preg_match('/\b' . preg_quote($term, '/') . '\b/', $content)) {
+            if (preg_match('/\b'.preg_quote($term, '/').'\b/', $content)) {
                 $definedTerms[] = strtolower(str_replace(' ', '_', $term));
             }
         }
-        
+
         return array_unique($definedTerms);
     }
 
@@ -851,14 +889,14 @@ class ContractClause extends Model
     public function getRequiredDefinitions(): array
     {
         $metadata = $this->metadata ?? [];
-        
+
         // First check if user has explicitly defined required definitions
         if (isset($metadata['required_definitions']) && is_array($metadata['required_definitions'])) {
             return $metadata['required_definitions'];
         }
-        
+
         $requiredDefinitions = [];
-        
+
         // Fallback to category-based mapping for backward compatibility
         $categoryMappings = [
             'services' => ['agreement', 'support_services', 'supported_infrastructure', 'service_levels'],
@@ -876,16 +914,16 @@ class ContractClause extends Model
             'admin' => ['agreement', 'business_hours'],
             'definitions' => [], // Definitions clause doesn't require other definitions
         ];
-        
+
         // Get requirements based on category
         if (isset($categoryMappings[$this->category])) {
             $requiredDefinitions = $categoryMappings[$this->category];
         }
-        
+
         // Also analyze content for specific terms
         $contentTerms = $this->extractDefinedTerms();
         $requiredDefinitions = array_merge($requiredDefinitions, $contentTerms);
-        
+
         return array_unique($requiredDefinitions);
     }
 
@@ -923,7 +961,7 @@ class ContractClause extends Model
     public function removeRequiredDefinition(string $definition): void
     {
         $current = $this->getRequiredDefinitions();
-        $filtered = array_filter($current, fn($item) => $item !== $definition);
+        $filtered = array_filter($current, fn ($item) => $item !== $definition);
         $this->setRequiredDefinitions($filtered);
     }
 
@@ -933,6 +971,7 @@ class ContractClause extends Model
     public function getDefinitionMetadata(): array
     {
         $metadata = $this->metadata ?? [];
+
         return $metadata['definitions'] ?? [
             'defines_terms' => $this->definesTerms(),
             'required_definitions' => $this->getRequiredDefinitions(),
@@ -976,16 +1015,16 @@ class ContractClause extends Model
     {
         $newClause = $this->replicate();
         $newClause->version = $this->getNextVersion();
-        $newClause->slug = $this->slug . '-v' . str_replace('.', '-', $newClause->version);
+        $newClause->slug = $this->slug.'-v'.str_replace('.', '-', $newClause->version);
         $newClause->created_by = auth()->id();
-        
+
         // Apply changes
         foreach ($changes as $key => $value) {
             $newClause->$key = $value;
         }
-        
+
         $newClause->save();
-        
+
         return $newClause;
     }
 
@@ -997,8 +1036,8 @@ class ContractClause extends Model
         $versionParts = explode('.', $this->version);
         $majorVersion = (int) $versionParts[0];
         $minorVersion = isset($versionParts[1]) ? (int) $versionParts[1] : 0;
-        
-        return $majorVersion . '.' . ($minorVersion + 1);
+
+        return $majorVersion.'.'.($minorVersion + 1);
     }
 
     /**
@@ -1085,7 +1124,7 @@ class ContractClause extends Model
     {
         return $query->where(function ($q) use ($contractType) {
             $q->whereNull('applicable_contract_types')
-              ->orWhereJsonContains('applicable_contract_types', $contractType);
+                ->orWhereJsonContains('applicable_contract_types', $contractType);
         });
     }
 
@@ -1095,24 +1134,24 @@ class ContractClause extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         // Generate slug if not provided
         static::creating(function ($clause) {
-            if (!$clause->slug) {
+            if (! $clause->slug) {
                 $clause->slug = Str::slug($clause->name);
             }
-            
-            if (!$clause->created_by) {
+
+            if (! $clause->created_by) {
                 $clause->created_by = auth()->id();
             }
         });
-        
+
         // Update slug when name changes
         static::updating(function ($clause) {
-            if ($clause->isDirty('name') && !$clause->isDirty('slug')) {
+            if ($clause->isDirty('name') && ! $clause->isDirty('slug')) {
                 $clause->slug = Str::slug($clause->name);
             }
-            
+
             $clause->updated_by = auth()->id();
         });
     }

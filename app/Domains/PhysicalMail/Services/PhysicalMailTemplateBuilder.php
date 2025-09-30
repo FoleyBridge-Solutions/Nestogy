@@ -6,27 +6,38 @@ class PhysicalMailTemplateBuilder
 {
     // Standard measurements in pixels (at 96 DPI for HTML)
     const DPI = 96;
+
     const INCH_TO_PX = 96;
-    
+
     // PostGrid address zones (in inches)
     const ADDRESS_ZONE_HEIGHT = 3.5;  // Top 3.5 inches reserved for addresses
+
     const RETURN_ADDRESS_TOP = 0.5;
+
     const RETURN_ADDRESS_LEFT = 0.5;
+
     const RECIPIENT_ADDRESS_TOP = 2.0;
+
     const RECIPIENT_ADDRESS_LEFT = 3.75;
-    
+
     // Standard margins
     const MARGIN_TOP_SAFE = 4.0;  // Start content at 4 inches from top
+
     const MARGIN_SIDE = 0.75;     // 0.75 inch side margins
+
     const MARGIN_BOTTOM = 0.75;
-    
+
     // Template types
     const TYPE_LETTER = 'letter';
+
     const TYPE_INVOICE = 'invoice';
+
     const TYPE_STATEMENT = 'statement';
+
     const TYPE_NOTICE = 'notice';
+
     const TYPE_MARKETING = 'marketing';
-    
+
     /**
      * Build a safe HTML template with proper address zones
      */
@@ -38,10 +49,10 @@ class PhysicalMailTemplateBuilder
         $styles = $this->getBaseStyles($type, $options);
         $headerContent = $this->getHeaderContent($type, $options);
         $wrappedContent = $this->wrapContent($content, $type);
-        
+
         return $this->assembleTemplate($styles, $headerContent, $wrappedContent, $options);
     }
-    
+
     /**
      * Get base CSS styles for the template
      */
@@ -50,7 +61,7 @@ class PhysicalMailTemplateBuilder
         $topMargin = ($options['top_margin'] ?? self::MARGIN_TOP_SAFE) * self::INCH_TO_PX;
         $sideMargin = self::MARGIN_SIDE * self::INCH_TO_PX;
         $primaryColor = $options['primary_color'] ?? '#1a56db';
-        
+
         return "
         <style>
             @page {
@@ -98,8 +109,8 @@ class PhysicalMailTemplateBuilder
             /* Main content area */
             .content-wrapper {
                 padding: 0 {$sideMargin}px;
-                padding-bottom: " . (self::MARGIN_BOTTOM * self::INCH_TO_PX) . "px;
-                min-height: calc(11in - {$topMargin}px - " . (self::MARGIN_BOTTOM * self::INCH_TO_PX) . "px);
+                padding-bottom: ".(self::MARGIN_BOTTOM * self::INCH_TO_PX)."px;
+                min-height: calc(11in - {$topMargin}px - ".(self::MARGIN_BOTTOM * self::INCH_TO_PX)."px);
             }
             
             /* Typography */
@@ -225,7 +236,7 @@ class PhysicalMailTemplateBuilder
         </style>
         ";
     }
-    
+
     /**
      * Get header content for the safe zone
      */
@@ -233,37 +244,37 @@ class PhysicalMailTemplateBuilder
     {
         $logoUrl = $options['logo_url'] ?? '';
         $headerHtml = '<div class="address-zone">';
-        
+
         if ($logoUrl) {
             $headerHtml .= '
                 <div class="letterhead">
-                    <img src="' . htmlspecialchars($logoUrl) . '" alt="Logo">
+                    <img src="'.htmlspecialchars($logoUrl).'" alt="Logo">
                 </div>
             ';
         }
-        
+
         // Add any watermark or background elements that won't interfere with addresses
         if (isset($options['watermark'])) {
             $headerHtml .= '
                 <div style="position: absolute; top: 50px; right: 20px; opacity: 0.1; transform: rotate(-45deg); font-size: 48pt; color: #e5e7eb;">
-                    ' . htmlspecialchars($options['watermark']) . '
+                    '.htmlspecialchars($options['watermark']).'
                 </div>
             ';
         }
-        
+
         $headerHtml .= '</div>';
-        
+
         return $headerHtml;
     }
-    
+
     /**
      * Wrap content based on template type
      */
     private function wrapContent(string $content, string $type): string
     {
-        return '<div class="content-wrapper">' . $content . '</div>';
+        return '<div class="content-wrapper">'.$content.'</div>';
     }
-    
+
     /**
      * Assemble the complete template
      */
@@ -274,72 +285,72 @@ class PhysicalMailTemplateBuilder
         array $options
     ): string {
         $title = $options['title'] ?? 'Document';
-        
+
         return '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>' . htmlspecialchars($title) . '</title>
-    ' . $styles . '
+    <title>'.htmlspecialchars($title).'</title>
+    '.$styles.'
 </head>
 <body>
-    ' . $header . '
-    ' . $content . '
+    '.$header.'
+    '.$content.'
 </body>
 </html>';
     }
-    
+
     /**
      * Check if content has elements in the address zone
      */
     public function hasContentInAddressZone(string $html): bool
     {
         // Parse HTML to check for content positioning
-        $dom = new \DOMDocument();
+        $dom = new \DOMDocument;
         @$dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-        
+
         // Check for absolute positioned elements in address zone
         $xpath = new \DOMXPath($dom);
         $elements = $xpath->query('//*[@style]');
-        
+
         foreach ($elements as $element) {
             $style = $element->getAttribute('style');
             if (preg_match('/position:\s*absolute/i', $style)) {
                 if (preg_match('/top:\s*(\d+)(px|pt|in|cm)/i', $style, $matches)) {
                     $value = (float) $matches[1];
                     $unit = $matches[2];
-                    
+
                     // Convert to inches
                     $inches = $this->convertToInches($value, $unit);
-                    
+
                     if ($inches < self::ADDRESS_ZONE_HEIGHT) {
                         return true; // Content in address zone
                     }
                 }
             }
         }
-        
+
         // Check if body has enough top margin/padding
         $body = $dom->getElementsByTagName('body')->item(0);
         if ($body) {
             $style = $body->getAttribute('style');
-            if (!preg_match('/margin-top:\s*(\d+)/i', $style) && 
-                !preg_match('/padding-top:\s*(\d+)/i', $style)) {
+            if (! preg_match('/margin-top:\s*(\d+)/i', $style) &&
+                ! preg_match('/padding-top:\s*(\d+)/i', $style)) {
                 // No top margin/padding, content likely starts at top
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     /**
      * Convert measurement to inches
      */
     private function convertToInches(float $value, string $unit): float
     {
-        return match($unit) {
+        return match ($unit) {
             'in' => $value,
             'px' => $value / self::DPI,
             'pt' => $value / 72,
@@ -347,7 +358,7 @@ class PhysicalMailTemplateBuilder
             default => $value / self::DPI,
         };
     }
-    
+
     /**
      * Generate a standard business letter template
      */
@@ -366,7 +377,7 @@ class PhysicalMailTemplateBuilder
         
         <p>Dear {{to.firstName}} {{to.lastName}},</p>
         
-        ' . ($data['body'] ?? '<p>{{body}}</p>') . '
+        '.($data['body'] ?? '<p>{{body}}</p>').'
         
         <div class="signature">
             <p>Sincerely,</p>
@@ -375,10 +386,10 @@ class PhysicalMailTemplateBuilder
             <p class="text-muted">{{from.companyName}}</p>
         </div>
         ';
-        
+
         return $this->buildTemplate($content, self::TYPE_LETTER, $data);
     }
-    
+
     /**
      * Generate an invoice template
      */
@@ -437,7 +448,7 @@ class PhysicalMailTemplateBuilder
             <p class="text-center text-muted">{{from.companyName}} | {{from.email}} | {{from.phoneNumber}}</p>
         </div>
         ';
-        
+
         return $this->buildTemplate($content, self::TYPE_INVOICE, $data);
     }
 }

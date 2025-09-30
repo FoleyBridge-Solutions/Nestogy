@@ -3,15 +3,14 @@
 namespace App\Domains\Security\Services;
 
 use App\Domains\Core\Services\BaseService;
+use App\Domains\Security\Models\IpLookupLog;
 use App\Domains\Security\Models\SuspiciousLoginAttempt;
 use App\Domains\Security\Models\TrustedDevice;
-use App\Domains\Security\Models\IpLookupLog;
-use App\Domains\Security\Services\IpLookupService;
-use App\Models\User;
 use App\Models\AuditLog;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SuspiciousLoginService extends BaseService
 {
@@ -32,7 +31,7 @@ class SuspiciousLoginService extends BaseService
 
     public function analyzeLoginAttempt(User $user, Request $request): ?SuspiciousLoginAttempt
     {
-        if (!config('security.suspicious_login.enabled', true)) {
+        if (! config('security.suspicious_login.enabled', true)) {
             return null;
         }
 
@@ -44,7 +43,7 @@ class SuspiciousLoginService extends BaseService
         $detectionReasons = [];
 
         $ipLookup = $this->ipLookupService->lookupIp($ipAddress);
-        
+
         if ($ipLookup) {
             $locationAnalysis = $this->analyzeLocation($user, $ipLookup);
             $riskScore += $locationAnalysis['risk_score'];
@@ -60,7 +59,7 @@ class SuspiciousLoginService extends BaseService
         $detectionReasons = array_merge($detectionReasons, $behaviorAnalysis['reasons']);
 
         $riskThreshold = config('security.suspicious_login.risk_threshold', 60);
-        
+
         if ($riskScore >= $riskThreshold) {
             return $this->createSuspiciousLoginAttempt($user, $request, $ipLookup, $deviceFingerprint, $riskScore, $detectionReasons);
         }
@@ -80,12 +79,12 @@ class SuspiciousLoginService extends BaseService
                 $riskScore += 30;
                 $reasons[] = SuspiciousLoginAttempt::REASON_VPN_DETECTED;
             }
-            
+
             if ($ipLookup->is_proxy) {
                 $riskScore += 25;
                 $reasons[] = SuspiciousLoginAttempt::REASON_PROXY_DETECTED;
             }
-            
+
             if ($ipLookup->is_tor) {
                 $riskScore += 50;
                 $reasons[] = SuspiciousLoginAttempt::REASON_TOR_DETECTED;
@@ -93,11 +92,11 @@ class SuspiciousLoginService extends BaseService
         }
 
         $userLoginHistory = $this->getUserLoginHistory($user);
-        
-        if (!$this->hasUserLoggedInFromCountry($userLoginHistory, $ipLookup->country_code)) {
+
+        if (! $this->hasUserLoggedInFromCountry($userLoginHistory, $ipLookup->country_code)) {
             $riskScore += 40;
             $reasons[] = SuspiciousLoginAttempt::REASON_NEW_COUNTRY;
-        } elseif (!$this->hasUserLoggedInFromRegion($userLoginHistory, $ipLookup->country_code, $ipLookup->region)) {
+        } elseif (! $this->hasUserLoggedInFromRegion($userLoginHistory, $ipLookup->country_code, $ipLookup->region)) {
             $riskScore += 20;
             $reasons[] = SuspiciousLoginAttempt::REASON_NEW_REGION;
         }
@@ -115,7 +114,7 @@ class SuspiciousLoginService extends BaseService
             if ($lastLoginTime) {
                 $timeDiffHours = now()->diffInHours($lastLoginTime);
                 $maxPossibleSpeed = 900;
-                
+
                 if ($timeDiffHours > 0 && ($distance / $timeDiffHours) > $maxPossibleSpeed) {
                     $riskScore += 35;
                     $reasons[] = SuspiciousLoginAttempt::REASON_IMPOSSIBLE_TRAVEL;
@@ -150,7 +149,7 @@ class SuspiciousLoginService extends BaseService
             }
         }
 
-        if (!$deviceMatches) {
+        if (! $deviceMatches) {
             $riskScore += 30;
             $reasons[] = SuspiciousLoginAttempt::REASON_NEW_DEVICE;
         }
@@ -188,11 +187,11 @@ class SuspiciousLoginService extends BaseService
     }
 
     protected function createSuspiciousLoginAttempt(
-        User $user, 
-        Request $request, 
-        ?IpLookupLog $ipLookup, 
-        array $deviceFingerprint, 
-        int $riskScore, 
+        User $user,
+        Request $request,
+        ?IpLookupLog $ipLookup,
+        array $deviceFingerprint,
+        int $riskScore,
         array $reasons
     ): SuspiciousLoginAttempt {
         $locationData = null;
@@ -237,7 +236,7 @@ class SuspiciousLoginService extends BaseService
 
     protected function sendSuspiciousLoginNotification(SuspiciousLoginAttempt $attempt): void
     {
-        if (!config('security.suspicious_login.email_enabled', true)) {
+        if (! config('security.suspicious_login.email_enabled', true)) {
             return;
         }
 
@@ -268,7 +267,7 @@ class SuspiciousLoginService extends BaseService
             ->pending()
             ->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return false;
         }
 
@@ -296,7 +295,7 @@ class SuspiciousLoginService extends BaseService
             ->pending()
             ->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return false;
         }
 
@@ -350,7 +349,7 @@ class SuspiciousLoginService extends BaseService
     {
         // This could integrate with firewall or security services
         Log::warning('IP address should be blocked', ['ip' => $ipAddress]);
-        
+
         // Update the threat level in IP lookup log
         $ipLookup = IpLookupLog::where('ip_address', $ipAddress)->first();
         if ($ipLookup) {
@@ -361,7 +360,7 @@ class SuspiciousLoginService extends BaseService
     protected function generateDeviceFingerprint(Request $request): array
     {
         $userAgent = $request->userAgent();
-        
+
         $fingerprint = [
             'user_agent_hash' => md5($userAgent),
             'accept_language' => $request->header('Accept-Language'),
@@ -438,26 +437,28 @@ class SuspiciousLoginService extends BaseService
 
     protected function hasUserLoggedInFromCountry(\Illuminate\Support\Collection $loginHistory, ?string $countryCode): bool
     {
-        if (!$countryCode) {
+        if (! $countryCode) {
             return true;
         }
 
         return $loginHistory->contains(function ($log) use ($countryCode) {
             $metadata = $log->metadata ?? [];
+
             return isset($metadata['ip_country_code']) && $metadata['ip_country_code'] === $countryCode;
         });
     }
 
     protected function hasUserLoggedInFromRegion(\Illuminate\Support\Collection $loginHistory, ?string $countryCode, ?string $region): bool
     {
-        if (!$countryCode || !$region) {
+        if (! $countryCode || ! $region) {
             return true;
         }
 
         return $loginHistory->contains(function ($log) use ($countryCode, $region) {
             $metadata = $log->metadata ?? [];
-            return isset($metadata['ip_country_code'], $metadata['ip_region']) 
-                && $metadata['ip_country_code'] === $countryCode 
+
+            return isset($metadata['ip_country_code'], $metadata['ip_region'])
+                && $metadata['ip_country_code'] === $countryCode
                 && $metadata['ip_region'] === $region;
         });
     }
@@ -471,14 +472,15 @@ class SuspiciousLoginService extends BaseService
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if (!$lastLogin || !$lastLogin->metadata) {
+        if (! $lastLogin || ! $lastLogin->metadata) {
             return null;
         }
 
         $metadata = $lastLogin->metadata;
         if (isset($metadata['ip_coordinates'])) {
             [$lat, $lon] = explode(',', $metadata['ip_coordinates']);
-            return ['latitude' => (float)$lat, 'longitude' => (float)$lon];
+
+            return ['latitude' => (float) $lat, 'longitude' => (float) $lon];
         }
 
         return null;
@@ -507,6 +509,7 @@ class SuspiciousLoginService extends BaseService
              sin($dLon / 2) * sin($dLon / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
         return $earthRadius * $c;
     }
 

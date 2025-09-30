@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Domains\Integration\Models\DeviceMapping;
-use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Models\RmmClientMapping;
+use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Services\RmmServiceFactory;
 use App\Models\Asset;
 use App\Models\Client;
@@ -43,8 +43,8 @@ class SyncRmmAgents implements ShouldQueue
             // Sync agents
             $result = $service->syncAgents();
 
-            if (!$result['success']) {
-                throw new \Exception('Failed to sync agents: ' . ($result['error'] ?? 'Unknown error'));
+            if (! $result['success']) {
+                throw new \Exception('Failed to sync agents: '.($result['error'] ?? 'Unknown error'));
             }
 
             $agents = $result['agents'];
@@ -122,7 +122,7 @@ class SyncRmmAgents implements ShouldQueue
 
         // Find or resolve client
         $client = $this->resolveClient($agentData['client']);
-        if (!$client) {
+        if (! $client) {
             Log::warning('Could not resolve client for agent - skipping asset creation', [
                 'agent_id' => $agentData['id'],
                 'client_name' => $agentData['client'],
@@ -130,6 +130,7 @@ class SyncRmmAgents implements ShouldQueue
                 'hostname' => $agentData['hostname'] ?? 'unknown',
                 'suggestion' => 'Create a client mapping in settings to resolve this RMM client to a Nestogy client',
             ]);
+
             return;
         }
 
@@ -146,6 +147,7 @@ class SyncRmmAgents implements ShouldQueue
                 'integration_id' => $this->integration->id,
                 'action' => 'Asset creation prevented - data isolation maintained',
             ]);
+
             return;
         }
 
@@ -156,7 +158,6 @@ class SyncRmmAgents implements ShouldQueue
             'client_name' => $client->name,
             'company_id' => $client->company_id,
         ]);
-
 
         // Find existing device mapping
         $deviceMapping = DeviceMapping::where([
@@ -170,19 +171,19 @@ class SyncRmmAgents implements ShouldQueue
             $asset = Asset::find($deviceMapping->asset_id);
         }
 
-        if (!$asset) {
+        if (! $asset) {
             // Create new asset
-            
+
             // Ensure required fields have valid values
             $platform = trim($agentData['platform'] ?? 'unknown');
             $make = $this->mapAssetMake($platform);
             $type = $this->determineAssetTypeFromRmm($agentData);
-            
+
             // Ensure make is never null or empty
             if (empty($make) || $make === '') {
                 $make = 'Unknown';
             }
-            
+
             Log::debug('Creating asset with data', [
                 'hostname' => $agentData['hostname'],
                 'platform' => $platform,
@@ -201,6 +202,7 @@ class SyncRmmAgents implements ShouldQueue
                     'client_company_id' => $client->company_id,
                     'client_id' => $client->id,
                 ]);
+
                 return;
             }
 
@@ -255,12 +257,12 @@ class SyncRmmAgents implements ShouldQueue
         } else {
             // Update existing asset - preserve existing status unless it's the old incorrect mapping
             $currentStatus = $asset->status;
-            
+
             // If the current status is the old incorrect active/inactive mapping, fix it
             if (in_array($currentStatus, ['active', 'inactive'])) {
                 $currentStatus = 'Ready To Deploy'; // Reset to default - user can manage lifecycle separately
             }
-            
+
             $asset->update([
                 'name' => $agentData['hostname'],
                 'type' => $this->determineAssetTypeFromRmm($agentData),
@@ -338,6 +340,7 @@ class SyncRmmAgents implements ShouldQueue
                     'client_id' => $client->id,
                     'integration_id' => $this->integration->id,
                 ]);
+
                 return null;
             }
 
@@ -347,17 +350,18 @@ class SyncRmmAgents implements ShouldQueue
                 'resolved_client_name' => $client->name,
                 'integration_id' => $this->integration->id,
             ]);
+
             return $client;
         }
 
         // Secondary: Try exact name matching for backward compatibility
         $client = Client::where('company_id', $this->integration->company_id)
-                    ->where(function ($query) use ($clientName) {
-                        $query->where('name', $clientName)
-                              ->orWhere('company_name', $clientName);
-                    })
-                    ->first();
-        
+            ->where(function ($query) use ($clientName) {
+                $query->where('name', $clientName)
+                    ->orWhere('company_name', $clientName);
+            })
+            ->first();
+
         if ($client) {
             Log::info('Client resolved via exact name match', [
                 'rmm_client_name' => $clientName,
@@ -365,6 +369,7 @@ class SyncRmmAgents implements ShouldQueue
                 'resolved_client_name' => $client->name,
                 'integration_id' => $this->integration->id,
             ]);
+
             return $client;
         }
 
@@ -378,7 +383,7 @@ class SyncRmmAgents implements ShouldQueue
                 ->count(),
             'message' => 'Asset creation will be skipped. Please create a client mapping for this RMM client.',
         ]);
-        
+
         return null;
     }
 
@@ -392,35 +397,35 @@ class SyncRmmAgents implements ShouldQueue
         if ($monitoringType === 'server') {
             return 'Server';
         }
-        
+
         // 2. Check raw_data for monitoring_type in case it's nested
         $rawData = $agentData['raw_data'] ?? [];
         if (isset($rawData['monitoring_type']) && $rawData['monitoring_type'] === 'server') {
             return 'Server';
         }
-        
+
         // 3. Check other server indicator fields in raw data
         $serverIndicatorFields = [
-            'agent_type', 
+            'agent_type',
             'machine_type',
             'server_type',
             'role',
-            'computer_type'
+            'computer_type',
         ];
-        
+
         foreach ($serverIndicatorFields as $field) {
-            if (isset($rawData[$field]) && 
+            if (isset($rawData[$field]) &&
                 (strtolower($rawData[$field]) === 'server' || strtolower($rawData[$field]) === 'domain_controller')) {
                 return 'Server';
             }
         }
-        
+
         // 4. Check operating system for server indicators
         $os = $agentData['operating_system'] ?? '';
         $serverOsPatterns = [
             'windows server',
             'server 2019',
-            'server 2022', 
+            'server 2022',
             'server 2025',
             'server 2016',
             'server 2012',
@@ -431,16 +436,16 @@ class SyncRmmAgents implements ShouldQueue
             'rhel',
             'red hat',
             'windows srv',
-            'srv '
+            'srv ',
         ];
-        
+
         $osLower = strtolower($os);
         foreach ($serverOsPatterns as $pattern) {
             if (stripos($osLower, $pattern) !== false) {
                 return 'Server';
             }
         }
-        
+
         // 5. Check hostname patterns that typically indicate servers
         $hostname = $agentData['hostname'] ?? '';
         $serverHostnamePatterns = [
@@ -455,16 +460,16 @@ class SyncRmmAgents implements ShouldQueue
             'web-',
             'file-',
             'print-',
-            'backup-'
+            'backup-',
         ];
-        
+
         $hostnameLower = strtolower($hostname);
         foreach ($serverHostnamePatterns as $pattern) {
             if (strpos($hostnameLower, $pattern) === 0) {
                 return 'Server';
             }
         }
-        
+
         // 6. Final fallback - default to Desktop for workstations
         return 'Desktop';
     }

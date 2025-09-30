@@ -39,16 +39,16 @@ class TaxJurisdictionFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'name' => $this->faker->state,
             'jurisdiction_type' => 'state',
-            'authority_name' => $attributes['name'] . ' Department of Revenue',
+            'authority_name' => $attributes['name'].' Department of Revenue',
         ]);
     }
 
     public function county(): static
     {
         return $this->state(fn (array $attributes) => [
-            'name' => $this->faker->city . ' County',
+            'name' => $this->faker->city.' County',
             'jurisdiction_type' => 'county',
-            'authority_name' => $attributes['name'] . ' Tax Assessor',
+            'authority_name' => $attributes['name'].' Tax Assessor',
         ]);
     }
 }

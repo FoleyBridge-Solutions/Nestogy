@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Domains\Core\Controllers\Settings\UnifiedSettingsController;
-use App\Domains\Security\Controllers\RoleController;
 use App\Domains\Security\Controllers\PermissionController;
+use App\Domains\Security\Controllers\RoleController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,136 +12,136 @@ use App\Domains\Security\Controllers\PermissionController;
 */
 
 Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->group(function () {
-    
+
     // Main Settings Dashboard
     Route::get('/', [UnifiedSettingsController::class, 'index'])->name('index');
-    
+
     // Legacy route aliases for backward compatibility
-    Route::get('/general', function() {
+    Route::get('/general', function () {
         return redirect()->route('settings.category.show', ['domain' => 'company', 'category' => 'general']);
     })->name('general');
-    
-    Route::get('/security', function() {
+
+    Route::get('/security', function () {
         return redirect()->route('settings.category.show', ['domain' => 'security', 'category' => 'access']);
     })->name('security');
-    
-    Route::get('/email', function() {
+
+    Route::get('/email', function () {
         return redirect()->route('settings.category.show', ['domain' => 'communication', 'category' => 'email']);
     })->name('email');
-    
-    Route::get('/company-email-provider', function() {
+
+    Route::get('/company-email-provider', function () {
         return redirect()->route('settings.category.show', ['domain' => 'communication', 'category' => 'email']);
     })->name('company-email-provider');
-    
-    Route::get('/user-management', function() {
+
+    Route::get('/user-management', function () {
         return redirect()->route('settings.category.show', ['domain' => 'company', 'category' => 'users']);
     })->name('user-management');
-    
-    Route::get('/billing-financial', function() {
+
+    Route::get('/billing-financial', function () {
         return redirect()->route('settings.category.show', ['domain' => 'financial', 'category' => 'billing']);
     })->name('billing-financial');
-    
-    Route::get('/integrations', function() {
+
+    Route::get('/integrations', function () {
         return redirect()->route('settings.category.show', ['domain' => 'integrations', 'category' => 'overview']);
     })->name('integrations');
-    
-    Route::get('/ticketing-service-desk', function() {
+
+    Route::get('/ticketing-service-desk', function () {
         return redirect()->route('settings.category.show', ['domain' => 'operations', 'category' => 'ticketing']);
     })->name('ticketing-service-desk');
-    
-    Route::get('/project-management', function() {
+
+    Route::get('/project-management', function () {
         return redirect()->route('settings.category.show', ['domain' => 'operations', 'category' => 'projects']);
     })->name('project-management');
-    
-    Route::get('/asset-inventory', function() {
+
+    Route::get('/asset-inventory', function () {
         return redirect()->route('settings.category.show', ['domain' => 'operations', 'category' => 'assets']);
     })->name('asset-inventory');
-    
-    Route::get('/automation-workflows', function() {
+
+    Route::get('/automation-workflows', function () {
         return redirect()->route('settings.category.show', ['domain' => 'system', 'category' => 'automation']);
     })->name('automation-workflows');
-    
-    Route::get('/api-webhooks', function() {
+
+    Route::get('/api-webhooks', function () {
         return redirect()->route('settings.category.show', ['domain' => 'integrations', 'category' => 'api']);
     })->name('api-webhooks');
-    
-    Route::get('/data-management', function() {
+
+    Route::get('/data-management', function () {
         return redirect()->route('settings.category.show', ['domain' => 'system', 'category' => 'database']);
     })->name('data-management');
-    
+
     // Additional legacy routes for all navigation items
-    Route::get('/accounting', function() {
+    Route::get('/accounting', function () {
         return redirect()->route('settings.category.show', ['domain' => 'financial', 'category' => 'accounting']);
     })->name('accounting');
-    
-    Route::get('/backup-recovery', function() {
+
+    Route::get('/backup-recovery', function () {
         return redirect()->route('settings.category.show', ['domain' => 'system', 'category' => 'backup']);
     })->name('backup-recovery');
-    
-    Route::get('/client-portal', function() {
+
+    Route::get('/client-portal', function () {
         return redirect()->route('settings.category.show', ['domain' => 'operations', 'category' => 'portal']);
     })->name('client-portal');
-    
-    Route::get('/compliance-audit', function() {
+
+    Route::get('/compliance-audit', function () {
         return redirect()->route('settings.category.show', ['domain' => 'security', 'category' => 'compliance']);
     })->name('compliance-audit');
-    
-    Route::get('/contract-clauses', function() {
+
+    Route::get('/contract-clauses', function () {
         return redirect()->route('settings.category.show', ['domain' => 'operations', 'category' => 'clauses']);
     })->name('contract-clauses');
-    
-    Route::get('/knowledge-base', function() {
+
+    Route::get('/knowledge-base', function () {
         return redirect()->route('settings.category.show', ['domain' => 'operations', 'category' => 'knowledge']);
     })->name('knowledge-base');
-    
-    Route::get('/mobile-remote', function() {
+
+    Route::get('/mobile-remote', function () {
         return redirect()->route('settings.category.show', ['domain' => 'system', 'category' => 'mobile']);
     })->name('mobile-remote');
-    
-    Route::get('/notifications-alerts', function() {
+
+    Route::get('/notifications-alerts', function () {
         return redirect()->route('settings.category.show', ['domain' => 'communication', 'category' => 'notifications']);
     })->name('notifications-alerts');
-    
-    Route::get('/payment-gateways', function() {
+
+    Route::get('/payment-gateways', function () {
         return redirect()->route('settings.category.show', ['domain' => 'financial', 'category' => 'payments']);
     })->name('payment-gateways');
-    
-    Route::get('/performance-optimization', function() {
+
+    Route::get('/performance-optimization', function () {
         return redirect()->route('settings.category.show', ['domain' => 'system', 'category' => 'performance']);
     })->name('performance-optimization');
-    
-    Route::get('/physical-mail', function() {
+
+    Route::get('/physical-mail', function () {
         return redirect()->route('settings.category.show', ['domain' => 'communication', 'category' => 'physical-mail']);
     })->name('physical-mail');
-    
-    Route::get('/reporting-analytics', function() {
+
+    Route::get('/reporting-analytics', function () {
         return redirect()->route('settings.category.show', ['domain' => 'operations', 'category' => 'reports']);
     })->name('reporting-analytics');
-    
-    Route::get('/rmm-monitoring', function() {
+
+    Route::get('/rmm-monitoring', function () {
         return redirect()->route('settings.category.show', ['domain' => 'integrations', 'category' => 'rmm']);
     })->name('rmm-monitoring');
-    
-    Route::get('/training-documentation', function() {
+
+    Route::get('/training-documentation', function () {
         return redirect()->route('settings.category.show', ['domain' => 'operations', 'category' => 'training']);
     })->name('training-documentation');
-    
+
     // Contract Templates route
     Route::prefix('contract-templates')->name('contract-templates.')->group(function () {
-        Route::get('/', function() {
+        Route::get('/', function () {
             return redirect()->route('settings.category.show', ['domain' => 'operations', 'category' => 'contracts']);
         })->name('index');
     });
-    
+
     // Settings Import/Export
     Route::get('/export', [UnifiedSettingsController::class, 'export'])->name('export');
     Route::post('/import', [UnifiedSettingsController::class, 'import'])->name('import');
-    
+
     // Domain-based Settings (Clean URLs)
     Route::prefix('{domain}')->group(function () {
         // Domain index
         Route::get('/', [UnifiedSettingsController::class, 'showDomain'])->name('domain.index');
-        
+
         // Category-specific routes
         Route::prefix('{category}')->group(function () {
             Route::get('/', [UnifiedSettingsController::class, 'showCategory'])->name('category.show');
@@ -150,7 +150,7 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
             Route::post('/reset', [UnifiedSettingsController::class, 'resetToDefaults'])->name('category.reset');
         });
     });
-    
+
     // Roles & Permissions (these stay separate due to their complexity)
     Route::prefix('roles')->name('roles.')->group(function () {
         Route::get('/', [RoleController::class, 'index'])->name('index');
@@ -162,7 +162,7 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
         Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
         Route::post('/{role}/duplicate', [RoleController::class, 'duplicate'])->name('duplicate');
     });
-    
+
     Route::prefix('permissions')->name('permissions.')->group(function () {
         Route::get('/', [PermissionController::class, 'index'])->name('index');
         Route::get('/matrix', [PermissionController::class, 'matrix'])->name('matrix');

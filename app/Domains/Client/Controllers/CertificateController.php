@@ -5,7 +5,6 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientCertificate;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +13,7 @@ use Illuminate\Validation\Rule;
 class CertificateController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of certificates for the selected client
      */
@@ -21,7 +21,7 @@ class CertificateController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -29,12 +29,12 @@ class CertificateController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('subject', 'like', "%{$search}%")
-                  ->orWhere('issuer', 'like', "%{$search}%")
-                  ->orWhere('serial_number', 'like', "%{$search}%")
-                  ->orWhere('domain_names', 'like', "%{$search}%");
+                    ->orWhere('subject', 'like', "%{$search}%")
+                    ->orWhere('issuer', 'like', "%{$search}%")
+                    ->orWhere('serial_number', 'like', "%{$search}%")
+                    ->orWhere('domain_names', 'like', "%{$search}%");
             });
         }
 
@@ -66,8 +66,8 @@ class CertificateController extends Controller
         }
 
         $certificates = $query->orderBy('expires_at', 'asc')
-                             ->paginate(20)
-                             ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $types = ClientCertificate::getTypes();
         $statuses = ClientCertificate::getStatuses();
@@ -82,8 +82,8 @@ class CertificateController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $types = ClientCertificate::getTypes();
@@ -110,12 +110,12 @@ class CertificateController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:' . implode(',', array_keys(ClientCertificate::getTypes())),
+            'type' => 'required|in:'.implode(',', array_keys(ClientCertificate::getTypes())),
             'issuer' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
             'serial_number' => 'nullable|string|max:255',
-            'key_size' => 'nullable|in:' . implode(',', array_keys(ClientCertificate::getKeySizes())),
-            'algorithm' => 'nullable|in:' . implode(',', array_keys(ClientCertificate::getAlgorithms())),
+            'key_size' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getKeySizes())),
+            'algorithm' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getAlgorithms())),
             'fingerprint_sha1' => 'nullable|string|max:255',
             'fingerprint_sha256' => 'nullable|string|max:255',
             'is_wildcard' => 'boolean',
@@ -129,8 +129,8 @@ class CertificateController extends Controller
             'renewal_date' => 'nullable|date|before:expires_at',
             'auto_renewal' => 'boolean',
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
-            'status' => 'required|in:' . implode(',', array_keys(ClientCertificate::getStatuses())),
-            'vendor' => 'nullable|in:' . implode(',', array_keys(ClientCertificate::getVendors())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientCertificate::getStatuses())),
+            'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
@@ -138,8 +138,8 @@ class CertificateController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process domain names
@@ -178,12 +178,12 @@ class CertificateController extends Controller
             'renewal_cost' => $request->renewal_cost,
             'notes' => $request->notes,
         ]);
-        
+
         $certificate->company_id = auth()->user()->company_id;
         $certificate->save();
 
         return redirect()->route('clients.certificates.standalone.index')
-                        ->with('success', 'Certificate created successfully.');
+            ->with('success', 'Certificate created successfully.');
     }
 
     /**
@@ -194,7 +194,7 @@ class CertificateController extends Controller
         $this->authorize('view', $certificate);
 
         $certificate->load('client');
-        
+
         // Update access timestamp
         $certificate->update(['accessed_at' => now()]);
 
@@ -209,8 +209,8 @@ class CertificateController extends Controller
         $this->authorize('update', $certificate);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $types = ClientCertificate::getTypes();
         $statuses = ClientCertificate::getStatuses();
@@ -238,12 +238,12 @@ class CertificateController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:' . implode(',', array_keys(ClientCertificate::getTypes())),
+            'type' => 'required|in:'.implode(',', array_keys(ClientCertificate::getTypes())),
             'issuer' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
             'serial_number' => 'nullable|string|max:255',
-            'key_size' => 'nullable|in:' . implode(',', array_keys(ClientCertificate::getKeySizes())),
-            'algorithm' => 'nullable|in:' . implode(',', array_keys(ClientCertificate::getAlgorithms())),
+            'key_size' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getKeySizes())),
+            'algorithm' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getAlgorithms())),
             'fingerprint_sha1' => 'nullable|string|max:255',
             'fingerprint_sha256' => 'nullable|string|max:255',
             'is_wildcard' => 'boolean',
@@ -257,8 +257,8 @@ class CertificateController extends Controller
             'renewal_date' => 'nullable|date|before:expires_at',
             'auto_renewal' => 'boolean',
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
-            'status' => 'required|in:' . implode(',', array_keys(ClientCertificate::getStatuses())),
-            'vendor' => 'nullable|in:' . implode(',', array_keys(ClientCertificate::getVendors())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientCertificate::getStatuses())),
+            'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
@@ -266,8 +266,8 @@ class CertificateController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process domain names
@@ -310,7 +310,7 @@ class CertificateController extends Controller
         $certificate->save();
 
         return redirect()->route('clients.certificates.standalone.index')
-                        ->with('success', 'Certificate updated successfully.');
+            ->with('success', 'Certificate updated successfully.');
     }
 
     /**
@@ -323,7 +323,7 @@ class CertificateController extends Controller
         $certificate->delete();
 
         return redirect()->route('clients.certificates.standalone.index')
-                        ->with('success', 'Certificate deleted successfully.');
+            ->with('success', 'Certificate deleted successfully.');
     }
 
     /**
@@ -332,16 +332,16 @@ class CertificateController extends Controller
     public function export(Request $request)
     {
         $query = ClientCertificate::with(['client'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('subject', 'like', "%{$search}%")
-                  ->orWhere('issuer', 'like', "%{$search}%");
+                    ->orWhere('subject', 'like', "%{$search}%")
+                    ->orWhere('issuer', 'like', "%{$search}%");
             });
         }
 
@@ -363,16 +363,16 @@ class CertificateController extends Controller
 
         $certificates = $query->orderBy('expires_at', 'asc')->get();
 
-        $filename = 'certificates_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'certificates_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($certificates) {
+        $callback = function () use ($certificates) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Certificate Name',
@@ -391,7 +391,7 @@ class CertificateController extends Controller
                 'Purchase Cost',
                 'Renewal Cost',
                 'Auto Renewal',
-                'Created At'
+                'Created At',
             ]);
 
             // CSV data
@@ -416,7 +416,7 @@ class CertificateController extends Controller
                     $certificate->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 

@@ -2,13 +2,13 @@
 
 namespace App\Domains\Security\Services;
 
-use Silber\Bouncer\BouncerFacade as Bouncer;
-use Illuminate\Support\Collection;
 use App\Models\User;
+use Illuminate\Support\Collection;
+use Silber\Bouncer\BouncerFacade as Bouncer;
 
 /**
  * Enhanced Permission Service for Advanced Permission Management
- * 
+ *
  * Provides wildcard matching, permission inheritance, and granular access control
  */
 class PermissionService
@@ -22,11 +22,11 @@ class PermissionService
         if ($user->can($permission)) {
             return true;
         }
-        
+
         // Wildcard permission check
         return $this->hasWildcardPermission($user, $permission);
     }
-    
+
     /**
      * Check wildcard permissions
      * Example: 'assets.*' matches 'assets.view', 'assets.edit', etc.
@@ -35,27 +35,27 @@ class PermissionService
     {
         $parts = explode('.', $permission);
         $wildcardChecks = [];
-        
+
         // Build wildcard patterns to check
         // For 'assets.equipment.view', check:
         // - '*' (full wildcard)
-        // - 'assets.*' 
+        // - 'assets.*'
         // - 'assets.equipment.*'
         for ($i = 0; $i < count($parts); $i++) {
-            $wildcard = implode('.', array_slice($parts, 0, $i)) . ($i > 0 ? '.' : '') . '*';
+            $wildcard = implode('.', array_slice($parts, 0, $i)).($i > 0 ? '.' : '').'*';
             $wildcardChecks[] = $wildcard;
         }
-        
+
         // Check each wildcard pattern
         foreach ($wildcardChecks as $pattern) {
             if ($user->can($pattern)) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     /**
      * Grant permissions with wildcard expansion
      */
@@ -64,21 +64,21 @@ class PermissionService
         if (str_contains($permission, '*')) {
             // Store the wildcard permission
             Bouncer::allow($role)->to($permission);
-            
+
             // Also expand common sub-permissions for better UI display
             $this->expandWildcardPermissions($role, $permission);
         } else {
             Bouncer::allow($role)->to($permission);
         }
     }
-    
+
     /**
      * Expand wildcard permissions for UI display
      */
     private function expandWildcardPermissions($role, string $wildcardPermission): void
     {
         $basePermission = str_replace('.*', '', $wildcardPermission);
-        
+
         // Define common sub-permissions for each module
         $expansions = [
             'assets' => ['view', 'create', 'edit', 'delete', 'export', 'import'],
@@ -88,14 +88,14 @@ class PermissionService
             'projects' => ['view', 'create', 'edit', 'delete', 'tasks', 'timeline'],
             'reports' => ['view', 'create', 'export', 'schedule'],
         ];
-        
+
         if (isset($expansions[$basePermission])) {
             foreach ($expansions[$basePermission] as $action) {
                 Bouncer::allow($role)->to("{$basePermission}.{$action}");
             }
         }
     }
-    
+
     /**
      * Get hierarchical permission structure for UI
      */
@@ -182,7 +182,7 @@ class PermissionService
             ],
         ];
     }
-    
+
     /**
      * Check resource-level permissions
      * Example: Can user edit this specific asset?
@@ -190,23 +190,23 @@ class PermissionService
     public function canAccessResource(User $user, string $permission, $resource): bool
     {
         // Check general permission first
-        if (!$this->userHasPermission($user, $permission)) {
+        if (! $this->userHasPermission($user, $permission)) {
             return false;
         }
-        
+
         // Check resource-specific constraints
         // Example: User can only edit assets for their assigned clients
         if (str_starts_with($permission, 'assets.') && $resource) {
             return $this->checkAssetAccess($user, $resource);
         }
-        
+
         if (str_starts_with($permission, 'tickets.') && $resource) {
             return $this->checkTicketAccess($user, $resource);
         }
-        
+
         return true;
     }
-    
+
     /**
      * Check asset-specific access
      */
@@ -216,16 +216,16 @@ class PermissionService
         if ($user->isA('super-admin') || $user->isA('admin')) {
             return true;
         }
-        
+
         // Check if user is assigned to the client that owns this asset
         if ($asset->client_id) {
             return $user->isAssignedToClient($asset->client_id);
         }
-        
+
         // Check if asset belongs to user's company
         return $asset->company_id === $user->company_id;
     }
-    
+
     /**
      * Check ticket-specific access
      */
@@ -235,49 +235,50 @@ class PermissionService
         if ($user->isA('super-admin') || $user->isA('admin')) {
             return true;
         }
-        
+
         // User created the ticket
         if ($ticket->created_by === $user->id) {
             return true;
         }
-        
+
         // User is assigned to the ticket
         if ($ticket->assigned_to === $user->id) {
             return true;
         }
-        
+
         // User is assigned to the client with appropriate access level
         if ($ticket->client_id) {
             $accessLevel = $user->getClientAccessLevel($ticket->client_id);
+
             return $accessLevel !== null; // Any level of access allows viewing
         }
-        
+
         return false;
     }
-    
+
     /**
      * Get effective permissions for a user (including wildcards)
      */
     public function getEffectivePermissions(User $user): Collection
     {
         $permissions = collect();
-        
+
         // Get all direct permissions
         foreach ($user->getAbilities() as $ability) {
             $permissions->push($ability->name);
-            
+
             // If it's a wildcard, expand it
             if (str_contains($ability->name, '*')) {
                 $expanded = $this->expandWildcard($ability->name);
                 $permissions = $permissions->merge($expanded);
             }
         }
-        
+
         // Get role-based permissions
         foreach ($user->roles as $role) {
             foreach ($role->getAbilities() as $ability) {
                 $permissions->push($ability->name);
-                
+
                 // If it's a wildcard, expand it
                 if (str_contains($ability->name, '*')) {
                     $expanded = $this->expandWildcard($ability->name);
@@ -285,10 +286,10 @@ class PermissionService
                 }
             }
         }
-        
+
         return $permissions->unique()->sort();
     }
-    
+
     /**
      * Expand a wildcard permission to its components
      */
@@ -296,30 +297,32 @@ class PermissionService
     {
         $base = str_replace('.*', '', $wildcard);
         $hierarchy = $this->getPermissionHierarchy();
-        
+
         if ($wildcard === '*') {
             // Full system access
             $expanded = [];
             foreach ($hierarchy as $module => $config) {
                 foreach ($config['permissions'] as $perm => $desc) {
-                    if (!str_contains($perm, '*')) {
+                    if (! str_contains($perm, '*')) {
                         $expanded[] = $perm;
                     }
                 }
             }
+
             return $expanded;
         }
-        
+
         if (isset($hierarchy[$base])) {
             $expanded = [];
             foreach ($hierarchy[$base]['permissions'] as $perm => $desc) {
-                if (!str_contains($perm, '*')) {
+                if (! str_contains($perm, '*')) {
                     $expanded[] = $perm;
                 }
             }
+
             return $expanded;
         }
-        
+
         return [];
     }
 }

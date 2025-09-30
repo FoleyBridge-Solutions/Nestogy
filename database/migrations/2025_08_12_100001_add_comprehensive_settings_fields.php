@@ -13,7 +13,7 @@ return new class extends Migration
     {
         // Get existing columns to avoid conflicts
         $existingColumns = collect(Schema::getColumnListing('settings'));
-        
+
         Schema::table('settings', function (Blueprint $table) use ($existingColumns) {
             // General & Company Settings
             $table->string('company_logo')->nullable()->after('company_id');
@@ -129,7 +129,7 @@ return new class extends Migration
             $table->json('ticket_templates')->nullable()->after('csat_settings');
             $table->json('ticket_automation_rules')->nullable()->after('ticket_templates');
             $table->json('multichannel_settings')->nullable()->after('ticket_automation_rules');
-            if (!$existingColumns->contains('queue_management_settings')) {
+            if (! $existingColumns->contains('queue_management_settings')) {
                 $table->json('queue_management_settings')->nullable()->after('multichannel_settings');
             }
 
@@ -293,7 +293,7 @@ return new class extends Migration
             $table->json('external_training_integration_settings')->nullable()->after('learning_path_settings');
             $table->json('documentation_versioning_settings')->nullable()->after('external_training_integration_settings');
             $table->json('search_discovery_settings')->nullable()->after('documentation_versioning_settings');
-            
+
             // User Management Settings (consolidated)
             $table->json('user_management_settings')->nullable()->after('search_discovery_settings');
 
@@ -555,7 +555,7 @@ return new class extends Migration
                 'company_city',
                 'company_address',
                 'company_colors',
-                'company_logo'
+                'company_logo',
             ]);
         });
     }

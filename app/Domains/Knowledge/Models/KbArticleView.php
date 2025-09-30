@@ -2,14 +2,14 @@
 
 namespace App\Domains\Knowledge\Models;
 
+use App\Domains\Client\Models\ClientContact;
 use App\Models\BaseModel;
 use App\Models\User;
-use App\Domains\Client\Models\ClientContact;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Knowledge Base Article View Tracking Model
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $article_id
@@ -53,7 +53,9 @@ class KbArticleView extends BaseModel
     ];
 
     const VIEWER_TYPE_ANONYMOUS = 'anonymous';
+
     const VIEWER_TYPE_USER = 'user';
+
     const VIEWER_TYPE_CLIENT = 'client';
 
     /**
@@ -125,7 +127,7 @@ class KbArticleView extends BaseModel
         array $additionalData = []
     ): self {
         $viewerType = self::VIEWER_TYPE_ANONYMOUS;
-        
+
         if ($userId) {
             $viewerType = self::VIEWER_TYPE_USER;
         } elseif ($contactId) {

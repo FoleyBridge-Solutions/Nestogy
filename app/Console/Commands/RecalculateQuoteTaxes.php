@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\Quote;
 use App\Domains\Financial\Services\QuoteService;
+use App\Models\Quote;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class RecalculateQuoteTaxes extends Command
@@ -33,20 +33,21 @@ class RecalculateQuoteTaxes extends Command
     public function handle()
     {
         $this->info('Starting quote tax recalculation...');
-        
+
         $options = $this->parseOptions();
         $this->displayRunMode($options);
-        
+
         $quotes = $this->getQuotesToProcess($options);
-        
+
         if ($quotes->isEmpty()) {
             $this->warn('No quotes found matching criteria');
+
             return 0;
         }
-        
+
         $stats = $this->processQuotes($quotes, $options);
         $this->displayResults($stats, $options);
-        
+
         return $stats['errors'] > 0 ? 1 : 0;
     }
 
@@ -60,7 +61,7 @@ class RecalculateQuoteTaxes extends Command
             'quoteId' => $this->option('quote'),
             'dryRun' => $this->option('dry-run'),
             'force' => $this->option('force'),
-            'verbose' => $this->option('verbose')
+            'verbose' => $this->option('verbose'),
         ];
     }
 
@@ -80,9 +81,9 @@ class RecalculateQuoteTaxes extends Command
     private function getQuotesToProcess(array $options)
     {
         $query = Quote::with(['items', 'client']);
-        
+
         $this->applyFilters($query, $options);
-        
+
         return $query->get();
     }
 
@@ -94,15 +95,17 @@ class RecalculateQuoteTaxes extends Command
         if ($options['companyId']) {
             $query->where('company_id', $options['companyId']);
             $this->info("Processing quotes for company ID: {$options['companyId']}");
+
             return;
         }
-        
+
         if ($options['quoteId']) {
             $query->where('id', $options['quoteId']);
             $this->info("Processing specific quote ID: {$options['quoteId']}");
+
             return;
         }
-        
+
         // Default: last 12 months
         $query->where('created_at', '>=', now()->subMonths(12));
         $this->info('Processing quotes from last 12 months');
@@ -114,25 +117,25 @@ class RecalculateQuoteTaxes extends Command
     private function processQuotes($quotes, array $options): array
     {
         $this->info("Found {$quotes->count()} quotes to process");
-        
+
         $progressBar = $this->output->createProgressBar($quotes->count());
         $progressBar->start();
-        
+
         $stats = [
             'processed' => 0,
             'updated' => 0,
             'errors' => 0,
-            'skipped' => 0
+            'skipped' => 0,
         ];
-        
+
         foreach ($quotes as $quote) {
             $progressBar->advance();
             $this->processSingleQuote($quote, $stats, $options);
         }
-        
+
         $progressBar->finish();
         $this->newLine(2);
-        
+
         return $stats;
     }
 
@@ -142,20 +145,21 @@ class RecalculateQuoteTaxes extends Command
     private function processSingleQuote(Quote $quote, array &$stats, array $options): void
     {
         $stats['processed']++;
-        
+
         try {
             if ($this->shouldSkipQuote($quote, $options)) {
                 $stats['skipped']++;
+
                 return;
             }
-            
+
             $taxChange = $this->recalculateQuoteTax($quote, $options);
-            
+
             if ($taxChange['hasChanged']) {
                 $stats['updated']++;
                 $this->logTaxChange($quote, $taxChange, $options);
             }
-            
+
         } catch (\Exception $e) {
             $stats['errors']++;
             $this->logError($quote, $e, $options);
@@ -167,14 +171,14 @@ class RecalculateQuoteTaxes extends Command
      */
     private function shouldSkipQuote(Quote $quote, array $options): bool
     {
-        if (!$options['force'] && $this->hasModernTaxBreakdown($quote)) {
+        if (! $options['force'] && $this->hasModernTaxBreakdown($quote)) {
             return true;
         }
-        
+
         if ($quote->items->isEmpty()) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -184,21 +188,21 @@ class RecalculateQuoteTaxes extends Command
     private function recalculateQuoteTax(Quote $quote, array $options): array
     {
         $oldTaxAmount = $quote->items->sum('tax');
-        
-        if (!$options['dryRun']) {
+
+        if (! $options['dryRun']) {
             DB::transaction(function () use ($quote) {
-                $quoteService = new QuoteService();
+                $quoteService = new QuoteService;
                 $quoteService->calculatePricing($quote);
             });
             $quote->refresh();
         }
-        
+
         $newTaxAmount = $quote->items->sum('tax');
-        
+
         return [
             'hasChanged' => abs($oldTaxAmount - $newTaxAmount) > 0.01,
             'oldAmount' => $oldTaxAmount,
-            'newAmount' => $newTaxAmount
+            'newAmount' => $newTaxAmount,
         ];
     }
 
@@ -207,10 +211,10 @@ class RecalculateQuoteTaxes extends Command
      */
     private function logTaxChange(Quote $quote, array $taxChange, array $options): void
     {
-        if (!$options['verbose']) {
+        if (! $options['verbose']) {
             return;
         }
-        
+
         $this->newLine();
         $this->line("Quote {$quote->id}: Tax changed from \${$taxChange['oldAmount']} to \${$taxChange['newAmount']}");
     }
@@ -220,12 +224,12 @@ class RecalculateQuoteTaxes extends Command
      */
     private function logError(Quote $quote, \Exception $e, array $options): void
     {
-        if (!$options['verbose']) {
+        if (! $options['verbose']) {
             return;
         }
-        
+
         $this->newLine();
-        $this->error("Error processing quote {$quote->id}: " . $e->getMessage());
+        $this->error("Error processing quote {$quote->id}: ".$e->getMessage());
     }
 
     /**
@@ -243,7 +247,7 @@ class RecalculateQuoteTaxes extends Command
                 ['Errors', $stats['errors']],
             ]
         );
-        
+
         $this->displayWarnings($stats, $options);
     }
 
@@ -255,7 +259,7 @@ class RecalculateQuoteTaxes extends Command
         if ($options['dryRun'] && $stats['updated'] > 0) {
             $this->warn("Run without --dry-run to apply {$stats['updated']} changes");
         }
-        
+
         if ($stats['errors'] > 0) {
             $this->error("Encountered {$stats['errors']} errors. Use --verbose to see details.");
         }

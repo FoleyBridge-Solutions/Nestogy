@@ -2,8 +2,8 @@
 
 namespace App\Traits;
 
-use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 trait HasFilters
 {
@@ -41,7 +41,7 @@ trait HasFilters
     {
         return $query->whereBetween('created_at', [
             Carbon::parse($startDate)->startOfDay(),
-            Carbon::parse($endDate)->endOfDay()
+            Carbon::parse($endDate)->endOfDay(),
         ]);
     }
 
@@ -54,7 +54,7 @@ trait HasFilters
     {
         return $query->whereBetween('created_at', [
             Carbon::now()->startOfWeek(),
-            Carbon::now()->endOfWeek()
+            Carbon::now()->endOfWeek(),
         ]);
     }
 
@@ -62,7 +62,7 @@ trait HasFilters
     {
         return $query->whereBetween('created_at', [
             Carbon::now()->startOfMonth(),
-            Carbon::now()->endOfMonth()
+            Carbon::now()->endOfMonth(),
         ]);
     }
 
@@ -75,7 +75,7 @@ trait HasFilters
     {
         return $query->whereBetween('updated_at', [
             Carbon::now()->startOfWeek(),
-            Carbon::now()->endOfWeek()
+            Carbon::now()->endOfWeek(),
         ]);
     }
 
@@ -107,59 +107,59 @@ trait HasFilters
                         $query->search($value);
                     }
                     break;
-                
+
                 case 'status':
                     $query->byStatus($value);
                     break;
-                
+
                 case 'type':
                     $query->byType($value);
                     break;
-                
+
                 case 'client_id':
                     $query->forClient($value);
                     break;
-                
+
                 case 'location_id':
                     $query->forLocation($value);
                     break;
-                
+
                 case 'user_id':
                     $query->forUser($value);
                     break;
-                
+
                 case 'date_from':
                     $query->where('created_at', '>=', Carbon::parse($value)->startOfDay());
                     break;
-                
+
                 case 'date_to':
                     $query->where('created_at', '<=', Carbon::parse($value)->endOfDay());
                     break;
-                
+
                 case 'created_today':
                     if ($value) {
                         $query->createdToday();
                     }
                     break;
-                
+
                 case 'created_this_week':
                     if ($value) {
                         $query->createdThisWeek();
                     }
                     break;
-                
+
                 case 'created_this_month':
                     if ($value) {
                         $query->createdThisMonth();
                     }
                     break;
-                
+
                 case 'active_only':
                     if ($value) {
                         $query->active();
                     }
                     break;
-                
+
                 case 'archived':
                     if ($value) {
                         $query->archived();
@@ -167,7 +167,7 @@ trait HasFilters
                         $query->notArchived();
                     }
                     break;
-                
+
                 default:
                     // Handle custom filters
                     $this->applyCustomFilter($query, $key, $value);
@@ -187,19 +187,19 @@ trait HasFilters
     public function scopeSortBy(Builder $query, string $field, string $direction = 'asc'): Builder
     {
         $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
-        
+
         // Handle relationship sorting
         if (str_contains($field, '.')) {
             [$relation, $column] = explode('.', $field, 2);
-            
+
             return $query->leftJoin(
                 $this->getRelationTable($relation),
-                $this->getTable() . '.' . $this->getRelationForeignKey($relation),
+                $this->getTable().'.'.$this->getRelationForeignKey($relation),
                 '=',
-                $this->getRelationTable($relation) . '.id'
-            )->orderBy($this->getRelationTable($relation) . '.' . $column, $direction);
+                $this->getRelationTable($relation).'.id'
+            )->orderBy($this->getRelationTable($relation).'.'.$column, $direction);
         }
-        
+
         return $query->orderBy($field, $direction);
     }
 
@@ -210,7 +210,7 @@ trait HasFilters
 
     protected function getRelationForeignKey(string $relation): string
     {
-        return $relation . '_id';
+        return $relation.'_id';
     }
 
     public function scopeLatestFirst(Builder $query): Builder

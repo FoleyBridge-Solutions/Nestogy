@@ -12,11 +12,14 @@ use Illuminate\Support\Facades\Notification;
 class UpdateTaxData extends Command
 {
     private const MAX_RETRIES = 3;
+
     private const DEFAULT_BATCH_SIZE = 100;
 
     // Class constants to reduce duplication
     private const API_BASE_URL = 'https://api.example.com';
+
     private const MSG_UPDATE_START = 'Starting Texas tax data update...';
+
     private const MSG_UPDATE_COMPLETE = 'Texas tax data update completed';
 
     /**
@@ -57,8 +60,9 @@ class UpdateTaxData extends Command
             // Get the appropriate service for the state
             $this->service = \App\Services\TaxEngine\TaxServiceFactory::getService($stateCode, 1); // Default company ID
 
-            if (!$this->service) {
+            if (! $this->service) {
                 $this->error("❌ No tax service configured for state: {$stateCode}");
+
                 return Command::FAILURE;
             }
 
@@ -67,8 +71,9 @@ class UpdateTaxData extends Command
             $this->info("📅 Processing quarter: {$quarter} for {$stateCode}");
 
             // Check if we should update
-            if (!$this->option('force') && $this->isQuarterAlreadyProcessed($quarter)) {
+            if (! $this->option('force') && $this->isQuarterAlreadyProcessed($quarter)) {
                 $this->warn("⚠️ Data for {$quarter} already exists. Use --force to update anyway.");
+
                 return Command::SUCCESS;
             }
 
@@ -78,8 +83,9 @@ class UpdateTaxData extends Command
             $this->info('📊 Step 1: Processing tax jurisdiction rates...');
             $taxRatesResult = $this->processTaxRates($quarter);
 
-            if (!$taxRatesResult['success']) {
-                $this->error("❌ Failed to process tax rates: " . $taxRatesResult['error']);
+            if (! $taxRatesResult['success']) {
+                $this->error('❌ Failed to process tax rates: '.$taxRatesResult['error']);
+
                 return Command::FAILURE;
             }
 
@@ -91,9 +97,9 @@ class UpdateTaxData extends Command
                 $this->info('🏠 Step 2: Processing address data...');
                 $addressResult = $this->processAddressData($quarter);
 
-                if (!$addressResult['success']) {
+                if (! $addressResult['success']) {
                     $errorMessage = $addressResult['error'] ?? 'Unknown error occurred';
-                    $this->warn("⚠️ Address data processing failed: " . $errorMessage);
+                    $this->warn('⚠️ Address data processing failed: '.$errorMessage);
                 } else {
                     $this->info("✅ Processed address data for {$addressResult['jurisdictions']} jurisdictions");
                 }
@@ -118,12 +124,13 @@ class UpdateTaxData extends Command
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error("❌ Update failed: " . $e->getMessage());
+            $this->error('❌ Update failed: '.$e->getMessage());
             Log::error('Tax data update failed', [
                 'error' => $e->getMessage(),
                 'state' => $stateCode,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return Command::FAILURE;
         }
     }
@@ -135,17 +142,17 @@ class UpdateTaxData extends Command
     {
         try {
             // Try to download from API first
-            $this->line("Downloading tax rates from Texas Comptroller API...");
+            $this->line('Downloading tax rates from Texas Comptroller API...');
 
             $download = $this->service->downloadTaxRates();
 
             if ($download['success']) {
-                $this->info("✅ Downloaded from API");
+                $this->info('✅ Downloaded from API');
                 $content = $download['content'];
             } else {
                 // Fallback to local file if API fails
-                $this->warn("⚠️ API download failed, checking for local file...");
-                $localPath = base_path('tax_jurisdiction_rates-' . $quarter . '.csv');
+                $this->warn('⚠️ API download failed, checking for local file...');
+                $localPath = base_path('tax_jurisdiction_rates-'.$quarter.'.csv');
 
                 if (file_exists($localPath)) {
                     $this->info("✅ Using local file: {$localPath}");
@@ -153,16 +160,16 @@ class UpdateTaxData extends Command
                 } else {
                     return [
                         'success' => false,
-                        'error' => 'No API access and no local file found: ' . $localPath
+                        'error' => 'No API access and no local file found: '.$localPath,
                     ];
                 }
             }
 
             // Parse the content
-            $this->line("Parsing tax jurisdiction rates...");
+            $this->line('Parsing tax jurisdiction rates...');
             $parseResult = $this->service->parseTaxRatesFile($content);
 
-            if (!$parseResult['success']) {
+            if (! $parseResult['success']) {
                 return $parseResult;
             }
 
@@ -179,13 +186,13 @@ class UpdateTaxData extends Command
             return [
                 'success' => $updateResult['success'],
                 'count' => $updateResult['inserted'] ?? 0,
-                'error' => $updateResult['error'] ?? null
+                'error' => $updateResult['error'] ?? null,
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -200,8 +207,8 @@ class UpdateTaxData extends Command
             if ($this->option('all-jurisdictions')) {
                 $jurisdictions = $this->getAllJurisdictionsForState($stateCode);
                 $this->info("🏛️ FULL STATEWIDE IMPORT: Processing ALL jurisdictions for {$stateCode}");
-                $this->info("📊 Estimated records: Varies by state");
-                $this->info("⏱️ Estimated time: Varies by state");
+                $this->info('📊 Estimated records: Varies by state');
+                $this->info('⏱️ Estimated time: Varies by state');
                 $this->newLine();
             } elseif ($this->option('jurisdictions')) {
                 $jurisdictions = explode(',', $this->option('jurisdictions'));
@@ -210,7 +217,7 @@ class UpdateTaxData extends Command
             }
 
             $totalJurisdictions = count($jurisdictions);
-            $parallelLimit = (int)$this->option('parallel');
+            $parallelLimit = (int) $this->option('parallel');
 
             $this->line("Processing address data for {$totalJurisdictions} jurisdictions...");
             $this->line("Parallel processing: {$parallelLimit} jurisdictions at a time");
@@ -239,7 +246,7 @@ class UpdateTaxData extends Command
                         $processedJurisdictions++;
                         $totalAddresses += $result['addresses'];
                     } else {
-                        $errors[] = "{$jurisdictionCode}: " . $result['error'];
+                        $errors[] = "{$jurisdictionCode}: ".$result['error'];
                     }
                 }
             }
@@ -250,27 +257,27 @@ class UpdateTaxData extends Command
             $totalTime = microtime(true) - $startTime;
             $averagePerJurisdiction = $totalTime / max($processedJurisdictions, 1);
 
-            $this->info("✅ Address Import Complete!");
+            $this->info('✅ Address Import Complete!');
             $this->table(
                 ['Metric', 'Value'],
                 [
-                    ['Jurisdictions Processed', number_format($processedJurisdictions) . '/' . number_format($totalJurisdictions)],
+                    ['Jurisdictions Processed', number_format($processedJurisdictions).'/'.number_format($totalJurisdictions)],
                     ['Total Addresses', number_format($totalAddresses)],
                     ['Processing Time', gmdate('H:i:s', $totalTime)],
-                    ['Average per Jurisdiction', number_format($averagePerJurisdiction, 2) . 's'],
+                    ['Average per Jurisdiction', number_format($averagePerJurisdiction, 2).'s'],
                     ['Addresses per Second', number_format($totalAddresses / max($totalTime, 1), 0)],
-                    ['Errors', count($errors)]
+                    ['Errors', count($errors)],
                 ]
             );
 
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 $this->newLine();
-                $this->warn("⚠️ Counties with errors:");
+                $this->warn('⚠️ Counties with errors:');
                 foreach (array_slice($errors, 0, 10) as $error) {
                     $this->line("   • {$error}");
                 }
                 if (count($errors) > 10) {
-                    $this->line("   ... and " . (count($errors) - 10) . " more");
+                    $this->line('   ... and '.(count($errors) - 10).' more');
                 }
             }
 
@@ -279,13 +286,13 @@ class UpdateTaxData extends Command
                 'jurisdictions' => $processedJurisdictions,
                 'addresses' => $totalAddresses,
                 'errors' => $errors,
-                'processing_time' => $totalTime
+                'processing_time' => $totalTime,
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -298,7 +305,7 @@ class UpdateTaxData extends Command
         $results = [];
 
         $this->newLine();
-        $this->line("📦 Processing batch {$batchNumber}/{$totalBatches} (" . count($jurisdictions) . " jurisdictions");
+        $this->line("📦 Processing batch {$batchNumber}/{$totalBatches} (".count($jurisdictions).' jurisdictions');
 
         // For now, process sequentially but prepare for parallel execution
         // In the future, this could use PHP parallel processing or queue jobs
@@ -311,19 +318,19 @@ class UpdateTaxData extends Command
                 $processingTime = microtime(true) - $startTime;
 
                 if ($result['success']) {
-                    $this->line("   ✅ {$jurisdictionCode}: " . number_format($result['addresses']) . " addresses (" . number_format($processingTime, 1) . "s)");
+                    $this->line("   ✅ {$jurisdictionCode}: ".number_format($result['addresses']).' addresses ('.number_format($processingTime, 1).'s)');
                 } else {
-                    $this->line("   ❌ {$jurisdictionCode}: " . $result['error']);
+                    $this->line("   ❌ {$jurisdictionCode}: ".$result['error']);
                 }
 
                 $results[$jurisdictionCode] = $result;
 
             } catch (\Exception $e) {
-                $this->line("   ❌ {$jurisdictionCode}: " . $e->getMessage());
+                $this->line("   ❌ {$jurisdictionCode}: ".$e->getMessage());
                 $results[$jurisdictionCode] = [
                     'success' => false,
                     'error' => $e->getMessage(),
-                    'addresses' => 0
+                    'addresses' => 0,
                 ];
             }
 
@@ -400,7 +407,7 @@ class UpdateTaxData extends Command
                 '441', '443', '445', '447', '449', '451', '453', '455', '457', '459', // 441-459
                 '461', '463', '465', '467', '469', '471', '473', '475', '477', '479', // 461-479
                 '481', '483', '485', '487', '489', '491', '493', '495', '497', '499', // 481-499
-                '501', '503', '505', '507'  // 501-507
+                '501', '503', '505', '507',  // 501-507
             ],
             // Add other states as needed
             'CA' => [], // California counties would go here
@@ -416,8 +423,9 @@ class UpdateTaxData extends Command
     protected function getCurrentQuarter(): string
     {
         $year = date('Y');
-        $quarter = 'Q' . ceil(date('n') / self::MAX_RETRIES);
-        return $year . $quarter;
+        $quarter = 'Q'.ceil(date('n') / self::MAX_RETRIES);
+
+        return $year.$quarter;
     }
 
     /**
@@ -441,7 +449,7 @@ class UpdateTaxData extends Command
             'quarter' => $quarter,
             'source' => 'TX_official',
             'version' => '1.0',
-            'cost' => 'FREE'
+            'cost' => 'FREE',
         ];
 
         // Store in cache for quick access
@@ -454,7 +462,7 @@ class UpdateTaxData extends Command
                     ['key' => 'tax_data_metadata'],
                     [
                         'value' => json_encode($metadata),
-                        'updated_at' => now()
+                        'updated_at' => now(),
                     ]
                 );
             }
@@ -462,7 +470,7 @@ class UpdateTaxData extends Command
             // Silently continue if system_settings table doesn't exist
             Log::debug('System settings table not available for metadata storage', [
                 'error' => $e->getMessage(),
-                'quarter' => $quarter
+                'quarter' => $quarter,
             ]);
         }
     }
@@ -484,22 +492,22 @@ class UpdateTaxData extends Command
             $emails = config('texas-tax.automation.notification_emails', []);
             $emails = array_filter($emails); // Remove empty values
 
-            if (!empty($emails)) {
-                $this->line("Sending notifications to " . count($emails) . " recipients...");
+            if (! empty($emails)) {
+                $this->line('Sending notifications to '.count($emails).' recipients...');
 
                 Notification::route('mail', $emails)
                     ->notify(new TexasTaxDataUpdated($updateData));
 
-                $this->info("✅ Notifications sent successfully");
+                $this->info('✅ Notifications sent successfully');
             } else {
-                $this->warn("⚠️ No notification emails configured");
+                $this->warn('⚠️ No notification emails configured');
             }
 
         } catch (\Exception $e) {
-            $this->warn("⚠️ Failed to send notifications: " . $e->getMessage());
+            $this->warn('⚠️ Failed to send notifications: '.$e->getMessage());
             Log::warning('Failed to send tax data notifications', [
                 'error' => $e->getMessage(),
-                'quarter' => $quarter
+                'quarter' => $quarter,
             ]);
         }
     }
@@ -513,7 +521,7 @@ class UpdateTaxData extends Command
             'quarter' => $quarter,
             'tax_rates_imported' => $taxRatesResult['count'] ?? 0,
             'source' => 'TX_official',
-            'command' => 'nestogy:update-texas-tax-data'
+            'command' => 'nestogy:update-texas-tax-data',
         ]);
     }
 }

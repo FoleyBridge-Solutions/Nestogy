@@ -2,25 +2,25 @@
 
 namespace App\Domains\Contract\Models;
 
-use App\Models\User;
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
-use App\Domains\Contract\Traits\HasCompanyConfiguration;
 use App\Domains\Contract\Traits\HasBillingCalculations;
+use App\Domains\Contract\Traits\HasCompanyConfiguration;
+use App\Models\User;
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * ContractTemplate Model
- * 
+ *
  * Template management for contract generation with VoIP-specific features,
  * variable field support, and compliance templates.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $name
@@ -79,7 +79,7 @@ use Carbon\Carbon;
  */
 class ContractTemplate extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasCompanyConfiguration, HasBillingCalculations;
+    use BelongsToCompany, HasBillingCalculations, HasCompanyConfiguration, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -237,9 +237,9 @@ class ContractTemplate extends Model
     public function clauses(): BelongsToMany
     {
         return $this->belongsToMany(ContractClause::class, 'contract_template_clauses', 'template_id', 'clause_id')
-                    ->withPivot(['sort_order', 'is_required', 'conditions', 'variable_overrides', 'metadata'])
-                    ->withTimestamps()
-                    ->orderByPivot('sort_order');
+            ->withPivot(['sort_order', 'is_required', 'conditions', 'variable_overrides', 'metadata'])
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
     }
 
     /**
@@ -273,6 +273,7 @@ class ContractTemplate extends Model
     {
         $statuses = $this->getCompanyConfigRegistry()->getTemplateStatuses();
         $activeStatus = $statuses['active'] ?? 'active';
+
         return $this->status === $activeStatus;
     }
 
@@ -289,7 +290,7 @@ class ContractTemplate extends Model
      */
     public function needsReview(): bool
     {
-        if (!$this->next_review_date) {
+        if (! $this->next_review_date) {
             return false;
         }
 
@@ -303,12 +304,12 @@ class ContractTemplate extends Model
     {
         $billingModels = $this->getCompanyConfigRegistry()->getBillingModels();
         $fixedBillingKey = array_search('Fixed', $billingModels) ?: 'fixed';
-        
-        return !is_null($this->calculation_formulas) ||
-               !is_null($this->auto_assignment_rules) ||
-               !is_null($this->billing_triggers) ||
-               !is_null($this->workflow_automation) ||
-               !empty($this->billing_model) && $this->billing_model !== $fixedBillingKey;
+
+        return ! is_null($this->calculation_formulas) ||
+               ! is_null($this->auto_assignment_rules) ||
+               ! is_null($this->billing_triggers) ||
+               ! is_null($this->workflow_automation) ||
+               ! empty($this->billing_model) && $this->billing_model !== $fixedBillingKey;
     }
 
     // Billing support methods moved to HasBillingCalculations trait
@@ -345,6 +346,7 @@ class ContractTemplate extends Model
     public function getAssetServices(string $assetType): array
     {
         $matrix = $this->asset_service_matrix ?? [];
+
         return $matrix[$assetType] ?? [];
     }
 
@@ -404,12 +406,12 @@ class ContractTemplate extends Model
     {
         $statuses = $this->getCompanyConfigRegistry()->getTemplateStatuses();
         $draftStatus = $statuses['draft'] ?? 'draft';
-        
+
         $newTemplate = $this->replicate();
         $newTemplate->parent_template_id = $this->id;
         $newTemplate->version = $this->getNextVersion();
         $newTemplate->status = $draftStatus;
-        $newTemplate->slug = $this->slug . '-v' . $newTemplate->version;
+        $newTemplate->slug = $this->slug.'-v'.$newTemplate->version;
         $newTemplate->is_default = false;
         $newTemplate->usage_count = 0;
         $newTemplate->last_used_at = null;
@@ -434,7 +436,7 @@ class ContractTemplate extends Model
         $majorVersion = (int) $versionParts[0];
         $minorVersion = isset($versionParts[1]) ? (int) $versionParts[1] : 0;
 
-        return $majorVersion . '.' . ($minorVersion + 1);
+        return $majorVersion.'.'.($minorVersion + 1);
     }
 
     /**
@@ -443,12 +445,12 @@ class ContractTemplate extends Model
     public function extractVariables(): array
     {
         $variables = [];
-        
+
         foreach ($this->clauses as $clause) {
             $clauseVariables = $clause->extractVariables();
             $variables = array_merge($variables, $clauseVariables);
         }
-        
+
         return array_unique($variables);
     }
 
@@ -461,7 +463,7 @@ class ContractTemplate extends Model
     {
         // Extract unique variables from all attached clauses
         $extractedVariables = $this->extractVariables();
-        
+
         // Convert to the expected format for variable_fields
         $variableFields = [];
         foreach ($extractedVariables as $variable) {
@@ -471,18 +473,18 @@ class ContractTemplate extends Model
                 'label' => ucfirst(str_replace('_', ' ', $variable)),
                 'required' => false, // Default to optional
                 'default_value' => '',
-                'description' => "Auto-extracted from clause content",
-                'placeholder' => "Enter {$variable}..."
+                'description' => 'Auto-extracted from clause content',
+                'placeholder' => "Enter {$variable}...",
             ];
         }
-        
+
         // Update the template with the new variable fields
         $this->update(['variable_fields' => $variableFields]);
-        
+
         // Log the synchronization for debugging
-        \Log::info("Synchronized variables for template {$this->name}: " . count($variableFields) . " variables found", [
+        \Log::info("Synchronized variables for template {$this->name}: ".count($variableFields).' variables found', [
             'template_id' => $this->id,
-            'variables' => array_column($variableFields, 'name')
+            'variables' => array_column($variableFields, 'name'),
         ]);
     }
 
@@ -492,23 +494,23 @@ class ContractTemplate extends Model
     public function validateContent(): array
     {
         $errors = [];
-        
+
         // Check if template has any clauses
         if ($this->clauses()->count() === 0) {
             $errors['no_clauses'] = 'Template must have at least one clause';
         }
-        
+
         // Check for required clause categories
         $clauseService = app(\App\Domains\Contract\Services\ContractClauseService::class);
         $missingCategories = $clauseService->getMissingRequiredClauses($this);
-        
-        if (!empty($missingCategories)) {
+
+        if (! empty($missingCategories)) {
             $errors['missing_categories'] = $missingCategories;
         }
-        
+
         // Validate clause dependencies
         $dependencyErrors = $clauseService->validateClauseDependencies($this);
-        if (!empty($dependencyErrors)) {
+        if (! empty($dependencyErrors)) {
             $errors['dependency_errors'] = $dependencyErrors;
         }
 
@@ -522,7 +524,7 @@ class ContractTemplate extends Model
     {
         $contractsCreated = $this->contracts()->count();
         $activeContracts = $this->contracts()->where('status', Contract::STATUS_ACTIVE)->count();
-        
+
         return [
             'usage_count' => $this->usage_count,
             'contracts_created' => $contractsCreated,
@@ -564,9 +566,9 @@ class ContractTemplate extends Model
         }
 
         // Calculate total
-        $calculation['total_amount'] = $calculation['base_amount'] + 
-                                     $calculation['asset_charges'] + 
-                                     $calculation['contact_charges'] + 
+        $calculation['total_amount'] = $calculation['base_amount'] +
+                                     $calculation['asset_charges'] +
+                                     $calculation['contact_charges'] +
                                      $calculation['usage_charges'];
 
         return $calculation;
@@ -634,8 +636,8 @@ class ContractTemplate extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%")
-              ->orWhere('category', 'like', "%{$search}%");
+                ->orWhere('description', 'like', "%{$search}%")
+                ->orWhere('category', 'like', "%{$search}%");
         });
     }
 
@@ -654,10 +656,10 @@ class ContractTemplate extends Model
     {
         return $query->where(function ($q) {
             $q->whereNotNull('calculation_formulas')
-              ->orWhereNotNull('auto_assignment_rules')
-              ->orWhereNotNull('billing_triggers')
-              ->orWhereNotNull('workflow_automation')
-              ->orWhere('billing_model', '!=', 'fixed'); // Use default fallback
+                ->orWhereNotNull('auto_assignment_rules')
+                ->orWhereNotNull('billing_triggers')
+                ->orWhereNotNull('workflow_automation')
+                ->orWhere('billing_model', '!=', 'fixed'); // Use default fallback
         });
     }
 
@@ -666,16 +668,16 @@ class ContractTemplate extends Model
      */
     public static function getValidationRules(?int $companyId = null): array
     {
-        $instance = new static();
+        $instance = new static;
         $templateTypes = array_keys($instance->getAvailableContractTypes($companyId));
         $statuses = array_keys($instance->getConfigValue('template_statuses', [], $companyId));
-        
+
         return [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:contract_templates,slug',
-            'template_type' => 'required|in:' . implode(',', $templateTypes ?: ['default']),
+            'template_type' => 'required|in:'.implode(',', $templateTypes ?: ['default']),
             'template_content' => 'required|string',
-            'status' => 'required|in:' . implode(',', $statuses ?: ['active']),
+            'status' => 'required|in:'.implode(',', $statuses ?: ['active']),
             'version' => 'required|string|max:20',
             'variable_fields' => 'nullable|array',
             'default_values' => 'nullable|array',
@@ -688,7 +690,8 @@ class ContractTemplate extends Model
      */
     public static function getAvailableTypes(?int $companyId = null): array
     {
-        $instance = new static();
+        $instance = new static;
+
         return $instance->getConfigValue('contract_types', [], $companyId);
     }
 
@@ -697,7 +700,8 @@ class ContractTemplate extends Model
      */
     public static function getAvailableCategories(?int $companyId = null): array
     {
-        $instance = new static();
+        $instance = new static;
+
         return $instance->getConfigValue('template_categories', [], $companyId);
     }
 
@@ -706,16 +710,18 @@ class ContractTemplate extends Model
      */
     public static function getAvailableBillingModels(?int $companyId = null): array
     {
-        $instance = new static();
+        $instance = new static;
+
         return $instance->getConfigValue('billing_models', [], $companyId);
     }
-    
+
     /**
      * Get available template statuses for a company.
      */
     public static function getAvailableStatuses(?int $companyId = null): array
     {
-        $instance = new static();
+        $instance = new static;
+
         return $instance->getConfigValue('template_statuses', [], $companyId);
     }
 
@@ -736,22 +742,22 @@ class ContractTemplate extends Model
 
         // Generate slug if not provided
         static::creating(function ($template) {
-            if (!$template->slug) {
+            if (! $template->slug) {
                 $template->slug = \Str::slug($template->name);
             }
 
-            if (!$template->version) {
+            if (! $template->version) {
                 $template->version = '1.0';
             }
 
-            if (!$template->created_by) {
+            if (! $template->created_by) {
                 $template->created_by = auth()->id();
             }
         });
 
         // Update slug when name changes
         static::updating(function ($template) {
-            if ($template->isDirty('name') && !$template->isDirty('slug')) {
+            if ($template->isDirty('name') && ! $template->isDirty('slug')) {
                 $template->slug = \Str::slug($template->name);
             }
 

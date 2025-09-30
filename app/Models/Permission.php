@@ -4,17 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Silber\Bouncer\Database\Ability;
 
 /**
  * Permission Model
- * 
+ *
  * DEPRECATED: This model is maintained for backward compatibility only.
  * The system now uses Bouncer's Ability model for permissions.
- * 
+ *
  * @deprecated Use Silber\Bouncer\Database\Ability instead
+ *
  * @property int $id
  * @property string $name
  * @property string $slug
@@ -48,24 +47,38 @@ class Permission extends Model
      * Permission domains - maintained for backward compatibility
      */
     const DOMAIN_CLIENTS = 'clients';
+
     const DOMAIN_ASSETS = 'assets';
+
     const DOMAIN_FINANCIAL = 'financial';
+
     const DOMAIN_PROJECTS = 'projects';
+
     const DOMAIN_REPORTS = 'reports';
+
     const DOMAIN_TICKETS = 'tickets';
+
     const DOMAIN_USERS = 'users';
+
     const DOMAIN_SYSTEM = 'system';
 
     /**
      * Permission actions - maintained for backward compatibility
      */
     const ACTION_VIEW = 'view';
+
     const ACTION_CREATE = 'create';
+
     const ACTION_EDIT = 'edit';
+
     const ACTION_DELETE = 'delete';
+
     const ACTION_MANAGE = 'manage';
+
     const ACTION_EXPORT = 'export';
+
     const ACTION_APPROVE = 'approve';
+
     const ACTION_IMPORT = 'import';
 
     /**
@@ -121,8 +134,8 @@ class Permission extends Model
         bool $isSystem = false,
         ?int $groupId = null
     ): self {
-        $slug = strtolower($domain . '.' . $action);
-        
+        $slug = strtolower($domain.'.'.$action);
+
         return self::create([
             'name' => $slug,
             'title' => $name,
@@ -143,6 +156,7 @@ class Permission extends Model
     public function getDomainAttribute(): ?string
     {
         $parts = explode('.', $this->name);
+
         return $parts[0] ?? null;
     }
 
@@ -152,6 +166,7 @@ class Permission extends Model
     public function getActionAttribute(): ?string
     {
         $parts = explode('.', $this->name);
+
         return $parts[1] ?? null;
     }
 
@@ -161,6 +176,7 @@ class Permission extends Model
     public function getDomainLabelAttribute(): string
     {
         $domains = self::getAvailableDomains();
+
         return $domains[$this->domain] ?? ucfirst($this->domain ?? '');
     }
 
@@ -170,19 +186,20 @@ class Permission extends Model
     public function getActionLabelAttribute(): string
     {
         $actions = self::getAvailableActions();
+
         return $actions[$this->action] ?? ucfirst($this->action ?? '');
     }
 
     /**
      * Bouncer compatibility methods
      */
-    
+
     /**
      * Scope permissions by domain.
      */
     public function scopeByDomain($query, string $domain)
     {
-        return $query->where('name', 'like', $domain . '.%');
+        return $query->where('name', 'like', $domain.'.%');
     }
 
     /**
@@ -190,7 +207,7 @@ class Permission extends Model
      */
     public function scopeByAction($query, string $action)
     {
-        return $query->where('name', 'like', '%.' . $action);
+        return $query->where('name', 'like', '%.'.$action);
     }
 
     /**
@@ -198,7 +215,8 @@ class Permission extends Model
      */
     public static function existsByDomainAction(string $domain, string $action): bool
     {
-        $slug = strtolower($domain . '.' . $action);
+        $slug = strtolower($domain.'.'.$action);
+
         return self::where('name', $slug)->exists();
     }
 }

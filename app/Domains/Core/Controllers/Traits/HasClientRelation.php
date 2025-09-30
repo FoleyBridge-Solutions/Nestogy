@@ -13,17 +13,17 @@ trait HasClientRelation
         if ($request->filled('client_id')) {
             $query->where('client_id', $request->input('client_id'));
         }
-        
+
         return $query;
     }
-    
+
     protected function validateClientAccess(Client $client): void
     {
         if ($client->company_id !== auth()->user()->company_id) {
             abort(403, 'Access denied: Client does not belong to your company.');
         }
     }
-    
+
     protected function getClientFilterOptions(): array
     {
         return Client::where('company_id', auth()->user()->company_id)
@@ -31,12 +31,12 @@ trait HasClientRelation
             ->pluck('company_name', 'id')
             ->toArray();
     }
-    
+
     protected function getClientFilters(): array
     {
         return array_merge(parent::getAllowedFilters(), ['client_id']);
     }
-    
+
     protected function getAllowedFilters(): array
     {
         return $this->getClientFilters();

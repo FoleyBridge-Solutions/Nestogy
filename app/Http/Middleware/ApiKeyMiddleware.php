@@ -2,16 +2,16 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuditLog;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\AuditLog;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * ApiKeyMiddleware
- * 
+ *
  * Validates API key authentication for API endpoints.
  * Supports multiple API key formats and validation methods.
  */
@@ -27,19 +27,20 @@ class ApiKeyMiddleware
     {
         $apiKey = $this->extractApiKey($request);
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return $this->unauthorizedResponse('API key is required');
         }
 
         $keyData = $this->validateApiKey($apiKey);
 
-        if (!$keyData) {
+        if (! $keyData) {
             $this->logFailedAttempt($request, $apiKey);
+
             return $this->unauthorizedResponse('Invalid API key');
         }
 
         // Check if key is active
-        if (!$keyData['is_active']) {
+        if (! $keyData['is_active']) {
             return $this->unauthorizedResponse('API key is inactive');
         }
 
@@ -49,12 +50,12 @@ class ApiKeyMiddleware
         }
 
         // Check scope if required
-        if ($scope && !$this->hasScope($keyData, $scope)) {
+        if ($scope && ! $this->hasScope($keyData, $scope)) {
             return $this->forbiddenResponse('Insufficient API key permissions');
         }
 
         // Check rate limits for this API key
-        if (!$this->checkKeyRateLimit($keyData)) {
+        if (! $this->checkKeyRateLimit($keyData)) {
             return $this->rateLimitResponse($keyData);
         }
 
@@ -102,32 +103,33 @@ class ApiKeyMiddleware
     protected function validateApiKey(string $apiKey): ?array
     {
         // Check cache first
-        $cacheKey = 'api_key:' . substr($apiKey, 0, 8);
+        $cacheKey = 'api_key:'.substr($apiKey, 0, 8);
         $cached = Cache::get($cacheKey);
-        
+
         if ($cached !== null) {
             // Verify the full key matches
             if ($cached && Hash::check($apiKey, $cached['key_hash'])) {
                 return $cached;
             }
+
             return null;
         }
 
         // Look up in database (you'll need to create an ApiKey model)
         $keyData = $this->findApiKeyInDatabase($apiKey);
-        
+
         if ($keyData) {
             // Cache for performance (without the actual key)
             $cacheData = $keyData;
             $cacheData['key_hash'] = Hash::make($apiKey);
             Cache::put($cacheKey, $cacheData, now()->addMinutes(5));
-            
+
             return $keyData;
         }
 
         // Cache negative result to prevent database hammering
         Cache::put($cacheKey, false, now()->addMinutes(1));
-        
+
         return null;
     }
 
@@ -141,17 +143,17 @@ class ApiKeyMiddleware
         // $apiKeyModel = \App\Models\ApiKey::where('key', hash('sha256', $apiKey))
         //     ->where('is_active', true)
         //     ->first();
-        
+
         // For now, return a mock implementation
         // In production, this should query your api_keys table
         $mockKeys = config('security.api_keys.keys', []);
-        
+
         foreach ($mockKeys as $id => $keyData) {
             if (Hash::check($apiKey, $keyData['hash'])) {
                 return array_merge($keyData, ['id' => $id]);
             }
         }
-        
+
         return null;
     }
 
@@ -160,7 +162,7 @@ class ApiKeyMiddleware
      */
     protected function isKeyExpired(array $keyData): bool
     {
-        if (!isset($keyData['expires_at'])) {
+        if (! isset($keyData['expires_at'])) {
             return false;
         }
 
@@ -172,12 +174,12 @@ class ApiKeyMiddleware
      */
     protected function hasScope(array $keyData, string $requiredScope): bool
     {
-        if (!isset($keyData['scopes'])) {
+        if (! isset($keyData['scopes'])) {
             return false;
         }
 
         $scopes = is_array($keyData['scopes']) ? $keyData['scopes'] : explode(',', $keyData['scopes']);
-        
+
         // Check for exact scope or wildcard
         return in_array($requiredScope, $scopes) || in_array('*', $scopes);
     }
@@ -191,7 +193,7 @@ class ApiKeyMiddleware
         $limit = $keyData['rate_limit'] ?? config('security.api_keys.default_rate_limit', 1000);
         $window = $keyData['rate_limit_window'] ?? 3600; // 1 hour default
 
-        $key = 'api_key_rate_limit:' . $keyId;
+        $key = 'api_key_rate_limit:'.$keyId;
         $current = Cache::get($key, 0);
 
         if ($current >= $limit) {
@@ -199,7 +201,7 @@ class ApiKeyMiddleware
         }
 
         Cache::increment($key);
-        
+
         // Set expiration on first request
         if ($current === 0) {
             Cache::put($key, 1, $window);
@@ -214,8 +216,8 @@ class ApiKeyMiddleware
     protected function logFailedAttempt(Request $request, string $apiKey): void
     {
         // Log only first 8 characters of the key for security
-        $maskedKey = substr($apiKey, 0, 8) . '...';
-        
+        $maskedKey = substr($apiKey, 0, 8).'...';
+
         AuditLog::logSecurity('Invalid API Key Attempt', [
             'masked_key' => $maskedKey,
             'ip' => $request->ip(),
@@ -226,16 +228,16 @@ class ApiKeyMiddleware
 
         // Track failed attempts by IP
         $ip = $request->ip();
-        $failKey = 'api_key_fails:' . $ip;
+        $failKey = 'api_key_fails:'.$ip;
         $fails = Cache::increment($failKey);
-        
+
         if ($fails === 1) {
             Cache::put($failKey, 1, now()->addMinutes(15));
         }
-        
+
         // Block IP after too many failed attempts
         if ($fails >= config('security.api_keys.max_failed_attempts', 10)) {
-            Cache::put('ip_blocked_' . $ip, true, now()->addHours(1));
+            Cache::put('ip_blocked_'.$ip, true, now()->addHours(1));
         }
     }
 
@@ -264,9 +266,9 @@ class ApiKeyMiddleware
     {
         // In production, update the api_keys table
         // \App\Models\ApiKey::where('id', $keyId)->update(['last_used_at' => now()]);
-        
+
         // For now, just cache it
-        Cache::put('api_key_last_used:' . $keyId, now(), now()->addDay());
+        Cache::put('api_key_last_used:'.$keyId, now(), now()->addDay());
     }
 
     /**

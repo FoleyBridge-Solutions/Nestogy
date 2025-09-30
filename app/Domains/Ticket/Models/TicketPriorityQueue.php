@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Ticket Priority Queue Model
- * 
+ *
  * Manages ticket prioritization with automated escalation rules,
  * SLA tracking, and team-based assignment queues.
  */
 class TicketPriorityQueue extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'ticket_id',
@@ -69,7 +69,7 @@ class TicketPriorityQueue extends Model
      */
     public function getTimeRemainingMinutes(): ?int
     {
-        if (!$this->sla_deadline) {
+        if (! $this->sla_deadline) {
             return null;
         }
 
@@ -82,6 +82,7 @@ class TicketPriorityQueue extends Model
     public function getTimeRemainingHours(): ?float
     {
         $minutes = $this->getTimeRemainingMinutes();
+
         return $minutes ? round($minutes / 60, 1) : null;
     }
 
@@ -90,12 +91,12 @@ class TicketPriorityQueue extends Model
      */
     public function getSlaStatus(): string
     {
-        if (!$this->sla_deadline) {
+        if (! $this->sla_deadline) {
             return 'No SLA';
         }
 
         $hoursRemaining = $this->getTimeRemainingHours();
-        
+
         if ($hoursRemaining < 0) {
             return 'Overdue';
         } elseif ($hoursRemaining < 2) {
@@ -126,7 +127,7 @@ class TicketPriorityQueue extends Model
      */
     public function shouldEscalate(): bool
     {
-        if (!$this->escalation_rules || !$this->is_active) {
+        if (! $this->escalation_rules || ! $this->is_active) {
             return false;
         }
 
@@ -149,21 +150,30 @@ class TicketPriorityQueue extends Model
                 return $this->isOverdue();
 
             case 'time_since_update':
-                if (!isset($rule['hours'])) return false;
+                if (! isset($rule['hours'])) {
+                    return false;
+                }
                 $lastUpdate = $this->ticket->updated_at;
+
                 return now()->diffInHours($lastUpdate) >= $rule['hours'];
 
             case 'priority_age':
-                if (!isset($rule['hours']) || !isset($rule['priority'])) return false;
+                if (! isset($rule['hours']) || ! isset($rule['priority'])) {
+                    return false;
+                }
                 $isHighPriority = in_array($this->ticket->priority, (array) $rule['priority']);
                 $ageInHours = $this->ticket->getAgeInHours();
+
                 return $isHighPriority && $ageInHours >= $rule['hours'];
 
             case 'no_assignment':
-                if (!isset($rule['hours'])) return false;
-                $hasAssignment = !is_null($this->ticket->assigned_to);
+                if (! isset($rule['hours'])) {
+                    return false;
+                }
+                $hasAssignment = ! is_null($this->ticket->assigned_to);
                 $ageInHours = $this->ticket->getAgeInHours();
-                return !$hasAssignment && $ageInHours >= $rule['hours'];
+
+                return ! $hasAssignment && $ageInHours >= $rule['hours'];
 
             default:
                 return false;
@@ -173,7 +183,7 @@ class TicketPriorityQueue extends Model
     /**
      * Escalate this ticket
      */
-    public function escalate(string $reason = null): void
+    public function escalate(?string $reason = null): void
     {
         $this->update([
             'escalation_level' => $this->escalation_level + 1,
@@ -203,7 +213,7 @@ class TicketPriorityQueue extends Model
         $maxPosition = self::where('company_id', $this->company_id)
             ->where('is_active', true)
             ->max('queue_position') ?? 1;
-        
+
         $newPosition = min($maxPosition, $this->queue_position + $positions);
         $this->moveToPosition($newPosition);
     }
@@ -214,10 +224,10 @@ class TicketPriorityQueue extends Model
     public function moveToPosition(int $position): void
     {
         $oldPosition = $this->queue_position;
-        
+
         // Temporarily set to a high number to avoid conflicts
         $this->update(['queue_position' => 999999]);
-        
+
         if ($position < $oldPosition) {
             // Moving up - shift others down
             self::where('company_id', $this->company_id)
@@ -231,7 +241,7 @@ class TicketPriorityQueue extends Model
                 ->whereBetween('queue_position', [$oldPosition + 1, $position])
                 ->decrement('queue_position');
         }
-        
+
         // Set final position
         $this->update(['queue_position' => $position]);
     }
@@ -258,7 +268,7 @@ class TicketPriorityQueue extends Model
     public function removeFromQueue(): void
     {
         $this->update(['is_active' => false]);
-        
+
         // Shift remaining items up
         self::where('company_id', $this->company_id)
             ->where('is_active', true)
@@ -278,11 +288,11 @@ class TicketPriorityQueue extends Model
 
         return [
             'total_tickets' => $queue->count(),
-            'overdue_tickets' => $queue->filter(fn($item) => $item->isOverdue())->count(),
-            'high_priority_tickets' => $queue->filter(fn($item) => $item->ticket->isHighPriority())->count(),
-            'escalated_tickets' => $queue->filter(fn($item) => $item->escalation_level > 0)->count(),
+            'overdue_tickets' => $queue->filter(fn ($item) => $item->isOverdue())->count(),
+            'high_priority_tickets' => $queue->filter(fn ($item) => $item->ticket->isHighPriority())->count(),
+            'escalated_tickets' => $queue->filter(fn ($item) => $item->escalation_level > 0)->count(),
             'average_priority_score' => $queue->avg('priority_score'),
-            'oldest_ticket_age' => $queue->min(fn($item) => $item->ticket->getAgeInHours()),
+            'oldest_ticket_age' => $queue->min(fn ($item) => $item->ticket->getAgeInHours()),
         ];
     }
 
@@ -373,7 +383,7 @@ class TicketPriorityQueue extends Model
 
         // Auto-assign queue position for new entries
         static::creating(function ($queueItem) {
-            if (!$queueItem->queue_position) {
+            if (! $queueItem->queue_position) {
                 $queueItem->queue_position = self::where('company_id', $queueItem->company_id)
                     ->where('is_active', true)
                     ->max('queue_position') + 1;

@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * ContractDetailConfiguration Model
- * 
+ *
  * Configures how contract detail views are displayed including
  * sections, tabs, sidebar widgets, and related data.
  */
 class ContractDetailConfiguration extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'contract_detail_configurations';
 

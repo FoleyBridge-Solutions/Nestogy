@@ -3,18 +3,18 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * Auto Payment Model
- * 
+ *
  * Manages automated payment configurations for clients including
  * recurring payments, auto-pay for invoices, and scheduled payments.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -94,7 +94,7 @@ use Carbon\Carbon;
  */
 class AutoPayment extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -253,31 +253,42 @@ class AutoPayment extends Model
      * Auto payment type constants
      */
     const TYPE_INVOICE_AUTO_PAY = 'invoice_auto_pay';
+
     const TYPE_RECURRING_PAYMENT = 'recurring_payment';
+
     const TYPE_SCHEDULED_PAYMENT = 'scheduled_payment';
 
     /**
      * Frequency constants
      */
     const FREQUENCY_MONTHLY = 'monthly';
+
     const FREQUENCY_QUARTERLY = 'quarterly';
+
     const FREQUENCY_ANNUALLY = 'annually';
+
     const FREQUENCY_SEMI_ANNUALLY = 'semi_annually';
 
     /**
      * Trigger type constants
      */
     const TRIGGER_INVOICE_DUE = 'invoice_due';
+
     const TRIGGER_INVOICE_SENT = 'invoice_sent';
+
     const TRIGGER_FIXED_SCHEDULE = 'fixed_schedule';
 
     /**
      * Status constants
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_PAUSED = 'paused';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_EXPIRED = 'expired';
 
     /**
@@ -341,10 +352,10 @@ class AutoPayment extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === self::STATUS_ACTIVE && 
-               $this->is_active === true && 
-               !$this->isPaused() && 
-               !$this->isExpired();
+        return $this->status === self::STATUS_ACTIVE &&
+               $this->is_active === true &&
+               ! $this->isPaused() &&
+               ! $this->isExpired();
     }
 
     /**
@@ -392,11 +403,11 @@ class AutoPayment extends Model
      */
     public function isDueForProcessing(): bool
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return false;
         }
 
-        if (!$this->next_processing_date) {
+        if (! $this->next_processing_date) {
             return false;
         }
 
@@ -408,9 +419,9 @@ class AutoPayment extends Model
      */
     public function hasValidPaymentMethod(): bool
     {
-        return $this->paymentMethod && 
-               $this->paymentMethod->isActive() && 
-               !$this->paymentMethod->isExpired();
+        return $this->paymentMethod &&
+               $this->paymentMethod->isActive() &&
+               ! $this->paymentMethod->isExpired();
     }
 
     /**
@@ -426,7 +437,7 @@ class AutoPayment extends Model
             case self::TYPE_INVOICE_AUTO_PAY:
                 return 'Auto-Pay for Invoices';
             case self::TYPE_RECURRING_PAYMENT:
-                return 'Recurring Payment - ' . ucfirst($this->frequency);
+                return 'Recurring Payment - '.ucfirst($this->frequency);
             case self::TYPE_SCHEDULED_PAYMENT:
                 return 'Scheduled Payment';
             default:
@@ -462,7 +473,7 @@ class AutoPayment extends Model
         }
 
         // Check payment method health
-        if (!$this->hasValidPaymentMethod() || !$this->paymentMethod->hasGoodHealth()) {
+        if (! $this->hasValidPaymentMethod() || ! $this->paymentMethod->hasGoodHealth()) {
             return false;
         }
 
@@ -497,7 +508,7 @@ class AutoPayment extends Model
     /**
      * Pause the auto payment.
      */
-    public function pause(Carbon $until = null): bool
+    public function pause(?Carbon $until = null): bool
     {
         return $this->update([
             'is_paused' => true,
@@ -521,7 +532,7 @@ class AutoPayment extends Model
     /**
      * Cancel the auto payment.
      */
-    public function cancel(string $reason = null, int $cancelledBy = null): bool
+    public function cancel(?string $reason = null, ?int $cancelledBy = null): bool
     {
         return $this->update([
             'status' => self::STATUS_CANCELLED,
@@ -563,7 +574,7 @@ class AutoPayment extends Model
     /**
      * Record failed payment.
      */
-    public function recordFailedPayment(string $reason = null): bool
+    public function recordFailedPayment(?string $reason = null): bool
     {
         $failureReasons = $this->failure_reasons ?? [];
         if ($reason) {
@@ -615,13 +626,14 @@ class AutoPayment extends Model
      */
     public function calculateRetryProcessingDate(): ?Carbon
     {
-        if (!$this->retry_on_failure) {
+        if (! $this->retry_on_failure) {
             return null;
         }
 
         if ($this->consecutive_failures >= $this->max_retry_attempts) {
             // Max retries reached, suspend auto payment
             $this->suspend();
+
             return null;
         }
 
@@ -690,7 +702,7 @@ class AutoPayment extends Model
         }
 
         // If inclusions are specified, type must be in the list
-        if ($this->invoice_types && !in_array($invoiceType, $this->invoice_types)) {
+        if ($this->invoice_types && ! in_array($invoiceType, $this->invoice_types)) {
             return false;
         }
 
@@ -702,7 +714,7 @@ class AutoPayment extends Model
      */
     public function getPaymentAmount(float $invoiceAmount): float
     {
-        if (!$this->partial_payment_allowed) {
+        if (! $this->partial_payment_allowed) {
             return $invoiceAmount;
         }
 
@@ -723,11 +735,11 @@ class AutoPayment extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-                    ->where('status', self::STATUS_ACTIVE)
-                    ->where(function ($q) {
-                        $q->whereNull('end_date')
-                          ->orWhere('end_date', '>', Carbon::now());
-                    });
+            ->where('status', self::STATUS_ACTIVE)
+            ->where(function ($q) {
+                $q->whereNull('end_date')
+                    ->orWhere('end_date', '>', Carbon::now());
+            });
     }
 
     /**
@@ -736,12 +748,12 @@ class AutoPayment extends Model
     public function scopeDueForProcessing($query)
     {
         return $query->active()
-                    ->where('is_paused', false)
-                    ->where(function ($q) {
-                        $q->whereNull('paused_until')
-                          ->orWhere('paused_until', '<=', Carbon::now());
-                    })
-                    ->where('next_processing_date', '<=', Carbon::now());
+            ->where('is_paused', false)
+            ->where(function ($q) {
+                $q->whereNull('paused_until')
+                    ->orWhere('paused_until', '<=', Carbon::now());
+            })
+            ->where('next_processing_date', '<=', Carbon::now());
     }
 
     /**
@@ -768,11 +780,11 @@ class AutoPayment extends Model
         parent::boot();
 
         static::creating(function ($autoPayment) {
-            if (!$autoPayment->activated_at && $autoPayment->is_active) {
+            if (! $autoPayment->activated_at && $autoPayment->is_active) {
                 $autoPayment->activated_at = Carbon::now();
             }
 
-            if (!$autoPayment->next_processing_date && $autoPayment->type !== self::TYPE_INVOICE_AUTO_PAY) {
+            if (! $autoPayment->next_processing_date && $autoPayment->type !== self::TYPE_INVOICE_AUTO_PAY) {
                 $autoPayment->next_processing_date = $autoPayment->calculateNextProcessingDate();
             }
         });

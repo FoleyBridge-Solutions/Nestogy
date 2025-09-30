@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientRack extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -111,6 +111,7 @@ class ClientRack extends Model
     public function hasAvailablePower($requiredWatts = 0)
     {
         $availablePower = $this->power_capacity_watts - $this->power_used_watts;
+
         return $availablePower >= $requiredWatts;
     }
 
@@ -127,9 +128,10 @@ class ClientRack extends Model
      */
     public function getPowerUtilizationAttribute()
     {
-        if (!$this->power_capacity_watts) {
+        if (! $this->power_capacity_watts) {
             return 0;
         }
+
         return round(($this->power_used_watts / $this->power_capacity_watts) * 100, 1);
     }
 
@@ -154,7 +156,7 @@ class ClientRack extends Model
     public function getEnvironmentalStatusAttribute()
     {
         $status = 'normal';
-        
+
         // Check temperature (typical server room: 18-24°C)
         if ($this->temperature_celsius) {
             if ($this->temperature_celsius < 18 || $this->temperature_celsius > 24) {
@@ -183,11 +185,11 @@ class ClientRack extends Model
      */
     public function isWarrantyExpiring($days = 30)
     {
-        if (!$this->warranty_expiry) {
+        if (! $this->warranty_expiry) {
             return false;
         }
-        
-        return $this->warranty_expiry->isPast() || 
+
+        return $this->warranty_expiry->isPast() ||
                $this->warranty_expiry->diffInDays(now()) <= $days;
     }
 

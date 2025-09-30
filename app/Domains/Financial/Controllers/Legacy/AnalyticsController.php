@@ -2,26 +2,27 @@
 
 namespace App\Domains\Financial\Controllers\Legacy;
 
-use App\Http\Controllers\Controller;
-use App\Domains\Financial\Services\FinancialAnalyticsService;
 use App\Domains\Core\Services\DashboardDataService;
+use App\Domains\Financial\Services\FinancialAnalyticsService;
+use App\Http\Controllers\Controller;
 use App\Models\DashboardWidget;
 use App\Models\FinancialReport;
-use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
 
 /**
  * AnalyticsController
- * 
+ *
  * Handles all financial analytics and dashboard endpoints with comprehensive
  * data aggregation, real-time KPIs, and export capabilities.
  */
 class AnalyticsController extends Controller
 {
     protected FinancialAnalyticsService $analyticsService;
+
     protected DashboardDataService $dashboardService;
 
     public function __construct()
@@ -30,6 +31,7 @@ class AnalyticsController extends Controller
         $this->middleware(function ($request, $next) {
             $this->analyticsService = new FinancialAnalyticsService(Auth::user()->company_id);
             $this->dashboardService = new DashboardDataService(Auth::user()->company_id);
+
             return $next($request);
         });
     }
@@ -187,14 +189,14 @@ class AnalyticsController extends Controller
             ->where('id', $widgetId)
             ->first();
 
-        if (!$widget) {
+        if (! $widget) {
             return response()->json([
                 'success' => false,
                 'message' => 'Widget not found',
             ], 404);
         }
 
-        if (!$widget->canBeViewedBy(Auth::user())) {
+        if (! $widget->canBeViewedBy(Auth::user())) {
             return response()->json([
                 'success' => false,
                 'message' => 'Access denied',
@@ -473,7 +475,7 @@ class AnalyticsController extends Controller
             ->where('id', $widgetId)
             ->first();
 
-        if (!$widget) {
+        if (! $widget) {
             return response()->json([
                 'success' => false,
                 'message' => 'Widget not found',
@@ -509,7 +511,7 @@ class AnalyticsController extends Controller
             ->where('id', $widgetId)
             ->first();
 
-        if (!$widget) {
+        if (! $widget) {
             return response()->json([
                 'success' => false,
                 'message' => 'Widget not found',
@@ -540,7 +542,7 @@ class AnalyticsController extends Controller
             ->where('id', $request->report_id)
             ->first();
 
-        if (!$report) {
+        if (! $report) {
             return response()->json([
                 'success' => false,
                 'message' => 'Report not found',

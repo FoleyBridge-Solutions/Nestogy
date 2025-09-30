@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
+use App\Domains\Ticket\Models\Ticket;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Domains\Ticket\Models\Ticket;
-use App\Traits\BelongsToCompany;
 
 /**
  * TicketReply Model
- * 
+ *
  * Represents replies/updates to tickets with time tracking and visibility control.
  * Supports public, private, and internal reply types.
- * 
+ *
  * @property int $id
  * @property string $reply
  * @property string $type
@@ -27,7 +27,7 @@ use App\Traits\BelongsToCompany;
  */
 class TicketReply extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -74,7 +74,9 @@ class TicketReply extends Model
      * Reply type enumeration
      */
     const TYPE_PUBLIC = 'public';
+
     const TYPE_PRIVATE = 'private';
+
     const TYPE_INTERNAL = 'internal';
 
     /**
@@ -90,9 +92,13 @@ class TicketReply extends Model
      * Sentiment constants
      */
     const SENTIMENT_POSITIVE = 'POSITIVE';
+
     const SENTIMENT_WEAK_POSITIVE = 'WEAK_POSITIVE';
+
     const SENTIMENT_NEUTRAL = 'NEUTRAL';
+
     const SENTIMENT_WEAK_NEGATIVE = 'WEAK_NEGATIVE';
+
     const SENTIMENT_NEGATIVE = 'NEGATIVE';
 
     /**
@@ -156,7 +162,7 @@ class TicketReply extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -164,7 +170,7 @@ class TicketReply extends Model
      */
     public function hasTimeTracked(): bool
     {
-        return !empty($this->time_worked);
+        return ! empty($this->time_worked);
     }
 
     /**
@@ -172,7 +178,7 @@ class TicketReply extends Model
      */
     public function getTimeWorkedInMinutes(): int
     {
-        if (!$this->time_worked) {
+        if (! $this->time_worked) {
             return 0;
         }
 
@@ -190,7 +196,7 @@ class TicketReply extends Model
      */
     public function getFormattedTimeWorked(): string
     {
-        if (!$this->time_worked) {
+        if (! $this->time_worked) {
             return '00:00';
         }
 
@@ -198,7 +204,7 @@ class TicketReply extends Model
         $hours = str_pad($parts[0] ?? '0', 2, '0', STR_PAD_LEFT);
         $minutes = str_pad($parts[1] ?? '0', 2, '0', STR_PAD_LEFT);
 
-        return $hours . ':' . $minutes;
+        return $hours.':'.$minutes;
     }
 
     /**
@@ -208,7 +214,7 @@ class TicketReply extends Model
     {
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
-        
+
         $this->time_worked = sprintf('%02d:%02d:00', $hours, $mins);
     }
 
@@ -217,8 +223,8 @@ class TicketReply extends Model
      */
     public function getExcerpt(int $length = 100): string
     {
-        return strlen($this->reply) > $length 
-            ? substr($this->reply, 0, $length) . '...'
+        return strlen($this->reply) > $length
+            ? substr($this->reply, 0, $length).'...'
             : $this->reply;
     }
 
@@ -243,7 +249,7 @@ class TicketReply extends Model
      */
     public function getTypeColor(): string
     {
-        return match($this->type) {
+        return match ($this->type) {
             self::TYPE_PUBLIC => '#28a745',
             self::TYPE_PRIVATE => '#fd7e14',
             self::TYPE_INTERNAL => '#6c757d',
@@ -256,7 +262,7 @@ class TicketReply extends Model
      */
     public function getTypeIcon(): string
     {
-        return match($this->type) {
+        return match ($this->type) {
             self::TYPE_PUBLIC => 'fas fa-eye',
             self::TYPE_PRIVATE => 'fas fa-eye-slash',
             self::TYPE_INTERNAL => 'fas fa-users',
@@ -303,7 +309,7 @@ class TicketReply extends Model
      */
     public function hasSentimentAnalysis(): bool
     {
-        return !is_null($this->sentiment_score) && !is_null($this->sentiment_analyzed_at);
+        return ! is_null($this->sentiment_score) && ! is_null($this->sentiment_analyzed_at);
     }
 
     /**
@@ -311,11 +317,11 @@ class TicketReply extends Model
      */
     public function getSentimentInterpretation(): array
     {
-        if (!$this->hasSentimentAnalysis()) {
+        if (! $this->hasSentimentAnalysis()) {
             return [
                 'interpretation' => 'Not Analyzed',
                 'color' => '#94a3b8', // slate-400
-                'confidence_level' => 'N/A'
+                'confidence_level' => 'N/A',
             ];
         }
 
@@ -331,7 +337,7 @@ class TicketReply extends Model
     }
 
     /**
-     * Check if reply sentiment is positive  
+     * Check if reply sentiment is positive
      */
     public function hasPositiveSentiment(): bool
     {
@@ -351,13 +357,13 @@ class TicketReply extends Model
      */
     public function getSentimentColor(): string
     {
-        if (!$this->hasSentimentAnalysis()) {
+        if (! $this->hasSentimentAnalysis()) {
             return '#94a3b8'; // slate-400
         }
 
-        return match($this->sentiment_label) {
+        return match ($this->sentiment_label) {
             self::SENTIMENT_POSITIVE => '#10b981', // emerald-500
-            self::SENTIMENT_WEAK_POSITIVE => '#84cc16', // lime-500  
+            self::SENTIMENT_WEAK_POSITIVE => '#84cc16', // lime-500
             self::SENTIMENT_NEUTRAL => '#64748b', // slate-500
             self::SENTIMENT_WEAK_NEGATIVE => '#f97316', // orange-500
             self::SENTIMENT_NEGATIVE => '#ef4444', // red-500
@@ -370,11 +376,11 @@ class TicketReply extends Model
      */
     public function getSentimentIcon(): string
     {
-        if (!$this->hasSentimentAnalysis()) {
+        if (! $this->hasSentimentAnalysis()) {
             return 'fas fa-question-circle';
         }
 
-        return match($this->sentiment_label) {
+        return match ($this->sentiment_label) {
             self::SENTIMENT_POSITIVE => 'fas fa-smile',
             self::SENTIMENT_WEAK_POSITIVE => 'fas fa-smile-wink',
             self::SENTIMENT_NEUTRAL => 'fas fa-meh',
@@ -445,7 +451,7 @@ class TicketReply extends Model
      */
     public function scopeSearch($query, string $search)
     {
-        return $query->where('reply', 'like', '%' . $search . '%');
+        return $query->where('reply', 'like', '%'.$search.'%');
     }
 
     // Sentiment-related scopes
@@ -482,7 +488,7 @@ class TicketReply extends Model
     public function scopeSentimentNeedsAttention($query)
     {
         return $query->whereIn('sentiment_label', [self::SENTIMENT_NEGATIVE, self::SENTIMENT_WEAK_NEGATIVE])
-                    ->where('sentiment_confidence', '>', 0.6);
+            ->where('sentiment_confidence', '>', 0.6);
     }
 
     /**

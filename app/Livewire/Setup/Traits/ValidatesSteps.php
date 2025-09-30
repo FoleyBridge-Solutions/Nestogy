@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Setup\Traits;
 
-use App\Models\Company;
 use App\Models\Setting;
 use Illuminate\Validation\Rules\Password;
 
@@ -10,7 +9,7 @@ trait ValidatesSteps
 {
     protected function validateCurrentStep(): bool
     {
-        return match($this->currentStep) {
+        return match ($this->currentStep) {
             1 => $this->validateCompanyInfo(),
             2 => $this->validateEmailConfig(),
             3 => $this->validateSystemPrefs(),
@@ -19,7 +18,7 @@ trait ValidatesSteps
             default => true,
         };
     }
-    
+
     protected function validateCompanyInfo(): bool
     {
         try {
@@ -41,20 +40,20 @@ trait ValidatesSteps
                 'currency.required' => 'Please select your default currency.',
                 'company_website.url' => 'Please enter a valid website URL.',
             ]);
-            
+
             return true;
         } catch (\Illuminate\Validation\ValidationException $e) {
             return false;
         }
     }
-    
+
     protected function validateEmailConfig(): bool
     {
         // Email configuration is optional, but if provided, validate it
         if (empty($this->smtp_host)) {
             return true; // Skip validation if no SMTP host provided
         }
-        
+
         try {
             $this->validate([
                 'smtp_host' => 'required|string|max:255',
@@ -72,19 +71,20 @@ trait ValidatesSteps
                 'smtp_port.max' => 'SMTP port cannot exceed 65535.',
                 'mail_from_email.email' => 'Please enter a valid from email address.',
             ]);
+
             return true;
         } catch (\Illuminate\Validation\ValidationException $e) {
             return false;
         }
     }
-    
+
     protected function validateSystemPrefs(): bool
     {
         try {
             $this->validate([
                 'timezone' => 'required|string|max:255',
                 'date_format' => 'nullable|string|max:20',
-                'theme' => 'nullable|string|in:' . implode(',', array_keys(Setting::getAvailableThemes())),
+                'theme' => 'nullable|string|in:'.implode(',', array_keys(Setting::getAvailableThemes())),
                 'company_language' => 'nullable|string|size:2',
                 'default_net_terms' => 'nullable|integer|min:0|max:365',
                 'default_hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
@@ -93,12 +93,13 @@ trait ValidatesSteps
                 'default_net_terms.max' => 'Payment terms cannot exceed 365 days.',
                 'default_hourly_rate.numeric' => 'Hourly rate must be a valid number.',
             ]);
+
             return true;
         } catch (\Illuminate\Validation\ValidationException $e) {
             return false;
         }
     }
-    
+
     protected function validateMspSettings(): bool
     {
         try {
@@ -118,12 +119,13 @@ trait ValidatesSteps
                 'invoice_starting_number' => 'nullable|integer|min:1',
                 'invoice_late_fee_percent' => 'nullable|numeric|min:0|max:100',
             ]);
+
             return true;
         } catch (\Illuminate\Validation\ValidationException $e) {
             return false;
         }
     }
-    
+
     protected function validateAdminUser(): bool
     {
         try {
@@ -139,24 +141,25 @@ trait ValidatesSteps
                 'admin_password.required' => 'Administrator password is required.',
                 'admin_password.confirmed' => 'Password confirmation does not match.',
             ]);
+
             return true;
         } catch (\Illuminate\Validation\ValidationException $e) {
             return false;
         }
     }
-    
+
     protected function canNavigateToStep($step): bool
     {
         // Can always go backwards
         if ($step < $this->currentStep) {
             return true;
         }
-        
+
         // Can only go forward if current step is valid
         if ($step == $this->currentStep + 1) {
             return $this->validateCurrentStep();
         }
-        
+
         // Can't skip steps ahead
         return false;
     }

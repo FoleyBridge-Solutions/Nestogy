@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Domains\Financial\Services\RecurringBillingService;
 use App\Domains\Core\Services\NotificationService;
-use Illuminate\Support\Facades\Log;
+use App\Domains\Financial\Services\RecurringBillingService;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class GenerateRecurringInvoices extends Command
 {
@@ -29,6 +29,7 @@ class GenerateRecurringInvoices extends Command
     protected $description = 'Generate recurring invoices from active contracts';
 
     protected RecurringBillingService $billingService;
+
     protected NotificationService $notificationService;
 
     /**
@@ -49,21 +50,22 @@ class GenerateRecurringInvoices extends Command
     public function handle()
     {
         $this->info('Starting recurring invoice generation...');
-        
+
         $options = $this->parseOptions();
-        
+
         if ($options['dryRun']) {
             $this->warn('Running in DRY RUN mode - no invoices will be created');
         }
-        
+
         try {
-            $result = $options['contractId'] 
+            $result = $options['contractId']
                 ? $this->processSingleContract($options)
                 : $this->processBulkInvoices($options);
-            
+
             $this->logGeneration($options, $result);
+
             return Command::SUCCESS;
-            
+
         } catch (\Exception $e) {
             return $this->handleError($e);
         }
@@ -78,7 +80,7 @@ class GenerateRecurringInvoices extends Command
             'companyId' => $this->option('company'),
             'contractId' => $this->option('contract'),
             'dryRun' => $this->option('dry-run'),
-            'date' => $this->option('date') ? Carbon::parse($this->option('date')) : now()
+            'date' => $this->option('date') ? Carbon::parse($this->option('date')) : now(),
         ];
     }
 
@@ -88,16 +90,16 @@ class GenerateRecurringInvoices extends Command
     private function processSingleContract(array $options): ?array
     {
         $contract = \App\Domains\Contract\Models\Contract::find($options['contractId']);
-        
-        if (!$contract) {
+
+        if (! $contract) {
             throw new \InvalidArgumentException('Contract not found');
         }
-        
+
         $this->info("Generating invoice for contract: {$contract->contract_number}");
         $invoice = $this->billingService->generateInvoiceFromContract($contract, $options['dryRun']);
-        
+
         $this->displaySingleContractResult($invoice, $options['dryRun']);
-        
+
         return ['invoice' => $invoice];
     }
 
@@ -108,9 +110,10 @@ class GenerateRecurringInvoices extends Command
     {
         if ($dryRun) {
             $this->info('Invoice preview generated (not saved)');
+
             return;
         }
-        
+
         if ($invoice) {
             $this->info("Invoice {$invoice->invoice_number} generated successfully");
             $this->displayInvoiceSummary([$invoice]);
@@ -123,16 +126,16 @@ class GenerateRecurringInvoices extends Command
     private function processBulkInvoices(array $options): array
     {
         $this->info('Generating bulk invoices for all due contracts...');
-        
+
         $result = $this->billingService->generateBulkInvoices(
-            $options['dryRun'], 
+            $options['dryRun'],
             $options['companyId']
         );
-        
+
         $this->displayBulkResults($result);
         $this->handleBulkErrors($result);
         $this->processGeneratedInvoices($result, $options['dryRun']);
-        
+
         return $result;
     }
 
@@ -141,7 +144,7 @@ class GenerateRecurringInvoices extends Command
      */
     private function displayBulkResults(array $result): void
     {
-        $this->info("Processing complete!");
+        $this->info('Processing complete!');
         $this->info("Contracts processed: {$result['processed']}");
         $this->info("Invoices generated: {$result['generated']}");
     }
@@ -154,13 +157,13 @@ class GenerateRecurringInvoices extends Command
         if ($result['failed'] <= 0) {
             return;
         }
-        
+
         $this->warn("Failed generations: {$result['failed']}");
-        
+
         if (empty($result['errors'])) {
             return;
         }
-        
+
         $this->error('Errors encountered:');
         foreach ($result['errors'] as $error) {
             $this->error(" - {$error}");
@@ -175,7 +178,7 @@ class GenerateRecurringInvoices extends Command
         if ($dryRun || empty($result['invoices'])) {
             return;
         }
-        
+
         $this->displayInvoiceSummary($result['invoices']);
         $this->sendInvoiceNotifications($result['invoices']);
     }
@@ -200,7 +203,7 @@ class GenerateRecurringInvoices extends Command
             'contract_id' => $options['contractId'],
             'dry_run' => $options['dryRun'],
             'date' => $options['date']->toDateString(),
-            'result' => $result
+            'result' => $result,
         ]);
     }
 
@@ -209,13 +212,13 @@ class GenerateRecurringInvoices extends Command
      */
     private function handleError(\Exception $e): int
     {
-        $this->error('Failed to generate recurring invoices: ' . $e->getMessage());
-        
+        $this->error('Failed to generate recurring invoices: '.$e->getMessage());
+
         Log::error('Recurring invoice generation failed', [
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
-        
+
         return Command::FAILURE;
     }
 
@@ -237,8 +240,8 @@ class GenerateRecurringInvoices extends Command
                 $invoice->client->name ?? 'N/A',
                 $invoice->invoice_date->format('Y-m-d'),
                 $invoice->due_date->format('Y-m-d'),
-                '$' . number_format($invoice->total, 2),
-                $invoice->status
+                '$'.number_format($invoice->total, 2),
+                $invoice->status,
             ];
         })->toArray();
 
@@ -248,6 +251,6 @@ class GenerateRecurringInvoices extends Command
         );
 
         $totalAmount = collect($invoices)->sum('total');
-        $this->info('Total Amount: $' . number_format($totalAmount, 2));
+        $this->info('Total Amount: $'.number_format($totalAmount, 2));
     }
 }

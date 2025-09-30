@@ -21,7 +21,7 @@ trait HasPhysicalMail
     public function sendByMail(array $options = []): PhysicalMailOrder
     {
         $service = app(PhysicalMailService::class);
-        
+
         $data = array_merge([
             'to' => $this->getMailingAddress(),
             'from' => config('physical_mail.defaults.from_address'),
@@ -29,7 +29,7 @@ trait HasPhysicalMail
             'merge_variables' => $this->getMailMergeVariables(),
             'client_id' => $this->getMailClientId(),
         ], $options);
-        
+
         return $service->send($this->getMailType(), $data);
     }
 

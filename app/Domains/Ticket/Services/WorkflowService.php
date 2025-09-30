@@ -2,16 +2,16 @@
 
 namespace App\Domains\Ticket\Services;
 
-use App\Domains\Ticket\Models\TicketWorkflow;
-use App\Domains\Ticket\Models\TicketStatusTransition;
 use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Ticket\Models\TicketStatusTransition;
+use App\Domains\Ticket\Models\TicketWorkflow;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Workflow Service
- * 
+ *
  * Handles workflow automation, status transitions, condition evaluation,
  * and automated actions for comprehensive ticket workflow management.
  */
@@ -21,42 +21,44 @@ class WorkflowService
      * Execute a workflow transition for a ticket
      */
     public function executeTransition(
-        Ticket $ticket, 
-        TicketStatusTransition $transition, 
+        Ticket $ticket,
+        TicketStatusTransition $transition,
         array $context = []
     ): bool {
         // Verify the transition is valid for current ticket state
-        if (!$this->canExecuteTransition($ticket, $transition)) {
+        if (! $this->canExecuteTransition($ticket, $transition)) {
             Log::warning('Invalid transition attempted', [
                 'ticket_id' => $ticket->id,
                 'transition_id' => $transition->id,
                 'current_status' => $ticket->status,
-                'from_status' => $transition->from_status
+                'from_status' => $transition->from_status,
             ]);
+
             return false;
         }
 
         // Evaluate conditions
-        if (!$this->evaluateConditions($transition->conditions ?? [], $ticket, $context)) {
+        if (! $this->evaluateConditions($transition->conditions ?? [], $ticket, $context)) {
             Log::info('Transition conditions not met', [
                 'ticket_id' => $ticket->id,
-                'transition_id' => $transition->id
+                'transition_id' => $transition->id,
             ]);
+
             return false;
         }
 
         try {
             $oldStatus = $ticket->status;
-            
+
             // Update ticket status
             $ticket->update(['status' => $transition->to_status]);
-            
+
             // Execute transition actions
             $this->executeActions($transition->actions ?? [], $ticket, $context);
-            
+
             // Log the transition
             $this->logTransition($ticket, $transition, $oldStatus, $context);
-            
+
             // Add note to ticket
             $ticket->addNote(
                 "Workflow transition: {$transition->name} (from {$oldStatus} to {$transition->to_status})",
@@ -67,7 +69,7 @@ class WorkflowService
                 'ticket_id' => $ticket->id,
                 'transition_id' => $transition->id,
                 'from_status' => $oldStatus,
-                'to_status' => $transition->to_status
+                'to_status' => $transition->to_status,
             ]);
 
             return true;
@@ -75,8 +77,9 @@ class WorkflowService
             Log::error('Failed to execute workflow transition', [
                 'ticket_id' => $ticket->id,
                 'transition_id' => $transition->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -86,16 +89,16 @@ class WorkflowService
      */
     public function getAvailableTransitions(Ticket $ticket): Collection
     {
-        if (!$ticket->workflow) {
+        if (! $ticket->workflow) {
             return collect();
         }
 
         return $ticket->workflow->transitions()
-                     ->where('from_status', $ticket->status)
-                     ->get()
-                     ->filter(function ($transition) use ($ticket) {
-                         return $this->canExecuteTransition($ticket, $transition);
-                     });
+            ->where('from_status', $ticket->status)
+            ->get()
+            ->filter(function ($transition) use ($ticket) {
+                return $this->canExecuteTransition($ticket, $transition);
+            });
     }
 
     /**
@@ -107,28 +110,28 @@ class WorkflowService
             'processed' => 0,
             'executed' => 0,
             'failed' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
         // Get tickets with workflows that have automatic transitions
         $tickets = Ticket::whereNotNull('workflow_id')
-                        ->whereIn('status', function($query) {
-                            $query->select('from_status')
-                                  ->from('ticket_status_transitions')
-                                  ->where('is_automatic', true)
-                                  ->distinct();
-                        })
-                        ->with(['workflow.transitions'])
-                        ->get();
+            ->whereIn('status', function ($query) {
+                $query->select('from_status')
+                    ->from('ticket_status_transitions')
+                    ->where('is_automatic', true)
+                    ->distinct();
+            })
+            ->with(['workflow.transitions'])
+            ->get();
 
         foreach ($tickets as $ticket) {
             $results['processed']++;
-            
+
             try {
                 $automaticTransitions = $ticket->workflow->transitions()
-                                              ->where('from_status', $ticket->status)
-                                              ->where('is_automatic', true)
-                                              ->get();
+                    ->where('from_status', $ticket->status)
+                    ->where('is_automatic', true)
+                    ->get();
 
                 foreach ($automaticTransitions as $transition) {
                     if ($this->executeTransition($ticket, $transition)) {
@@ -140,7 +143,7 @@ class WorkflowService
                 $results['failed']++;
                 $results['errors'][] = [
                     'ticket_id' => $ticket->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -158,7 +161,7 @@ class WorkflowService
         }
 
         foreach ($conditions as $condition) {
-            if (!$this->evaluateCondition($condition, $ticket, $context)) {
+            if (! $this->evaluateCondition($condition, $ticket, $context)) {
                 return false;
             }
         }
@@ -187,9 +190,9 @@ class WorkflowService
     {
         $duplicate = $workflow->replicate([
             'created_at',
-            'updated_at'
+            'updated_at',
         ]);
-        
+
         $duplicate->name = $newName;
         $duplicate->is_active = false; // Start as inactive
         $duplicate->created_by = auth()->id();
@@ -201,9 +204,9 @@ class WorkflowService
                 'id',
                 'workflow_id',
                 'created_at',
-                'updated_at'
+                'updated_at',
             ]);
-            
+
             $duplicateTransition->workflow_id = $duplicate->id;
             $duplicateTransition->save();
         }
@@ -220,31 +223,31 @@ class WorkflowService
 
         // Check for orphaned statuses
         $allStatuses = $workflow->transitions->pluck('from_status')
-                               ->merge($workflow->transitions->pluck('to_status'))
-                               ->unique();
+            ->merge($workflow->transitions->pluck('to_status'))
+            ->unique();
 
-        if (!$allStatuses->contains($workflow->initial_status)) {
+        if (! $allStatuses->contains($workflow->initial_status)) {
             $issues[] = "Initial status '{$workflow->initial_status}' is not referenced in any transitions";
         }
 
         // Check for unreachable final statuses
         $reachableStatuses = $workflow->transitions->pluck('to_status')->unique();
         foreach ($workflow->final_statuses as $finalStatus) {
-            if (!$reachableStatuses->contains($finalStatus)) {
+            if (! $reachableStatuses->contains($finalStatus)) {
                 $issues[] = "Final status '{$finalStatus}' is not reachable from any transition";
             }
         }
 
         // Check for circular dependencies
         if ($this->hasCircularDependencies($workflow)) {
-            $issues[] = "Workflow contains circular dependencies that may cause infinite loops";
+            $issues[] = 'Workflow contains circular dependencies that may cause infinite loops';
         }
 
         // Validate transition actions and conditions
         foreach ($workflow->transitions as $transition) {
             $actionIssues = $this->validateActions($transition->actions ?? []);
             $conditionIssues = $this->validateConditions($transition->conditions ?? []);
-            
+
             $issues = array_merge($issues, $actionIssues, $conditionIssues);
         }
 
@@ -262,12 +265,12 @@ class WorkflowService
         }
 
         // Check required role if specified
-        if ($transition->required_role && !auth()->user()->hasRole($transition->required_role)) {
+        if ($transition->required_role && ! auth()->user()->hasRole($transition->required_role)) {
             return false;
         }
 
         // Check if user can update ticket
-        if (!auth()->user()->can('update', $ticket)) {
+        if (! auth()->user()->can('update', $ticket)) {
             return false;
         }
 
@@ -293,6 +296,7 @@ class WorkflowService
 
             case 'field_contains':
                 $fieldValue = $this->getTicketFieldValue($ticket, $field);
+
                 return is_string($fieldValue) && str_contains($fieldValue, $value);
 
             case 'field_greater_than':
@@ -305,7 +309,7 @@ class WorkflowService
                 return in_array($value, $ticket->tags ?? []);
 
             case 'missing_tag':
-                return !in_array($value, $ticket->tags ?? []);
+                return ! in_array($value, $ticket->tags ?? []);
 
             case 'assigned_to':
                 return $ticket->assigned_to == $value;
@@ -330,6 +334,7 @@ class WorkflowService
 
             default:
                 Log::warning('Unknown condition type', ['type' => $type]);
+
                 return false;
         }
     }
@@ -368,7 +373,7 @@ class WorkflowService
 
                 case 'add_tag':
                     $tags = $ticket->tags ?? [];
-                    if (!in_array($value, $tags)) {
+                    if (! in_array($value, $tags)) {
                         $tags[] = $value;
                         $ticket->update(['tags' => $tags]);
                         $ticket->addNote("Tag '{$value}' auto-added", 'workflow');
@@ -377,7 +382,7 @@ class WorkflowService
 
                 case 'remove_tag':
                     $tags = $ticket->tags ?? [];
-                    $tags = array_filter($tags, fn($tag) => $tag !== $value);
+                    $tags = array_filter($tags, fn ($tag) => $tag !== $value);
                     $ticket->update(['tags' => array_values($tags)]);
                     $ticket->addNote("Tag '{$value}' auto-removed", 'workflow');
                     break;
@@ -411,7 +416,7 @@ class WorkflowService
             Log::error('Failed to execute workflow action', [
                 'ticket_id' => $ticket->id,
                 'action_type' => $type,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -427,11 +432,12 @@ class WorkflowService
         switch ($type) {
             case 'assign_to_user':
                 $user = User::find($value);
+
                 return [
                     'type' => $type,
-                    'description' => "Assign to user: " . ($user ? $user->name : "User ID {$value}"),
+                    'description' => 'Assign to user: '.($user ? $user->name : "User ID {$value}"),
                     'current_value' => $ticket->assignee?->name ?? 'Unassigned',
-                    'new_value' => $user?->name ?? "User ID {$value}"
+                    'new_value' => $user?->name ?? "User ID {$value}",
                 ];
 
             case 'set_priority':
@@ -439,7 +445,7 @@ class WorkflowService
                     'type' => $type,
                     'description' => "Set priority to: {$value}",
                     'current_value' => $ticket->priority,
-                    'new_value' => $value
+                    'new_value' => $value,
                 ];
 
             case 'add_tag':
@@ -447,7 +453,7 @@ class WorkflowService
                     'type' => $type,
                     'description' => "Add tag: {$value}",
                     'current_value' => implode(', ', $ticket->tags ?? []),
-                    'new_value' => implode(', ', array_unique(array_merge($ticket->tags ?? [], [$value])))
+                    'new_value' => implode(', ', array_unique(array_merge($ticket->tags ?? [], [$value]))),
                 ];
 
             default:
@@ -455,7 +461,7 @@ class WorkflowService
                     'type' => $type,
                     'description' => "Execute action: {$type}",
                     'current_value' => '',
-                    'new_value' => $value
+                    'new_value' => $value,
                 ];
         }
     }
@@ -496,8 +502,8 @@ class WorkflowService
     private function isUpdatableField(string $field): bool
     {
         $allowedFields = [
-            'priority', 'status', 'assigned_to', 'due_date', 
-            'estimated_hours', 'tags', 'custom_fields'
+            'priority', 'status', 'assigned_to', 'due_date',
+            'estimated_hours', 'tags', 'custom_fields',
         ];
 
         return in_array($field, $allowedFields);
@@ -537,7 +543,7 @@ class WorkflowService
 
         if (isset($graph[$status])) {
             foreach ($graph[$status] as $nextStatus) {
-                if (!isset($visited[$nextStatus])) {
+                if (! isset($visited[$nextStatus])) {
                     if ($this->hasCycleDFS($nextStatus, $graph, $visited, $recursionStack)) {
                         return true;
                     }
@@ -548,6 +554,7 @@ class WorkflowService
         }
 
         unset($recursionStack[$status]);
+
         return false;
     }
 
@@ -562,19 +569,20 @@ class WorkflowService
             $type = $action['type'] ?? '';
             if (empty($type)) {
                 $issues[] = "Action {$index} is missing type";
+
                 continue;
             }
 
             switch ($type) {
                 case 'assign_to_user':
-                    if (empty($action['value']) || !is_numeric($action['value'])) {
+                    if (empty($action['value']) || ! is_numeric($action['value'])) {
                         $issues[] = "Action {$index} requires a valid user ID";
                     }
                     break;
 
                 case 'set_priority':
                     $validPriorities = ['Low', 'Medium', 'High', 'Critical'];
-                    if (!in_array($action['value'] ?? '', $validPriorities)) {
+                    if (! in_array($action['value'] ?? '', $validPriorities)) {
                         $issues[] = "Action {$index} has invalid priority value";
                     }
                     break;
@@ -605,9 +613,9 @@ class WorkflowService
      * Log workflow transition
      */
     private function logTransition(
-        Ticket $ticket, 
-        TicketStatusTransition $transition, 
-        string $oldStatus, 
+        Ticket $ticket,
+        TicketStatusTransition $transition,
+        string $oldStatus,
         array $context
     ): void {
         Log::info('Workflow transition logged', [
@@ -619,7 +627,7 @@ class WorkflowService
             'to_status' => $transition->to_status,
             'executed_by' => auth()->id(),
             'context' => $context,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ]);
     }
 }

@@ -3,14 +3,14 @@
 namespace App\Domains\Financial\Services\TaxEngine;
 
 use App\Models\TaxApiQueryCache;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Sentiment Analysis Service using API Ninjas
- * 
+ *
  * Provides sentiment analysis for tickets and replies using the API Ninjas
  * Sentiment API. Follows the established BaseApiClient pattern for consistency
  * with caching, rate limiting, and error handling.
@@ -18,13 +18,14 @@ use Exception;
 class SentimentAnalysisService extends BaseApiClient
 {
     protected string $baseUrl = 'https://api.api-ninjas.com/v1';
+
     protected string $apiKey;
 
     public function __construct(int $companyId, array $config = [])
     {
         $this->apiKey = config('services.api_ninjas.key') ?? config('services.api_ninjas.key');
-        
-        if (!$this->apiKey) {
+
+        if (! $this->apiKey) {
             throw new Exception('API Ninjas API key not configured for sentiment analysis');
         }
 
@@ -44,7 +45,7 @@ class SentimentAnalysisService extends BaseApiClient
             'batch_analysis' => [
                 'max_requests' => 50,
                 'window' => 60,
-            ]
+            ],
         ];
     }
 
@@ -59,9 +60,9 @@ class SentimentAnalysisService extends BaseApiClient
 
         // Truncate text to API limit (2000 characters)
         $text = substr(trim($text), 0, 2000);
-        
+
         $parameters = ['text' => $text];
-        
+
         return $this->makeRequest(
             'sentiment_analysis',
             $parameters,
@@ -78,7 +79,7 @@ class SentimentAnalysisService extends BaseApiClient
     public function analyzeBatchSentiment(array $texts): array
     {
         $results = [];
-        
+
         foreach ($texts as $key => $text) {
             try {
                 $results[$key] = $this->analyzeSentiment($text);
@@ -86,13 +87,13 @@ class SentimentAnalysisService extends BaseApiClient
                 Log::warning('Batch sentiment analysis failed for text', [
                     'key' => $key,
                     'error' => $e->getMessage(),
-                    'company_id' => $this->companyId
+                    'company_id' => $this->companyId,
                 ]);
-                
+
                 $results[$key] = $this->getErrorResponse($e->getMessage());
             }
         }
-        
+
         return $results;
     }
 
@@ -104,21 +105,21 @@ class SentimentAnalysisService extends BaseApiClient
         $response = Http::withHeaders([
             'X-Api-Key' => $this->apiKey,
             'Accept' => 'application/json',
-            'Content-Type' => 'application/json'
+            'Content-Type' => 'application/json',
         ])
-        ->timeout($this->config['timeout'])
-        ->retry($this->config['retry_attempts'], $this->config['retry_delay'])
-        ->get($this->baseUrl . '/sentiment', [
-            'text' => $text
-        ]);
+            ->timeout($this->config['timeout'])
+            ->retry($this->config['retry_attempts'], $this->config['retry_delay'])
+            ->get($this->baseUrl.'/sentiment', [
+                'text' => $text,
+            ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new Exception("API Ninjas Sentiment API request failed: HTTP {$response->status()}");
         }
 
         $data = $response->json();
-        
-        if (!isset($data['score']) || !isset($data['sentiment'])) {
+
+        if (! isset($data['score']) || ! isset($data['sentiment'])) {
             throw new Exception('Invalid response from API Ninjas Sentiment API');
         }
 
@@ -132,13 +133,13 @@ class SentimentAnalysisService extends BaseApiClient
     {
         $score = (float) $apiData['score'];
         $sentiment = strtoupper($apiData['sentiment']);
-        
+
         // Map API Ninjas sentiment labels to our enum values
         $mappedSentiment = $this->mapSentimentLabel($sentiment);
-        
+
         // Calculate confidence based on absolute score value
         $confidence = abs($score);
-        
+
         return [
             'success' => true,
             'sentiment_score' => round($score, 2),
@@ -148,7 +149,7 @@ class SentimentAnalysisService extends BaseApiClient
             'text_length' => strlen($originalText),
             'analyzed_at' => now()->toISOString(),
             'provider' => 'api_ninjas',
-            'api_response' => $apiData
+            'api_response' => $apiData,
         ];
     }
 
@@ -159,7 +160,7 @@ class SentimentAnalysisService extends BaseApiClient
     {
         return match ($apiSentiment) {
             'POSITIVE' => 'POSITIVE',
-            'WEAK_POSITIVE' => 'WEAK_POSITIVE', 
+            'WEAK_POSITIVE' => 'WEAK_POSITIVE',
             'NEUTRAL' => 'NEUTRAL',
             'WEAK_NEGATIVE' => 'WEAK_NEGATIVE',
             'NEGATIVE' => 'NEGATIVE',
@@ -181,7 +182,7 @@ class SentimentAnalysisService extends BaseApiClient
             'text_length' => 0,
             'analyzed_at' => now()->toISOString(),
             'provider' => 'api_ninjas',
-            'message' => 'Empty text provided'
+            'message' => 'Empty text provided',
         ];
     }
 
@@ -197,7 +198,7 @@ class SentimentAnalysisService extends BaseApiClient
             'sentiment_confidence' => null,
             'error' => $error,
             'analyzed_at' => now()->toISOString(),
-            'provider' => 'api_ninjas'
+            'provider' => 'api_ninjas',
         ];
     }
 
@@ -207,21 +208,21 @@ class SentimentAnalysisService extends BaseApiClient
     public function testConnection(): array
     {
         try {
-            $testText = "This is a test message to verify the sentiment analysis API is working correctly.";
+            $testText = 'This is a test message to verify the sentiment analysis API is working correctly.';
             $result = $this->analyzeSentiment($testText);
-            
+
             return [
                 'success' => $result['success'],
                 'test_text' => $testText,
                 'sentiment_result' => $result,
-                'api_status' => 'API Ninjas Sentiment API connection successful'
+                'api_status' => 'API Ninjas Sentiment API connection successful',
             ];
-            
+
         } catch (Exception $e) {
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
-                'api_status' => 'API Ninjas Sentiment API connection failed'
+                'api_status' => 'API Ninjas Sentiment API connection failed',
             ];
         }
     }
@@ -232,7 +233,7 @@ class SentimentAnalysisService extends BaseApiClient
     public function getConfigurationStatus(): array
     {
         return [
-            'configured' => !empty($this->apiKey),
+            'configured' => ! empty($this->apiKey),
             'service' => 'API Ninjas Sentiment Analysis',
             'coverage' => 'Text sentiment analysis with confidence scores',
             'cost' => 'Paid API service - cost-effective sentiment analysis',
@@ -242,18 +243,18 @@ class SentimentAnalysisService extends BaseApiClient
                 'Multiple sentiment levels (5-point scale)',
                 'Fast response times',
                 'High accuracy',
-                'Batch processing support'
+                'Batch processing support',
             ],
             'rate_limits' => $this->rateLimits,
             'cache_enabled' => $this->config['enable_caching'],
-            'api_key_configured' => !empty($this->apiKey)
+            'api_key_configured' => ! empty($this->apiKey),
         ];
     }
 
     /**
      * Get sentiment statistics for the company
      */
-    public function getSentimentStatistics(Carbon $startDate = null, Carbon $endDate = null): array
+    public function getSentimentStatistics(?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
         $startDate = $startDate ?? now()->subMonth();
         $endDate = $endDate ?? now();
@@ -267,7 +268,7 @@ class SentimentAnalysisService extends BaseApiClient
 
         $totalAnalyzed = $stats->count();
         $avgResponseTime = $stats->avg('response_time_ms');
-        
+
         // Extract sentiment results from cached responses
         $sentiments = [];
         foreach ($stats as $stat) {
@@ -278,11 +279,11 @@ class SentimentAnalysisService extends BaseApiClient
         }
 
         $sentimentCounts = array_count_values($sentiments);
-        
+
         return [
             'period' => [
                 'start' => $startDate->toDateString(),
-                'end' => $endDate->toDateString()
+                'end' => $endDate->toDateString(),
             ],
             'total_analyzed' => $totalAnalyzed,
             'avg_response_time_ms' => round($avgResponseTime ?? 0, 2),
@@ -299,7 +300,7 @@ class SentimentAnalysisService extends BaseApiClient
                 'NEUTRAL' => round((($sentimentCounts['NEUTRAL'] ?? 0) / $totalAnalyzed) * 100, 1),
                 'WEAK_NEGATIVE' => round((($sentimentCounts['WEAK_NEGATIVE'] ?? 0) / $totalAnalyzed) * 100, 1),
                 'NEGATIVE' => round((($sentimentCounts['NEGATIVE'] ?? 0) / $totalAnalyzed) * 100, 1),
-            ] : []
+            ] : [],
         ];
     }
 
@@ -309,7 +310,7 @@ class SentimentAnalysisService extends BaseApiClient
     public static function interpretSentimentScore(float $score): array
     {
         $absScore = abs($score);
-        
+
         if ($score > 0.5) {
             $interpretation = 'Very Positive';
             $color = '#10b981'; // emerald-500
@@ -326,11 +327,11 @@ class SentimentAnalysisService extends BaseApiClient
             $interpretation = 'Very Negative';
             $color = '#ef4444'; // red-500
         }
-        
+
         return [
             'interpretation' => $interpretation,
             'color' => $color,
-            'confidence_level' => $absScore > 0.7 ? 'High' : ($absScore > 0.3 ? 'Medium' : 'Low')
+            'confidence_level' => $absScore > 0.7 ? 'High' : ($absScore > 0.3 ? 'Medium' : 'Low'),
         ];
     }
 }

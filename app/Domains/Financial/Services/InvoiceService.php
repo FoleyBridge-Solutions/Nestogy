@@ -4,7 +4,6 @@ namespace App\Domains\Financial\Services;
 
 use App\Models\Client;
 use App\Models\Invoice;
-use App\Models\InvoiceItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -37,7 +36,7 @@ class InvoiceService
             Log::info('Invoice created', [
                 'invoice_id' => $invoice->id,
                 'client_id' => $client->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return $invoice;
@@ -55,21 +54,21 @@ class InvoiceService
             // Update items if provided
             if (isset($data['items'])) {
                 $invoice->items()->delete();
-                
+
                 foreach ($data['items'] as $item) {
                     $invoice->items()->create([
                         'description' => $item['description'],
                         'quantity' => $item['quantity'] ?? 1,
                         'rate' => $item['rate'] ?? 0,
                         'amount' => ($item['quantity'] ?? 1) * ($item['rate'] ?? 0),
-                        'tax_rate' => $item['tax_rate'] ?? 0
+                        'tax_rate' => $item['tax_rate'] ?? 0,
                     ]);
                 }
             }
 
             Log::info('Invoice updated', [
                 'invoice_id' => $invoice->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return $invoice->load('items');
@@ -85,7 +84,7 @@ class InvoiceService
             // Update status to sent
             $invoice->update([
                 'status' => 'sent',
-                'sent_at' => now()
+                'sent_at' => now(),
             ]);
 
             // Here you would typically send email notification
@@ -94,7 +93,7 @@ class InvoiceService
             Log::info('Invoice sent', [
                 'invoice_id' => $invoice->id,
                 'client_id' => $invoice->client_id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return true;
@@ -102,7 +101,7 @@ class InvoiceService
             Log::error('Failed to send invoice', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return false;
@@ -117,12 +116,12 @@ class InvoiceService
         try {
             $invoice->update([
                 'status' => 'paid',
-                'paid_at' => $paymentData['paid_at'] ?? now()
+                'paid_at' => $paymentData['paid_at'] ?? now(),
             ]);
 
             Log::info('Invoice marked as paid', [
                 'invoice_id' => $invoice->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return true;
@@ -130,7 +129,7 @@ class InvoiceService
             Log::error('Failed to mark invoice as paid', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return false;
@@ -144,19 +143,19 @@ class InvoiceService
     {
         $company_id = Auth::user()->company_id;
         $year = now()->year;
-        
+
         $lastInvoice = Invoice::where('company_id', $company_id)
             ->whereYear('created_at', $year)
             ->orderBy('number', 'desc')
             ->first();
 
-        if ($lastInvoice && preg_match('/INV-' . $year . '-(\d+)/', $lastInvoice->number, $matches)) {
+        if ($lastInvoice && preg_match('/INV-'.$year.'-(\d+)/', $lastInvoice->number, $matches)) {
             $nextNumber = intval($matches[1]) + 1;
         } else {
             $nextNumber = 1;
         }
 
-        return 'INV-' . $year . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return 'INV-'.$year.'-'.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -175,7 +174,7 @@ class InvoiceService
                 ->where('due_date', '<', now()->toDateString())->count(),
             'total_amount' => $invoices->sum('total'),
             'paid_amount' => $invoices->where('status', 'paid')->sum('total'),
-            'outstanding_amount' => $invoices->whereIn('status', ['sent', 'overdue'])->sum('total')
+            'outstanding_amount' => $invoices->whereIn('status', ['sent', 'overdue'])->sum('total'),
         ];
     }
 
@@ -186,10 +185,10 @@ class InvoiceService
     {
         try {
             $invoice->update(['archived_at' => now()]);
-            
+
             Log::info('Invoice archived', [
                 'invoice_id' => $invoice->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return true;
@@ -197,7 +196,7 @@ class InvoiceService
             Log::error('Failed to archive invoice', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return false;

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Domains\Integration\Models\Integration;
 use App\Domains\Ticket\Models\Ticket;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -11,11 +12,10 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use GuzzleHttp\Exception\RequestException;
 
 /**
  * Update RMM Ticket Status Job
- * 
+ *
  * Handles bidirectional sync of ticket status updates between
  * Nestogy and RMM systems. Updates RMM when tickets are resolved.
  */
@@ -24,7 +24,9 @@ class UpdateRMMTicketStatus implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Ticket $ticket;
+
     protected string $newStatus;
+
     protected ?string $resolution;
 
     /**
@@ -67,25 +69,27 @@ class UpdateRMMTicketStatus implements ShouldQueue
             Log::info('Updating RMM ticket status', [
                 'ticket_id' => $this->ticket->id,
                 'new_status' => $this->newStatus,
-                'has_resolution' => !is_null($this->resolution),
+                'has_resolution' => ! is_null($this->resolution),
                 'attempt' => $this->attempts(),
             ]);
 
             // Find related RMM alert
             $rmmAlert = $this->ticket->rmmAlerts()->first();
-            if (!$rmmAlert) {
+            if (! $rmmAlert) {
                 Log::info('No RMM alert found for ticket, skipping RMM update', [
                     'ticket_id' => $this->ticket->id,
                 ]);
+
                 return;
             }
 
             $integration = $rmmAlert->integration;
-            if (!$integration->isActive()) {
+            if (! $integration->isActive()) {
                 Log::warning('Integration inactive, skipping RMM update', [
                     'ticket_id' => $this->ticket->id,
                     'integration_id' => $integration->id,
                 ]);
+
                 return;
             }
 
@@ -109,7 +113,7 @@ class UpdateRMMTicketStatus implements ShouldQueue
 
         } catch (\Exception $e) {
             $processingTime = round((microtime(true) - $startTime) * 1000, 2);
-            
+
             Log::error('RMM ticket status update failed', [
                 'ticket_id' => $this->ticket->id,
                 'new_status' => $this->newStatus,
@@ -139,6 +143,7 @@ class UpdateRMMTicketStatus implements ShouldQueue
                     Log::info('RMM status updates not supported for provider', [
                         'provider' => $integration->provider,
                     ]);
+
                     return false;
             }
         } catch (RequestException $e) {
@@ -159,9 +164,10 @@ class UpdateRMMTicketStatus implements ShouldQueue
     {
         $credentials = $integration->getCredentials();
         $endpoint = $integration->api_endpoint;
-        
-        if (!$endpoint || !isset($credentials['api_key'])) {
+
+        if (! $endpoint || ! isset($credentials['api_key'])) {
             Log::warning('ConnectWise credentials not configured for status update');
+
             return false;
         }
 
@@ -172,7 +178,7 @@ class UpdateRMMTicketStatus implements ShouldQueue
         ];
 
         $rmmStatus = $statusMapping[$status] ?? 'Active';
-        
+
         $payload = [
             'Status' => $rmmStatus,
             'ResolvedBy' => auth()->user()?->name ?? 'Nestogy System',
@@ -184,7 +190,7 @@ class UpdateRMMTicketStatus implements ShouldQueue
         }
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $credentials['api_key'],
+            'Authorization' => 'Bearer '.$credentials['api_key'],
             'Content-Type' => 'application/json',
         ])->timeout(30)->put(
             "{$endpoint}/alerts/{$rmmAlert->external_alert_id}",
@@ -201,9 +207,10 @@ class UpdateRMMTicketStatus implements ShouldQueue
     {
         $credentials = $integration->getCredentials();
         $endpoint = $integration->api_endpoint;
-        
-        if (!$endpoint || !isset($credentials['api_key'])) {
+
+        if (! $endpoint || ! isset($credentials['api_key'])) {
             Log::warning('Datto credentials not configured for status update');
+
             return false;
         }
 
@@ -214,7 +221,7 @@ class UpdateRMMTicketStatus implements ShouldQueue
         ];
 
         $rmmStatus = $statusMapping[$status] ?? 'open';
-        
+
         $payload = [
             'status' => $rmmStatus,
             'resolved_by' => auth()->user()?->name ?? 'Nestogy System',
@@ -243,9 +250,10 @@ class UpdateRMMTicketStatus implements ShouldQueue
     {
         $credentials = $integration->getCredentials();
         $endpoint = $integration->api_endpoint;
-        
-        if (!$endpoint || !isset($credentials['bearer_token'])) {
+
+        if (! $endpoint || ! isset($credentials['bearer_token'])) {
             Log::warning('NinjaOne credentials not configured for status update');
+
             return false;
         }
 
@@ -256,7 +264,7 @@ class UpdateRMMTicketStatus implements ShouldQueue
         ];
 
         $rmmStatus = $statusMapping[$status] ?? 'ACTIVE';
-        
+
         $payload = [
             'status' => $rmmStatus,
             'resolvedBy' => auth()->user()?->name ?? 'Nestogy System',
@@ -296,8 +304,8 @@ class UpdateRMMTicketStatus implements ShouldQueue
     {
         return [
             'rmm-update',
-            'ticket:' . $this->ticket->id,
-            'status:' . $this->newStatus,
+            'ticket:'.$this->ticket->id,
+            'status:'.$this->newStatus,
         ];
     }
 }

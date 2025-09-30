@@ -5,25 +5,34 @@ namespace App\Livewire\Assets;
 use App\Models\Asset;
 use App\Models\Client;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Auth;
 
 class AssetIndex extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $type = '';
+
     public $status = '';
+
     public $clientId = '';
+
     public $assignedTo = '';
+
     public $locationId = '';
+
     public $sortField = 'created_at';
+
     public $sortDirection = 'desc';
+
     public $perPage = 25;
-    
+
     public $selectedAssets = [];
+
     public $selectAll = false;
 
     protected $queryString = [
@@ -35,7 +44,7 @@ class AssetIndex extends Component
         'locationId' => ['except' => ''],
         'sortField' => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
-        'perPage' => ['except' => 25]
+        'perPage' => ['except' => 25],
     ];
 
     public function mount()
@@ -75,14 +84,14 @@ class AssetIndex extends Component
     public function bulkUpdateStatus($status)
     {
         $count = count($this->selectedAssets);
-        
+
         Asset::whereIn('id', $this->selectedAssets)
             ->where('company_id', Auth::user()->company_id)
             ->update(['status' => $status]);
 
         $this->selectedAssets = [];
         $this->selectAll = false;
-        
+
         session()->flash('message', "$count assets have been updated to $status status.");
     }
 
@@ -91,7 +100,7 @@ class AssetIndex extends Component
         $asset = Asset::where('id', $assetId)
             ->where('company_id', Auth::user()->company_id)
             ->first();
-            
+
         if ($asset) {
             $asset->update(['archived_at' => now()]);
             session()->flash('message', "Asset '{$asset->name}' has been archived.");
@@ -105,11 +114,11 @@ class AssetIndex extends Component
             ->whereNull('archived_at')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('serial_number', 'like', '%' . $this->search . '%')
-                      ->orWhere('asset_tag', 'like', '%' . $this->search . '%')
-                      ->orWhere('model', 'like', '%' . $this->search . '%')
-                      ->orWhere('manufacturer', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('serial_number', 'like', '%'.$this->search.'%')
+                        ->orWhere('asset_tag', 'like', '%'.$this->search.'%')
+                        ->orWhere('model', 'like', '%'.$this->search.'%')
+                        ->orWhere('manufacturer', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->type, function ($query) {
@@ -135,17 +144,17 @@ class AssetIndex extends Component
     public function render()
     {
         $assets = $this->getAssets();
-        
+
         $clients = Client::where('company_id', Auth::user()->company_id)
             ->whereNull('deleted_at')
             ->orderBy('name')
             ->get();
-            
+
         $users = User::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
             ->orderBy('name')
             ->get();
-            
+
         $locations = \App\Models\Location::where('company_id', Auth::user()->company_id)
             ->whereNull('archived_at')
             ->orderBy('name')
@@ -157,7 +166,7 @@ class AssetIndex extends Component
             'users' => $users,
             'locations' => $locations,
             'types' => ['Computer', 'Laptop', 'Server', 'Printer', 'Mobile', 'Network', 'Software', 'Other'],
-            'statuses' => ['Active', 'Inactive', 'In Repair', 'Disposed', 'Lost', 'Stolen']
+            'statuses' => ['Active', 'Inactive', 'In Repair', 'Disposed', 'Lost', 'Stolen'],
         ]);
     }
 }

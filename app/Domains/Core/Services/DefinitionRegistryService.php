@@ -4,7 +4,7 @@ namespace App\Domains\Core\Services;
 
 /**
  * Definition Registry Service
- * 
+ *
  * Manages standardized definition content for contract clauses.
  * Provides centralized definition repository with proper variable substitution.
  */
@@ -16,12 +16,14 @@ class DefinitionRegistryService
     {
         $this->registry = $registry;
     }
+
     /**
      * Get the standardized definition content for a given definition key.
      */
     public function getDefinitionContent(string $key): ?string
     {
         $definitions = $this->getDefinitionRegistry();
+
         return $definitions[$key] ?? null;
     }
 
@@ -37,6 +39,7 @@ class DefinitionRegistryService
                 $contents[$key] = $content;
             }
         }
+
         return $contents;
     }
 
@@ -74,17 +77,17 @@ class DefinitionRegistryService
         }
 
         $definitions = $this->getDefinitionContents($requiredKeys);
-        
+
         if (empty($definitions)) {
             return '';
         }
 
         $content = "DEFINITIONS\n\n";
-        
+
         foreach ($definitions as $key => $definition) {
             // Process variables in definition content
             $processedDefinition = $this->processVariables($definition, $variables);
-            $content .= $processedDefinition . "\n\n";
+            $content .= $processedDefinition."\n\n";
         }
 
         return trim($content);
@@ -96,8 +99,9 @@ class DefinitionRegistryService
     protected function processVariables(string $content, array $variables): string
     {
         foreach ($variables as $key => $value) {
-            $content = str_replace("{{" . $key . "}}", $value, $content);
+            $content = str_replace('{{'.$key.'}}', $value, $content);
         }
+
         return $content;
     }
 
@@ -108,12 +112,12 @@ class DefinitionRegistryService
     {
         $definitions = [];
         $structuredDefinitions = $this->registry->getAllDefinitions();
-        
+
         // Transform structured definitions to simple key-value format
         foreach ($structuredDefinitions as $key => $definition) {
-            $definitions[$key] = $definition['term'] . ': ' . $definition['definition'];
+            $definitions[$key] = $definition['term'].': '.$definition['definition'];
         }
-        
+
         return $definitions;
     }
 
@@ -163,10 +167,11 @@ class DefinitionRegistryService
     {
         $missing = [];
         foreach ($keys as $key) {
-            if (!$this->hasDefinition($key)) {
+            if (! $this->hasDefinition($key)) {
                 $missing[] = $key;
             }
         }
+
         return $missing;
     }
 
@@ -183,9 +188,9 @@ class DefinitionRegistryService
             // Extract the term name from the definition
             if (preg_match('/^([^:]+):/', $definition, $matches)) {
                 $term = trim($matches[1]);
-                
+
                 // Check if the term appears in the content
-                if (preg_match('/\b' . preg_quote($term, '/') . '\b/i', $content)) {
+                if (preg_match('/\b'.preg_quote($term, '/').'\b/i', $content)) {
                     $suggestions[] = $key;
                 }
             }

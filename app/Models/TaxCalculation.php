@@ -3,17 +3,17 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Carbon\Carbon;
 
 /**
  * Tax Calculation Model
- * 
+ *
  * Comprehensive audit trail for all tax calculations performed in the system.
  * Stores calculation inputs, outputs, API calls made, and validation status.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $calculable_type
@@ -126,21 +126,31 @@ class TaxCalculation extends Model
 
     // Engine type constants
     const ENGINE_VOIP = 'voip';
+
     const ENGINE_GENERAL = 'general';
+
     const ENGINE_DIGITAL = 'digital';
+
     const ENGINE_EQUIPMENT = 'equipment';
 
     // Calculation type constants
     const TYPE_QUOTE = 'quote';
+
     const TYPE_INVOICE = 'invoice';
+
     const TYPE_PREVIEW = 'preview';
+
     const TYPE_ADJUSTMENT = 'adjustment';
 
     // Status constants
     const STATUS_DRAFT = 'draft';
+
     const STATUS_CALCULATED = 'calculated';
+
     const STATUS_APPLIED = 'applied';
+
     const STATUS_ADJUSTED = 'adjusted';
+
     const STATUS_VOIDED = 'voided';
 
     /**
@@ -188,7 +198,7 @@ class TaxCalculation extends Model
      */
     public static function generateCalculationId(): string
     {
-        return 'tax_' . uniqid() . '_' . now()->format('Ymd');
+        return 'tax_'.uniqid().'_'.now()->format('Ymd');
     }
 
     /**
@@ -202,7 +212,7 @@ class TaxCalculation extends Model
         string $calculationType = self::TYPE_PREVIEW
     ): self {
         $calculationId = static::generateCalculationId();
-        
+
         $calculation = static::create([
             'company_id' => $companyId,
             'calculable_type' => $calculable ? get_class($calculable) : null,
@@ -235,7 +245,7 @@ class TaxCalculation extends Model
         ]);
 
         $calculation->logStatusChange(self::STATUS_CALCULATED, 'Calculation completed');
-        
+
         return $calculation;
     }
 
@@ -245,10 +255,10 @@ class TaxCalculation extends Model
     protected static function extractApiCallsInfo(array $calculationResult): ?array
     {
         $apiCalls = [];
-        
+
         if (isset($calculationResult['api_enhancements'])) {
             $enhancements = $calculationResult['api_enhancements'];
-            
+
             foreach ($enhancements as $enhancementType => $data) {
                 switch ($enhancementType) {
                     case 'vat':
@@ -258,7 +268,7 @@ class TaxCalculation extends Model
                             'success' => isset($data['vat_validation']['valid']),
                         ];
                         break;
-                        
+
                     case 'telecom':
                         $apiCalls[] = [
                             'provider' => 'fcc',
@@ -266,7 +276,7 @@ class TaxCalculation extends Model
                             'success' => isset($data['telecom_taxes']),
                         ];
                         break;
-                        
+
                     case 'us_sales_tax':
                         $apiCalls[] = [
                             'provider' => 'taxcloud',
@@ -274,7 +284,7 @@ class TaxCalculation extends Model
                             'success' => isset($data['sales_tax_calculation']['success']) && $data['sales_tax_calculation']['success'],
                         ];
                         break;
-                        
+
                     case 'jurisdictions':
                         if (isset($data['census_geography'])) {
                             $apiCalls[] = [
@@ -287,8 +297,8 @@ class TaxCalculation extends Model
                 }
             }
         }
-        
-        return !empty($apiCalls) ? $apiCalls : null;
+
+        return ! empty($apiCalls) ? $apiCalls : null;
     }
 
     /**
@@ -297,7 +307,7 @@ class TaxCalculation extends Model
     public function logStatusChange(string $newStatus, string $reason = '', ?int $userId = null): void
     {
         $history = $this->status_history ?? [];
-        
+
         $history[] = [
             'from_status' => $this->status,
             'to_status' => $newStatus,
@@ -305,7 +315,7 @@ class TaxCalculation extends Model
             'changed_by' => $userId ?? auth()->id(),
             'changed_at' => now()->toISOString(),
         ];
-        
+
         $this->update([
             'status' => $newStatus,
             'status_history' => $history,
@@ -319,19 +329,19 @@ class TaxCalculation extends Model
     public function logChange(string $action, array $changes = [], ?int $userId = null): void
     {
         $changeLog = $this->change_log ?? [];
-        
+
         $changeLog[] = [
             'action' => $action,
             'changes' => $changes,
             'changed_by' => $userId ?? auth()->id(),
             'changed_at' => now()->toISOString(),
         ];
-        
+
         // Keep only last 100 changes
         if (count($changeLog) > 100) {
             $changeLog = array_slice($changeLog, -100);
         }
-        
+
         $this->update([
             'change_log' => $changeLog,
             'updated_by' => $userId ?? auth()->id(),
@@ -349,7 +359,7 @@ class TaxCalculation extends Model
             'validated_by' => $validatorId ?? auth()->id(),
             'validation_notes' => $notes,
         ]);
-        
+
         $this->logChange('validated', ['notes' => $notes], $validatorId);
     }
 
@@ -431,7 +441,7 @@ class TaxCalculation extends Model
     {
         $breakdown = $this->tax_breakdown ?? [];
         $summary = [];
-        
+
         foreach ($breakdown as $taxType => $taxData) {
             $summary[] = [
                 'tax_type' => $taxType,
@@ -441,7 +451,7 @@ class TaxCalculation extends Model
                 'source' => $taxData['source'] ?? 'internal',
             ];
         }
-        
+
         return $summary;
     }
 
@@ -452,7 +462,7 @@ class TaxCalculation extends Model
     {
         $jurisdictions = $this->jurisdictions ?? [];
         $breakdown = [];
-        
+
         foreach ($jurisdictions as $jurisdiction) {
             $breakdown[] = [
                 'type' => $jurisdiction['type'] ?? 'unknown',
@@ -463,7 +473,7 @@ class TaxCalculation extends Model
                 'tax_amount' => $jurisdiction['tax_amount'] ?? null,
             ];
         }
-        
+
         return $breakdown;
     }
 
@@ -485,20 +495,20 @@ class TaxCalculation extends Model
     /**
      * Get calculation statistics for a company
      */
-    public static function getCompanyStatistics(int $companyId, Carbon $from = null, Carbon $to = null): array
+    public static function getCompanyStatistics(int $companyId, ?Carbon $from = null, ?Carbon $to = null): array
     {
         $query = static::where('company_id', $companyId);
-        
+
         if ($from) {
             $query->where('created_at', '>=', $from);
         }
-        
+
         if ($to) {
             $query->where('created_at', '<=', $to);
         }
-        
+
         $calculations = $query->get();
-        
+
         return [
             'total_calculations' => $calculations->count(),
             'by_type' => $calculations->groupBy('calculation_type')->map->count(),

@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -16,11 +14,11 @@ return new class extends Migration
         $assets = DB::table('assets')
             ->whereNotNull('notes')
             ->get();
-            
+
         foreach ($assets as $asset) {
             $rmmData = json_decode($asset->notes, true);
-            
-            if ($rmmData && !isset($rmmData['rmm_online'])) {
+
+            if ($rmmData && ! isset($rmmData['rmm_online'])) {
                 // Determine online status based on last_seen timestamp
                 $isOnline = false;
                 if (isset($rmmData['rmm_last_seen'])) {
@@ -32,19 +30,19 @@ return new class extends Migration
                         $isOnline = false;
                     }
                 }
-                
+
                 // Add rmm_online field to notes
                 $rmmData['rmm_online'] = $isOnline;
-                
+
                 DB::table('assets')
                     ->where('id', $asset->id)
                     ->update([
                         'notes' => json_encode($rmmData),
-                        'updated_at' => now()
+                        'updated_at' => now(),
                     ]);
             }
         }
-        
+
         // Update server assets to use 'Deployed' status since they're infrastructure
         // Servers shouldn't be in the check-in/out system
         DB::table('assets')
@@ -52,15 +50,15 @@ return new class extends Migration
             ->where('status', 'Ready To Deploy')
             ->update([
                 'status' => 'Deployed',
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
-            
+
         \Log::info('RMM online status and server exclusions migration completed', [
             'timestamp' => now(),
             'actions' => [
                 'Added rmm_online field to existing RMM assets',
-                'Set servers to Deployed status (infrastructure, not assignable)'
-            ]
+                'Set servers to Deployed status (infrastructure, not assignable)',
+            ],
         ]);
     }
 
@@ -75,7 +73,7 @@ return new class extends Migration
             ->where('status', 'Deployed')
             ->update([
                 'status' => 'Ready To Deploy',
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
     }
 };

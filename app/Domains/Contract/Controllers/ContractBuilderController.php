@@ -2,15 +2,14 @@
 
 namespace App\Domains\Contract\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Client;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractComponent;
-use App\Domains\Contract\Models\ContractComponentAssignment;
 use App\Domains\Contract\Requests\StoreBuiltContractRequest;
 use App\Domains\Contract\Services\ContractService;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\Client;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ContractBuilderController extends Controller
 {
@@ -59,6 +58,7 @@ class ContractBuilderController extends Controller
                 $template->estimated_value = $template->componentAssignments->sum(function ($assignment) {
                     return $assignment->calculatePrice();
                 });
+
                 return $template;
             });
 
@@ -79,12 +79,12 @@ class ContractBuilderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Contract created successfully',
-                'redirect_url' => route('contracts.show', $contract)
+                'redirect_url' => route('contracts.show', $contract),
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error creating contract: ' . $e->getMessage()
+                'message' => 'Error creating contract: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -100,8 +100,8 @@ class ContractBuilderController extends Controller
             'component' => $component->load(['creator', 'updater']),
             'sample_pricing' => $component->calculatePrice([
                 'units' => 1,
-                'quantity' => 1
-            ])
+                'quantity' => 1,
+            ]),
         ]);
     }
 
@@ -113,7 +113,7 @@ class ContractBuilderController extends Controller
         $request->validate([
             'component_id' => 'required|exists:contract_components,id',
             'variables' => 'array',
-            'pricing_override' => 'nullable|array'
+            'pricing_override' => 'nullable|array',
         ]);
 
         $component = ContractComponent::findOrFail($request->component_id);
@@ -143,7 +143,7 @@ class ContractBuilderController extends Controller
             'base_price' => $basePrice,
             'final_price' => $finalPrice,
             'variables_used' => $variables,
-            'override_applied' => $pricingOverride ? true : false
+            'override_applied' => $pricingOverride ? true : false,
         ]);
     }
 
@@ -154,10 +154,10 @@ class ContractBuilderController extends Controller
     {
         $this->authorize('view', $template);
 
-        if (!$template->is_template) {
+        if (! $template->is_template) {
             return response()->json([
                 'success' => false,
-                'message' => 'This is not a template contract'
+                'message' => 'This is not a template contract',
             ], 400);
         }
 
@@ -168,14 +168,14 @@ class ContractBuilderController extends Controller
             ->get()
             ->map(function ($assignment) {
                 return [
-                    'id' => 'template_' . $assignment->id,
+                    'id' => 'template_'.$assignment->id,
                     'component' => $assignment->component,
                     'variable_values' => $assignment->variable_values ?? [],
-                    'has_pricing_override' => !empty($assignment->pricing_override),
+                    'has_pricing_override' => ! empty($assignment->pricing_override),
                     'pricing_override' => $assignment->pricing_override ?? [
                         'type' => 'fixed',
-                        'amount' => 0
-                    ]
+                        'amount' => 0,
+                    ],
                 ];
             });
 
@@ -185,7 +185,7 @@ class ContractBuilderController extends Controller
             'components' => $assignments,
             'total_value' => $assignments->sum(function ($assignment) {
                 return $assignment['component']->calculatePrice($assignment['variable_values']);
-            })
+            }),
         ]);
     }
 
@@ -196,7 +196,7 @@ class ContractBuilderController extends Controller
     {
         $request->validate([
             'contract' => 'required|array',
-            'components' => 'required|array'
+            'components' => 'required|array',
         ]);
 
         $contractData = $request->input('contract');
@@ -207,7 +207,7 @@ class ContractBuilderController extends Controller
             'title' => $contractData['title'] ?? 'Untitled Contract',
             'client_name' => $this->getClientName($contractData['client_id'] ?? null),
             'sections' => [],
-            'total_value' => 0
+            'total_value' => 0,
         ];
 
         foreach ($components as $componentData) {
@@ -215,21 +215,21 @@ class ContractBuilderController extends Controller
             if ($component) {
                 $variables = $componentData['variable_values'] ?? [];
                 $price = $this->calculateComponentPrice($component, $variables, $componentData['pricing_override'] ?? null);
-                
+
                 $preview['sections'][] = [
                     'category' => $component->category,
                     'name' => $component->name,
                     'content' => $this->renderComponentContent($component, $variables),
-                    'price' => $price
+                    'price' => $price,
                 ];
-                
+
                 $preview['total_value'] += $price;
             }
         }
 
         return response()->json([
             'success' => true,
-            'preview' => $preview
+            'preview' => $preview,
         ]);
     }
 
@@ -240,18 +240,18 @@ class ContractBuilderController extends Controller
     {
         $request->validate([
             'contract' => 'required|array',
-            'components' => 'required|array'
+            'components' => 'required|array',
         ]);
 
         session(['contract_draft' => [
             'contract' => $request->input('contract'),
             'components' => $request->input('components'),
-            'saved_at' => now()->toISOString()
+            'saved_at' => now()->toISOString(),
         ]]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Draft saved successfully'
+            'message' => 'Draft saved successfully',
         ]);
     }
 
@@ -262,16 +262,16 @@ class ContractBuilderController extends Controller
     {
         $draft = session('contract_draft');
 
-        if (!$draft) {
+        if (! $draft) {
             return response()->json([
                 'success' => false,
-                'message' => 'No draft found'
+                'message' => 'No draft found',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'draft' => $draft
+            'draft' => $draft,
         ]);
     }
 
@@ -284,7 +284,7 @@ class ContractBuilderController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Draft cleared'
+            'message' => 'Draft cleared',
         ]);
     }
 
@@ -294,14 +294,14 @@ class ContractBuilderController extends Controller
     protected function seedSystemComponents(): void
     {
         $systemComponents = ContractComponent::getSystemComponents();
-        
+
         foreach ($systemComponents as $componentData) {
             ContractComponent::create(array_merge($componentData, [
                 'company_id' => auth()->user()->company_id,
                 'is_system' => true,
                 'status' => ContractComponent::STATUS_ACTIVE,
                 'created_by' => auth()->id(),
-                'updated_by' => auth()->id()
+                'updated_by' => auth()->id(),
             ]));
         }
     }
@@ -311,11 +311,12 @@ class ContractBuilderController extends Controller
      */
     protected function getClientName(?int $clientId): string
     {
-        if (!$clientId) {
+        if (! $clientId) {
             return 'Unknown Client';
         }
 
         $client = Client::find($clientId);
+
         return $client ? $client->name : 'Unknown Client';
     }
 
@@ -332,6 +333,7 @@ class ContractBuilderController extends Controller
                     return (float) $pricingOverride['amount'];
                 case 'percentage':
                     $percentage = (float) $pricingOverride['amount'];
+
                     return $basePrice * ($percentage / 100);
             }
         }
@@ -347,7 +349,7 @@ class ContractBuilderController extends Controller
         $content = $component->template_content ?? '';
 
         foreach ($variables as $key => $value) {
-            $content = str_replace('{{' . $key . '}}', $value, $content);
+            $content = str_replace('{{'.$key.'}}', $value, $content);
         }
 
         return $content;

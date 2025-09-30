@@ -12,16 +12,25 @@ use Spatie\Permission\Models\Role;
 class Register extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $extension_key = '';
+
     public ?int $company_id = null;
+
     public ?string $role = '';
+
     public bool $status = true;
+
     public bool $force_mfa = false;
+
     public string $password = '';
+
     public string $password_confirmation = '';
 
     public $companies;
+
     public $roles;
 
     public function mount()

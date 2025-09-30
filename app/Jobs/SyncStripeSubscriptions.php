@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\Client;
 use App\Domains\Core\Services\StripeSubscriptionService;
+use App\Models\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * SyncStripeSubscriptions
- * 
+ *
  * Background job that syncs subscription statuses with Stripe to ensure
  * our local data stays in sync with Stripe's records.
  */
@@ -40,18 +40,18 @@ class SyncStripeSubscriptions implements ShouldQueue
         foreach ($clients as $client) {
             try {
                 $success = $stripeService->syncSubscriptionStatus($client);
-                
+
                 if ($success) {
                     $syncCount++;
                     Log::debug('Subscription synced successfully', [
                         'client_id' => $client->id,
-                        'subscription_id' => $client->stripe_subscription_id
+                        'subscription_id' => $client->stripe_subscription_id,
                     ]);
                 } else {
                     $errorCount++;
                     Log::warning('Failed to sync subscription', [
                         'client_id' => $client->id,
-                        'subscription_id' => $client->stripe_subscription_id
+                        'subscription_id' => $client->stripe_subscription_id,
                     ]);
                 }
             } catch (\Exception $e) {
@@ -59,7 +59,7 @@ class SyncStripeSubscriptions implements ShouldQueue
                 Log::error('Error syncing subscription', [
                     'client_id' => $client->id,
                     'subscription_id' => $client->stripe_subscription_id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -67,7 +67,7 @@ class SyncStripeSubscriptions implements ShouldQueue
         Log::info('Stripe subscription sync completed', [
             'total_clients' => $clients->count(),
             'successful_syncs' => $syncCount,
-            'errors' => $errorCount
+            'errors' => $errorCount,
         ]);
     }
 }

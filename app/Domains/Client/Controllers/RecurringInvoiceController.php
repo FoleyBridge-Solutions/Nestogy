@@ -17,20 +17,20 @@ class RecurringInvoiceController extends Controller
     public function index(Request $request)
     {
         $query = ClientRecurringInvoice::with(['client', 'creator'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('template_name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('invoice_prefix', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('invoice_prefix', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -70,12 +70,12 @@ class RecurringInvoiceController extends Controller
         }
 
         $invoices = $query->orderBy('next_invoice_date', 'asc')
-                         ->paginate(20)
-                         ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $statuses = ClientRecurringInvoice::getStatuses();
         $frequencies = ClientRecurringInvoice::getFrequencies();
@@ -90,8 +90,8 @@ class RecurringInvoiceController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $statuses = ClientRecurringInvoice::getStatuses();
@@ -118,14 +118,14 @@ class RecurringInvoiceController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
-            'currency' => 'required|in:' . implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
-            'frequency' => 'required|in:' . implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
+            'currency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
+            'frequency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
             'interval_count' => 'nullable|integer|min:1',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
             'day_of_month' => 'nullable|integer|min:1|max:31',
             'day_of_week' => 'nullable|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            'status' => 'required|in:' . implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
             'auto_send' => 'boolean',
             'payment_terms_days' => 'nullable|integer|min:1|max:365',
             'late_fee_percentage' => 'nullable|numeric|min:0|max:100',
@@ -138,8 +138,8 @@ class RecurringInvoiceController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Calculate tax and total amounts
@@ -154,7 +154,7 @@ class RecurringInvoiceController extends Controller
             $lines = explode("\n", $request->line_items);
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (!empty($line)) {
+                if (! empty($line)) {
                     $lineItems[] = ['description' => $line];
                 }
             }
@@ -186,16 +186,16 @@ class RecurringInvoiceController extends Controller
             'line_items' => $lineItems,
             'created_by' => auth()->id(),
         ]);
-        
+
         $invoice->company_id = auth()->user()->company_id;
-        
+
         // Calculate initial next invoice date
         $invoice->next_invoice_date = $invoice->calculateNextInvoiceDate($invoice->start_date);
-        
+
         $invoice->save();
 
         return redirect()->route('clients.recurring-invoices.standalone.index')
-                        ->with('success', 'Recurring invoice created successfully.');
+            ->with('success', 'Recurring invoice created successfully.');
     }
 
     /**
@@ -206,7 +206,7 @@ class RecurringInvoiceController extends Controller
         $this->authorize('view', $recurringInvoice);
 
         $recurringInvoice->load('client', 'creator');
-        
+
         return view('clients.recurring-invoices.show', compact('recurringInvoice'));
     }
 
@@ -218,8 +218,8 @@ class RecurringInvoiceController extends Controller
         $this->authorize('update', $recurringInvoice);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $statuses = ClientRecurringInvoice::getStatuses();
         $frequencies = ClientRecurringInvoice::getFrequencies();
@@ -247,14 +247,14 @@ class RecurringInvoiceController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
-            'currency' => 'required|in:' . implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
-            'frequency' => 'required|in:' . implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
+            'currency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
+            'frequency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
             'interval_count' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'day_of_month' => 'nullable|integer|min:1|max:31',
             'day_of_week' => 'nullable|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            'status' => 'required|in:' . implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
             'auto_send' => 'boolean',
             'payment_terms_days' => 'nullable|integer|min:1|max:365',
             'late_fee_percentage' => 'nullable|numeric|min:0|max:100',
@@ -267,8 +267,8 @@ class RecurringInvoiceController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Calculate tax and total amounts
@@ -283,7 +283,7 @@ class RecurringInvoiceController extends Controller
             $lines = explode("\n", $request->line_items);
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (!empty($line)) {
+                if (! empty($line)) {
                     $lineItems[] = ['description' => $line];
                 }
             }
@@ -323,7 +323,7 @@ class RecurringInvoiceController extends Controller
         $recurringInvoice->save();
 
         return redirect()->route('clients.recurring-invoices.standalone.index')
-                        ->with('success', 'Recurring invoice updated successfully.');
+            ->with('success', 'Recurring invoice updated successfully.');
     }
 
     /**
@@ -336,7 +336,7 @@ class RecurringInvoiceController extends Controller
         $recurringInvoice->delete();
 
         return redirect()->route('clients.recurring-invoices.standalone.index')
-                        ->with('success', 'Recurring invoice deleted successfully.');
+            ->with('success', 'Recurring invoice deleted successfully.');
     }
 
     /**
@@ -349,7 +349,7 @@ class RecurringInvoiceController extends Controller
         $recurringInvoice->pause($request->get('reason'));
 
         return redirect()->route('clients.recurring-invoices.standalone.show', $recurringInvoice)
-                        ->with('success', 'Recurring invoice paused successfully.');
+            ->with('success', 'Recurring invoice paused successfully.');
     }
 
     /**
@@ -362,7 +362,7 @@ class RecurringInvoiceController extends Controller
         $recurringInvoice->resume();
 
         return redirect()->route('clients.recurring-invoices.standalone.show', $recurringInvoice)
-                        ->with('success', 'Recurring invoice resumed successfully.');
+            ->with('success', 'Recurring invoice resumed successfully.');
     }
 
     /**
@@ -375,7 +375,7 @@ class RecurringInvoiceController extends Controller
         $recurringInvoice->cancel($request->get('reason'));
 
         return redirect()->route('clients.recurring-invoices.standalone.show', $recurringInvoice)
-                        ->with('success', 'Recurring invoice cancelled successfully.');
+            ->with('success', 'Recurring invoice cancelled successfully.');
     }
 
     /**
@@ -385,19 +385,19 @@ class RecurringInvoiceController extends Controller
     {
         $this->authorize('update', $recurringInvoice);
 
-        if (!$recurringInvoice->isDue()) {
+        if (! $recurringInvoice->isDue()) {
             return redirect()->back()
-                           ->with('error', 'This recurring invoice is not due for generation yet.');
+                ->with('error', 'This recurring invoice is not due for generation yet.');
         }
 
         $invoice = $recurringInvoice->generateInvoice();
 
         if ($invoice) {
             return redirect()->route('clients.recurring-invoices.standalone.show', $recurringInvoice)
-                           ->with('success', 'Invoice generated successfully.');
+                ->with('success', 'Invoice generated successfully.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Failed to generate invoice.');
+                ->with('error', 'Failed to generate invoice.');
         }
     }
 
@@ -407,15 +407,15 @@ class RecurringInvoiceController extends Controller
     public function export(Request $request)
     {
         $query = ClientRecurringInvoice::with(['client', 'creator'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('template_name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -429,16 +429,16 @@ class RecurringInvoiceController extends Controller
 
         $invoices = $query->orderBy('next_invoice_date', 'asc')->get();
 
-        $filename = 'recurring_invoices_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'recurring_invoices_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($invoices) {
+        $callback = function () use ($invoices) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Template Name',
@@ -453,7 +453,7 @@ class RecurringInvoiceController extends Controller
                 'Next Invoice Date',
                 'Invoice Count',
                 'Total Revenue',
-                'Created At'
+                'Created At',
             ]);
 
             // CSV data
@@ -463,7 +463,7 @@ class RecurringInvoiceController extends Controller
                     $invoice->client->display_name,
                     $invoice->description,
                     $invoice->amount,
-                    $invoice->tax_rate . '%',
+                    $invoice->tax_rate.'%',
                     $invoice->total_amount,
                     $invoice->currency,
                     $invoice->frequency_description,
@@ -474,7 +474,7 @@ class RecurringInvoiceController extends Controller
                     $invoice->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 

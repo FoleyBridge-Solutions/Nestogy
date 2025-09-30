@@ -5,7 +5,6 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientDomain;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +13,7 @@ use Illuminate\Validation\Rule;
 class DomainController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of domains for the selected client
      */
@@ -21,7 +21,7 @@ class DomainController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -29,15 +29,15 @@ class DomainController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('domain_name', 'like', "%{$search}%")
-                  ->orWhere('registrar', 'like', "%{$search}%")
-                  ->orWhere('dns_provider', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('domain_name', 'like', "%{$search}%")
+                    ->orWhere('registrar', 'like', "%{$search}%")
+                    ->orWhere('dns_provider', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -69,20 +69,20 @@ class DomainController extends Controller
         }
 
         $domains = $query->orderBy('expires_at', 'asc')
-                         ->paginate(20)
-                         ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $statuses = ClientDomain::getStatuses();
         $registrars = ClientDomain::getRegistrars();
 
         // Get unique TLDs from existing domains
         $tlds = ClientDomain::where('company_id', auth()->user()->company_id)
-                           ->whereNotNull('tld')
-                           ->distinct()
-                           ->pluck('tld')
-                           ->filter()
-                           ->sort()
-                           ->values();
+            ->whereNotNull('tld')
+            ->distinct()
+            ->pluck('tld')
+            ->filter()
+            ->sort()
+            ->values();
 
         return view('clients.domains.index', compact('domains', 'client', 'statuses', 'registrars', 'tlds'));
     }
@@ -93,8 +93,8 @@ class DomainController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $statuses = ClientDomain::getStatuses();
@@ -122,18 +122,18 @@ class DomainController extends Controller
             'description' => 'nullable|string',
             'domain_name' => 'required|string|max:255',
             'tld' => 'required|string|max:20',
-            'registrar' => 'nullable|in:' . implode(',', array_keys(ClientDomain::getRegistrars())),
+            'registrar' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getRegistrars())),
             'registrar_account' => 'nullable|string|max:255',
             'registrar_url' => 'nullable|url',
             'nameservers' => 'nullable|string',
-            'dns_provider' => 'nullable|in:' . implode(',', array_keys(ClientDomain::getDnsProviders())),
+            'dns_provider' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getDnsProviders())),
             'dns_account' => 'nullable|string|max:255',
             'registered_at' => 'nullable|date|before_or_equal:today',
             'expires_at' => 'required|date|after:registered_at',
             'renewal_date' => 'nullable|date|before:expires_at',
             'auto_renewal' => 'boolean',
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
-            'status' => 'required|in:' . implode(',', array_keys(ClientDomain::getStatuses())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientDomain::getStatuses())),
             'privacy_protection' => 'boolean',
             'lock_status' => 'boolean',
             'whois_guard' => 'boolean',
@@ -149,8 +149,8 @@ class DomainController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process nameservers
@@ -190,12 +190,12 @@ class DomainController extends Controller
             'email_forwards_count' => $request->email_forwards_count ?: 0,
             'notes' => $request->notes,
         ]);
-        
+
         $domain->company_id = auth()->user()->company_id;
         $domain->save();
 
         return redirect()->route('clients.domains.standalone.index')
-                        ->with('success', 'Domain created successfully.');
+            ->with('success', 'Domain created successfully.');
     }
 
     /**
@@ -206,7 +206,7 @@ class DomainController extends Controller
         $this->authorize('view', $domain);
 
         $domain->load('client');
-        
+
         // Update access timestamp
         $domain->update(['accessed_at' => now()]);
 
@@ -221,8 +221,8 @@ class DomainController extends Controller
         $this->authorize('update', $domain);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $statuses = ClientDomain::getStatuses();
         $registrars = ClientDomain::getRegistrars();
@@ -251,18 +251,18 @@ class DomainController extends Controller
             'description' => 'nullable|string',
             'domain_name' => 'required|string|max:255',
             'tld' => 'required|string|max:20',
-            'registrar' => 'nullable|in:' . implode(',', array_keys(ClientDomain::getRegistrars())),
+            'registrar' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getRegistrars())),
             'registrar_account' => 'nullable|string|max:255',
             'registrar_url' => 'nullable|url',
             'nameservers' => 'nullable|string',
-            'dns_provider' => 'nullable|in:' . implode(',', array_keys(ClientDomain::getDnsProviders())),
+            'dns_provider' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getDnsProviders())),
             'dns_account' => 'nullable|string|max:255',
             'registered_at' => 'nullable|date|before_or_equal:today',
             'expires_at' => 'required|date|after:registered_at',
             'renewal_date' => 'nullable|date|before:expires_at',
             'auto_renewal' => 'boolean',
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
-            'status' => 'required|in:' . implode(',', array_keys(ClientDomain::getStatuses())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientDomain::getStatuses())),
             'privacy_protection' => 'boolean',
             'lock_status' => 'boolean',
             'whois_guard' => 'boolean',
@@ -278,8 +278,8 @@ class DomainController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process nameservers
@@ -323,7 +323,7 @@ class DomainController extends Controller
         $domain->save();
 
         return redirect()->route('clients.domains.standalone.index')
-                        ->with('success', 'Domain updated successfully.');
+            ->with('success', 'Domain updated successfully.');
     }
 
     /**
@@ -336,7 +336,7 @@ class DomainController extends Controller
         $domain->delete();
 
         return redirect()->route('clients.domains.standalone.index')
-                        ->with('success', 'Domain deleted successfully.');
+            ->with('success', 'Domain deleted successfully.');
     }
 
     /**
@@ -345,16 +345,16 @@ class DomainController extends Controller
     public function export(Request $request)
     {
         $query = ClientDomain::with(['client'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('domain_name', 'like', "%{$search}%")
-                  ->orWhere('registrar', 'like', "%{$search}%");
+                    ->orWhere('domain_name', 'like', "%{$search}%")
+                    ->orWhere('registrar', 'like', "%{$search}%");
             });
         }
 
@@ -376,16 +376,16 @@ class DomainController extends Controller
 
         $domains = $query->orderBy('expires_at', 'asc')->get();
 
-        $filename = 'domains_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'domains_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($domains) {
+        $callback = function () use ($domains) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Domain Name',
@@ -406,7 +406,7 @@ class DomainController extends Controller
                 'DNS Records',
                 'Subdomains',
                 'Email Forwards',
-                'Created At'
+                'Created At',
             ]);
 
             // CSV data
@@ -433,7 +433,7 @@ class DomainController extends Controller
                     $domain->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 

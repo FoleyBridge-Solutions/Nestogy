@@ -5,20 +5,23 @@ namespace App\Exceptions;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Base Exception Class for Nestogy MSP Platform
- * 
+ *
  * Provides common functionality for all custom exceptions including
  * context handling, user-friendly messaging, and proper HTTP responses.
  */
 abstract class BaseException extends Exception
 {
     protected array $context;
+
     protected string $userMessage;
+
     protected int $statusCode;
+
     protected string $domain;
 
     public function __construct(
@@ -30,7 +33,7 @@ abstract class BaseException extends Exception
         int $statusCode = 500
     ) {
         parent::__construct($message, $code, $previous);
-        
+
         $this->context = $context;
         $this->userMessage = $userMessage ?: $this->getDefaultUserMessage();
         $this->statusCode = $statusCode;
@@ -75,6 +78,7 @@ abstract class BaseException extends Exception
     public function setContext(array $context): self
     {
         $this->context = array_merge($this->context, $context);
+
         return $this;
     }
 
@@ -98,7 +102,7 @@ abstract class BaseException extends Exception
         }
 
         $errorView = $this->getErrorView();
-        
+
         return response()->view($errorView, [
             'message' => $this->userMessage,
             'statusCode' => $this->statusCode,
@@ -112,7 +116,7 @@ abstract class BaseException extends Exception
      */
     public function report(): void
     {
-        Log::error("{$this->domain} Exception: " . $this->getMessage(), [
+        Log::error("{$this->domain} Exception: ".$this->getMessage(), [
             'exception' => get_class($this),
             'domain' => $this->domain,
             'message' => $this->getMessage(),
@@ -135,6 +139,7 @@ abstract class BaseException extends Exception
     protected function getDomainName(): string
     {
         $className = class_basename($this);
+
         return str_replace('Exception', '', $className);
     }
 
@@ -150,13 +155,13 @@ abstract class BaseException extends Exception
     {
         $statusCode = $this->statusCode;
         $domain = strtolower($this->domain);
-        
+
         // Try domain-specific error view first
         $domainView = "errors.{$domain}.{$statusCode}";
         if (view()->exists($domainView)) {
             return $domainView;
         }
-        
+
         // Fallback to generic error view
         return "errors.{$statusCode}";
     }
@@ -187,7 +192,7 @@ abstract class ValidationException extends BaseException
         string $userMessage = ''
     ) {
         $this->validationErrors = $validationErrors;
-        
+
         parent::__construct(
             $message,
             422,
@@ -236,7 +241,7 @@ abstract class NotFoundException extends BaseException
         mixed $identifier = null,
         array $context = []
     ) {
-        $message = $identifier 
+        $message = $identifier
             ? "{$resource} with identifier '{$identifier}' not found"
             : "{$resource} not found";
 
@@ -266,10 +271,10 @@ abstract class PermissionException extends BaseException
 {
     public function __construct(
         string $action,
-        string $resource = null,
+        ?string $resource = null,
         array $context = []
     ) {
-        $message = $resource 
+        $message = $resource
             ? "Permission denied for action '{$action}' on resource '{$resource}'"
             : "Permission denied for action '{$action}'";
 
@@ -326,7 +331,7 @@ abstract class IntegrationException extends BaseException
                 'service' => $service,
                 'integration_message' => $message,
             ]),
-            $userMessage ?: "A third-party service error occurred. Please try again later.",
+            $userMessage ?: 'A third-party service error occurred. Please try again later.',
             502
         );
     }

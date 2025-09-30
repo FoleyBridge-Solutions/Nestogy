@@ -4,18 +4,18 @@ namespace App\Models;
 
 use App\Traits\BelongsToCompany;
 use App\Traits\HasArchive;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * Ticket Model
- * 
+ *
  * Represents support tickets with priority, status, and time tracking.
  * Tickets can be assigned to users, associated with assets, and have replies.
- * 
+ *
  * @property int $id
  * @property string|null $prefix
  * @property int $number
@@ -47,7 +47,7 @@ use Carbon\Carbon;
  */
 class Ticket extends Model
 {
-    use HasFactory, BelongsToCompany, HasArchive;
+    use BelongsToCompany, HasArchive, HasFactory;
 
     /**
      * The table associated with the model.
@@ -114,26 +114,37 @@ class Ticket extends Model
      * Ticket priority enumeration
      */
     const PRIORITY_LOW = 'Low';
+
     const PRIORITY_MEDIUM = 'Medium';
+
     const PRIORITY_HIGH = 'High';
+
     const PRIORITY_CRITICAL = 'Critical';
 
     /**
      * Ticket status enumeration
      */
     const STATUS_OPEN = 'Open';
+
     const STATUS_IN_PROGRESS = 'In Progress';
+
     const STATUS_RESOLVED = 'Resolved';
+
     const STATUS_CLOSED = 'Closed';
+
     const STATUS_ON_HOLD = 'On Hold';
 
     /**
      * Ticket source enumeration
      */
     const SOURCE_EMAIL = 'Email';
+
     const SOURCE_PHONE = 'Phone';
+
     const SOURCE_PORTAL = 'Portal';
+
     const SOURCE_WALK_IN = 'Walk-in';
+
     const SOURCE_INTERNAL = 'Internal';
 
     /**
@@ -262,6 +273,7 @@ class Ticket extends Model
     public function getAverageRating(): ?float
     {
         $avg = $this->ratings()->avg('rating');
+
         return $avg ? round($avg, 1) : null;
     }
 
@@ -271,10 +283,10 @@ class Ticket extends Model
     public function getFullNumber(): string
     {
         if ($this->prefix) {
-            return $this->prefix . '-' . str_pad($this->number, 4, '0', STR_PAD_LEFT);
+            return $this->prefix.'-'.str_pad($this->number, 4, '0', STR_PAD_LEFT);
         }
 
-        return 'TKT-' . str_pad($this->number, 4, '0', STR_PAD_LEFT);
+        return 'TKT-'.str_pad($this->number, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -298,7 +310,7 @@ class Ticket extends Model
      */
     public function isOverdue(): bool
     {
-        if (!$this->schedule || $this->isClosed()) {
+        if (! $this->schedule || $this->isClosed()) {
             return false;
         }
 
@@ -310,7 +322,7 @@ class Ticket extends Model
      */
     public function isScheduledToday(): bool
     {
-        if (!$this->schedule) {
+        if (! $this->schedule) {
             return false;
         }
 
@@ -346,7 +358,7 @@ class Ticket extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -372,7 +384,7 @@ class Ticket extends Model
     {
         $lastReply = $this->replies()->latest()->first();
         $lastUpdate = $lastReply ? $lastReply->created_at : $this->updated_at;
-        
+
         return $lastUpdate->diffInHours(Carbon::now());
     }
 
@@ -426,7 +438,7 @@ class Ticket extends Model
     /**
      * Close the ticket.
      */
-    public function close(int $closedBy, string $reason = null): void
+    public function close(int $closedBy, ?string $reason = null): void
     {
         $this->update([
             'status' => self::STATUS_CLOSED,
@@ -471,7 +483,7 @@ class Ticket extends Model
      */
     public function getPriorityColor(): string
     {
-        return match($this->priority) {
+        return match ($this->priority) {
             self::PRIORITY_CRITICAL => '#dc3545',
             self::PRIORITY_HIGH => '#fd7e14',
             self::PRIORITY_MEDIUM => '#28a745',
@@ -485,7 +497,7 @@ class Ticket extends Model
      */
     public function getStatusColor(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_OPEN => '#dc3545',
             self::STATUS_IN_PROGRESS => '#fd7e14',
             self::STATUS_ON_HOLD => '#6c757d',
@@ -541,8 +553,8 @@ class Ticket extends Model
     public function scopeOverdue($query)
     {
         return $query->whereNotIn('status', [self::STATUS_RESOLVED, self::STATUS_CLOSED])
-                    ->whereNotNull('schedule')
-                    ->where('schedule', '<', Carbon::now());
+            ->whereNotNull('schedule')
+            ->where('schedule', '<', Carbon::now());
     }
 
     /**
@@ -575,10 +587,10 @@ class Ticket extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('subject', 'like', '%' . $search . '%')
-              ->orWhere('details', 'like', '%' . $search . '%')
-              ->orWhere('number', $search)
-              ->orWhere('vendor_ticket_number', 'like', '%' . $search . '%');
+            $q->where('subject', 'like', '%'.$search.'%')
+                ->orWhere('details', 'like', '%'.$search.'%')
+                ->orWhere('number', $search)
+                ->orWhere('vendor_ticket_number', 'like', '%'.$search.'%');
         });
     }
 
@@ -686,7 +698,7 @@ class Ticket extends Model
 
         // Auto-increment ticket number for new tickets
         static::creating(function ($ticket) {
-            if (!$ticket->number) {
+            if (! $ticket->number) {
                 $lastTicket = static::where('client_id', $ticket->client_id)
                     ->where('prefix', $ticket->prefix)
                     ->orderBy('number', 'desc')
@@ -699,7 +711,7 @@ class Ticket extends Model
             if (empty($ticket->priority)) {
                 $ticket->priority = self::PRIORITY_MEDIUM;
             }
-            
+
             if (empty($ticket->status)) {
                 $ticket->status = self::STATUS_OPEN;
             }

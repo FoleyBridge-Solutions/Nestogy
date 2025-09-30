@@ -3,22 +3,23 @@
 namespace App\Domains\Financial\Services\TaxEngine;
 
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Texas Comptroller GIS API Client
- * 
+ *
  * Uses the free Texas Comptroller GIS system to get accurate tax rates
  * for Texas addresses. This is the official state system and provides
  * real-time jurisdiction-specific tax rates at no cost.
- * 
+ *
  * API: https://gis.cpa.texas.gov/search/
  */
 class TexasComptrollerApiClient
 {
     protected string $baseUrl = 'https://gis.cpa.texas.gov';
+
     protected int $timeout = 15;
 
     public function __construct(int $companyId, array $config = [])
@@ -32,20 +33,20 @@ class TexasComptrollerApiClient
     public function calculateTexasTax(
         float $amount,
         array $destination,
-        array $origin = null,
-        string $customerId = null,
+        ?array $origin = null,
+        ?string $customerId = null,
         array $lineItems = []
     ): array {
-        if (!$this->isTexasAddress($destination)) {
+        if (! $this->isTexasAddress($destination)) {
             return $this->getNotTexasResponse($amount);
         }
 
         try {
             $taxRate = $this->getTaxRateForAddress($destination);
-            
+
             if ($taxRate['success']) {
                 $taxAmount = $amount * $taxRate['total_rate'];
-                
+
                 return [
                     'success' => true,
                     'subtotal' => $amount,
@@ -54,7 +55,7 @@ class TexasComptrollerApiClient
                     'tax_rate' => $taxRate['total_rate'] * 100,
                     'jurisdictions' => $taxRate['jurisdictions'],
                     'source' => 'texas_comptroller',
-                    'address' => $taxRate['formatted_address']
+                    'address' => $taxRate['formatted_address'],
                 ];
             } else {
                 throw new Exception($taxRate['error']);
@@ -64,7 +65,7 @@ class TexasComptrollerApiClient
             Log::error('Texas Comptroller tax calculation failed', [
                 'error' => $e->getMessage(),
                 'amount' => $amount,
-                'destination' => $destination
+                'destination' => $destination,
             ]);
 
             return [
@@ -74,7 +75,7 @@ class TexasComptrollerApiClient
                 'tax_amount' => 0,
                 'total' => $amount,
                 'tax_rate' => 0,
-                'source' => 'texas_comptroller_error'
+                'source' => 'texas_comptroller_error',
             ];
         }
     }
@@ -86,10 +87,10 @@ class TexasComptrollerApiClient
     {
         $zipCode = $this->extractZipCode($address);
         $fullAddress = $this->formatAddressForSearch($address);
-        
+
         // Cache key for this address
-        $cacheKey = "texas_tax_rate_" . md5($fullAddress);
-        
+        $cacheKey = 'texas_tax_rate_'.md5($fullAddress);
+
         // Check cache first (cache for 24 hours)
         $cached = Cache::get($cacheKey);
         if ($cached) {
@@ -104,29 +105,29 @@ class TexasComptrollerApiClient
                     'Address' => $address['line1'] ?? $address['street'] ?? '',
                     'City' => $address['city'] ?? '',
                     'State' => 'TX',
-                    'ZipCode' => $zipCode
+                    'ZipCode' => $zipCode,
                 ]);
 
             if ($response->successful()) {
                 $html = $response->body();
                 $taxData = $this->parseTexasComptrollerResponse($html);
-                
+
                 if ($taxData['success']) {
                     // Cache the result for 24 hours
                     Cache::put($cacheKey, $taxData, now()->addHours(24));
                 }
-                
+
                 return $taxData;
             } else {
-                throw new Exception("API request failed with status: " . $response->status());
+                throw new Exception('API request failed with status: '.$response->status());
             }
 
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'error' => 'Failed to get tax rate from Texas Comptroller: ' . $e->getMessage(),
+                'error' => 'Failed to get tax rate from Texas Comptroller: '.$e->getMessage(),
                 'total_rate' => 0,
-                'jurisdictions' => []
+                'jurisdictions' => [],
             ];
         }
     }
@@ -144,39 +145,39 @@ class TexasComptrollerApiClient
             // Look for the tax rate table in the HTML
             if (preg_match('/JURISDICTION NAME\s+TEXAS.*?TOTAL TAX RATE\s+([\d.]+)/s', $html, $matches)) {
                 $foundResults = true;
-                
+
                 // Extract all jurisdiction entries
                 preg_match_all('/JURISDICTION NAME\s+([^\n]+)\s+Code\s+(\d+)\s+Type\s+([^\n]+)\s+Tax Rate\s+([\d.]+)/s', $html, $jurisdictionMatches, PREG_SET_ORDER);
-                
+
                 foreach ($jurisdictionMatches as $match) {
                     $name = trim($match[1]);
                     $code = trim($match[2]);
                     $type = trim($match[3]);
                     $rate = (float) trim($match[4]);
-                    
+
                     $jurisdictions[] = [
                         'name' => $name,
                         'code' => $code,
                         'type' => $this->normalizeJurisdictionType($type),
                         'tax_amount' => 0, // Will be calculated when applied to amount
-                        'tax_rate' => $rate * 100 // Convert to percentage
+                        'tax_rate' => $rate * 100, // Convert to percentage
                     ];
-                    
+
                     $totalRate += $rate;
                 }
-                
+
                 // Get the total rate from the parsed data
                 if (isset($matches[1])) {
                     $totalRate = (float) $matches[1];
                 }
             }
 
-            if (!$foundResults) {
+            if (! $foundResults) {
                 return [
                     'success' => false,
                     'error' => 'No tax rate data found in response',
                     'total_rate' => 0,
-                    'jurisdictions' => []
+                    'jurisdictions' => [],
                 ];
             }
 
@@ -184,15 +185,15 @@ class TexasComptrollerApiClient
                 'success' => true,
                 'total_rate' => $totalRate,
                 'jurisdictions' => $jurisdictions,
-                'formatted_address' => $this->extractFormattedAddress($html)
+                'formatted_address' => $this->extractFormattedAddress($html),
             ];
 
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'error' => 'Failed to parse tax rate response: ' . $e->getMessage(),
+                'error' => 'Failed to parse tax rate response: '.$e->getMessage(),
                 'total_rate' => 0,
-                'jurisdictions' => []
+                'jurisdictions' => [],
             ];
         }
     }
@@ -203,7 +204,7 @@ class TexasComptrollerApiClient
     protected function normalizeJurisdictionType(string $type): string
     {
         $type = strtoupper(trim($type));
-        
+
         $typeMap = [
             'STATE' => 'state',
             'SPD' => 'special_district',
@@ -211,7 +212,7 @@ class TexasComptrollerApiClient
             'CITY' => 'city',
             'COUNTY' => 'county',
             'MUD' => 'municipal_utility_district',
-            'ESD' => 'emergency_services_district'
+            'ESD' => 'emergency_services_district',
         ];
 
         return $typeMap[$type] ?? strtolower($type);
@@ -225,6 +226,7 @@ class TexasComptrollerApiClient
         if (preg_match('/Results found:\s*\d+\s*([^\n]+)/i', $html, $matches)) {
             return trim($matches[1]);
         }
+
         return '';
     }
 
@@ -234,6 +236,7 @@ class TexasComptrollerApiClient
     protected function isTexasAddress(array $address): bool
     {
         $state = $address['state'] ?? $address['state_code'] ?? '';
+
         return strtoupper($state) === 'TX';
     }
 
@@ -243,12 +246,12 @@ class TexasComptrollerApiClient
     protected function extractZipCode(array $address): string
     {
         $zip = $address['zip'] ?? $address['postal_code'] ?? $address['zip_code'] ?? '';
-        
+
         // Extract just the 5-digit zip if it includes +4
         if (preg_match('/(\d{5})/', $zip, $matches)) {
             return $matches[1];
         }
-        
+
         return $zip;
     }
 
@@ -261,9 +264,9 @@ class TexasComptrollerApiClient
             $address['line1'] ?? $address['street'] ?? '',
             $address['city'] ?? '',
             'TX',
-            $this->extractZipCode($address)
+            $this->extractZipCode($address),
         ];
-        
+
         return implode(', ', array_filter($parts));
     }
 
@@ -279,7 +282,7 @@ class TexasComptrollerApiClient
             'tax_amount' => 0,
             'total' => $amount,
             'tax_rate' => 0,
-            'source' => 'texas_comptroller_out_of_state'
+            'source' => 'texas_comptroller_out_of_state',
         ];
     }
 
@@ -296,7 +299,7 @@ class TexasComptrollerApiClient
                     'line1' => '25334 TRIANGLE LOOP',
                     'city' => 'SAN ANTONIO',
                     'state' => 'TX',
-                    'zip' => '78255'
+                    'zip' => '78255',
                 ]
             );
 
@@ -304,7 +307,7 @@ class TexasComptrollerApiClient
                 'success' => $testResult['success'],
                 'connection_status' => $testResult['success'] ? 'Connected' : 'Failed',
                 'test_result' => $testResult,
-                'api_version' => 'texas_comptroller'
+                'api_version' => 'texas_comptroller',
             ];
 
         } catch (Exception $e) {
@@ -312,7 +315,7 @@ class TexasComptrollerApiClient
                 'success' => false,
                 'connection_status' => 'Failed',
                 'error' => $e->getMessage(),
-                'api_version' => 'texas_comptroller'
+                'api_version' => 'texas_comptroller',
             ];
         }
     }
@@ -326,7 +329,7 @@ class TexasComptrollerApiClient
             'configured' => true, // No credentials needed - it's a free public API
             'api_url' => $this->baseUrl,
             'api_version' => 'texas_comptroller',
-            'cost' => 'FREE'
+            'cost' => 'FREE',
         ];
     }
 }

@@ -2,17 +2,16 @@
 
 namespace App\Domains\Integration\Services;
 
+use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Models\Integration;
 use App\Domains\Integration\Models\RMMAlert;
-use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Ticket\Models\Ticket;
 use App\Jobs\ProcessRMMAlert;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Queue;
 
 /**
  * RMM Integration Service
- * 
+ *
  * Core service for processing RMM webhooks and managing integrations.
  * Handles payload standardization, alert processing, and device mapping.
  */
@@ -32,45 +31,46 @@ class RMMIntegrationService
 
             // Standardize payload format
             $standardizedPayload = $this->standardizePayload($integration, $payload);
-            
+
             // Create or update device mapping
             $deviceMapping = $this->handleDeviceMapping($integration, $standardizedPayload);
-            
+
             // Create RMM alert record
             $alert = $this->createAlert($integration, $standardizedPayload, $deviceMapping);
-            
+
             // Check for duplicates
             if ($this->isDuplicateAlert($alert)) {
                 $alert->markDuplicate();
                 Log::info('Duplicate alert detected', ['alert_id' => $alert->id]);
+
                 return ['status' => 'duplicate', 'alert_id' => $alert->id];
             }
-            
+
             // Dispatch processing job
             ProcessRMMAlert::dispatch($alert);
-            
+
             // Update integration last sync
             $integration->updateLastSync();
-            
+
             Log::info('RMM webhook processed successfully', [
                 'integration_id' => $integration->id,
                 'alert_id' => $alert->id,
                 'device_mapping_id' => $deviceMapping?->id,
             ]);
-            
+
             return [
                 'status' => 'processed',
                 'alert_id' => $alert->id,
                 'device_mapping_id' => $deviceMapping?->id,
             ];
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to process RMM webhook payload', [
                 'integration_id' => $integration->id,
                 'error' => $e->getMessage(),
                 'payload' => $payload,
             ]);
-            
+
             throw $e;
         }
     }
@@ -81,7 +81,7 @@ class RMMIntegrationService
     public function standardizePayload(Integration $integration, array $payload): array
     {
         $fieldMappings = $integration->field_mappings ?: Integration::getDefaultFieldMappings($integration->provider);
-        
+
         $standardized = [
             'device_id' => data_get($payload, $fieldMappings['device_id']),
             'device_name' => data_get($payload, $fieldMappings['device_name']),
@@ -93,7 +93,7 @@ class RMMIntegrationService
             'alert_type' => $this->determineAlertType($payload, $integration->provider),
             'raw_payload' => $payload,
         ];
-        
+
         // Normalize severity
         if ($standardized['severity']) {
             $standardized['severity'] = RMMAlert::normalizeSeverity(
@@ -103,13 +103,13 @@ class RMMIntegrationService
         } else {
             $standardized['severity'] = RMMAlert::SEVERITY_NORMAL;
         }
-        
+
         // Ensure we have required fields
         $standardized['device_id'] = $standardized['device_id'] ?: 'unknown';
         $standardized['device_name'] = $standardized['device_name'] ?: 'Unknown Device';
         $standardized['alert_id'] = $standardized['alert_id'] ?: uniqid('alert_');
         $standardized['message'] = $standardized['message'] ?: 'RMM Alert';
-        
+
         return $standardized;
     }
 
@@ -119,20 +119,21 @@ class RMMIntegrationService
     public function handleDeviceMapping(Integration $integration, array $standardizedPayload): ?DeviceMapping
     {
         // Skip if we don't have device information
-        if (!$standardizedPayload['device_id'] || !$standardizedPayload['client_id']) {
+        if (! $standardizedPayload['device_id'] || ! $standardizedPayload['client_id']) {
             return null;
         }
-        
+
         // Find or resolve client ID
         $clientId = $this->resolveClientId($integration, $standardizedPayload['client_id']);
-        if (!$clientId) {
+        if (! $clientId) {
             Log::warning('Could not resolve client ID for device mapping', [
                 'integration_id' => $integration->id,
                 'rmm_client_id' => $standardizedPayload['client_id'],
             ]);
+
             return null;
         }
-        
+
         // Create or update device mapping
         $deviceMapping = DeviceMapping::updateOrCreateMapping(
             $integration->id,
@@ -144,7 +145,7 @@ class RMMIntegrationService
                 'provider_data' => $standardizedPayload['raw_payload'],
             ]
         );
-        
+
         return $deviceMapping;
     }
 
@@ -163,7 +164,7 @@ class RMMIntegrationService
             'message' => $standardizedPayload['message'],
             'raw_payload' => $standardizedPayload['raw_payload'],
         ]);
-        
+
         return $alert;
     }
 
@@ -182,20 +183,21 @@ class RMMIntegrationService
     {
         $integration = $alert->integration;
         $alertRules = $integration->alert_rules ?: Integration::getDefaultAlertRules($integration->provider);
-        
+
         // Check if auto-create tickets is enabled
-        if (!data_get($alertRules, 'auto_create_tickets', true)) {
+        if (! data_get($alertRules, 'auto_create_tickets', true)) {
             return null;
         }
-        
+
         try {
             // Determine client ID
             $clientId = $this->resolveClientIdFromAlert($alert);
-            if (!$clientId) {
+            if (! $clientId) {
                 Log::warning('Cannot create ticket: client not found', ['alert_id' => $alert->id]);
+
                 return null;
             }
-            
+
             // Create ticket
             $ticket = Ticket::create([
                 'company_id' => $integration->company_id,
@@ -209,33 +211,33 @@ class RMMIntegrationService
                 'subcategory' => 'Monitoring',
                 'asset_id' => $alert->asset_id,
             ]);
-            
+
             // Link alert to ticket
             $alert->update(['ticket_id' => $ticket->id]);
-            
+
             // Auto-assign if configured
             if (data_get($alertRules, 'auto_assign_technician')) {
                 $this->autoAssignTicket($ticket, $integration);
             }
-            
+
             // Notify client if configured
             if (data_get($alertRules, 'notify_client')) {
                 $this->notifyClient($ticket, $alert);
             }
-            
+
             Log::info('Created ticket from RMM alert', [
                 'alert_id' => $alert->id,
                 'ticket_id' => $ticket->id,
             ]);
-            
+
             return $ticket;
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to create ticket from RMM alert', [
                 'alert_id' => $alert->id,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return null;
         }
     }
@@ -247,7 +249,7 @@ class RMMIntegrationService
     {
         // This would typically involve mapping RMM client IDs to internal client IDs
         // For now, we'll assume the RMM client ID might be the internal ID or name
-        
+
         // Try as direct ID first
         if (is_numeric($rmmClientId)) {
             $client = \App\Models\Client::where('company_id', $integration->company_id)
@@ -257,16 +259,16 @@ class RMMIntegrationService
                 return $client->id;
             }
         }
-        
+
         // Try matching by name or RMM ID
         $client = \App\Models\Client::where('company_id', $integration->company_id)
             ->where(function ($query) use ($rmmClientId) {
                 $query->where('name', $rmmClientId)
-                      ->orWhere('company_name', $rmmClientId)
-                      ->orWhere('rmm_id', $rmmClientId);
+                    ->orWhere('company_name', $rmmClientId)
+                    ->orWhere('rmm_id', $rmmClientId);
             })
             ->first();
-            
+
         return $client?->id;
     }
 
@@ -280,21 +282,21 @@ class RMMIntegrationService
             'integration_id' => $alert->integration_id,
             'rmm_device_id' => $alert->device_id,
         ])->first();
-        
+
         if ($deviceMapping) {
             return $deviceMapping->client_id;
         }
-        
+
         // Try to resolve from raw payload
-        $clientId = data_get($alert->raw_payload, 'client_id') 
+        $clientId = data_get($alert->raw_payload, 'client_id')
                  ?: data_get($alert->raw_payload, 'ClientID')
                  ?: data_get($alert->raw_payload, 'site_name')
                  ?: data_get($alert->raw_payload, 'organizationId');
-                 
+
         if ($clientId) {
             return $this->resolveClientId($alert->integration, $clientId);
         }
-        
+
         return null;
     }
 
@@ -323,7 +325,7 @@ class RMMIntegrationService
     {
         $deviceName = $alert->device_id;
         $alertType = $alert->alert_type;
-        
+
         return "[{$alert->severity}] {$alertType} - {$deviceName}";
     }
 
@@ -339,8 +341,8 @@ class RMMIntegrationService
         $description .= "Message: {$alert->message}\n";
         $description .= "Integration: {$alert->integration->name}\n";
         $description .= "Received: {$alert->created_at->format('Y-m-d H:i:s')}\n\n";
-        $description .= "This ticket was automatically created from an RMM system alert.";
-        
+        $description .= 'This ticket was automatically created from an RMM system alert.';
+
         return $description;
     }
 
@@ -355,7 +357,7 @@ class RMMIntegrationService
             RMMAlert::SEVERITY_NORMAL => 'Normal',
             RMMAlert::SEVERITY_LOW => 'Low',
         ];
-        
+
         return $mapping[$severity] ?? 'Normal';
     }
 

@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Domains\Ticket\Models\Ticket;
 use App\Models\TicketReply;
 use App\Models\User;
-use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -27,7 +27,7 @@ class TicketReplyFactory extends Factory
             TicketReply::SENTIMENT_WEAK_POSITIVE,
             TicketReply::SENTIMENT_NEUTRAL,
             TicketReply::SENTIMENT_WEAK_NEGATIVE,
-            TicketReply::SENTIMENT_NEGATIVE
+            TicketReply::SENTIMENT_NEGATIVE,
         ];
 
         $hasTimeTracked = $this->faker->boolean(30); // 30% chance of time tracking
@@ -37,8 +37,8 @@ class TicketReplyFactory extends Factory
             'company_id' => 1,
             'reply' => $this->faker->paragraphs($this->faker->numberBetween(1, 3), true),
             'type' => $this->faker->randomElement($types),
-            'time_worked' => $hasTimeTracked ? sprintf('%02d:%02d:00', 
-                $this->faker->numberBetween(0, 4), 
+            'time_worked' => $hasTimeTracked ? sprintf('%02d:%02d:00',
+                $this->faker->numberBetween(0, 4),
                 $this->faker->numberBetween(0, 59)
             ) : null,
             'replied_by' => User::inRandomOrder()->first()?->id ?? User::factory(),
@@ -83,11 +83,12 @@ class TicketReplyFactory extends Factory
     /**
      * Indicate that the reply has time tracked.
      */
-    public function withTimeTracked(int $hours = null, int $minutes = null): static
+    public function withTimeTracked(?int $hours = null, ?int $minutes = null): static
     {
         return $this->state(function (array $attributes) use ($hours, $minutes) {
             $h = $hours ?? $this->faker->numberBetween(0, 4);
             $m = $minutes ?? $this->faker->numberBetween(0, 59);
+
             return [
                 'time_worked' => sprintf('%02d:%02d:00', $h, $m),
             ];
@@ -103,7 +104,7 @@ class TicketReplyFactory extends Factory
             'sentiment_score' => $this->faker->randomFloat(2, 0.3, 1.0),
             'sentiment_label' => $this->faker->randomElement([
                 TicketReply::SENTIMENT_POSITIVE,
-                TicketReply::SENTIMENT_WEAK_POSITIVE
+                TicketReply::SENTIMENT_WEAK_POSITIVE,
             ]),
             'sentiment_analyzed_at' => $this->faker->dateTimeThisMonth(),
             'sentiment_confidence' => $this->faker->randomFloat(2, 0.7, 1.0),
@@ -119,7 +120,7 @@ class TicketReplyFactory extends Factory
             'sentiment_score' => $this->faker->randomFloat(2, -1.0, -0.3),
             'sentiment_label' => $this->faker->randomElement([
                 TicketReply::SENTIMENT_NEGATIVE,
-                TicketReply::SENTIMENT_WEAK_NEGATIVE
+                TicketReply::SENTIMENT_WEAK_NEGATIVE,
             ]),
             'sentiment_analyzed_at' => $this->faker->dateTimeThisMonth(),
             'sentiment_confidence' => $this->faker->randomFloat(2, 0.7, 1.0),

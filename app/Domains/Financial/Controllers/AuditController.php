@@ -3,34 +3,34 @@
 namespace App\Domains\Financial\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Carbon\Carbon;
 
 class AuditController extends Controller
 {
     public function index(Request $request): View
     {
         $auditLogs = collect(); // TODO: Load from audit_logs table
-        
+
         $filters = [
             'date_from' => $request->get('date_from', Carbon::now()->subMonth()),
             'date_to' => $request->get('date_to', Carbon::now()),
             'user_id' => $request->get('user_id'),
             'entity_type' => $request->get('entity_type'),
-            'action' => $request->get('action')
+            'action' => $request->get('action'),
         ];
-        
+
         return view('financial.audits.index', compact('auditLogs', 'filters'));
     }
 
     public function transactions(Request $request): View
     {
         $transactionAudits = collect(); // TODO: Load transaction audit trail
-        
+
         $suspiciousActivities = $this->detectSuspiciousActivities();
         $complianceIssues = $this->checkComplianceIssues();
-        
+
         return view('financial.audits.transactions', compact(
             'transactionAudits',
             'suspiciousActivities',
@@ -42,11 +42,11 @@ class AuditController extends Controller
     {
         $entityType = $request->get('entity', 'invoice');
         $entityId = $request->get('id');
-        
+
         $changeHistory = collect(); // TODO: Load change history for entity
         $originalValues = [];
         $currentValues = [];
-        
+
         return view('financial.audits.changes', compact(
             'changeHistory',
             'originalValues',
@@ -62,12 +62,12 @@ class AuditController extends Controller
             'tax_compliance' => $this->checkTaxCompliance(),
             'invoice_compliance' => $this->checkInvoiceCompliance(),
             'payment_compliance' => $this->checkPaymentCompliance(),
-            'regulatory_compliance' => $this->checkRegulatoryCompliance()
+            'regulatory_compliance' => $this->checkRegulatoryCompliance(),
         ];
-        
+
         $violations = $this->getComplianceViolations();
         $recommendations = $this->generateComplianceRecommendations();
-        
+
         return view('financial.audits.compliance', compact(
             'complianceChecks',
             'violations',
@@ -81,12 +81,12 @@ class AuditController extends Controller
             'type' => 'required|in:full,transactions,changes,compliance',
             'format' => 'required|in:pdf,csv,excel',
             'date_from' => 'required|date',
-            'date_to' => 'required|date|after:date_from'
+            'date_to' => 'required|date|after:date_from',
         ]);
-        
+
         // TODO: Generate and export audit report
-        
-        return response()->download('audit-report.' . $validated['format']);
+
+        return response()->download('audit-report.'.$validated['format']);
     }
 
     public function trail($entity, $id): View
@@ -94,7 +94,7 @@ class AuditController extends Controller
         // TODO: Load complete audit trail for specific entity
         $auditTrail = collect();
         $relatedActivities = collect();
-        
+
         return view('financial.audits.trail', compact(
             'auditTrail',
             'relatedActivities',
@@ -109,7 +109,7 @@ class AuditController extends Controller
         return [
             'unusual_amounts' => [],
             'frequent_modifications' => [],
-            'unauthorized_access' => []
+            'unauthorized_access' => [],
         ];
     }
 
@@ -124,7 +124,7 @@ class AuditController extends Controller
         // TODO: Verify tax compliance
         return [
             'status' => 'compliant',
-            'issues' => []
+            'issues' => [],
         ];
     }
 
@@ -133,7 +133,7 @@ class AuditController extends Controller
         // TODO: Verify invoice compliance
         return [
             'status' => 'compliant',
-            'issues' => []
+            'issues' => [],
         ];
     }
 
@@ -142,7 +142,7 @@ class AuditController extends Controller
         // TODO: Verify payment compliance
         return [
             'status' => 'compliant',
-            'issues' => []
+            'issues' => [],
         ];
     }
 
@@ -151,7 +151,7 @@ class AuditController extends Controller
         // TODO: Verify regulatory compliance
         return [
             'status' => 'compliant',
-            'issues' => []
+            'issues' => [],
         ];
     }
 

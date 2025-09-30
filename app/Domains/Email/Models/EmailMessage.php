@@ -107,7 +107,7 @@ class EmailMessage extends Model
     // Helper methods
     public function getThreadMessages(): \Illuminate\Database\Eloquent\Collection
     {
-        if (!$this->thread_id) {
+        if (! $this->thread_id) {
             return collect([$this]);
         }
 
@@ -119,25 +119,26 @@ class EmailMessage extends Model
     public function generatePreview(int $length = 200): string
     {
         $text = $this->body_text ?: strip_tags($this->body_html);
+
         return Str::limit($text, $length);
     }
 
     public function getAllRecipients(): array
     {
         $recipients = [];
-        
+
         if ($this->to_addresses) {
             $recipients = array_merge($recipients, $this->to_addresses);
         }
-        
+
         if ($this->cc_addresses) {
             $recipients = array_merge($recipients, $this->cc_addresses);
         }
-        
+
         if ($this->bcc_addresses) {
             $recipients = array_merge($recipients, $this->bcc_addresses);
         }
-        
+
         return array_unique($recipients);
     }
 
@@ -158,11 +159,11 @@ class EmailMessage extends Model
 
     public function markAsRead(): self
     {
-        if (!$this->is_read) {
+        if (! $this->is_read) {
             $this->update(['is_read' => true]);
             $this->emailFolder->decrement('unread_count');
         }
-        
+
         return $this;
     }
 
@@ -172,19 +173,21 @@ class EmailMessage extends Model
             $this->update(['is_read' => false]);
             $this->emailFolder->increment('unread_count');
         }
-        
+
         return $this;
     }
 
     public function flag(): self
     {
         $this->update(['is_flagged' => true]);
+
         return $this;
     }
 
     public function unflag(): self
     {
         $this->update(['is_flagged' => false]);
+
         return $this;
     }
 
@@ -238,9 +241,9 @@ class EmailMessage extends Model
     {
         return $query->where(function ($q) use ($term) {
             $q->where('subject', 'like', "%{$term}%")
-              ->orWhere('body_text', 'like', "%{$term}%")
-              ->orWhere('from_address', 'like', "%{$term}%")
-              ->orWhere('from_name', 'like', "%{$term}%");
+                ->orWhere('body_text', 'like', "%{$term}%")
+                ->orWhere('from_address', 'like', "%{$term}%")
+                ->orWhere('from_name', 'like', "%{$term}%");
         });
     }
 
@@ -253,8 +256,8 @@ class EmailMessage extends Model
     {
         return $query->where(function ($q) use ($email) {
             $q->whereJsonContains('to_addresses', $email)
-              ->orWhereJsonContains('cc_addresses', $email)
-              ->orWhereJsonContains('bcc_addresses', $email);
+                ->orWhereJsonContains('cc_addresses', $email)
+                ->orWhereJsonContains('bcc_addresses', $email);
         });
     }
 }

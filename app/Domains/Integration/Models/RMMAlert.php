@@ -10,10 +10,10 @@ use Illuminate\Support\Str;
 
 /**
  * RMMAlert Model
- * 
+ *
  * Represents alerts received from RMM systems.
  * Tracks processing status and ticket creation.
- * 
+ *
  * @property int $id
  * @property string $uuid
  * @property int $integration_id
@@ -62,8 +62,11 @@ class RMMAlert extends Model
 
     // Severity constants
     const SEVERITY_URGENT = 'urgent';
+
     const SEVERITY_HIGH = 'high';
+
     const SEVERITY_NORMAL = 'normal';
+
     const SEVERITY_LOW = 'low';
 
     const SEVERITY_LABELS = [
@@ -76,12 +79,12 @@ class RMMAlert extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($alert) {
             $alert->uuid = Str::uuid();
-            
+
             // Generate duplicate hash for deduplication
-            if (!$alert->duplicate_hash) {
+            if (! $alert->duplicate_hash) {
                 $alert->duplicate_hash = $alert->generateDuplicateHash();
             }
         });
@@ -116,7 +119,7 @@ class RMMAlert extends Model
      */
     public function isProcessed(): bool
     {
-        return !is_null($this->processed_at);
+        return ! is_null($this->processed_at);
     }
 
     /**

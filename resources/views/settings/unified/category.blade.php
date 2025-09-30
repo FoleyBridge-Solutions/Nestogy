@@ -19,10 +19,8 @@
 
     <!-- Header -->
     <flux:card class="mb-6">
-        <flux:card.body>
-            <flux:heading size="xl">{{ $metadata['name'] }}</flux:heading>
-            <flux:text class="mt-2">{{ $metadata['description'] }}</flux:text>
-        </flux:card.body>
+        <flux:heading size="xl">{{ $metadata['name'] }}</flux:heading>
+        <flux:text class="mt-2">{{ $metadata['description'] }}</flux:text>
     </flux:card>
 
     <!-- Success/Error Messages -->
@@ -40,11 +38,11 @@
 
     <!-- Settings Form -->
     <flux:card>
-        <form action="{{ route('settings.category.update', [$domain, $category]) }}" method="POST" id="settings-form">
+        <form action="{{ route('settings.category.update', [$domain, $category]) }}" method="POST" id="settings-form" class="space-y-6">
             @csrf
             @method('PUT')
             
-            <flux:card.body>
+            <div>
                 @if($category === 'email' && $domain === 'communication')
                     @include('settings.unified.forms.communication-email', ['settings' => $settings])
                 @elseif($category === 'physical_mail' && $domain === 'communication')
@@ -73,32 +71,32 @@
                         @endforeach
                     </flux:field.group>
                 @endif
-            </flux:card.body>
+            </div>
             
-            <flux:card.footer>
-                <flux:between>
-                    <flux:button.group>
-                        @if(in_array($category, ['email', 'physical_mail']) && $domain === 'communication')
-                            <flux:button type="button" variant="secondary" icon="beaker" onclick="testConfiguration()">
-                                Test Configuration
-                            </flux:button>
-                        @endif
-                        
-                        <flux:button type="button" variant="secondary" icon="arrow-uturn-left" onclick="resetToDefaults()">
-                            Reset to Defaults
+            <flux:separator />
+            
+            <div class="flex items-center justify-between">
+                <flux:button.group>
+                    @if(in_array($category, ['email', 'physical_mail']) && $domain === 'communication')
+                        <flux:button type="button" variant="secondary" icon="beaker" onclick="testConfiguration()">
+                            Test Configuration
                         </flux:button>
-                    </flux:button.group>
+                    @endif
                     
-                    <flux:button.group>
-                        <flux:button variant="ghost" href="{{ route('settings.domain.index', $domain) }}">
-                            Cancel
-                        </flux:button>
-                        <flux:button type="submit" variant="primary" icon="check">
-                            Save Settings
-                        </flux:button>
-                    </flux:button.group>
-                </flux:between>
-            </flux:card.footer>
+                    <flux:button type="button" variant="secondary" icon="arrow-uturn-left" onclick="resetToDefaults()">
+                        Reset to Defaults
+                    </flux:button>
+                </flux:button.group>
+                
+                <flux:button.group>
+                    <flux:button variant="ghost" href="{{ route('settings.domain.index', $domain) }}">
+                        Cancel
+                    </flux:button>
+                    <flux:button type="submit" variant="primary" icon="check">
+                        Save Settings
+                    </flux:button>
+                </flux:button.group>
+            </div>
         </form>
     </flux:card>
 

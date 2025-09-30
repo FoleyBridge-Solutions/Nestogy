@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Credit Application Model
- * 
+ *
  * Manages the application of credit notes to invoices and accounts,
  * supporting various application methods, automatic matching,
  * and comprehensive audit tracking.
@@ -39,7 +39,7 @@ class CreditApplication extends Model
         'requires_approval', 'approved', 'approved_by', 'approved_at', 'approval_notes',
         'external_id', 'external_references', 'source_system', 'retry_count',
         'next_retry_at', 'error_log', 'failure_reason', 'application_notes',
-        'internal_notes', 'metadata'
+        'internal_notes', 'metadata',
     ];
 
     protected $casts = [
@@ -94,31 +94,46 @@ class CreditApplication extends Model
         'next_retry_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Application Types
     const TYPE_AUTOMATIC = 'automatic';
+
     const TYPE_MANUAL = 'manual';
+
     const TYPE_PARTIAL = 'partial';
+
     const TYPE_FULL = 'full';
+
     const TYPE_OLDEST_FIRST = 'oldest_first';
+
     const TYPE_SPECIFIC_INVOICE = 'specific_invoice';
+
     const TYPE_FUTURE_INVOICES = 'future_invoices';
 
     // Application Methods
     const METHOD_DIRECT_APPLICATION = 'direct_application';
+
     const METHOD_ACCOUNT_CREDIT = 'account_credit';
+
     const METHOD_PREPAYMENT = 'prepayment';
+
     const METHOD_FUTURE_BILLING_CREDIT = 'future_billing_credit';
+
     const METHOD_PRORATION_ADJUSTMENT = 'proration_adjustment';
 
     // Status
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPLIED = 'applied';
+
     const STATUS_PARTIALLY_APPLIED = 'partially_applied';
+
     const STATUS_REVERSED = 'reversed';
+
     const STATUS_EXPIRED = 'expired';
+
     const STATUS_FAILED = 'failed';
 
     /**
@@ -160,6 +175,7 @@ class CreditApplication extends Model
     public function scopeForCompany($query, $companyId = null)
     {
         $companyId = $companyId ?? Auth::user()?->company_id;
+
         return $query->where('company_id', $companyId);
     }
 
@@ -224,7 +240,7 @@ class CreditApplication extends Model
     {
         $companyId = Auth::user()?->company_id;
         $year = now()->year;
-        
+
         $lastApplication = self::where('company_id', $companyId)
             ->where('application_number', 'like', "CA-$year-%")
             ->orderBy('application_number', 'desc')
@@ -236,7 +252,7 @@ class CreditApplication extends Model
             $nextNumber = 1;
         }
 
-        return 'CA-' . $year . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+        return 'CA-'.$year.'-'.str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -244,7 +260,7 @@ class CreditApplication extends Model
      */
     public function canBeReversed(): bool
     {
-        return $this->status === self::STATUS_APPLIED && !$this->is_reversed;
+        return $this->status === self::STATUS_APPLIED && ! $this->is_reversed;
     }
 
     /**
@@ -268,7 +284,7 @@ class CreditApplication extends Model
      */
     public function apply(): bool
     {
-        if (!$this->canApply()) {
+        if (! $this->canApply()) {
             return false;
         }
 
@@ -279,27 +295,27 @@ class CreditApplication extends Model
             // Apply the credit
             $this->status = self::STATUS_APPLIED;
             $this->applied_at = now();
-            
+
             // Update invoice balance
             if ($this->invoice) {
                 $this->applyToInvoice();
             } else {
                 $this->applyToAccount();
             }
-            
+
             // Update credit note remaining balance
             $this->creditNote->updateRemainingBalance();
-            
+
             // Create GL entries
             if ($this->debit_gl_account && $this->credit_gl_account) {
                 $this->createGlEntries();
             }
-            
+
             // Send notifications
             if ($this->customer_notified) {
                 $this->sendApplicationNotifications();
             }
-            
+
             $this->save();
         });
 
@@ -311,9 +327,9 @@ class CreditApplication extends Model
      */
     public function canApply(): bool
     {
-        return $this->isPending() && 
-               $this->applied_amount > 0 && 
-               (!$this->requires_approval || $this->approved);
+        return $this->isPending() &&
+               $this->applied_amount > 0 &&
+               (! $this->requires_approval || $this->approved);
     }
 
     /**
@@ -321,7 +337,7 @@ class CreditApplication extends Model
      */
     public function reverse(User $reversedBy, string $reason): bool
     {
-        if (!$this->canBeReversed()) {
+        if (! $this->canBeReversed()) {
             return false;
         }
 
@@ -355,7 +371,7 @@ class CreditApplication extends Model
      */
     public function approve(User $approver, ?string $notes = null): bool
     {
-        if (!$this->requires_approval || $this->approved) {
+        if (! $this->requires_approval || $this->approved) {
             return false;
         }
 
@@ -378,7 +394,7 @@ class CreditApplication extends Model
      */
     public function calculateInvoicePercentage(): float
     {
-        if (!$this->invoice || $this->invoice->amount <= 0) {
+        if (! $this->invoice || $this->invoice->amount <= 0) {
             return 0;
         }
 
@@ -397,7 +413,7 @@ class CreditApplication extends Model
             self::TYPE_FULL => 'Full',
             self::TYPE_OLDEST_FIRST => 'Oldest First',
             self::TYPE_SPECIFIC_INVOICE => 'Specific Invoice',
-            self::TYPE_FUTURE_INVOICES => 'Future Invoices'
+            self::TYPE_FUTURE_INVOICES => 'Future Invoices',
         ];
     }
 
@@ -411,7 +427,7 @@ class CreditApplication extends Model
             self::METHOD_ACCOUNT_CREDIT => 'Account Credit',
             self::METHOD_PREPAYMENT => 'Prepayment',
             self::METHOD_FUTURE_BILLING_CREDIT => 'Future Billing Credit',
-            self::METHOD_PRORATION_ADJUSTMENT => 'Proration Adjustment'
+            self::METHOD_PRORATION_ADJUSTMENT => 'Proration Adjustment',
         ];
     }
 
@@ -420,7 +436,7 @@ class CreditApplication extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'yellow',
             self::STATUS_APPLIED => 'green',
             self::STATUS_PARTIALLY_APPLIED => 'blue',
@@ -436,7 +452,7 @@ class CreditApplication extends Model
      */
     public function getFormattedAppliedAmountAttribute(): string
     {
-        return number_format($this->applied_amount, 2) . ' ' . $this->currency_code;
+        return number_format($this->applied_amount, 2).' '.$this->currency_code;
     }
 
     /**
@@ -444,7 +460,7 @@ class CreditApplication extends Model
      */
     private function applyToInvoice(): void
     {
-        if (!$this->invoice) {
+        if (! $this->invoice) {
             return;
         }
 
@@ -502,14 +518,14 @@ class CreditApplication extends Model
                 'account' => $this->debit_gl_account,
                 'debit' => $this->applied_amount,
                 'credit' => 0,
-                'description' => "Credit application #{$this->application_number}"
+                'description' => "Credit application #{$this->application_number}",
             ],
             [
                 'account' => $this->credit_gl_account,
                 'debit' => 0,
                 'credit' => $this->applied_amount,
-                'description' => "Credit application #{$this->application_number}"
-            ]
+                'description' => "Credit application #{$this->application_number}",
+            ],
         ];
 
         $this->gl_entries = $glEntries;
@@ -519,7 +535,7 @@ class CreditApplication extends Model
 
     private function reverseGlEntries(): void
     {
-        if (!$this->gl_posted || !$this->gl_entries) {
+        if (! $this->gl_posted || ! $this->gl_entries) {
             return;
         }
 
@@ -530,14 +546,14 @@ class CreditApplication extends Model
                 'account' => $entry['account'],
                 'debit' => $entry['credit'], // Reverse debit/credit
                 'credit' => $entry['debit'],
-                'description' => "Reversal of " . $entry['description']
+                'description' => 'Reversal of '.$entry['description'],
             ];
         }
 
         $this->reversal_details = [
             'original_entries' => $this->gl_entries,
             'reversing_entries' => $reversingEntries,
-            'reversed_at' => now()
+            'reversed_at' => now(),
         ];
     }
 
@@ -552,30 +568,30 @@ class CreditApplication extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($application) {
-            if (!$application->company_id) {
+            if (! $application->company_id) {
                 $application->company_id = Auth::user()?->company_id;
             }
-            
-            if (!$application->applied_by) {
+
+            if (! $application->applied_by) {
                 $application->applied_by = Auth::id();
             }
-            
-            if (!$application->application_number) {
+
+            if (! $application->application_number) {
                 $application->application_number = self::generateApplicationNumber();
             }
-            
-            if (!$application->application_date) {
+
+            if (! $application->application_date) {
                 $application->application_date = now()->toDateString();
             }
-            
+
             // Set default currency from credit note
-            if (!$application->currency_code && $application->creditNote) {
+            if (! $application->currency_code && $application->creditNote) {
                 $application->currency_code = $application->creditNote->currency_code;
             }
         });
-        
+
         static::updated(function ($application) {
             // Auto-update credit note remaining balance when application status changes
             if ($application->isDirty('status') && $application->creditNote) {

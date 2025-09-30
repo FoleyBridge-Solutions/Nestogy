@@ -8,14 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * UsagePool Model
- * 
+ *
  * Manages shared usage allowances and limits across multiple clients, services, or locations.
  * Supports complex pooling scenarios for enterprise VoIP deployments.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int|null $client_id
@@ -33,7 +32,7 @@ use Carbon\Carbon;
  */
 class UsagePool extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -214,31 +213,42 @@ class UsagePool extends Model
      * Pool type constants
      */
     const POOL_TYPE_SHARED = 'shared';
+
     const POOL_TYPE_CLIENT_SPECIFIC = 'client_specific';
+
     const POOL_TYPE_LOCATION_BASED = 'location_based';
+
     const POOL_TYPE_SERVICE_BASED = 'service_based';
 
     /**
      * Pool status constants
      */
     const STATUS_ACTIVE = 'active';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_DEPLETED = 'depleted';
+
     const STATUS_EXPIRED = 'expired';
 
     /**
      * Allocation method constants
      */
     const ALLOCATION_EQUAL_SHARE = 'equal_share';
+
     const ALLOCATION_WEIGHTED = 'weighted';
+
     const ALLOCATION_PRIORITY_BASED = 'priority_based';
+
     const ALLOCATION_FIRST_COME_FIRST_SERVED = 'first_come_first_served';
 
     /**
      * Billing model constants
      */
     const BILLING_SHARED_COST = 'shared_cost';
+
     const BILLING_INDIVIDUAL_BILLING = 'individual_billing';
+
     const BILLING_HYBRID = 'hybrid';
 
     /**
@@ -362,7 +372,7 @@ class UsagePool extends Model
      */
     public function allocateUsage(float $amount, array $options = []): bool
     {
-        if (!$this->canAllocate($amount)) {
+        if (! $this->canAllocate($amount)) {
             return false;
         }
 
@@ -389,7 +399,7 @@ class UsagePool extends Model
      */
     public function canAllocate(float $amount): bool
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return false;
         }
 
@@ -398,7 +408,7 @@ class UsagePool extends Model
         }
 
         $remainingCapacity = $this->getRemainingCapacity();
-        
+
         if ($amount <= $remainingCapacity) {
             return true;
         }
@@ -406,6 +416,7 @@ class UsagePool extends Model
         // Check if overallocation is allowed
         if ($this->allow_overallocation) {
             $overallocationLimit = $this->total_capacity * ($this->overallocation_limit / 100);
+
             return ($this->used_capacity + $amount) <= ($this->total_capacity + $overallocationLimit);
         }
 
@@ -455,11 +466,12 @@ class UsagePool extends Model
      */
     protected function calculateRollover(): float
     {
-        if (!$this->allows_rollover) {
+        if (! $this->allows_rollover) {
             return 0;
         }
 
         $unusedCapacity = $this->getRemainingCapacity();
+
         return $unusedCapacity * ($this->rollover_percentage / 100);
     }
 
@@ -524,7 +536,7 @@ class UsagePool extends Model
      */
     protected function checkThresholds(): void
     {
-        if (!$this->email_alerts_enabled && !$this->sms_alerts_enabled) {
+        if (! $this->email_alerts_enabled && ! $this->sms_alerts_enabled) {
             return;
         }
 
@@ -550,7 +562,7 @@ class UsagePool extends Model
      */
     protected function shouldSendAlert(): bool
     {
-        if (!$this->last_alert_sent) {
+        if (! $this->last_alert_sent) {
             return true;
         }
 
@@ -564,7 +576,7 @@ class UsagePool extends Model
     protected function sendThresholdAlert(string $level, float $utilization): void
     {
         // Implementation would integrate with notification system
-        \Log::info("Usage pool threshold alert", [
+        \Log::info('Usage pool threshold alert', [
             'pool_id' => $this->id,
             'pool_name' => $this->pool_name,
             'level' => $level,
@@ -580,7 +592,7 @@ class UsagePool extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-                    ->where('pool_status', self::STATUS_ACTIVE);
+            ->where('pool_status', self::STATUS_ACTIVE);
     }
 
     /**
@@ -657,26 +669,26 @@ class UsagePool extends Model
         parent::boot();
 
         static::creating(function ($pool) {
-            if (!$pool->pool_code) {
-                $pool->pool_code = 'POOL-' . strtoupper(uniqid());
+            if (! $pool->pool_code) {
+                $pool->pool_code = 'POOL-'.strtoupper(uniqid());
             }
-            
-            if (!$pool->cycle_start_date) {
+
+            if (! $pool->cycle_start_date) {
                 $pool->cycle_start_date = now()->startOfMonth()->toDateString();
             }
-            
-            if (!$pool->cycle_end_date) {
+
+            if (! $pool->cycle_end_date) {
                 $pool->cycle_end_date = now()->endOfMonth()->toDateString();
             }
-            
-            if (!$pool->next_reset_date) {
+
+            if (! $pool->next_reset_date) {
                 $pool->next_reset_date = now()->addMonth()->startOfMonth()->toDateString();
             }
         });
 
         static::updating(function ($pool) {
             $pool->updated_by = auth()->id() ?? 1;
-            
+
             // Update pool status based on capacity
             if ($pool->isDirty(['used_capacity', 'total_capacity'])) {
                 if ($pool->getRemainingCapacity() <= 0 && $pool->pool_status === self::STATUS_ACTIVE) {

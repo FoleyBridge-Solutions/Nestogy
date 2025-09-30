@@ -3,7 +3,6 @@
 namespace App\Livewire\Clients;
 
 use App\Models\Contact;
-use App\Domains\Core\Services\NavigationService;
 use Livewire\Component;
 
 class EditContact extends Component
@@ -46,9 +45,9 @@ class EditContact extends Component
     public bool $has_portal_access = false;
 
     public string $auth_method = 'password';
-    
+
     public string $portal_access_method = 'manual_password';
-    
+
     public bool $send_invitation = false;
 
     public string $password = '';
@@ -312,7 +311,7 @@ class EditContact extends Component
 
         return redirect()->route('clients.contacts.show', $this->contact);
     }
-    
+
     /**
      * Send portal invitation to the contact
      */
@@ -320,17 +319,17 @@ class EditContact extends Component
     {
         $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
         $result = $invitationService->sendInvitation($this->contact, auth()->user());
-        
+
         if ($result['success']) {
             session()->flash('success', 'Portal invitation sent successfully!');
             // Refresh the contact model to get updated invitation status
             $this->contact->refresh();
             $this->mount($this->contact);
         } else {
-            session()->flash('error', 'Failed to send invitation: ' . $result['message']);
+            session()->flash('error', 'Failed to send invitation: '.$result['message']);
         }
     }
-    
+
     /**
      * Resend portal invitation to the contact
      */
@@ -338,16 +337,16 @@ class EditContact extends Component
     {
         $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
         $result = $invitationService->resendInvitation($this->contact, auth()->user());
-        
+
         if ($result['success']) {
             session()->flash('success', 'Portal invitation resent successfully!');
             $this->contact->refresh();
             $this->mount($this->contact);
         } else {
-            session()->flash('error', 'Failed to resend invitation: ' . $result['message']);
+            session()->flash('error', 'Failed to resend invitation: '.$result['message']);
         }
     }
-    
+
     /**
      * Revoke portal invitation
      */
@@ -355,13 +354,13 @@ class EditContact extends Component
     {
         $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
         $result = $invitationService->revokeInvitation($this->contact, auth()->user());
-        
+
         if ($result['success']) {
             session()->flash('success', 'Portal invitation revoked successfully.');
             $this->contact->refresh();
             $this->mount($this->contact);
         } else {
-            session()->flash('error', 'Failed to revoke invitation: ' . $result['message']);
+            session()->flash('error', 'Failed to revoke invitation: '.$result['message']);
         }
     }
 

@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * ContractViewDefinition Model
- * 
+ *
  * Defines how contract views are configured for different contract types.
  * Controls layout, fields display, and available actions.
  */
 class ContractViewDefinition extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'contract_view_definitions';
 
@@ -41,8 +41,11 @@ class ContractViewDefinition extends Model
      * View type constants
      */
     const VIEW_INDEX = 'index';
+
     const VIEW_SHOW = 'show';
+
     const VIEW_EDIT = 'edit';
+
     const VIEW_CREATE = 'create';
 
     /**

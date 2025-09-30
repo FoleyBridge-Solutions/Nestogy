@@ -4,7 +4,7 @@ namespace App\Domains\Core\Services;
 
 /**
  * Parsed Command Value Object
- * 
+ *
  * Represents a structured command after intent parsing.
  * Immutable data structure containing all command components.
  */
@@ -109,6 +109,6 @@ class ParsedCommand
 
     public function __toString(): string
     {
-        return "ParsedCommand({$this->getIntent()}: " . implode(',', $this->getEntities()) . ")";
+        return "ParsedCommand({$this->getIntent()}: ".implode(',', $this->getEntities()).')';
     }
 }

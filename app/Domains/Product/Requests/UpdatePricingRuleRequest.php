@@ -60,41 +60,41 @@ class UpdatePricingRuleRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $ruleType = $this->input('rule_type');
-            
+
             // Validate required fields based on rule type
             switch ($ruleType) {
                 case 'percentage_discount':
-                    if (!$this->filled('discount_percentage')) {
+                    if (! $this->filled('discount_percentage')) {
                         $validator->errors()->add('discount_percentage', 'Discount percentage is required for this rule type.');
                     }
                     break;
-                
+
                 case 'fixed_discount':
-                    if (!$this->filled('discount_amount')) {
+                    if (! $this->filled('discount_amount')) {
                         $validator->errors()->add('discount_amount', 'Discount amount is required for this rule type.');
                     }
                     break;
-                
+
                 case 'fixed_price':
-                    if (!$this->filled('fixed_price')) {
+                    if (! $this->filled('fixed_price')) {
                         $validator->errors()->add('fixed_price', 'Fixed price is required for this rule type.');
                     }
                     break;
-                
+
                 case 'bulk_pricing':
-                    if (!$this->filled('min_quantity')) {
+                    if (! $this->filled('min_quantity')) {
                         $validator->errors()->add('min_quantity', 'Minimum quantity is required for bulk pricing.');
                     }
-                    if (!$this->filled('discount_percentage')) {
+                    if (! $this->filled('discount_percentage')) {
                         $validator->errors()->add('discount_percentage', 'Discount percentage is required for bulk pricing.');
                     }
                     break;
-                
+
                 case 'buy_x_get_y':
-                    if (!$this->filled('buy_quantity')) {
+                    if (! $this->filled('buy_quantity')) {
                         $validator->errors()->add('buy_quantity', 'Buy quantity is required for this rule type.');
                     }
-                    if (!$this->filled('get_quantity')) {
+                    if (! $this->filled('get_quantity')) {
                         $validator->errors()->add('get_quantity', 'Get quantity is required for this rule type.');
                     }
                     break;

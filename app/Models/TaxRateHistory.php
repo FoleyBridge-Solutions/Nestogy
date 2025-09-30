@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Tax Rate History Model
- * 
+ *
  * Maintains audit trail of tax rate changes for compliance.
  * Records all modifications to tax rates with timestamps and user info.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $voip_tax_rate_id
@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class TaxRateHistory extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -131,25 +131,27 @@ class TaxRateHistory extends Model
         switch ($field) {
             case 'percentage_rate':
                 return "{$fieldName}: {$oldValue}% → {$newValue}%";
-            
+
             case 'fixed_amount':
             case 'minimum_threshold':
             case 'maximum_amount':
                 return "{$fieldName}: \${$oldValue} → \${$newValue}";
-            
+
             case 'effective_date':
             case 'expiry_date':
                 $oldFormatted = $oldValue ? date('M j, Y', strtotime($oldValue)) : 'None';
                 $newFormatted = $newValue ? date('M j, Y', strtotime($newValue)) : 'None';
+
                 return "{$fieldName}: {$oldFormatted} → {$newFormatted}";
-            
+
             case 'is_active':
             case 'is_recoverable':
             case 'is_compound':
                 $oldText = $oldValue ? 'Yes' : 'No';
                 $newText = $newValue ? 'Yes' : 'No';
+
                 return "{$fieldName}: {$oldText} → {$newText}";
-            
+
             default:
                 return "{$fieldName}: {$oldValue} → {$newValue}";
         }
@@ -204,16 +206,16 @@ class TaxRateHistory extends Model
 
         static::creating(function ($history) {
             // Calculate changed fields if not provided
-            if (empty($history->changed_fields) && !empty($history->old_values) && !empty($history->new_values)) {
+            if (empty($history->changed_fields) && ! empty($history->old_values) && ! empty($history->new_values)) {
                 $changedFields = [];
-                
+
                 foreach ($history->new_values as $field => $newValue) {
                     $oldValue = $history->old_values[$field] ?? null;
                     if ($oldValue !== $newValue) {
                         $changedFields[] = $field;
                     }
                 }
-                
+
                 $history->changed_fields = $changedFields;
             }
         });

@@ -2,15 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Category;
+use App\Models\Client;
+use App\Models\Quote;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Quote;
-use App\Models\Client;
-use App\Models\Category;
 
 /**
  * BaseQuoteRequest
- * 
+ *
  * Base class for quote-related form requests with common validation rules.
  */
 abstract class BaseQuoteRequest extends FormRequest
@@ -27,24 +27,24 @@ abstract class BaseQuoteRequest extends FormRequest
             'date' => 'required|date',
             'expire_date' => 'nullable|date|after:date',
             'valid_until' => 'nullable|date|after:date',
-            
+
             // Status and approval
-            'status' => 'required|in:' . implode(',', Quote::getAvailableStatuses()),
-            'approval_status' => 'nullable|in:' . implode(',', Quote::getAvailableApprovalStatuses()),
-            
+            'status' => 'required|in:'.implode(',', Quote::getAvailableStatuses()),
+            'approval_status' => 'nullable|in:'.implode(',', Quote::getAvailableApprovalStatuses()),
+
             // Financial information
             'discount_amount' => 'nullable|numeric|min:0|max:999999.99',
             'discount_type' => 'required|in:percentage,fixed',
             'currency_code' => 'required|string|size:3',
-            
+
             // Content
             'note' => 'nullable|string',
             'terms_conditions' => 'nullable|string',
-            
+
             // Auto-renewal settings
             'auto_renew' => 'nullable|boolean',
             'auto_renew_days' => 'nullable|integer|min:1|max:365|required_if:auto_renew,true',
-            
+
             // Template and VoIP configuration
             'template_name' => 'nullable|string|max:100',
             'voip_config' => 'nullable|array',
@@ -60,7 +60,7 @@ abstract class BaseQuoteRequest extends FormRequest
             'voip_config.equipment.wireless_phones' => 'nullable|integer|min:0|max:1000',
             'voip_config.equipment.conference_phone' => 'nullable|integer|min:0|max:100',
             'voip_config.monthly_allowances' => 'nullable|array',
-            
+
             // Pricing model
             'pricing_model' => 'nullable|array',
             'pricing_model.type' => 'nullable|in:flat_rate,tiered,usage_based,hybrid',
@@ -69,7 +69,7 @@ abstract class BaseQuoteRequest extends FormRequest
             'pricing_model.per_extension' => 'nullable|numeric|min:0|max:9999.99',
             'pricing_model.per_minute_overage' => 'nullable|numeric|min:0|max:99.99',
             'pricing_model.equipment_lease' => 'nullable|numeric|min:0|max:999999.99',
-            
+
             // Quote items
             'items' => 'nullable|array',
             'items.*.name' => 'required_with:items|string|max:255',
@@ -151,14 +151,14 @@ abstract class BaseQuoteRequest extends FormRequest
     {
         if ($this->voip_config && is_array($this->voip_config)) {
             $voipConfig = $this->voip_config;
-            
+
             // Convert string booleans to actual booleans for features
             if (isset($voipConfig['features']) && is_array($voipConfig['features'])) {
                 foreach ($voipConfig['features'] as $key => $value) {
                     $voipConfig['features'][$key] = $this->boolean("voip_config.features.{$key}");
                 }
             }
-            
+
             $this->merge(['voip_config' => $voipConfig]);
         }
     }
@@ -169,25 +169,25 @@ abstract class BaseQuoteRequest extends FormRequest
     protected function validateCompanyOwnership($validator): void
     {
         $user = Auth::user();
-        
+
         // Validate client belongs to user's company
         if ($this->client_id) {
             $client = Client::where('id', $this->client_id)
                 ->where('company_id', $user->company_id)
                 ->first();
-            
-            if (!$client) {
+
+            if (! $client) {
                 $validator->errors()->add('client_id', 'The selected client is invalid.');
             }
         }
 
-        // Validate category belongs to user's company  
+        // Validate category belongs to user's company
         if ($this->category_id) {
             $category = Category::where('id', $this->category_id)
                 ->where('company_id', $user->company_id)
                 ->first();
-            
-            if (!$category) {
+
+            if (! $category) {
                 $validator->errors()->add('category_id', 'The selected category is invalid.');
             }
         }
@@ -211,19 +211,19 @@ abstract class BaseQuoteRequest extends FormRequest
         if ($this->voip_config) {
             $extensions = $this->input('voip_config.extensions', 0);
             $concurrentCalls = $this->input('voip_config.concurrent_calls', 0);
-            
+
             if ($concurrentCalls > $extensions) {
-                $validator->errors()->add('voip_config.concurrent_calls', 
+                $validator->errors()->add('voip_config.concurrent_calls',
                     'Concurrent calls cannot exceed the number of extensions.');
             }
-            
+
             // Validate equipment doesn't exceed extensions
             $deskPhones = $this->input('voip_config.equipment.desk_phones', 0);
             $wirelessPhones = $this->input('voip_config.equipment.wireless_phones', 0);
             $totalPhones = $deskPhones + $wirelessPhones;
-            
+
             if ($totalPhones > $extensions) {
-                $validator->errors()->add('voip_config.equipment', 
+                $validator->errors()->add('voip_config.equipment',
                     'Total phones cannot exceed the number of extensions.');
             }
         }
@@ -235,8 +235,8 @@ abstract class BaseQuoteRequest extends FormRequest
     protected function validatePricingModel($validator): void
     {
         if ($this->pricing_model && $this->input('pricing_model.type') === 'usage_based') {
-            if (!$this->input('pricing_model.per_minute_overage')) {
-                $validator->errors()->add('pricing_model.per_minute_overage', 
+            if (! $this->input('pricing_model.per_minute_overage')) {
+                $validator->errors()->add('pricing_model.per_minute_overage',
                     'Per minute overage rate is required for usage-based pricing.');
             }
         }

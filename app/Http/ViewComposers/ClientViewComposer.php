@@ -2,8 +2,8 @@
 
 namespace App\Http\ViewComposers;
 
-use Illuminate\View\View;
 use App\Domains\Core\Services\NavigationService;
+use Illuminate\View\View;
 
 class ClientViewComposer
 {
@@ -20,7 +20,7 @@ class ClientViewComposer
     public function compose(View $view): void
     {
         $selectedClient = $this->navigationService->getSelectedClient();
-        
+
         $view->with([
             'selectedClient' => $selectedClient,
         ]);

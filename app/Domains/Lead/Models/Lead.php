@@ -11,11 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class Lead extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -80,23 +79,35 @@ class Lead extends Model
 
     // Status constants
     const STATUS_NEW = 'new';
+
     const STATUS_CONTACTED = 'contacted';
+
     const STATUS_QUALIFIED = 'qualified';
+
     const STATUS_UNQUALIFIED = 'unqualified';
+
     const STATUS_NURTURING = 'nurturing';
+
     const STATUS_CONVERTED = 'converted';
+
     const STATUS_LOST = 'lost';
 
     // Priority constants
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_MEDIUM = 'medium';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_URGENT = 'urgent';
 
     // Scoring constants
     const SCORE_EXCELLENT = 80;
+
     const SCORE_GOOD = 60;
+
     const SCORE_FAIR = 40;
+
     const SCORE_POOR = 20;
 
     /**
@@ -144,7 +155,7 @@ class Lead extends Model
      */
     public function getFullNameAttribute(): string
     {
-        return trim($this->first_name . ' ' . $this->last_name);
+        return trim($this->first_name.' '.$this->last_name);
     }
 
     /**
@@ -184,7 +195,7 @@ class Lead extends Model
      */
     public function isConverted(): bool
     {
-        return $this->status === self::STATUS_CONVERTED && !is_null($this->client_id);
+        return $this->status === self::STATUS_CONVERTED && ! is_null($this->client_id);
     }
 
     /**
@@ -216,7 +227,7 @@ class Lead extends Model
      */
     public function getDaysSinceFirstContactAttribute(): ?int
     {
-        if (!$this->first_contact_date) {
+        if (! $this->first_contact_date) {
             return null;
         }
 
@@ -228,7 +239,7 @@ class Lead extends Model
      */
     public function getDaysSinceLastContactAttribute(): ?int
     {
-        if (!$this->last_contact_date) {
+        if (! $this->last_contact_date) {
             return null;
         }
 
@@ -350,11 +361,11 @@ class Lead extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('first_name', 'like', '%' . $search . '%')
-              ->orWhere('last_name', 'like', '%' . $search . '%')
-              ->orWhere('email', 'like', '%' . $search . '%')
-              ->orWhere('company_name', 'like', '%' . $search . '%')
-              ->orWhere('phone', 'like', '%' . $search . '%');
+            $q->where('first_name', 'like', '%'.$search.'%')
+                ->orWhere('last_name', 'like', '%'.$search.'%')
+                ->orWhere('email', 'like', '%'.$search.'%')
+                ->orWhere('company_name', 'like', '%'.$search.'%')
+                ->orWhere('phone', 'like', '%'.$search.'%');
         });
     }
 
@@ -450,7 +461,7 @@ class Lead extends Model
     public function updateScore(array $scores): void
     {
         $totalScore = array_sum($scores);
-        
+
         $this->update(array_merge($scores, [
             'total_score' => $totalScore,
             'last_scored_at' => now(),
@@ -460,7 +471,7 @@ class Lead extends Model
     /**
      * Add activity to lead.
      */
-    public function addActivity(string $type, string $subject = null, string $description = null, array $metadata = []): LeadActivity
+    public function addActivity(string $type, ?string $subject = null, ?string $description = null, array $metadata = []): LeadActivity
     {
         return $this->activities()->create([
             'type' => $type,
@@ -484,7 +495,7 @@ class Lead extends Model
      */
     public function needsFollowUp(int $daysSinceLastContact = 7): bool
     {
-        if (!$this->last_contact_date) {
+        if (! $this->last_contact_date) {
             return true;
         }
 
@@ -500,7 +511,7 @@ class Lead extends Model
 
         static::creating(function ($lead) {
             // Auto-assign lead source if not provided
-            if (!$lead->lead_source_id) {
+            if (! $lead->lead_source_id) {
                 $defaultSource = LeadSource::where('company_id', $lead->company_id)
                     ->where('type', 'manual')
                     ->where('is_active', true)

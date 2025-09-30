@@ -27,6 +27,7 @@ class RmmEnhancedSetup extends Command
     protected $description = 'Set up and test enhanced RMM capabilities';
 
     protected AssetSyncService $syncService;
+
     protected RmmServiceFactory $rmmFactory;
 
     public function __construct(AssetSyncService $syncService, RmmServiceFactory $rmmFactory)
@@ -70,6 +71,7 @@ class RmmEnhancedSetup extends Command
 
         if ($integrations->isEmpty()) {
             $this->error('No active RMM integrations found.');
+
             return 1;
         }
 
@@ -89,11 +91,11 @@ class RmmEnhancedSetup extends Command
                     // Test enhanced capabilities
                     $this->testEnhancedCapabilities($rmmService, $integration);
                 } else {
-                    $this->error('✗ Connection failed: ' . ($connectionTest['message'] ?? 'Unknown error'));
+                    $this->error('✗ Connection failed: '.($connectionTest['message'] ?? 'Unknown error'));
                 }
 
             } catch (\Exception $e) {
-                $this->error('✗ Integration test failed: ' . $e->getMessage());
+                $this->error('✗ Integration test failed: '.$e->getMessage());
             }
         }
 
@@ -111,7 +113,7 @@ class RmmEnhancedSetup extends Command
         $this->info('- Testing agent retrieval...');
         $agentsResult = $rmmService->getAgents(['limit' => 1]);
 
-        if ($agentsResult['success'] && !empty($agentsResult['data'])) {
+        if ($agentsResult['success'] && ! empty($agentsResult['data'])) {
             $this->info('✓ Agent retrieval working');
 
             $testAgent = $agentsResult['data'][0];
@@ -123,7 +125,7 @@ class RmmEnhancedSetup extends Command
 
             if ($inventoryResult['success']) {
                 $this->info('✓ Comprehensive inventory working');
-                $this->line('  Data sections: ' . implode(', ', array_keys($inventoryResult['data'])));
+                $this->line('  Data sections: '.implode(', ', array_keys($inventoryResult['data'])));
             } else {
                 $this->warn('⚠ Comprehensive inventory has issues');
             }
@@ -154,7 +156,7 @@ class RmmEnhancedSetup extends Command
 
             if ($servicesResult['success']) {
                 $this->info('✓ Service management working');
-                $this->line('  Services found: ' . count($servicesResult['data']));
+                $this->line('  Services found: '.count($servicesResult['data']));
             } else {
                 $this->warn('⚠ Service management has issues');
             }
@@ -192,6 +194,7 @@ class RmmEnhancedSetup extends Command
 
         } else {
             $this->error('Please specify either --company or --integration option');
+
             return 1;
         }
 
@@ -225,7 +228,7 @@ class RmmEnhancedSetup extends Command
         $this->line("\nAsset Statistics:");
         $this->line("  Total assets: {$totalAssets}");
         $this->line("  Assets with RMM connections: {$assetsWithRmm}");
-        $this->line("  Coverage: " . round(($assetsWithRmm / max($totalAssets, 1)) * 100, 1) . "%");
+        $this->line('  Coverage: '.round(($assetsWithRmm / max($totalAssets, 1)) * 100, 1).'%');
 
         // Show device mappings
         $mappings = DB::table('device_mappings')
@@ -300,10 +303,10 @@ class RmmEnhancedSetup extends Command
         }
 
         $this->line("\nSupported RMM Systems:");
-        $this->line("  ✓ TacticalRMM (fully implemented)");
-        $this->line("  ⚠ ConnectWise Automate (legacy support)");
-        $this->line("  ⚠ Datto RMM (legacy support)");
-        $this->line("  ⚠ NinjaOne (legacy support)");
+        $this->line('  ✓ TacticalRMM (fully implemented)');
+        $this->line('  ⚠ ConnectWise Automate (legacy support)');
+        $this->line('  ⚠ Datto RMM (legacy support)');
+        $this->line('  ⚠ NinjaOne (legacy support)');
 
         return 0;
     }

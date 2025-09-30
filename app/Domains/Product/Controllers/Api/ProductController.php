@@ -2,18 +2,18 @@
 
 namespace App\Domains\Product\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\Product;
-use App\Models\ProductBundle;
-use App\Models\Client;
 use App\Domains\Financial\Services\ProductPricingService;
 use App\Domains\Financial\Services\ProductSearchService;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\Client;
+use App\Models\Product;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     protected ProductPricingService $pricingService;
+
     protected ProductSearchService $searchService;
 
     public function __construct(
@@ -31,7 +31,7 @@ class ProductController extends Controller
     {
         $filters = $request->only([
             'search', 'category', 'billing_model', 'type',
-            'min_price', 'max_price', 'sort_by', 'sort_order'
+            'min_price', 'max_price', 'sort_by', 'sort_order',
         ]);
 
         $client = null;
@@ -51,17 +51,17 @@ class ProductController extends Controller
                     $request->get('q', ''),
                     $perPage
                 );
-                
+
                 return response()->json([
                     'success' => true,
                     'products' => $results['products'] ?? [],
                     'services' => $results['services'] ?? [],
-                    'bundles' => $results['bundles'] ?? []
+                    'bundles' => $results['bundles'] ?? [],
                 ]);
             } else {
                 // Regular search with pagination
                 $products = $this->searchService->searchProducts($filters, $client);
-                
+
                 // Manual pagination for simplicity
                 $total = $products->count();
                 $offset = ($page - 1) * $perPage;
@@ -73,14 +73,14 @@ class ProductController extends Controller
                     'total' => $total,
                     'page' => $page,
                     'per_page' => $perPage,
-                    'total_pages' => ceil($total / $perPage)
+                    'total_pages' => ceil($total / $perPage),
                 ]);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to search products',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -98,22 +98,22 @@ class ProductController extends Controller
                 'success' => true,
                 'products' => [],
                 'services' => [],
-                'bundles' => []
+                'bundles' => [],
             ]);
         }
 
         try {
             $results = $this->searchService->quickSearch($query, $limit);
-            
+
             return response()->json([
                 'success' => true,
-                ...$results
+                ...$results,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Search failed',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -134,13 +134,13 @@ class ProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'categories' => $categories
+                'categories' => $categories,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load categories',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -153,7 +153,7 @@ class ProductController extends Controller
         $request->validate([
             'product_ids' => 'required|array',
             'product_ids.*' => 'integer|exists:products,id',
-            'client_id' => 'nullable|integer|exists:clients,id'
+            'client_id' => 'nullable|integer|exists:clients,id',
         ]);
 
         $client = null;
@@ -164,14 +164,14 @@ class ProductController extends Controller
 
         try {
             $pricing = [];
-            
+
             foreach ($request->product_ids as $productId) {
                 $product = Product::where('company_id', auth()->user()->company_id)
                     ->find($productId);
-                
+
                 if ($product) {
                     $pricing[$productId] = $this->pricingService->calculatePrice(
-                        $product, 
+                        $product,
                         $client
                     );
                 }
@@ -179,13 +179,13 @@ class ProductController extends Controller
 
             return response()->json([
                 'success' => true,
-                'pricing' => $pricing
+                'pricing' => $pricing,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to calculate pricing',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -198,11 +198,11 @@ class ProductController extends Controller
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'client_id' => 'nullable|integer|exists:clients,id',
-            'quantity' => 'integer|min:1'
+            'quantity' => 'integer|min:1',
         ]);
 
         $quantity = $request->get('quantity', 1);
-        
+
         $product = Product::where('company_id', auth()->user()->company_id)
             ->findOrFail($request->product_id);
 
@@ -214,16 +214,16 @@ class ProductController extends Controller
 
         try {
             $pricing = $this->pricingService->calculatePrice($product, $client, $quantity);
-            
+
             return response()->json([
                 'success' => true,
-                ...$pricing
+                ...$pricing,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to calculate price',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -237,19 +237,19 @@ class ProductController extends Controller
         if ($product->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found'
+                'message' => 'Product not found',
             ], 404);
         }
 
         try {
             $product->load(['service']);
-            
+
             // Get compatible products
             $compatibleProducts = $this->searchService->getCompatibleProducts($product, 5);
-            
+
             // Get volume pricing tiers
             $pricingTiers = $this->pricingService->getVolumePricingTiers($product);
-            
+
             // Check availability
             $availability = $this->searchService->checkAvailability($product);
 
@@ -258,13 +258,13 @@ class ProductController extends Controller
                 'product' => $product,
                 'compatible_products' => $compatibleProducts,
                 'pricing_tiers' => $pricingTiers,
-                'availability' => $availability
+                'availability' => $availability,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load product details',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -282,17 +282,17 @@ class ProductController extends Controller
 
         try {
             $products = $this->searchService->getProductsByCategory($category, $client);
-            
+
             return response()->json([
                 'success' => true,
                 'products' => $products,
-                'category' => $category
+                'category' => $category,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load products',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -303,7 +303,7 @@ class ProductController extends Controller
     public function recommendations(Request $request): JsonResponse
     {
         $request->validate([
-            'client_id' => 'required|integer|exists:clients,id'
+            'client_id' => 'required|integer|exists:clients,id',
         ]);
 
         $client = Client::where('company_id', auth()->user()->company_id)
@@ -311,16 +311,16 @@ class ProductController extends Controller
 
         try {
             $recommendations = $this->searchService->getRecommendations($client, 5);
-            
+
             return response()->json([
                 'success' => true,
-                'recommendations' => $recommendations
+                'recommendations' => $recommendations,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to load recommendations',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -334,7 +334,7 @@ class ProductController extends Controller
             'product_id' => 'required|integer|exists:products,id',
             'promo_code' => 'required|string',
             'client_id' => 'nullable|integer|exists:clients,id',
-            'quantity' => 'integer|min:1'
+            'quantity' => 'integer|min:1',
         ]);
 
         $product = Product::where('company_id', auth()->user()->company_id)
@@ -355,18 +355,18 @@ class ProductController extends Controller
                 $client,
                 $quantity
             );
-            
+
             return response()->json([
                 'success' => true,
                 'valid' => true,
                 'message' => 'Promo code applied successfully',
-                ...$pricing
+                ...$pricing,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'valid' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }
@@ -379,7 +379,7 @@ class ProductController extends Controller
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'client_id' => 'nullable|integer|exists:clients,id',
-            'quantity' => 'integer|min:1'
+            'quantity' => 'integer|min:1',
         ]);
 
         $product = Product::where('company_id', auth()->user()->company_id)
@@ -395,16 +395,16 @@ class ProductController extends Controller
 
         try {
             $bestPrice = $this->pricingService->getBestPrice($product, $client, $quantity);
-            
+
             return response()->json([
                 'success' => true,
-                'best_price' => $bestPrice
+                'best_price' => $bestPrice,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to calculate best price',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

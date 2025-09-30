@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Models\Invoice;
 use App\Domains\Email\Services\EmailService;
+use App\Models\Invoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * SendRecurringInvoiceEmail Job
- * 
+ *
  * Handles sending emails for automatically generated recurring invoices.
  */
 class SendRecurringInvoiceEmail implements ShouldQueue
@@ -21,7 +21,9 @@ class SendRecurringInvoiceEmail implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 60;
+
     public $tries = 3;
+
     public $maxExceptions = 2;
 
     protected $invoiceId;
@@ -46,7 +48,7 @@ class SendRecurringInvoiceEmail implements ShouldQueue
             Log::info('Sending recurring invoice email', [
                 'invoice_id' => $invoice->id,
                 'client_id' => $invoice->client_id,
-                'amount' => $invoice->amount
+                'amount' => $invoice->amount,
             ]);
 
             // Send the invoice email using the email service
@@ -56,18 +58,18 @@ class SendRecurringInvoiceEmail implements ShouldQueue
                 'additional_context' => [
                     'is_recurring' => true,
                     'recurring_service' => $invoice->recurring->name ?? 'Recurring Service',
-                    'billing_cycle' => $invoice->recurring->billing_cycle ?? 'monthly'
-                ]
+                    'billing_cycle' => $invoice->recurring->billing_cycle ?? 'monthly',
+                ],
             ]);
 
             Log::info('Recurring invoice email sent successfully', [
-                'invoice_id' => $invoice->id
+                'invoice_id' => $invoice->id,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to send recurring invoice email', [
                 'invoice_id' => $this->invoiceId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             throw $e;
@@ -82,7 +84,7 @@ class SendRecurringInvoiceEmail implements ShouldQueue
         Log::error('Recurring invoice email job failed permanently', [
             'invoice_id' => $this->invoiceId,
             'error' => $exception->getMessage(),
-            'attempts' => $this->attempts()
+            'attempts' => $this->attempts(),
         ]);
     }
 
@@ -94,7 +96,7 @@ class SendRecurringInvoiceEmail implements ShouldQueue
         return [
             'email',
             'recurring-invoice',
-            'invoice:' . $this->invoiceId
+            'invoice:'.$this->invoiceId,
         ];
     }
 }

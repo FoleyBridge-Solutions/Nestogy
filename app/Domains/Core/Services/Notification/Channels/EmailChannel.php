@@ -3,15 +3,15 @@
 namespace App\Domains\Core\Services\Notification\Channels;
 
 use App\Domains\Core\Services\Notification\Contracts\NotificationChannelInterface;
-use App\Models\User;
 use App\Models\Contact;
-use Illuminate\Support\Facades\Mail;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 /**
  * Email Notification Channel
- * 
+ *
  * Handles email delivery for ticket notifications using Laravel's Mail system.
  * Supports both user and contact recipients with proper validation and formatting.
  */
@@ -38,7 +38,7 @@ class EmailChannel implements NotificationChannelInterface
             'sent' => 0,
             'failed' => 0,
             'errors' => [],
-            'channel' => 'email'
+            'channel' => 'email',
         ];
 
         $validRecipients = $this->validateRecipients($recipients);
@@ -65,21 +65,21 @@ class EmailChannel implements NotificationChannelInterface
                     'channel' => 'email',
                     'recipient' => $recipient['email'],
                     'subject' => $subject,
-                    'ticket_id' => $data['ticket']->id ?? null
+                    'ticket_id' => $data['ticket']->id ?? null,
                 ]);
 
             } catch (\Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = [
                     'recipient' => $recipient['email'] ?? 'unknown',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
 
                 Log::error('Email notification failed', [
                     'channel' => 'email',
                     'recipient' => $recipient['email'] ?? 'unknown',
                     'error' => $e->getMessage(),
-                    'ticket_id' => $data['ticket']->id ?? null
+                    'ticket_id' => $data['ticket']->id ?? null,
                 ]);
             }
         }
@@ -93,9 +93,9 @@ class EmailChannel implements NotificationChannelInterface
     public function isAvailable(): bool
     {
         try {
-            return !empty($this->config['from_email']) && 
-                   !empty(config('mail.default')) &&
-                   !empty(config('mail.mailers.' . config('mail.default')));
+            return ! empty($this->config['from_email']) &&
+                   ! empty(config('mail.default')) &&
+                   ! empty(config('mail.mailers.'.config('mail.default')));
         } catch (\Exception $e) {
             return false;
         }
@@ -118,7 +118,7 @@ class EmailChannel implements NotificationChannelInterface
 
         foreach ($recipients as $recipient) {
             $emailData = $this->extractEmailData($recipient);
-            
+
             if ($emailData && $this->isValidEmail($emailData['email'])) {
                 $validRecipients[] = $emailData;
             }
@@ -135,7 +135,7 @@ class EmailChannel implements NotificationChannelInterface
         return [
             'from_email' => 'Sender email address',
             'from_name' => 'Sender name',
-            'mail_driver' => 'Mail driver configuration'
+            'mail_driver' => 'Mail driver configuration',
         ];
     }
 
@@ -146,21 +146,21 @@ class EmailChannel implements NotificationChannelInterface
     {
         // Add HTML formatting for email
         $formattedMessage = nl2br(htmlspecialchars($message));
-        
+
         // Add ticket information if available
         if (isset($data['ticket'])) {
             $ticket = $data['ticket'];
-            $ticketInfo = "\n\n" . 
-                          "Ticket Details:\n" .
-                          "- Number: #{$ticket->ticket_number}\n" .
-                          "- Subject: {$ticket->subject}\n" .
-                          "- Priority: {$ticket->priority}\n" .
+            $ticketInfo = "\n\n".
+                          "Ticket Details:\n".
+                          "- Number: #{$ticket->ticket_number}\n".
+                          "- Subject: {$ticket->subject}\n".
+                          "- Priority: {$ticket->priority}\n".
                           "- Status: {$ticket->status}\n";
-            
+
             if ($ticket->assignee) {
                 $ticketInfo .= "- Assigned to: {$ticket->assignee->name}\n";
             }
-            
+
             $formattedMessage .= nl2br(htmlspecialchars($ticketInfo));
         }
 
@@ -182,7 +182,7 @@ class EmailChannel implements NotificationChannelInterface
             return [
                 'email' => $recipient['email'],
                 'name' => $recipient['name'] ?? null,
-                'type' => $recipient['type'] ?? 'array'
+                'type' => $recipient['type'] ?? 'array',
             ];
         }
 
@@ -192,7 +192,7 @@ class EmailChannel implements NotificationChannelInterface
                 'email' => $recipient->email,
                 'name' => $recipient->name,
                 'type' => 'user',
-                'user_id' => $recipient->id
+                'user_id' => $recipient->id,
             ];
         }
 
@@ -202,7 +202,7 @@ class EmailChannel implements NotificationChannelInterface
                 'email' => $recipient->email,
                 'name' => $recipient->name,
                 'type' => 'contact',
-                'contact_id' => $recipient->id
+                'contact_id' => $recipient->id,
             ];
         }
 
@@ -215,10 +215,10 @@ class EmailChannel implements NotificationChannelInterface
     protected function isValidEmail(string $email): bool
     {
         $validator = Validator::make(['email' => $email], [
-            'email' => 'required|email'
+            'email' => 'required|email',
         ]);
 
-        return !$validator->fails();
+        return ! $validator->fails();
     }
 
     /**
@@ -226,7 +226,7 @@ class EmailChannel implements NotificationChannelInterface
      */
     public function getTemplatePath(string $notificationType = 'default'): string
     {
-        return $this->config['template_path'] . '.' . $notificationType;
+        return $this->config['template_path'].'.'.$notificationType;
     }
 
     /**
@@ -235,6 +235,7 @@ class EmailChannel implements NotificationChannelInterface
     public function setConfig(array $config): self
     {
         $this->config = array_merge($this->config, $config);
+
         return $this;
     }
 

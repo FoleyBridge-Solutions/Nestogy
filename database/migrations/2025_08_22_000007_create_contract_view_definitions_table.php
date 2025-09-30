@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('contract_view_definitions', function (Blueprint $table) {
             $table->id();
-            
+
             // Multi-tenancy
             $table->unsignedBigInteger('company_id')->index();
-            
+
             // View definition
             $table->string('contract_type_slug')->index();
             $table->string('view_type')->index(); // index, show, edit, create
@@ -25,20 +25,20 @@ return new class extends Migration
             $table->json('actions_config')->nullable(); // Available actions
             $table->json('permissions')->nullable(); // Required permissions
             $table->boolean('is_active')->default(true);
-            
+
             $table->timestamps();
-            
+
             // Foreign key constraints
             $table->foreign('company_id')
                 ->references('id')
                 ->on('companies')
                 ->onDelete('cascade');
-            
+
             // Indexes
             $table->index(['company_id', 'contract_type_slug']);
             $table->index(['company_id', 'view_type']);
             $table->index(['company_id', 'is_active']);
-            
+
             // Unique constraint
             $table->unique(['company_id', 'contract_type_slug', 'view_type'], 'unique_contract_view');
         });

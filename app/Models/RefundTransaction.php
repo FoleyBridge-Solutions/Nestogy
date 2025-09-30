@@ -8,11 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 /**
  * Refund Transaction Model
- * 
+ *
  * Manages actual payment gateway transactions for refund processing,
  * supporting multiple gateways, retry logic, risk management,
  * and comprehensive transaction tracking.
@@ -46,7 +45,7 @@ class RefundTransaction extends Model
         'customer_notified', 'notification_sent_at', 'notification_details',
         'initiated_at', 'processed_at', 'completed_at', 'failed_at', 'cancelled_at',
         'processing_time_seconds', 'sla_met', 'sla_deadline', 'audit_trail',
-        'correlation_id', 'metadata'
+        'correlation_id', 'metadata',
     ];
 
     protected $casts = [
@@ -100,44 +99,66 @@ class RefundTransaction extends Model
         'sla_deadline' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Transaction Types
     const TYPE_CREDIT_CARD_REFUND = 'credit_card_refund';
+
     const TYPE_ACH_REFUND = 'ach_refund';
+
     const TYPE_WIRE_TRANSFER_REFUND = 'wire_transfer_refund';
+
     const TYPE_PAYPAL_REFUND = 'paypal_refund';
+
     const TYPE_STRIPE_REFUND = 'stripe_refund';
+
     const TYPE_CHECK_REFUND = 'check_refund';
+
     const TYPE_ACCOUNT_CREDIT = 'account_credit';
+
     const TYPE_MANUAL_REFUND = 'manual_refund';
+
     const TYPE_CHARGEBACK_REFUND = 'chargeback_refund';
 
     // Status
     const STATUS_PENDING = 'pending';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_REVERSED = 'reversed';
+
     const STATUS_DISPUTED = 'disputed';
+
     const STATUS_SETTLED = 'settled';
 
     // Gateways
     const GATEWAY_STRIPE = 'stripe';
+
     const GATEWAY_PAYPAL = 'paypal';
+
     const GATEWAY_AUTHORIZE_NET = 'authorize_net';
+
     const GATEWAY_SQUARE = 'square';
+
     const GATEWAY_BRAINTREE = 'braintree';
+
     const GATEWAY_MANUAL = 'manual';
 
     // Card Types
     const CARD_TYPE_CREDIT = 'Credit';
+
     const CARD_TYPE_DEBIT = 'Debit';
 
     // Account Types
     const ACCOUNT_TYPE_CHECKING = 'checking';
+
     const ACCOUNT_TYPE_SAVINGS = 'savings';
 
     /**
@@ -169,6 +190,7 @@ class RefundTransaction extends Model
     public function scopeForCompany($query, $companyId = null)
     {
         $companyId = $companyId ?? Auth::user()?->company_id;
+
         return $query->where('company_id', $companyId);
     }
 
@@ -230,11 +252,11 @@ class RefundTransaction extends Model
     public function scopeRetryable($query)
     {
         return $query->where('status', self::STATUS_FAILED)
-                    ->where('retry_count', '<', DB::raw('max_retries'))
-                    ->where(function($q) {
-                        $q->whereNull('next_retry_at')
-                          ->orWhere('next_retry_at', '<=', now());
-                    });
+            ->where('retry_count', '<', DB::raw('max_retries'))
+            ->where(function ($q) {
+                $q->whereNull('next_retry_at')
+                    ->orWhere('next_retry_at', '<=', now());
+            });
     }
 
     /**
@@ -249,7 +271,7 @@ class RefundTransaction extends Model
         $companyId = Auth::user()?->company_id;
         $timestamp = now()->format('YmdHis');
         $random = str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-        
+
         return "RT-{$companyId}-{$timestamp}-{$random}";
     }
 
@@ -260,7 +282,7 @@ class RefundTransaction extends Model
     {
         return $this->status === self::STATUS_FAILED &&
                $this->retry_count < $this->max_retries &&
-               (!$this->next_retry_at || $this->next_retry_at <= now());
+               (! $this->next_retry_at || $this->next_retry_at <= now());
     }
 
     /**
@@ -315,8 +337,8 @@ class RefundTransaction extends Model
         $this->status = self::STATUS_COMPLETED;
         $this->completed_at = now();
         $this->processing_time_seconds = $this->calculateProcessingTime();
-        
-        if (!empty($gatewayResponse)) {
+
+        if (! empty($gatewayResponse)) {
             $this->gateway_response = $gatewayResponse;
             $this->gateway_transaction_id = $gatewayResponse['transaction_id'] ?? null;
             $this->gateway_status_code = $gatewayResponse['status_code'] ?? null;
@@ -339,8 +361,8 @@ class RefundTransaction extends Model
         $this->failed_at = now();
         $this->failure_reason = $reason;
         $this->processing_time_seconds = $this->calculateProcessingTime();
-        
-        if (!empty($errorData)) {
+
+        if (! empty($errorData)) {
             $this->error_log = array_merge($this->error_log ?? [], [$errorData]);
         }
 
@@ -370,7 +392,7 @@ class RefundTransaction extends Model
      */
     public function calculateProcessingTime(): ?int
     {
-        if (!$this->processed_at) {
+        if (! $this->processed_at) {
             return null;
         }
 
@@ -382,7 +404,7 @@ class RefundTransaction extends Model
      */
     public function checkSla(): bool
     {
-        if (!$this->sla_deadline) {
+        if (! $this->sla_deadline) {
             return true;
         }
 
@@ -395,12 +417,12 @@ class RefundTransaction extends Model
     /**
      * Flag as suspicious
      */
-    public function flagAsSuspicious(array $riskFactors, float $riskScore = null): void
+    public function flagAsSuspicious(array $riskFactors, ?float $riskScore = null): void
     {
         $this->flagged_as_suspicious = true;
         $this->requires_manual_review = true;
         $this->risk_factors = $riskFactors;
-        
+
         if ($riskScore !== null) {
             $this->risk_score = $riskScore;
         }
@@ -411,9 +433,9 @@ class RefundTransaction extends Model
     /**
      * Mark as settled
      */
-    public function markAsSettled(string $batchId = null, float $settlementAmount = null): bool
+    public function markAsSettled(?string $batchId = null, ?float $settlementAmount = null): bool
     {
-        if (!$this->isCompleted()) {
+        if (! $this->isCompleted()) {
             return false;
         }
 
@@ -421,7 +443,7 @@ class RefundTransaction extends Model
         $this->settlement_date = now()->toDateString();
         $this->settlement_batch_id = $batchId;
         $this->settlement_amount = $settlementAmount ?? $this->net_amount;
-        
+
         $this->save();
 
         return true;
@@ -432,7 +454,7 @@ class RefundTransaction extends Model
      */
     public function markAsReconciled(): bool
     {
-        if (!$this->settled) {
+        if (! $this->settled) {
             return false;
         }
 
@@ -457,7 +479,7 @@ class RefundTransaction extends Model
             self::TYPE_CHECK_REFUND => 'Check Refund',
             self::TYPE_ACCOUNT_CREDIT => 'Account Credit',
             self::TYPE_MANUAL_REFUND => 'Manual Refund',
-            self::TYPE_CHARGEBACK_REFUND => 'Chargeback Refund'
+            self::TYPE_CHARGEBACK_REFUND => 'Chargeback Refund',
         ];
     }
 
@@ -472,7 +494,7 @@ class RefundTransaction extends Model
             self::GATEWAY_AUTHORIZE_NET => 'Authorize.Net',
             self::GATEWAY_SQUARE => 'Square',
             self::GATEWAY_BRAINTREE => 'Braintree',
-            self::GATEWAY_MANUAL => 'Manual'
+            self::GATEWAY_MANUAL => 'Manual',
         ];
     }
 
@@ -481,7 +503,7 @@ class RefundTransaction extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'yellow',
             self::STATUS_PROCESSING => 'blue',
             self::STATUS_COMPLETED => 'green',
@@ -499,7 +521,7 @@ class RefundTransaction extends Model
      */
     public function getFormattedAmountAttribute(): string
     {
-        return number_format($this->amount, 2) . ' ' . $this->currency_code;
+        return number_format($this->amount, 2).' '.$this->currency_code;
     }
 
     /**
@@ -507,7 +529,7 @@ class RefundTransaction extends Model
      */
     public function getFormattedNetAmountAttribute(): string
     {
-        return number_format($this->net_amount, 2) . ' ' . $this->currency_code;
+        return number_format($this->net_amount, 2).' '.$this->currency_code;
     }
 
     /**
@@ -515,11 +537,11 @@ class RefundTransaction extends Model
      */
     public function getMaskedCardAttribute(): ?string
     {
-        if (!$this->card_last_four) {
+        if (! $this->card_last_four) {
             return null;
         }
 
-        return '**** **** **** ' . $this->card_last_four;
+        return '**** **** **** '.$this->card_last_four;
     }
 
     /**
@@ -527,11 +549,11 @@ class RefundTransaction extends Model
      */
     public function getMaskedAccountAttribute(): ?string
     {
-        if (!$this->account_last_four) {
+        if (! $this->account_last_four) {
             return null;
         }
 
-        return '****' . $this->account_last_four;
+        return '****'.$this->account_last_four;
     }
 
     /**
@@ -540,51 +562,51 @@ class RefundTransaction extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($transaction) {
-            if (!$transaction->company_id) {
+            if (! $transaction->company_id) {
                 $transaction->company_id = Auth::user()?->company_id;
             }
-            
-            if (!$transaction->processed_by) {
+
+            if (! $transaction->processed_by) {
                 $transaction->processed_by = Auth::id();
             }
-            
-            if (!$transaction->transaction_id) {
+
+            if (! $transaction->transaction_id) {
                 $transaction->transaction_id = self::generateTransactionId();
             }
-            
-            if (!$transaction->initiated_at) {
+
+            if (! $transaction->initiated_at) {
                 $transaction->initiated_at = now();
             }
-            
+
             // Set default max retries
-            if (!$transaction->max_retries) {
+            if (! $transaction->max_retries) {
                 $transaction->max_retries = 3;
             }
-            
+
             // Calculate net amount
-            if (!$transaction->net_amount) {
-                $transaction->net_amount = $transaction->amount - 
-                    ($transaction->processing_fee ?? 0) - 
+            if (! $transaction->net_amount) {
+                $transaction->net_amount = $transaction->amount -
+                    ($transaction->processing_fee ?? 0) -
                     ($transaction->gateway_fee ?? 0);
             }
-            
+
             // Set default SLA deadline (24 hours for most transactions)
-            if (!$transaction->sla_deadline) {
+            if (! $transaction->sla_deadline) {
                 $transaction->sla_deadline = now()->addHours(24);
             }
         });
-        
+
         static::updated(function ($transaction) {
             // Check SLA when status changes
             if ($transaction->isDirty('status')) {
                 $transaction->checkSla();
             }
-            
+
             // Update correlation ID for tracking
-            if (!$transaction->correlation_id) {
-                $transaction->correlation_id = $transaction->refundRequest?->request_number ?? 
+            if (! $transaction->correlation_id) {
+                $transaction->correlation_id = $transaction->refundRequest?->request_number ??
                     $transaction->transaction_id;
             }
         });

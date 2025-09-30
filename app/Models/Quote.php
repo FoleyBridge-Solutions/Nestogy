@@ -2,25 +2,23 @@
 
 namespace App\Models;
 
+use App\Domains\Financial\Services\TaxEngine\LocalTaxRateService;
+use App\Domains\Financial\Services\VoIPTaxService;
 use App\Traits\BelongsToCompany;
 use App\Traits\QuotePricingCalculations;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
-use App\Domains\Financial\Services\VoIPTaxService;
-use App\Domains\Financial\Services\TaxEngine\LocalTaxRateService;
-use App\Models\TaxExemption;
-use App\Models\TaxExemptionUsage;
 
 /**
  * Quote Model
- * 
+ *
  * Enterprise-grade quote management with multi-tier approval workflows,
  * versioning, expiration handling, and VoIP-specific features.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string|null $prefix
@@ -60,7 +58,7 @@ use App\Models\TaxExemptionUsage;
  */
 class Quote extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, QuotePricingCalculations;
+    use BelongsToCompany, HasFactory, QuotePricingCalculations, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -142,35 +140,50 @@ class Quote extends Model
      * Quote status enumeration
      */
     const STATUS_DRAFT = 'Draft';
+
     const STATUS_SENT = 'Sent';
+
     const STATUS_VIEWED = 'Viewed';
+
     const STATUS_ACCEPTED = 'Accepted';
+
     const STATUS_DECLINED = 'Declined';
+
     const STATUS_EXPIRED = 'Expired';
+
     const STATUS_CONVERTED = 'Converted';
+
     const STATUS_CANCELLED = 'Cancelled';
 
     /**
      * Approval status enumeration
      */
     const APPROVAL_PENDING = 'pending';
+
     const APPROVAL_MANAGER_APPROVED = 'manager_approved';
+
     const APPROVAL_EXECUTIVE_APPROVED = 'executive_approved';
+
     const APPROVAL_REJECTED = 'rejected';
+
     const APPROVAL_NOT_REQUIRED = 'not_required';
 
     /**
      * Discount type enumeration
      */
     const DISCOUNT_PERCENTAGE = 'percentage';
+
     const DISCOUNT_FIXED = 'fixed';
 
     /**
      * VoIP pricing model types
      */
     const PRICING_FLAT_RATE = 'flat_rate';
+
     const PRICING_TIERED = 'tiered';
+
     const PRICING_USAGE_BASED = 'usage_based';
+
     const PRICING_HYBRID = 'hybrid';
 
     /**
@@ -259,7 +272,7 @@ class Quote extends Model
     public function taxExemptions(): HasMany
     {
         return $this->hasMany(TaxExemption::class, 'client_id', 'client_id')
-                    ->where('company_id', $this->company_id);
+            ->where('company_id', $this->company_id);
     }
 
     /**
@@ -284,9 +297,9 @@ class Quote extends Model
     public function latestTaxCalculation()
     {
         return $this->taxCalculations()
-                   ->where('status', '!=', 'voided')
-                   ->latest()
-                   ->first();
+            ->where('status', '!=', 'voided')
+            ->latest()
+            ->first();
     }
 
     /**
@@ -295,14 +308,14 @@ class Quote extends Model
     public function calculateRealTimeTax(): array
     {
         $taxService = new LocalTaxRateService($this->company_id);
-        
+
         // Determine service type from items (default to general)
         $serviceType = 'general';
         $firstItem = $this->items()->first();
-        if ($firstItem && !empty($firstItem->service_type)) {
+        if ($firstItem && ! empty($firstItem->service_type)) {
             $serviceType = $firstItem->service_type;
         }
-        
+
         return $taxService->calculateTax(
             $this->amount,
             $serviceType,
@@ -310,7 +323,7 @@ class Quote extends Model
                 'line1' => $this->client->address ?? '',
                 'city' => $this->client->city ?? '',
                 'state' => $this->client->state ?? '',
-                'zip' => $this->client->postal_code ?? $this->client->zip_code ?? ''
+                'zip' => $this->client->postal_code ?? $this->client->zip_code ?? '',
             ] : null
         );
     }
@@ -322,21 +335,21 @@ class Quote extends Model
     {
         // First try to get real-time calculation
         $realTimeCalculation = $this->calculateRealTimeTax();
-        
-        if ($realTimeCalculation['success'] && !empty($realTimeCalculation['jurisdictions'])) {
+
+        if ($realTimeCalculation['success'] && ! empty($realTimeCalculation['jurisdictions'])) {
             return [
                 'has_breakdown' => true,
                 'total_tax' => $realTimeCalculation['tax_amount'],
                 'total_rate' => $realTimeCalculation['tax_rate'],
                 'jurisdictions' => $realTimeCalculation['jurisdictions'],
-                'source' => 'real_time_local'
+                'source' => 'real_time_local',
             ];
         }
-        
+
         // Fallback to stored tax calculation
         $taxCalculation = $this->latestTaxCalculation();
-        
-        if (!$taxCalculation) {
+
+        if (! $taxCalculation) {
             return [
                 'total_tax' => 0,
                 'jurisdictions' => [],
@@ -363,7 +376,7 @@ class Quote extends Model
      */
     public function calculateVoIPTaxes(?array $serviceAddress = null): array
     {
-        $taxService = new VoIPTaxService();
+        $taxService = new VoIPTaxService;
         $taxService->setCompanyId($this->company_id);
         $allCalculations = [];
         $totalTaxAmount = 0;
@@ -387,7 +400,7 @@ class Quote extends Model
                 $totalTaxAmount += $calculation['total_tax_amount'];
 
                 // Record exemption usage if any exemptions were applied
-                if (!empty($calculation['exemptions_applied'])) {
+                if (! empty($calculation['exemptions_applied'])) {
                     $taxService->recordExemptionUsage(
                         $calculation['exemptions_applied'],
                         null,
@@ -445,7 +458,7 @@ class Quote extends Model
     public function getVoIPTaxBreakdown(): array
     {
         $breakdown = [];
-        
+
         foreach ($this->voipItems as $item) {
             if ($item->voip_tax_data) {
                 $breakdown[$item->id] = [
@@ -468,8 +481,8 @@ class Quote extends Model
         $prefix = $this->prefix ?: 'QTE';
         $number = str_pad($this->number, 4, '0', STR_PAD_LEFT);
         // $version = $this->version > 1 ? '.v' . $this->version : '';
-        
-        return $prefix . '-' . $number; // . $version;
+
+        return $prefix.'-'.$number; // . $version;
     }
 
     /**
@@ -477,11 +490,12 @@ class Quote extends Model
      */
     public function isExpired(): bool
     {
-        if (!$this->expire_date && !$this->valid_until) {
+        if (! $this->expire_date && ! $this->valid_until) {
             return false;
         }
 
         $expiryDate = $this->valid_until ?: $this->expire_date;
+
         return $expiryDate && Carbon::now()->gt($expiryDate);
     }
 
@@ -502,7 +516,7 @@ class Quote extends Model
             self::STATUS_SENT,
             self::STATUS_VIEWED,
             self::STATUS_ACCEPTED,
-            self::STATUS_DECLINED
+            self::STATUS_DECLINED,
         ]);
     }
 
@@ -527,7 +541,7 @@ class Quote extends Model
      */
     public function isConverted(): bool
     {
-        return $this->status === self::STATUS_CONVERTED || !is_null($this->converted_invoice_id);
+        return $this->status === self::STATUS_CONVERTED || ! is_null($this->converted_invoice_id);
     }
 
     /**
@@ -550,7 +564,7 @@ class Quote extends Model
     {
         return in_array($this->approval_status, [
             self::APPROVAL_EXECUTIVE_APPROVED,
-            self::APPROVAL_NOT_REQUIRED
+            self::APPROVAL_NOT_REQUIRED,
         ]);
     }
 
@@ -568,7 +582,7 @@ class Quote extends Model
     public function getDaysUntilExpiration(): ?int
     {
         $expiryDate = $this->valid_until ?: $this->expire_date;
-        if (!$expiryDate) {
+        if (! $expiryDate) {
             return null;
         }
 
@@ -600,7 +614,7 @@ class Quote extends Model
         // if ($this->discount_type === self::DISCOUNT_PERCENTAGE) {
         //     return ($this->getSubtotal() * $this->discount_amount) / 100;
         // }
-        
+
         return $this->discount_amount ?? 0;
     }
 
@@ -622,12 +636,12 @@ class Quote extends Model
      */
     public function recalculateVoIPTaxes(?array $serviceAddress = null): void
     {
-        if (!$this->hasVoIPServices()) {
+        if (! $this->hasVoIPServices()) {
             return;
         }
 
         $taxCalculations = $this->calculateVoIPTaxes($serviceAddress);
-        
+
         // Update individual items with new tax calculations
         foreach ($taxCalculations['calculations'] as $calculation) {
             $item = $this->items()->find($calculation['item_id']);
@@ -645,7 +659,7 @@ class Quote extends Model
         \Log::info('Quote VoIP taxes recalculated', [
             'quote_id' => $this->id,
             'total_tax' => $taxCalculations['total_tax_amount'],
-            'items_processed' => count($taxCalculations['calculations'])
+            'items_processed' => count($taxCalculations['calculations']),
         ]);
     }
 
@@ -654,11 +668,11 @@ class Quote extends Model
      */
     public function getPublicUrl(): string
     {
-        if (!$this->url_key) {
+        if (! $this->url_key) {
             $this->generateUrlKey();
         }
 
-        return url('/quote/' . $this->url_key);
+        return url('/quote/'.$this->url_key);
     }
 
     /**
@@ -676,7 +690,7 @@ class Quote extends Model
     {
         $this->update([
             'status' => self::STATUS_SENT,
-            'sent_at' => now()
+            'sent_at' => now(),
         ]);
     }
 
@@ -688,7 +702,7 @@ class Quote extends Model
         if ($this->status === self::STATUS_SENT) {
             $this->update([
                 'status' => self::STATUS_VIEWED,
-                'viewed_at' => now()
+                'viewed_at' => now(),
             ]);
         }
     }
@@ -700,7 +714,7 @@ class Quote extends Model
     {
         $this->update([
             'status' => self::STATUS_ACCEPTED,
-            'accepted_at' => now()
+            'accepted_at' => now(),
         ]);
     }
 
@@ -711,7 +725,7 @@ class Quote extends Model
     {
         $this->update([
             'status' => self::STATUS_DECLINED,
-            'declined_at' => now()
+            'declined_at' => now(),
         ]);
     }
 
@@ -756,7 +770,7 @@ class Quote extends Model
         // Update quote status
         $this->update([
             'status' => self::STATUS_CONVERTED,
-            'converted_invoice_id' => $invoice->id
+            'converted_invoice_id' => $invoice->id,
         ]);
 
         return $invoice;
@@ -777,12 +791,12 @@ class Quote extends Model
         $newQuote->viewed_at = null;
         $newQuote->accepted_at = null;
         $newQuote->declined_at = null;
-        
+
         // Apply any changes
         foreach ($changes as $key => $value) {
             $newQuote->$key = $value;
         }
-        
+
         $newQuote->save();
 
         // Copy items
@@ -800,6 +814,7 @@ class Quote extends Model
         }
 
         $newQuote->calculateTotals();
+
         return $newQuote;
     }
 
@@ -808,11 +823,11 @@ class Quote extends Model
      */
     public function autoRenew(): ?Quote
     {
-        if (!$this->auto_renew || !$this->auto_renew_days) {
+        if (! $this->auto_renew || ! $this->auto_renew_days) {
             return null;
         }
 
-        if (!$this->isExpired()) {
+        if (! $this->isExpired()) {
             return null;
         }
 
@@ -839,7 +854,8 @@ class Quote extends Model
     public function formatCurrency(float $amount): string
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($amount, 2);
+
+        return $symbol.number_format($amount, 2);
     }
 
     /**
@@ -874,7 +890,7 @@ class Quote extends Model
     {
         return $query->where(function ($q) {
             $q->where('expire_date', '<', Carbon::now())
-              ->orWhere('valid_until', '<', Carbon::now());
+                ->orWhere('valid_until', '<', Carbon::now());
         });
     }
 
@@ -884,10 +900,10 @@ class Quote extends Model
     public function scopeExpiringSoon($query, int $days = 7)
     {
         $futureDate = Carbon::now()->addDays($days);
-        
+
         return $query->where(function ($q) use ($futureDate) {
             $q->whereBetween('expire_date', [Carbon::now(), $futureDate])
-              ->orWhereBetween('valid_until', [Carbon::now(), $futureDate]);
+                ->orWhereBetween('valid_until', [Carbon::now(), $futureDate]);
         });
     }
 
@@ -898,8 +914,8 @@ class Quote extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('number', $search)
-              ->orWhere('scope', 'like', '%' . $search . '%')
-              ->orWhere('note', 'like', '%' . $search . '%');
+                ->orWhere('scope', 'like', '%'.$search.'%')
+                ->orWhere('note', 'like', '%'.$search.'%');
         });
     }
 
@@ -972,7 +988,7 @@ class Quote extends Model
 
         // Auto-increment quote number and set defaults
         static::creating(function ($quote) {
-            if (!$quote->number) {
+            if (! $quote->number) {
                 $lastQuote = static::where('company_id', $quote->company_id)
                     ->where('prefix', $quote->prefix)
                     ->orderBy('number', 'desc')
@@ -986,7 +1002,7 @@ class Quote extends Model
             //     $quote->version = 1;
             // }
 
-            if (!$quote->url_key) {
+            if (! $quote->url_key) {
                 $quote->url_key = bin2hex(random_bytes(16));
             }
 

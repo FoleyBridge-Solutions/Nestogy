@@ -3,18 +3,18 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * Portal Notification Model
- * 
+ *
  * Manages notifications and communications for client portal users.
  * Supports multiple delivery channels and notification preferences.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $client_id
@@ -109,7 +109,7 @@ use Carbon\Carbon;
  */
 class PortalNotification extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /**
      * The table associated with the model.
@@ -278,42 +278,64 @@ class PortalNotification extends Model
      * Notification type constants
      */
     const TYPE_INVOICE_DUE = 'invoice_due';
+
     const TYPE_PAYMENT_RECEIVED = 'payment_received';
+
     const TYPE_PAYMENT_FAILED = 'payment_failed';
+
     const TYPE_SERVICE_OUTAGE = 'service_outage';
+
     const TYPE_MAINTENANCE = 'maintenance';
+
     const TYPE_ACCOUNT_UPDATE = 'account_update';
+
     const TYPE_SECURITY_ALERT = 'security_alert';
+
     const TYPE_SYSTEM_MESSAGE = 'system_message';
+
     const TYPE_MARKETING = 'marketing';
+
     const TYPE_REMINDER = 'reminder';
 
     /**
      * Category constants
      */
     const CATEGORY_BILLING = 'billing';
+
     const CATEGORY_TECHNICAL = 'technical';
+
     const CATEGORY_MARKETING = 'marketing';
+
     const CATEGORY_SECURITY = 'security';
+
     const CATEGORY_SYSTEM = 'system';
 
     /**
      * Priority constants
      */
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_URGENT = 'urgent';
+
     const PRIORITY_CRITICAL = 'critical';
 
     /**
      * Status constants
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_SENT = 'sent';
+
     const STATUS_DELIVERED = 'delivered';
+
     const STATUS_READ = 'read';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     /**
@@ -457,7 +479,7 @@ class PortalNotification extends Model
      */
     public function requiresAction(): bool
     {
-        return $this->requires_action === true && !$this->action_completed;
+        return $this->requires_action === true && ! $this->action_completed;
     }
 
     /**
@@ -465,7 +487,7 @@ class PortalNotification extends Model
      */
     public function requiresAcknowledgment(): bool
     {
-        return $this->requires_acknowledgment === true && !$this->acknowledged_at;
+        return $this->requires_acknowledgment === true && ! $this->acknowledged_at;
     }
 
     /**
@@ -529,7 +551,7 @@ class PortalNotification extends Model
             'last_viewed_at' => Carbon::now(),
         ];
 
-        if (!$this->first_viewed_at) {
+        if (! $this->first_viewed_at) {
             $updates['first_viewed_at'] = Carbon::now();
         }
 
@@ -546,7 +568,7 @@ class PortalNotification extends Model
             'last_clicked_at' => Carbon::now(),
         ];
 
-        if (!$this->first_clicked_at) {
+        if (! $this->first_clicked_at) {
             $updates['first_clicked_at'] = Carbon::now();
         }
 
@@ -615,8 +637,8 @@ class PortalNotification extends Model
      */
     public function getExcerpt(int $length = 100): string
     {
-        return strlen($this->message) > $length 
-            ? substr($this->message, 0, $length) . '...' 
+        return strlen($this->message) > $length
+            ? substr($this->message, 0, $length).'...'
             : $this->message;
     }
 
@@ -625,7 +647,7 @@ class PortalNotification extends Model
      */
     public function shouldShowToClient(): bool
     {
-        if (!$this->show_in_portal) {
+        if (! $this->show_in_portal) {
             return false;
         }
 
@@ -650,9 +672,9 @@ class PortalNotification extends Model
      */
     public function shouldSendEmail(): bool
     {
-        return $this->send_email && 
-               !$this->email_sent_at && 
-               $this->client->email && 
+        return $this->send_email &&
+               ! $this->email_sent_at &&
+               $this->client->email &&
                $this->client->allowsEmailNotifications($this->type);
     }
 
@@ -661,9 +683,9 @@ class PortalNotification extends Model
      */
     public function shouldSendSMS(): bool
     {
-        return $this->send_sms && 
-               !$this->sms_sent_at && 
-               $this->client->phone && 
+        return $this->send_sms &&
+               ! $this->sms_sent_at &&
+               $this->client->phone &&
                $this->client->allowsSMSNotifications($this->type);
     }
 
@@ -672,16 +694,16 @@ class PortalNotification extends Model
      */
     public function shouldSendPush(): bool
     {
-        return $this->send_push && 
-               !$this->push_sent_at && 
-               $this->client->hasPushTokens() && 
+        return $this->send_push &&
+               ! $this->push_sent_at &&
+               $this->client->hasPushTokens() &&
                $this->client->allowsPushNotifications($this->type);
     }
 
     /**
      * Mark email as sent.
      */
-    public function markEmailSent(bool $delivered = true, string $error = null): bool
+    public function markEmailSent(bool $delivered = true, ?string $error = null): bool
     {
         return $this->update([
             'email_sent_at' => Carbon::now(),
@@ -693,7 +715,7 @@ class PortalNotification extends Model
     /**
      * Mark SMS as sent.
      */
-    public function markSMSSent(bool $delivered = true, string $error = null): bool
+    public function markSMSSent(bool $delivered = true, ?string $error = null): bool
     {
         return $this->update([
             'sms_sent_at' => Carbon::now(),
@@ -705,7 +727,7 @@ class PortalNotification extends Model
     /**
      * Mark push notification as sent.
      */
-    public function markPushSent(bool $delivered = true, string $error = null): bool
+    public function markPushSent(bool $delivered = true, ?string $error = null): bool
     {
         return $this->update([
             'push_sent_at' => Carbon::now(),
@@ -719,7 +741,7 @@ class PortalNotification extends Model
      */
     public function calculateNextOccurrence(): ?Carbon
     {
-        if (!$this->is_recurring || !$this->recurring_pattern) {
+        if (! $this->is_recurring || ! $this->recurring_pattern) {
             return null;
         }
 
@@ -803,11 +825,11 @@ class PortalNotification extends Model
     public function scopeActive($query)
     {
         return $query->where('show_in_portal', true)
-                    ->where('is_dismissed', false)
-                    ->where(function ($q) {
-                        $q->whereNull('expires_at')
-                          ->orWhere('expires_at', '>', Carbon::now());
-                    });
+            ->where('is_dismissed', false)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', Carbon::now());
+            });
     }
 
     /**
@@ -816,10 +838,10 @@ class PortalNotification extends Model
     public function scopeDueForSending($query)
     {
         return $query->where('status', self::STATUS_PENDING)
-                    ->where(function ($q) {
-                        $q->whereNull('scheduled_at')
-                          ->orWhere('scheduled_at', '<=', Carbon::now());
-                    });
+            ->where(function ($q) {
+                $q->whereNull('scheduled_at')
+                    ->orWhere('scheduled_at', '<=', Carbon::now());
+            });
     }
 
     /**
@@ -828,7 +850,7 @@ class PortalNotification extends Model
     public function scopeRequiringAction($query)
     {
         return $query->where('requires_action', true)
-                    ->where('action_completed', false);
+            ->where('action_completed', false);
     }
 
     /**
@@ -840,17 +862,17 @@ class PortalNotification extends Model
 
         static::creating(function ($notification) {
             // Set default scheduled_at if not provided
-            if (!$notification->scheduled_at) {
+            if (! $notification->scheduled_at) {
                 $notification->scheduled_at = Carbon::now();
             }
 
             // Set language from client if not provided
-            if (!$notification->language && $notification->client) {
+            if (! $notification->language && $notification->client) {
                 $notification->language = $notification->client->preferred_language ?? 'en';
             }
 
             // Set timezone from client if not provided
-            if (!$notification->timezone && $notification->client) {
+            if (! $notification->timezone && $notification->client) {
                 $notification->timezone = $notification->client->timezone ?? 'UTC';
             }
         });

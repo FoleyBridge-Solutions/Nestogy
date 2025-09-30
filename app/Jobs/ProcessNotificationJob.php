@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Process Notification Job
- * 
+ *
  * Handles queued notification processing through the notification dispatcher.
  */
 class ProcessNotificationJob implements ShouldQueue
@@ -21,7 +21,9 @@ class ProcessNotificationJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected string $eventType;
+
     protected int $ticketId;
+
     protected array $eventData;
 
     /**
@@ -41,28 +43,29 @@ class ProcessNotificationJob implements ShouldQueue
     {
         try {
             $ticket = Ticket::find($this->ticketId);
-            
-            if (!$ticket) {
+
+            if (! $ticket) {
                 Log::warning('Notification job failed: Ticket not found', [
                     'ticket_id' => $this->ticketId,
-                    'event_type' => $this->eventType
+                    'event_type' => $this->eventType,
                 ]);
+
                 return;
             }
 
             $result = $dispatcher->dispatch($this->eventType, $ticket, $this->eventData);
-            
+
             Log::info('Queued notification processed', [
                 'event_type' => $this->eventType,
                 'ticket_id' => $this->ticketId,
-                'result' => $result
+                'result' => $result,
             ]);
 
         } catch (\Exception $e) {
             Log::error('Notification job failed', [
                 'event_type' => $this->eventType,
                 'ticket_id' => $this->ticketId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             throw $e; // Re-throw to trigger job retry logic
@@ -77,7 +80,7 @@ class ProcessNotificationJob implements ShouldQueue
         Log::error('Notification job permanently failed', [
             'event_type' => $this->eventType,
             'ticket_id' => $this->ticketId,
-            'error' => $exception->getMessage()
+            'error' => $exception->getMessage(),
         ]);
     }
 }

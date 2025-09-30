@@ -2,19 +2,19 @@
 
 namespace App\Domains\Project\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Task Model
- * 
+ *
  * Comprehensive task management with dependencies, subtasks, time tracking,
  * and status management for enterprise project workflows.
- * 
+ *
  * @property int $id
  * @property int $project_id
  * @property string $task_code
@@ -112,32 +112,49 @@ class Task extends Model
      * Task status enumeration
      */
     const STATUS_TODO = 'todo';
+
     const STATUS_IN_PROGRESS = 'in_progress';
+
     const STATUS_IN_REVIEW = 'in_review';
+
     const STATUS_BLOCKED = 'blocked';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CLOSED = 'closed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     /**
      * Task priority enumeration
      */
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_URGENT = 'urgent';
+
     const PRIORITY_CRITICAL = 'critical';
 
     /**
      * Task categories
      */
     const CATEGORY_DEVELOPMENT = 'development';
+
     const CATEGORY_DESIGN = 'design';
+
     const CATEGORY_TESTING = 'testing';
+
     const CATEGORY_DOCUMENTATION = 'documentation';
+
     const CATEGORY_RESEARCH = 'research';
+
     const CATEGORY_MEETING = 'meeting';
+
     const CATEGORY_REVIEW = 'review';
+
     const CATEGORY_OTHER = 'other';
 
     /**
@@ -186,8 +203,8 @@ class Task extends Model
     public function dependencies(): BelongsToMany
     {
         return $this->belongsToMany(Task::class, 'task_dependencies', 'task_id', 'depends_on_task_id')
-                    ->withPivot(['dependency_type', 'lag_days'])
-                    ->withTimestamps();
+            ->withPivot(['dependency_type', 'lag_days'])
+            ->withTimestamps();
     }
 
     /**
@@ -196,8 +213,8 @@ class Task extends Model
     public function dependentTasks(): BelongsToMany
     {
         return $this->belongsToMany(Task::class, 'task_dependencies', 'depends_on_task_id', 'task_id')
-                    ->withPivot(['dependency_type', 'lag_days'])
-                    ->withTimestamps();
+            ->withPivot(['dependency_type', 'lag_days'])
+            ->withTimestamps();
     }
 
     /**
@@ -238,7 +255,7 @@ class Task extends Model
     public function watchers(): BelongsToMany
     {
         return $this->belongsToMany(\App\Models\User::class, 'task_watchers', 'task_id', 'user_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     /**
@@ -254,7 +271,7 @@ class Task extends Model
      */
     public function getStatusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_TODO => 'To Do',
             self::STATUS_IN_PROGRESS => 'In Progress',
             self::STATUS_IN_REVIEW => 'In Review',
@@ -271,7 +288,7 @@ class Task extends Model
      */
     public function getPriorityLabel(): string
     {
-        return match($this->priority) {
+        return match ($this->priority) {
             self::PRIORITY_LOW => 'Low',
             self::PRIORITY_NORMAL => 'Normal',
             self::PRIORITY_HIGH => 'High',
@@ -310,7 +327,7 @@ class Task extends Model
      */
     public function isOverdue(): bool
     {
-        if (!$this->due_date || $this->isCompleted()) {
+        if (! $this->due_date || $this->isCompleted()) {
             return false;
         }
 
@@ -322,11 +339,11 @@ class Task extends Model
      */
     public function isDueSoon(int $days = 3): bool
     {
-        if (!$this->due_date || $this->isCompleted()) {
+        if (! $this->due_date || $this->isCompleted()) {
             return false;
         }
 
-        return Carbon::now()->diffInDays($this->due_date, false) <= $days && 
+        return Carbon::now()->diffInDays($this->due_date, false) <= $days &&
                Carbon::now()->lte($this->due_date);
     }
 
@@ -351,7 +368,7 @@ class Task extends Model
      */
     public function getDaysUntilDue(): ?int
     {
-        if (!$this->due_date) {
+        if (! $this->due_date) {
             return null;
         }
 
@@ -363,7 +380,7 @@ class Task extends Model
      */
     public function getPlannedDurationInDays(): ?int
     {
-        if (!$this->start_date || !$this->due_date) {
+        if (! $this->start_date || ! $this->due_date) {
             return null;
         }
 
@@ -375,11 +392,12 @@ class Task extends Model
      */
     public function getActualDurationInDays(): ?int
     {
-        if (!$this->actual_start_date) {
+        if (! $this->actual_start_date) {
             return null;
         }
 
         $endDate = $this->actual_end_date ?: Carbon::now();
+
         return $this->actual_start_date->diffInDays($endDate);
     }
 
@@ -389,12 +407,13 @@ class Task extends Model
     public function getCalculatedProgress(): float
     {
         $totalItems = $this->checklistItems()->count();
-        
+
         if ($totalItems === 0) {
             return $this->progress_percentage;
         }
 
         $completedItems = $this->checklistItems()->where('is_completed', true)->count();
+
         return round(($completedItems / $totalItems) * 100, 2);
     }
 
@@ -411,7 +430,7 @@ class Task extends Model
      */
     public function getTimeRemaining(): ?float
     {
-        if (!$this->estimated_hours) {
+        if (! $this->estimated_hours) {
             return null;
         }
 
@@ -423,7 +442,7 @@ class Task extends Model
      */
     public function isOverEstimatedTime(): bool
     {
-        if (!$this->estimated_hours) {
+        if (! $this->estimated_hours) {
             return false;
         }
 
@@ -455,7 +474,7 @@ class Task extends Model
             $health['issues'][] = 'Over estimated time';
         }
 
-        if (!$this->canBeStarted() && !$this->isCompleted()) {
+        if (! $this->canBeStarted() && ! $this->isCompleted()) {
             $health['status'] = $health['status'] === 'critical' ? 'critical' : 'warning';
             $health['issues'][] = 'Waiting for dependencies';
         }
@@ -468,13 +487,13 @@ class Task extends Model
      */
     public function startWork(): void
     {
-        if (!$this->canBeStarted()) {
+        if (! $this->canBeStarted()) {
             throw new \Exception('Task cannot be started until dependencies are completed.');
         }
 
         $updates = ['status' => self::STATUS_IN_PROGRESS];
-        
-        if (!$this->actual_start_date) {
+
+        if (! $this->actual_start_date) {
             $updates['actual_start_date'] = now();
         }
 
@@ -499,10 +518,10 @@ class Task extends Model
     /**
      * Block task with reason.
      */
-    public function block(string $reason = null): void
+    public function block(?string $reason = null): void
     {
         $this->update(['status' => self::STATUS_BLOCKED]);
-        
+
         if ($reason) {
             $this->comments()->create([
                 'user_id' => auth()->id(),
@@ -518,7 +537,7 @@ class Task extends Model
     public function unblock(): void
     {
         $this->update(['status' => self::STATUS_TODO]);
-        
+
         $this->comments()->create([
             'user_id' => auth()->id(),
             'comment' => 'Task unblocked',
@@ -554,10 +573,10 @@ class Task extends Model
     {
         $attributes = $this->toArray();
         unset($attributes['id'], $attributes['created_at'], $attributes['updated_at'], $attributes['deleted_at']);
-        
+
         $attributes = array_merge($attributes, $overrides);
-        $attributes['name'] = 'Copy of ' . $attributes['name'];
-        
+        $attributes['name'] = 'Copy of '.$attributes['name'];
+
         return Task::create($attributes);
     }
 
@@ -566,12 +585,12 @@ class Task extends Model
      */
     public function createRecurringInstance(): Task
     {
-        if (!$this->is_recurring) {
+        if (! $this->is_recurring) {
             throw new \Exception('This task is not configured as recurring.');
         }
 
         $nextDueDate = $this->calculateNextRecurringDate();
-        
+
         $newTask = $this->clone([
             'due_date' => $nextDueDate,
             'start_date' => $nextDueDate->subDays($this->getPlannedDurationInDays() ?? 1),
@@ -593,7 +612,7 @@ class Task extends Model
         $pattern = json_decode($this->recurring_pattern, true);
         $baseDate = $this->due_date ?: now();
 
-        return match($pattern['type']) {
+        return match ($pattern['type']) {
             'daily' => $baseDate->addDays($pattern['interval'] ?? 1),
             'weekly' => $baseDate->addWeeks($pattern['interval'] ?? 1),
             'monthly' => $baseDate->addMonths($pattern['interval'] ?? 1),
@@ -632,8 +651,8 @@ class Task extends Model
     public function scopeOverdue($query)
     {
         return $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CLOSED])
-                    ->whereNotNull('due_date')
-                    ->where('due_date', '<', Carbon::now());
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', Carbon::now());
     }
 
     /**
@@ -642,9 +661,9 @@ class Task extends Model
     public function scopeDueSoon($query, int $days = 3)
     {
         return $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CLOSED])
-                    ->whereNotNull('due_date')
-                    ->where('due_date', '>=', Carbon::now())
-                    ->where('due_date', '<=', Carbon::now()->addDays($days));
+            ->whereNotNull('due_date')
+            ->where('due_date', '>=', Carbon::now())
+            ->where('due_date', '<=', Carbon::now()->addDays($days));
     }
 
     /**
@@ -685,9 +704,9 @@ class Task extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('description', 'like', '%' . $search . '%')
-              ->orWhere('task_code', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('description', 'like', '%'.$search.'%')
+                ->orWhere('task_code', 'like', '%'.$search.'%');
         });
     }
 
@@ -700,14 +719,14 @@ class Task extends Model
             'project_id' => 'required|integer|exists:projects,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'required|in:' . implode(',', self::getAvailableStatuses()),
-            'priority' => 'required|in:' . implode(',', self::getAvailablePriorities()),
+            'status' => 'required|in:'.implode(',', self::getAvailableStatuses()),
+            'priority' => 'required|in:'.implode(',', self::getAvailablePriorities()),
             'assigned_to' => 'nullable|integer|exists:users,id',
             'parent_task_id' => 'nullable|integer|exists:project_tasks,id',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date|after_or_equal:start_date',
             'estimated_hours' => 'nullable|numeric|min:0',
-            'category' => 'nullable|in:' . implode(',', self::getAvailableCategories()),
+            'category' => 'nullable|in:'.implode(',', self::getAvailableCategories()),
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'is_billable' => 'boolean',
@@ -771,17 +790,17 @@ class Task extends Model
 
         // Auto-generate task code for new tasks
         static::creating(function ($task) {
-            if (!$task->task_code) {
+            if (! $task->task_code) {
                 $task->task_code = static::generateTaskCode($task->project_id);
             }
 
             // Set created_by from authenticated user if not set
-            if (!$task->created_by && auth()->user()) {
+            if (! $task->created_by && auth()->user()) {
                 $task->created_by = auth()->user()->id;
             }
 
             // Set sort order
-            if (!$task->sort_order) {
+            if (! $task->sort_order) {
                 $maxOrder = static::where('project_id', $task->project_id)
                     ->where('parent_task_id', $task->parent_task_id)
                     ->max('sort_order') ?? 0;
@@ -793,7 +812,7 @@ class Task extends Model
         static::updating(function ($task) {
             if ($task->isDirty('status') && in_array($task->status, [self::STATUS_COMPLETED, self::STATUS_CLOSED])) {
                 $task->progress_percentage = 100;
-                if (!$task->actual_end_date) {
+                if (! $task->actual_end_date) {
                     $task->actual_end_date = now();
                 }
             }
@@ -807,19 +826,19 @@ class Task extends Model
     {
         $project = Project::find($projectId);
         $projectCode = $project ? $project->project_code : 'PRJ-UNKNOWN';
-        
+
         $lastTask = static::where('project_id', $projectId)
-            ->where('task_code', 'like', $projectCode . '-T%')
+            ->where('task_code', 'like', $projectCode.'-T%')
             ->orderBy('task_code', 'desc')
             ->first();
 
         if ($lastTask) {
-            $lastNumber = intval(substr($lastTask->task_code, strlen($projectCode . '-T')));
+            $lastNumber = intval(substr($lastTask->task_code, strlen($projectCode.'-T')));
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
 
-        return $projectCode . '-T' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        return $projectCode.'-T'.str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
 }

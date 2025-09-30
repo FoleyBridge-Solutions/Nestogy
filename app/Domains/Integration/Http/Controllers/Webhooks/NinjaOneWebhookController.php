@@ -4,13 +4,13 @@ namespace App\Domains\Integration\Http\Controllers\Webhooks;
 
 use App\Domains\Integration\Services\WebhookService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
  * NinjaOne Webhook Controller
- * 
+ *
  * Handles webhooks from NinjaOne RMM system.
  * Processes device alerts, software updates, and monitoring data.
  */
@@ -34,7 +34,7 @@ class NinjaOneWebhookController extends Controller
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'content_type' => $request->header('Content-Type'),
-                'auth_present' => !empty($request->header('Authorization')),
+                'auth_present' => ! empty($request->header('Authorization')),
                 'payload_size' => strlen($request->getContent()),
             ]);
 
@@ -113,7 +113,7 @@ class NinjaOneWebhookController extends Controller
                 'headers' => [
                     'content_type' => $request->header('Content-Type'),
                     'user_agent' => $request->userAgent(),
-                    'auth_present' => !empty($request->header('Authorization')),
+                    'auth_present' => ! empty($request->header('Authorization')),
                 ],
                 'payload_preview' => $this->getPayloadPreview($request->all()),
             ];
@@ -139,7 +139,7 @@ class NinjaOneWebhookController extends Controller
     protected function getPayloadPreview(array $payload): array
     {
         $preview = [];
-        
+
         // Show key fields without sensitive data
         $safeFields = [
             'deviceId',
@@ -152,15 +152,15 @@ class NinjaOneWebhookController extends Controller
             'createdAt',
             'status',
         ];
-        
+
         foreach ($safeFields as $field) {
             if (isset($payload[$field])) {
                 $preview[$field] = $payload[$field];
             }
         }
-        
+
         $preview['total_fields'] = count($payload);
-        
+
         return $preview;
     }
 }

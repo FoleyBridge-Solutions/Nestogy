@@ -2,22 +2,19 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\Quote;
-use App\Models\QuoteItem;
-use App\Models\Client;
-use App\Models\Category;
-use App\Models\Product;
-use App\Domains\Financial\Exceptions\QuoteValidationException;
 use App\Domains\Financial\Exceptions\QuoteNotFoundException;
 use App\Domains\Financial\Exceptions\QuotePermissionException;
+use App\Domains\Financial\Exceptions\QuoteValidationException;
 use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
+use App\Models\Category;
+use App\Models\Client;
+use App\Models\Product;
+use App\Models\Quote;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
-use Carbon\Carbon;
 
 /**
  * Enhanced Quote Service with proper transaction handling
@@ -32,18 +29,17 @@ class QuoteService
      */
     protected function getTaxEngine(): TaxEngineRouter
     {
-        if (!$this->taxEngine) {
+        if (! $this->taxEngine) {
             $companyId = auth()->user()->company_id ?? 1;
             $this->taxEngine = new TaxEngineRouter($companyId);
         }
+
         return $this->taxEngine;
     }
 
     /**
      * Create a new quote with transaction handling
      *
-     * @param array $data
-     * @return Quote
      * @throws QuoteValidationException
      */
     public function createQuote(array $data): Quote
@@ -70,7 +66,7 @@ class QuoteService
                 ]);
 
                 // Add quote items if provided
-                if (!empty($data['items'])) {
+                if (! empty($data['items'])) {
                     $skipComplex = $data['skip_complex_calculations'] ?? false;
                     $this->addQuoteItems($quote, $data['items'], $skipComplex);
                 }
@@ -89,7 +85,7 @@ class QuoteService
                     'quote_id' => $quote->id,
                     'client_id' => $quote->client_id,
                     'total_amount' => $quote->amount,
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
 
                 // Clear relevant caches
@@ -101,9 +97,9 @@ class QuoteService
                 Log::error('Quote creation failed', [
                     'error' => $e->getMessage(),
                     'data' => $data,
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
-                throw new QuoteValidationException('Failed to create quote: ' . $e->getMessage());
+                throw new QuoteValidationException('Failed to create quote: '.$e->getMessage());
             }
         });
     }
@@ -111,9 +107,6 @@ class QuoteService
     /**
      * Update an existing quote with transaction handling
      *
-     * @param Quote $quote
-     * @param array $data
-     * @return Quote
      * @throws QuoteValidationException
      * @throws QuotePermissionException
      */
@@ -152,7 +145,7 @@ class QuoteService
                 Log::info('Quote updated successfully', [
                     'quote_id' => $quote->id,
                     'changes' => array_diff_assoc($quote->toArray(), $originalData),
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
 
                 // Clear relevant caches
@@ -165,9 +158,9 @@ class QuoteService
                     'quote_id' => $quote->id,
                     'error' => $e->getMessage(),
                     'data' => $data,
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
-                throw new QuoteValidationException('Failed to update quote: ' . $e->getMessage());
+                throw new QuoteValidationException('Failed to update quote: '.$e->getMessage());
             }
         });
     }
@@ -175,8 +168,6 @@ class QuoteService
     /**
      * Delete a quote with proper cleanup
      *
-     * @param Quote $quote
-     * @return bool
      * @throws QuotePermissionException
      */
     public function deleteQuote(Quote $quote): bool
@@ -197,7 +188,7 @@ class QuoteService
                 // Log quote deletion
                 Log::info('Quote deleted successfully', [
                     'quote_id' => $quoteId,
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
 
                 // Clear relevant caches
@@ -209,9 +200,9 @@ class QuoteService
                 Log::error('Quote deletion failed', [
                     'quote_id' => $quote->id,
                     'error' => $e->getMessage(),
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
-                throw new QuoteValidationException('Failed to delete quote: ' . $e->getMessage());
+                throw new QuoteValidationException('Failed to delete quote: '.$e->getMessage());
             }
         });
     }
@@ -219,9 +210,6 @@ class QuoteService
     /**
      * Duplicate an existing quote
      *
-     * @param Quote $originalQuote
-     * @param array $overrides
-     * @return Quote
      * @throws QuotePermissionException
      */
     public function duplicateQuote(Quote $originalQuote, array $overrides = []): Quote
@@ -232,10 +220,10 @@ class QuoteService
             try {
                 // Prepare data for new quote
                 $quoteData = $originalQuote->toArray();
-                
+
                 // Remove fields that shouldn't be duplicated
-                unset($quoteData['id'], $quoteData['number'], $quoteData['created_at'], 
-                      $quoteData['updated_at'], $quoteData['archived_at']);
+                unset($quoteData['id'], $quoteData['number'], $quoteData['created_at'],
+                    $quoteData['updated_at'], $quoteData['archived_at']);
 
                 // Apply overrides
                 $quoteData = array_merge($quoteData, $overrides);
@@ -252,10 +240,11 @@ class QuoteService
                 $itemsData = $originalItems->map(function ($item) {
                     $itemData = $item->toArray();
                     unset($itemData['id'], $itemData['quote_id'], $itemData['created_at'], $itemData['updated_at']);
+
                     return $itemData;
                 })->toArray();
 
-                if (!empty($itemsData)) {
+                if (! empty($itemsData)) {
                     $this->addQuoteItems($newQuote, $itemsData);
                     $this->calculatePricing($newQuote);
                 }
@@ -263,7 +252,7 @@ class QuoteService
                 Log::info('Quote duplicated successfully', [
                     'original_quote_id' => $originalQuote->id,
                     'new_quote_id' => $newQuote->id,
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
 
                 return $newQuote->fresh(['client', 'category', 'items', 'user']);
@@ -272,19 +261,15 @@ class QuoteService
                 Log::error('Quote duplication failed', [
                     'original_quote_id' => $originalQuote->id,
                     'error' => $e->getMessage(),
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
-                throw new QuoteValidationException('Failed to duplicate quote: ' . $e->getMessage());
+                throw new QuoteValidationException('Failed to duplicate quote: '.$e->getMessage());
             }
         });
     }
 
     /**
      * Add items to a quote with advanced tax calculations
-     *
-     * @param Quote $quote
-     * @param array $items
-     * @return Collection
      */
     public function addQuoteItems(Quote $quote, array $items, bool $skipComplex = false): Collection
     {
@@ -301,7 +286,7 @@ class QuoteService
             // Determine service type and category for tax calculation
             $serviceType = $this->determineServiceType($itemData);
             $categoryId = $itemData['category_id'] ?? null;
-            
+
             // Calculate taxes using tax engine (with optional skip)
             $taxCalculation = $this->calculateItemTax([
                 'base_price' => $unitPrice,
@@ -347,12 +332,12 @@ class QuoteService
     protected function determineServiceType(array $itemData): string
     {
         // Check if service_type is explicitly provided
-        if (!empty($itemData['service_type'])) {
+        if (! empty($itemData['service_type'])) {
             return $itemData['service_type'];
         }
 
         // Try to determine from product
-        if (!empty($itemData['product_id'])) {
+        if (! empty($itemData['product_id'])) {
             $product = Product::find($itemData['product_id']);
             if ($product && $product->category) {
                 $categoryName = strtolower($product->category->name);
@@ -373,7 +358,7 @@ class QuoteService
         }
 
         // Check category name if provided
-        if (!empty($itemData['category'])) {
+        if (! empty($itemData['category'])) {
             $category = strtolower($itemData['category']);
             if (strpos($category, 'voip') !== false || strpos($category, 'hosted') !== false) {
                 return 'voip';
@@ -396,21 +381,21 @@ class QuoteService
         $quantity = $params['quantity'] ?? 1;
         $discount = $params['discount'] ?? 0;
         $subtotal = ($basePrice * $quantity) - $discount;
-        
+
         // Quick calculation for speed during drafts
         if ($skipComplex) {
             // Use simple 8% tax rate for drafts
             $simpleTax = $subtotal * 0.08;
-            
+
             return [
                 'total_tax_amount' => $simpleTax,
                 'effective_tax_rate' => 8.0,
                 'tax_breakdown' => [
-                    ['name' => 'Estimated Tax', 'rate' => 8.0, 'amount' => $simpleTax]
+                    ['name' => 'Estimated Tax', 'rate' => 8.0, 'amount' => $simpleTax],
                 ],
             ];
         }
-        
+
         try {
             // Try the complex tax engine first
             return $this->getTaxEngine()->calculateTaxes($params);
@@ -419,21 +404,21 @@ class QuoteService
                 'error' => $e->getMessage(),
                 'params' => $params,
             ]);
-            
+
             // Fallback to database tax rates
             $taxRate = $this->getFallbackTaxRate($params);
             $taxAmount = $subtotal * ($taxRate / 100);
-            
+
             return [
                 'total_tax_amount' => $taxAmount,
                 'effective_tax_rate' => $taxRate,
                 'tax_breakdown' => [
-                    ['name' => 'Sales Tax', 'rate' => $taxRate, 'amount' => $taxAmount]
+                    ['name' => 'Sales Tax', 'rate' => $taxRate, 'amount' => $taxAmount],
                 ],
             ];
         }
     }
-    
+
     /**
      * Get fallback tax rate from database
      */
@@ -445,10 +430,11 @@ class QuoteService
                 ->whereNull('archived_at')
                 ->orderBy('percent', 'desc')
                 ->first();
-                
+
             return $tax ? $tax->percent : 8.25; // Default to 8.25% if no tax found
         } catch (\Exception $e) {
             Log::warning('Fallback tax rate lookup failed', ['error' => $e->getMessage()]);
+
             return 8.25; // Default tax rate
         }
     }
@@ -465,7 +451,7 @@ class QuoteService
                     ->where('state_code', $client->state)
                     ->where('is_active', true)
                     ->first();
-                
+
                 if ($jurisdiction) {
                     return $jurisdiction->id;
                 }
@@ -481,18 +467,15 @@ class QuoteService
         } catch (\Exception $e) {
             Log::warning('Failed to get tax jurisdiction', [
                 'client_id' => $client->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
 
     /**
      * Update quote items
-     *
-     * @param Quote $quote
-     * @param array $items
-     * @return Collection
      */
     public function updateQuoteItems(Quote $quote, array $items): Collection
     {
@@ -505,14 +488,11 @@ class QuoteService
 
     /**
      * Calculate quote pricing with advanced tax calculations
-     *
-     * @param Quote $quote
-     * @return Quote
      */
     public function calculatePricing(Quote $quote): Quote
     {
         $items = $quote->items()->get();
-        
+
         // Calculate subtotal from individual item subtotals
         $subtotal = $items->sum('subtotal');
 
@@ -559,6 +539,7 @@ class QuoteService
             // Skip if item already has tax breakdown
             if ($item->tax_breakdown) {
                 $totalTax += $item->tax;
+
                 continue;
             }
 
@@ -599,7 +580,7 @@ class QuoteService
 
         return $totalTax;
     }
-    
+
     /**
      * Recalculate all taxes for quote items using full tax engine
      * Used when converting draft to final quote
@@ -608,7 +589,7 @@ class QuoteService
     {
         $items = $quote->items()->get();
         $client = $quote->client;
-        
+
         foreach ($items as $item) {
             // Determine service type and category for tax calculation
             $serviceType = $this->determineServiceType([
@@ -617,7 +598,7 @@ class QuoteService
                 'bundle_id' => $item->bundle_id,
                 'service_type' => $item->service_type,
             ]);
-            
+
             // Recalculate taxes using full tax engine (no skip)
             $taxCalculation = $this->calculateItemTax([
                 'base_price' => $item->price,
@@ -635,7 +616,7 @@ class QuoteService
                     'country' => $client->country ?? 'US',
                 ],
             ], false); // false = don't skip complex calculations
-            
+
             // Update item with accurate tax information
             $item->update([
                 'tax' => $taxCalculation['total_tax_amount'] ?? 0,
@@ -678,44 +659,42 @@ class QuoteService
     /**
      * Get quotes for the current user's company with caching
      *
-     * @param array $filters
-     * @param int $perPage
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getQuotes(array $filters = [], int $perPage = 15)
     {
-        $cacheKey = 'quotes_' . auth()->user()->company_id . '_' . md5(serialize($filters)) . '_' . $perPage;
-        
+        $cacheKey = 'quotes_'.auth()->user()->company_id.'_'.md5(serialize($filters)).'_'.$perPage;
+
         return Cache::remember($cacheKey, 300, function () use ($filters, $perPage) {
             $query = Quote::where('company_id', auth()->user()->company_id)
-                         ->with(['client', 'category', 'items']);
+                ->with(['client', 'category', 'items']);
 
             // Apply filters
-            if (!empty($filters['status'])) {
+            if (! empty($filters['status'])) {
                 $query->where('status', $filters['status']);
             }
 
-            if (!empty($filters['client_id'])) {
+            if (! empty($filters['client_id'])) {
                 $query->where('client_id', $filters['client_id']);
             }
 
-            if (!empty($filters['date_from'])) {
+            if (! empty($filters['date_from'])) {
                 $query->whereDate('date', '>=', $filters['date_from']);
             }
 
-            if (!empty($filters['date_to'])) {
+            if (! empty($filters['date_to'])) {
                 $query->whereDate('date', '<=', $filters['date_to']);
             }
 
-            if (!empty($filters['search'])) {
-                $search = '%' . $filters['search'] . '%';
+            if (! empty($filters['search'])) {
+                $search = '%'.$filters['search'].'%';
                 $query->where(function ($q) use ($search) {
                     $q->where('number', 'like', $search)
-                      ->orWhere('scope', 'like', $search)
-                      ->orWhereHas('client', function ($clientQuery) use ($search) {
-                          $clientQuery->where('name', 'like', $search)
-                                    ->orWhere('company_name', 'like', $search);
-                      });
+                        ->orWhere('scope', 'like', $search)
+                        ->orWhereHas('client', function ($clientQuery) use ($search) {
+                            $clientQuery->where('name', 'like', $search)
+                                ->orWhere('company_name', 'like', $search);
+                        });
                 });
             }
 
@@ -729,8 +708,6 @@ class QuoteService
     /**
      * Find a quote by ID with permission check
      *
-     * @param int $id
-     * @return Quote
      * @throws QuoteNotFoundException
      * @throws QuotePermissionException
      */
@@ -738,7 +715,7 @@ class QuoteService
     {
         $quote = Quote::with(['client', 'category', 'items', 'creator'])->find($id);
 
-        if (!$quote) {
+        if (! $quote) {
             throw new QuoteNotFoundException("Quote with ID {$id} not found.");
         }
 
@@ -749,20 +726,18 @@ class QuoteService
 
     /**
      * Generate a unique quote number
-     *
-     * @return string
      */
     public function generateQuoteNumber(): string
     {
         $prefix = config('app.quote_prefix', 'QUO');
         $year = date('Y');
         $month = date('m');
-        
+
         $lastQuote = Quote::where('company_id', auth()->user()->company_id)
-                         ->whereRaw('EXTRACT(YEAR FROM created_at) = ?', [$year])
-                         ->whereRaw('EXTRACT(MONTH FROM created_at) = ?', [$month])
-                         ->orderBy('id', 'desc')
-                         ->first();
+            ->whereRaw('EXTRACT(YEAR FROM created_at) = ?', [$year])
+            ->whereRaw('EXTRACT(MONTH FROM created_at) = ?', [$month])
+            ->orderBy('id', 'desc')
+            ->first();
 
         $sequence = $lastQuote ? (int) substr($lastQuote->number, -4) + 1 : 1;
 
@@ -771,55 +746,48 @@ class QuoteService
 
     /**
      * Auto-save quote data
-     *
-     * @param array $data
-     * @return array
      */
     public function autoSave(array $data): array
     {
         try {
-            $cacheKey = 'autosave_quote_' . auth()->id() . '_' . ($data['quote_id'] ?? 'new');
-            
+            $cacheKey = 'autosave_quote_'.auth()->id().'_'.($data['quote_id'] ?? 'new');
+
             Cache::put($cacheKey, $data, 3600); // Save for 1 hour
 
             return [
                 'success' => true,
                 'message' => 'Quote auto-saved successfully',
-                'timestamp' => now()->toISOString()
+                'timestamp' => now()->toISOString(),
             ];
         } catch (\Exception $e) {
             Log::warning('Quote auto-save failed', [
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Auto-save failed'
+                'message' => 'Auto-save failed',
             ];
         }
     }
 
     /**
      * Get auto-saved quote data
-     *
-     * @param int|null $quoteId
-     * @return array|null
      */
-    public function getAutoSavedData(int $quoteId = null): ?array
+    public function getAutoSavedData(?int $quoteId = null): ?array
     {
-        $cacheKey = 'autosave_quote_' . auth()->id() . '_' . ($quoteId ?? 'new');
+        $cacheKey = 'autosave_quote_'.auth()->id().'_'.($quoteId ?? 'new');
+
         return Cache::get($cacheKey);
     }
 
     /**
      * Validate quote data
      *
-     * @param array $data
-     * @param int|null $quoteId
      * @throws QuoteValidationException
      */
-    private function validateQuoteData(array $data, int $quoteId = null): void
+    private function validateQuoteData(array $data, ?int $quoteId = null): void
     {
         $rules = [
             'client_id' => 'required|exists:clients,id',
@@ -848,7 +816,7 @@ class QuoteService
         // Add custom validation
         $validator->after(function ($validator) use ($data) {
             // Validate client belongs to user's company
-            if (!empty($data['client_id'])) {
+            if (! empty($data['client_id'])) {
                 $client = Client::find($data['client_id']);
                 if ($client && $client->company_id !== auth()->user()->company_id) {
                     $validator->errors()->add('client_id', 'The selected client is invalid.');
@@ -856,7 +824,7 @@ class QuoteService
             }
 
             // Validate category belongs to user's company
-            if (!empty($data['category_id'])) {
+            if (! empty($data['category_id'])) {
                 $category = Category::find($data['category_id']);
                 if ($category && $category->company_id !== auth()->user()->company_id) {
                     $validator->errors()->add('category_id', 'The selected category is invalid.');
@@ -864,8 +832,8 @@ class QuoteService
             }
 
             // Validate discount percentage
-            if (!empty($data['discount_type']) && $data['discount_type'] === Quote::DISCOUNT_PERCENTAGE) {
-                if (!empty($data['discount_amount']) && $data['discount_amount'] > 100) {
+            if (! empty($data['discount_type']) && $data['discount_type'] === Quote::DISCOUNT_PERCENTAGE) {
+                if (! empty($data['discount_amount']) && $data['discount_amount'] > 100) {
                     $validator->errors()->add('discount_amount', 'Discount percentage cannot exceed 100%.');
                 }
             }
@@ -879,7 +847,6 @@ class QuoteService
     /**
      * Ensure user can view quote
      *
-     * @param Quote $quote
      * @throws QuotePermissionException
      */
     private function ensureUserCanViewQuote(Quote $quote): void
@@ -892,7 +859,6 @@ class QuoteService
     /**
      * Ensure user can modify quote
      *
-     * @param Quote $quote
      * @throws QuotePermissionException
      */
     private function ensureUserCanModifyQuote(Quote $quote): void
@@ -908,19 +874,17 @@ class QuoteService
 
     /**
      * Clear relevant caches
-     *
-     * @param Quote $quote
      */
     private function clearQuoteCaches(Quote $quote): void
     {
         $companyId = $quote->company_id;
-        
+
         // Clear quotes list cache
         Cache::forget("quotes_{$companyId}_*");
-        
+
         // Clear specific quote cache
         Cache::forget("quote_{$quote->id}");
-        
+
         // Clear client quotes cache
         Cache::forget("client_quotes_{$quote->client_id}");
     }
@@ -935,70 +899,67 @@ class QuoteService
             'client:id,name,company_name,email,phone',
             'category:id,name,color',
             'items' => function ($query) {
-                $query->select(['id', 'quote_id', 'product_id', 'name', 'description', 
-                               'quantity', 'price', 'discount', 'subtotal', 'tax', 'total',
-                               'order', 'category_id', 'service_type'])
-                      ->orderBy('order');
+                $query->select(['id', 'quote_id', 'product_id', 'name', 'description',
+                    'quantity', 'price', 'discount', 'subtotal', 'tax', 'total',
+                    'order', 'category_id', 'service_type'])
+                    ->orderBy('order');
             },
             'items.product:id,name,sku,category_id',
-            'creator:id,name,email'
+            'creator:id,name,email',
         ]);
     }
 
     /**
      * Get quotes for a company with optimized queries
-     * 
-     * @param int $companyId
-     * @param array $filters
-     * @param int $perPage
+     *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getCompanyQuotes(int $companyId, array $filters = [], int $perPage = 15)
     {
-        $cacheKey = "quotes_{$companyId}_" . md5(serialize($filters)) . "_page_{$perPage}";
-        
+        $cacheKey = "quotes_{$companyId}_".md5(serialize($filters))."_page_{$perPage}";
+
         return Cache::remember($cacheKey, 300, function () use ($companyId, $filters, $perPage) {
             $query = Quote::where('company_id', $companyId)
                 ->with([
                     'client:id,name,company_name,email',
                     'category:id,name,color',
-                    'items:id,quote_id,name,quantity,price,subtotal'
+                    'items:id,quote_id,name,quantity,price,subtotal',
                 ])
-                ->select(['id', 'number', 'client_id', 'category_id', 
-                         'date', 'expire', 'status', 'amount', 
-                         'created_at', 'updated_at']);
+                ->select(['id', 'number', 'client_id', 'category_id',
+                    'date', 'expire', 'status', 'amount',
+                    'created_at', 'updated_at']);
 
             // Apply filters
-            if (!empty($filters['status'])) {
+            if (! empty($filters['status'])) {
                 $query->where('status', $filters['status']);
             } else {
                 // By default, exclude cancelled quotes unless specifically filtering for them
                 $query->where('status', '!=', Quote::STATUS_CANCELLED);
             }
 
-            if (!empty($filters['client_id'])) {
+            if (! empty($filters['client_id'])) {
                 $query->where('client_id', $filters['client_id']);
             }
 
-            if (!empty($filters['category_id'])) {
+            if (! empty($filters['category_id'])) {
                 $query->where('category_id', $filters['category_id']);
             }
 
-            if (!empty($filters['date_from'])) {
+            if (! empty($filters['date_from'])) {
                 $query->where('date', '>=', $filters['date_from']);
             }
 
-            if (!empty($filters['date_to'])) {
+            if (! empty($filters['date_to'])) {
                 $query->where('date', '<=', $filters['date_to']);
             }
 
-            if (!empty($filters['search'])) {
+            if (! empty($filters['search'])) {
                 $query->where(function ($q) use ($filters) {
-                    $q->where('number', 'like', '%' . $filters['search'] . '%')
-                      ->orWhereHas('client', function ($clientQuery) use ($filters) {
-                          $clientQuery->where('name', 'like', '%' . $filters['search'] . '%')
-                                     ->orWhere('company_name', 'like', '%' . $filters['search'] . '%');
-                      });
+                    $q->where('number', 'like', '%'.$filters['search'].'%')
+                        ->orWhereHas('client', function ($clientQuery) use ($filters) {
+                            $clientQuery->where('name', 'like', '%'.$filters['search'].'%')
+                                ->orWhere('company_name', 'like', '%'.$filters['search'].'%');
+                        });
                 });
             }
 
@@ -1008,25 +969,21 @@ class QuoteService
 
     /**
      * Get client quotes with optimized loading
-     * 
-     * @param int $clientId
-     * @param int $limit
-     * @return Collection
      */
     public function getClientQuotes(int $clientId, int $limit = 10): Collection
     {
         $cacheKey = "client_quotes_{$clientId}_{$limit}";
-        
+
         return Cache::remember($cacheKey, 300, function () use ($clientId, $limit) {
             return Quote::where('client_id', $clientId)
                 ->with([
                     'category:id,name,color',
                     'items' => function ($query) {
                         $query->select(['id', 'quote_id', 'name', 'quantity', 'price', 'subtotal']);
-                    }
+                    },
                 ])
-                ->select(['id', 'number', 'category_id', 'date', 'expire', 
-                         'status', 'amount', 'created_at'])
+                ->select(['id', 'number', 'category_id', 'date', 'expire',
+                    'status', 'amount', 'created_at'])
                 ->latest('created_at')
                 ->limit($limit)
                 ->get();
@@ -1035,14 +992,11 @@ class QuoteService
 
     /**
      * Get quote statistics for dashboard with single optimized query
-     * 
-     * @param int $companyId
-     * @return array
      */
     public function getQuoteStatistics(int $companyId): array
     {
         $cacheKey = "quote_stats_{$companyId}";
-        
+
         return Cache::remember($cacheKey, 600, function () use ($companyId) {
             $stats = DB::table('quotes')
                 ->selectRaw("
@@ -1078,19 +1032,16 @@ class QuoteService
             return [
                 'totals' => $stats,
                 'monthly_trends' => $monthlyStats,
-                'conversion_rate' => $stats->sent_quotes > 0 
-                    ? round(($stats->accepted_quotes / $stats->sent_quotes) * 100, 2) 
-                    : 0
+                'conversion_rate' => $stats->sent_quotes > 0
+                    ? round(($stats->accepted_quotes / $stats->sent_quotes) * 100, 2)
+                    : 0,
             ];
         });
     }
 
     /**
      * Bulk update quote statuses with single query
-     * 
-     * @param array $quoteIds
-     * @param string $status
-     * @param int $companyId
+     *
      * @return int Number of updated quotes
      */
     public function bulkUpdateStatus(array $quoteIds, string $status, int $companyId): int
@@ -1099,12 +1050,12 @@ class QuoteService
             ->where('company_id', $companyId)
             ->update([
                 'status' => $status,
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
 
         // Clear relevant caches
         Cache::forget("quotes_{$companyId}_*");
-        
+
         return $updated;
     }
 
@@ -1112,8 +1063,6 @@ class QuoteService
      * Prepare quote data for copying
      * Extracts all quote data including items for use in create form
      *
-     * @param Quote $sourceQuote
-     * @return array
      * @throws QuotePermissionException
      */
     public function prepareQuoteForCopy(Quote $sourceQuote): array
@@ -1137,12 +1086,12 @@ class QuoteService
             'template_name' => $sourceQuote->template_name,
             'voip_config' => $sourceQuote->voip_config,
             'pricing_model' => $sourceQuote->pricing_model,
-            
+
             // Reset fields for new quote
             'date' => now()->format('Y-m-d'),
             'expire_date' => now()->addDays(30)->format('Y-m-d'),
             'status' => Quote::STATUS_DRAFT,
-            
+
             // Clear timestamps and IDs
             'number' => null, // Will be auto-generated
             'url_key' => null, // Will be auto-generated
@@ -1169,7 +1118,7 @@ class QuoteService
                 'service_type' => $item->service_type,
                 'service_data' => $item->service_data,
                 'order' => $index + 1,
-                
+
                 // Preserve calculated values for reference but will be recalculated
                 'original_subtotal' => $item->subtotal,
                 'original_tax' => $item->tax,
@@ -1185,7 +1134,7 @@ class QuoteService
             'source_quote_id' => $sourceQuote->id,
             'source_quote_number' => $sourceQuote->getFullNumber(),
             'items_count' => count($items),
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
         ]);
 
         return $quoteData;

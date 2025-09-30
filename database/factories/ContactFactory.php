@@ -2,10 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Contact;
 use App\Models\Client;
 use App\Models\Company;
-use App\Models\Location;
+use App\Models\Contact;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -27,13 +26,13 @@ class ContactFactory extends Factory
     {
         $firstName = $this->faker->firstName();
         $lastName = $this->faker->lastName();
-        
+
         return [
             'company_id' => Company::factory(),
             'client_id' => Client::factory(),
-            'name' => $firstName . ' ' . $lastName,
+            'name' => $firstName.' '.$lastName,
             'title' => $this->faker->jobTitle(),
-            'email' => strtolower($firstName . '.' . $lastName) . '@' . $this->faker->domainName(),
+            'email' => strtolower($firstName.'.'.$lastName).'@'.$this->faker->domainName(),
             'phone' => $this->faker->phoneNumber(),
             'extension' => $this->faker->optional()->numberBetween(100, 999),
             'mobile' => $this->faker->optional()->phoneNumber(),

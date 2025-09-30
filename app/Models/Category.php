@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Category Model
- * 
+ *
  * Represents hierarchical categories for organizing various entities
  * like expenses, income, tickets, products, etc.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string $type
@@ -37,6 +37,7 @@ class Category extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'company_id',
         'name',
         'type',
         'color',
@@ -63,12 +64,19 @@ class Category extends Model
      * Category types enumeration
      */
     const TYPE_EXPENSE = 'expense';
+
     const TYPE_INCOME = 'income';
+
     const TYPE_TICKET = 'ticket';
+
     const TYPE_PRODUCT = 'product';
+
     const TYPE_INVOICE = 'invoice';
+
     const TYPE_QUOTE = 'quote';
+
     const TYPE_RECURRING = 'recurring';
+
     const TYPE_ASSET = 'asset';
 
     /**
@@ -216,7 +224,7 @@ class Category extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -333,7 +341,7 @@ class Category extends Model
      */
     public function scopeSearch($query, string $search)
     {
-        return $query->where('name', 'like', '%' . $search . '%');
+        return $query->where('name', 'like', '%'.$search.'%');
     }
 
     /**
@@ -350,10 +358,10 @@ class Category extends Model
     public static function getValidationRules(): array
     {
         $types = implode(',', array_keys(self::TYPE_LABELS));
-        
+
         return [
             'name' => 'required|string|max:255',
-            'type' => 'required|string|in:' . $types,
+            'type' => 'required|string|in:'.$types,
             'color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'icon' => 'nullable|string|max:100',
             'parent_id' => 'nullable|integer|exists:categories,id',
@@ -366,10 +374,10 @@ class Category extends Model
     public static function getUpdateValidationRules(int $categoryId): array
     {
         $rules = self::getValidationRules();
-        
+
         // Prevent circular references
-        $rules['parent_id'] = 'nullable|integer|exists:categories,id|not_in:' . $categoryId;
-        
+        $rules['parent_id'] = 'nullable|integer|exists:categories,id|not_in:'.$categoryId;
+
         return $rules;
     }
 

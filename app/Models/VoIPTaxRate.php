@@ -3,19 +3,19 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * VoIP Tax Rate Model
- * 
+ *
  * Stores tax rates for telecommunications services across different jurisdictions.
  * Supports federal, state, and local tax rates with effective date management.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $tax_jurisdiction_id
@@ -49,7 +49,7 @@ use Carbon\Carbon;
  */
 class VoIPTaxRate extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -118,67 +118,99 @@ class VoIPTaxRate extends Model
      * Tax type enumeration
      */
     const TAX_TYPE_FEDERAL = 'federal';
+
     const TAX_TYPE_STATE = 'state';
+
     const TAX_TYPE_LOCAL = 'local';
+
     const TAX_TYPE_MUNICIPAL = 'municipal';
+
     const TAX_TYPE_COUNTY = 'county';
+
     const TAX_TYPE_SPECIAL_DISTRICT = 'special_district';
 
     /**
      * Rate type enumeration
      */
     const RATE_TYPE_PERCENTAGE = 'percentage';
+
     const RATE_TYPE_FIXED = 'fixed';
+
     const RATE_TYPE_TIERED = 'tiered';
+
     const RATE_TYPE_PER_LINE = 'per_line';
+
     const RATE_TYPE_PER_MINUTE = 'per_minute';
 
     /**
      * Calculation method enumeration
      */
     const CALC_METHOD_STANDARD = 'standard';
+
     const CALC_METHOD_COMPOUND = 'compound';
+
     const CALC_METHOD_ADDITIVE = 'additive';
+
     const CALC_METHOD_INCLUSIVE = 'inclusive';
+
     const CALC_METHOD_EXCLUSIVE = 'exclusive';
 
     /**
      * Federal tax types
      */
     const FEDERAL_EXCISE_TAX = 'federal_excise_tax';
+
     const FEDERAL_USF = 'universal_service_fund';
+
     const FEDERAL_PICC = 'presubscribed_interexchange_carrier_charge';
 
     /**
      * State tax types
      */
     const STATE_PUC_FEE = 'state_puc_fee';
+
     const STATE_TELECOM_TAX = 'state_telecommunications_tax';
+
     const STATE_TRS_FEE = 'telecommunications_relay_service_fee';
+
     const STATE_911_SURCHARGE = 'state_911_surcharge';
 
     /**
-     * Local tax types  
+     * Local tax types
      */
     const LOCAL_FRANCHISE_FEE = 'local_franchise_fee';
+
     const LOCAL_RIGHT_OF_WAY = 'right_of_way_fee';
+
     const LOCAL_911_SURCHARGE = 'local_911_surcharge';
+
     const LOCAL_MUNICIPAL_TAX = 'municipal_telecommunications_tax';
 
     /**
      * Service types for VoIP taxation
      */
     const SERVICE_TYPE_LOCAL = 'local';
+
     const SERVICE_TYPE_LONG_DISTANCE = 'long_distance';
+
     const SERVICE_TYPE_INTERNATIONAL = 'international';
+
     const SERVICE_TYPE_DATA = 'data';
+
     const SERVICE_TYPE_INTERNET = 'internet';
+
     const SERVICE_TYPE_VOIP_FIXED = 'voip_fixed';
+
     const SERVICE_TYPE_VOIP_NOMADIC = 'voip_nomadic';
+
     const SERVICE_TYPE_HOSTED_PBX = 'hosted_pbx';
+
     const SERVICE_TYPE_SIP_TRUNKING = 'sip_trunking';
+
     const SERVICE_TYPE_PRI = 'pri';
+
     const SERVICE_TYPE_FEATURES = 'features';
+
     const SERVICE_TYPE_EQUIPMENT = 'equipment';
 
     /**
@@ -210,12 +242,12 @@ class VoIPTaxRate extends Model
      */
     public function isCurrentlyActive(): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
         $now = Carbon::now();
-        
+
         // Check if effective date has passed
         if ($this->effective_date && $now->lt($this->effective_date)) {
             return false;
@@ -234,7 +266,7 @@ class VoIPTaxRate extends Model
      */
     public function isActiveOnDate(Carbon $date): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -268,7 +300,7 @@ class VoIPTaxRate extends Model
      */
     public function calculateTaxAmount(float $baseAmount, array $options = []): float
     {
-        if (!$this->isCurrentlyActive()) {
+        if (! $this->isCurrentlyActive()) {
             return 0.0;
         }
 
@@ -347,16 +379,16 @@ class VoIPTaxRate extends Model
     {
         switch ($this->rate_type) {
             case self::RATE_TYPE_PERCENTAGE:
-                return number_format($this->percentage_rate, 2) . '%';
+                return number_format($this->percentage_rate, 2).'%';
 
             case self::RATE_TYPE_FIXED:
-                return '$' . number_format($this->fixed_amount, 2);
+                return '$'.number_format($this->fixed_amount, 2);
 
             case self::RATE_TYPE_PER_LINE:
-                return '$' . number_format($this->fixed_amount, 2) . ' per line';
+                return '$'.number_format($this->fixed_amount, 2).' per line';
 
             case self::RATE_TYPE_PER_MINUTE:
-                return '$' . number_format($this->fixed_amount, 4) . ' per minute';
+                return '$'.number_format($this->fixed_amount, 4).' per minute';
 
             case self::RATE_TYPE_TIERED:
                 return 'Tiered rates';
@@ -389,11 +421,11 @@ class VoIPTaxRate extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-                    ->where('effective_date', '<=', Carbon::now())
-                    ->where(function ($q) {
-                        $q->whereNull('expiry_date')
-                          ->orWhere('expiry_date', '>', Carbon::now());
-                    });
+            ->where('effective_date', '<=', Carbon::now())
+            ->where(function ($q) {
+                $q->whereNull('expiry_date')
+                    ->orWhere('expiry_date', '>', Carbon::now());
+            });
     }
 
     /**
@@ -427,7 +459,7 @@ class VoIPTaxRate extends Model
     {
         return $query->where(function ($q) use ($serviceType) {
             $q->whereNull('service_types')
-              ->orWhereJsonContains('service_types', $serviceType);
+                ->orWhereJsonContains('service_types', $serviceType);
         });
     }
 
@@ -456,7 +488,7 @@ class VoIPTaxRate extends Model
             self::TAX_TYPE_LOCAL,
             self::TAX_TYPE_MUNICIPAL,
             self::TAX_TYPE_COUNTY,
-            self::TAX_TYPE_SPECIAL_DISTRICT
+            self::TAX_TYPE_SPECIAL_DISTRICT,
         ]);
     }
 
@@ -559,7 +591,7 @@ class VoIPTaxRate extends Model
         parent::boot();
 
         static::creating(function ($taxRate) {
-            if (!isset($taxRate->priority)) {
+            if (! isset($taxRate->priority)) {
                 // Set default priority based on tax type
                 $priorities = [
                     self::TAX_TYPE_FEDERAL => 100,
@@ -569,7 +601,7 @@ class VoIPTaxRate extends Model
                     self::TAX_TYPE_MUNICIPAL => 500,
                     self::TAX_TYPE_SPECIAL_DISTRICT => 600,
                 ];
-                
+
                 $taxRate->priority = $priorities[$taxRate->tax_type] ?? 999;
             }
         });

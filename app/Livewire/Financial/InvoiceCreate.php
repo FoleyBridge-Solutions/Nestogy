@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Financial;
 
+use App\Domains\Core\Services\NavigationService;
 use App\Domains\Financial\Services\InvoiceService;
 use App\Models\Category;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Product;
-use App\Domains\Core\Services\NavigationService;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,32 +18,44 @@ class InvoiceCreate extends Component
 {
     // Core Invoice Fields
     public $client_id = '';
+
     public $category_id = '';
+
     public $invoice_date;
+
     public $due_date;
+
     public $currency_code = 'USD';
+
     public $payment_terms = 30;
-    
+
     // Invoice Number
     public $prefix = 'INV-';
+
     public $number = '';
-    
+
     // Items
     public $items = [];
-    
+
     // Pricing
     public $discount_type = 'fixed';
+
     public $discount_amount = 0;
+
     public $tax_rate = 0;
-    
+
     // Additional Fields
     public $description = '';
+
     public $notes = '';
+
     public $terms_conditions = '';
-    
+
     // UI State
     public $showItemForm = false;
+
     public $editingItemIndex = null;
+
     public $itemForm = [
         'name' => '',
         'description' => '',
@@ -80,10 +92,10 @@ class InvoiceCreate extends Component
         // Set default dates
         $this->invoice_date = now()->format('Y-m-d');
         $this->due_date = now()->addDays($this->payment_terms)->format('Y-m-d');
-        
+
         // Generate invoice number
         $this->generateInvoiceNumber();
-        
+
         // Set default category
         $defaultCategory = Category::where('company_id', Auth::user()->company_id)
             ->where('type', 'invoice')
@@ -92,7 +104,7 @@ class InvoiceCreate extends Component
         if ($defaultCategory) {
             $this->category_id = $defaultCategory->id;
         }
-        
+
         // Pre-select client from parameter or session
         if ($clientId) {
             $this->client_id = $clientId;
@@ -111,7 +123,7 @@ class InvoiceCreate extends Component
             ->first();
 
         if ($lastInvoice && is_numeric($lastInvoice->number)) {
-            $this->number = str_pad((int)$lastInvoice->number + 1, 6, '0', STR_PAD_LEFT);
+            $this->number = str_pad((int) $lastInvoice->number + 1, 6, '0', STR_PAD_LEFT);
         } else {
             $this->number = '000001';
         }
@@ -177,6 +189,7 @@ class InvoiceCreate extends Component
         if ($this->discount_type === 'percentage') {
             return ($this->subtotal * $this->discount_amount) / 100;
         }
+
         return $this->discount_amount;
     }
 
@@ -184,6 +197,7 @@ class InvoiceCreate extends Component
     public function taxAmount()
     {
         $taxableAmount = $this->subtotal - $this->discountAmount;
+
         return ($taxableAmount * $this->tax_rate) / 100;
     }
 
@@ -259,14 +273,14 @@ class InvoiceCreate extends Component
 
     public function addProductAsItem($productId)
     {
-        if (!$productId) {
+        if (! $productId) {
             return;
         }
-        
+
         $product = Product::where('company_id', Auth::user()->company_id)
             ->where('is_active', true)
             ->find($productId);
-            
+
         if ($product) {
             $this->items[] = [
                 'name' => $product->name,
@@ -295,6 +309,7 @@ class InvoiceCreate extends Component
             $this->validate();
         } catch (\Illuminate\Validation\ValidationException $e) {
             Flux::toast('Please complete all required fields', variant: 'danger');
+
             return;
         }
 
@@ -328,10 +343,10 @@ class InvoiceCreate extends Component
 
             DB::commit();
 
-            $message = $status === 'Draft' 
-                ? "Invoice saved as draft" 
+            $message = $status === 'Draft'
+                ? 'Invoice saved as draft'
                 : "Invoice #{$invoice->prefix}{$invoice->number} created successfully";
-            
+
             Flux::toast($message, variant: 'success');
 
             return redirect()->route('financial.invoices.show', $invoice->id);

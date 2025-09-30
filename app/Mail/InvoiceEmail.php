@@ -2,27 +2,32 @@
 
 namespace App\Mail;
 
-use App\Models\Invoice;
 use App\Contracts\Services\PdfServiceInterface;
+use App\Models\Invoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class InvoiceEmail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public string $recipientEmail;
+
     public ?string $recipientName;
+
     public string $emailSubject;
+
     public ?string $customMessage;
+
     public bool $attachPdf;
+
     public string $viewUrl;
 
     /**
@@ -34,11 +39,11 @@ class InvoiceEmail extends Mailable implements ShouldQueue
     ) {
         $this->recipientEmail = $options['to'] ?? $invoice->client->email;
         $this->recipientName = $options['recipient_name'] ?? $invoice->client->name;
-        $this->emailSubject = $options['subject'] ?? "Invoice #" . ($invoice->invoice_number ?? $invoice->number);
+        $this->emailSubject = $options['subject'] ?? 'Invoice #'.($invoice->invoice_number ?? $invoice->number);
         $this->customMessage = $options['message'] ?? null;
         $this->attachPdf = $options['attach_pdf'] ?? true;
         $this->viewUrl = $options['view_url'] ?? route('financial.invoices.show', $invoice);
-        
+
         // Set queue for email processing
         $this->onQueue('emails');
     }
@@ -84,7 +89,7 @@ class InvoiceEmail extends Mailable implements ShouldQueue
         if ($this->attachPdf) {
             try {
                 $pdfService = app(PdfServiceInterface::class);
-                
+
                 // Load invoice relationships
                 $this->invoice->load(['client', 'items', 'payments']);
 
@@ -95,7 +100,7 @@ class InvoiceEmail extends Mailable implements ShouldQueue
                 $filename = $pdfService->generateFilename('invoice', $this->invoice->invoice_number ?? $this->invoice->number);
 
                 // Save to temporary storage
-                $tempPath = 'temp/' . $filename;
+                $tempPath = 'temp/'.$filename;
                 Storage::disk('local')->put($tempPath, $pdfContent);
 
                 // Add attachment
@@ -113,7 +118,7 @@ class InvoiceEmail extends Mailable implements ShouldQueue
             } catch (\Exception $e) {
                 Log::error('Failed to generate PDF attachment for invoice email', [
                     'invoice_id' => $this->invoice->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }

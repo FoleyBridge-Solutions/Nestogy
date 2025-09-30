@@ -2,14 +2,14 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Quote;
 use App\Models\QuoteApproval;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * ApproveQuoteRequest
- * 
+ *
  * Validation rules for processing quote approvals in the multi-tier
  * approval workflow system.
  */
@@ -22,12 +22,12 @@ class ApproveQuoteRequest extends FormRequest
     {
         $user = Auth::user();
         $quote = $this->route('quote');
-        
+
         // User must have approval permissions
-        if (!$user->hasPermission('financial.quotes.approve')) {
+        if (! $user->hasPermission('financial.quotes.approve')) {
             return false;
         }
-        
+
         // Quote must belong to user's company
         if ($quote && $quote->company_id !== $user->company_id) {
             return false;
@@ -45,19 +45,21 @@ class ApproveQuoteRequest extends FormRequest
             'level' => [
                 'required',
                 'string',
-                'in:' . implode(',', QuoteApproval::getAvailableLevels()),
+                'in:'.implode(',', QuoteApproval::getAvailableLevels()),
                 function ($attribute, $value, $fail) {
                     $quote = $this->route('quote');
                     $user = Auth::user();
-                    
-                    if (!$quote) {
+
+                    if (! $quote) {
                         $fail('Quote not found.');
+
                         return;
                     }
 
                     // Check if user has permission to approve at this level
-                    if (!$this->canApproveAtLevel($user, $value, $quote)) {
+                    if (! $this->canApproveAtLevel($user, $value, $quote)) {
                         $fail("You don't have permission to approve at the {$value} level.");
+
                         return;
                     }
 
@@ -66,8 +68,9 @@ class ApproveQuoteRequest extends FormRequest
                         ->where('approval_level', $value)
                         ->first();
 
-                    if (!$approval) {
+                    if (! $approval) {
                         $fail("No approval required at the {$value} level for this quote.");
+
                         return;
                     }
 
@@ -130,13 +133,14 @@ class ApproveQuoteRequest extends FormRequest
             $quote = $this->route('quote');
             $user = Auth::user();
 
-            if (!$quote) {
+            if (! $quote) {
                 return;
             }
 
             // Validate quote is in correct state for approval
-            if (!$quote->needsApproval()) {
+            if (! $quote->needsApproval()) {
                 $validator->errors()->add('quote', 'This quote does not require approval.');
+
                 return;
             }
 
@@ -149,8 +153,8 @@ class ApproveQuoteRequest extends FormRequest
                     ->where('status', QuoteApproval::STATUS_APPROVED)
                     ->first();
 
-                if (!$managerApproval) {
-                    $validator->errors()->add('level', 
+                if (! $managerApproval) {
+                    $validator->errors()->add('level',
                         'Manager approval is required before executive approval.');
                 }
             }
@@ -162,7 +166,7 @@ class ApproveQuoteRequest extends FormRequest
                 ->first();
 
             if ($existingApproval && $existingApproval->status !== QuoteApproval::STATUS_PENDING) {
-                $validator->errors()->add('level', 
+                $validator->errors()->add('level',
                     'You have already processed the approval for this level.');
             }
         });
@@ -175,17 +179,17 @@ class ApproveQuoteRequest extends FormRequest
     {
         // This would typically check user roles, permissions, and company hierarchy
         // For now, we'll implement basic permission checks
-        
+
         switch ($level) {
             case QuoteApproval::LEVEL_MANAGER:
                 return $user->hasRole('manager') || $user->hasRole('admin') || $user->hasRole('executive');
-                
+
             case QuoteApproval::LEVEL_EXECUTIVE:
                 return $user->hasRole('executive') || $user->hasRole('admin');
-                
+
             case QuoteApproval::LEVEL_FINANCE:
                 return $user->hasRole('finance') || $user->hasRole('admin') || $user->hasRole('executive');
-                
+
             default:
                 return false;
         }
@@ -197,7 +201,7 @@ class ApproveQuoteRequest extends FormRequest
     public function getApprovalData(): array
     {
         $validated = $this->validated();
-        
+
         return [
             'level' => $validated['level'],
             'action' => $validated['action'],
@@ -215,7 +219,7 @@ class ApproveQuoteRequest extends FormRequest
         // Trim whitespace from comments
         if ($this->comments) {
             $this->merge([
-                'comments' => trim($this->comments)
+                'comments' => trim($this->comments),
             ]);
         }
     }

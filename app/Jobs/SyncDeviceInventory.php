@@ -2,11 +2,12 @@
 
 namespace App\Jobs;
 
+use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Models\Integration;
 use App\Domains\Integration\Models\RmmIntegration;
-use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Services\AssetSyncService;
 use App\Domains\Integration\Services\RmmServiceFactory;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,11 +15,10 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use GuzzleHttp\Exception\RequestException;
 
 /**
  * Sync Device Inventory Job
- * 
+ *
  * Synchronizes device information from RMM systems to maintain
  * up-to-date asset inventory and device mappings.
  */
@@ -27,7 +27,9 @@ class SyncDeviceInventory implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected RmmIntegration $integration;
+
     protected ?string $deviceId;
+
     protected AssetSyncService $syncService;
 
     /**
@@ -75,10 +77,11 @@ class SyncDeviceInventory implements ShouldQueue
             ]);
 
             // Check if integration is active
-            if (!$this->integration->is_active) {
+            if (! $this->integration->is_active) {
                 Log::warning('Skipping sync for inactive integration', [
                     'integration_id' => $this->integration->id,
                 ]);
+
                 return;
             }
 
@@ -87,7 +90,7 @@ class SyncDeviceInventory implements ShouldQueue
                 $this->syncSingleDeviceComprehensive();
             } else {
                 $result = $this->syncService->syncAssetsFromIntegration($this->integration);
-                
+
                 Log::info('Comprehensive sync completed', [
                     'integration_id' => $this->integration->id,
                     'synced_count' => $result['synced_count'],
@@ -105,7 +108,7 @@ class SyncDeviceInventory implements ShouldQueue
 
         } catch (\Exception $e) {
             $processingTime = round((microtime(true) - $startTime) * 1000, 2);
-            
+
             Log::error('Device inventory sync failed', [
                 'integration_id' => $this->integration->id,
                 'device_id' => $this->deviceId,
@@ -125,30 +128,30 @@ class SyncDeviceInventory implements ShouldQueue
     {
         try {
             $rmmService = app(RmmServiceFactory::class)->create($this->integration);
-            
+
             // Get agent data first
             $agentResponse = $rmmService->getAgent($this->deviceId);
-            
-            if (!$agentResponse['success']) {
-                throw new \Exception("Failed to get agent data: " . $agentResponse['error']);
+
+            if (! $agentResponse['success']) {
+                throw new \Exception('Failed to get agent data: '.$agentResponse['error']);
             }
-            
+
             // Use comprehensive sync
             $asset = $this->syncService->syncSingleAsset($this->integration, $rmmService, $agentResponse['data']);
-            
+
             Log::info('Single device synced comprehensively', [
                 'integration_id' => $this->integration->id,
                 'device_id' => $this->deviceId,
                 'asset_id' => $asset->id,
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Comprehensive single device sync failed', [
                 'integration_id' => $this->integration->id,
                 'device_id' => $this->deviceId,
                 'error' => $e->getMessage(),
             ]);
-            
+
             throw $e;
         }
     }
@@ -159,7 +162,7 @@ class SyncDeviceInventory implements ShouldQueue
     protected function syncSingleDevice(): void
     {
         $deviceData = $this->fetchDeviceData($this->deviceId);
-        
+
         if ($deviceData) {
             $this->updateDeviceMapping($deviceData);
             Log::info('Single device synced successfully', [
@@ -216,6 +219,7 @@ class SyncDeviceInventory implements ShouldQueue
                     Log::warning('Device sync not supported for provider', [
                         'provider' => $this->integration->provider,
                     ]);
+
                     return null;
             }
         } catch (RequestException $e) {
@@ -246,6 +250,7 @@ class SyncDeviceInventory implements ShouldQueue
                     Log::warning('Bulk device sync not supported for provider', [
                         'provider' => $this->integration->provider,
                     ]);
+
                     return [];
             }
         } catch (RequestException $e) {
@@ -265,13 +270,13 @@ class SyncDeviceInventory implements ShouldQueue
     {
         $credentials = $this->integration->getCredentials();
         $endpoint = $this->integration->api_endpoint;
-        
-        if (!$endpoint || !isset($credentials['api_key'])) {
+
+        if (! $endpoint || ! isset($credentials['api_key'])) {
             return null;
         }
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $credentials['api_key'],
+            'Authorization' => 'Bearer '.$credentials['api_key'],
         ])->timeout(30)->get("{$endpoint}/computers/{$deviceId}");
 
         if ($response->successful()) {
@@ -288,13 +293,13 @@ class SyncDeviceInventory implements ShouldQueue
     {
         $credentials = $this->integration->getCredentials();
         $endpoint = $this->integration->api_endpoint;
-        
-        if (!$endpoint || !isset($credentials['api_key'])) {
+
+        if (! $endpoint || ! isset($credentials['api_key'])) {
             return [];
         }
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $credentials['api_key'],
+            'Authorization' => 'Bearer '.$credentials['api_key'],
         ])->timeout(60)->get("{$endpoint}/computers");
 
         if ($response->successful()) {
@@ -311,8 +316,8 @@ class SyncDeviceInventory implements ShouldQueue
     {
         $credentials = $this->integration->getCredentials();
         $endpoint = $this->integration->api_endpoint;
-        
-        if (!$endpoint || !isset($credentials['api_key'])) {
+
+        if (! $endpoint || ! isset($credentials['api_key'])) {
             return null;
         }
 
@@ -334,8 +339,8 @@ class SyncDeviceInventory implements ShouldQueue
     {
         $credentials = $this->integration->getCredentials();
         $endpoint = $this->integration->api_endpoint;
-        
-        if (!$endpoint || !isset($credentials['api_key'])) {
+
+        if (! $endpoint || ! isset($credentials['api_key'])) {
             return [];
         }
 
@@ -357,8 +362,8 @@ class SyncDeviceInventory implements ShouldQueue
     {
         $credentials = $this->integration->getCredentials();
         $endpoint = $this->integration->api_endpoint;
-        
-        if (!$endpoint || !isset($credentials['bearer_token'])) {
+
+        if (! $endpoint || ! isset($credentials['bearer_token'])) {
             return null;
         }
 
@@ -380,8 +385,8 @@ class SyncDeviceInventory implements ShouldQueue
     {
         $credentials = $this->integration->getCredentials();
         $endpoint = $this->integration->api_endpoint;
-        
-        if (!$endpoint || !isset($credentials['bearer_token'])) {
+
+        if (! $endpoint || ! isset($credentials['bearer_token'])) {
             return [];
         }
 
@@ -401,29 +406,31 @@ class SyncDeviceInventory implements ShouldQueue
      */
     protected function updateDeviceMapping(array $deviceData): void
     {
-        $fieldMappings = $this->integration->field_mappings 
+        $fieldMappings = $this->integration->field_mappings
                       ?: Integration::getDefaultFieldMappings($this->integration->provider);
 
         $deviceId = data_get($deviceData, $fieldMappings['device_id']);
         $deviceName = data_get($deviceData, $fieldMappings['device_name'], 'Unknown Device');
         $clientId = data_get($deviceData, $fieldMappings['client_id']);
 
-        if (!$deviceId) {
+        if (! $deviceId) {
             Log::warning('Device ID not found in sync data', [
                 'integration_id' => $this->integration->id,
                 'device_data' => $deviceData,
             ]);
+
             return;
         }
 
         // Resolve client ID
         $internalClientId = $this->resolveClientId($clientId);
-        if (!$internalClientId) {
+        if (! $internalClientId) {
             Log::warning('Could not resolve client ID for device sync', [
                 'integration_id' => $this->integration->id,
                 'rmm_client_id' => $clientId,
                 'device_id' => $deviceId,
             ]);
+
             return;
         }
 
@@ -465,8 +472,8 @@ class SyncDeviceInventory implements ShouldQueue
         $client = \App\Models\Client::forCompany($this->integration->company_id)
             ->where(function ($query) use ($rmmClientId) {
                 $query->where('name', $rmmClientId)
-                      ->orWhere('company_name', $rmmClientId)
-                      ->orWhere('rmm_id', $rmmClientId);
+                    ->orWhere('company_name', $rmmClientId)
+                    ->orWhere('rmm_id', $rmmClientId);
             })
             ->first();
 
@@ -492,8 +499,8 @@ class SyncDeviceInventory implements ShouldQueue
     {
         return [
             'device-sync',
-            'integration:' . $this->integration->id,
-            'provider:' . $this->integration->provider,
+            'integration:'.$this->integration->id,
+            'provider:'.$this->integration->provider,
         ];
     }
 }

@@ -2,31 +2,28 @@
 
 namespace App\Domains\Financial\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Domains\Financial\Services\VoIPTaxService;
 use App\Domains\Financial\Services\TaxRateManagementService;
 use App\Domains\Financial\Services\VoIPTaxComplianceService;
-use App\Models\TaxJurisdiction;
+use App\Domains\Financial\Services\VoIPTaxService;
+use App\Http\Controllers\Controller;
 use App\Models\TaxCategory;
-use App\Models\VoIPTaxRate;
 use App\Models\TaxExemption;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\ValidationException;
+use App\Models\TaxJurisdiction;
+use App\Models\VoIPTaxRate;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * VoIP Tax API Controller
- * 
+ *
  * Provides REST API endpoints for VoIP tax calculations, management, and compliance.
  */
 class VoIPTaxController extends Controller
 {
     /**
      * Calculate VoIP taxes for a service amount.
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function calculateTaxes(Request $request): JsonResponse
     {
@@ -47,7 +44,7 @@ class VoIPTaxController extends Controller
             ]);
 
             $companyId = auth()->user()->company_id;
-            $taxService = new VoIPTaxService();
+            $taxService = new VoIPTaxService;
             $taxService->setCompanyId($companyId);
 
             $calculation = $taxService->calculateTaxes($validated);
@@ -77,9 +74,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Get tax rates for a specific jurisdiction and category.
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getTaxRates(Request $request): JsonResponse
     {
@@ -118,10 +112,10 @@ class VoIPTaxController extends Controller
             if (isset($validated['effective_date'])) {
                 $effectiveDate = Carbon::parse($validated['effective_date']);
                 $query->where('effective_date', '<=', $effectiveDate)
-                      ->where(function ($q) use ($effectiveDate) {
-                          $q->whereNull('expiry_date')
+                    ->where(function ($q) use ($effectiveDate) {
+                        $q->whereNull('expiry_date')
                             ->orWhere('expiry_date', '>', $effectiveDate);
-                      });
+                    });
             }
 
             if (isset($validated['service_type'])) {
@@ -183,9 +177,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Get available tax jurisdictions.
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getJurisdictions(Request $request): JsonResponse
     {
@@ -253,9 +244,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Get tax categories.
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getCategories(Request $request): JsonResponse
     {
@@ -319,9 +307,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Get tax exemptions for a client.
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getClientExemptions(Request $request): JsonResponse
     {
@@ -396,9 +381,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Generate compliance report.
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function generateComplianceReport(Request $request): JsonResponse
     {
@@ -420,7 +402,7 @@ class VoIPTaxController extends Controller
 
             if ($validated['format'] === 'summary') {
                 $report = $complianceService->generateComplianceReport($startDate, $endDate, $jurisdictions);
-                
+
                 // Return summarized version
                 $summary = [
                     'period' => $report['reporting_period'],
@@ -463,8 +445,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Check compliance status.
-     * 
-     * @return JsonResponse
      */
     public function checkComplianceStatus(): JsonResponse
     {
@@ -491,9 +471,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Export compliance data.
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function exportComplianceData(Request $request): JsonResponse
     {
@@ -545,9 +522,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Create or update tax rate.
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function createOrUpdateTaxRate(Request $request): JsonResponse
     {
@@ -597,8 +571,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Initialize default tax rates for the company.
-     * 
-     * @return JsonResponse
      */
     public function initializeDefaultRates(): JsonResponse
     {
@@ -625,8 +597,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Get service types available for VoIP taxation.
-     * 
-     * @return JsonResponse
      */
     public function getServiceTypes(): JsonResponse
     {
@@ -645,9 +615,6 @@ class VoIPTaxController extends Controller
 
     /**
      * Clear tax calculation cache.
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function clearCache(Request $request): JsonResponse
     {
@@ -657,7 +624,7 @@ class VoIPTaxController extends Controller
             ]);
 
             $companyId = auth()->user()->company_id;
-            $taxService = new VoIPTaxService();
+            $taxService = new VoIPTaxService;
             $taxService->setCompanyId($companyId);
 
             $pattern = $validated['pattern'] ?? null;

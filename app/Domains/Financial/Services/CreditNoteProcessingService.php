@@ -2,27 +2,20 @@
 
 namespace App\Domains\Financial\Services;
 
+use App\Models\Client;
+use App\Models\CreditApplication;
 use App\Models\CreditNote;
 use App\Models\CreditNoteItem;
-use App\Models\CreditApplication;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
-use App\Models\Client;
-use App\Models\Payment;
-use App\Models\User;
-use App\Domains\Financial\Services\VoIPTaxReversalService;
-use App\Domains\Financial\Services\RefundManagementService;
-use Illuminate\Support\Facades\Auth;
+use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Collection;
-use Carbon\Carbon;
-use Exception;
 
 /**
  * Credit Note Processing Service
- * 
+ *
  * Advanced service for intelligent credit note processing including:
  * - Automatic credit matching and application algorithms
  * - Credit note generation from various sources (returns, disputes, adjustments)
@@ -35,10 +28,11 @@ use Exception;
 class CreditNoteProcessingService
 {
     protected ?VoIPTaxReversalService $voipTaxService;
+
     protected RefundManagementService $refundService;
 
     public function __construct(
-        ?VoIPTaxReversalService $voipTaxService = null,
+        ?VoIPTaxReversalService $voipTaxService,
         RefundManagementService $refundService
     ) {
         $this->voipTaxService = $voipTaxService;
@@ -82,7 +76,7 @@ class CreditNoteProcessingService
             Log::info('Credit note created from invoice', [
                 'credit_note_id' => $creditNote->id,
                 'invoice_id' => $invoice->id,
-                'total_amount' => $creditNote->total_amount
+                'total_amount' => $creditNote->total_amount,
             ]);
 
             return $creditNote->load(['items', 'client', 'invoice']);
@@ -96,7 +90,7 @@ class CreditNoteProcessingService
     {
         $applications = collect();
 
-        if (!$creditNote->canBeApplied()) {
+        if (! $creditNote->canBeApplied()) {
             return $applications;
         }
 
@@ -105,15 +99,15 @@ class CreditNoteProcessingService
 
         // Apply intelligent matching strategies
         $strategies = [
-            'exact_match' => fn() => $this->exactAmountMatch($creditNote, $outstandingInvoices),
-            'oldest_first' => fn() => $this->oldestFirstMatch($creditNote, $outstandingInvoices),
-            'highest_amount_first' => fn() => $this->highestAmountFirstMatch($creditNote, $outstandingInvoices),
-            'same_service_type' => fn() => $this->sameServiceTypeMatch($creditNote, $outstandingInvoices),
-            'priority_based' => fn() => $this->priorityBasedMatch($creditNote, $outstandingInvoices)
+            'exact_match' => fn () => $this->exactAmountMatch($creditNote, $outstandingInvoices),
+            'oldest_first' => fn () => $this->oldestFirstMatch($creditNote, $outstandingInvoices),
+            'highest_amount_first' => fn () => $this->highestAmountFirstMatch($creditNote, $outstandingInvoices),
+            'same_service_type' => fn () => $this->sameServiceTypeMatch($creditNote, $outstandingInvoices),
+            'priority_based' => fn () => $this->priorityBasedMatch($creditNote, $outstandingInvoices),
         ];
 
         $strategy = $this->determineMatchingStrategy($creditNote);
-        
+
         if (isset($strategies[$strategy])) {
             $applications = $strategies[$strategy]();
         }
@@ -131,7 +125,7 @@ class CreditNoteProcessingService
             'failed' => [],
             'total_processed' => 0,
             'total_amount' => 0,
-            'processing_time' => 0
+            'processing_time' => 0,
         ];
 
         $startTime = microtime(true);
@@ -144,28 +138,28 @@ class CreditNoteProcessingService
                 foreach ($chunk as $creditRequest) {
                     try {
                         $creditNote = $this->processSingleCreditRequest($creditRequest);
-                        
+
                         $results['successful'][] = [
                             'request_id' => $creditRequest['request_id'] ?? null,
                             'credit_note_id' => $creditNote->id,
-                            'amount' => $creditNote->total_amount
+                            'amount' => $creditNote->total_amount,
                         ];
-                        
+
                         $results['total_amount'] += $creditNote->total_amount;
-                        
+
                     } catch (Exception $e) {
                         $results['failed'][] = [
                             'request_id' => $creditRequest['request_id'] ?? null,
                             'error' => $e->getMessage(),
-                            'data' => $creditRequest
+                            'data' => $creditRequest,
                         ];
-                        
+
                         Log::error('Batch credit processing failed', [
                             'request' => $creditRequest,
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
                         ]);
                     }
-                    
+
                     $results['total_processed']++;
                 }
             });
@@ -182,7 +176,7 @@ class CreditNoteProcessingService
             'total_processed' => $results['total_processed'],
             'successful' => count($results['successful']),
             'failed' => count($results['failed']),
-            'processing_time' => $results['processing_time']
+            'processing_time' => $results['processing_time'],
         ]);
 
         return $results;
@@ -196,7 +190,7 @@ class CreditNoteProcessingService
         $results = [
             'expired_credits' => 0,
             'cleanup_actions' => 0,
-            'revenue_adjustments' => 0
+            'revenue_adjustments' => 0,
         ];
 
         // Find expired credits
@@ -210,9 +204,9 @@ class CreditNoteProcessingService
                 // Mark as expired
                 $creditNote->update([
                     'status' => CreditNote::STATUS_EXPIRED,
-                    'internal_notes' => ($creditNote->internal_notes ?? '') . 
-                        "\n\nExpired on " . now()->format('Y-m-d H:i:s') . 
-                        " - Remaining balance: " . $creditNote->remaining_balance
+                    'internal_notes' => ($creditNote->internal_notes ?? '').
+                        "\n\nExpired on ".now()->format('Y-m-d H:i:s').
+                        ' - Remaining balance: '.$creditNote->remaining_balance,
                 ]);
 
                 // Create revenue recognition adjustment
@@ -245,7 +239,7 @@ class CreditNoteProcessingService
             'net_impact' => 0,
             'period_adjustments' => [],
             'gl_entries' => [],
-            'recognition_method' => 'immediate'
+            'recognition_method' => 'immediate',
         ];
 
         if ($creditNote->invoice) {
@@ -274,17 +268,19 @@ class CreditNoteProcessingService
             'service_outages' => true,
             'billing_errors' => true,
             'sla_breaches' => true,
-            'equipment_returns' => true
+            'equipment_returns' => true,
         ];
 
         $sources = array_merge($defaultSources, $sources);
         $results = [];
 
         foreach ($sources as $source => $enabled) {
-            if (!$enabled) continue;
+            if (! $enabled) {
+                continue;
+            }
 
-            $method = 'generateFrom' . ucfirst(str_replace('_', '', $source));
-            
+            $method = 'generateFrom'.ucfirst(str_replace('_', '', $source));
+
             if (method_exists($this, $method)) {
                 $results[$source] = $this->{$method}();
             }
@@ -301,7 +297,7 @@ class CreditNoteProcessingService
         $optimizations = [
             'consolidations' => 0,
             'auto_applications' => 0,
-            'performance_gain' => 0
+            'performance_gain' => 0,
         ];
 
         // Consolidate small credits
@@ -334,7 +330,7 @@ class CreditNoteProcessingService
         if (isset($filters['date_range'])) {
             $query->whereBetween('created_at', [
                 $filters['date_range']['start'],
-                $filters['date_range']['end']
+                $filters['date_range']['end'],
             ]);
         }
 
@@ -351,16 +347,16 @@ class CreditNoteProcessingService
                 'applied_amount' => $credits->sum('applied_amount'),
                 'remaining_balance' => $credits->sum('remaining_balance'),
                 'average_credit_size' => $credits->avg('total_amount'),
-                'application_rate' => $credits->where('applied_amount', '>', 0)->count() / max($credits->count(), 1) * 100
+                'application_rate' => $credits->where('applied_amount', '>', 0)->count() / max($credits->count(), 1) * 100,
             ],
             'by_status' => $credits->groupBy('status')->map->count(),
             'by_type' => $credits->groupBy('type')->map->count(),
             'by_reason' => $credits->groupBy('reason_code')->map->count(),
-            'monthly_trend' => $credits->groupBy(fn($c) => $c->created_at->format('Y-m'))->map->count(),
+            'monthly_trend' => $credits->groupBy(fn ($c) => $c->created_at->format('Y-m'))->map->count(),
             'top_clients' => $this->getTopClientsByCredits($credits),
             'aging_analysis' => $this->getCreditAgingAnalysis($credits),
             'application_efficiency' => $this->getApplicationEfficiencyMetrics($credits),
-            'revenue_impact' => $this->getTotalRevenueImpact($credits)
+            'revenue_impact' => $this->getTotalRevenueImpact($credits),
         ];
     }
 
@@ -387,9 +383,9 @@ class CreditNoteProcessingService
             'metadata' => [
                 'created_from_invoice' => $invoice->id,
                 'original_invoice_number' => $invoice->number,
-                'creation_method' => 'automated'
+                'creation_method' => 'automated',
             ],
-            'original_invoice_data' => $invoice->toArray()
+            'original_invoice_data' => $invoice->toArray(),
         ]);
     }
 
@@ -404,7 +400,7 @@ class CreditNoteProcessingService
     {
         foreach ($lineItems as $lineItem) {
             $invoiceItem = $invoice->items()->find($lineItem['invoice_item_id']);
-            
+
             if ($invoiceItem) {
                 $creditQuantity = $lineItem['quantity'] ?? $invoiceItem->quantity;
                 $this->createCreditNoteItem($creditNote, $invoiceItem, $creditQuantity, $lineItem);
@@ -441,15 +437,15 @@ class CreditNoteProcessingService
             'original_tax_amount' => $invoiceItem->tax,
             'remaining_credit' => $lineTotal,
             'metadata' => array_merge([
-                'original_invoice_item_id' => $invoiceItem->id
-            ], $additionalData)
+                'original_invoice_item_id' => $invoiceItem->id,
+            ], $additionalData),
         ]);
     }
 
     private function calculateCreditNoteTotals(CreditNote $creditNote): void
     {
         $items = $creditNote->items;
-        
+
         $subtotal = $items->sum('line_total');
         $taxAmount = $items->sum('tax_amount');
         $totalAmount = $subtotal + $taxAmount;
@@ -464,7 +460,7 @@ class CreditNoteProcessingService
             'remaining_balance' => $totalAmount,
             'voip_tax_reversal' => $voipTaxReversal,
             'tax_breakdown' => $this->calculateTaxBreakdown($items),
-            'jurisdiction_taxes' => $this->calculateJurisdictionTaxes($items)
+            'jurisdiction_taxes' => $this->calculateJurisdictionTaxes($items),
         ]);
     }
 
@@ -480,7 +476,7 @@ class CreditNoteProcessingService
     private function exactAmountMatch(CreditNote $creditNote, Collection $invoices): Collection
     {
         $applications = collect();
-        
+
         $exactMatch = $invoices->first(function ($invoice) use ($creditNote) {
             return abs($invoice->getBalance() - $creditNote->remaining_balance) < 0.01;
         });
@@ -499,7 +495,9 @@ class CreditNoteProcessingService
         $remainingCredit = $creditNote->remaining_balance;
 
         foreach ($invoices->sortBy('due_date') as $invoice) {
-            if ($remainingCredit <= 0) break;
+            if ($remainingCredit <= 0) {
+                break;
+            }
 
             $invoiceBalance = $invoice->getBalance();
             $applicationAmount = min($remainingCredit, $invoiceBalance);
@@ -520,7 +518,9 @@ class CreditNoteProcessingService
         $remainingCredit = $creditNote->remaining_balance;
 
         foreach ($invoices->sortByDesc('amount') as $invoice) {
-            if ($remainingCredit <= 0) break;
+            if ($remainingCredit <= 0) {
+                break;
+            }
 
             $invoiceBalance = $invoice->getBalance();
             $applicationAmount = min($remainingCredit, $invoiceBalance);
@@ -562,8 +562,8 @@ class CreditNoteProcessingService
             'approved' => true,
             'metadata' => [
                 'matching_algorithm' => 'intelligent_auto_match',
-                'created_by_system' => true
-            ]
+                'created_by_system' => true,
+            ],
         ]);
     }
 
@@ -573,7 +573,7 @@ class CreditNoteProcessingService
         if ($creditNote->total_amount < 100) {
             return 'oldest_first';
         }
-        
+
         if ($creditNote->reason_code === 'billing_error') {
             return 'exact_match';
         }
@@ -602,7 +602,7 @@ class CreditNoteProcessingService
 
     private function calculateVoipTaxReversal(CreditNote $creditNote): float
     {
-        if (!$this->voipTaxService) {
+        if (! $this->voipTaxService) {
             return 0;
         }
 
@@ -676,11 +676,11 @@ class CreditNoteProcessingService
     private function getTopClientsByCredits(Collection $credits): array
     {
         return $credits->groupBy('client_id')
-            ->map(fn($group) => [
+            ->map(fn ($group) => [
                 'client' => $group->first()->client->name,
                 'credit_count' => $group->count(),
                 'total_amount' => $group->sum('total_amount'),
-                'applied_amount' => $group->sum('applied_amount')
+                'applied_amount' => $group->sum('applied_amount'),
             ])
             ->sortByDesc('total_amount')
             ->take(10)
@@ -691,12 +691,12 @@ class CreditNoteProcessingService
     private function getCreditAgingAnalysis(Collection $credits): array
     {
         $now = now();
-        
+
         return [
-            '0-30_days' => $credits->filter(fn($c) => $c->created_at->diffInDays($now) <= 30)->sum('remaining_balance'),
-            '31-60_days' => $credits->filter(fn($c) => $c->created_at->diffInDays($now) > 30 && $c->created_at->diffInDays($now) <= 60)->sum('remaining_balance'),
-            '61-90_days' => $credits->filter(fn($c) => $c->created_at->diffInDays($now) > 60 && $c->created_at->diffInDays($now) <= 90)->sum('remaining_balance'),
-            'over_90_days' => $credits->filter(fn($c) => $c->created_at->diffInDays($now) > 90)->sum('remaining_balance')
+            '0-30_days' => $credits->filter(fn ($c) => $c->created_at->diffInDays($now) <= 30)->sum('remaining_balance'),
+            '31-60_days' => $credits->filter(fn ($c) => $c->created_at->diffInDays($now) > 30 && $c->created_at->diffInDays($now) <= 60)->sum('remaining_balance'),
+            '61-90_days' => $credits->filter(fn ($c) => $c->created_at->diffInDays($now) > 60 && $c->created_at->diffInDays($now) <= 90)->sum('remaining_balance'),
+            'over_90_days' => $credits->filter(fn ($c) => $c->created_at->diffInDays($now) > 90)->sum('remaining_balance'),
         ];
     }
 
@@ -709,8 +709,8 @@ class CreditNoteProcessingService
         return [
             'application_rate' => $totalCredits > 0 ? ($appliedCredits / $totalCredits) * 100 : 0,
             'full_application_rate' => $totalCredits > 0 ? ($fullyAppliedCredits / $totalCredits) * 100 : 0,
-            'average_days_to_apply' => $credits->where('applied_at')->avg(fn($c) => $c->created_at->diffInDays($c->applied_at)),
-            'unutilized_credits' => $credits->where('remaining_balance', '>', 0)->count()
+            'average_days_to_apply' => $credits->where('applied_at')->avg(fn ($c) => $c->created_at->diffInDays($c->applied_at)),
+            'unutilized_credits' => $credits->where('remaining_balance', '>', 0)->count(),
         ];
     }
 
@@ -720,7 +720,7 @@ class CreditNoteProcessingService
             'total_revenue_reduction' => $credits->sum('total_amount'),
             'recognized_impact' => $credits->where('affects_revenue_recognition', true)->sum('total_amount'),
             'deferred_impact' => $credits->where('affects_revenue_recognition', false)->sum('total_amount'),
-            'tax_impact' => $credits->sum('tax_amount')
+            'tax_impact' => $credits->sum('tax_amount'),
         ];
     }
 }

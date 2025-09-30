@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Knowledge Base Category Model
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int|null $parent_id
@@ -102,12 +102,12 @@ class KbCategory extends BaseModel
     public function getDescendantsAttribute()
     {
         $descendants = collect();
-        
+
         foreach ($this->children as $child) {
             $descendants->push($child);
             $descendants = $descendants->merge($child->descendants);
         }
-        
+
         return $descendants;
     }
 
@@ -118,12 +118,12 @@ class KbCategory extends BaseModel
     {
         $ancestors = collect();
         $parent = $this->parent;
-        
+
         while ($parent) {
             $ancestors->push($parent);
             $parent = $parent->parent;
         }
-        
+
         return $ancestors;
     }
 
@@ -133,6 +133,7 @@ class KbCategory extends BaseModel
     public function getBreadcrumbAttribute(): array
     {
         $breadcrumb = $this->ancestors->reverse()->push($this);
+
         return $breadcrumb->pluck('name', 'slug')->toArray();
     }
 
@@ -150,11 +151,11 @@ class KbCategory extends BaseModel
     public function getTotalArticlesCountAttribute(): int
     {
         $count = $this->articles()->count();
-        
+
         foreach ($this->children as $child) {
             $count += $child->total_articles_count;
         }
-        
+
         return $count;
     }
 
@@ -164,15 +165,16 @@ class KbCategory extends BaseModel
     public static function generateSlug(string $name, ?int $parentId = null): string
     {
         $slug = str()->slug($name);
-        
+
         $query = static::where('slug', 'LIKE', "{$slug}%");
         if ($parentId) {
             $query->where('parent_id', $parentId);
         } else {
             $query->whereNull('parent_id');
         }
-        
+
         $count = $query->count();
+
         return $count ? "{$slug}-{$count}" : $slug;
     }
 

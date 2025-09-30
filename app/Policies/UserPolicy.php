@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
@@ -171,7 +170,7 @@ class UserPolicy
 
         return $user->canAny([
             'users.manage',
-            'system.permissions.manage'
+            'system.permissions.manage',
         ]) && $this->sameCompany($user, $model);
     }
 
@@ -187,7 +186,7 @@ class UserPolicy
 
         return $user->canAny([
             'users.manage',
-            'system.permissions.manage'
+            'system.permissions.manage',
         ]) && $this->sameCompany($user, $model);
     }
 

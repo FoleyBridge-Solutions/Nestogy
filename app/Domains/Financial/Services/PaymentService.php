@@ -29,7 +29,7 @@ class PaymentService
                 'status' => $data['status'] ?? 'completed',
                 'gateway' => $data['gateway'] ?? null,
                 'gateway_id' => $data['gateway_id'] ?? null,
-                'created_by' => Auth::id()
+                'created_by' => Auth::id(),
             ]);
 
             // If payment is for an invoice, update invoice status if fully paid
@@ -41,7 +41,7 @@ class PaymentService
                 'payment_id' => $payment->id,
                 'client_id' => $payment->client_id,
                 'amount' => $payment->amount,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return $payment;
@@ -63,7 +63,7 @@ class PaymentService
 
             Log::info('Payment updated', [
                 'payment_id' => $payment->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return $payment;
@@ -82,7 +82,7 @@ class PaymentService
         if ($totalPayments >= $invoice->total) {
             $invoice->update([
                 'status' => 'paid',
-                'paid_at' => now()
+                'paid_at' => now(),
             ]);
         } elseif ($totalPayments > 0) {
             $invoice->update(['status' => 'partial']);
@@ -102,40 +102,40 @@ class PaymentService
         try {
             // This is where you would integrate with payment gateway
             // For now, we'll simulate successful payment
-            
+
             $payment = $this->createPayment([
                 'client_id' => $paymentData['client_id'],
                 'invoice_id' => $paymentData['invoice_id'] ?? null,
                 'amount' => $paymentData['amount'],
                 'method' => 'credit_card',
-                'reference' => 'CC-' . uniqid(),
+                'reference' => 'CC-'.uniqid(),
                 'status' => 'completed',
                 'gateway' => $paymentData['gateway'] ?? 'stripe',
-                'notes' => $paymentData['notes'] ?? ''
+                'notes' => $paymentData['notes'] ?? '',
             ]);
 
             Log::info('Credit card payment processed', [
                 'payment_id' => $payment->id,
                 'amount' => $payment->amount,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return [
                 'success' => true,
                 'payment' => $payment,
-                'message' => 'Payment processed successfully'
+                'message' => 'Payment processed successfully',
             ];
 
         } catch (\Exception $e) {
             Log::error('Credit card payment failed', [
                 'error' => $e->getMessage(),
                 'payment_data' => $paymentData,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Payment processing failed: ' . $e->getMessage()
+                'message' => 'Payment processing failed: '.$e->getMessage(),
             ];
         }
     }
@@ -151,34 +151,34 @@ class PaymentService
                 'invoice_id' => $paymentData['invoice_id'] ?? null,
                 'amount' => $paymentData['amount'],
                 'method' => 'ach',
-                'reference' => 'ACH-' . uniqid(),
+                'reference' => 'ACH-'.uniqid(),
                 'status' => 'pending', // ACH payments typically start as pending
                 'gateway' => $paymentData['gateway'] ?? 'stripe',
-                'notes' => $paymentData['notes'] ?? ''
+                'notes' => $paymentData['notes'] ?? '',
             ]);
 
             Log::info('ACH payment initiated', [
                 'payment_id' => $payment->id,
                 'amount' => $payment->amount,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return [
                 'success' => true,
                 'payment' => $payment,
-                'message' => 'ACH payment initiated successfully'
+                'message' => 'ACH payment initiated successfully',
             ];
 
         } catch (\Exception $e) {
             Log::error('ACH payment failed', [
                 'error' => $e->getMessage(),
                 'payment_data' => $paymentData,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'ACH payment failed: ' . $e->getMessage()
+                'message' => 'ACH payment failed: '.$e->getMessage(),
             ];
         }
     }
@@ -197,11 +197,11 @@ class PaymentService
                 'amount' => -abs($amount), // Negative amount for refund
                 'date' => now()->toDateString(),
                 'method' => $payment->method,
-                'reference' => 'REFUND-' . $payment->reference,
+                'reference' => 'REFUND-'.$payment->reference,
                 'notes' => "Refund for payment #{$payment->id}. Reason: {$reason}",
                 'status' => 'completed',
                 'gateway' => $payment->gateway,
-                'created_by' => Auth::id()
+                'created_by' => Auth::id(),
             ]);
 
             // Update invoice status if applicable
@@ -214,13 +214,13 @@ class PaymentService
                 'refund_payment_id' => $refund->id,
                 'refund_amount' => $amount,
                 'reason' => $reason,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return [
                 'success' => true,
                 'refund' => $refund,
-                'message' => 'Payment refunded successfully'
+                'message' => 'Payment refunded successfully',
             ];
 
         } catch (\Exception $e) {
@@ -228,12 +228,12 @@ class PaymentService
                 'payment_id' => $payment->id,
                 'refund_amount' => $amount,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Refund failed: ' . $e->getMessage()
+                'message' => 'Refund failed: '.$e->getMessage(),
             ];
         }
     }
@@ -257,9 +257,9 @@ class PaymentService
             'methods_used' => $payments->groupBy('method')->map(function ($group) {
                 return [
                     'count' => $group->count(),
-                    'total' => $group->sum('amount')
+                    'total' => $group->sum('amount'),
                 ];
-            })
+            }),
         ];
     }
 
@@ -286,10 +286,10 @@ class PaymentService
     {
         try {
             $payment->update(['archived_at' => now()]);
-            
+
             Log::info('Payment archived', [
                 'payment_id' => $payment->id,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return true;
@@ -297,7 +297,7 @@ class PaymentService
             Log::error('Failed to archive payment', [
                 'payment_id' => $payment->id,
                 'error' => $e->getMessage(),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return false;

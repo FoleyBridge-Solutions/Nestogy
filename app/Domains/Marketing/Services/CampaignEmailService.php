@@ -2,6 +2,7 @@
 
 namespace App\Domains\Marketing\Services;
 
+use App\Domains\Email\Services\EmailService;
 use App\Domains\Lead\Models\Lead;
 use App\Domains\Lead\Models\LeadActivity;
 use App\Domains\Marketing\Models\CampaignEnrollment;
@@ -9,7 +10,6 @@ use App\Domains\Marketing\Models\CampaignSequence;
 use App\Domains\Marketing\Models\EmailTracking;
 use App\Domains\Marketing\Models\MarketingCampaign;
 use App\Models\Contact;
-use App\Domains\Email\Services\EmailService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -23,14 +23,16 @@ class CampaignEmailService extends EmailService
     {
         try {
             $sequence = $enrollment->getCurrentSequence();
-            if (!$sequence) {
+            if (! $sequence) {
                 Log::warning('No sequence found for enrollment', ['enrollment_id' => $enrollment->id]);
+
                 return false;
             }
 
             $recipient = $enrollment->recipient;
-            if (!$recipient || !$recipient->email) {
+            if (! $recipient || ! $recipient->email) {
                 Log::warning('No valid recipient for enrollment', ['enrollment_id' => $enrollment->id]);
+
                 return false;
             }
 
@@ -39,11 +41,11 @@ class CampaignEmailService extends EmailService
 
             // Prepare email variables
             $variables = $this->prepareEmailVariables($recipient, $enrollment);
-            
+
             // Process email content
             $subject = $sequence->getProcessedSubjectLine($variables);
             $content = $sequence->getProcessedEmailTemplate($variables);
-            
+
             // Add tracking pixels and links
             $content = $this->addEmailTracking($content, $trackingId);
 
@@ -53,8 +55,8 @@ class CampaignEmailService extends EmailService
             // Send the email
             $sent = Mail::send([], [], function ($message) use ($recipient, $subject, $content) {
                 $message->to($recipient->email, $this->getRecipientName($recipient))
-                        ->subject($subject)
-                        ->html($content);
+                    ->subject($subject)
+                    ->html($content);
             });
 
             if ($sent) {
@@ -71,7 +73,7 @@ class CampaignEmailService extends EmailService
                         [
                             'campaign_id' => $enrollment->campaign_id,
                             'sequence_step' => $sequence->step_number,
-                            'tracking_id' => $trackingId
+                            'tracking_id' => $trackingId,
                         ]
                     );
                 }
@@ -79,13 +81,13 @@ class CampaignEmailService extends EmailService
                 // Update email tracking
                 $emailTracking->update([
                     'status' => 'sent',
-                    'sent_at' => now()
+                    'sent_at' => now(),
                 ]);
 
                 Log::info('Campaign email sent successfully', [
                     'enrollment_id' => $enrollment->id,
                     'recipient_email' => $recipient->email,
-                    'tracking_id' => $trackingId
+                    'tracking_id' => $trackingId,
                 ]);
 
                 return true;
@@ -96,8 +98,9 @@ class CampaignEmailService extends EmailService
         } catch (\Exception $e) {
             Log::error('Failed to send campaign email', [
                 'enrollment_id' => $enrollment->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -126,12 +129,12 @@ class CampaignEmailService extends EmailService
     /**
      * Track email open.
      */
-    public function trackEmailOpen(string $trackingId, string $userAgent = null, string $ipAddress = null): bool
+    public function trackEmailOpen(string $trackingId, ?string $userAgent = null, ?string $ipAddress = null): bool
     {
         try {
             $tracking = EmailTracking::where('tracking_id', $trackingId)->first();
-            
-            if (!$tracking) {
+
+            if (! $tracking) {
                 return false;
             }
 
@@ -140,10 +143,10 @@ class CampaignEmailService extends EmailService
                 'open_count' => $tracking->open_count + 1,
                 'last_opened_at' => now(),
                 'user_agent' => $userAgent,
-                'ip_address' => $ipAddress
+                'ip_address' => $ipAddress,
             ];
 
-            if (!$tracking->first_opened_at) {
+            if (! $tracking->first_opened_at) {
                 $updateData['first_opened_at'] = now();
             }
 
@@ -152,7 +155,7 @@ class CampaignEmailService extends EmailService
             // Update enrollment metrics
             if ($tracking->campaign_id) {
                 $enrollment = CampaignEnrollment::where('campaign_id', $tracking->campaign_id)
-                    ->where(function($q) use ($tracking) {
+                    ->where(function ($q) use ($tracking) {
                         if ($tracking->lead_id) {
                             $q->where('lead_id', $tracking->lead_id);
                         } elseif ($tracking->contact_id) {
@@ -178,7 +181,7 @@ class CampaignEmailService extends EmailService
                             'tracking_id' => $trackingId,
                             'campaign_id' => $tracking->campaign_id,
                             'user_agent' => $userAgent,
-                            'ip_address' => $ipAddress
+                            'ip_address' => $ipAddress,
                         ]
                     );
                 }
@@ -189,8 +192,9 @@ class CampaignEmailService extends EmailService
         } catch (\Exception $e) {
             Log::error('Failed to track email open', [
                 'tracking_id' => $trackingId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -198,12 +202,12 @@ class CampaignEmailService extends EmailService
     /**
      * Track email click.
      */
-    public function trackEmailClick(string $trackingId, string $url, string $userAgent = null, string $ipAddress = null): bool
+    public function trackEmailClick(string $trackingId, string $url, ?string $userAgent = null, ?string $ipAddress = null): bool
     {
         try {
             $tracking = EmailTracking::where('tracking_id', $trackingId)->first();
-            
-            if (!$tracking) {
+
+            if (! $tracking) {
                 return false;
             }
 
@@ -212,10 +216,10 @@ class CampaignEmailService extends EmailService
                 'click_count' => $tracking->click_count + 1,
                 'last_clicked_at' => now(),
                 'user_agent' => $userAgent,
-                'ip_address' => $ipAddress
+                'ip_address' => $ipAddress,
             ];
 
-            if (!$tracking->first_clicked_at) {
+            if (! $tracking->first_clicked_at) {
                 $updateData['first_clicked_at'] = now();
             }
 
@@ -224,7 +228,7 @@ class CampaignEmailService extends EmailService
             // Update enrollment metrics
             if ($tracking->campaign_id) {
                 $enrollment = CampaignEnrollment::where('campaign_id', $tracking->campaign_id)
-                    ->where(function($q) use ($tracking) {
+                    ->where(function ($q) use ($tracking) {
                         if ($tracking->lead_id) {
                             $q->where('lead_id', $tracking->lead_id);
                         } elseif ($tracking->contact_id) {
@@ -251,7 +255,7 @@ class CampaignEmailService extends EmailService
                             'campaign_id' => $tracking->campaign_id,
                             'url' => $url,
                             'user_agent' => $userAgent,
-                            'ip_address' => $ipAddress
+                            'ip_address' => $ipAddress,
                         ]
                     );
                 }
@@ -262,8 +266,9 @@ class CampaignEmailService extends EmailService
         } catch (\Exception $e) {
             Log::error('Failed to track email click', [
                 'tracking_id' => $trackingId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -275,8 +280,8 @@ class CampaignEmailService extends EmailService
     {
         try {
             $tracking = EmailTracking::where('tracking_id', $trackingId)->first();
-            
-            if (!$tracking) {
+
+            if (! $tracking) {
                 return false;
             }
 
@@ -286,7 +291,7 @@ class CampaignEmailService extends EmailService
             // Update enrollment status
             if ($tracking->campaign_id) {
                 $enrollment = CampaignEnrollment::where('campaign_id', $tracking->campaign_id)
-                    ->where(function($q) use ($tracking) {
+                    ->where(function ($q) use ($tracking) {
                         if ($tracking->lead_id) {
                             $q->where('lead_id', $tracking->lead_id);
                         } elseif ($tracking->contact_id) {
@@ -305,8 +310,9 @@ class CampaignEmailService extends EmailService
         } catch (\Exception $e) {
             Log::error('Failed to track email unsubscribe', [
                 'tracking_id' => $trackingId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -358,20 +364,20 @@ class CampaignEmailService extends EmailService
     protected function addEmailTracking(string $content, string $trackingId): string
     {
         // Add tracking pixel
-        $trackingPixel = '<img src="' . route('marketing.email.track-open', $trackingId) . '" width="1" height="1" style="display:none;" />';
+        $trackingPixel = '<img src="'.route('marketing.email.track-open', $trackingId).'" width="1" height="1" style="display:none;" />';
         $content .= $trackingPixel;
 
         // Convert links for click tracking
         $content = preg_replace_callback(
             '/<a\s+([^>]*?)href="([^"]*)"([^>]*?)>/i',
-            function($matches) use ($trackingId) {
+            function ($matches) use ($trackingId) {
                 $originalUrl = $matches[2];
                 $trackingUrl = route('marketing.email.track-click', [
                     'tracking_id' => $trackingId,
-                    'url' => urlencode($originalUrl)
+                    'url' => urlencode($originalUrl),
                 ]);
-                
-                return '<a ' . $matches[1] . 'href="' . $trackingUrl . '"' . $matches[3] . '>';
+
+                return '<a '.$matches[1].'href="'.$trackingUrl.'"'.$matches[3].'>';
             },
             $content
         );
@@ -385,7 +391,7 @@ class CampaignEmailService extends EmailService
     protected function createEmailTracking(CampaignEnrollment $enrollment, CampaignSequence $sequence, string $trackingId, string $subject): EmailTracking
     {
         $recipient = $enrollment->recipient;
-        
+
         return EmailTracking::create([
             'company_id' => $enrollment->campaign->company_id,
             'tracking_id' => $trackingId,
@@ -422,7 +428,7 @@ class CampaignEmailService extends EmailService
     {
         return route('marketing.unsubscribe', [
             'enrollment' => $enrollment->id,
-            'token' => hash('sha256', $enrollment->id . $enrollment->campaign_id . config('app.key'))
+            'token' => hash('sha256', $enrollment->id.$enrollment->campaign_id.config('app.key')),
         ]);
     }
 
@@ -442,21 +448,22 @@ class CampaignEmailService extends EmailService
                 'unsubscribe_url' => '#',
             ];
 
-            $subject = '[TEST] ' . $sequence->getProcessedSubjectLine($variables);
+            $subject = '[TEST] '.$sequence->getProcessedSubjectLine($variables);
             $content = $sequence->getProcessedEmailTemplate($variables);
 
             return Mail::send([], [], function ($message) use ($testEmail, $subject, $content) {
                 $message->to($testEmail)
-                        ->subject($subject)
-                        ->html($content);
+                    ->subject($subject)
+                    ->html($content);
             });
 
         } catch (\Exception $e) {
             Log::error('Failed to send test email', [
                 'sequence_id' => $sequence->id,
                 'test_email' => $testEmail,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }

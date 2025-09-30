@@ -2,19 +2,19 @@
 
 namespace App\Domains\Ticket\Services;
 
+use App\Domains\Core\Services\Notification\NotificationDispatcher;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\User;
-use App\Domains\Core\Services\Notification\NotificationDispatcher;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Ticket Notification Service (Refactored with Composition)
- * 
+ *
  * This service has been refactored to use composition over inheritance.
  * Instead of containing all notification logic, it now composes with
  * the NotificationDispatcher service and delegates to specialized strategies.
- * 
+ *
  * COMPOSITION BENEFITS DEMONSTRATED HERE:
  * - Single Responsibility: This service now only handles ticket-specific orchestration
  * - Dependency Injection: Composes NotificationDispatcher rather than inheriting
@@ -36,7 +36,7 @@ class TicketNotificationService
 
     /**
      * Send notification for new ticket creation.
-     * 
+     *
      * COMPOSITION PATTERN: Delegates to NotificationDispatcher instead of handling directly.
      */
     public function notifyTicketCreated(Ticket $ticket): array
@@ -50,21 +50,21 @@ class TicketNotificationService
         } catch (\Exception $e) {
             Log::error('Failed to send ticket creation notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'notifications_sent' => 0,
-                'notifications_failed' => 1
+                'notifications_failed' => 1,
             ];
         }
     }
 
     /**
      * Send notification for ticket updates.
-     * 
+     *
      * COMPOSITION PATTERN: Strategy determined by event type, not inheritance hierarchy.
      */
     public function notifyTicketUpdated(Ticket $ticket, array $changes = []): array
@@ -79,21 +79,21 @@ class TicketNotificationService
         } catch (\Exception $e) {
             Log::error('Failed to send ticket update notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'notifications_sent' => 0,
-                'notifications_failed' => 1
+                'notifications_failed' => 1,
             ];
         }
     }
 
     /**
      * Send notification for status changes.
-     * 
+     *
      * COMPOSITION PATTERN: Specific strategy handles status change logic.
      */
     public function notifyStatusChanged(Ticket $ticket, string $oldStatus, string $newStatus): array
@@ -109,14 +109,14 @@ class TicketNotificationService
         } catch (\Exception $e) {
             Log::error('Failed to send status change notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'notifications_sent' => 0,
-                'notifications_failed' => 1
+                'notifications_failed' => 1,
             ];
         }
     }
@@ -137,14 +137,14 @@ class TicketNotificationService
         } catch (\Exception $e) {
             Log::error('Failed to send priority change notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'notifications_sent' => 0,
-                'notifications_failed' => 1
+                'notifications_failed' => 1,
             ];
         }
     }
@@ -165,14 +165,14 @@ class TicketNotificationService
         } catch (\Exception $e) {
             Log::error('Failed to send assignment notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'notifications_sent' => 0,
-                'notifications_failed' => 1
+                'notifications_failed' => 1,
             ];
         }
     }
@@ -192,21 +192,21 @@ class TicketNotificationService
         } catch (\Exception $e) {
             Log::error('Failed to send new reply notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'notifications_sent' => 0,
-                'notifications_failed' => 1
+                'notifications_failed' => 1,
             ];
         }
     }
 
     /**
      * Send SLA breach notifications.
-     * 
+     *
      * COMPOSITION PATTERN: Critical notifications handled by specialized strategy.
      */
     public function notifySLABreach(Ticket $ticket, string $breachType, array $breachDetails = []): array
@@ -221,14 +221,14 @@ class TicketNotificationService
         } catch (\Exception $e) {
             Log::error('Failed to send SLA breach notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'notifications_sent' => 0,
-                'notifications_failed' => 1
+                'notifications_failed' => 1,
             ];
         }
     }
@@ -248,21 +248,21 @@ class TicketNotificationService
         } catch (\Exception $e) {
             Log::error('Failed to send escalation notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'notifications_sent' => 0,
-                'notifications_failed' => 1
+                'notifications_failed' => 1,
             ];
         }
     }
 
     /**
      * Send bulk notifications for multiple tickets.
-     * 
+     *
      * COMPOSITION PATTERN: Bulk operations delegated to dispatcher.
      */
     public function sendBulkNotifications(Collection $tickets, string $notificationType, array $data = []): array
@@ -274,7 +274,7 @@ class TicketNotificationService
             Log::error('Failed to send bulk notifications', [
                 'notification_type' => $notificationType,
                 'ticket_count' => $tickets->count(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
@@ -282,7 +282,7 @@ class TicketNotificationService
                 'error' => $e->getMessage(),
                 'tickets_processed' => 0,
                 'total_notifications_sent' => 0,
-                'total_notifications_failed' => $tickets->count()
+                'total_notifications_failed' => $tickets->count(),
             ];
         }
     }
@@ -300,21 +300,21 @@ class TicketNotificationService
         } catch (\Exception $e) {
             Log::error('Failed to send ticket reminder', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'notifications_sent' => 0,
-                'notifications_failed' => 1
+                'notifications_failed' => 1,
             ];
         }
     }
 
     /**
      * Queue notification for later delivery.
-     * 
+     *
      * COMPOSITION PATTERN: Queuing logic handled by dispatcher.
      */
     public function queueNotification(string $eventType, Ticket $ticket, array $eventData = [], int $delayInMinutes = 0): bool
@@ -324,34 +324,34 @@ class TicketNotificationService
 
     /**
      * Get notification statistics.
-     * 
+     *
      * COMPOSITION PATTERN: Statistics aggregated from composed services.
      */
     public function getNotificationStatistics(array $filters = []): array
     {
         $dispatcherStats = $this->notificationDispatcher->getStatistics($filters);
-        
+
         // Add ticket-specific statistics
         return array_merge($dispatcherStats, [
             'service' => 'TicketNotificationService',
             'composition_pattern' => 'Uses NotificationDispatcher composition',
             'available_events' => [
                 'ticket_created',
-                'ticket_updated', 
+                'ticket_updated',
                 'ticket_status_changed',
                 'priority_changed',
                 'assignment_changed',
                 'new_reply',
                 'sla_breach',
                 'escalation',
-                'ticket_reminder'
-            ]
+                'ticket_reminder',
+            ],
         ]);
     }
 
     /**
      * Test notification system with a sample ticket.
-     * 
+     *
      * Useful for verifying the composition is working correctly.
      */
     public function testNotificationSystem(Ticket $ticket): array
@@ -361,19 +361,20 @@ class TicketNotificationService
             'available_channels' => $this->notificationDispatcher->getAvailableChannels()->keys()->toArray(),
             'test_notification' => $this->notificationDispatcher->dispatch('ticket_created', $ticket, [
                 'test_mode' => true,
-                'timestamp' => now()
-            ])
+                'timestamp' => now(),
+            ]),
         ];
     }
 
     /**
      * Set a custom notification dispatcher (useful for testing).
-     * 
+     *
      * COMPOSITION PATTERN: Easy to inject different implementations.
      */
     public function setNotificationDispatcher(NotificationDispatcher $dispatcher): self
     {
         $this->notificationDispatcher = $dispatcher;
+
         return $this;
     }
 

@@ -2,12 +2,12 @@
 
 namespace App\Domains\Financial\Models;
 
+use App\Models\Client;
+use App\Models\Project;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Client;
-use App\Models\User;
-use App\Models\Project;
 
 class Expense extends Model
 {
@@ -82,33 +82,51 @@ class Expense extends Model
      * Expense status constants
      */
     const STATUS_DRAFT = 'draft';
+
     const STATUS_SUBMITTED = 'submitted';
+
     const STATUS_PENDING_APPROVAL = 'pending_approval';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_PAID = 'paid';
+
     const STATUS_INVOICED = 'invoiced';
+
     const STATUS_CANCELLED = 'cancelled';
 
     /**
      * Payment method constants
      */
     const METHOD_CASH = 'cash';
+
     const METHOD_CREDIT_CARD = 'credit_card';
+
     const METHOD_DEBIT_CARD = 'debit_card';
+
     const METHOD_CHECK = 'check';
+
     const METHOD_BANK_TRANSFER = 'bank_transfer';
+
     const METHOD_PETTY_CASH = 'petty_cash';
+
     const METHOD_PERSONAL = 'personal';
+
     const METHOD_COMPANY_CARD = 'company_card';
 
     /**
      * Recurring frequency constants
      */
     const FREQUENCY_WEEKLY = 'weekly';
+
     const FREQUENCY_BIWEEKLY = 'biweekly';
+
     const FREQUENCY_MONTHLY = 'monthly';
+
     const FREQUENCY_QUARTERLY = 'quarterly';
+
     const FREQUENCY_ANNUALLY = 'annually';
 
     /**
@@ -193,7 +211,7 @@ class Expense extends Model
             self::STATUS_PENDING_APPROVAL,
             self::STATUS_APPROVED,
             self::STATUS_PAID,
-            self::STATUS_INVOICED
+            self::STATUS_INVOICED,
         ]);
     }
 
@@ -243,8 +261,8 @@ class Expense extends Model
     public function scopeUninvoiced($query)
     {
         return $query->where('is_billable', true)
-                    ->whereNull('invoiced_at')
-                    ->where('status', self::STATUS_APPROVED);
+            ->whereNull('invoiced_at')
+            ->where('status', self::STATUS_APPROVED);
     }
 
     /**
@@ -310,7 +328,7 @@ class Expense extends Model
     {
         return in_array($this->status, [
             self::STATUS_SUBMITTED,
-            self::STATUS_PENDING_APPROVAL
+            self::STATUS_PENDING_APPROVAL,
         ]);
     }
 
@@ -321,7 +339,7 @@ class Expense extends Model
     {
         return in_array($this->status, [
             self::STATUS_SUBMITTED,
-            self::STATUS_PENDING_APPROVAL
+            self::STATUS_PENDING_APPROVAL,
         ]);
     }
 
@@ -354,15 +372,15 @@ class Expense extends Model
      */
     public function isInvoiced(): bool
     {
-        return !is_null($this->invoiced_at);
+        return ! is_null($this->invoiced_at);
     }
 
     /**
      * Approve expense
      */
-    public function approve(User $approver, string $notes = null): bool
+    public function approve(User $approver, ?string $notes = null): bool
     {
-        if (!$this->canBeApproved()) {
+        if (! $this->canBeApproved()) {
             return false;
         }
 
@@ -380,7 +398,7 @@ class Expense extends Model
      */
     public function reject(User $rejector, string $reason): bool
     {
-        if (!$this->canBeRejected()) {
+        if (! $this->canBeRejected()) {
             return false;
         }
 
@@ -414,7 +432,7 @@ class Expense extends Model
      */
     public function calculateBillableAmount(): float
     {
-        if (!$this->is_billable) {
+        if (! $this->is_billable) {
             return 0.00;
         }
 
@@ -434,7 +452,7 @@ class Expense extends Model
      */
     public function getFormattedAmountAttribute(): string
     {
-        return '$' . number_format($this->amount, 2);
+        return '$'.number_format($this->amount, 2);
     }
 
     /**
@@ -442,7 +460,7 @@ class Expense extends Model
      */
     public function getFormattedBillableAmountAttribute(): string
     {
-        return '$' . number_format($this->total_billable_amount ?? $this->calculateBillableAmount(), 2);
+        return '$'.number_format($this->total_billable_amount ?? $this->calculateBillableAmount(), 2);
     }
 
     /**

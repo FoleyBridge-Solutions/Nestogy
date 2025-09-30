@@ -7,19 +7,22 @@ use Exception;
 
 /**
  * US Census Bureau API Client
- * 
+ *
  * Free API for accessing US Census data, geographic boundaries,
  * and demographic information. Useful for jurisdiction detection
  * and administrative boundary determination.
- * 
+ *
  * API Documentation: https://www.census.gov/data/developers/guidance/api-user-guide.html
  * Geocoding API: https://geocoding.geo.census.gov/geocoder/
  */
 class CensusBureauApiClient extends BaseApiClient
 {
     protected string $geocodingBaseUrl = 'https://geocoding.geo.census.gov/geocoder';
+
     protected string $dataBaseUrl = 'https://api.census.gov/data';
+
     protected string $tigerwebBaseUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services';
+
     protected ?string $apiKey;
 
     public function __construct(int $companyId, array $config = [])
@@ -52,11 +55,11 @@ class CensusBureauApiClient extends BaseApiClient
 
     /**
      * Geocode an address using Census Bureau geocoding service
-     * 
-     * @param string $address Street address
-     * @param string|null $city City name
-     * @param string|null $state State abbreviation
-     * @param string|null $zip ZIP code
+     *
+     * @param  string  $address  Street address
+     * @param  string|null  $city  City name
+     * @param  string|null  $state  State abbreviation
+     * @param  string|null  $zip  ZIP code
      * @return array Geocoding result with coordinates and FIPS codes
      */
     public function geocodeAddress(string $address, ?string $city = null, ?string $state = null, ?string $zip = null): array
@@ -71,8 +74,8 @@ class CensusBureauApiClient extends BaseApiClient
         ];
 
         // Remove null values
-        $parameters = array_filter($parameters, fn($value) => $value !== null);
-        
+        $parameters = array_filter($parameters, fn ($value) => $value !== null);
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_GEOCODING,
             $parameters,
@@ -80,12 +83,12 @@ class CensusBureauApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->get("{$this->geocodingBaseUrl}/locations/address", $parameters);
 
-                if (!$response->successful()) {
-                    throw new Exception("Census geocoding failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('Census geocoding failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 if (empty($data['result']['addressMatches'])) {
                     return [
                         'found' => false,
@@ -129,10 +132,10 @@ class CensusBureauApiClient extends BaseApiClient
 
     /**
      * Get geographic information for coordinates
-     * 
-     * @param float $latitude Latitude
-     * @param float $longitude Longitude
-     * @param array $layers Geographic layers to include
+     *
+     * @param  float  $latitude  Latitude
+     * @param  float  $longitude  Longitude
+     * @param  array  $layers  Geographic layers to include
      * @return array Geographic information including FIPS codes
      */
     public function getGeographicInfo(float $latitude, float $longitude, array $layers = []): array
@@ -151,14 +154,14 @@ class CensusBureauApiClient extends BaseApiClient
         ];
 
         $layers = empty($layers) ? $defaultLayers : $layers;
-        
+
         $parameters = [
             'x' => $longitude,
             'y' => $latitude,
             'layers' => implode(',', $layers),
             'format' => 'json',
         ];
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_BOUNDARY,
             $parameters,
@@ -166,12 +169,12 @@ class CensusBureauApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->get("{$this->geocodingBaseUrl}/geographies/coordinates", $parameters);
 
-                if (!$response->successful()) {
-                    throw new Exception("Census geographic info failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('Census geographic info failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 if (empty($data['result']['geographies'])) {
                     return [
                         'found' => false,
@@ -201,19 +204,19 @@ class CensusBureauApiClient extends BaseApiClient
 
     /**
      * Get tax jurisdictions for an address
-     * 
-     * @param string $address Address to analyze
-     * @param string|null $city City name
-     * @param string|null $state State abbreviation
-     * @param string|null $zip ZIP code
+     *
+     * @param  string  $address  Address to analyze
+     * @param  string|null  $city  City name
+     * @param  string|null  $state  State abbreviation
+     * @param  string|null  $zip  ZIP code
      * @return array Tax jurisdiction information
      */
     public function getTaxJurisdictions(string $address, ?string $city = null, ?string $state = null, ?string $zip = null): array
     {
         // First geocode the address
         $geocoded = $this->geocodeAddress($address, $city, $state, $zip);
-        
-        if (!$geocoded['found'] || empty($geocoded['matches'])) {
+
+        if (! $geocoded['found'] || empty($geocoded['matches'])) {
             return [
                 'found' => false,
                 'address' => compact('address', 'city', 'state', 'zip'),
@@ -223,11 +226,11 @@ class CensusBureauApiClient extends BaseApiClient
 
         $match = $geocoded['matches'][0];
         $coords = $match['coordinates'];
-        
+
         // Get geographic boundaries
         $geoInfo = $this->getGeographicInfo($coords['latitude'], $coords['longitude']);
-        
-        if (!$geoInfo['found']) {
+
+        if (! $geoInfo['found']) {
             return [
                 'found' => false,
                 'address' => compact('address', 'city', 'state', 'zip'),
@@ -239,9 +242,9 @@ class CensusBureauApiClient extends BaseApiClient
         // Extract jurisdiction information
         $jurisdictions = [];
         $geographies = $geoInfo['geographies'];
-        
+
         // State jurisdiction
-        if (!empty($geographies['States'])) {
+        if (! empty($geographies['States'])) {
             $state = $geographies['States'][0];
             $jurisdictions[] = [
                 'type' => 'state',
@@ -251,39 +254,39 @@ class CensusBureauApiClient extends BaseApiClient
                 'level' => 1,
             ];
         }
-        
+
         // County jurisdiction
-        if (!empty($geographies['Counties'])) {
+        if (! empty($geographies['Counties'])) {
             $county = $geographies['Counties'][0];
             $jurisdictions[] = [
                 'type' => 'county',
                 'name' => $county['NAME'] ?? null,
                 'fips_code' => $county['COUNTY'] ?? null,
-                'full_fips' => ($county['STATE'] ?? '') . ($county['COUNTY'] ?? ''),
+                'full_fips' => ($county['STATE'] ?? '').($county['COUNTY'] ?? ''),
                 'level' => 2,
             ];
         }
-        
+
         // Census tract (useful for local tax districts)
-        if (!empty($geographies['Census Tracts'])) {
+        if (! empty($geographies['Census Tracts'])) {
             $tract = $geographies['Census Tracts'][0];
             $jurisdictions[] = [
                 'type' => 'census_tract',
-                'name' => "Census Tract " . ($tract['NAME'] ?? ''),
+                'name' => 'Census Tract '.($tract['NAME'] ?? ''),
                 'fips_code' => $tract['TRACT'] ?? null,
-                'full_fips' => ($tract['STATE'] ?? '') . ($tract['COUNTY'] ?? '') . ($tract['TRACT'] ?? ''),
+                'full_fips' => ($tract['STATE'] ?? '').($tract['COUNTY'] ?? '').($tract['TRACT'] ?? ''),
                 'level' => 3,
             ];
         }
-        
+
         // Congressional district
-        if (!empty($geographies['Congressional Districts'])) {
+        if (! empty($geographies['Congressional Districts'])) {
             $district = $geographies['Congressional Districts'][0];
             $jurisdictions[] = [
                 'type' => 'congressional_district',
-                'name' => "Congressional District " . ($district['CD'] ?? ''),
+                'name' => 'Congressional District '.($district['CD'] ?? ''),
                 'fips_code' => $district['CD'] ?? null,
-                'full_fips' => ($district['STATE'] ?? '') . ($district['CD'] ?? ''),
+                'full_fips' => ($district['STATE'] ?? '').($district['CD'] ?? ''),
                 'level' => 4,
             ];
         }
@@ -300,8 +303,8 @@ class CensusBureauApiClient extends BaseApiClient
 
     /**
      * Get ZIP code information
-     * 
-     * @param string $zipCode 5-digit ZIP code
+     *
+     * @param  string  $zipCode  5-digit ZIP code
      * @return array ZIP code information including boundaries
      */
     public function getZipCodeInfo(string $zipCode): array
@@ -311,7 +314,7 @@ class CensusBureauApiClient extends BaseApiClient
             'zip' => $zipCode,
             'format' => 'json',
         ];
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_BOUNDARY,
             $parameters,
@@ -344,8 +347,8 @@ class CensusBureauApiClient extends BaseApiClient
 
     /**
      * Get state FIPS code by state abbreviation
-     * 
-     * @param string $stateAbbrev State abbreviation (e.g., 'CA', 'NY')
+     *
+     * @param  string  $stateAbbrev  State abbreviation (e.g., 'CA', 'NY')
      * @return array State information including FIPS code
      */
     public function getStateFipsCode(string $stateAbbrev): array
@@ -405,8 +408,8 @@ class CensusBureauApiClient extends BaseApiClient
         ];
 
         $stateAbbrev = strtoupper($stateAbbrev);
-        
-        if (!isset($stateFipsCodes[$stateAbbrev])) {
+
+        if (! isset($stateFipsCodes[$stateAbbrev])) {
             return [
                 'found' => false,
                 'state_abbrev' => $stateAbbrev,
@@ -425,14 +428,14 @@ class CensusBureauApiClient extends BaseApiClient
 
     /**
      * Batch geocode multiple addresses
-     * 
-     * @param array $addresses Array of address components
+     *
+     * @param  array  $addresses  Array of address components
      * @return array Batch geocoding results
      */
     public function batchGeocode(array $addresses): array
     {
         $results = [];
-        
+
         foreach ($addresses as $index => $addressData) {
             try {
                 $result = $this->geocodeAddress(
@@ -442,7 +445,7 @@ class CensusBureauApiClient extends BaseApiClient
                     $addressData['zip'] ?? null
                 );
                 $results[$index] = $result;
-                
+
             } catch (Exception $e) {
                 $results[$index] = [
                     'found' => false,
@@ -452,11 +455,11 @@ class CensusBureauApiClient extends BaseApiClient
                 ];
             }
         }
-        
+
         return [
             'total_addresses' => count($addresses),
-            'successful' => count(array_filter($results, fn($r) => $r['found'])),
-            'failed' => count(array_filter($results, fn($r) => !$r['found'])),
+            'successful' => count(array_filter($results, fn ($r) => $r['found'])),
+            'failed' => count(array_filter($results, fn ($r) => ! $r['found'])),
             'results' => $results,
         ];
     }

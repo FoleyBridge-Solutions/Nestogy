@@ -2,8 +2,6 @@
 
 namespace App\Domains\Email\Services\Providers;
 
-use App\Models\Company;
-
 interface EmailProviderInterface
 {
     /**

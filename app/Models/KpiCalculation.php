@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 /**
  * KpiCalculation Model
- * 
+ *
  * Stores calculated KPI values with trend analysis and performance indicators.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $kpi_name
@@ -49,7 +49,7 @@ use Carbon\Carbon;
  */
 class KpiCalculation extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'kpi_calculations';
 
@@ -113,44 +113,65 @@ class KpiCalculation extends Model
 
     // KPI Categories
     const CATEGORY_FINANCIAL = 'financial';
+
     const CATEGORY_CUSTOMER = 'customer';
+
     const CATEGORY_OPERATIONAL = 'operational';
+
     const CATEGORY_GROWTH = 'growth';
+
     const CATEGORY_PROFITABILITY = 'profitability';
 
     // Calculation Periods
     const PERIOD_DAILY = 'daily';
+
     const PERIOD_WEEKLY = 'weekly';
+
     const PERIOD_MONTHLY = 'monthly';
+
     const PERIOD_QUARTERLY = 'quarterly';
+
     const PERIOD_ANNUAL = 'annual';
 
     // Performance Status
     const PERFORMANCE_EXCELLENT = 'excellent';
+
     const PERFORMANCE_GOOD = 'good';
+
     const PERFORMANCE_WARNING = 'warning';
+
     const PERFORMANCE_CRITICAL = 'critical';
 
     // Trend Direction
     const TREND_UP = 'up';
+
     const TREND_DOWN = 'down';
+
     const TREND_STABLE = 'stable';
 
     // Unit Types
     const UNIT_NUMBER = 'number';
+
     const UNIT_PERCENTAGE = 'percentage';
+
     const UNIT_CURRENCY = 'currency';
+
     const UNIT_RATIO = 'ratio';
 
     // Status
     const STATUS_PENDING = 'pending';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_ERROR = 'error';
 
     // Data Completeness
     const DATA_COMPLETE = 'complete';
+
     const DATA_PARTIAL = 'partial';
+
     const DATA_ESTIMATED = 'estimated';
 
     /**
@@ -201,10 +222,10 @@ class KpiCalculation extends Model
 
         if ($previousPeriod) {
             $data['previous_period_value'] = $previousPeriod->kpi_value;
-            
+
             if ($previousPeriod->kpi_value != 0) {
                 $data['trend_percentage'] = (($data['kpi_value'] - $previousPeriod->kpi_value) / abs($previousPeriod->kpi_value)) * 100;
-                
+
                 $data['trend_direction'] = match (true) {
                     $data['trend_percentage'] > 1 => self::TREND_UP,
                     $data['trend_percentage'] < -1 => self::TREND_DOWN,
@@ -240,7 +261,7 @@ class KpiCalculation extends Model
         // If we have a target, use it for performance assessment
         if ($targetValue !== null) {
             $performance = ($value / $targetValue) * 100;
-            
+
             return match (true) {
                 $performance >= 95 => self::PERFORMANCE_EXCELLENT,
                 $performance >= 80 => self::PERFORMANCE_GOOD,
@@ -251,11 +272,11 @@ class KpiCalculation extends Model
 
         // Default performance based on KPI type and trends
         $trendPercentage = $data['trend_percentage'] ?? 0;
-        
+
         // Positive trend KPIs (higher is better)
         $positiveTrendKPIs = [
             'total_revenue', 'mrr', 'arr', 'customer_lifetime_value',
-            'quote_conversion_rate', 'collection_efficiency'
+            'quote_conversion_rate', 'collection_efficiency',
         ];
 
         if (in_array($kpiName, $positiveTrendKPIs)) {
@@ -269,7 +290,7 @@ class KpiCalculation extends Model
 
         // Negative trend KPIs (lower is better)
         $negativeTrendKPIs = ['churn_rate', 'customer_acquisition_cost'];
-        
+
         if (in_array($kpiName, $negativeTrendKPIs)) {
             return match (true) {
                 $trendPercentage < -10 => self::PERFORMANCE_EXCELLENT,
@@ -287,7 +308,7 @@ class KpiCalculation extends Model
      */
     public function meetsTarget(): ?bool
     {
-        if (!$this->target_value) {
+        if (! $this->target_value) {
             return null;
         }
 
@@ -300,9 +321,9 @@ class KpiCalculation extends Model
     public function getFormattedValue(): string
     {
         return match ($this->unit_type) {
-            self::UNIT_PERCENTAGE => number_format($this->kpi_value, 2) . '%',
-            self::UNIT_CURRENCY => '$' . number_format($this->kpi_value, 2),
-            self::UNIT_RATIO => number_format($this->kpi_value, 2) . ':1',
+            self::UNIT_PERCENTAGE => number_format($this->kpi_value, 2).'%',
+            self::UNIT_CURRENCY => '$'.number_format($this->kpi_value, 2),
+            self::UNIT_RATIO => number_format($this->kpi_value, 2).':1',
             default => number_format($this->kpi_value, 2),
         };
     }

@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Domains\Ticket\Models\TimeEntryTemplate;
+use Illuminate\Database\Seeder;
 
 class TimeEntryTemplateSeeder extends Seeder
 {

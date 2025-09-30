@@ -3,23 +3,23 @@
 namespace App\Livewire\Auth;
 
 use App\Providers\RouteServiceProvider;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
-use Laravel\Fortify\Contracts\TwoFactorChallengeViewResponse;
 use Livewire\Component;
 
 class TwoFactorChallenge extends Component
 {
     public string $code = '';
+
     public string $recovery_code = '';
+
     public bool $showingRecoveryForm = false;
 
     public function challenge()
     {
         $user = session('login.user');
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -32,8 +32,9 @@ class TwoFactorChallenge extends Component
             ? $this->resolveRecoveryCode($user, $data['recovery_code'])
             : $this->resolveCode($user, $data['code']);
 
-        if (!$valid) {
+        if (! $valid) {
             $this->addError($this->showingRecoveryForm ? 'recovery_code' : 'code', __('The provided two factor authentication code was invalid.'));
+
             return;
         }
 
@@ -54,15 +55,17 @@ class TwoFactorChallenge extends Component
         foreach (json_decode(decrypt($user->two_factor_recovery_codes), true) as $code) {
             if (hash_equals($code['code'], $recoveryCode)) {
                 $user->replaceRecoveryCode($recoveryCode);
+
                 return true;
             }
         }
+
         return false;
     }
 
     public function toggleRecoveryForm()
     {
-        $this->showingRecoveryForm = !$this->showingRecoveryForm;
+        $this->showingRecoveryForm = ! $this->showingRecoveryForm;
     }
 
     public function render()

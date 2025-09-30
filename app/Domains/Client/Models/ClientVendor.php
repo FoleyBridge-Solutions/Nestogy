@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientVendor extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -156,9 +156,9 @@ class ClientVendor extends Model
      */
     public function scopeNeedingReview($query)
     {
-        return $query->where(function($q) {
+        return $query->where(function ($q) {
             $q->whereNull('next_review_date')
-              ->orWhere('next_review_date', '<=', now());
+                ->orWhere('next_review_date', '<=', now());
         });
     }
 
@@ -168,7 +168,7 @@ class ClientVendor extends Model
     public function scopeContractsExpiringSoon($query, $days = 90)
     {
         return $query->whereNotNull('contract_end_date')
-                    ->whereBetween('contract_end_date', [now(), now()->addDays($days)]);
+            ->whereBetween('contract_end_date', [now(), now()->addDays($days)]);
     }
 
     /**
@@ -176,7 +176,7 @@ class ClientVendor extends Model
      */
     public function needsReview()
     {
-        return !$this->next_review_date || $this->next_review_date->isPast();
+        return ! $this->next_review_date || $this->next_review_date->isPast();
     }
 
     /**
@@ -184,8 +184,8 @@ class ClientVendor extends Model
      */
     public function isContractExpiringSoon($days = 90)
     {
-        return $this->contract_end_date && 
-               $this->contract_end_date->isFuture() && 
+        return $this->contract_end_date &&
+               $this->contract_end_date->isFuture() &&
                $this->contract_end_date->diffInDays(now()) <= $days;
     }
 
@@ -194,14 +194,14 @@ class ClientVendor extends Model
      */
     public function getStatusAttribute()
     {
-        if (!$this->is_approved) {
+        if (! $this->is_approved) {
             return 'pending_approval';
         }
-        
+
         if ($this->relationship_status === 'active' && $this->is_preferred) {
             return 'preferred';
         }
-        
+
         return $this->relationship_status;
     }
 
@@ -259,7 +259,7 @@ class ClientVendor extends Model
         $ratings = array_filter([
             $this->performance_rating,
             $this->reliability_rating,
-            $this->cost_rating
+            $this->cost_rating,
         ]);
 
         return count($ratings) > 0 ? round(array_sum($ratings) / count($ratings), 1) : null;
@@ -270,7 +270,7 @@ class ClientVendor extends Model
      */
     public function getRatingColorAttribute()
     {
-        if (!$this->overall_rating) {
+        if (! $this->overall_rating) {
             return 'secondary';
         }
 

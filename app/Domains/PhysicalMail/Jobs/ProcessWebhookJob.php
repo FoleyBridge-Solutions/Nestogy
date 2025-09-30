@@ -18,6 +18,7 @@ class ProcessWebhookJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
+
     public $backoff = [10, 30, 60];
 
     public function __construct(
@@ -40,7 +41,7 @@ class ProcessWebhookJob implements ShouldQueue
 
             // Process based on webhook type
             $type = $this->webhookData['type'] ?? '';
-            
+
             match (true) {
                 str_starts_with($type, 'letter.') => $this->processLetterWebhook(),
                 str_starts_with($type, 'postcard.') => $this->processPostcardWebhook(),
@@ -75,15 +76,17 @@ class ProcessWebhookJob implements ShouldQueue
         $data = $this->webhookData['data'] ?? [];
         $postgridId = $data['id'] ?? null;
 
-        if (!$postgridId) {
+        if (! $postgridId) {
             Log::warning('Letter webhook missing PostGrid ID');
+
             return;
         }
 
         $order = PhysicalMailOrder::where('postgrid_id', $postgridId)->first();
 
-        if (!$order) {
+        if (! $order) {
             Log::warning('Order not found for PostGrid ID', ['postgrid_id' => $postgridId]);
+
             return;
         }
 
@@ -116,15 +119,16 @@ class ProcessWebhookJob implements ShouldQueue
         $data = $this->webhookData['data'] ?? [];
         $postgridId = $data['id'] ?? null;
 
-        if (!$postgridId) {
+        if (! $postgridId) {
             return;
         }
 
         $contact = PhysicalMailContact::where('postgrid_id', $postgridId)->first();
 
-        if (!$contact) {
+        if (! $contact) {
             // Create new contact from webhook data
             PhysicalMailContact::fromPostGrid($data);
+
             return;
         }
 
@@ -142,7 +146,7 @@ class ProcessWebhookJob implements ShouldQueue
         // Update status
         if (isset($data['status']) && $data['status'] !== $order->status) {
             $updates['status'] = $data['status'];
-            
+
             Log::info('Order status updated via webhook', [
                 'order_id' => $order->id,
                 'old_status' => $order->status,
@@ -164,9 +168,9 @@ class ProcessWebhookJob implements ShouldQueue
         }
 
         // Update tracking number (certified/registered mail)
-        if (isset($data['trackingNumber']) && !$order->tracking_number) {
+        if (isset($data['trackingNumber']) && ! $order->tracking_number) {
             $updates['tracking_number'] = $data['trackingNumber'];
-            
+
             Log::info('Tracking number added via webhook', [
                 'order_id' => $order->id,
                 'tracking_number' => $data['trackingNumber'],
@@ -174,7 +178,7 @@ class ProcessWebhookJob implements ShouldQueue
         }
 
         // Update PDF URL if not set
-        if (isset($data['url']) && !$order->pdf_url) {
+        if (isset($data['url']) && ! $order->pdf_url) {
             $updates['pdf_url'] = $data['url'];
         }
 
@@ -183,7 +187,7 @@ class ProcessWebhookJob implements ShouldQueue
             $updates['cost'] = $data['cost'];
         }
 
-        if (!empty($updates)) {
+        if (! empty($updates)) {
             $order->update($updates);
         }
 
@@ -220,7 +224,7 @@ class ProcessWebhookJob implements ShouldQueue
         // Handle address changes (NCOA)
         if (isset($data['addressChange'])) {
             $updates['address_change'] = $data['addressChange'];
-            
+
             Log::info('Contact address changed via NCOA', [
                 'contact_id' => $contact->id,
                 'old_address' => $contact->address_line1,
@@ -228,7 +232,7 @@ class ProcessWebhookJob implements ShouldQueue
             ]);
         }
 
-        if (!empty($updates)) {
+        if (! empty($updates)) {
             $contact->update($updates);
         }
     }
@@ -261,7 +265,7 @@ class ProcessWebhookJob implements ShouldQueue
      */
     private function fireStatusEvents(PhysicalMailOrder $order, ?string $newStatus): void
     {
-        if (!$newStatus) {
+        if (! $newStatus) {
             return;
         }
 
@@ -269,15 +273,15 @@ class ProcessWebhookJob implements ShouldQueue
             case 'printing':
                 event(new \App\Domains\PhysicalMail\Events\MailOrderPrinting($order));
                 break;
-            
+
             case 'processed_for_delivery':
                 event(new \App\Domains\PhysicalMail\Events\MailOrderProcessed($order));
                 break;
-            
+
             case 'completed':
                 event(new \App\Domains\PhysicalMail\Events\MailOrderDelivered($order));
                 break;
-            
+
             case 'returned_to_sender':
                 event(new \App\Domains\PhysicalMail\Events\MailOrderReturned($order));
                 break;

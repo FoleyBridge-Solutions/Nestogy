@@ -4,10 +4,10 @@ namespace App\Domains\Project\Exceptions;
 
 use App\Exceptions\BaseException;
 use App\Exceptions\BusinessException;
-use App\Exceptions\ValidationException as BaseValidationException;
 use App\Exceptions\NotFoundException as BaseNotFoundException;
 use App\Exceptions\PermissionException as BasePermissionException;
 use App\Exceptions\ServiceException;
+use App\Exceptions\ValidationException as BaseValidationException;
 
 /**
  * Base Project Exception

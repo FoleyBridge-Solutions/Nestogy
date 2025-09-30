@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Domains\Client\Models\ClientITDocumentation;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ClientITDocumentationPolicy
 {
@@ -13,7 +12,7 @@ class ClientITDocumentationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('clients.documents.view') || 
+        return $user->can('clients.documents.view') ||
                $user->isAn(['admin', 'technician']);
     }
 
@@ -36,7 +35,7 @@ class ClientITDocumentationPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('clients.documents.manage') || 
+        return $user->can('clients.documents.manage') ||
                $user->isAn(['admin', 'technician']);
     }
 
@@ -79,7 +78,7 @@ class ClientITDocumentationPolicy
         }
 
         // Only admins can delete, or authors of their own docs
-        return $user->hasRole('admin') || 
+        return $user->hasRole('admin') ||
                ($documentation->authored_by === $user->id && $user->can('clients.documents.manage'));
     }
 
@@ -141,7 +140,7 @@ class ClientITDocumentationPolicy
      */
     public function export(User $user): bool
     {
-        return $user->can('clients.documents.export') || 
+        return $user->can('clients.documents.export') ||
                $user->hasRole('admin');
     }
 
@@ -166,11 +165,11 @@ class ClientITDocumentationPolicy
      */
     protected function canAccessLevel(User $user, string $accessLevel): bool
     {
-        return match($accessLevel) {
+        return match ($accessLevel) {
             'public' => true,
-            'confidential' => $user->isAn(['admin', 'technician']) || 
+            'confidential' => $user->isAn(['admin', 'technician']) ||
                             $user->can('clients.documents.view'),
-            'restricted' => $user->hasRole('admin') || 
+            'restricted' => $user->hasRole('admin') ||
                           $user->can('clients.documents.manage'),
             'admin_only' => $user->hasRole('admin'),
             default => false,

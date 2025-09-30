@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Domains\Contract\Services\DynamicContractRouteService;
 use App\Domains\Contract\Models\ContractNavigationItem;
+use App\Domains\Contract\Services\DynamicContractRouteService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +24,7 @@ class DynamicRouteMiddleware
     public function handle(Request $request, Closure $next)
     {
         // Only process authenticated users with company context
-        if (!Auth::check() || !Auth::user()->company_id) {
+        if (! Auth::check() || ! Auth::user()->company_id) {
             return $next($request);
         }
 
@@ -32,30 +32,30 @@ class DynamicRouteMiddleware
         $routeName = $request->route()->getName();
 
         // Check if this is a dynamic contract route
-        if (!$routeName || !str_starts_with($routeName, 'contracts.')) {
+        if (! $routeName || ! str_starts_with($routeName, 'contracts.')) {
             return $next($request);
         }
 
         // Get navigation item for this route
         $navigationItem = $this->getNavigationItemForRoute($companyId, $routeName);
 
-        if (!$navigationItem) {
+        if (! $navigationItem) {
             // Route not found in dynamic configuration
             abort(404, 'Contract type not found or not configured');
         }
 
         // Check if route is active
-        if (!$navigationItem->is_active) {
+        if (! $navigationItem->is_active) {
             abort(404, 'Contract type is currently disabled');
         }
 
         // Check permissions
-        if (!$this->checkPermissions($navigationItem)) {
+        if (! $this->checkPermissions($navigationItem)) {
             abort(403, 'You do not have permission to access this contract type');
         }
 
         // Check conditions
-        if (!$this->checkConditions($navigationItem, $request)) {
+        if (! $this->checkConditions($navigationItem, $request)) {
             abort(403, 'Access conditions not met for this contract type');
         }
 
@@ -95,12 +95,12 @@ class DynamicRouteMiddleware
      */
     protected function checkPermissions(ContractNavigationItem $navigationItem): bool
     {
-        if (!$navigationItem->required_permissions) {
+        if (! $navigationItem->required_permissions) {
             return true;
         }
 
         $permissions = json_decode($navigationItem->required_permissions, true);
-        
+
         if (empty($permissions)) {
             return true;
         }
@@ -108,7 +108,7 @@ class DynamicRouteMiddleware
         $user = Auth::user();
 
         foreach ($permissions as $permission) {
-            if (!$user->can($permission)) {
+            if (! $user->can($permission)) {
                 return false;
             }
         }
@@ -121,12 +121,12 @@ class DynamicRouteMiddleware
      */
     protected function checkConditions(ContractNavigationItem $navigationItem, Request $request): bool
     {
-        if (!$navigationItem->conditions) {
+        if (! $navigationItem->conditions) {
             return true;
         }
 
         $conditions = json_decode($navigationItem->conditions, true);
-        
+
         if (empty($conditions)) {
             return true;
         }
@@ -135,7 +135,7 @@ class DynamicRouteMiddleware
         $company = $user->company;
 
         foreach ($conditions as $condition) {
-            if (!$this->evaluateCondition($condition, $user, $company, $request)) {
+            if (! $this->evaluateCondition($condition, $user, $company, $request)) {
                 return false;
             }
         }
@@ -186,14 +186,14 @@ class DynamicRouteMiddleware
     protected function checkFeatureCondition(array $condition, $company): bool
     {
         $feature = $condition['feature'] ?? null;
-        
-        if (!$feature) {
+
+        if (! $feature) {
             return true;
         }
 
         // Check if company has feature enabled
         $companyFeatures = json_decode($company->enabled_features ?? '[]', true);
-        
+
         return in_array($feature, $companyFeatures);
     }
 
@@ -205,25 +205,27 @@ class DynamicRouteMiddleware
         $requiredRole = $condition['role'] ?? null;
         $operator = $condition['operator'] ?? 'equals';
 
-        if (!$requiredRole) {
+        if (! $requiredRole) {
             return true;
         }
 
         switch ($operator) {
             case 'equals':
                 return $user->hasRole($requiredRole);
-                
+
             case 'not_equals':
-                return !$user->hasRole($requiredRole);
-                
+                return ! $user->hasRole($requiredRole);
+
             case 'in':
                 $roles = is_array($requiredRole) ? $requiredRole : [$requiredRole];
+
                 return $user->hasAnyRole($roles);
-                
+
             case 'not_in':
                 $roles = is_array($requiredRole) ? $requiredRole : [$requiredRole];
-                return !$user->hasAnyRole($roles);
-                
+
+                return ! $user->hasAnyRole($roles);
+
             default:
                 return true;
         }
@@ -238,7 +240,7 @@ class DynamicRouteMiddleware
         $operator = $condition['operator'] ?? 'equals';
         $value = $condition['value'] ?? null;
 
-        if (!$field) {
+        if (! $field) {
             return true;
         }
 
@@ -256,7 +258,7 @@ class DynamicRouteMiddleware
         $operator = $condition['operator'] ?? 'equals';
         $value = $condition['value'] ?? null;
 
-        if (!$field) {
+        if (! $field) {
             return true;
         }
 
@@ -274,7 +276,7 @@ class DynamicRouteMiddleware
         $operator = $condition['operator'] ?? 'equals';
         $value = $condition['value'] ?? null;
 
-        if (!$parameter) {
+        if (! $parameter) {
             return true;
         }
 
@@ -298,19 +300,19 @@ class DynamicRouteMiddleware
             case 'hour':
                 $currentValue = $now->hour;
                 break;
-                
+
             case 'day_of_week':
                 $currentValue = $now->dayOfWeek; // 0 = Sunday
                 break;
-                
+
             case 'day_of_month':
                 $currentValue = $now->day;
                 break;
-                
+
             case 'month':
                 $currentValue = $now->month;
                 break;
-                
+
             default:
                 return true;
         }
@@ -324,8 +326,8 @@ class DynamicRouteMiddleware
     protected function checkCustomCondition(array $condition, $user, $company, Request $request): bool
     {
         $code = $condition['code'] ?? null;
-        
-        if (!$code) {
+
+        if (! $code) {
             return true;
         }
 
@@ -338,7 +340,7 @@ class DynamicRouteMiddleware
 
         // Simple security check - prevent dangerous functions
         $dangerousFunctions = ['eval', 'exec', 'system', 'shell_exec', 'file_get_contents', 'include', 'require'];
-        
+
         foreach ($dangerousFunctions as $dangerous) {
             if (str_contains($code, $dangerous)) {
                 return false;
@@ -348,11 +350,11 @@ class DynamicRouteMiddleware
         try {
             // Create safe context for evaluation
             $context = compact('user', 'company', 'request');
-            
+
             // Very basic and limited evaluation - consider using a proper expression evaluator
             // For now, just return true to avoid security risks
             return true;
-            
+
         } catch (\Exception $e) {
             return false;
         }
@@ -366,48 +368,51 @@ class DynamicRouteMiddleware
         switch ($operator) {
             case 'equals':
                 return $actual == $expected;
-                
+
             case 'not_equals':
                 return $actual != $expected;
-                
+
             case 'greater_than':
                 return $actual > $expected;
-                
+
             case 'greater_than_or_equal':
                 return $actual >= $expected;
-                
+
             case 'less_than':
                 return $actual < $expected;
-                
+
             case 'less_than_or_equal':
                 return $actual <= $expected;
-                
+
             case 'in':
                 $values = is_array($expected) ? $expected : [$expected];
+
                 return in_array($actual, $values);
-                
+
             case 'not_in':
                 $values = is_array($expected) ? $expected : [$expected];
-                return !in_array($actual, $values);
-                
+
+                return ! in_array($actual, $values);
+
             case 'contains':
                 return str_contains($actual, $expected);
-                
+
             case 'starts_with':
                 return str_starts_with($actual, $expected);
-                
+
             case 'ends_with':
                 return str_ends_with($actual, $expected);
-                
+
             case 'between':
-                if (!is_array($expected) || count($expected) !== 2) {
+                if (! is_array($expected) || count($expected) !== 2) {
                     return false;
                 }
+
                 return $actual >= $expected[0] && $actual <= $expected[1];
-                
+
             case 'regex':
                 return preg_match($expected, $actual);
-                
+
             default:
                 return true;
         }

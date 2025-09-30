@@ -22,12 +22,12 @@ return new class extends Migration
             $table->timestamp('last_modified_at')->nullable();
             $table->unsignedBigInteger('last_modified_by')->nullable();
             $table->timestamps();
-            
+
             // Indexes
             $table->index(['company_id', 'domain']);
             $table->index(['company_id', 'domain', 'category']);
             $table->unique(['company_id', 'domain', 'category'], 'unique_company_domain_category');
-            
+
             // Foreign keys
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('last_modified_by')->references('id')->on('users')->onDelete('set null');

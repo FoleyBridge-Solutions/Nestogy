@@ -19,7 +19,7 @@ return new class extends Migration
         Schema::dropIfExists('user_widget_instances');
         Schema::dropIfExists('user_dashboard_configs');
         Schema::dropIfExists('dashboard_widgets');
-        
+
         // Dashboard widget definitions
         Schema::create('dashboard_widgets', function (Blueprint $table) {
             $table->id();
@@ -51,7 +51,7 @@ return new class extends Migration
             $table->boolean('is_default')->default(false);
             $table->boolean('is_shared')->default(false);
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'dashboard_name']);
             $table->index(['company_id', 'is_shared']);
         });
@@ -72,7 +72,7 @@ return new class extends Migration
             $table->boolean('is_visible')->default(true);
             $table->boolean('is_collapsed')->default(false);
             $table->timestamps();
-            
+
             $table->index('instance_id');
         });
 
@@ -91,7 +91,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->integer('usage_count')->default(0);
             $table->timestamps();
-            
+
             $table->index(['company_id', 'role']);
         });
 
@@ -105,7 +105,7 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamp('expires_at');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'widget_type']);
             $table->index('expires_at');
         });
@@ -122,7 +122,7 @@ return new class extends Migration
             $table->json('breakdown')->nullable(); // Detailed breakdown
             $table->timestamp('calculated_at');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'metric_key', 'calculated_at']);
         });
 
@@ -136,7 +136,7 @@ return new class extends Migration
             $table->string('ip_address')->nullable();
             $table->string('user_agent')->nullable();
             $table->timestamps();
-            
+
             $table->index(['user_id', 'created_at']);
         });
     }

@@ -24,16 +24,16 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->boolean('is_resolution')->default(false);
             $table->unsignedBigInteger('time_entry_id')->nullable();
-            
+
             // Sentiment analysis fields (matching ticket_replies)
             $table->decimal('sentiment_score', 3, 2)->nullable();
             $table->enum('sentiment_label', ['POSITIVE', 'WEAK_POSITIVE', 'NEUTRAL', 'WEAK_NEGATIVE', 'NEGATIVE'])->nullable();
             $table->timestamp('sentiment_analyzed_at')->nullable();
             $table->decimal('sentiment_confidence', 3, 2)->nullable();
-            
+
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes
             $table->index('ticket_id');
             $table->index('company_id');

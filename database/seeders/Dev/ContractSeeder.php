@@ -2,11 +2,11 @@
 
 namespace Database\Seeders\Dev;
 
-use Illuminate\Database\Seeder;
 use App\Domains\Contract\Models\Contract;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class ContractSeeder extends Seeder
 {
@@ -16,23 +16,23 @@ class ContractSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('Starting Contract Seeder...');
-        
+
         // Skip root company
         $companies = Company::where('id', '>', 1)->get();
-        
+
         foreach ($companies as $company) {
             $this->command->info("Creating contracts for company: {$company->name}");
-            
+
             $clients = Client::where('company_id', $company->id)
-                            ->where('status', 'active')
-                            ->get();
-            
+                ->where('status', 'active')
+                ->get();
+
             $users = User::where('company_id', $company->id)->get();
-            
+
             if ($users->isEmpty()) {
                 continue;
             }
-            
+
             foreach ($clients as $client) {
                 // Most active clients should have at least one contract
                 if (fake()->boolean(80)) {
@@ -43,7 +43,7 @@ class ContractSeeder extends Seeder
                             'created_by' => $users->random()->id,
                         ])
                         ->create();
-                    
+
                     // Some clients have multiple contracts
                     if (fake()->boolean(30)) {
                         Contract::factory()
@@ -56,10 +56,10 @@ class ContractSeeder extends Seeder
                     }
                 }
             }
-            
+
             $this->command->info("Completed contracts for company: {$company->name}");
         }
-        
+
         $this->command->info('Contract Seeder completed!');
     }
 }

@@ -4,10 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\Client;
 use App\Models\CommunicationLog;
-use App\Models\Contact;
 use App\Models\User;
-use Illuminate\Database\Seeder;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class CommunicationLogSeeder extends Seeder
 {
@@ -18,6 +17,7 @@ class CommunicationLogSeeder extends Seeder
 
         if ($clients->isEmpty() || $users->isEmpty()) {
             $this->command->warn('No clients or users found. Skipping communication log seeding.');
+
             return;
         }
 
@@ -88,14 +88,14 @@ class CommunicationLogSeeder extends Seeder
         foreach ($clients as $client) {
             // Get contacts for this client
             $contacts = $client->contacts()->limit(2)->get();
-            
+
             // Create 3-5 communications per client
             $numCommunications = rand(3, 5);
             $selectedCommunications = array_slice($sampleCommunications, 0, $numCommunications);
-            
+
             foreach ($selectedCommunications as $communication) {
                 $contact = $contacts->isNotEmpty() ? $contacts->random() : null;
-                
+
                 CommunicationLog::create(array_merge($communication, [
                     'client_id' => $client->id,
                     'user_id' => $users->random()->id,

@@ -28,9 +28,6 @@ class ContractRenewalSummary extends Mailable
 
     /**
      * Create a new message instance.
-     *
-     * @param array $results
-     * @param bool $isDryRun
      */
     public function __construct(array $results, bool $isDryRun = false)
     {
@@ -45,7 +42,7 @@ class ContractRenewalSummary extends Mailable
     {
         $prefix = $this->isDryRun ? '[DRY RUN] ' : '';
         $status = empty($this->results['errors']) ? 'Success' : 'Completed with Errors';
-        
+
         return new Envelope(
             subject: "{$prefix}Contract Renewal Processing Summary - {$status}",
         );
@@ -61,7 +58,7 @@ class ContractRenewalSummary extends Mailable
             with: [
                 'results' => $this->results,
                 'isDryRun' => $this->isDryRun,
-                'hasErrors' => !empty($this->results['errors']),
+                'hasErrors' => ! empty($this->results['errors']),
                 'successRate' => $this->calculateSuccessRate(),
                 'revenueImpact' => $this->results['revenue_impact'] ?? 0,
                 'executionTime' => $this->results['execution_time'] ?? 0,
@@ -71,17 +68,15 @@ class ContractRenewalSummary extends Mailable
 
     /**
      * Calculate success rate
-     *
-     * @return float
      */
     protected function calculateSuccessRate(): float
     {
         $total = ($this->results['renewed'] ?? 0) + ($this->results['failed'] ?? 0);
-        
+
         if ($total === 0) {
             return 100.0;
         }
-        
+
         return round((($this->results['renewed'] ?? 0) / $total) * 100, 2);
     }
 

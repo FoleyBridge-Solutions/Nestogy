@@ -2,11 +2,11 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\Product;
-use App\Models\Service;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Product;
+use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -29,14 +29,14 @@ class BillingService
 
         for ($i = 0; $i < $periods; $i++) {
             $billingDate = $this->getNextBillingDate($currentDate, $product->billing_cycle);
-            
+
             $schedule[] = [
                 'period' => $i + 1,
                 'billing_date' => $billingDate->format('Y-m-d'),
                 'due_date' => $billingDate->copy()->addDays($product->payment_terms ?? 30)->format('Y-m-d'),
                 'amount' => $product->base_price,
                 'billing_cycle' => $product->billing_cycle,
-                'description' => $this->generateBillingDescription($product, $billingDate)
+                'description' => $this->generateBillingDescription($product, $billingDate),
             ];
 
             $currentDate = $billingDate;
@@ -48,20 +48,20 @@ class BillingService
     /**
      * Calculate prorated amount for partial period
      */
-    public function calculateProratedAmount(Product $product, Carbon $startDate, Carbon $endDate = null): array
+    public function calculateProratedAmount(Product $product, Carbon $startDate, ?Carbon $endDate = null): array
     {
         if ($product->billing_model !== 'subscription') {
             return [
                 'amount' => $product->base_price,
                 'days' => 0,
-                'is_prorated' => false
+                'is_prorated' => false,
             ];
         }
 
         $endDate = $endDate ?? $this->getNextBillingDate($startDate, $product->billing_cycle);
         $totalDays = $this->getBillingCycleDays($product->billing_cycle);
         $usedDays = $startDate->diffInDays($endDate);
-        
+
         $proratedAmount = ($product->base_price / $totalDays) * $usedDays;
 
         return [
@@ -70,7 +70,7 @@ class BillingService
             'total_days' => $totalDays,
             'is_prorated' => true,
             'start_date' => $startDate->format('Y-m-d'),
-            'end_date' => $endDate->format('Y-m-d')
+            'end_date' => $endDate->format('Y-m-d'),
         ];
     }
 
@@ -112,14 +112,14 @@ class BillingService
             'base_amount' => $baseAmount,
             'overage_amount' => $overage,
             'total_amount' => $total,
-            'unit_type' => $product->unit_type ?? 'units'
+            'unit_type' => $product->unit_type ?? 'units',
         ];
     }
 
     /**
      * Process recurring billing for subscriptions
      */
-    public function processRecurringBilling(Carbon $billingDate = null): Collection
+    public function processRecurringBilling(?Carbon $billingDate = null): Collection
     {
         $billingDate = $billingDate ?? Carbon::today();
         $invoices = collect();
@@ -135,7 +135,7 @@ class BillingService
                 // Log billing failure
                 \Log::error('Recurring billing failed', [
                     'subscription_id' => $subscription->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -150,11 +150,11 @@ class BillingService
     {
         $product = $subscription->product;
         $client = $subscription->client;
-        
+
         // Calculate pricing
         $pricing = $this->pricingService->calculatePrice(
-            $product, 
-            $client, 
+            $product,
+            $client,
             $subscription->quantity ?? 1
         );
 
@@ -170,7 +170,7 @@ class BillingService
             'total' => $pricing['total'],
             'status' => 'draft',
             'type' => 'subscription',
-            'notes' => 'Recurring billing for ' . $product->name
+            'notes' => 'Recurring billing for '.$product->name,
         ]);
 
         // Add invoice items
@@ -182,7 +182,7 @@ class BillingService
             'unit_price' => $pricing['unit_price'],
             'subtotal' => $pricing['subtotal'],
             'tax' => $pricing['tax'],
-            'total' => $pricing['total']
+            'total' => $pricing['total'],
         ]);
 
         return $invoice;
@@ -191,7 +191,7 @@ class BillingService
     /**
      * Handle service setup fees
      */
-    public function calculateServiceSetupFees(Service $service, Client $client = null): array
+    public function calculateServiceSetupFees(Service $service, ?Client $client = null): array
     {
         $fees = [];
         $totalSetupCost = 0;
@@ -200,22 +200,22 @@ class BillingService
         if ($service->has_setup_fee) {
             $fees[] = [
                 'type' => 'setup_fee',
-                'description' => 'Setup fee for ' . $service->product->name,
+                'description' => 'Setup fee for '.$service->product->name,
                 'amount' => $service->setup_fee,
-                'is_one_time' => true
+                'is_one_time' => true,
             ];
             $totalSetupCost += $service->setup_fee;
         }
 
         // Additional fees based on requirements
-        if (!empty($service->requirements)) {
+        if (! empty($service->requirements)) {
             foreach ($service->requirements as $requirement) {
                 if (isset($requirement['has_fee']) && $requirement['has_fee']) {
                     $fees[] = [
                         'type' => 'requirement_fee',
                         'description' => $requirement['description'] ?? 'Additional requirement',
                         'amount' => $requirement['fee'] ?? 0,
-                        'is_one_time' => true
+                        'is_one_time' => true,
                     ];
                     $totalSetupCost += $requirement['fee'] ?? 0;
                 }
@@ -225,7 +225,7 @@ class BillingService
         return [
             'fees' => $fees,
             'total_setup_cost' => $totalSetupCost,
-            'has_setup_fees' => $totalSetupCost > 0
+            'has_setup_fees' => $totalSetupCost > 0,
         ];
     }
 
@@ -234,19 +234,19 @@ class BillingService
      */
     public function calculateEarlyTerminationFee(Service $service, Carbon $startDate, Carbon $terminationDate): float
     {
-        if (!$service->hasMinimumCommitment()) {
+        if (! $service->hasMinimumCommitment()) {
             return 0;
         }
 
         $commitmentEndDate = $startDate->copy()->addMonths($service->minimum_commitment_months);
-        
+
         if ($terminationDate >= $commitmentEndDate) {
             return 0; // No early termination fee
         }
 
         // Calculate remaining months
         $remainingMonths = $terminationDate->diffInMonths($commitmentEndDate);
-        
+
         // Calculate fee based on remaining commitment
         $monthlyRate = $service->product->base_price;
         $terminationFee = $monthlyRate * $remainingMonths * 0.5; // 50% of remaining value
@@ -259,7 +259,7 @@ class BillingService
      */
     protected function getNextBillingDate(Carbon $currentDate, string $billingCycle): Carbon
     {
-        return match($billingCycle) {
+        return match ($billingCycle) {
             'weekly' => $currentDate->copy()->addWeek(),
             'monthly' => $currentDate->copy()->addMonth(),
             'quarterly' => $currentDate->copy()->addMonths(3),
@@ -274,7 +274,7 @@ class BillingService
      */
     protected function getBillingCycleDays(string $billingCycle): int
     {
-        return match($billingCycle) {
+        return match ($billingCycle) {
             'weekly' => 7,
             'monthly' => 30,
             'quarterly' => 90,
@@ -289,16 +289,16 @@ class BillingService
      */
     protected function generateBillingDescription(Product $product, Carbon $billingDate): string
     {
-        $period = match($product->billing_cycle) {
-            'weekly' => 'Week of ' . $billingDate->format('M d, Y'),
+        $period = match ($product->billing_cycle) {
+            'weekly' => 'Week of '.$billingDate->format('M d, Y'),
             'monthly' => $billingDate->format('F Y'),
-            'quarterly' => 'Q' . $billingDate->quarter . ' ' . $billingDate->year,
-            'semi-annually' => ($billingDate->month <= 6 ? 'First' : 'Second') . ' Half ' . $billingDate->year,
-            'annually' => 'Year ' . $billingDate->year,
+            'quarterly' => 'Q'.$billingDate->quarter.' '.$billingDate->year,
+            'semi-annually' => ($billingDate->month <= 6 ? 'First' : 'Second').' Half '.$billingDate->year,
+            'annually' => 'Year '.$billingDate->year,
             default => $billingDate->format('M d, Y')
         };
 
-        return $product->name . ' - ' . $period;
+        return $product->name.' - '.$period;
     }
 
     /**
@@ -313,7 +313,7 @@ class BillingService
             ->first();
 
         $sequence = $lastInvoice ? (intval(substr($lastInvoice->invoice_number, -4)) + 1) : 1;
-        
+
         return sprintf('%s-%d-%04d', $prefix, $year, $sequence);
     }
 
@@ -330,14 +330,14 @@ class BillingService
     /**
      * Calculate billing for product bundles
      */
-    public function calculateBundleBilling($bundle, array $selectedProducts, Client $client = null): array
+    public function calculateBundleBilling($bundle, array $selectedProducts, ?Client $client = null): array
     {
         $bundlePricing = $this->pricingService->calculateBundlePrice($bundle, $selectedProducts, $client);
-        
+
         $items = [];
         foreach ($bundlePricing['items'] as $item) {
             $product = Product::find($item['product_id']);
-            
+
             $items[] = [
                 'product_id' => $item['product_id'],
                 'product_name' => $item['product_name'],
@@ -345,7 +345,7 @@ class BillingService
                 'unit_price' => $item['bundle_price'],
                 'subtotal' => $item['bundle_price'] * $item['quantity'],
                 'is_bundle_item' => true,
-                'bundle_id' => $bundle->id
+                'bundle_id' => $bundle->id,
             ];
         }
 
@@ -353,12 +353,12 @@ class BillingService
             'bundle' => [
                 'id' => $bundle->id,
                 'name' => $bundle->name,
-                'type' => $bundle->bundle_type
+                'type' => $bundle->bundle_type,
             ],
             'items' => $items,
             'subtotal' => $bundlePricing['bundle_price'],
             'savings' => $bundlePricing['savings'],
-            'total' => $bundlePricing['bundle_price']
+            'total' => $bundlePricing['bundle_price'],
         ];
     }
 }

@@ -2,22 +2,19 @@
 
 namespace App\Domains\Contract\Controllers;
 
-use App\Http\Controllers\Controller;
-
 use App\Domains\Contract\Models\ContractTemplate;
-use App\Domains\Contract\Services\ContractTemplateService;
 use App\Domains\Contract\Requests\StoreContractTemplateRequest;
-use App\Domains\Contract\Requests\UpdateContractTemplateRequest;
+use App\Domains\Contract\Services\ContractTemplateService;
 use App\Domains\Core\Controllers\BaseResourceController;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 /**
  * ContractTemplateController
- * 
+ *
  * Handles CRUD operations for contract templates following Nestogy's patterns
  */
 class ContractTemplateController extends BaseResourceController
@@ -43,14 +40,14 @@ class ContractTemplateController extends BaseResourceController
     public function index(Request $request): View|JsonResponse
     {
         $this->authorize('viewAny', ContractTemplate::class);
-        
+
         $filters = array_merge(
             $this->defaultFilters,
             $request->only($this->getAllowedFilters())
         );
-        
+
         $templates = $this->service->getPaginated($filters, $this->perPage);
-        
+
         if ($request->expectsJson()) {
             return response()->json([
                 'data' => $templates->items(),
@@ -59,7 +56,7 @@ class ContractTemplateController extends BaseResourceController
                     'last_page' => $templates->lastPage(),
                     'per_page' => $templates->perPage(),
                     'total' => $templates->total(),
-                ]
+                ],
             ]);
         }
 
@@ -70,7 +67,7 @@ class ContractTemplateController extends BaseResourceController
         return view('settings.contract-templates.index', compact(
             'templates',
             'availableTypes',
-            'availableCategories', 
+            'availableCategories',
             'availableStatuses'
         ));
     }
@@ -95,15 +92,15 @@ class ContractTemplateController extends BaseResourceController
     public function store(FormRequest $request): RedirectResponse|JsonResponse
     {
         $this->authorize('create', $this->getModelClass());
-        
+
         // Create and validate using our specific request class
         $storeRequest = StoreContractTemplateRequest::createFrom($request);
         $storeRequest->setContainer(app());
         $storeRequest->validateResolved();
-        
+
         try {
             $template = $this->service->create($storeRequest->validated());
-            
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Contract template created successfully.',
@@ -114,18 +111,18 @@ class ContractTemplateController extends BaseResourceController
             return redirect()
                 ->route('settings.contract-templates.show', $template)
                 ->with('success', 'Contract template created successfully.');
-                
+
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Failed to create contract template',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ], 422);
             }
-            
+
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Failed to create contract template: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to create contract template: '.$e->getMessage()]);
         }
     }
 
@@ -143,7 +140,7 @@ class ContractTemplateController extends BaseResourceController
 
         return view('settings.contract-templates.show', compact(
             'template',
-            'statistics', 
+            'statistics',
             'validationErrors'
         ));
     }
@@ -171,10 +168,10 @@ class ContractTemplateController extends BaseResourceController
     {
         $template = $this->service->findByIdOrFail($id);
         $this->authorize('update', $template);
-        
+
         try {
             $template = $this->service->updateTemplate($template, $request->validated());
-            
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Contract template updated successfully.',
@@ -185,18 +182,18 @@ class ContractTemplateController extends BaseResourceController
             return redirect()
                 ->route('settings.contract-templates.show', $template)
                 ->with('success', 'Contract template updated successfully.');
-                
+
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Failed to update contract template',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ], 422);
             }
-            
+
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Failed to update contract template: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to update contract template: '.$e->getMessage()]);
         }
     }
 
@@ -207,7 +204,7 @@ class ContractTemplateController extends BaseResourceController
 
         try {
             $this->service->deleteTemplate($template);
-            
+
             if (request()->expectsJson()) {
                 return response()->json([
                     'message' => 'Contract template deleted successfully.',
@@ -217,17 +214,17 @@ class ContractTemplateController extends BaseResourceController
             return redirect()
                 ->route('settings.contract-templates.index')
                 ->with('success', 'Contract template deleted successfully.');
-                
+
         } catch (\Exception $e) {
             if (request()->expectsJson()) {
                 return response()->json([
                     'message' => 'Failed to delete contract template',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ], 422);
             }
-            
+
             return back()
-                ->withErrors(['error' => 'Failed to delete contract template: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to delete contract template: '.$e->getMessage()]);
         }
     }
 
@@ -241,7 +238,7 @@ class ContractTemplateController extends BaseResourceController
 
         $template = $this->service->toggleDefault($template);
 
-        $message = $template->is_default 
+        $message = $template->is_default
             ? 'Template set as default successfully.'
             : 'Template removed as default successfully.';
 
@@ -303,7 +300,7 @@ class ContractTemplateController extends BaseResourceController
 
         return response()->json([
             'valid' => empty($validationErrors),
-            'errors' => $validationErrors
+            'errors' => $validationErrors,
         ]);
     }
 

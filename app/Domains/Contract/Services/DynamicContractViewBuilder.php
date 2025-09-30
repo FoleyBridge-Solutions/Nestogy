@@ -2,16 +2,15 @@
 
 namespace App\Domains\Contract\Services;
 
+use App\Domains\Contract\Models\ContractDetailConfiguration;
+use App\Domains\Contract\Models\ContractListConfiguration;
 use App\Domains\Contract\Models\ContractTypeDefinition;
 use App\Domains\Contract\Models\ContractViewDefinition;
-use App\Domains\Contract\Models\ContractListConfiguration;
-use App\Domains\Contract\Models\ContractDetailConfiguration;
-use App\Domains\Contract\Models\ContractFieldDefinition;
 use Illuminate\Support\Facades\Auth;
 
 /**
  * DynamicContractViewBuilder
- * 
+ *
  * Builds dynamic views for contract display based on company-specific
  * configuration. Handles index, show, edit views and their layouts.
  */
@@ -23,7 +22,7 @@ class DynamicContractViewBuilder
     public function buildIndexView(string $contractType): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -31,7 +30,7 @@ class DynamicContractViewBuilder
             ->where('slug', $contractType)
             ->first();
 
-        if (!$typeDefinition) {
+        if (! $typeDefinition) {
             throw new \Exception("Contract type '{$contractType}' not found");
         }
 
@@ -70,17 +69,17 @@ class DynamicContractViewBuilder
     public function buildDetailView($contract): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
         $contractType = $contract->contract_type;
-        
+
         $typeDefinition = ContractTypeDefinition::where('company_id', $user->company_id)
             ->where('slug', $contractType)
             ->first();
 
-        if (!$typeDefinition) {
+        if (! $typeDefinition) {
             throw new \Exception("Contract type '{$contractType}' not found");
         }
 
@@ -113,10 +112,10 @@ class DynamicContractViewBuilder
     /**
      * Build dashboard widgets configuration
      */
-    public function buildDashboardWidgets(string $contractType = null): array
+    public function buildDashboardWidgets(?string $contractType = null): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -128,7 +127,7 @@ class DynamicContractViewBuilder
         if ($contractType) {
             $query->where(function ($q) use ($contractType) {
                 $q->whereNull('contract_types_filter')
-                  ->orWhereJsonContains('contract_types_filter', $contractType);
+                    ->orWhereJsonContains('contract_types_filter', $contractType);
             });
         }
 
@@ -168,7 +167,7 @@ class DynamicContractViewBuilder
     protected function buildFilters(string $contractType, $listConfig): array
     {
         $filters = $listConfig?->getFiltersConfig() ?? [];
-        
+
         // Get dynamic status options
         $statusDefinitions = \App\Domains\Contract\Models\ContractStatusDefinition::where('company_id', Auth::user()->company_id)
             ->active()
@@ -196,7 +195,7 @@ class DynamicContractViewBuilder
     protected function buildDetailSections($contract, $detailConfig): array
     {
         $sections = $detailConfig?->getSectionsConfig() ?? $this->getDefaultDetailSections();
-        
+
         // Process sections and populate with contract data
         foreach ($sections as &$section) {
             if (isset($section['fields'])) {
@@ -303,7 +302,7 @@ class DynamicContractViewBuilder
     protected function buildIndexActions(string $contractType, $viewDefinition): array
     {
         $actions = $viewDefinition?->getActionsConfig() ?? [];
-        
+
         // Add default create action
         $actions[] = [
             'label' => 'Create Contract',
@@ -322,7 +321,7 @@ class DynamicContractViewBuilder
     protected function buildDetailActions($contract, $viewDefinition): array
     {
         $actions = $viewDefinition?->getActionsConfig() ?? [];
-        
+
         // Add default actions
         $defaultActions = [
             [

@@ -3,21 +3,20 @@
 namespace App\Domains\Financial\Controllers;
 
 use App\Http\Controllers\Controller;
-
-use App\Models\TaxCalculation;
-use App\Models\ServiceTaxRate;
-use App\Models\TaxProfile;
-use App\Models\TaxJurisdiction;
 use App\Models\Invoice;
 use App\Models\Quote;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use App\Models\ServiceTaxRate;
+use App\Models\TaxCalculation;
+use App\Models\TaxJurisdiction;
+use App\Models\TaxProfile;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Tax Reporting Controller
- * 
+ *
  * Provides comprehensive tax reporting capabilities including
  * tax summaries, compliance reports, jurisdiction analysis, and performance metrics.
  */
@@ -35,10 +34,10 @@ class TaxReportController extends Controller
     {
         $companyId = auth()->user()->company_id;
         $dateRange = $this->getDateRange($request);
-        
+
         // Get summary statistics
         $stats = $this->getTaxSummaryStats($companyId, $dateRange);
-        
+
         // Get recent tax calculations
         $recentCalculations = TaxCalculation::where('company_id', $companyId)
             ->whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
@@ -46,13 +45,13 @@ class TaxReportController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
-        
+
         // Get jurisdiction breakdown
         $jurisdictionBreakdown = $this->getJurisdictionBreakdown($companyId, $dateRange);
-        
+
         // Get engine performance metrics
         $engineMetrics = $this->getEnginePerformanceMetrics($companyId, $dateRange);
-        
+
         return view('reports.tax.index', compact(
             'stats',
             'recentCalculations',
@@ -70,19 +69,19 @@ class TaxReportController extends Controller
         $companyId = auth()->user()->company_id;
         $dateRange = $this->getDateRange($request);
         $groupBy = $request->input('group_by', 'month'); // month, week, day
-        
+
         // Get tax calculations grouped by time period
         $taxData = $this->getTaxDataGrouped($companyId, $dateRange, $groupBy);
-        
+
         // Get tax breakdown by type
         $taxTypeBreakdown = $this->getTaxTypeBreakdown($companyId, $dateRange);
-        
+
         // Get top jurisdictions by tax amount
         $topJurisdictions = $this->getTopJurisdictions($companyId, $dateRange);
-        
+
         // Get invoice vs quote tax comparison
         $invoiceQuoteComparison = $this->getInvoiceQuoteComparison($companyId, $dateRange);
-        
+
         return view('reports.tax.summary', compact(
             'taxData',
             'taxTypeBreakdown',
@@ -101,7 +100,7 @@ class TaxReportController extends Controller
         $companyId = auth()->user()->company_id;
         $dateRange = $this->getDateRange($request);
         $jurisdictionId = $request->input('jurisdiction_id');
-        
+
         // Get all jurisdictions for the company
         $jurisdictions = TaxJurisdiction::where('company_id', $companyId)
             ->withCount(['taxRates' => function ($query) {
@@ -110,17 +109,17 @@ class TaxReportController extends Controller
             ->orderBy('state')
             ->orderBy('name')
             ->get();
-        
+
         // Get detailed jurisdiction data
         $jurisdictionData = [];
         if ($jurisdictionId) {
             $selectedJurisdiction = $jurisdictions->find($jurisdictionId);
             $jurisdictionData = $this->getJurisdictionDetailedData($companyId, $jurisdictionId, $dateRange);
         }
-        
+
         // Get jurisdiction summary for all jurisdictions
         $jurisdictionSummary = $this->getJurisdictionSummary($companyId, $dateRange);
-        
+
         return view('reports.tax.jurisdictions', compact(
             'jurisdictions',
             'jurisdictionData',
@@ -137,19 +136,19 @@ class TaxReportController extends Controller
     {
         $companyId = auth()->user()->company_id;
         $dateRange = $this->getDateRange($request);
-        
+
         // Get tax compliance data
         $complianceData = $this->getComplianceData($companyId, $dateRange);
-        
+
         // Get exemption usage
         $exemptionUsage = $this->getExemptionUsage($companyId, $dateRange);
-        
+
         // Get calculation errors and issues
         $calculationIssues = $this->getCalculationIssues($companyId, $dateRange);
-        
+
         // Get rate changes during period
         $rateChanges = $this->getRateChanges($companyId, $dateRange);
-        
+
         return view('reports.tax.compliance', compact(
             'complianceData',
             'exemptionUsage',
@@ -166,19 +165,19 @@ class TaxReportController extends Controller
     {
         $companyId = auth()->user()->company_id;
         $dateRange = $this->getDateRange($request);
-        
+
         // Get calculation performance metrics
         $performanceMetrics = $this->getDetailedPerformanceMetrics($companyId, $dateRange);
-        
+
         // Get error rate analysis
         $errorAnalysis = $this->getErrorAnalysis($companyId, $dateRange);
-        
+
         // Get cache performance
         $cacheMetrics = $this->getCachePerformanceMetrics($companyId);
-        
+
         // Get engine comparison
         $engineComparison = $this->getEngineComparison($companyId, $dateRange);
-        
+
         return view('reports.tax.performance', compact(
             'performanceMetrics',
             'errorAnalysis',
@@ -197,7 +196,7 @@ class TaxReportController extends Controller
         $format = $request->input('format', 'csv');
         $companyId = auth()->user()->company_id;
         $dateRange = $this->getDateRange($request);
-        
+
         switch ($type) {
             case 'summary':
                 return $this->exportSummaryReport($companyId, $dateRange, $format);
@@ -220,7 +219,7 @@ class TaxReportController extends Controller
         $companyId = auth()->user()->company_id;
         $type = $request->input('type');
         $dateRange = $this->getDateRange($request);
-        
+
         switch ($type) {
             case 'tax_trend':
                 return response()->json($this->getTaxTrendData($companyId, $dateRange));
@@ -240,49 +239,49 @@ class TaxReportController extends Controller
     private function getDateRange(Request $request): array
     {
         $period = $request->input('period', '30_days');
-        
+
         switch ($period) {
             case '7_days':
                 return [
                     'start' => now()->subDays(7)->startOfDay(),
                     'end' => now()->endOfDay(),
-                    'label' => 'Last 7 days'
+                    'label' => 'Last 7 days',
                 ];
             case '30_days':
                 return [
                     'start' => now()->subDays(30)->startOfDay(),
                     'end' => now()->endOfDay(),
-                    'label' => 'Last 30 days'
+                    'label' => 'Last 30 days',
                 ];
             case '90_days':
                 return [
                     'start' => now()->subDays(90)->startOfDay(),
                     'end' => now()->endOfDay(),
-                    'label' => 'Last 90 days'
+                    'label' => 'Last 90 days',
                 ];
             case 'current_month':
                 return [
                     'start' => now()->startOfMonth(),
                     'end' => now()->endOfMonth(),
-                    'label' => 'Current month'
+                    'label' => 'Current month',
                 ];
             case 'last_month':
                 return [
                     'start' => now()->subMonth()->startOfMonth(),
                     'end' => now()->subMonth()->endOfMonth(),
-                    'label' => 'Last month'
+                    'label' => 'Last month',
                 ];
             case 'custom':
                 return [
                     'start' => Carbon::parse($request->input('start_date', now()->subDays(30)))->startOfDay(),
                     'end' => Carbon::parse($request->input('end_date', now()))->endOfDay(),
-                    'label' => 'Custom range'
+                    'label' => 'Custom range',
                 ];
             default:
                 return [
                     'start' => now()->subDays(30)->startOfDay(),
                     'end' => now()->endOfDay(),
-                    'label' => 'Last 30 days'
+                    'label' => 'Last 30 days',
                 ];
         }
     }
@@ -300,8 +299,8 @@ class TaxReportController extends Controller
             ')
             ->first();
 
-        $successRate = $calculations->total_calculations > 0 
-            ? ($calculations->successful_calculations / $calculations->total_calculations) * 100 
+        $successRate = $calculations->total_calculations > 0
+            ? ($calculations->successful_calculations / $calculations->total_calculations) * 100
             : 0;
 
         return [
@@ -347,9 +346,10 @@ class TaxReportController extends Controller
             ')
             ->get()
             ->map(function ($engine) {
-                $engine->success_rate = $engine->usage_count > 0 
-                    ? ($engine->success_count / $engine->usage_count) * 100 
+                $engine->success_rate = $engine->usage_count > 0
+                    ? ($engine->success_count / $engine->usage_count) * 100
                     : 0;
+
                 return $engine;
             })
             ->toArray();
@@ -357,7 +357,7 @@ class TaxReportController extends Controller
 
     private function getTaxDataGrouped(int $companyId, array $dateRange, string $groupBy): array
     {
-        $dateFormat = match($groupBy) {
+        $dateFormat = match ($groupBy) {
             'day' => 'YYYY-MM-DD',
             'week' => 'YYYY-WW',
             'month' => 'YYYY-MM',
@@ -569,9 +569,10 @@ class TaxReportController extends Controller
             ->orderBy('date')
             ->get()
             ->map(function ($item) {
-                $item->error_rate = $item->total_calculations > 0 
-                    ? ($item->error_count / $item->total_calculations) * 100 
+                $item->error_rate = $item->total_calculations > 0
+                    ? ($item->error_count / $item->total_calculations) * 100
                     : 0;
+
                 return $item;
             })
             ->toArray();

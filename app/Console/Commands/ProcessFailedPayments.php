@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Domains\Financial\Services\RecurringBillingService;
-use App\Domains\Financial\Models\Invoice;
 use App\Domains\Core\Services\NotificationService;
-use Illuminate\Support\Facades\Log;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Services\RecurringBillingService;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class ProcessFailedPayments extends Command
 {
@@ -15,8 +15,11 @@ class ProcessFailedPayments extends Command
 
     // Class constants to reduce duplication
     private const STATUS_FAILED = 'failed';
+
     private const STATUS_RETRYING = 'retrying';
+
     private const MAX_RETRY_ATTEMPTS = 3;
+
     private const MSG_PAYMENT_START = 'Processing failed payments...';
 
     /**
@@ -37,6 +40,7 @@ class ProcessFailedPayments extends Command
     protected $description = 'Retry failed payment attempts for overdue invoices';
 
     protected RecurringBillingService $billingService;
+
     protected NotificationService $notificationService;
 
     /**
@@ -85,6 +89,7 @@ class ProcessFailedPayments extends Command
 
             if ($invoices->isEmpty()) {
                 $this->info('No invoices requiring payment retry found');
+
                 return Command::SUCCESS;
             }
 
@@ -94,7 +99,7 @@ class ProcessFailedPayments extends Command
                 'successful' => 0,
                 'failed' => 0,
                 'skipped' => 0,
-                'total_collected' => 0
+                'total_collected' => 0,
             ];
 
             $progressBar = $this->output->createProgressBar($invoices->count());
@@ -105,7 +110,7 @@ class ProcessFailedPayments extends Command
 
                 // Check if we should retry based on last attempt
                 if ($this->shouldRetryPayment($invoice)) {
-                    if (!$dryRun) {
+                    if (! $dryRun) {
                         $result = $this->billingService->retryFailedPayment($invoice);
 
                         if ($result['success']) {
@@ -147,16 +152,16 @@ class ProcessFailedPayments extends Command
             Log::info('Failed payment retry process completed', [
                 'company_id' => $companyId,
                 'dry_run' => $dryRun,
-                'results' => $results
+                'results' => $results,
             ]);
 
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('Failed to process payment retries: ' . $e->getMessage());
+            $this->error('Failed to process payment retries: '.$e->getMessage());
             Log::error('Payment retry process failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return Command::FAILURE;
@@ -168,7 +173,7 @@ class ProcessFailedPayments extends Command
      */
     private function shouldRetryPayment(Invoice $invoice): bool
     {
-        if (!$invoice->last_payment_attempt) {
+        if (! $invoice->last_payment_attempt) {
             return true;
         }
 
@@ -200,7 +205,7 @@ class ProcessFailedPayments extends Command
                 ['Successful Payments', $results['successful']],
                 ['Failed Payments', $results['failed']],
                 ['Skipped (Too Soon)', $results['skipped']],
-                ['Total Collected', '$' . number_format($results['total_collected'], 2)]
+                ['Total Collected', '$'.number_format($results['total_collected'], 2)],
             ]
         );
 

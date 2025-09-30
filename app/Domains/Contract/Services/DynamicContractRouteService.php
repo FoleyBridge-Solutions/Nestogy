@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 class DynamicContractRouteService
 {
     protected Router $router;
+
     protected array $registeredRoutes = [];
 
     public function __construct(Router $router)
@@ -70,7 +71,7 @@ class DynamicContractRouteService
             ->middleware(['web', 'auth', 'company']);
 
         // Add route parameters if specified
-        if (!empty($item->config['parameters'])) {
+        if (! empty($item->config['parameters'])) {
             $parameters = $item->config['parameters'];
             foreach ($parameters as $key => $constraint) {
                 $route->where($key, $constraint);
@@ -78,8 +79,8 @@ class DynamicContractRouteService
         }
 
         // Add role/permission middleware if specified
-        if (!empty($item->permissions)) {
-            $route->middleware(['can:' . implode(',', $item->permissions)]);
+        if (! empty($item->permissions)) {
+            $route->middleware(['can:'.implode(',', $item->permissions)]);
         }
 
         $this->registeredRoutes[] = $routeName;
@@ -90,20 +91,20 @@ class DynamicContractRouteService
      */
     protected function generateRoutePath(ContractNavigationItem $item): string
     {
-        if (!empty($item->config['path'])) {
+        if (! empty($item->config['path'])) {
             return $item->config['path'];
         }
 
         // Generate path from navigation structure
         $pathParts = [];
-        
+
         // Build hierarchical path
         $current = $item;
         $hierarchy = [];
-        
+
         while ($current) {
             array_unshift($hierarchy, $current);
-            $current = $current->parent_slug ? 
+            $current = $current->parent_slug ?
                 ContractNavigationItem::where('company_id', $item->company_id)
                     ->where('slug', $current->parent_slug)
                     ->first() : null;
@@ -115,26 +116,26 @@ class DynamicContractRouteService
             }
         }
 
-        $basePath = '/contracts/' . implode('/', $pathParts);
+        $basePath = '/contracts/'.implode('/', $pathParts);
 
         // Add resource parameters based on navigation type
         $type = $item->config['type'] ?? 'page';
         switch ($type) {
             case 'list':
                 return $basePath;
-                
+
             case 'create':
-                return $basePath . '/create';
-                
+                return $basePath.'/create';
+
             case 'show':
-                return $basePath . '/{id}';
-                
+                return $basePath.'/{id}';
+
             case 'edit':
-                return $basePath . '/{id}/edit';
-                
+                return $basePath.'/{id}/edit';
+
             case 'custom':
                 return $item->config['path'] ?? $basePath;
-                
+
             default:
                 return $basePath;
         }
@@ -145,32 +146,32 @@ class DynamicContractRouteService
      */
     protected function getControllerAction(ContractNavigationItem $item): string
     {
-        if (!empty($item->config['controller'])) {
+        if (! empty($item->config['controller'])) {
             return $item->config['controller'];
         }
 
         // Default to DynamicContractController
         $controller = 'App\Domains\Contract\Controllers\DynamicContractController';
-        
+
         $type = $item->config['type'] ?? 'page';
         switch ($type) {
             case 'list':
-                return $controller . '@index';
-                
+                return $controller.'@index';
+
             case 'create':
-                return $controller . '@create';
-                
+                return $controller.'@create';
+
             case 'show':
-                return $controller . '@show';
-                
+                return $controller.'@show';
+
             case 'edit':
-                return $controller . '@edit';
-                
+                return $controller.'@edit';
+
             case 'custom':
-                return $item->config['controller'] ?? $controller . '@index';
-                
+                return $item->config['controller'] ?? $controller.'@index';
+
             default:
-                return $controller . '@index';
+                return $controller.'@index';
         }
     }
 
@@ -190,7 +191,7 @@ class DynamicContractRouteService
                 'method' => 'GET',
                 'action' => 'index',
                 'type' => 'list',
-                'title' => $parentItem->label . ' List',
+                'title' => $parentItem->label.' List',
             ],
             [
                 'name' => "{$routePrefix}.create",
@@ -198,7 +199,7 @@ class DynamicContractRouteService
                 'method' => 'GET',
                 'action' => 'create',
                 'type' => 'create',
-                'title' => 'Create ' . $parentItem->label,
+                'title' => 'Create '.$parentItem->label,
             ],
             [
                 'name' => "{$routePrefix}.store",
@@ -206,7 +207,7 @@ class DynamicContractRouteService
                 'method' => 'POST',
                 'action' => 'store',
                 'type' => 'store',
-                'title' => 'Store ' . $parentItem->label,
+                'title' => 'Store '.$parentItem->label,
             ],
             [
                 'name' => "{$routePrefix}.show",
@@ -214,7 +215,7 @@ class DynamicContractRouteService
                 'method' => 'GET',
                 'action' => 'show',
                 'type' => 'show',
-                'title' => 'View ' . $parentItem->label,
+                'title' => 'View '.$parentItem->label,
             ],
             [
                 'name' => "{$routePrefix}.edit",
@@ -222,7 +223,7 @@ class DynamicContractRouteService
                 'method' => 'GET',
                 'action' => 'edit',
                 'type' => 'edit',
-                'title' => 'Edit ' . $parentItem->label,
+                'title' => 'Edit '.$parentItem->label,
             ],
             [
                 'name' => "{$routePrefix}.update",
@@ -230,7 +231,7 @@ class DynamicContractRouteService
                 'method' => 'PUT',
                 'action' => 'update',
                 'type' => 'update',
-                'title' => 'Update ' . $parentItem->label,
+                'title' => 'Update '.$parentItem->label,
             ],
             [
                 'name' => "{$routePrefix}.destroy",
@@ -238,7 +239,7 @@ class DynamicContractRouteService
                 'method' => 'DELETE',
                 'action' => 'destroy',
                 'type' => 'destroy',
-                'title' => 'Delete ' . $parentItem->label,
+                'title' => 'Delete '.$parentItem->label,
             ],
         ];
 
@@ -274,7 +275,7 @@ class DynamicContractRouteService
      */
     public function generateUrl(ContractNavigationItem $item, array $parameters = []): string
     {
-        if (!$item->route) {
+        if (! $item->route) {
             return '#';
         }
 
@@ -283,11 +284,11 @@ class DynamicContractRouteService
         } catch (\Exception $e) {
             // Fallback to manual URL generation
             $path = $this->generateRoutePath($item);
-            
+
             foreach ($parameters as $key => $value) {
                 $path = str_replace("{{$key}}", $value, $path);
             }
-            
+
             return url($path);
         }
     }
@@ -332,29 +333,29 @@ class DynamicContractRouteService
                 $errors[] = "Navigation item {$index}: Label is required";
             }
 
-            if (!empty($item['route'])) {
+            if (! empty($item['route'])) {
                 // Validate route name format
-                if (!preg_match('/^[a-z0-9_.]+$/', $item['route'])) {
+                if (! preg_match('/^[a-z0-9_.]+$/', $item['route'])) {
                     $errors[] = "Navigation item {$index}: Invalid route name format";
                 }
             }
 
-            if (!empty($item['route_path'])) {
+            if (! empty($item['route_path'])) {
                 // Validate route path format
-                if (!str_starts_with($item['route_path'], '/')) {
+                if (! str_starts_with($item['route_path'], '/')) {
                     $errors[] = "Navigation item {$index}: Route path must start with '/'";
                 }
             }
 
             // Validate controller action format
-            if (!empty($item['controller_action'])) {
-                if (!str_contains($item['controller_action'], '@')) {
+            if (! empty($item['controller_action'])) {
+                if (! str_contains($item['controller_action'], '@')) {
                     $errors[] = "Navigation item {$index}: Controller action must be in format 'Controller@method'";
                 }
             }
 
             // Validate permissions format
-            if (!empty($item['required_permissions'])) {
+            if (! empty($item['required_permissions'])) {
                 $permissions = json_decode($item['required_permissions'], true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $errors[] = "Navigation item {$index}: Invalid permissions JSON format";
@@ -362,7 +363,7 @@ class DynamicContractRouteService
             }
 
             // Validate conditions format
-            if (!empty($item['conditions'])) {
+            if (! empty($item['conditions'])) {
                 $conditions = json_decode($item['conditions'], true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $errors[] = "Navigation item {$index}: Invalid conditions JSON format";

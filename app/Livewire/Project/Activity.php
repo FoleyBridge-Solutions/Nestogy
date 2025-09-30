@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Project;
 
-use Livewire\Component;
 use App\Domains\Project\Models\Project;
+use Livewire\Component;
 
 class Activity extends Component
 {
@@ -17,6 +17,7 @@ class Activity extends Component
     public function render()
     {
         $activities = $this->project->comments()->with('user')->latest()->get();
+
         return view('livewire.project.activity', compact('activities'));
     }
 }

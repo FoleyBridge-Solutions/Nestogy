@@ -3,16 +3,17 @@
 namespace App\Domains\Email\Services;
 
 use App\Domains\Email\Models\EmailAccount;
-use App\Domains\Email\Services\ImapService;
-use App\Domains\Email\Services\Providers\MicrosoftGraphProvider;
 use App\Domains\Email\Services\Providers\GoogleWorkspaceProvider;
-use Illuminate\Support\Facades\Log;
+use App\Domains\Email\Services\Providers\MicrosoftGraphProvider;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class UnifiedEmailSyncService
 {
     protected ImapService $imapService;
+
     protected EmailProviderService $providerService;
+
     protected OAuthTokenManager $tokenManager;
 
     public function __construct(
@@ -33,7 +34,7 @@ class UnifiedEmailSyncService
         // Force error logging to ensure we see this in production
         error_log("OAUTH_DEBUG: Starting syncAccount for {$account->email_address} (ID: {$account->id})");
         error_log("OAUTH_DEBUG: Connection type: {$account->connection_type}, Provider: {$account->provider}");
-        
+
         try {
             if ($account->connection_type === 'oauth') {
                 return $this->syncOAuthAccount($account);
@@ -66,13 +67,13 @@ class UnifiedEmailSyncService
     protected function syncOAuthAccount(EmailAccount $account): array
     {
         error_log("OAUTH_DEBUG: Starting syncOAuthAccount for provider: {$account->oauth_provider}");
-        
+
         // Ensure tokens are valid
-        if (!$this->tokenManager->ensureValidTokens($account)) {
+        if (! $this->tokenManager->ensureValidTokens($account)) {
             error_log("OAUTH_DEBUG: Token refresh failed for account {$account->id}");
             throw new \Exception('Unable to refresh OAuth tokens');
         }
-        
+
         error_log("OAUTH_DEBUG: Tokens validated successfully for account {$account->id}");
 
         // Use provider-specific sync method
@@ -103,7 +104,7 @@ class UnifiedEmailSyncService
 
             // Get access token
             $accessToken = $this->tokenManager->getValidAccessToken($account);
-            if (!$accessToken) {
+            if (! $accessToken) {
                 throw new \Exception('No valid access token available');
             }
 
@@ -117,7 +118,7 @@ class UnifiedEmailSyncService
                     $messagesResult = $this->syncMicrosoftMessages($account, $folder, $accessToken);
                     $results['messages_synced'] += $messagesResult['count'];
                 } catch (\Exception $e) {
-                    $results['errors'][] = "Folder {$folder->name}: " . $e->getMessage();
+                    $results['errors'][] = "Folder {$folder->name}: ".$e->getMessage();
                 }
             }
 
@@ -151,7 +152,7 @@ class UnifiedEmailSyncService
 
             // Get access token
             $accessToken = $this->tokenManager->getValidAccessToken($account);
-            if (!$accessToken) {
+            if (! $accessToken) {
                 throw new \Exception('No valid access token available');
             }
 
@@ -217,26 +218,27 @@ class UnifiedEmailSyncService
 
             $provider = new GoogleWorkspaceProvider($account->company);
             $labels = $provider->getLabels($accessToken);
-            
+
             Log::info('Retrieved Gmail labels', [
                 'account_id' => $account->id,
                 'labels_count' => count($labels),
                 'labels' => collect($labels)->pluck('name', 'id')->toArray(),
             ]);
-            
+
             $syncedCount = 0;
             foreach ($labels as $label) {
                 // Skip system labels that aren't useful as folders
-                if (in_array($label['type'] ?? '', ['system']) && 
-                    !in_array($label['id'], ['INBOX', 'SENT', 'DRAFT', 'SPAM', 'TRASH'])) {
+                if (in_array($label['type'] ?? '', ['system']) &&
+                    ! in_array($label['id'], ['INBOX', 'SENT', 'DRAFT', 'SPAM', 'TRASH'])) {
                     Log::debug('Skipping system label', [
                         'label_id' => $label['id'],
                         'label_name' => $label['name'],
                         'label_type' => $label['type'] ?? 'unknown',
                     ]);
+
                     continue;
                 }
-                
+
                 // Create or update email folder
                 $folder = \App\Domains\Email\Models\EmailFolder::updateOrCreate(
                     [
@@ -253,24 +255,24 @@ class UnifiedEmailSyncService
                         'last_synced_at' => now(),
                     ]
                 );
-                
+
                 Log::debug('Synced Gmail label', [
                     'folder_id' => $folder->id,
                     'label_id' => $label['id'],
                     'label_name' => $label['name'],
                     'folder_type' => $folder->type,
                 ]);
-                
+
                 $syncedCount++;
             }
-            
+
             Log::info('Completed Google labels sync', [
                 'account_id' => $account->id,
                 'synced_count' => $syncedCount,
             ]);
-            
+
             return ['count' => $syncedCount];
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to sync Google labels', [
                 'account_id' => $account->id,
@@ -293,7 +295,7 @@ class UnifiedEmailSyncService
             ]);
 
             $provider = new GoogleWorkspaceProvider($account->company);
-            
+
             // Get recent messages (last 7 days by default)
             $query = 'newer_than:7d';
             Log::info('Querying Gmail messages', [
@@ -301,21 +303,21 @@ class UnifiedEmailSyncService
                 'query' => $query,
                 'max_results' => 50,
             ]);
-            
+
             $messages = $provider->getMessages($accessToken, [
                 'query' => $query,
-                'maxResults' => 50
+                'maxResults' => 50,
             ]);
-            
+
             Log::info('Retrieved Gmail messages response', [
                 'account_id' => $account->id,
                 'messages_count' => count($messages['messages'] ?? []),
                 'total_result_size_estimate' => $messages['resultSizeEstimate'] ?? 0,
                 'has_next_page_token' => isset($messages['nextPageToken']),
             ]);
-            
+
             $syncedCount = 0;
-            if (!empty($messages['messages'])) {
+            if (! empty($messages['messages'])) {
                 Log::info('Processing Gmail messages', [
                     'account_id' => $account->id,
                     'message_count' => count($messages['messages']),
@@ -324,10 +326,10 @@ class UnifiedEmailSyncService
                     try {
                         // Get full message details
                         $messageDetails = $provider->getMessage($accessToken, $messageRef['id']);
-                        
+
                         // Extract message data
                         $messageData = $this->parseGoogleMessage($messageDetails, $account);
-                        
+
                         // Create or update email message
                         \App\Domains\Email\Models\EmailMessage::updateOrCreate(
                             [
@@ -336,9 +338,9 @@ class UnifiedEmailSyncService
                             ],
                             $messageData
                         );
-                        
+
                         $syncedCount++;
-                        
+
                     } catch (\Exception $e) {
                         Log::warning('Failed to sync individual Gmail message', [
                             'account_id' => $account->id,
@@ -353,14 +355,14 @@ class UnifiedEmailSyncService
                     'account_id' => $account->id,
                     'original_query' => $query,
                 ]);
-                
+
                 // Try with a broader query (last 30 days)
                 $broadQuery = 'newer_than:30d';
                 $broadMessages = $provider->getMessages($accessToken, [
                     'query' => $broadQuery,
-                    'maxResults' => 10
+                    'maxResults' => 10,
                 ]);
-                
+
                 Log::info('Broader Gmail search results', [
                     'account_id' => $account->id,
                     'query' => $broadQuery,
@@ -368,9 +370,9 @@ class UnifiedEmailSyncService
                     'result_size_estimate' => $broadMessages['resultSizeEstimate'] ?? 0,
                 ]);
             }
-            
+
             return ['count' => $syncedCount];
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to sync Google messages', [
                 'account_id' => $account->id,
@@ -387,13 +389,23 @@ class UnifiedEmailSyncService
     {
         $labelId = $label['id'] ?? '';
         $labelName = strtolower($label['name'] ?? '');
-        
-        if ($labelId === 'INBOX') return 'inbox';
-        if ($labelId === 'SENT') return 'sent';
-        if ($labelId === 'DRAFT') return 'drafts';
-        if ($labelId === 'SPAM') return 'spam';
-        if ($labelId === 'TRASH') return 'trash';
-        
+
+        if ($labelId === 'INBOX') {
+            return 'inbox';
+        }
+        if ($labelId === 'SENT') {
+            return 'sent';
+        }
+        if ($labelId === 'DRAFT') {
+            return 'drafts';
+        }
+        if ($labelId === 'SPAM') {
+            return 'spam';
+        }
+        if ($labelId === 'TRASH') {
+            return 'trash';
+        }
+
         return 'folder';
     }
 
@@ -404,13 +416,13 @@ class UnifiedEmailSyncService
     {
         $payload = $messageDetails['payload'] ?? [];
         $headers = $payload['headers'] ?? [];
-        
+
         // Extract headers
         $subject = '';
         $from = '';
         $to = '';
         $date = '';
-        
+
         foreach ($headers as $header) {
             switch (strtolower($header['name'])) {
                 case 'subject':
@@ -427,13 +439,13 @@ class UnifiedEmailSyncService
                     break;
             }
         }
-        
+
         // Extract body
         $body = $this->extractGoogleMessageBody($payload);
-        
+
         // Determine email folder
         $folderId = $this->determineGmailMessageFolder($messageDetails, $account);
-        
+
         return [
             'message_id' => $messageDetails['id'], // Use Gmail message ID as message_id
             'uid' => $messageDetails['id'], // Use Gmail message ID as UID for Gmail
@@ -443,7 +455,7 @@ class UnifiedEmailSyncService
             'body_text' => $body,
             'body_html' => $body, // For now, same as text - can be improved later
             'received_at' => $date ? Carbon::parse($date) : now(),
-            'is_read' => !in_array('UNREAD', $messageDetails['labelIds'] ?? []),
+            'is_read' => ! in_array('UNREAD', $messageDetails['labelIds'] ?? []),
             'size_bytes' => $messageDetails['sizeEstimate'] ?? 0,
             'has_attachments' => false, // TODO: Detect attachments
             'is_draft' => in_array('DRAFT', $messageDetails['labelIds'] ?? []),
@@ -457,22 +469,22 @@ class UnifiedEmailSyncService
     protected function determineGmailMessageFolder(array $messageDetails, \App\Domains\Email\Models\EmailAccount $account): int
     {
         $labelIds = $messageDetails['labelIds'] ?? [];
-        
+
         Log::debug('Determining Gmail message folder', [
             'account_id' => $account->id,
             'message_id' => $messageDetails['id'] ?? 'unknown',
             'label_ids' => $labelIds,
         ]);
-        
+
         // Priority mapping for Gmail labels to folder types
         $labelPriorities = [
             'DRAFT' => 'drafts',
-            'SENT' => 'sent', 
+            'SENT' => 'sent',
             'SPAM' => 'spam',
             'TRASH' => 'trash',
             'INBOX' => 'inbox',
         ];
-        
+
         // Find the highest priority label
         $targetFolderType = null;
         foreach ($labelPriorities as $labelId => $folderType) {
@@ -481,16 +493,16 @@ class UnifiedEmailSyncService
                 break;
             }
         }
-        
+
         // If no standard labels found, look for custom labels
-        if (!$targetFolderType && !empty($labelIds)) {
+        if (! $targetFolderType && ! empty($labelIds)) {
             // Try to find a custom folder that matches a label
             foreach ($labelIds as $labelId) {
-                if (!in_array($labelId, ['UNREAD', 'IMPORTANT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS', 'CATEGORY_PROMOTIONS'])) {
+                if (! in_array($labelId, ['UNREAD', 'IMPORTANT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS', 'CATEGORY_PROMOTIONS'])) {
                     $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
                         ->where('remote_id', $labelId)
                         ->first();
-                    
+
                     if ($folder) {
                         Log::debug('Found custom folder for Gmail message', [
                             'account_id' => $account->id,
@@ -498,28 +510,29 @@ class UnifiedEmailSyncService
                             'folder_name' => $folder->name,
                             'label_id' => $labelId,
                         ]);
+
                         return $folder->id;
                     }
                 }
             }
         }
-        
+
         // Default to inbox if no specific folder determined
-        if (!$targetFolderType) {
+        if (! $targetFolderType) {
             $targetFolderType = 'inbox';
         }
-        
+
         // Find or create the folder
         $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
             ->where('type', $targetFolderType)
             ->first();
-            
-        if (!$folder) {
+
+        if (! $folder) {
             Log::info('Creating missing Gmail folder', [
                 'account_id' => $account->id,
                 'folder_type' => $targetFolderType,
             ]);
-            
+
             $folderNames = [
                 'inbox' => 'Inbox',
                 'sent' => 'Sent',
@@ -527,7 +540,7 @@ class UnifiedEmailSyncService
                 'trash' => 'Trash',
                 'spam' => 'Spam',
             ];
-            
+
             $folder = \App\Domains\Email\Models\EmailFolder::create([
                 'email_account_id' => $account->id,
                 'name' => $folderNames[$targetFolderType] ?? ucfirst($targetFolderType),
@@ -537,7 +550,7 @@ class UnifiedEmailSyncService
                 'message_count' => 0,
             ]);
         }
-        
+
         Log::debug('Determined Gmail message folder', [
             'account_id' => $account->id,
             'folder_id' => $folder->id,
@@ -545,7 +558,7 @@ class UnifiedEmailSyncService
             'folder_type' => $folder->type,
             'target_folder_type' => $targetFolderType,
         ]);
-        
+
         return $folder->id;
     }
 
@@ -554,25 +567,25 @@ class UnifiedEmailSyncService
      */
     protected function extractGoogleMessageBody(array $payload): string
     {
-        if (!empty($payload['body']['data'])) {
+        if (! empty($payload['body']['data'])) {
             return base64_decode(str_replace(['-', '_'], ['+', '/'], $payload['body']['data']));
         }
-        
-        if (!empty($payload['parts'])) {
+
+        if (! empty($payload['parts'])) {
             foreach ($payload['parts'] as $part) {
-                if ($part['mimeType'] === 'text/plain' && !empty($part['body']['data'])) {
+                if ($part['mimeType'] === 'text/plain' && ! empty($part['body']['data'])) {
                     return base64_decode(str_replace(['-', '_'], ['+', '/'], $part['body']['data']));
                 }
             }
-            
+
             // Fallback to HTML if no plain text found
             foreach ($payload['parts'] as $part) {
-                if ($part['mimeType'] === 'text/html' && !empty($part['body']['data'])) {
+                if ($part['mimeType'] === 'text/html' && ! empty($part['body']['data'])) {
                     return base64_decode(str_replace(['-', '_'], ['+', '/'], $part['body']['data']));
                 }
             }
         }
-        
+
         return '';
     }
 }

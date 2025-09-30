@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * ContractComment Model
- * 
+ *
  * Manages collaborative comments and discussions on contracts
  */
 class ContractComment extends Model
@@ -52,20 +52,29 @@ class ContractComment extends Model
 
     // Comment types
     const TYPE_GENERAL = 'general';
+
     const TYPE_SUGGESTION = 'suggestion';
+
     const TYPE_OBJECTION = 'objection';
+
     const TYPE_APPROVAL = 'approval';
+
     const TYPE_QUESTION = 'question';
 
     // Priority levels
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_URGENT = 'urgent';
 
     // Author types
     const AUTHOR_INTERNAL = 'internal';
+
     const AUTHOR_CLIENT = 'client';
+
     const AUTHOR_SYSTEM = 'system';
 
     /**
@@ -171,9 +180,9 @@ class ContractComment extends Model
 
     public function isOverdue(): bool
     {
-        return $this->requires_response && 
-               !$this->is_resolved && 
-               $this->response_due && 
+        return $this->requires_response &&
+               ! $this->is_resolved &&
+               $this->response_due &&
                $this->response_due->isPast();
     }
 
@@ -191,23 +200,23 @@ class ContractComment extends Model
     {
         $depth = 0;
         $current = $this;
-        
+
         while ($current->parent_id) {
             $depth++;
             $current = $current->parent;
         }
-        
+
         return $depth;
     }
 
     public function getThreadRoot(): self
     {
         $current = $this;
-        
+
         while ($current->parent_id) {
             $current = $current->parent;
         }
-        
+
         return $current;
     }
 
@@ -218,14 +227,14 @@ class ContractComment extends Model
         });
     }
 
-    public function resolve(\App\Models\User $user, string $notes = null): bool
+    public function resolve(\App\Models\User $user, ?string $notes = null): bool
     {
         $result = $this->update([
             'is_resolved' => true,
             'resolved_at' => now(),
-            'resolved_by' => $user->id
+            'resolved_by' => $user->id,
         ]);
-        
+
         // Create system comment about resolution
         if ($result && $notes) {
             self::create([
@@ -238,10 +247,10 @@ class ContractComment extends Model
                 'user_id' => $user->id,
                 'author_type' => self::AUTHOR_SYSTEM,
                 'is_internal' => $this->is_internal,
-                'thread_position' => $this->getNextThreadPosition()
+                'thread_position' => $this->getNextThreadPosition(),
             ]);
         }
-        
+
         return $result;
     }
 
@@ -257,7 +266,7 @@ class ContractComment extends Model
             'user_id' => $user->id,
             'author_type' => self::AUTHOR_INTERNAL,
             'is_internal' => $this->is_internal,
-            'thread_position' => $this->getNextThreadPosition()
+            'thread_position' => $this->getNextThreadPosition(),
         ], $options));
     }
 
@@ -265,7 +274,7 @@ class ContractComment extends Model
     {
         $mentions = $this->mentions ?? [];
         $mentions = array_unique(array_merge($mentions, $userIds));
-        
+
         return $this->update(['mentions' => $mentions]);
     }
 
@@ -276,18 +285,18 @@ class ContractComment extends Model
             'filename' => $filename,
             'path' => $path,
             'size' => $size,
-            'uploaded_at' => now()->toISOString()
+            'uploaded_at' => now()->toISOString(),
         ];
-        
+
         return $this->update(['attachments' => $attachments]);
     }
 
     protected function getNextThreadPosition(): int
     {
-        if (!$this->parent_id) {
+        if (! $this->parent_id) {
             return $this->replies()->max('thread_position') + 1;
         }
-        
+
         return $this->parent->replies()->max('thread_position') + 1;
     }
 
@@ -299,7 +308,7 @@ class ContractComment extends Model
     public function getFormattedContent(): string
     {
         $content = $this->content;
-        
+
         // Replace user mentions with formatted names
         if ($this->mentions) {
             foreach ($this->mentions as $userId) {
@@ -309,7 +318,7 @@ class ContractComment extends Model
                 }
             }
         }
-        
+
         return $content;
     }
 
@@ -320,7 +329,7 @@ class ContractComment extends Model
             self::TYPE_SUGGESTION => 'Suggestion',
             self::TYPE_OBJECTION => 'Objection',
             self::TYPE_APPROVAL => 'Approval',
-            self::TYPE_QUESTION => 'Question'
+            self::TYPE_QUESTION => 'Question',
         ];
     }
 
@@ -330,7 +339,7 @@ class ContractComment extends Model
             self::PRIORITY_LOW => 'Low',
             self::PRIORITY_NORMAL => 'Normal',
             self::PRIORITY_HIGH => 'High',
-            self::PRIORITY_URGENT => 'Urgent'
+            self::PRIORITY_URGENT => 'Urgent',
         ];
     }
 
@@ -350,7 +359,7 @@ class ContractComment extends Model
         if ($this->user_id === $user->id) {
             return $this->created_at->diffInMinutes(now()) <= 15;
         }
-        
+
         return false;
     }
 
@@ -360,12 +369,12 @@ class ContractComment extends Model
         if ($this->user_id === $user->id) {
             return true;
         }
-        
+
         // Check if user has permission in the negotiation
         if ($this->negotiation) {
             return $this->negotiation->canUserEdit($user);
         }
-        
+
         return false;
     }
 }

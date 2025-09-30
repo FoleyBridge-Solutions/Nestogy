@@ -25,13 +25,8 @@ class QuoteNotFoundException extends FinancialException
 
     /**
      * Create a new quote not found exception
-     *
-     * @param string $message
-     * @param int|null $quoteId
-     * @param int $code
-     * @param Exception|null $previous
      */
-    public function __construct(string $message = 'Quote not found', ?int $quoteId = null, int $code = 404, Exception $previous = null)
+    public function __construct(string $message = 'Quote not found', ?int $quoteId = null, int $code = 404, ?Exception $previous = null)
     {
         $this->quoteId = $quoteId;
         parent::__construct($message, $code, $previous);
@@ -39,8 +34,6 @@ class QuoteNotFoundException extends FinancialException
 
     /**
      * Get the quote ID that was not found
-     *
-     * @return int|null
      */
     public function getQuoteId(): ?int
     {
@@ -50,7 +43,6 @@ class QuoteNotFoundException extends FinancialException
     /**
      * Create exception for specific quote ID
      *
-     * @param int $quoteId
      * @return static
      */
     public static function forId(int $quoteId): self
@@ -61,7 +53,6 @@ class QuoteNotFoundException extends FinancialException
     /**
      * Create exception for quote number
      *
-     * @param string $quoteNumber
      * @return static
      */
     public static function forNumber(string $quoteNumber): self
@@ -71,8 +62,6 @@ class QuoteNotFoundException extends FinancialException
 
     /**
      * Convert to array format for API responses
-     *
-     * @return array
      */
     public function toArray(): array
     {
@@ -81,7 +70,7 @@ class QuoteNotFoundException extends FinancialException
             'quote_id' => $this->quoteId,
             'type' => $this->getErrorType(),
             'context' => $this->getContext(),
-            'code' => $this->getCode()
+            'code' => $this->getCode(),
         ];
     }
 }

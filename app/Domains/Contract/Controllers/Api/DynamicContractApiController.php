@@ -2,25 +2,25 @@
 
 namespace App\Domains\Contract\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Domains\Contract\Services\DynamicContractFormBuilder;
-use App\Domains\Contract\Services\DynamicContractViewBuilder;
-use App\Domains\Contract\Services\DynamicContractRouteService;
-use App\Domains\Contract\Models\{
-    ContractFormConfiguration,
-    ContractViewConfiguration,
-    ContractNavigationItem
-};
 use App\Domains\Contract\Models\Contract;
-use Illuminate\Http\Request;
+use App\Domains\Contract\Models\ContractFormConfiguration;
+use App\Domains\Contract\Models\ContractNavigationItem;
+use App\Domains\Contract\Models\ContractViewConfiguration;
+use App\Domains\Contract\Services\DynamicContractFormBuilder;
+use App\Domains\Contract\Services\DynamicContractRouteService;
+use App\Domains\Contract\Services\DynamicContractViewBuilder;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class DynamicContractApiController extends Controller
 {
     protected DynamicContractFormBuilder $formBuilder;
+
     protected DynamicContractViewBuilder $viewBuilder;
+
     protected DynamicContractRouteService $routeService;
 
     public function __construct(
@@ -60,8 +60,8 @@ class DynamicContractApiController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('reference_number', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('reference_number', 'like', "%{$search}%");
             });
         }
 
@@ -109,7 +109,7 @@ class DynamicContractApiController extends Controller
             ->where('is_active', true)
             ->first();
 
-        if (!$formConfig) {
+        if (! $formConfig) {
             return response()->json([
                 'success' => false,
                 'message' => 'Form configuration not found for this contract type',
@@ -148,7 +148,7 @@ class DynamicContractApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create contract: ' . $e->getMessage(),
+                'message' => 'Failed to create contract: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -159,13 +159,13 @@ class DynamicContractApiController extends Controller
     public function show(Request $request, $id): JsonResponse
     {
         $companyId = Auth::user()->company_id;
-        
+
         $contract = Contract::where('company_id', $companyId)
             ->where('id', $id)
             ->with(['client', 'user', 'milestones', 'signatures', 'amendments'])
             ->first();
 
-        if (!$contract) {
+        if (! $contract) {
             return response()->json([
                 'success' => false,
                 'message' => 'Contract not found',
@@ -184,12 +184,12 @@ class DynamicContractApiController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $companyId = Auth::user()->company_id;
-        
+
         $contract = Contract::where('company_id', $companyId)
             ->where('id', $id)
             ->first();
 
-        if (!$contract) {
+        if (! $contract) {
             return response()->json([
                 'success' => false,
                 'message' => 'Contract not found',
@@ -231,7 +231,7 @@ class DynamicContractApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update contract: ' . $e->getMessage(),
+                'message' => 'Failed to update contract: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -242,12 +242,12 @@ class DynamicContractApiController extends Controller
     public function destroy(Request $request, $id): JsonResponse
     {
         $companyId = Auth::user()->company_id;
-        
+
         $contract = Contract::where('company_id', $companyId)
             ->where('id', $id)
             ->first();
 
-        if (!$contract) {
+        if (! $contract) {
             return response()->json([
                 'success' => false,
                 'message' => 'Contract not found',
@@ -265,7 +265,7 @@ class DynamicContractApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete contract: ' . $e->getMessage(),
+                'message' => 'Failed to delete contract: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -302,13 +302,14 @@ class DynamicContractApiController extends Controller
             switch ($action) {
                 case 'delete':
                     $deleted = $contracts->each->delete()->count();
+
                     return response()->json([
                         'success' => true,
                         'message' => "Deleted {$deleted} contracts",
                     ]);
 
                 case 'update_status':
-                    if (!isset($data['status'])) {
+                    if (! isset($data['status'])) {
                         return response()->json([
                             'success' => false,
                             'message' => 'Status is required for update_status action',
@@ -342,7 +343,7 @@ class DynamicContractApiController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bulk action failed: ' . $e->getMessage(),
+                'message' => 'Bulk action failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -379,7 +380,7 @@ class DynamicContractApiController extends Controller
         $companyId = Auth::user()->company_id;
         $contractType = $request->get('type');
 
-        if (!$contractType) {
+        if (! $contractType) {
             return response()->json([
                 'success' => false,
                 'message' => 'Contract type is required',
@@ -391,7 +392,7 @@ class DynamicContractApiController extends Controller
             ->where('is_active', true)
             ->first();
 
-        if (!$formConfig) {
+        if (! $formConfig) {
             return response()->json([
                 'success' => false,
                 'message' => 'Schema not found for this contract type',

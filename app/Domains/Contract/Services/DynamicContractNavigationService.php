@@ -3,15 +3,14 @@
 namespace App\Domains\Contract\Services;
 
 use App\Domains\Contract\Models\ContractNavigationItem;
-use App\Domains\Contract\Models\ContractMenuSection;
 use App\Domains\Contract\Models\ContractTypeDefinition;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 /**
  * DynamicContractNavigationService
- * 
+ *
  * Manages dynamic navigation generation for contract management.
  * Creates navigation menus, routes, and breadcrumbs based on company configuration.
  */
@@ -23,7 +22,7 @@ class DynamicContractNavigationService
     public function generateNavigationMenu(): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -47,7 +46,7 @@ class DynamicContractNavigationService
         $menu = [];
 
         foreach ($items as $item) {
-            if (!$item->hasPermission($user) || !$item->conditionsMet()) {
+            if (! $item->hasPermission($user) || ! $item->conditionsMet()) {
                 continue;
             }
 
@@ -76,7 +75,7 @@ class DynamicContractNavigationService
     public function getContractTypeRoutes(): Collection
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return collect();
         }
 
@@ -108,7 +107,7 @@ class DynamicContractNavigationService
     public function getBreadcrumbs(string $contractType, string $action, $contract = null): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -116,7 +115,7 @@ class DynamicContractNavigationService
             ->where('slug', $contractType)
             ->first();
 
-        if (!$typeDefinition) {
+        if (! $typeDefinition) {
             return [];
         }
 
@@ -171,7 +170,7 @@ class DynamicContractNavigationService
     public function getActionButtons($contract): array
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -247,9 +246,9 @@ class DynamicContractNavigationService
 
         foreach ($contractTypes as $typeInfo) {
             $slug = $typeInfo['slug'];
-            
+
             Route::middleware(['web', 'auth', 'company'])->group(function () use ($slug) {
-                Route::prefix("contracts/{$slug}")->name("contracts.{$slug}.")->group(function () use ($slug) {
+                Route::prefix("contracts/{$slug}")->name("contracts.{$slug}.")->group(function () {
                     Route::get('/', 'DynamicContractController@index')->name('index');
                     Route::get('/create', 'DynamicContractController@create')->name('create');
                     Route::post('/', 'DynamicContractController@store')->name('store');

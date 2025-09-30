@@ -6,12 +6,12 @@ use App\Domains\Ticket\Models\RecurringTicket;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTemplate;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Recurring Ticket Service
- * 
+ *
  * Handles automated ticket generation, schedule management, and recurring
  * ticket business logic for complex frequency patterns and date calculations.
  */
@@ -29,33 +29,33 @@ class RecurringTicketService
         ];
 
         $dueRecurringTickets = RecurringTicket::where('is_active', true)
-                                            ->where('next_due_date', '<=', now())
-                                            ->where(function($query) {
-                                                $query->whereNull('end_date')
-                                                      ->orWhere('end_date', '>=', now());
-                                            })
-                                            ->with(['template', 'client'])
-                                            ->get();
+            ->where('next_due_date', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('end_date')
+                    ->orWhere('end_date', '>=', now());
+            })
+            ->with(['template', 'client'])
+            ->get();
 
         foreach ($dueRecurringTickets as $recurringTicket) {
             try {
                 $this->generateTicketFromRecurring($recurringTicket);
                 $results['success']++;
-                
+
                 Log::info('Recurring ticket generated', [
                     'recurring_ticket_id' => $recurringTicket->id,
-                    'next_due_date' => $recurringTicket->next_due_date
+                    'next_due_date' => $recurringTicket->next_due_date,
                 ]);
             } catch (\Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = [
                     'recurring_ticket_id' => $recurringTicket->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
-                
+
                 Log::error('Failed to generate recurring ticket', [
                     'recurring_ticket_id' => $recurringTicket->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -68,11 +68,11 @@ class RecurringTicketService
      */
     public function generateTicketFromRecurring(RecurringTicket $recurringTicket, array $overrides = []): Ticket
     {
-        if (!$recurringTicket->is_active) {
+        if (! $recurringTicket->is_active) {
             throw new \Exception('Cannot generate tickets from inactive recurring schedule');
         }
 
-        if (!$recurringTicket->template) {
+        if (! $recurringTicket->template) {
             throw new \Exception('Recurring ticket must have a template');
         }
 
@@ -122,8 +122,8 @@ class RecurringTicketService
      */
     public function calculateNextDueDate(RecurringTicket $recurringTicket): ?Carbon
     {
-        $currentDue = $recurringTicket->next_due_date ? 
-            Carbon::parse($recurringTicket->next_due_date) : 
+        $currentDue = $recurringTicket->next_due_date ?
+            Carbon::parse($recurringTicket->next_due_date) :
             Carbon::parse($recurringTicket->start_date);
 
         // Check if we've reached the end date
@@ -169,8 +169,8 @@ class RecurringTicketService
     public function getUpcomingDates(RecurringTicket $recurringTicket, int $count = 10): Collection
     {
         $dates = collect();
-        $currentDate = $recurringTicket->next_due_date ? 
-            Carbon::parse($recurringTicket->next_due_date) : 
+        $currentDate = $recurringTicket->next_due_date ?
+            Carbon::parse($recurringTicket->next_due_date) :
             Carbon::parse($recurringTicket->start_date);
 
         $maxIterations = $count * 2; // Safety limit
@@ -183,13 +183,13 @@ class RecurringTicketService
             }
 
             $dates->push($currentDate->copy());
-            
+
             // Calculate next date
             $tempRecurring = $recurringTicket->replicate();
             $tempRecurring->next_due_date = $currentDate;
             $currentDate = $this->calculateNextDueDate($tempRecurring);
-            
-            if (!$currentDate) {
+
+            if (! $currentDate) {
                 break;
             }
 
@@ -204,7 +204,7 @@ class RecurringTicketService
      */
     public function previewTicketGeneration(RecurringTicket $recurringTicket, array $variables = []): array
     {
-        if (!$recurringTicket->template) {
+        if (! $recurringTicket->template) {
             throw new \Exception('Recurring ticket must have a template');
         }
 
@@ -239,28 +239,28 @@ class RecurringTicketService
         foreach ($recurringTickets as $recurringTicket) {
             try {
                 $oldNextDue = $recurringTicket->next_due_date;
-                
+
                 $recurringTicket->update($updates);
-                
+
                 // Recalculate next due date if frequency changed
                 if (isset($updates['frequency']) || isset($updates['interval_value']) || isset($updates['frequency_config'])) {
                     $recurringTicket->update([
-                        'next_due_date' => $this->calculateNextDueDate($recurringTicket)
+                        'next_due_date' => $this->calculateNextDueDate($recurringTicket),
                     ]);
                 }
-                
+
                 $results['updated']++;
-                
+
                 Log::info('Recurring ticket schedule updated', [
                     'recurring_ticket_id' => $recurringTicket->id,
                     'old_next_due' => $oldNextDue,
-                    'new_next_due' => $recurringTicket->next_due_date
+                    'new_next_due' => $recurringTicket->next_due_date,
                 ]);
             } catch (\Exception $e) {
                 $results['failed']++;
                 $results['errors'][] = [
                     'recurring_ticket_id' => $recurringTicket->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -284,10 +284,10 @@ class RecurringTicketService
         // Find next occurrence on specified weekdays
         $daysOfWeek = [
             'sunday' => 0, 'monday' => 1, 'tuesday' => 2, 'wednesday' => 3,
-            'thursday' => 4, 'friday' => 5, 'saturday' => 6
+            'thursday' => 4, 'friday' => 5, 'saturday' => 6,
         ];
 
-        $targetDays = array_map(fn($day) => $daysOfWeek[$day], $weekdays);
+        $targetDays = array_map(fn ($day) => $daysOfWeek[$day], $weekdays);
         sort($targetDays);
 
         $nextDue = $current->copy()->addDay(); // Start from next day
@@ -302,7 +302,7 @@ class RecurringTicketService
             }
 
             $nextDue->addDay();
-            
+
             // Check if we've completed a week
             if ($nextDue->dayOfWeek === $current->dayOfWeek) {
                 $weeksAdded++;
@@ -364,12 +364,12 @@ class RecurringTicketService
     {
         $daysOfWeek = [
             'sunday' => 0, 'monday' => 1, 'tuesday' => 2, 'wednesday' => 3,
-            'thursday' => 4, 'friday' => 5, 'saturday' => 6
+            'thursday' => 4, 'friday' => 5, 'saturday' => 6,
         ];
 
         $targetDay = $daysOfWeek[$weekday];
         $firstOfMonth = $date->copy()->startOfMonth();
-        
+
         // Find first occurrence of the weekday
         while ($firstOfMonth->dayOfWeek !== $targetDay) {
             $firstOfMonth->addDay();
@@ -406,7 +406,7 @@ class RecurringTicketService
 
         // Replace variables in subject and description
         foreach ($allVariables as $key => $value) {
-            $placeholder = '{{' . $key . '}}';
+            $placeholder = '{{'.$key.'}}';
             $subject = str_replace($placeholder, $value, $subject);
             $description = str_replace($placeholder, $value, $description);
         }
@@ -424,12 +424,12 @@ class RecurringTicketService
     {
         $prefix = 'REC';
         $year = date('Y');
-        
+
         // Get the last ticket number for this year
         $lastTicket = Ticket::where('company_id', $tenantId)
-                           ->where('ticket_number', 'like', "{$prefix}-{$year}-%")
-                           ->orderBy('ticket_number', 'desc')
-                           ->first();
+            ->where('ticket_number', 'like', "{$prefix}-{$year}-%")
+            ->orderBy('ticket_number', 'desc')
+            ->first();
 
         if ($lastTicket) {
             // Extract sequence number and increment

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LeadSource extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -29,12 +29,19 @@ class LeadSource extends Model
 
     // Source type constants
     const TYPE_MANUAL = 'manual';
+
     const TYPE_WEBSITE = 'website';
+
     const TYPE_REFERRAL = 'referral';
+
     const TYPE_CAMPAIGN = 'campaign';
+
     const TYPE_IMPORT = 'import';
+
     const TYPE_SOCIAL = 'social';
+
     const TYPE_EVENT = 'event';
+
     const TYPE_COLD_OUTREACH = 'cold_outreach';
 
     /**

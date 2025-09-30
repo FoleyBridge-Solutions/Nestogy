@@ -2,35 +2,36 @@
 
 namespace App\Domains\Financial\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\Client;
-use App\Models\Category;
-use App\Models\Product;
 use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
 use App\Domains\Financial\Services\TaxEngine\TaxProfileService;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\Client;
+use App\Models\Product;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Unified Tax Engine API Controller
- * 
+ *
  * Provides comprehensive tax calculation endpoints that automatically
  * route to appropriate tax engines based on product/service category.
  */
 class TaxEngineController extends Controller
 {
     protected TaxEngineRouter $taxEngine;
+
     protected TaxProfileService $profileService;
-    
+
     public function __construct()
     {
         $companyId = auth()->user()->company_id ?? 1;
         $this->taxEngine = new TaxEngineRouter($companyId);
         $this->profileService = new TaxProfileService($companyId);
     }
-    
+
     /**
      * Calculate comprehensive taxes for any product/service type
      */
@@ -41,12 +42,12 @@ class TaxEngineController extends Controller
                 // Base pricing
                 'base_price' => 'required|numeric|min:0',
                 'quantity' => 'nullable|integer|min:1',
-                
+
                 // Category identification
                 'category_id' => 'nullable|exists:categories,id',
                 'category_type' => 'nullable|string',
                 'product_id' => 'nullable|exists:products,id',
-                
+
                 // Customer/Address
                 'customer_id' => 'nullable|exists:clients,id',
                 'customer_address' => 'nullable|array',
@@ -54,7 +55,7 @@ class TaxEngineController extends Controller
                 'customer_address.city' => 'nullable|string|max:255',
                 'customer_address.zip' => 'nullable|string|max:10',
                 'customer_address.country' => 'nullable|string|max:2',
-                
+
                 // Category-specific tax data
                 'tax_data' => 'nullable|array',
                 'tax_data.line_count' => 'nullable|integer|min:1',
@@ -69,10 +70,10 @@ class TaxEngineController extends Controller
                 'tax_data.service_location' => 'nullable|array',
                 'tax_data.service_type' => 'nullable|string',
             ]);
-            
+
             // Get customer address if customer_id provided
             $address = $validated['customer_address'] ?? null;
-            if (!$address && isset($validated['customer_id'])) {
+            if (! $address && isset($validated['customer_id'])) {
                 $customer = Client::find($validated['customer_id']);
                 if ($customer && $customer->company_id === auth()->user()->company_id) {
                     $address = [
@@ -83,7 +84,7 @@ class TaxEngineController extends Controller
                     ];
                 }
             }
-            
+
             // Calculate taxes using the router
             $calculation = $this->taxEngine->calculateTaxes([
                 'base_price' => $validated['base_price'],
@@ -94,7 +95,7 @@ class TaxEngineController extends Controller
                 'customer_address' => $address,
                 'customer_id' => $validated['customer_id'] ?? null,
             ]);
-            
+
             // Format response
             return response()->json([
                 'success' => true,
@@ -114,21 +115,21 @@ class TaxEngineController extends Controller
                 'calculation_id' => uniqid('calc_'),
                 'calculated_at' => now()->toISOString(),
             ]);
-            
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'error' => 'Validation failed',
                 'details' => $e->errors(),
             ], 422);
-            
+
         } catch (\Exception $e) {
             Log::error('Tax calculation error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Tax calculation failed',
@@ -136,7 +137,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Calculate taxes for multiple items in bulk (for quote/invoice creation)
      */
@@ -152,16 +153,16 @@ class TaxEngineController extends Controller
                 'items.*.category_type' => 'nullable|string',
                 'items.*.product_id' => 'nullable|exists:products,id',
                 'items.*.tax_data' => 'nullable|array',
-                
+
                 // Global settings for all items
                 'customer_id' => 'nullable|exists:clients,id',
                 'customer_address' => 'nullable|array',
                 'calculation_type' => 'nullable|string|in:preview,final,estimate',
             ]);
-            
+
             // Get customer address once for all items
             $address = $validated['customer_address'] ?? null;
-            if (!$address && isset($validated['customer_id'])) {
+            if (! $address && isset($validated['customer_id'])) {
                 $customer = Client::find($validated['customer_id']);
                 if ($customer && $customer->company_id === auth()->user()->company_id) {
                     $address = [
@@ -172,14 +173,14 @@ class TaxEngineController extends Controller
                     ];
                 }
             }
-            
+
             // Prepare items for bulk calculation
             $bulkItems = [];
             foreach ($validated['items'] as $index => $item) {
                 $bulkItems[] = [
                     'base_price' => $item['base_price'],
                     'quantity' => $item['quantity'] ?? 1,
-                    'name' => $item['name'] ?? "Item " . ($index + 1),
+                    'name' => $item['name'] ?? 'Item '.($index + 1),
                     'category_id' => $item['category_id'] ?? null,
                     'category_type' => $item['category_type'] ?? null,
                     'tax_data' => $item['tax_data'] ?? [],
@@ -187,22 +188,22 @@ class TaxEngineController extends Controller
                     'customer_id' => $validated['customer_id'] ?? null,
                 ];
             }
-            
+
             // Perform bulk calculation
             $calculationType = $validated['calculation_type'] ?? 'preview';
             $results = $this->taxEngine->calculateBulkTaxes($bulkItems, $calculationType);
-            
+
             // Calculate totals
             $totalSubtotal = 0;
             $totalTax = 0;
             $totalAmount = 0;
-            
+
             foreach ($results['bulk_results'] as $result) {
                 $totalSubtotal += $result['base_amount'] ?? 0;
                 $totalTax += $result['total_tax_amount'] ?? 0;
                 $totalAmount += $result['final_amount'] ?? 0;
             }
-            
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -224,21 +225,21 @@ class TaxEngineController extends Controller
                 'calculation_id' => uniqid('bulk_'),
                 'calculated_at' => now()->toISOString(),
             ]);
-            
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'error' => 'Validation failed',
                 'details' => $e->errors(),
             ], 422);
-            
+
         } catch (\Exception $e) {
             Log::error('Bulk tax calculation error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Bulk tax calculation failed',
@@ -246,7 +247,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Preview taxes for a quote without saving
      */
@@ -266,10 +267,10 @@ class TaxEngineController extends Controller
                 'quote_data.items.*.tax_data' => 'nullable|array',
                 'quote_data.discount_amount' => 'nullable|numeric|min:0',
             ]);
-            
+
             $quoteData = $validated['quote_data'];
             $customer = Client::findOrFail($quoteData['client_id']);
-            
+
             // Verify customer belongs to current company
             if ($customer->company_id !== auth()->user()->company_id) {
                 return response()->json([
@@ -277,19 +278,19 @@ class TaxEngineController extends Controller
                     'error' => 'Unauthorized client access',
                 ], 403);
             }
-            
+
             $customerAddress = [
                 'state' => $customer->state,
                 'city' => $customer->city,
                 'zip' => $customer->zip_code,
                 'country' => $customer->country ?? 'US',
             ];
-            
+
             // Prepare items for calculation
             $items = [];
             foreach ($quoteData['items'] as $index => $item) {
                 $subtotal = ($item['quantity'] * $item['price']) - ($item['discount'] ?? 0);
-                
+
                 $items[] = [
                     'base_price' => $subtotal,
                     'quantity' => 1, // Already calculated subtotal
@@ -307,22 +308,22 @@ class TaxEngineController extends Controller
                     ],
                 ];
             }
-            
+
             // Calculate taxes for all items
             $results = $this->taxEngine->calculateBulkTaxes($items, 'preview');
-            
+
             // Calculate quote totals
             $itemsSubtotal = 0;
             $totalTax = 0;
-            
+
             foreach ($results['bulk_results'] as $result) {
                 $itemsSubtotal += $result['base_amount'] ?? 0;
                 $totalTax += $result['total_tax_amount'] ?? 0;
             }
-            
+
             $discountAmount = $quoteData['discount_amount'] ?? 0;
             $finalTotal = $itemsSubtotal - $discountAmount + $totalTax;
-            
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -349,21 +350,21 @@ class TaxEngineController extends Controller
                 'preview_id' => uniqid('quote_preview_'),
                 'calculated_at' => now()->toISOString(),
             ]);
-            
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'error' => 'Validation failed',
                 'details' => $e->errors(),
             ], 422);
-            
+
         } catch (\Exception $e) {
             Log::error('Quote tax preview error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Quote tax preview failed',
@@ -371,7 +372,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Clear tax calculation caches
      */
@@ -381,22 +382,22 @@ class TaxEngineController extends Controller
             $validated = $request->validate([
                 'category_id' => 'nullable|exists:categories,id',
             ]);
-            
+
             $this->taxEngine->clearTaxCaches($validated['category_id'] ?? null);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Tax caches cleared successfully',
                 'cleared_for' => $validated['category_id'] ? "category {$validated['category_id']}" : 'entire company',
                 'timestamp' => now()->toISOString(),
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Tax cache clear error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to clear caches',
@@ -404,7 +405,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Warm up tax calculation caches
      */
@@ -415,22 +416,22 @@ class TaxEngineController extends Controller
                 'category_ids' => 'nullable|array',
                 'category_ids.*' => 'exists:categories,id',
             ]);
-            
+
             $this->taxEngine->warmUpCaches($validated['category_ids'] ?? []);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Tax caches warmed up successfully',
                 'categories_cached' => count($validated['category_ids'] ?? []) ?: 'auto-detected',
                 'timestamp' => now()->toISOString(),
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Tax cache warm-up error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to warm up caches',
@@ -438,7 +439,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Get tax calculation performance statistics
      */
@@ -446,21 +447,21 @@ class TaxEngineController extends Controller
     {
         try {
             $stats = $this->taxEngine->getCacheStatistics();
-            
+
             // Add additional performance metrics
             $stats['current_time'] = now()->toISOString();
             $stats['company_id'] = auth()->user()->company_id;
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $stats,
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Tax statistics error', [
                 'error' => $e->getMessage(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to retrieve statistics',
@@ -468,7 +469,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Get tax profile and required fields for a category
      */
@@ -480,42 +481,42 @@ class TaxEngineController extends Controller
                 'category_type' => 'nullable|string',
                 'product_id' => 'nullable|exists:products,id',
             ]);
-            
+
             // Get tax profile
             $profile = $this->profileService->getProfile(
                 $validated['category_id'] ?? null,
                 $validated['product_id'] ?? null,
                 $validated['category_type'] ?? null
             );
-            
-            if (!$profile) {
+
+            if (! $profile) {
                 return response()->json([
                     'success' => false,
                     'error' => 'No tax profile found',
                 ], 404);
             }
-            
+
             // Get profile summary
             $summary = $this->profileService->getProfileSummary($profile);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $summary,
             ]);
-            
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'error' => 'Validation failed',
                 'details' => $e->errors(),
             ], 422);
-            
+
         } catch (\Exception $e) {
             Log::error('Get tax profile error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to get tax profile',
@@ -523,7 +524,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Get required tax fields for a category
      */
@@ -535,14 +536,14 @@ class TaxEngineController extends Controller
                 'category_type' => 'nullable|string',
                 'product_id' => 'nullable|exists:products,id',
             ]);
-            
+
             // Get required fields
             $fields = $this->profileService->getRequiredFields(
                 $validated['category_id'] ?? null,
                 $validated['product_id'] ?? null,
                 $validated['category_type'] ?? null
             );
-            
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -550,13 +551,13 @@ class TaxEngineController extends Controller
                     'field_count' => count($fields),
                 ],
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Get required fields error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to get required fields',
@@ -564,7 +565,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Validate tax data against profile requirements
      */
@@ -577,24 +578,24 @@ class TaxEngineController extends Controller
                 'product_id' => 'nullable|exists:products,id',
                 'tax_data' => 'required|array',
             ]);
-            
+
             // Get tax profile
             $profile = $this->profileService->getProfile(
                 $validated['category_id'] ?? null,
                 $validated['product_id'] ?? null,
                 $validated['category_type'] ?? null
             );
-            
-            if (!$profile) {
+
+            if (! $profile) {
                 return response()->json([
                     'success' => false,
                     'error' => 'No tax profile found',
                 ], 404);
             }
-            
+
             // Validate tax data
             $errors = $this->profileService->validateTaxData($validated['tax_data'], $profile);
-            
+
             if (empty($errors)) {
                 return response()->json([
                     'success' => true,
@@ -607,13 +608,13 @@ class TaxEngineController extends Controller
                     'details' => $errors,
                 ], 422);
             }
-            
+
         } catch (\Exception $e) {
             Log::error('Validate tax data error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Validation failed',
@@ -621,7 +622,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Get customer address for tax calculation
      */
@@ -634,7 +635,7 @@ class TaxEngineController extends Controller
                 'error' => 'Customer not found',
             ], 404);
         }
-        
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -652,7 +653,7 @@ class TaxEngineController extends Controller
             ],
         ]);
     }
-    
+
     /**
      * Get all available tax profiles
      */
@@ -661,15 +662,15 @@ class TaxEngineController extends Controller
         try {
             // Ensure default profiles exist
             $this->profileService->ensureDefaultProfiles();
-            
+
             // Get all profiles
             $profiles = $this->profileService->getAvailableProfiles();
-            
+
             // Format profiles for response
             $formattedProfiles = $profiles->map(function ($profile) {
                 return $this->profileService->getProfileSummary($profile);
             });
-            
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -677,12 +678,12 @@ class TaxEngineController extends Controller
                     'count' => $profiles->count(),
                 ],
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Get available profiles error', [
                 'error' => $e->getMessage(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to get tax profiles',
@@ -690,7 +691,7 @@ class TaxEngineController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Calculate tax for a single invoice line item
      */
@@ -702,39 +703,39 @@ class TaxEngineController extends Controller
                 'base_price' => 'required|numeric|min:0',
                 'quantity' => 'nullable|integer|min:1',
                 'product_id' => 'nullable|exists:products,id',
-                
+
                 // Customer details
                 'customer_id' => 'required|exists:clients,id',
-                
+
                 // Dynamic tax data
                 'tax_data' => 'nullable|array',
             ]);
-            
+
             // Get customer and verify company access
             $customer = Client::find($validated['customer_id']);
-            if (!$customer || $customer->company_id !== auth()->user()->company_id) {
+            if (! $customer || $customer->company_id !== auth()->user()->company_id) {
                 return response()->json([
                     'success' => false,
                     'error' => 'Customer not found or access denied',
                 ], 404);
             }
-            
+
             // Get product if specified
             $product = null;
             if (isset($validated['product_id'])) {
                 $product = Product::find($validated['product_id']);
-                if (!$product || $product->company_id !== auth()->user()->company_id) {
+                if (! $product || $product->company_id !== auth()->user()->company_id) {
                     return response()->json([
                         'success' => false,
                         'error' => 'Product not found or access denied',
                     ], 404);
                 }
             }
-            
+
             // Determine category information from product
             $categoryId = $product->category_id ?? null;
             $categoryType = $product ? $product->getTaxEngineType() : 'general';
-            
+
             // Build customer address
             $customerAddress = [
                 'state' => $customer->state,
@@ -742,7 +743,7 @@ class TaxEngineController extends Controller
                 'zip' => $customer->zip_code,
                 'country' => $customer->country ?? 'US',
             ];
-            
+
             // Calculate taxes using the router
             $calculation = $this->taxEngine->calculateTaxes([
                 'base_price' => $validated['base_price'],
@@ -753,7 +754,7 @@ class TaxEngineController extends Controller
                 'customer_address' => $customerAddress,
                 'customer_id' => $customer->id,
             ]);
-            
+
             // Format response for line item usage
             return response()->json([
                 'success' => true,
@@ -776,21 +777,21 @@ class TaxEngineController extends Controller
                 'calculation_id' => uniqid('line_calc_'),
                 'calculated_at' => now()->toISOString(),
             ]);
-            
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'error' => 'Validation failed',
                 'details' => $e->errors(),
             ], 422);
-            
+
         } catch (\Exception $e) {
             Log::error('Line item tax calculation error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Tax calculation failed',
@@ -808,9 +809,9 @@ class TaxEngineController extends Controller
             $validated = $request->validate([
                 'category_type' => 'required|string',
             ]);
-            
+
             $taxTypes = $this->taxEngine->getApplicableTaxTypes($validated['category_type']);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -818,13 +819,13 @@ class TaxEngineController extends Controller
                     'count' => count($taxTypes),
                 ],
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Get applicable tax types error', [
                 'error' => $e->getMessage(),
                 'request' => $request->all(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to get tax types',

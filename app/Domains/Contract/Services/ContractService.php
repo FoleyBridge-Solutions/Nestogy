@@ -3,13 +3,11 @@
 namespace App\Domains\Contract\Services;
 
 use App\Domains\Contract\Models\Contract;
-use App\Models\Client;
-use App\Models\Asset;
 use App\Domains\Contract\Models\ContractSchedule;
 use App\Domains\Contract\Models\ContractTemplate;
-use App\Models\Quote;
-use App\Domains\Contract\Services\ContractConfigurationRegistry;
 use App\Domains\Core\Services\TemplateVariableMapper;
+use App\Models\Asset;
+use App\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -20,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * ContractService
- * 
+ *
  * Handles core contract operations including CRUD, search, filtering,
  * and business logic following Nestogy's Domain-Driven Design patterns.
  */
@@ -32,6 +30,7 @@ class ContractService
     protected function getConfig(): ContractConfigurationRegistry
     {
         $companyId = auth()->user()->company_id;
+
         return app(ContractConfigurationRegistry::class, ['companyId' => $companyId]);
     }
 
@@ -70,9 +69,9 @@ class ContractService
             $createdResources = [
                 'contract' => null,
                 'schedules' => [],
-                'asset_assignments' => []
+                'asset_assignments' => [],
             ];
-            
+
             try {
                 // Validate client exists and belongs to company
                 $client = Client::where('company_id', auth()->user()->company_id)
@@ -86,11 +85,11 @@ class ContractService
                 $config = $this->getConfig();
                 $statuses = $config->getContractStatuses();
                 $signatureStatuses = $config->getContractSignatureStatuses();
-                
+
                 $data['status'] = $data['status'] ?? (array_search('Draft', $statuses) ?: 'draft');
                 $data['signature_status'] = $data['signature_status'] ?? (array_search('Pending', $signatureStatuses) ?: 'pending');
                 $data['currency_code'] = $data['currency_code'] ?? 'USD';
-                
+
                 $renewalTypes = $config->getRenewalTypes();
                 $data['renewal_type'] = $data['renewal_type'] ?? (array_search('Manual Renewal', $renewalTypes) ?: 'manual');
 
@@ -109,13 +108,13 @@ class ContractService
                 if (isset($data['end_date']) && $data['end_date'] === '') {
                     $data['end_date'] = null;
                 }
-                
+
                 Log::info('Starting contract creation', [
                     'client_id' => $data['client_id'],
                     'contract_type' => $data['contract_type'] ?? 'unknown',
                     'template_id' => $data['template_id'] ?? null,
-                    'has_pricing_structure' => !empty($data['pricing_structure']),
-                    'has_sla_terms' => !empty($data['sla_terms'])
+                    'has_pricing_structure' => ! empty($data['pricing_structure']),
+                    'has_sla_terms' => ! empty($data['sla_terms']),
                 ]);
 
                 $contract = Contract::create($data);
@@ -123,33 +122,33 @@ class ContractService
 
                 Log::info('Contract created successfully', [
                     'contract_id' => $contract->id,
-                    'contract_number' => $contract->contract_number
+                    'contract_number' => $contract->contract_number,
                 ]);
 
                 // Create contract schedules with error handling
                 try {
                     $scheduleIds = $this->createContractSchedules($contract, $data);
                     $createdResources['schedules'] = $scheduleIds;
-                    
+
                     Log::info('Contract schedules created', [
                         'contract_id' => $contract->id,
                         'schedule_count' => count($scheduleIds),
-                        'schedule_ids' => $scheduleIds
+                        'schedule_ids' => $scheduleIds,
                     ]);
-                    
+
                     // Update contract with pricing data from Schedule B
                     $this->updateContractPricingFromSchedules($contract, $data);
-                    
+
                     // Validate and synchronize schedule configuration
                     $this->validateScheduleConfiguration($contract, $data);
-                    
+
                 } catch (\Exception $e) {
                     Log::error('Failed to create contract schedules', [
                         'contract_id' => $contract->id,
                         'error' => $e->getMessage(),
-                        'template_id' => $data['template_id'] ?? null
+                        'template_id' => $data['template_id'] ?? null,
                     ]);
-                    
+
                     // Continue without schedules - they can be added later
                     $this->logPartialFailure($contract, 'schedules', $e->getMessage());
                 }
@@ -167,17 +166,17 @@ class ContractService
                         'auto_assign_setting' => $slaTerms['auto_assign_new_assets'],
                         'supported_asset_types' => $supportedAssetTypes,
                         'service_tier' => $slaTerms['service_tier'] ?? 'standard',
-                        'assignment_trigger' => 'contract_creation'
+                        'assignment_trigger' => 'contract_creation',
                     ]);
 
                     try {
                         $assignmentResults = $this->processAssetAssignments($contract, $data);
                         $createdResources['asset_assignments'] = $assignmentResults['assigned_assets'] ?? [];
-                        
+
                         // Add post-assignment verification in contract creation
                         $actualAssetsCount = $contract->supportedAssets()->count();
                         $assetsByType = $contract->supportedAssets()->groupBy('type')->map->count();
-                        
+
                         Log::info('Post-assignment verification in contract creation', [
                             'contract_id' => $contract->id,
                             'assignment_results_returned' => $assignmentResults,
@@ -187,33 +186,33 @@ class ContractService
                                 'relationship_working' => $actualAssetsCount > 0,
                                 'expected_vs_actual' => [
                                     'expected' => $assignmentResults['total_assigned'] ?? 0,
-                                    'actual' => $actualAssetsCount
-                                ]
-                            ]
+                                    'actual' => $actualAssetsCount,
+                                ],
+                            ],
                         ]);
-                        
+
                         // Store assignment results in contract metadata
                         $metadata = $contract->metadata ?? [];
                         $metadata['asset_assignment_results'] = $assignmentResults;
-                        
+
                         // Add assignment metadata logging
                         Log::debug('Storing asset assignment metadata', [
                             'contract_id' => $contract->id,
                             'metadata_structure' => [
                                 'asset_assignment_results' => array_keys($assignmentResults),
-                                'total_metadata_size' => strlen(json_encode($metadata))
+                                'total_metadata_size' => strlen(json_encode($metadata)),
                             ],
-                            'complete_metadata' => $metadata
+                            'complete_metadata' => $metadata,
                         ]);
-                        
+
                         $contract->update(['metadata' => $metadata]);
-                        
+
                         // Recalculate contract value based on actual assigned assets
                         $this->updateContractValueWithAssets($contract);
-                        
+
                         // Update schedule-level asset assignments and counts
                         $this->updateScheduleAssetAssignments($contract, $assignmentResults, $data);
-                        
+
                         Log::info('Contract asset assignment completed', [
                             'contract_id' => $contract->id,
                             'total_assigned' => $assignmentResults['total_assigned'],
@@ -223,16 +222,16 @@ class ContractService
                                 'metadata_stored' => true,
                                 'value_recalculated' => true,
                                 'schedules_updated' => true,
-                                'final_asset_count' => $actualAssetsCount
-                            ]
+                                'final_asset_count' => $actualAssetsCount,
+                            ],
                         ]);
-                        
+
                     } catch (\Exception $e) {
                         Log::error('Failed to assign assets to contract', [
                             'contract_id' => $contract->id,
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
                         ]);
-                        
+
                         // Continue without asset assignments
                         $this->logPartialFailure($contract, 'asset_assignments', $e->getMessage());
                     }
@@ -242,16 +241,16 @@ class ContractService
                 if ($contract->template_id) {
                     try {
                         $this->generateContractContent($contract);
-                        
+
                         Log::info('Contract content generated successfully', [
-                            'contract_id' => $contract->id
+                            'contract_id' => $contract->id,
                         ]);
                     } catch (\Exception $e) {
                         Log::error('Failed to generate contract content', [
                             'contract_id' => $contract->id,
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
                         ]);
-                        
+
                         // Continue without content generation
                         $this->logPartialFailure($contract, 'content_generation', $e->getMessage());
                     }
@@ -265,20 +264,20 @@ class ContractService
                     ->log('Contract created');
 
                 return $contract;
-                
+
             } catch (\Exception $e) {
                 // Critical failure - cleanup any created resources
                 Log::error('Critical failure during contract creation', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),
-                    'created_resources' => array_map(function($resource) {
-                        return is_object($resource) ? get_class($resource) . ':' . ($resource->id ?? 'unknown') : 
-                               (is_array($resource) ? count($resource) . ' items' : $resource);
-                    }, $createdResources)
+                    'created_resources' => array_map(function ($resource) {
+                        return is_object($resource) ? get_class($resource).':'.($resource->id ?? 'unknown') :
+                               (is_array($resource) ? count($resource).' items' : $resource);
+                    }, $createdResources),
                 ]);
-                
+
                 $this->performCleanup($createdResources);
-                
+
                 throw $e;
             }
         });
@@ -295,10 +294,10 @@ class ContractService
             $statuses = $config->getContractStatuses();
             $draftStatusKey = array_search('Draft', $statuses) ?: 'draft';
             $pendingReviewKey = array_search('Pending Review', $statuses) ?: 'pending_review';
-            
-            if (!in_array($contract->status, [$draftStatusKey, $pendingReviewKey])) {
+
+            if (! in_array($contract->status, [$draftStatusKey, $pendingReviewKey])) {
                 throw ValidationException::withMessages([
-                    'status' => 'Only draft and pending review contracts can be edited'
+                    'status' => 'Only draft and pending review contracts can be edited',
                 ]);
             }
 
@@ -312,14 +311,13 @@ class ContractService
                 ->withProperties([
                     'action' => 'updated',
                     'old_data' => $oldData,
-                    'new_data' => $data
+                    'new_data' => $data,
                 ])
                 ->log('Contract updated');
 
             return $contract->fresh();
         });
     }
-
 
     /**
      * Activate a contract
@@ -330,10 +328,10 @@ class ContractService
             $config = $this->getConfig();
             $statuses = $config->getContractStatuses();
             $signedStatusKey = array_search('Signed', $statuses) ?: 'signed';
-            
+
             if ($contract->status !== $signedStatusKey) {
                 throw ValidationException::withMessages([
-                    'status' => 'Contract must be signed before activation'
+                    'status' => 'Contract must be signed before activation',
                 ]);
             }
 
@@ -360,10 +358,10 @@ class ContractService
             $statuses = $config->getContractStatuses();
             $activeStatusKey = array_search('Active', $statuses) ?: 'active';
             $suspendedStatusKey = array_search('Suspended', $statuses) ?: 'suspended';
-            
-            if (!in_array($contract->status, [$activeStatusKey, $suspendedStatusKey])) {
+
+            if (! in_array($contract->status, [$activeStatusKey, $suspendedStatusKey])) {
                 throw ValidationException::withMessages([
-                    'status' => 'Only active or suspended contracts can be terminated'
+                    'status' => 'Only active or suspended contracts can be terminated',
                 ]);
             }
 
@@ -375,7 +373,7 @@ class ContractService
                 ->causedBy(auth()->user())
                 ->withProperties([
                     'reason' => $reason,
-                    'termination_date' => $terminationDate ?? now()
+                    'termination_date' => $terminationDate ?? now(),
                 ])
                 ->log('Contract terminated');
 
@@ -392,10 +390,10 @@ class ContractService
             $config = $this->getConfig();
             $statuses = $config->getContractStatuses();
             $activeStatusKey = array_search('Active', $statuses) ?: 'active';
-            
+
             if ($contract->status !== $activeStatusKey) {
                 throw ValidationException::withMessages([
-                    'status' => 'Only active contracts can be suspended'
+                    'status' => 'Only active contracts can be suspended',
                 ]);
             }
 
@@ -421,10 +419,10 @@ class ContractService
             $config = $this->getConfig();
             $statuses = $config->getContractStatuses();
             $suspendedStatusKey = array_search('Suspended', $statuses) ?: 'suspended';
-            
+
             if ($contract->status !== $suspendedStatusKey) {
                 throw ValidationException::withMessages([
-                    'status' => 'Only suspended contracts can be reactivated'
+                    'status' => 'Only suspended contracts can be reactivated',
                 ]);
             }
 
@@ -443,32 +441,37 @@ class ContractService
     /**
      * Get contract dashboard statistics
      */
-    public function getDashboardStatistics(): array
+    public function getDashboardStatistics(?int $clientId = null): array
     {
         $companyId = auth()->user()->company_id;
         $config = $this->getConfig();
-        
+
         // Get dynamic status keys
         $statuses = $config->getContractStatuses();
         $signatureStatuses = $config->getContractSignatureStatuses();
-        
+
         $activeStatusKey = array_search('Active', $statuses) ?: 'active';
         $draftStatusKey = array_search('Draft', $statuses) ?: 'draft';
         $pendingSignatureKey = array_search('Pending', $signatureStatuses) ?: 'pending';
 
+        // Base query with optional client filter
+        $baseQuery = function() use ($companyId, $clientId) {
+            $query = Contract::where('company_id', $companyId);
+            if ($clientId) {
+                $query->where('client_id', $clientId);
+            }
+            return $query;
+        };
+
         return [
-            'total_contracts' => Contract::where('company_id', $companyId)->count(),
-            'active_contracts' => Contract::where('company_id', $companyId)
-                ->where('status', $activeStatusKey)->count(),
-            'draft_contracts' => Contract::where('company_id', $companyId)
-                ->where('status', $draftStatusKey)->count(),
-            'pending_signature' => Contract::where('company_id', $companyId)
-                ->where('signature_status', $pendingSignatureKey)->count(),
-            'expiring_soon' => Contract::where('company_id', $companyId)
-                ->expiringSoon(30)->count(),
-            'total_value' => Contract::where('company_id', $companyId)->sum('contract_value'),
-            'monthly_recurring_revenue' => $this->calculateMonthlyRecurringRevenue(),
-            'annual_contract_value' => $this->calculateAnnualContractValue(),
+            'total_contracts' => $baseQuery()->count(),
+            'active_contracts' => $baseQuery()->where('status', $activeStatusKey)->count(),
+            'draft_contracts' => $baseQuery()->where('status', $draftStatusKey)->count(),
+            'pending_signature' => $baseQuery()->where('signature_status', $pendingSignatureKey)->count(),
+            'expiring_soon' => $baseQuery()->expiringSoon(30)->count(),
+            'total_value' => $baseQuery()->sum('contract_value'),
+            'monthly_recurring_revenue' => $this->calculateMonthlyRecurringRevenue($clientId),
+            'annual_contract_value' => $this->calculateAnnualContractValue($clientId),
         ];
     }
 
@@ -518,10 +521,10 @@ class ContractService
             $config = $this->getConfig();
             $statuses = $config->getContractStatuses();
             $draftStatusKey = array_search('Draft', $statuses) ?: 'draft';
-            
+
             if ($contract->status !== $draftStatusKey) {
                 throw ValidationException::withMessages([
-                    'status' => 'Only draft contracts can be deleted'
+                    'status' => 'Only draft contracts can be deleted',
                 ]);
             }
 
@@ -542,47 +545,47 @@ class ContractService
      */
     protected function applyFilters(Builder $query, array $filters): void
     {
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['contract_type'])) {
+        if (! empty($filters['contract_type'])) {
             $query->where('contract_type', $filters['contract_type']);
         }
 
-        if (!empty($filters['client_id'])) {
+        if (! empty($filters['client_id'])) {
             $query->where('client_id', $filters['client_id']);
         }
 
-        if (!empty($filters['signature_status'])) {
+        if (! empty($filters['signature_status'])) {
             $query->where('signature_status', $filters['signature_status']);
         }
 
-        if (!empty($filters['start_date_from'])) {
+        if (! empty($filters['start_date_from'])) {
             $query->where('start_date', '>=', $filters['start_date_from']);
         }
 
-        if (!empty($filters['start_date_to'])) {
+        if (! empty($filters['start_date_to'])) {
             $query->where('start_date', '<=', $filters['start_date_to']);
         }
 
-        if (!empty($filters['end_date_from'])) {
+        if (! empty($filters['end_date_from'])) {
             $query->where('end_date', '>=', $filters['end_date_from']);
         }
 
-        if (!empty($filters['end_date_to'])) {
+        if (! empty($filters['end_date_to'])) {
             $query->where('end_date', '<=', $filters['end_date_to']);
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('contract_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('client', function ($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%");
+                    });
             });
         }
     }
@@ -593,20 +596,20 @@ class ContractService
     protected function generateContractNumber(string $prefix = 'CNT'): string
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Get all contract numbers with this prefix to find the highest number
         // Use withoutGlobalScope and withTrashed to ensure we see all contracts for this company
         $contractNumbers = Contract::withoutGlobalScope('company')
             ->withTrashed()
             ->where('company_id', $companyId)
-            ->where('contract_number', 'like', $prefix . '-%')
+            ->where('contract_number', 'like', $prefix.'-%')
             ->pluck('contract_number')
             ->toArray();
 
         $maxNumber = 0;
         foreach ($contractNumbers as $contractNumber) {
-            if (preg_match('/' . preg_quote($prefix) . '-(\d+)/', $contractNumber, $matches)) {
-                $currentNumber = (int)$matches[1];
+            if (preg_match('/'.preg_quote($prefix).'-(\d+)/', $contractNumber, $matches)) {
+                $currentNumber = (int) $matches[1];
                 if ($currentNumber > $maxNumber) {
                     $maxNumber = $currentNumber;
                 }
@@ -614,27 +617,27 @@ class ContractService
         }
 
         $nextNumber = $maxNumber + 1;
-        
+
         // Keep trying until we find a unique number (in case of race conditions)
         do {
             $paddedNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-            $contractNumber = $prefix . '-' . $paddedNumber;
-            
+            $contractNumber = $prefix.'-'.$paddedNumber;
+
             $exists = Contract::withoutGlobalScope('company')
                 ->withTrashed()
                 ->where('company_id', $companyId)
                 ->where('contract_number', $contractNumber)
                 ->exists();
-                
-            if (!$exists) {
+
+            if (! $exists) {
                 return $contractNumber;
             }
-            
+
             $nextNumber++;
         } while ($nextNumber < 10000); // Failsafe to prevent infinite loop
 
         // If we somehow can't find a unique number, use timestamp
-        return $prefix . '-' . now()->format('YmdHis');
+        return $prefix.'-'.now()->format('YmdHis');
     }
 
     /**
@@ -650,14 +653,14 @@ class ContractService
 
         // Keep additional_terms data for ContractSchedule creation
         // Note: Data will be stored in Schedule C's schedule_data field instead of Contract.custom_clauses
-        
+
         // Extract infrastructure schedule data for asset auto-assignment
-        if (!empty($data['infrastructure_schedule'])) {
+        if (! empty($data['infrastructure_schedule'])) {
             $infraSchedule = $data['infrastructure_schedule'];
-            
+
             // Map auto-assignment settings to sla_terms for processAssetAssignments method
             $slaTerms = $data['sla_terms'] ?? [];
-            
+
             // Compute booleans from pre-mapping state for dataSources tracking
             $hasDirectAutoAssign = isset($slaTerms['auto_assign_new_assets']);
             $hasLegacyAutoAssign = isset($infraSchedule['coverageRules']['autoAssignNewAssets']);
@@ -668,90 +671,106 @@ class ContractService
             $hasDirectAutoAssignNewContacts = isset($slaTerms['auto_assign_new_contacts']);
             $hasLegacyAutoAssignNewContacts = isset($infraSchedule['coverageRules']['autoAssignNewContacts']);
             $hasDirectSupportedTypes = isset($slaTerms['supported_asset_types']);
-            $hasLegacySupportedTypes = !empty($infraSchedule['supportedAssetTypes']);
+            $hasLegacySupportedTypes = ! empty($infraSchedule['supportedAssetTypes']);
             $hasDirectServiceTier = isset($slaTerms['service_tier']);
             $hasLegacyServiceTier = isset($infraSchedule['sla']['serviceTier']);
-            
+
             // Only map from legacy if direct value is not already set (prioritize direct sla_terms values)
-            if (!$hasDirectAutoAssign && $hasLegacyAutoAssign) {
+            if (! $hasDirectAutoAssign && $hasLegacyAutoAssign) {
                 $val = filter_var($infraSchedule['coverageRules']['autoAssignNewAssets'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($val !== null) { $slaTerms['auto_assign_new_assets'] = $val; }
+                if ($val !== null) {
+                    $slaTerms['auto_assign_new_assets'] = $val;
+                }
             }
-            
+
             // Map auto_assign_assets from legacy coverage rules
-            if (!$hasDirectAutoAssignAssets && $hasLegacyAutoAssignAssets) {
+            if (! $hasDirectAutoAssignAssets && $hasLegacyAutoAssignAssets) {
                 $val = filter_var($infraSchedule['coverageRules']['autoAssignAssets'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($val !== null) { $slaTerms['auto_assign_assets'] = $val; }
+                if ($val !== null) {
+                    $slaTerms['auto_assign_assets'] = $val;
+                }
             }
 
             // Map auto_assign_contacts from legacy coverage rules
-            if (!$hasDirectAutoAssignContacts && $hasLegacyAutoAssignContacts) {
+            if (! $hasDirectAutoAssignContacts && $hasLegacyAutoAssignContacts) {
                 $val = filter_var($infraSchedule['coverageRules']['autoAssignContacts'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($val !== null) { $slaTerms['auto_assign_contacts'] = $val; }
+                if ($val !== null) {
+                    $slaTerms['auto_assign_contacts'] = $val;
+                }
             }
 
             // Map auto_assign_new_contacts from legacy coverage rules
-            if (!$hasDirectAutoAssignNewContacts && $hasLegacyAutoAssignNewContacts) {
+            if (! $hasDirectAutoAssignNewContacts && $hasLegacyAutoAssignNewContacts) {
                 $val = filter_var($infraSchedule['coverageRules']['autoAssignNewContacts'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($val !== null) { $slaTerms['auto_assign_new_contacts'] = $val; }
+                if ($val !== null) {
+                    $slaTerms['auto_assign_new_contacts'] = $val;
+                }
             }
 
             // Ensure all auto-assignment fields are always booleans if they exist
             if (isset($slaTerms['auto_assign_new_assets'])) {
                 $val = filter_var($slaTerms['auto_assign_new_assets'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($val !== null) { $slaTerms['auto_assign_new_assets'] = $val; }
+                if ($val !== null) {
+                    $slaTerms['auto_assign_new_assets'] = $val;
+                }
             }
             if (isset($slaTerms['auto_assign_assets'])) {
                 $val = filter_var($slaTerms['auto_assign_assets'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($val !== null) { $slaTerms['auto_assign_assets'] = $val; }
+                if ($val !== null) {
+                    $slaTerms['auto_assign_assets'] = $val;
+                }
             }
             if (isset($slaTerms['auto_assign_contacts'])) {
                 $val = filter_var($slaTerms['auto_assign_contacts'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($val !== null) { $slaTerms['auto_assign_contacts'] = $val; }
+                if ($val !== null) {
+                    $slaTerms['auto_assign_contacts'] = $val;
+                }
             }
             if (isset($slaTerms['auto_assign_new_contacts'])) {
                 $val = filter_var($slaTerms['auto_assign_new_contacts'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($val !== null) { $slaTerms['auto_assign_new_contacts'] = $val; }
+                if ($val !== null) {
+                    $slaTerms['auto_assign_new_contacts'] = $val;
+                }
             }
-            
+
             // Extract supported asset types for asset assignment (prioritize direct sla_terms values)
-            if (!$hasDirectSupportedTypes && $hasLegacySupportedTypes) {
+            if (! $hasDirectSupportedTypes && $hasLegacySupportedTypes) {
                 $slaTerms['supported_asset_types'] = $infraSchedule['supportedAssetTypes'];
             }
-            
+
             // Extract SLA data if available (prioritize direct sla_terms values)
-            if (!empty($infraSchedule['sla'])) {
+            if (! empty($infraSchedule['sla'])) {
                 $sla = $infraSchedule['sla'];
-                if (!array_key_exists('response_time_hours', $slaTerms) && isset($sla['responseTimeHours'])) {
+                if (! array_key_exists('response_time_hours', $slaTerms) && isset($sla['responseTimeHours'])) {
                     $slaTerms['response_time_hours'] = (float) $sla['responseTimeHours'];
                 }
-                if (!array_key_exists('resolution_time_hours', $slaTerms) && isset($sla['resolutionTimeHours'])) {
+                if (! array_key_exists('resolution_time_hours', $slaTerms) && isset($sla['resolutionTimeHours'])) {
                     $slaTerms['resolution_time_hours'] = (float) $sla['resolutionTimeHours'];
                 }
-                if (!array_key_exists('uptime_percentage', $slaTerms) && isset($sla['uptimePercentage'])) {
+                if (! array_key_exists('uptime_percentage', $slaTerms) && isset($sla['uptimePercentage'])) {
                     $slaTerms['uptime_percentage'] = (float) $sla['uptimePercentage'];
                 }
-                if (!$hasDirectServiceTier && $hasLegacyServiceTier) {
+                if (! $hasDirectServiceTier && $hasLegacyServiceTier) {
                     $slaTerms['service_tier'] = $sla['serviceTier'];
                 }
             }
-            
+
             $data['sla_terms'] = $slaTerms;
-            
+
             // Determine data sources using pre-computed booleans
             $dataSources = [
-                'auto_assign_new_assets' => $hasDirectAutoAssign ? 'direct_sla_terms' : 
+                'auto_assign_new_assets' => $hasDirectAutoAssign ? 'direct_sla_terms' :
                     ($hasLegacyAutoAssign ? 'legacy_infrastructure_schedule' : 'not_set'),
-                'auto_assign_assets' => $hasDirectAutoAssignAssets ? 'direct_sla_terms' : 
+                'auto_assign_assets' => $hasDirectAutoAssignAssets ? 'direct_sla_terms' :
                     ($hasLegacyAutoAssignAssets ? 'legacy_infrastructure_schedule' : 'not_set'),
-                'auto_assign_contacts' => $hasDirectAutoAssignContacts ? 'direct_sla_terms' : 
+                'auto_assign_contacts' => $hasDirectAutoAssignContacts ? 'direct_sla_terms' :
                     ($hasLegacyAutoAssignContacts ? 'legacy_infrastructure_schedule' : 'not_set'),
-                'auto_assign_new_contacts' => $hasDirectAutoAssignNewContacts ? 'direct_sla_terms' : 
+                'auto_assign_new_contacts' => $hasDirectAutoAssignNewContacts ? 'direct_sla_terms' :
                     ($hasLegacyAutoAssignNewContacts ? 'legacy_infrastructure_schedule' : 'not_set'),
-                'supported_asset_types' => $hasDirectSupportedTypes ? 'direct_sla_terms' : 
+                'supported_asset_types' => $hasDirectSupportedTypes ? 'direct_sla_terms' :
                     ($hasLegacySupportedTypes ? 'legacy_infrastructure_schedule' : 'not_set'),
-                'service_tier' => $hasDirectServiceTier ? 'direct_sla_terms' : 
-                    ($hasLegacyServiceTier ? 'legacy_infrastructure_schedule' : 'not_set')
+                'service_tier' => $hasDirectServiceTier ? 'direct_sla_terms' :
+                    ($hasLegacyServiceTier ? 'legacy_infrastructure_schedule' : 'not_set'),
             ];
 
             Log::info('Mapped infrastructure schedule to sla_terms', [
@@ -763,14 +782,14 @@ class ContractService
                 'service_tier' => $slaTerms['service_tier'] ?? null,
                 'data_sources' => $dataSources,
                 'infraSchedule_full' => $infraSchedule,
-                'coverage_rules' => $infraSchedule['coverageRules'] ?? 'not_set'
+                'coverage_rules' => $infraSchedule['coverageRules'] ?? 'not_set',
             ]);
         }
-        
+
         // Extract specific terms to dedicated contract columns
-        if (!empty($data['additional_terms'])) {
+        if (! empty($data['additional_terms'])) {
             $additionalTerms = $data['additional_terms'];
-            
+
             if (isset($additionalTerms['disputeResolution']['method'])) {
                 $data['dispute_resolution'] = $additionalTerms['disputeResolution']['method'];
             }
@@ -780,25 +799,25 @@ class ContractService
         }
 
         // Store template-specific schedule data in metadata
-        if (!empty($data['billing_config']) || !empty($data['variable_values']) || !empty($data['template_id'])) {
+        if (! empty($data['billing_config']) || ! empty($data['variable_values']) || ! empty($data['template_id'])) {
             // Ensure we have default variables for contract wizard contracts
             $variableValues = $data['variable_values'] ?? [];
             $billingConfig = $data['billing_config'] ?? [];
-            
+
             // Only use defaults if we have absolutely no wizard form data
             // Check for actual wizard-submitted data in multiple places
-            $hasPricingData = !empty($data['pricing_schedule']) || !empty($data['sla_terms']);
-            $hasInfrastructureData = !empty($data['infrastructure_schedule']);
-            $hasActualWizardData = $hasPricingData || $hasInfrastructureData || 
-                                  (!empty($variableValues) && count($variableValues) > 0) ||
-                                  (!empty($billingConfig) && !empty($billingConfig['model']));
-            
+            $hasPricingData = ! empty($data['pricing_schedule']) || ! empty($data['sla_terms']);
+            $hasInfrastructureData = ! empty($data['infrastructure_schedule']);
+            $hasActualWizardData = $hasPricingData || $hasInfrastructureData ||
+                                  (! empty($variableValues) && count($variableValues) > 0) ||
+                                  (! empty($billingConfig) && ! empty($billingConfig['model']));
+
             // If we have no actual wizard data and we have a template, populate with defaults
-            if (!$hasActualWizardData && !empty($data['template_id'])) {
+            if (! $hasActualWizardData && ! empty($data['template_id'])) {
                 \Log::info('No wizard form data detected, using defaults', [
                     'template_id' => $data['template_id'],
                     'has_pricing_data' => $hasPricingData,
-                    'has_infrastructure_data' => $hasInfrastructureData
+                    'has_infrastructure_data' => $hasInfrastructureData,
                 ]);
                 $variableValues = $this->generateDefaultVariables($data);
                 $billingConfig = $this->generateDefaultBillingConfig($data);
@@ -806,10 +825,10 @@ class ContractService
                 \Log::info('Wizard form data detected, preserving user selections', [
                     'variable_values_count' => count($variableValues),
                     'billing_config_fields' => array_keys($billingConfig),
-                    'has_pricing_data' => $hasPricingData
+                    'has_pricing_data' => $hasPricingData,
                 ]);
             }
-            
+
             $data['metadata'] = [
                 'billing_config' => $billingConfig,
                 'variable_values' => $variableValues,
@@ -831,18 +850,18 @@ class ContractService
     protected function determineScheduleType(array $data): string
     {
         // Check for specialized schedule types first
-        if (!empty($data['telecom_schedule'])) {
+        if (! empty($data['telecom_schedule'])) {
             return 'telecom';
         }
-        if (!empty($data['hardware_schedule'])) {
+        if (! empty($data['hardware_schedule'])) {
             return 'hardware';
         }
-        if (!empty($data['compliance_schedule'])) {
+        if (! empty($data['compliance_schedule'])) {
             return 'compliance';
         }
-        
+
         // Check template type as fallback
-        if (!empty($data['template_id'])) {
+        if (! empty($data['template_id'])) {
             $template = \App\Domains\Contract\Models\ContractTemplate::find($data['template_id']);
             if ($template) {
                 $templateType = $template->template_type ?? $template->type;
@@ -857,7 +876,7 @@ class ContractService
                 }
             }
         }
-        
+
         return 'infrastructure';
     }
 
@@ -873,30 +892,32 @@ class ContractService
             'total_assigned' => 0,
             'by_type' => [],
             'skipped' => [],
-            'errors' => []
+            'errors' => [],
         ];
 
         // Verify auto-assignment is enabled
         $autoAssignEnabled = $data['sla_terms']['auto_assign_new_assets'] ?? false;
-        if (!$autoAssignEnabled) {
+        if (! $autoAssignEnabled) {
             $assignmentResults['errors'][] = 'Auto-assignment is disabled for this contract';
             Log::info('Asset assignment skipped - auto-assignment disabled', [
                 'contract_id' => $contract->id,
                 'client_id' => $clientId,
                 'company_id' => $contract->company_id,
-                'auto_assign_new_assets' => $autoAssignEnabled
+                'auto_assign_new_assets' => $autoAssignEnabled,
             ]);
+
             return $assignmentResults;
         }
-        
+
         if (empty($supportedAssetTypes)) {
             $assignmentResults['errors'][] = 'No supported asset types specified for assignment';
             Log::warning('Asset assignment skipped - no supported types', [
                 'contract_id' => $contract->id,
                 'client_id' => $clientId,
                 'company_id' => $contract->company_id,
-                'sla_terms' => $data['sla_terms'] ?? []
+                'sla_terms' => $data['sla_terms'] ?? [],
             ]);
+
             return $assignmentResults;
         }
 
@@ -909,7 +930,7 @@ class ContractService
             'sla_terms_raw' => $data['sla_terms'] ?? [],
             'auto_assign_new_assets' => $autoAssignEnabled,
             'data_source' => 'sla_terms.auto_assign_new_assets',
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ]);
 
         // Log total available assets per type before assignment
@@ -937,7 +958,7 @@ class ContractService
                 'available_for_assignment' => $availableAssets,
                 'already_assigned' => $assignedAssets,
                 'contract_id' => $contract->id,
-                'client_id' => $clientId
+                'client_id' => $clientId,
             ]);
         }
 
@@ -946,7 +967,7 @@ class ContractService
             Log::debug('Processing asset type', [
                 'asset_type' => $assetType,
                 'contract_id' => $contract->id,
-                'client_id' => $clientId
+                'client_id' => $clientId,
             ]);
 
             // Find assets for this specific type with detailed logging
@@ -962,7 +983,7 @@ class ContractService
                 'client_id' => $clientId,
                 'supporting_contract_id' => 'IS NULL',
                 'raw_sql' => $assetsQuery->toSql(),
-                'bindings' => $assetsQuery->getBindings()
+                'bindings' => $assetsQuery->getBindings(),
             ]);
 
             $availableAssets = $assetsQuery->get();
@@ -979,11 +1000,11 @@ class ContractService
                         'name' => $asset->name,
                         'type' => $asset->type,
                         'current_supporting_contract_id' => $asset->supporting_contract_id,
-                        'support_status' => $asset->support_status ?? 'none'
+                        'support_status' => $asset->support_status ?? 'none',
                     ];
-                })->toArray()
+                })->toArray(),
             ]);
-            
+
             if ($availableAssets->count() > 0) {
                 // Log individual assets being assigned
                 foreach ($availableAssets as $asset) {
@@ -993,7 +1014,7 @@ class ContractService
                         'asset_type' => $asset->type,
                         'old_supporting_contract_id' => $asset->supporting_contract_id,
                         'new_supporting_contract_id' => $contract->id,
-                        'contract_id' => $contract->id
+                        'contract_id' => $contract->id,
                     ]);
                 }
 
@@ -1014,7 +1035,7 @@ class ContractService
                             'service_tier' => $data['sla_terms']['service_tier'] ?? 'standard',
                             'auto_assigned' => true,
                             'assigned_via' => 'contract_wizard',
-                            'assignment_date' => now()->toISOString()
+                            'assignment_date' => now()->toISOString(),
                         ]),
                         'support_last_evaluated_at' => now(),
                     ];
@@ -1023,7 +1044,7 @@ class ContractService
                         'asset_type' => $assetType,
                         'update_data' => $updateData,
                         'assets_to_update' => $assetIdsBeforeUpdate,
-                        'contract_id' => $contract->id
+                        'contract_id' => $contract->id,
                     ]);
 
                     $typeAssignedCount = $assetsQuery->update($updateData);
@@ -1033,7 +1054,7 @@ class ContractService
                         'expected_updates' => $availableAssets->count(),
                         'actual_updates' => $typeAssignedCount,
                         'contract_id' => $contract->id,
-                        'update_successful' => $typeAssignedCount === $availableAssets->count()
+                        'update_successful' => $typeAssignedCount === $availableAssets->count(),
                     ]);
 
                     // Post-assignment verification
@@ -1053,9 +1074,9 @@ class ContractService
                                 'name' => $asset->name,
                                 'supporting_contract_id' => $asset->supporting_contract_id,
                                 'support_status' => $asset->support_status,
-                                'support_assigned_at' => $asset->support_assigned_at
+                                'support_assigned_at' => $asset->support_assigned_at,
                             ];
-                        })->toArray()
+                        })->toArray(),
                     ]);
 
                     if ($verificationAssets->count() !== count($assetIdsBeforeUpdate)) {
@@ -1063,7 +1084,7 @@ class ContractService
                             'asset_type' => $assetType,
                             'expected' => count($assetIdsBeforeUpdate),
                             'actual' => $verificationAssets->count(),
-                            'missing_assets' => array_diff($assetIdsBeforeUpdate, $verificationAssets->pluck('id')->toArray())
+                            'missing_assets' => array_diff($assetIdsBeforeUpdate, $verificationAssets->pluck('id')->toArray()),
                         ]);
                     }
 
@@ -1073,26 +1094,26 @@ class ContractService
                         'error_message' => $e->getMessage(),
                         'error_trace' => $e->getTraceAsString(),
                         'contract_id' => $contract->id,
-                        'assets_attempted' => $assetIdsBeforeUpdate
+                        'assets_attempted' => $assetIdsBeforeUpdate,
                     ]);
-                    
+
                     $assignmentResults['errors'][] = "Assignment failed for type {$assetType}: {$e->getMessage()}";
                     $typeAssignedCount = 0;
                 }
-                
+
                 $assignmentResults['by_type'][$assetType] = [
                     'assigned' => $typeAssignedCount,
                     'available' => $availableAssets->count(),
                     'asset_ids' => $assetIdsBeforeUpdate,
-                    'processing_time_ms' => round((microtime(true) - $typeStartTime) * 1000, 2)
+                    'processing_time_ms' => round((microtime(true) - $typeStartTime) * 1000, 2),
                 ];
-                
+
                 Log::info('Assets assigned for type', [
                     'asset_type' => $assetType,
                     'count' => $typeAssignedCount,
                     'available' => $availableAssets->count(),
                     'contract_id' => $contract->id,
-                    'processing_time_ms' => round((microtime(true) - $typeStartTime) * 1000, 2)
+                    'processing_time_ms' => round((microtime(true) - $typeStartTime) * 1000, 2),
                 ]);
             } else {
                 // Enhanced debugging for no available assets
@@ -1109,7 +1130,7 @@ class ContractService
 
                 if ($totalAssetsOfType > 0) {
                     $assignmentResults['skipped'][$assetType] = 'Assets already under contract';
-                    
+
                     Log::info('Assets skipped - already assigned', [
                         'asset_type' => $assetType,
                         'total_assets' => $totalAssetsOfType,
@@ -1119,13 +1140,13 @@ class ContractService
                             return [
                                 'id' => $asset->id,
                                 'name' => $asset->name,
-                                'supporting_contract_id' => $asset->supporting_contract_id
+                                'supporting_contract_id' => $asset->supporting_contract_id,
                             ];
-                        })->toArray()
+                        })->toArray(),
                     ]);
                 } else {
                     $assignmentResults['skipped'][$assetType] = 'No assets of this type found';
-                    
+
                     Log::warning('No assets found for type', [
                         'asset_type' => $assetType,
                         'client_id' => $clientId,
@@ -1137,11 +1158,11 @@ class ContractService
                             ->where('client_id', $clientId)
                             ->distinct()
                             ->pluck('type')
-                            ->toArray()
+                            ->toArray(),
                     ]);
                 }
             }
-            
+
             $assignmentResults['total_assigned'] += $typeAssignedCount;
         }
 
@@ -1167,23 +1188,23 @@ class ContractService
                 'relationship_verification' => [
                     'contract_assets_count' => $contractAssetsCount,
                     'assets_by_type' => $contractAssetsByType,
-                    'relationship_working' => $contractAssetsCount > 0
+                    'relationship_working' => $contractAssetsCount > 0,
                 ],
-                'final_status' => $assignmentResults['total_assigned'] > 0 ? 'success' : 'no_assignments'
+                'final_status' => $assignmentResults['total_assigned'] > 0 ? 'success' : 'no_assignments',
             ]);
 
             // Add relationship verification to results
             $assignmentResults['verification'] = [
                 'contract_assets_count' => $contractAssetsCount,
                 'assets_by_type' => $contractAssetsByType,
-                'total_processing_time_ms' => $totalTime
+                'total_processing_time_ms' => $totalTime,
             ];
 
         } catch (\Exception $e) {
             Log::error('Asset assignment verification failed', [
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
-                'results_so_far' => $assignmentResults
+                'results_so_far' => $assignmentResults,
             ]);
         }
 
@@ -1197,7 +1218,7 @@ class ContractService
                 'supported_asset_types' => $supportedAssetTypes,
                 'client_id' => $clientId,
                 'support_level' => $this->determineSupportLevel($data),
-                'processing_time_ms' => $totalTime
+                'processing_time_ms' => $totalTime,
             ])
             ->log("Asset assignment completed: {$assignmentResults['total_assigned']} assets assigned in {$totalTime}ms");
 
@@ -1210,12 +1231,12 @@ class ContractService
     protected function determineSupportLevel(array $data): string
     {
         $serviceTier = $data['sla_terms']['service_tier'] ?? '';
-        
+
         $tierMapping = [
             'bronze' => 'basic',
-            'silver' => 'standard', 
+            'silver' => 'standard',
             'gold' => 'premium',
-            'platinum' => 'enterprise'
+            'platinum' => 'enterprise',
         ];
 
         return $tierMapping[$serviceTier] ?? 'standard';
@@ -1226,7 +1247,7 @@ class ContractService
      */
     protected function updateContractValueWithAssets(Contract $contract): void
     {
-        if (!$contract->pricing_structure || (!isset($contract->pricing_structure['assetTypePricing']) && !isset($contract->pricing_structure['asset_pricing']))) {
+        if (! $contract->pricing_structure || (! isset($contract->pricing_structure['assetTypePricing']) && ! isset($contract->pricing_structure['asset_pricing']))) {
             return;
         }
 
@@ -1236,15 +1257,15 @@ class ContractService
         // Add base pricing (handle empty strings)
         $recurringMonthly = $pricing['recurring_monthly'] ?? '';
         $oneTime = $pricing['one_time'] ?? '';
-        
+
         $totalValue += $recurringMonthly !== '' ? (float) $recurringMonthly : 0;
         $totalValue += $oneTime !== '' ? (float) $oneTime : 0;
 
         // Calculate asset-based pricing with actual counts
         $assetPricing = $pricing['assetTypePricing'] ?? $pricing['asset_pricing'] ?? [];
-        if (!empty($assetPricing)) {
+        if (! empty($assetPricing)) {
             foreach ($assetPricing as $assetType => $config) {
-                if (!empty($config['enabled']) && !empty($config['price']) && $config['price'] !== '') {
+                if (! empty($config['enabled']) && ! empty($config['price']) && $config['price'] !== '') {
                     $assetCount = $contract->supportedAssets()->where('type', $assetType)->count();
                     $totalValue += (float) $config['price'] * $assetCount;
                 }
@@ -1293,22 +1314,23 @@ class ContractService
             ->where('schedule_letter', 'A')
             ->where('schedule_type', 'A')
             ->first();
-            
-        if (!$infrastructureSchedule) {
+
+        if (! $infrastructureSchedule) {
             Log::warning('No infrastructure schedule found for asset count update', [
-                'contract_id' => $contract->id
+                'contract_id' => $contract->id,
             ]);
+
             return;
         }
-        
+
         // Update asset count on the schedule
         $totalAssignedAssets = $assignmentResults['total_assigned'] ?? 0;
         $infrastructureSchedule->update([
             'asset_count' => $totalAssignedAssets,
             'last_used_at' => now(),
-            'auto_assign_assets' => $data['sla_terms']['auto_assign_new_assets'] ?? false
+            'auto_assign_assets' => $data['sla_terms']['auto_assign_new_assets'] ?? false,
         ]);
-        
+
         // Update schedule metadata with assignment details
         $scheduleMetadata = $infrastructureSchedule->metadata ?? [];
         $scheduleMetadata['asset_assignment_results'] = [
@@ -1317,17 +1339,17 @@ class ContractService
             'last_assignment_date' => now()->toISOString(),
             'assignment_method' => 'auto_wizard',
             'auto_assign_enabled' => $data['sla_terms']['auto_assign_new_assets'] ?? false,
-            'auto_assign_source' => 'sla_terms.auto_assign_new_assets'
+            'auto_assign_source' => 'sla_terms.auto_assign_new_assets',
         ];
-        
+
         $infrastructureSchedule->update(['metadata' => $scheduleMetadata]);
-        
+
         Log::info('Updated schedule asset assignments', [
             'contract_id' => $contract->id,
             'schedule_id' => $infrastructureSchedule->id,
             'asset_count' => $totalAssignedAssets,
             'assignment_breakdown' => $assignmentResults['by_type'] ?? [],
-            'auto_assign_enabled' => $data['sla_terms']['auto_assign_new_assets'] ?? false
+            'auto_assign_enabled' => $data['sla_terms']['auto_assign_new_assets'] ?? false,
         ]);
     }
 
@@ -1340,17 +1362,17 @@ class ContractService
         $validationResults = [
             'auto_assignment_sync' => false,
             'asset_types_sync' => false,
-            'sla_terms_sync' => false
+            'sla_terms_sync' => false,
         ];
-        
+
         // Find infrastructure schedule for validation
         $infrastructureSchedule = $schedules->where('schedule_letter', 'A')->first();
-        
+
         if ($infrastructureSchedule) {
             // Validate auto-assignment synchronization
             $scheduleAutoAssign = $infrastructureSchedule->auto_assign_assets;
             $contractAutoAssign = $data['sla_terms']['auto_assign_new_assets'] ?? false;
-            
+
             if ($scheduleAutoAssign === $contractAutoAssign) {
                 $validationResults['auto_assignment_sync'] = true;
             } else {
@@ -1358,69 +1380,69 @@ class ContractService
                     'contract_id' => $contract->id,
                     'schedule_auto_assign' => $scheduleAutoAssign,
                     'contract_auto_assign' => $contractAutoAssign,
-                    'data_source' => 'sla_terms.auto_assign_new_assets'
+                    'data_source' => 'sla_terms.auto_assign_new_assets',
                 ]);
-                
+
                 // Fix the mismatch by updating schedule to match contract
                 $infrastructureSchedule->update(['auto_assign_assets' => $contractAutoAssign]);
                 $validationResults['auto_assignment_sync'] = true;
             }
-            
+
             // Validate asset types synchronization
             $scheduleAssetTypes = $infrastructureSchedule->supported_asset_types ?? [];
             $contractAssetTypes = $data['sla_terms']['supported_asset_types'] ?? [];
-            
-            if (empty(array_diff($scheduleAssetTypes, $contractAssetTypes)) && 
+
+            if (empty(array_diff($scheduleAssetTypes, $contractAssetTypes)) &&
                 empty(array_diff($contractAssetTypes, $scheduleAssetTypes))) {
                 $validationResults['asset_types_sync'] = true;
             } else {
                 Log::info('Asset types synchronized between schedule and contract', [
                     'contract_id' => $contract->id,
                     'schedule_types' => $scheduleAssetTypes,
-                    'contract_types' => $contractAssetTypes
+                    'contract_types' => $contractAssetTypes,
                 ]);
                 $validationResults['asset_types_sync'] = true;
             }
-            
+
             // Validate SLA terms synchronization with focus on auto-assignment
             $scheduleSla = $infrastructureSchedule->sla_terms ?? [];
             $contractSla = $data['sla_terms'] ?? [];
 
-            if (!empty($contractSla)) {
+            if (! empty($contractSla)) {
                 // Check if schedule SLA terms include the auto-assignment settings
                 $scheduleHasAutoAssign = isset($scheduleSla['auto_assign_new_assets']);
                 $contractHasAutoAssign = isset($contractSla['auto_assign_new_assets']);
-                
+
                 if ($contractHasAutoAssign) {
                     $validationResults['sla_terms_sync'] = true;
-                    
+
                     // Update schedule SLA terms if they don't match
-                    if (!$scheduleHasAutoAssign || $scheduleSla['auto_assign_new_assets'] !== $contractSla['auto_assign_new_assets']) {
+                    if (! $scheduleHasAutoAssign || $scheduleSla['auto_assign_new_assets'] !== $contractSla['auto_assign_new_assets']) {
                         $updatedSla = array_merge($scheduleSla, [
                             'auto_assign_new_assets' => $contractSla['auto_assign_new_assets'],
-                            'auto_assign_assets' => $contractSla['auto_assign_assets'] ?? false
+                            'auto_assign_assets' => $contractSla['auto_assign_assets'] ?? false,
                         ]);
                         $infrastructureSchedule->update(['sla_terms' => $updatedSla]);
                     }
                 }
             }
         }
-        
+
         // Update contract metadata with validation results
         $contractMetadata = $contract->metadata ?? [];
         $contractMetadata['schedule_validation'] = [
             'results' => $validationResults,
             'validated_at' => now()->toISOString(),
-            'all_synchronized' => !in_array(false, $validationResults, true)
+            'all_synchronized' => ! in_array(false, $validationResults, true),
         ];
-        
+
         $contract->update(['metadata' => $contractMetadata]);
-        
+
         Log::info('Schedule configuration validation completed', [
             'contract_id' => $contract->id,
             'validation_results' => $validationResults,
             'auto_assign_data_source' => 'sla_terms.auto_assign_new_assets',
-            'all_synchronized' => $contractMetadata['schedule_validation']['all_synchronized']
+            'all_synchronized' => $contractMetadata['schedule_validation']['all_synchronized'],
         ]);
     }
 
@@ -1431,30 +1453,30 @@ class ContractService
     {
         $createdScheduleIds = [];
         $scheduleType = $this->determineScheduleType($data);
-        
+
         Log::info('Starting contract schedule creation', [
             'contract_id' => $contract->id,
             'schedule_type' => $scheduleType,
-            'has_infrastructure' => !empty($data['infrastructure_schedule']),
-            'has_pricing' => !empty($data['pricing_schedule']),
-            'has_additional_terms' => !empty($data['additional_terms'])
+            'has_infrastructure' => ! empty($data['infrastructure_schedule']),
+            'has_pricing' => ! empty($data['pricing_schedule']),
+            'has_additional_terms' => ! empty($data['additional_terms']),
         ]);
-        
+
         try {
             // Create Schedule A (Infrastructure/Service Configuration)
-            if (!empty($data['infrastructure_schedule'])) {
+            if (! empty($data['infrastructure_schedule'])) {
                 Log::info('Creating Schedule A for contract', [
                     'contract_id' => $contract->id,
-                    'infrastructure_keys' => array_keys($data['infrastructure_schedule'])
+                    'infrastructure_keys' => array_keys($data['infrastructure_schedule']),
                 ]);
-                
+
                 try {
                     $scheduleA = $this->createScheduleA($contract, $data, $scheduleType);
                     if ($scheduleA) {
                         $createdScheduleIds[] = $scheduleA->id;
                         Log::info('Schedule A created successfully', [
                             'schedule_id' => $scheduleA->id,
-                            'title' => $scheduleA->title
+                            'title' => $scheduleA->title,
                         ]);
                     } else {
                         Log::warning('Schedule A creation returned null');
@@ -1463,27 +1485,27 @@ class ContractService
                     Log::error('Failed to create Schedule A', [
                         'contract_id' => $contract->id,
                         'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'trace' => $e->getTraceAsString(),
                     ]);
                 }
             } else {
                 Log::info('Skipping Schedule A - no infrastructure_schedule data');
             }
-            
+
             // Create Schedule B (Pricing & Fees)
-            if (!empty($data['pricing_schedule'])) {
+            if (! empty($data['pricing_schedule'])) {
                 Log::info('Creating Schedule B for contract', [
                     'contract_id' => $contract->id,
-                    'pricing_keys' => array_keys($data['pricing_schedule'])
+                    'pricing_keys' => array_keys($data['pricing_schedule']),
                 ]);
-                
+
                 try {
                     $scheduleB = $this->createScheduleB($contract, $data, $scheduleType);
                     if ($scheduleB) {
                         $createdScheduleIds[] = $scheduleB->id;
                         Log::info('Schedule B created successfully', [
                             'schedule_id' => $scheduleB->id,
-                            'title' => $scheduleB->title
+                            'title' => $scheduleB->title,
                         ]);
                     } else {
                         Log::warning('Schedule B creation returned null');
@@ -1492,27 +1514,27 @@ class ContractService
                     Log::error('Failed to create Schedule B', [
                         'contract_id' => $contract->id,
                         'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'trace' => $e->getTraceAsString(),
                     ]);
                 }
             } else {
                 Log::info('Skipping Schedule B - no pricing_schedule data');
             }
-            
+
             // Create Schedule C (Additional Terms)
-            if (!empty($data['additional_terms'])) {
+            if (! empty($data['additional_terms'])) {
                 Log::info('Creating Schedule C for contract', [
                     'contract_id' => $contract->id,
-                    'additional_terms_keys' => array_keys($data['additional_terms'])
+                    'additional_terms_keys' => array_keys($data['additional_terms']),
                 ]);
-                
+
                 try {
                     $scheduleC = $this->createScheduleC($contract, $data);
                     if ($scheduleC) {
                         $createdScheduleIds[] = $scheduleC->id;
                         Log::info('Schedule C created successfully', [
                             'schedule_id' => $scheduleC->id,
-                            'title' => $scheduleC->title
+                            'title' => $scheduleC->title,
                         ]);
                     } else {
                         Log::warning('Schedule C creation returned null');
@@ -1521,83 +1543,83 @@ class ContractService
                     Log::error('Failed to create Schedule C', [
                         'contract_id' => $contract->id,
                         'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'trace' => $e->getTraceAsString(),
                     ]);
                 }
             } else {
                 Log::info('Skipping Schedule C - no additional_terms data');
             }
-            
+
             // Create specialized schedules based on template type
-            if (!empty($data['telecom_schedule'])) {
+            if (! empty($data['telecom_schedule'])) {
                 Log::info('Creating telecom schedule', [
                     'contract_id' => $contract->id,
-                    'telecom_data_keys' => array_keys($data['telecom_schedule'])
+                    'telecom_data_keys' => array_keys($data['telecom_schedule']),
                 ]);
                 $telecomSchedule = $this->createTelecomSchedule($contract, $data);
                 if ($telecomSchedule) {
                     $createdScheduleIds[] = $telecomSchedule->id;
                     Log::info('Telecom schedule created successfully', [
                         'schedule_id' => $telecomSchedule->id,
-                        'title' => $telecomSchedule->title
+                        'title' => $telecomSchedule->title,
                     ]);
                 }
             }
-            
-            if (!empty($data['hardware_schedule'])) {
+
+            if (! empty($data['hardware_schedule'])) {
                 Log::info('Creating hardware schedule', [
                     'contract_id' => $contract->id,
-                    'hardware_data_keys' => array_keys($data['hardware_schedule'])
+                    'hardware_data_keys' => array_keys($data['hardware_schedule']),
                 ]);
                 $hardwareSchedule = $this->createHardwareSchedule($contract, $data);
                 if ($hardwareSchedule) {
                     $createdScheduleIds[] = $hardwareSchedule->id;
                     Log::info('Hardware schedule created successfully', [
                         'schedule_id' => $hardwareSchedule->id,
-                        'title' => $hardwareSchedule->title
+                        'title' => $hardwareSchedule->title,
                     ]);
                 }
             }
-            
-            if (!empty($data['compliance_schedule'])) {
+
+            if (! empty($data['compliance_schedule'])) {
                 Log::info('Creating compliance schedule', [
                     'contract_id' => $contract->id,
-                    'compliance_data_keys' => array_keys($data['compliance_schedule'])
+                    'compliance_data_keys' => array_keys($data['compliance_schedule']),
                 ]);
                 $complianceSchedule = $this->createComplianceSchedule($contract, $data);
                 if ($complianceSchedule) {
                     $createdScheduleIds[] = $complianceSchedule->id;
                     Log::info('Compliance schedule created successfully', [
                         'schedule_id' => $complianceSchedule->id,
-                        'title' => $complianceSchedule->title
+                        'title' => $complianceSchedule->title,
                     ]);
                 }
             }
-            
+
             Log::info('Contract schedules created successfully', [
                 'contract_id' => $contract->id,
                 'schedule_ids' => $createdScheduleIds,
-                'schedule_count' => count($createdScheduleIds)
+                'schedule_count' => count($createdScheduleIds),
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Error creating contract schedules', [
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
-                'partial_schedule_ids' => $createdScheduleIds
+                'partial_schedule_ids' => $createdScheduleIds,
             ]);
-            
+
             // Clean up any partially created schedules
-            if (!empty($createdScheduleIds)) {
+            if (! empty($createdScheduleIds)) {
                 ContractSchedule::whereIn('id', $createdScheduleIds)->delete();
                 Log::info('Cleaned up partially created schedules', [
-                    'deleted_schedule_ids' => $createdScheduleIds
+                    'deleted_schedule_ids' => $createdScheduleIds,
                 ]);
             }
-            
+
             throw $e;
         }
-        
+
         return $createdScheduleIds;
     }
 
@@ -1609,18 +1631,19 @@ class ContractService
         // Validate infrastructure schedule data
         if (empty($data['infrastructure_schedule'])) {
             Log::warning('No infrastructure schedule data provided for Schedule A', [
-                'contract_id' => $contract->id
+                'contract_id' => $contract->id,
             ]);
+
             return null;
         }
-        $title = match($scheduleType) {
+        $title = match ($scheduleType) {
             'telecom' => 'Schedule A - Telecommunications & Service Levels',
             'hardware' => 'Schedule A - Hardware Products & Services',
             'compliance' => 'Schedule A - Compliance Framework & Requirements',
             default => 'Schedule A - Infrastructure & SLA'
         };
 
-        $description = match($scheduleType) {
+        $description = match ($scheduleType) {
             'telecom' => 'Telecommunications services, QoS metrics, and compliance requirements',
             'hardware' => 'Hardware procurement, installation services, and warranty terms',
             'compliance' => 'Regulatory compliance requirements and audit schedules',
@@ -1630,8 +1653,8 @@ class ContractService
         // Build schedule_data from infrastructure_schedule wizard data
         $infraSchedule = $data['infrastructure_schedule'] ?? [];
         $scheduleData = [];
-        
-        if (!empty($infraSchedule)) {
+
+        if (! empty($infraSchedule)) {
             $scheduleData = [
                 'supportedAssetTypes' => $infraSchedule['supportedAssetTypes'] ?? [],
                 'sla' => [
@@ -1656,15 +1679,15 @@ class ContractService
 
         // Extract auto-assignment setting from mapped sla_terms data
         $autoAssignAssets = $data['sla_terms']['auto_assign_new_assets'] ?? false;
-        
+
         Log::info('Creating Schedule A with correct auto-assignment data', [
             'contract_id' => $contract->id,
             'auto_assign_assets' => $autoAssignAssets,
             'data_source' => 'sla_terms.auto_assign_new_assets',
             'legacy_value' => $infraSchedule['coverageRules']['autoAssignNewAssets'] ?? 'not_set',
-            'schedule_type' => $scheduleType
+            'schedule_type' => $scheduleType,
         ]);
-        
+
         try {
             return ContractSchedule::create([
                 'company_id' => $contract->company_id,
@@ -1680,11 +1703,11 @@ class ContractService
                 'sla_terms' => array_merge($scheduleData['sla'] ?? [], [
                     'auto_assign_new_assets' => $data['sla_terms']['auto_assign_new_assets'] ?? false,
                     'auto_assign_assets' => $data['sla_terms']['auto_assign_assets'] ?? false,
-                    'supported_asset_types' => $data['sla_terms']['supported_asset_types'] ?? []
+                    'supported_asset_types' => $data['sla_terms']['supported_asset_types'] ?? [],
                 ]),
                 'coverage_rules' => $scheduleData['coverageRules'] ?? [],
                 'auto_assign_assets' => $autoAssignAssets,
-                'require_manual_approval' => !$autoAssignAssets, // If auto-assign is enabled, don't require manual approval
+                'require_manual_approval' => ! $autoAssignAssets, // If auto-assign is enabled, don't require manual approval
                 'status' => 'active',
                 'effective_date' => $contract->start_date,
                 'created_by' => auth()->id(),
@@ -1693,8 +1716,9 @@ class ContractService
             Log::error('Failed to create Schedule A', [
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
-                'schedule_data' => $scheduleData
+                'schedule_data' => $scheduleData,
             ]);
+
             return null;
         }
     }
@@ -1707,16 +1731,17 @@ class ContractService
         // Validate pricing schedule data
         if (empty($data['pricing_schedule'])) {
             Log::warning('No pricing schedule data provided for Schedule B', [
-                'contract_id' => $contract->id
+                'contract_id' => $contract->id,
             ]);
+
             return null;
         }
-        
+
         // Build schedule_data from pricing_schedule wizard data
         $pricingSchedule = $data['pricing_schedule'] ?? [];
         $scheduleData = [];
-        
-        if (!empty($pricingSchedule)) {
+
+        if (! empty($pricingSchedule)) {
             $scheduleData = [
                 'billingModel' => $pricingSchedule['billingModel'] ?? 'per_asset',
                 'basePricing' => [
@@ -1746,14 +1771,14 @@ class ContractService
                 'client_id' => $contract->client_id,
                 'expected_asset_count_for_schedule_b' => $contractAssetsCount,
                 'pricing_data_structure' => [
-                    'has_pricing_structure' => !empty($scheduleData),
+                    'has_pricing_structure' => ! empty($scheduleData),
                     'pricing_keys' => array_keys($scheduleData),
-                    'has_asset_pricing' => !empty($scheduleData['assetTypePricing'] ?? $scheduleData['asset_pricing'] ?? [])
+                    'has_asset_pricing' => ! empty($scheduleData['assetTypePricing'] ?? $scheduleData['asset_pricing'] ?? []),
                 ],
                 'contract_object_provided' => true,
-                'generation_method' => 'generateScheduleBContent'
+                'generation_method' => 'generateScheduleBContent',
             ]);
-            
+
             // Test TemplateVariableMapper before full generation
             try {
                 $variableMapper = app(\App\Domains\Core\Services\TemplateVariableMapper::class);
@@ -1764,16 +1789,16 @@ class ContractService
                     'relationship_vs_mapper_count' => [
                         'contract_relationship' => $contractAssetsCount,
                         'template_mapper' => $testAssetCount,
-                        'counts_match' => $contractAssetsCount === $testAssetCount
-                    ]
+                        'counts_match' => $contractAssetsCount === $testAssetCount,
+                    ],
                 ]);
             } catch (\Exception $e) {
                 Log::warning('Pre-generation asset test failed', [
                     'contract_id' => $contract->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
-            
+
             return ContractSchedule::create([
                 'company_id' => $contract->company_id,
                 'contract_id' => $contract->id,
@@ -1793,8 +1818,9 @@ class ContractService
             Log::error('Failed to create Schedule B', [
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
-                'schedule_data' => $scheduleData
+                'schedule_data' => $scheduleData,
             ]);
+
             return null;
         }
     }
@@ -1807,16 +1833,17 @@ class ContractService
         // Validate additional terms data
         if (empty($data['additional_terms'])) {
             Log::warning('No additional terms data provided for Schedule C', [
-                'contract_id' => $contract->id
+                'contract_id' => $contract->id,
             ]);
+
             return null;
         }
-        
+
         // Build schedule_data from additional_terms wizard data
         $additionalTerms = $data['additional_terms'] ?? [];
         $scheduleData = [];
-        
-        if (!empty($additionalTerms)) {
+
+        if (! empty($additionalTerms)) {
             $scheduleData = [
                 'termination' => $additionalTerms['termination'] ?? [],
                 'liability' => $additionalTerms['liability'] ?? [],
@@ -1846,8 +1873,9 @@ class ContractService
             Log::error('Failed to create Schedule C', [
                 'contract_id' => $contract->id,
                 'error' => $e->getMessage(),
-                'schedule_data' => $scheduleData
+                'schedule_data' => $scheduleData,
             ]);
+
             return null;
         }
     }
@@ -1858,10 +1886,10 @@ class ContractService
     protected function generateScheduleAContent(array $data, string $scheduleType): string
     {
         $slaTerms = $data['sla_terms'] ?? [];
-        
+
         // Start with template content
         $template = $this->getScheduleATemplate($scheduleType);
-        
+
         // Process variables for substitution
         $variables = array_merge($slaTerms, [
             'schedule_title' => $this->getScheduleATitle($scheduleType),
@@ -1869,53 +1897,53 @@ class ContractService
             'response_times' => $this->formatResponseTimes($slaTerms['response_times'] ?? []),
             'coverage_hours' => $this->formatCoverageHours($slaTerms['coverage_hours'] ?? []),
             'service_tier' => $slaTerms['serviceTier'] ?? 'Standard',
-            'uptime_target' => $slaTerms['uptimePercentage'] ?? '99.5'
+            'uptime_target' => $slaTerms['uptimePercentage'] ?? '99.5',
         ]);
-        
+
         return $this->processTemplate($template, $variables);
     }
 
     /**
      * Generate Schedule B pricing content
-     * 
-     * @param array $data Pricing structure data containing pricing configuration
-     * @param Contract|null $contract Optional contract for asset count integration and pricing validation.
-     *                                When provided, the method will retrieve actual asset counts
-     *                                from the contract's assets and integrate them with pricing data.
-     *                                When null, only pricing configuration data will be used.
+     *
+     * @param  array  $data  Pricing structure data containing pricing configuration
+     * @param  Contract|null  $contract  Optional contract for asset count integration and pricing validation.
+     *                                   When provided, the method will retrieve actual asset counts
+     *                                   from the contract's assets and integrate them with pricing data.
+     *                                   When null, only pricing configuration data will be used.
      * @return string Generated Schedule B content with asset pricing table
      */
     protected function generateScheduleBContent(array $data, ?Contract $contract = null): string
     {
         $pricing = $data['pricing_structure'] ?? [];
-        
+
         // Get pricing template
         $template = $this->getScheduleBTemplate();
-        
+
         // Add Schedule B generation start logging
         Log::info('Schedule B content generation starting', [
             'contract_id' => $contract ? $contract->id : null,
             'client_id' => $contract ? $contract->client_id : null,
-            'has_pricing_data' => !empty($pricing),
+            'has_pricing_data' => ! empty($pricing),
             'pricing_data_keys' => array_keys($pricing),
-            'has_asset_pricing' => !empty(data_get($pricing, 'assetTypePricing', data_get($pricing, 'asset_pricing', []))),
+            'has_asset_pricing' => ! empty(data_get($pricing, 'assetTypePricing', data_get($pricing, 'asset_pricing', []))),
             'asset_types_configured' => count(data_get($pricing, 'assetTypePricing', data_get($pricing, 'asset_pricing', []))),
             'contract_provided' => $contract !== null,
-            'generation_stage' => 'content_generation'
+            'generation_stage' => 'content_generation',
         ]);
-        
+
         // Compute asset variables once to optimize performance with enhanced logging
         $assetVariables = null;
         if ($contract) {
             try {
                 Log::debug('Calling TemplateVariableMapper for asset variables', [
                     'contract_id' => $contract->id,
-                    'method' => 'generateAssetListingVariables'
+                    'method' => 'generateAssetListingVariables',
                 ]);
-                
+
                 $variableMapper = app(\App\Domains\Core\Services\TemplateVariableMapper::class);
                 $assetVariables = $variableMapper->generateAssetListingVariables($contract);
-                
+
                 Log::info('TemplateVariableMapper integration successful', [
                     'contract_id' => $contract->id,
                     'asset_variables_generated' => $assetVariables !== null,
@@ -1923,33 +1951,33 @@ class ContractService
                     'asset_listing_variables' => [
                         'supported_assets_table' => isset($assetVariables['supported_assets_table']) ? strlen($assetVariables['supported_assets_table']) : 0,
                         'individual_assets_list' => isset($assetVariables['individual_assets_list']) ? strlen($assetVariables['individual_assets_list']) : 0,
-                        'asset_count' => $assetVariables['asset_count'] ?? 0
-                    ]
+                        'asset_count' => $assetVariables['asset_count'] ?? 0,
+                    ],
                 ]);
-                
+
             } catch (\Exception $e) {
                 Log::error('TemplateVariableMapper failed in Schedule B generation', [
                     'contract_id' => $contract->id,
                     'error_message' => $e->getMessage(),
                     'error_trace' => $e->getTraceAsString(),
-                    'stage' => 'asset_variable_generation'
+                    'stage' => 'asset_variable_generation',
                 ]);
                 $assetVariables = null;
             }
         } else {
             Log::info('No contract provided - skipping asset variable generation', [
-                'generation_mode' => 'pricing_only'
+                'generation_mode' => 'pricing_only',
             ]);
         }
-        
+
         $variables = [
             'billing_model' => ucfirst(str_replace('_', ' ', data_get($pricing, 'billingModel', data_get($pricing, 'billing_model', 'fixed')))),
-            'monthly_fee' => number_format((float)(data_get($pricing, 'basePricing.monthlyBase', data_get($pricing, 'recurring_monthly', 0))), 2),
-            'setup_fee' => number_format((float)(data_get($pricing, 'basePricing.setupFee', data_get($pricing, 'one_time', 0))), 2),
+            'monthly_fee' => number_format((float) (data_get($pricing, 'basePricing.monthlyBase', data_get($pricing, 'recurring_monthly', 0))), 2),
+            'setup_fee' => number_format((float) (data_get($pricing, 'basePricing.setupFee', data_get($pricing, 'one_time', 0))), 2),
             'asset_pricing_table' => $this->generateAssetPricingTableWithFallback($pricing, $contract, $assetVariables),
             'telecom_pricing' => $this->formatTelecomPricing(data_get($pricing, 'telecomPricing', data_get($pricing, 'telecom_pricing', []))),
             'compliance_pricing' => $this->formatCompliancePricing(data_get($pricing, 'compliancePricing', data_get($pricing, 'compliance_pricing', []))),
-            'per_user_pricing' => number_format((float)(data_get($pricing, 'perUnitPricing.perUserMonthly', data_get($pricing, 'perUnitPricing.perUser', data_get($pricing, 'per_user', 0)))), 2)
+            'per_user_pricing' => number_format((float) (data_get($pricing, 'perUnitPricing.perUserMonthly', data_get($pricing, 'perUnitPricing.perUser', data_get($pricing, 'per_user', 0)))), 2),
         ];
 
         // Add asset inventory variables via TemplateVariableMapper with enhanced logging
@@ -1962,66 +1990,66 @@ class ContractService
                     'asset_variables_count' => count($assetVariables),
                     'asset_data_content_lengths' => [
                         'supported_assets_table' => isset($assetVariables['supported_assets_table']) ? strlen($assetVariables['supported_assets_table']) : 0,
-                        'individual_assets_list' => isset($assetVariables['individual_assets_list']) ? strlen($assetVariables['individual_assets_list']) : 0
-                    ]
+                        'individual_assets_list' => isset($assetVariables['individual_assets_list']) ? strlen($assetVariables['individual_assets_list']) : 0,
+                    ],
                 ]);
-                
+
                 // Merge variables, giving priority to existing pricing variables
                 $premergeCount = count($variables);
                 $variables = array_merge($assetVariables, $variables);
-                
+
                 Log::info('Variable merge completed for Schedule B', [
                     'contract_id' => $contract->id,
                     'variables_before_merge' => $premergeCount,
                     'asset_variables_added' => count($assetVariables),
                     'final_variables_count' => count($variables),
                     'asset_count' => $assetVariables['total_asset_count'] ?? $assetVariables['asset_count'] ?? 0,
-                    'merge_successful' => true
+                    'merge_successful' => true,
                 ]);
-                
+
             } catch (\Exception $e) {
                 Log::error('Failed to merge asset variables for Schedule B', [
                     'contract_id' => $contract->id,
                     'error_message' => $e->getMessage(),
                     'error_trace' => $e->getTraceAsString(),
-                    'asset_variables_available' => $assetVariables !== null
+                    'asset_variables_available' => $assetVariables !== null,
                 ]);
-                
+
                 // Provide safe fallback values for asset variables
                 $variables = array_merge([
                     'supported_assets_table' => '<p><em>Asset data temporarily unavailable. Please contact support if this persists.</em></p>',
                     'individual_assets_list' => '<p><em>Asset data temporarily unavailable. Please contact support if this persists.</em></p>',
                     'asset_count_by_type' => '<p><em>Asset data temporarily unavailable.</em></p>',
-                    'total_asset_count' => '0'
+                    'total_asset_count' => '0',
                 ], $variables);
             }
         } else {
             Log::info('Using fallback asset variables for Schedule B', [
                 'contract_provided' => $contract !== null,
                 'asset_variables_generated' => $assetVariables !== null,
-                'reason' => !$contract ? 'no_contract' : 'no_asset_variables'
+                'reason' => ! $contract ? 'no_contract' : 'no_asset_variables',
             ]);
-            
+
             // No contract provided - use fallback values for asset variables
             $variables = array_merge([
                 'supported_assets_table' => '<p><em>Asset inventory will be populated once contract assets are assigned.</em></p>',
                 'individual_assets_list' => '<p><em>Asset inventory will be populated once contract assets are assigned.</em></p>',
                 'asset_count_by_type' => '<p><em>Asset counts will be available once assets are assigned.</em></p>',
-                'total_asset_count' => '0'
+                'total_asset_count' => '0',
             ], $variables);
         }
-        
+
         // Add comprehensive pricing validation and status variables
         $pricingStatus = $this->evaluatePricingCompleteness($pricing, $contract, $assetVariables);
         $variables = array_merge($variables, $pricingStatus);
-        
+
         Log::debug('Schedule B pricing status evaluation', [
             'contract_id' => $contract ? $contract->id : null,
             'pricing_status' => $pricingStatus['pricing_status'],
             'has_complete_pricing' => $pricingStatus['has_complete_pricing'],
-            'missing_components' => count($pricingStatus['missing_pricing_components'])
+            'missing_components' => count($pricingStatus['missing_pricing_components']),
         ]);
-        
+
         // Add template processing logging
         Log::info('Processing Schedule B template with variables', [
             'contract_id' => $contract ? $contract->id : null,
@@ -2030,13 +2058,13 @@ class ContractService
             'asset_related_variables' => [
                 'supported_assets_table_length' => isset($variables['supported_assets_table']) ? strlen($variables['supported_assets_table']) : 0,
                 'individual_assets_list_length' => isset($variables['individual_assets_list']) ? strlen($variables['individual_assets_list']) : 0,
-                'total_asset_count' => $variables['total_asset_count'] ?? 0
+                'total_asset_count' => $variables['total_asset_count'] ?? 0,
             ],
-            'template_processing_stage' => 'final'
+            'template_processing_stage' => 'final',
         ]);
-        
+
         $finalContent = $this->processTemplate($template, $variables);
-        
+
         // Add end-to-end verification logging
         Log::info('Schedule B content generation completed', [
             'contract_id' => $contract ? $contract->id : null,
@@ -2044,16 +2072,16 @@ class ContractService
             'content_contains_assets' => [
                 'has_asset_table' => strpos($finalContent, '<table') !== false || strpos($finalContent, 'asset') !== false,
                 'has_asset_content' => strpos($finalContent, 'Asset') !== false || strpos($finalContent, 'asset') !== false,
-                'content_not_empty' => !empty(trim($finalContent))
+                'content_not_empty' => ! empty(trim($finalContent)),
             ],
             'generation_summary' => [
                 'asset_variables_used' => $contract && $assetVariables,
-                'pricing_variables_used' => !empty($pricing),
+                'pricing_variables_used' => ! empty($pricing),
                 'template_processed' => true,
-                'total_variables_processed' => count($variables)
-            ]
+                'total_variables_processed' => count($variables),
+            ],
         ]);
-        
+
         return $finalContent;
     }
 
@@ -2064,19 +2092,19 @@ class ContractService
     {
         // Get terms template
         $template = $this->getScheduleCTemplate();
-        
+
         // Process variables for substitution
         $customClauses = $data['custom_clauses'] ?? [];
         $variables = [
             'termination_notice' => $customClauses['termination']['noticePeriod'] ?? '30 days',
-            'early_termination_fee' => number_format((float)($customClauses['termination']['earlyTerminationFee'] ?? 0), 2),
+            'early_termination_fee' => number_format((float) ($customClauses['termination']['earlyTerminationFee'] ?? 0), 2),
             'dispute_method' => $data['dispute_resolution'] ?? 'Binding arbitration',
             'governing_law' => $data['governing_law'] ?? 'State of Client Location',
             'data_retention' => $customClauses['data_retention'] ?? 'Standard retention policy applies',
             'backup_policy' => $customClauses['backup_policy'] ?? 'Industry standard backup procedures',
-            'security_requirements' => $customClauses['security_requirements'] ?? 'Standard security protocols'
+            'security_requirements' => $customClauses['security_requirements'] ?? 'Standard security protocols',
         ];
-        
+
         return $this->processTemplate($template, $variables);
     }
 
@@ -2086,26 +2114,26 @@ class ContractService
     protected function generateInfrastructureScheduleContent(array $slaTerms): string
     {
         $content = "## Supported Asset Types\n";
-        if (!empty($slaTerms['supported_asset_types'])) {
+        if (! empty($slaTerms['supported_asset_types'])) {
             foreach ($slaTerms['supported_asset_types'] as $assetType) {
-                $content .= "- " . ucfirst(str_replace('_', ' ', $assetType)) . "\n";
+                $content .= '- '.ucfirst(str_replace('_', ' ', $assetType))."\n";
             }
         }
-        
+
         $content .= "\n## Service Level Agreement\n";
-        if (!empty($slaTerms['service_tier'])) {
-            $content .= "**Service Tier**: " . ucfirst($slaTerms['service_tier']) . "\n";
+        if (! empty($slaTerms['service_tier'])) {
+            $content .= '**Service Tier**: '.ucfirst($slaTerms['service_tier'])."\n";
         }
-        if (!empty($slaTerms['response_time_hours'])) {
-            $content .= "**Response Time**: " . $slaTerms['response_time_hours'] . " hours\n";
+        if (! empty($slaTerms['response_time_hours'])) {
+            $content .= '**Response Time**: '.$slaTerms['response_time_hours']." hours\n";
         }
-        if (!empty($slaTerms['resolution_time_hours'])) {
-            $content .= "**Resolution Time**: " . $slaTerms['resolution_time_hours'] . " hours\n";
+        if (! empty($slaTerms['resolution_time_hours'])) {
+            $content .= '**Resolution Time**: '.$slaTerms['resolution_time_hours']." hours\n";
         }
-        if (!empty($slaTerms['uptime_percentage'])) {
-            $content .= "**Uptime Guarantee**: " . $slaTerms['uptime_percentage'] . "%\n";
+        if (! empty($slaTerms['uptime_percentage'])) {
+            $content .= '**Uptime Guarantee**: '.$slaTerms['uptime_percentage']."%\n";
         }
-        
+
         return $content;
     }
 
@@ -2119,7 +2147,7 @@ class ContractService
     }
 
     /**
-     * Generate hardware schedule content  
+     * Generate hardware schedule content
      */
     protected function generateHardwareScheduleContent(array $slaTerms): string
     {
@@ -2143,14 +2171,15 @@ class ContractService
     {
         $variables = [];
         foreach ($data as $key => $value) {
-            if (is_string($value) && !empty($value)) {
+            if (is_string($value) && ! empty($value)) {
                 $variables[] = [
                     'name' => $key,
                     'type' => 'string',
-                    'required' => true
+                    'required' => true,
                 ];
             }
         }
+
         return $variables;
     }
 
@@ -2160,35 +2189,35 @@ class ContractService
     protected function extractPricingVariables(array $data): array
     {
         $variables = $this->extractScheduleVariables($data);
-        
+
         // Add Schedule B asset variables as optional variables
         $assetVariables = [
             [
                 'name' => 'supported_assets_table',
                 'type' => 'html',
                 'required' => false,
-                'description' => 'Professional formatted table of all supported assets'
+                'description' => 'Professional formatted table of all supported assets',
             ],
             [
                 'name' => 'individual_assets_list',
-                'type' => 'html', 
+                'type' => 'html',
                 'required' => false,
-                'description' => 'Detailed listing of individual assets covered under the agreement'
+                'description' => 'Detailed listing of individual assets covered under the agreement',
             ],
             [
                 'name' => 'asset_count_by_type',
                 'type' => 'html',
                 'required' => false,
-                'description' => 'Summary count of assets grouped by type'
+                'description' => 'Summary count of assets grouped by type',
             ],
             [
                 'name' => 'total_asset_count',
                 'type' => 'integer',
                 'required' => false,
-                'description' => 'Total number of assets covered under the agreement'
-            ]
+                'description' => 'Total number of assets covered under the agreement',
+            ],
         ];
-        
+
         return array_merge($variables, $assetVariables);
     }
 
@@ -2205,9 +2234,9 @@ class ContractService
      */
     protected function getScheduleATitle(string $scheduleType): string
     {
-        return match($scheduleType) {
+        return match ($scheduleType) {
             'telecom' => 'Telecommunications & Service Levels',
-            'hardware' => 'Hardware Products & Services', 
+            'hardware' => 'Hardware Products & Services',
             'compliance' => 'Compliance Framework & Requirements',
             default => 'Infrastructure & SLA'
         };
@@ -2225,38 +2254,44 @@ class ContractService
         $data['termination_clause'] = $data['termination_clause'] ?? $template->termination_clause;
         $data['liability_clause'] = $data['liability_clause'] ?? $template->liability_clause;
         $data['confidentiality_clause'] = $data['confidentiality_clause'] ?? $template->confidentiality_clause;
-        
+
         return $data;
     }
 
     /**
      * Calculate monthly recurring revenue
      */
-    protected function calculateMonthlyRecurringRevenue(): float
+    protected function calculateMonthlyRecurringRevenue(?int $clientId = null): float
     {
         $companyId = auth()->user()->company_id;
+
+        $query = Contract::where('company_id', $companyId)->active();
         
-        return Contract::where('company_id', $companyId)
-            ->active()
-            ->get()
-            ->sum(function ($contract) {
-                return $contract->getMonthlyRecurringRevenue();
-            });
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+
+        return $query->get()->sum(function ($contract) {
+            return $contract->getMonthlyRecurringRevenue();
+        });
     }
 
     /**
      * Calculate annual contract value
      */
-    protected function calculateAnnualContractValue(): float
+    protected function calculateAnnualContractValue(?int $clientId = null): float
     {
         $companyId = auth()->user()->company_id;
+
+        $query = Contract::where('company_id', $companyId)->active();
         
-        return Contract::where('company_id', $companyId)
-            ->active()
-            ->get()
-            ->sum(function ($contract) {
-                return $contract->getAnnualValue();
-            });
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+
+        return $query->get()->sum(function ($contract) {
+            return $contract->getAnnualValue();
+        });
     }
 
     /**
@@ -2276,12 +2311,12 @@ class ContractService
             // Prepare contract data
             $contractData['company_id'] = $user->company_id;
             $contractData['created_by'] = $user->id;
-            
+
             // Set dynamic status defaults
             $config = app(ContractConfigurationRegistry::class, ['companyId' => $user->company_id]);
             $statuses = $config->getContractStatuses();
             $signatureStatuses = $config->getContractSignatureStatuses();
-            
+
             $contractData['status'] = array_search('Draft', $statuses) ?: 'draft';
             $contractData['signature_status'] = array_search('Pending', $signatureStatuses) ?: 'pending';
             $contractData['currency_code'] = $contractData['currency_code'] ?? 'USD';
@@ -2313,8 +2348,8 @@ class ContractService
                     'component_id' => $component->id,
                     'configuration' => [],
                     'variable_values' => $assignmentData['variable_values'] ?? [],
-                    'pricing_override' => $assignmentData['has_pricing_override'] 
-                        ? $assignmentData['pricing_override'] 
+                    'pricing_override' => $assignmentData['has_pricing_override']
+                        ? $assignmentData['pricing_override']
                         : null,
                     'status' => 'active',
                     'sort_order' => $index + 1,
@@ -2340,7 +2375,7 @@ class ContractService
                 ->withProperties([
                     'action' => 'created_from_builder',
                     'component_count' => count($componentAssignments),
-                    'total_value' => $totalValue
+                    'total_value' => $totalValue,
                 ])
                 ->log('Contract created using dynamic builder');
 
@@ -2354,22 +2389,22 @@ class ContractService
     protected function processTemplate(string $template, array $variables): string
     {
         $content = $template;
-        
+
         // First, process conditionals (must be done before variable substitution)
         $content = $this->processConditionals($content, $variables);
-        
+
         // Then process variable substitutions
         foreach ($variables as $key => $value) {
             // Convert value to string if it's not already
-            $stringValue = is_array($value) ? json_encode($value) : (string)$value;
-            
+            $stringValue = is_array($value) ? json_encode($value) : (string) $value;
+
             // Replace {{key}} with value
-            $content = str_replace('{{' . $key . '}}', $stringValue, $content);
+            $content = str_replace('{{'.$key.'}}', $stringValue, $content);
         }
-        
+
         // Clean up any remaining unreplaced variables
         $content = preg_replace('/\{\{[^}]+\}\}/', '', $content);
-        
+
         return $content;
     }
 
@@ -2380,15 +2415,15 @@ class ContractService
     {
         // Pattern to match {{#if condition}}...{{#else}}...{{/if}} blocks (with optional else)
         $pattern = '/\{\{#if\s+([^}]+)\}\}(.*?)(?:\{\{#?else\}\}(.*?))?\{\{\/if\}\}/s';
-        
+
         return preg_replace_callback($pattern, function ($matches) use ($variables) {
             $condition = trim($matches[1]);
             $trueContent = $matches[2] ?? '';
             $falseContent = $matches[3] ?? '';
-            
+
             // Evaluate the condition (supports AND operations)
             $conditionResult = $this->evaluateCondition($condition, $variables);
-            
+
             return $conditionResult ? $trueContent : $falseContent;
         }, $content);
     }
@@ -2401,27 +2436,29 @@ class ContractService
         // Handle AND operations (&&)
         if (strpos($condition, '&&') !== false) {
             $parts = array_map('trim', explode('&&', $condition));
-            
+
             foreach ($parts as $part) {
-                if (!$this->isTruthy($variables[$part] ?? null)) {
+                if (! $this->isTruthy($variables[$part] ?? null)) {
                     return false;
                 }
             }
+
             return true;
         }
-        
-        // Handle OR operations (||) 
+
+        // Handle OR operations (||)
         if (strpos($condition, '||') !== false) {
             $parts = array_map('trim', explode('||', $condition));
-            
+
             foreach ($parts as $part) {
                 if ($this->isTruthy($variables[$part] ?? null)) {
                     return true;
                 }
             }
+
             return false;
         }
-        
+
         // Single variable condition
         return $this->isTruthy($variables[$condition] ?? null);
     }
@@ -2435,15 +2472,16 @@ class ContractService
             return $value;
         }
         if (is_string($value)) {
-            return !empty($value) && strtolower($value) !== 'false' && strtolower($value) !== 'no';
+            return ! empty($value) && strtolower($value) !== 'false' && strtolower($value) !== 'no';
         }
         if (is_numeric($value)) {
             return $value != 0;
         }
         if (is_array($value)) {
-            return !empty($value);
+            return ! empty($value);
         }
-        return !empty($value);
+
+        return ! empty($value);
     }
 
     /**
@@ -2471,8 +2509,8 @@ class ContractService
         return '# SCHEDULE A - INFRASTRUCTURE SERVICES & SERVICE LEVEL AGREEMENT
 
 **Document Version:** 2.0  
-**Effective Date:** ' . now()->format('F d, Y') . '  
-**Review Date:** ' . now()->addYear()->format('F d, Y') . '
+**Effective Date:** '.now()->format('F d, Y').'  
+**Review Date:** '.now()->addYear()->format('F d, Y').'
 
 ---
 
@@ -2562,7 +2600,7 @@ If monthly availability falls below the committed {{uptime_target}}%, Client sha
      */
     protected function getTelecomScheduleTemplate(): string
     {
-        return "# {{schedule_title}}
+        return '# {{schedule_title}}
 
 ## Service Quality Metrics
 **Uptime Target**: {{uptime_target}}%
@@ -2589,7 +2627,7 @@ If monthly availability falls below the committed {{uptime_target}}%, Client sha
 - Network availability: {{uptime_target}}%
 - Call completion rate: 99.5%
 - Voice quality monitoring
-- 24/7 network operations center";
+- 24/7 network operations center';
     }
 
     /**
@@ -2597,7 +2635,7 @@ If monthly availability falls below the committed {{uptime_target}}%, Client sha
      */
     protected function getHardwareScheduleTemplate(): string
     {
-        return "# {{schedule_title}}
+        return '# {{schedule_title}}
 
 ## Hardware Coverage
 {{supported_asset_types}}
@@ -2620,7 +2658,7 @@ If monthly availability falls below the committed {{uptime_target}}%, Client sha
 - Preventive maintenance
 - Failure diagnosis
 - Replacement logistics
-- Documentation updates";
+- Documentation updates';
     }
 
     /**
@@ -2628,7 +2666,7 @@ If monthly availability falls below the committed {{uptime_target}}%, Client sha
      */
     protected function getComplianceScheduleTemplate(): string
     {
-        return "# {{schedule_title}}
+        return '# {{schedule_title}}
 
 ## Compliance Framework
 **Service Tier**: {{service_tier}}
@@ -2656,7 +2694,7 @@ If monthly availability falls below the committed {{uptime_target}}%, Client sha
 - Industry-specific regulations
 - Data protection requirements
 - Security frameworks
-- Audit trail maintenance";
+- Audit trail maintenance';
     }
 
     /**
@@ -2667,8 +2705,8 @@ If monthly availability falls below the committed {{uptime_target}}%, Client sha
         return '# SCHEDULE B - PRICING & FEES
 
 **Document Version:** 2.0  
-**Effective Date:** ' . now()->format('F d, Y') . '  
-**Review Date:** ' . now()->addYear()->format('F d, Y') . '
+**Effective Date:** '.now()->format('F d, Y').'  
+**Review Date:** '.now()->addYear()->format('F d, Y').'
 
 ---
 
@@ -2787,8 +2825,8 @@ Automatic credits applied as outlined in Schedule A for SLA violations:
         return '# SCHEDULE C - ADDITIONAL TERMS & CONDITIONS
 
 **Document Version:** 2.0  
-**Effective Date:** ' . now()->format('F d, Y') . '  
-**Review Date:** ' . now()->addYear()->format('F d, Y') . '
+**Effective Date:** '.now()->format('F d, Y').'  
+**Review Date:** '.now()->addYear()->format('F d, Y').'
 
 ---
 
@@ -2908,12 +2946,12 @@ Events beyond reasonable control including but not limited to:
     protected function formatAssetTypes(array $assetTypes): string
     {
         if (empty($assetTypes)) {
-            return "- All standard IT assets";
+            return '- All standard IT assets';
         }
 
         $formatted = [];
         foreach ($assetTypes as $type) {
-            $formatted[] = "- " . ucfirst(str_replace('_', ' ', $type));
+            $formatted[] = '- '.ucfirst(str_replace('_', ' ', $type));
         }
 
         return implode("\n", $formatted);
@@ -2925,12 +2963,12 @@ Events beyond reasonable control including but not limited to:
     protected function formatResponseTimes(array $responseTimes): string
     {
         if (empty($responseTimes)) {
-            return "**Standard**: 4 hours business days";
+            return '**Standard**: 4 hours business days';
         }
 
         $formatted = [];
         foreach ($responseTimes as $priority => $time) {
-            $formatted[] = "**" . ucfirst($priority) . "**: " . $time;
+            $formatted[] = '**'.ucfirst($priority).'**: '.$time;
         }
 
         return implode("\n", $formatted);
@@ -2942,12 +2980,12 @@ Events beyond reasonable control including but not limited to:
     protected function formatCoverageHours(array $coverageHours): string
     {
         if (empty($coverageHours)) {
-            return "**Business Hours**: 8 AM - 6 PM (Local Time)";
+            return '**Business Hours**: 8 AM - 6 PM (Local Time)';
         }
 
         $formatted = [];
         foreach ($coverageHours as $type => $hours) {
-            $formatted[] = "**" . ucfirst(str_replace('_', ' ', $type)) . "**: " . $hours;
+            $formatted[] = '**'.ucfirst(str_replace('_', ' ', $type)).'**: '.$hours;
         }
 
         return implode("\n", $formatted);
@@ -2967,44 +3005,44 @@ Events beyond reasonable control including but not limited to:
                     $variableMapper = app(\App\Domains\Core\Services\TemplateVariableMapper::class);
                     $assetVariables = $variableMapper->generateAssetListingVariables($contract);
                 }
-                
+
                 // Extract asset counts by type from generated variables
                 // The method provides asset_count_by_type which contains the counts
                 $assetCountsByType = $this->extractAssetCountsFromVariables($assetVariables);
-                    
+
                 Log::debug('Asset counts retrieved for pricing table', [
                     'contract_id' => $contract->id,
                     'client_id' => $contract->client_id ?? null,
-                    'asset_counts' => $assetCountsByType
+                    'asset_counts' => $assetCountsByType,
                 ]);
             } catch (\Exception $e) {
                 Log::warning('Failed to retrieve asset counts for pricing table', [
                     'contract_id' => $contract->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 $assetCountsByType = [];
             }
         }
-        
+
         // Build comprehensive asset pricing table
         if (empty($assetPricing) && empty($assetCountsByType)) {
-            return "Asset pricing included in base monthly fee";
+            return 'Asset pricing included in base monthly fee';
         }
-        
+
         $tableRows = [];
         $totalMonthlyCost = 0;
         $hasAnyPricing = false;
-        
+
         // Get all asset types (from pricing config and actual assets)
         $allAssetTypes = collect(array_keys($assetPricing))
             ->merge(array_keys($assetCountsByType))
             ->unique()
             ->filter();
-            
+
         if ($allAssetTypes->isEmpty()) {
-            return "No assets or pricing configuration available";
+            return 'No assets or pricing configuration available';
         }
-        
+
         // Build HTML table for better formatting
         $html = '<table class="asset-pricing-table">';
         $html .= '<thead><tr class="asset-pricing-table__header">';
@@ -3013,22 +3051,22 @@ Events beyond reasonable control including but not limited to:
         $html .= '<th class="asset-pricing-table__cell asset-pricing-table__cell--right">Monthly Rate</th>';
         $html .= '<th class="asset-pricing-table__cell asset-pricing-table__cell--right">Total Monthly Cost</th>';
         $html .= '</tr></thead><tbody>';
-        
+
         foreach ($allAssetTypes as $assetType) {
             $config = $assetPricing[$assetType] ?? [];
             $count = $assetCountsByType[$assetType] ?? 0;
             $displayName = ucfirst(str_replace('_', ' ', $assetType));
-            
+
             // Determine pricing status
-            $hasPricing = !empty($config['enabled']) && !empty($config['price']);
-            $price = $hasPricing ? (float)$config['price'] : 0;
+            $hasPricing = ! empty($config['enabled']) && ! empty($config['price']);
+            $price = $hasPricing ? (float) $config['price'] : 0;
             $lineCost = $hasPricing ? $price * $count : 0;
-            
+
             if ($hasPricing) {
                 $hasAnyPricing = true;
                 $totalMonthlyCost += $lineCost;
             }
-            
+
             // Format rate display
             // Currency formatting behavior:
             // - For priced items: Display as currency (e.g., "$5.00")
@@ -3037,40 +3075,40 @@ Events beyond reasonable control including but not limited to:
             // Note: "Included" indicates the cost is covered by the base monthly fee
             // If downstream parsing is required, consider emitting numeric values with a separate flag
             if ($hasPricing) {
-                $rateDisplay = '$' . number_format($price, 2);
-                $costDisplay = '$' . number_format($lineCost, 2);
+                $rateDisplay = '$'.number_format($price, 2);
+                $costDisplay = '$'.number_format($lineCost, 2);
             } else {
                 $rateDisplay = 'Included';
                 $costDisplay = $count > 0 ? 'Included' : 'N/A';
             }
-            
+
             $html .= '<tr class="asset-pricing-table__row">';
-            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--left">' . htmlspecialchars($displayName) . '</td>';
-            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--center">' . $count . '</td>';
-            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--right">' . $rateDisplay . '</td>';
-            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--right">' . $costDisplay . '</td>';
+            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--left">'.htmlspecialchars($displayName).'</td>';
+            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--center">'.$count.'</td>';
+            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--right">'.$rateDisplay.'</td>';
+            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--right">'.$costDisplay.'</td>';
             $html .= '</tr>';
         }
-        
+
         // Add totals row if we have any pricing
         if ($hasAnyPricing && $totalMonthlyCost > 0) {
             $html .= '<tr class="asset-pricing-table__row asset-pricing-table__total">';
             $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--left">Total</td>';
             $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--center">-</td>';
             $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--right">-</td>';
-            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--right">$' . number_format($totalMonthlyCost, 2) . '</td>';
+            $html .= '<td class="asset-pricing-table__cell asset-pricing-table__cell--right">$'.number_format($totalMonthlyCost, 2).'</td>';
             $html .= '</tr>';
         }
-        
+
         $html .= '</tbody></table>';
-        
+
         // Add explanatory text
-        if (!$hasAnyPricing && !empty($assetCountsByType)) {
+        if (! $hasAnyPricing && ! empty($assetCountsByType)) {
             $html .= '<p style="margin-top: 10px; font-style: italic; color: #6c757d;">Asset management and monitoring fees are included in the base monthly service fee.</p>';
         } elseif ($hasAnyPricing) {
             $html .= '<p style="margin-top: 10px; font-style: italic; color: #6c757d;">Asset fees are billed monthly based on actual asset count. "Included" rates are covered by the base service fee.</p>';
         }
-        
+
         return $html;
     }
 
@@ -3081,7 +3119,7 @@ Events beyond reasonable control including but not limited to:
     {
         try {
             return $this->formatAssetPricingTable(
-                data_get($pricing, 'assetTypePricing', data_get($pricing, 'asset_pricing', [])), 
+                data_get($pricing, 'assetTypePricing', data_get($pricing, 'asset_pricing', [])),
                 $contract,
                 $assetVariables
             );
@@ -3089,14 +3127,14 @@ Events beyond reasonable control including but not limited to:
             Log::error('Failed to generate asset pricing table', [
                 'contract_id' => $contract ? $contract->id : null,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             // Provide fallback table
             return '<table class="asset-pricing-table" style="width: 100%; border-collapse: collapse; margin: 10px 0;">'
-                . '<tr><td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">'
-                . '<em>Asset pricing information temporarily unavailable. Please contact support if this persists.</em>'
-                . '</td></tr></table>';
+                .'<tr><td style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">'
+                .'<em>Asset pricing information temporarily unavailable. Please contact support if this persists.</em>'
+                .'</td></tr></table>';
         }
     }
 
@@ -3112,38 +3150,38 @@ Events beyond reasonable control including but not limited to:
         $hasCompliancePricing = false;
         $assetPricingConfigured = [];
         $assetPricingMissing = [];
-        
+
         // Check base pricing
         $monthlyBase = data_get($pricing, 'basePricing.monthlyBase', data_get($pricing, 'recurring_monthly', 0));
-        if ((float)$monthlyBase > 0) {
+        if ((float) $monthlyBase > 0) {
             $hasBasePricing = true;
         } else {
             $missingComponents[] = 'Base monthly fee';
         }
-        
+
         // Check asset pricing configuration
         $assetTypePricing = data_get($pricing, 'assetTypePricing', data_get($pricing, 'asset_pricing', []));
-        if (!empty($assetTypePricing)) {
+        if (! empty($assetTypePricing)) {
             foreach ($assetTypePricing as $assetType => $config) {
-                if (!empty($config['enabled']) && !empty($config['price'])) {
+                if (! empty($config['enabled']) && ! empty($config['price'])) {
                     $hasAssetPricing = true;
                     $assetPricingConfigured[] = ucfirst(str_replace('_', ' ', $assetType));
                 }
             }
         }
-        
+
         // Check telecom pricing
         $telecomPricing = data_get($pricing, 'telecomPricing', data_get($pricing, 'telecom_pricing', []));
-        if (!empty($telecomPricing)) {
+        if (! empty($telecomPricing)) {
             $hasTelecomPricing = true;
         }
-        
+
         // Check compliance pricing
         $compliancePricing = data_get($pricing, 'compliancePricing', data_get($pricing, 'compliance_pricing', []));
-        if (!empty($compliancePricing)) {
+        if (! empty($compliancePricing)) {
             $hasCompliancePricing = true;
         }
-        
+
         // If we have a contract, check for assets without pricing configuration
         if ($contract) {
             try {
@@ -3153,9 +3191,9 @@ Events beyond reasonable control including but not limited to:
                     $assetVariables = $variableMapper->generateAssetListingVariables($contract);
                 }
                 $assetCountsByType = $this->extractAssetCountsFromVariables($assetVariables);
-                
+
                 $actualAssetTypes = array_keys($assetCountsByType);
-                
+
                 foreach ($actualAssetTypes as $assetType) {
                     $config = $assetTypePricing[$assetType] ?? [];
                     if (empty($config['enabled']) || empty($config['price'])) {
@@ -3165,21 +3203,21 @@ Events beyond reasonable control including but not limited to:
             } catch (\Exception $e) {
                 Log::warning('Could not check asset types for pricing validation', [
                     'contract_id' => $contract->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
-        
+
         // Check billing model to determine if asset pricing is required
         $billingModel = data_get($pricing, 'billingModel', data_get($pricing, 'billing_model', 'per_asset'));
         $isFixedBilling = in_array($billingModel, ['fixed', 'monthly_fixed', 'flat_fee']);
-        
+
         // Add missing asset pricing to components if applicable
         // But not for fixed billing models where base fee covers all assets
-        if (!empty($assetPricingMissing) && !($isFixedBilling && $hasBasePricing)) {
-            $missingComponents[] = 'Asset pricing for: ' . implode(', ', $assetPricingMissing);
+        if (! empty($assetPricingMissing) && ! ($isFixedBilling && $hasBasePricing)) {
+            $missingComponents[] = 'Asset pricing for: '.implode(', ', $assetPricingMissing);
         }
-        
+
         // Determine overall pricing status
         // For fixed billing models with base pricing, asset pricing is optional
         if ($isFixedBilling && $hasBasePricing) {
@@ -3187,7 +3225,7 @@ Events beyond reasonable control including but not limited to:
         } else {
             $hasComplete = $hasBasePricing && (empty($assetPricingMissing));
         }
-        
+
         if ($hasComplete) {
             $status = 'complete';
             $completionMessage = 'Pricing configuration is complete and ready for client review.';
@@ -3198,7 +3236,7 @@ Events beyond reasonable control including but not limited to:
             $nextSteps = [
                 'Review and configure missing pricing components',
                 'Verify asset pricing matches actual client inventory',
-                'Complete setup before finalizing contract'
+                'Complete setup before finalizing contract',
             ];
         } else {
             $status = 'pending';
@@ -3207,10 +3245,10 @@ Events beyond reasonable control including but not limited to:
                 'Configure base monthly service fee',
                 'Set up asset pricing for managed devices',
                 'Review and approve pricing structure',
-                'Complete contract pricing wizard'
+                'Complete contract pricing wizard',
             ];
         }
-        
+
         return [
             'pricing_status' => $status,
             'has_complete_pricing' => $hasComplete,
@@ -3222,7 +3260,7 @@ Events beyond reasonable control including but not limited to:
             'has_base_pricing' => $hasBasePricing,
             'has_asset_pricing' => $hasAssetPricing,
             'has_telecom_pricing' => $hasTelecomPricing,
-            'has_compliance_pricing' => $hasCompliancePricing
+            'has_compliance_pricing' => $hasCompliancePricing,
         ];
     }
 
@@ -3232,31 +3270,31 @@ Events beyond reasonable control including but not limited to:
     protected function extractAssetCountsFromVariables(array $assetVariables): array
     {
         $assetCountsByType = [];
-        
+
         // Extract counts from specific asset type variables
         // TemplateVariableMapper provides individual count variables
         $assetTypeMapping = [
             'server' => $assetVariables['server_count'] ?? 0,
-            'workstation' => $assetVariables['workstation_count'] ?? 0, 
+            'workstation' => $assetVariables['workstation_count'] ?? 0,
             'network_device' => $assetVariables['network_device_count'] ?? 0,
             'hypervisor_node' => $assetVariables['hypervisor_count'] ?? 0,
             'storage' => $assetVariables['storage_count'] ?? 0,
-            'printer' => $assetVariables['printer_count'] ?? 0
+            'printer' => $assetVariables['printer_count'] ?? 0,
         ];
-        
+
         // Only include types that have counts > 0
         foreach ($assetTypeMapping as $type => $count) {
-            if ((int)$count > 0) {
-                $assetCountsByType[$type] = (int)$count;
+            if ((int) $count > 0) {
+                $assetCountsByType[$type] = (int) $count;
             }
         }
-        
+
         Log::debug('Asset counts extracted from template variables', [
             'total_available' => $assetVariables['total_asset_count'] ?? 0,
             'counts_by_type' => $assetCountsByType,
-            'mapping_source' => array_keys($assetTypeMapping)
+            'mapping_source' => array_keys($assetTypeMapping),
         ]);
-        
+
         return $assetCountsByType;
     }
 
@@ -3266,24 +3304,24 @@ Events beyond reasonable control including but not limited to:
     protected function formatTelecomPricing(array $telecomPricing): string
     {
         if (empty($telecomPricing)) {
-            return "No telecom services included";
+            return 'No telecom services included';
         }
 
         $formatted = [];
-        
-        if (!empty($telecomPricing['perChannel'])) {
-            $formatted[] = "- **Per Channel**: $" . number_format((float)$telecomPricing['perChannel'], 2);
-        }
-        
-        if (!empty($telecomPricing['callingPlan'])) {
-            $formatted[] = "- **Calling Plan**: $" . number_format((float)$telecomPricing['callingPlan'], 2);
-        }
-        
-        if (!empty($telecomPricing['e911'])) {
-            $formatted[] = "- **E911 Service**: $" . number_format((float)$telecomPricing['e911'], 2);
+
+        if (! empty($telecomPricing['perChannel'])) {
+            $formatted[] = '- **Per Channel**: $'.number_format((float) $telecomPricing['perChannel'], 2);
         }
 
-        return empty($formatted) ? "Telecom pricing included in base fee" : implode("\n", $formatted);
+        if (! empty($telecomPricing['callingPlan'])) {
+            $formatted[] = '- **Calling Plan**: $'.number_format((float) $telecomPricing['callingPlan'], 2);
+        }
+
+        if (! empty($telecomPricing['e911'])) {
+            $formatted[] = '- **E911 Service**: $'.number_format((float) $telecomPricing['e911'], 2);
+        }
+
+        return empty($formatted) ? 'Telecom pricing included in base fee' : implode("\n", $formatted);
     }
 
     /**
@@ -3292,20 +3330,20 @@ Events beyond reasonable control including but not limited to:
     protected function formatCompliancePricing(array $compliancePricing): string
     {
         if (empty($compliancePricing)) {
-            return "No compliance services included";
+            return 'No compliance services included';
         }
 
         $formatted = [];
-        
-        if (!empty($compliancePricing['frameworkMonthly'])) {
+
+        if (! empty($compliancePricing['frameworkMonthly'])) {
             foreach ($compliancePricing['frameworkMonthly'] as $framework => $fee) {
-                if (!empty($fee)) {
-                    $formatted[] = "- **" . strtoupper($framework) . "**: $" . number_format((float)$fee, 2) . " per month";
+                if (! empty($fee)) {
+                    $formatted[] = '- **'.strtoupper($framework).'**: $'.number_format((float) $fee, 2).' per month';
                 }
             }
         }
 
-        return empty($formatted) ? "Compliance services included in base fee" : implode("\n", $formatted);
+        return empty($formatted) ? 'Compliance services included in base fee' : implode("\n", $formatted);
     }
 
     /**
@@ -3320,9 +3358,9 @@ Events beyond reasonable control including but not limited to:
             'component' => $component,
             'error' => $error,
             'timestamp' => now()->toISOString(),
-            'can_retry' => true
+            'can_retry' => true,
         ];
-        
+
         $contract->update(['metadata' => $metadata]);
 
         // Log activity for audit trail
@@ -3332,7 +3370,7 @@ Events beyond reasonable control including but not limited to:
             ->withProperties([
                 'action' => 'partial_failure',
                 'component' => $component,
-                'error' => $error
+                'error' => $error,
             ])
             ->log("Contract creation completed with partial failure in {$component}");
     }
@@ -3344,17 +3382,17 @@ Events beyond reasonable control including but not limited to:
     {
         try {
             // Clean up contract schedules if any were created
-            if (!empty($createdResources['schedules'])) {
+            if (! empty($createdResources['schedules'])) {
                 \App\Domains\Contract\Models\ContractSchedule::whereIn('id', $createdResources['schedules'])
                     ->delete();
-                
+
                 Log::info('Cleaned up contract schedules', [
-                    'schedule_ids' => $createdResources['schedules']
+                    'schedule_ids' => $createdResources['schedules'],
                 ]);
             }
 
             // Clean up asset assignments if any were created
-            if (!empty($createdResources['asset_assignments'])) {
+            if (! empty($createdResources['asset_assignments'])) {
                 // Assuming asset assignments are stored in a pivot table or similar
                 foreach ($createdResources['asset_assignments'] as $assetId) {
                     // This would need to be adjusted based on actual asset assignment storage
@@ -3363,14 +3401,14 @@ Events beyond reasonable control including but not limited to:
             }
 
             // Clean up the main contract if it was created
-            if (!empty($createdResources['contract'])) {
+            if (! empty($createdResources['contract'])) {
                 $contract = $createdResources['contract'];
-                
+
                 // Force delete to bypass soft deletes in cleanup
                 $contract->forceDelete();
-                
+
                 Log::info('Cleaned up contract during error recovery', [
-                    'contract_id' => $contract->id
+                    'contract_id' => $contract->id,
                 ]);
             }
 
@@ -3378,7 +3416,7 @@ Events beyond reasonable control including but not limited to:
             // Log cleanup errors but don't throw - we're already in error recovery
             Log::error('Error during contract creation cleanup', [
                 'cleanup_error' => $cleanupError->getMessage(),
-                'original_resources' => $createdResources
+                'original_resources' => $createdResources,
             ]);
         }
     }
@@ -3404,28 +3442,28 @@ Events beyond reasonable control including but not limited to:
         }
 
         // Validate date logic
-        if (!empty($data['start_date']) && !empty($data['end_date'])) {
+        if (! empty($data['start_date']) && ! empty($data['end_date'])) {
             $startDate = \Carbon\Carbon::parse($data['start_date']);
             $endDate = \Carbon\Carbon::parse($data['end_date']);
-            
+
             if ($endDate->lte($startDate)) {
                 $errors[] = 'End date must be after start date';
             }
         }
 
         // Validate pricing structure if present
-        if (!empty($data['pricing_structure'])) {
-            $pricing = is_string($data['pricing_structure']) 
-                ? json_decode($data['pricing_structure'], true) 
+        if (! empty($data['pricing_structure'])) {
+            $pricing = is_string($data['pricing_structure'])
+                ? json_decode($data['pricing_structure'], true)
                 : $data['pricing_structure'];
-                
+
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $errors[] = 'Invalid pricing structure format';
             }
         }
 
-        if (!empty($errors)) {
-            throw new \InvalidArgumentException('Contract validation failed: ' . implode(', ', $errors));
+        if (! empty($errors)) {
+            throw new \InvalidArgumentException('Contract validation failed: '.implode(', ', $errors));
         }
 
         return $data;
@@ -3436,29 +3474,29 @@ Events beyond reasonable control including but not limited to:
      */
     protected function updateContractPricingFromSchedules(Contract $contract, array $data): void
     {
-        if (!empty($data['pricing_schedule'])) {
+        if (! empty($data['pricing_schedule'])) {
             $pricingData = $data['pricing_schedule'];
-            
+
             // Build the pricing structure for the contract
             $pricingStructure = [
                 'billing_model' => $pricingData['billingModel'] ?? 'per_asset',
-                'recurring_monthly' => (float)($pricingData['basePricing']['monthlyBase'] ?? 0),
-                'one_time' => (float)($pricingData['basePricing']['setupFee'] ?? 0),
-                'hourly_rate' => (float)($pricingData['basePricing']['hourlyRate'] ?? 0),
-                'per_user' => (float)($pricingData['perUnitPricing']['perUser'] ?? 0),
+                'recurring_monthly' => (float) ($pricingData['basePricing']['monthlyBase'] ?? 0),
+                'one_time' => (float) ($pricingData['basePricing']['setupFee'] ?? 0),
+                'hourly_rate' => (float) ($pricingData['basePricing']['hourlyRate'] ?? 0),
+                'per_user' => (float) ($pricingData['perUnitPricing']['perUser'] ?? 0),
                 'assetTypePricing' => $pricingData['assetTypePricing'] ?? [],
                 'tiers' => $pricingData['tiers'] ?? [],
                 'additional_fees' => $pricingData['additionalFees'] ?? [],
-                'payment_terms' => $pricingData['paymentTerms'] ?? []
+                'payment_terms' => $pricingData['paymentTerms'] ?? [],
             ];
-            
+
             // Update the contract with pricing structure
             $contract->update(['pricing_structure' => $pricingStructure]);
-            
+
             Log::info('Contract pricing structure updated from Schedule B', [
                 'contract_id' => $contract->id,
                 'billing_model' => $pricingStructure['billing_model'],
-                'has_asset_pricing' => !empty($pricingStructure['assetTypePricing'])
+                'has_asset_pricing' => ! empty($pricingStructure['assetTypePricing']),
             ]);
         }
     }
@@ -3471,17 +3509,18 @@ Events beyond reasonable control including but not limited to:
         try {
             $metadata = $contract->metadata ?? [];
             $partialFailures = $metadata['partial_failures'] ?? [];
-            
+
             // Find the specific failure to retry
             $failureToRetry = collect($partialFailures)->first(function ($failure) use ($component) {
                 return $failure['component'] === $component && ($failure['can_retry'] ?? false);
             });
-            
-            if (!$failureToRetry) {
+
+            if (! $failureToRetry) {
                 Log::warning('No retryable failure found for component', [
                     'contract_id' => $contract->id,
-                    'component' => $component
+                    'component' => $component,
                 ]);
+
                 return false;
             }
 
@@ -3490,10 +3529,10 @@ Events beyond reasonable control including but not limited to:
                 case 'schedules':
                     $data = $contract->toArray(); // Get contract data
                     $scheduleIds = $this->createContractSchedules($contract, $data);
-                    
+
                     Log::info('Successfully retried schedule creation', [
                         'contract_id' => $contract->id,
-                        'schedule_ids' => $scheduleIds
+                        'schedule_ids' => $scheduleIds,
                     ]);
                     break;
 
@@ -3502,16 +3541,17 @@ Events beyond reasonable control including but not limited to:
                     $slaTerms = $contract->sla_terms ?? [];
                     if ($slaTerms) {
                         $assignmentResults = $this->processAssetAssignments($contract, ['sla_terms' => $slaTerms]);
-                        
+
                         Log::info('Successfully retried asset assignments', [
                             'contract_id' => $contract->id,
-                            'assignments' => $assignmentResults
+                            'assignments' => $assignmentResults,
                         ]);
                     }
                     break;
 
                 default:
                     Log::warning('Unknown component for retry', ['component' => $component]);
+
                     return false;
             }
 
@@ -3522,7 +3562,7 @@ Events beyond reasonable control including but not limited to:
                 })
                 ->values()
                 ->toArray();
-            
+
             $contract->update(['metadata' => $metadata]);
 
             // Log successful retry
@@ -3531,7 +3571,7 @@ Events beyond reasonable control including but not limited to:
                 ->causedBy(auth()->user())
                 ->withProperties([
                     'action' => 'component_retry_success',
-                    'component' => $component
+                    'component' => $component,
                 ])
                 ->log("Successfully retried {$component} for contract");
 
@@ -3541,7 +3581,7 @@ Events beyond reasonable control including but not limited to:
             Log::error('Failed to retry contract component', [
                 'contract_id' => $contract->id,
                 'component' => $component,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -3557,78 +3597,79 @@ Events beyond reasonable control including but not limited to:
             'contract_id' => $contract->id,
             'contract_title' => $contract->title,
             'template_id' => $contract->template_id,
-            'has_metadata' => !empty($contract->metadata),
+            'has_metadata' => ! empty($contract->metadata),
             'metadata_keys' => $contract->metadata ? array_keys($contract->metadata) : [],
         ]);
-        
+
         // Use ContractClauseService to generate content from clauses
         $clauseService = app(\App\Domains\Contract\Services\ContractClauseService::class);
-        
+
         // Get contract's template and clauses
         $template = $contract->template;
-        if (!$template) {
+        if (! $template) {
             Log::error('❌ Contract has no template assigned', [
                 'contract_id' => $contract->id,
-                'template_id' => $contract->template_id
+                'template_id' => $contract->template_id,
             ]);
             throw new \InvalidArgumentException('Contract has no template');
         }
-        
+
         Log::info('📋 Template loaded', [
             'template_id' => $template->id,
             'template_name' => $template->name,
-            'template_type' => $template->type
+            'template_type' => $template->type,
         ]);
-        
+
         // Get clauses for this template
         $clauses = $template->clauses()->orderBy('sort_order')->get();
-        
+
         Log::info('📄 Clauses loaded for template', [
             'template_id' => $template->id,
             'clause_count' => $clauses->count(),
-            'clause_ids' => $clauses->pluck('id')->toArray()
+            'clause_ids' => $clauses->pluck('id')->toArray(),
         ]);
-        
+
         if ($clauses->isEmpty()) {
             Log::warning('⚠️ No active clauses found for template', [
                 'template_id' => $template->id,
-                'contract_id' => $contract->id
+                'contract_id' => $contract->id,
             ]);
+
             return;
         }
-        
+
         // Generate variables first
         Log::info('🔧 Starting variable generation...');
         $variableMapper = app(\App\Domains\Core\Services\TemplateVariableMapper::class);
         $variables = $variableMapper->generateVariables($contract);
-        
+
         Log::info('✅ Variables generated', [
             'total_variables' => count($variables),
             'wizard_vars' => array_intersect_key($variables, array_flip([
                 'billing_model', 'service_tier', 'payment_terms', 'response_time_hours',
-                'voip_enabled', 'hardware_support', 'price_per_user', 'setup_fee'
+                'voip_enabled', 'hardware_support', 'price_per_user', 'setup_fee',
             ])),
-            'key_variables' => array_slice($variables, 0, 10, true) // First 10 for brevity
+            'key_variables' => array_slice($variables, 0, 10, true), // First 10 for brevity
         ]);
-        
+
         // Generate content using the template and variables
         Log::info('🏗️ Generating contract content from clauses...');
         $content = $clauseService->generateContractFromClauses($template, $variables);
-        
+
         // Check for unprocessed template variables
         $unprocessedVars = [];
         if (preg_match_all('/\{\{([^}]+)\}\}/', $content, $matches)) {
             $unprocessedVars = array_unique($matches[1]);
         }
-        
-        if (!empty($unprocessedVars)) {
+
+        if (! empty($unprocessedVars)) {
             Log::warning('⚠️ Unprocessed template variables found in content', [
                 'contract_id' => $contract->id,
                 'unprocessed_variables' => $unprocessedVars,
-                'sample_content' => substr($content, 0, 500) . '...'
+                'sample_content' => substr($content, 0, 500).'...',
             ]);
         }
-        
+
         // Check for conditional processing issues
         $conditionalIssues = [];
         if (strpos($content, '{{#if') !== false) {
@@ -3640,48 +3681,48 @@ Events beyond reasonable control including but not limited to:
         if (strpos($content, '{{/if}}') !== false) {
             $conditionalIssues[] = 'Unprocessed {{/if}} blocks found';
         }
-        
-        if (!empty($conditionalIssues)) {
+
+        if (! empty($conditionalIssues)) {
             Log::error('❌ Conditional processing issues detected', [
                 'contract_id' => $contract->id,
                 'issues' => $conditionalIssues,
-                'sample_problematic_content' => $this->extractProblematicContent($content)
+                'sample_problematic_content' => $this->extractProblematicContent($content),
             ]);
         }
-        
+
         // Update contract with generated content and variables
         $contract->update([
             'content' => $content,
-            'variables' => $variables
+            'variables' => $variables,
         ]);
-        
+
         Log::info('✅ Contract content generated and saved', [
             'contract_id' => $contract->id,
             'content_length' => strlen($content),
             'variable_count' => count($variables),
-            'has_unprocessed_vars' => !empty($unprocessedVars),
-            'has_conditional_issues' => !empty($conditionalIssues),
-            'success' => empty($unprocessedVars) && empty($conditionalIssues)
+            'has_unprocessed_vars' => ! empty($unprocessedVars),
+            'has_conditional_issues' => ! empty($conditionalIssues),
+            'success' => empty($unprocessedVars) && empty($conditionalIssues),
         ]);
     }
-    
+
     /**
      * Extract problematic content sections for debugging
      */
     private function extractProblematicContent(string $content): array
     {
         $issues = [];
-        
+
         // Find unprocessed conditionals with context
         if (preg_match_all('/(.{0,50}\{\{[#\/]?if[^}]*\}\}.{0,50})/s', $content, $matches)) {
             $issues['conditional_blocks'] = array_slice($matches[0], 0, 3); // First 3 matches
         }
-        
+
         // Find unprocessed variables with context
         if (preg_match_all('/(.{0,30}\{\{[^#\/][^}]*\}\}.{0,30})/s', $content, $matches)) {
             $issues['unprocessed_variables'] = array_slice($matches[0], 0, 5); // First 5 matches
         }
-        
+
         return $issues;
     }
 
@@ -3692,10 +3733,10 @@ Events beyond reasonable control including but not limited to:
     {
         // Get template to determine default values
         $template = null;
-        if (!empty($data['template_id'])) {
+        if (! empty($data['template_id'])) {
             $template = \App\Domains\Contract\Models\ContractTemplate::find($data['template_id']);
         }
-        
+
         return [
             // Billing & Pricing
             'billing_model' => 'monthly_fixed',
@@ -3704,28 +3745,28 @@ Events beyond reasonable control including but not limited to:
             'monthly_base_rate' => '$2,500.00',
             'setup_fee' => '$500.00',
             'hourly_rate' => '$150.00',
-            
+
             // Service Levels
             'service_tier' => 'silver',
             'response_time_hours' => '4',
             'resolution_time_hours' => '24',
             'uptime_percentage' => '99.5',
             'business_hours' => '8 AM - 6 PM (Monday-Friday)',
-            
+
             // Performance Metrics
             'tier_benefits' => implode("\n", [
                 '- 24/7 monitoring and alerting',
-                '- Remote support and troubleshooting',  
+                '- Remote support and troubleshooting',
                 '- Monthly performance reports',
                 '- Quarterly business reviews',
-                '- Emergency after-hours support'
+                '- Emergency after-hours support',
             ]),
-            
+
             // Coverage Details
             'supported_asset_types' => implode(', ', [
-                'servers', 'workstations', 'network_equipment', 'storage_systems'
+                'servers', 'workstations', 'network_equipment', 'storage_systems',
             ]),
-            
+
             // Additional defaults based on template
             'auto_assign_new_assets' => true,
             'includes_remote_support' => true,
@@ -3755,7 +3796,7 @@ Events beyond reasonable control including but not limited to:
     protected function createTelecomSchedule(Contract $contract, array $data): ?ContractSchedule
     {
         $telecomData = $data['telecom_schedule'] ?? [];
-        
+
         $scheduleData = [
             'channelCount' => $telecomData['channelCount'] ?? 10,
             'callingPlan' => $telecomData['callingPlan'] ?? 'local_long_distance',
@@ -3765,7 +3806,7 @@ Events beyond reasonable control including but not limited to:
                 'meanOpinionScore' => '4.2',
                 'jitterMs' => 30,
                 'packetLossPercent' => 0.1,
-                'uptimePercent' => '99.9'
+                'uptimePercent' => '99.9',
             ],
             'carrier' => $telecomData['carrier'] ?? ['primary' => '', 'backup' => ''],
             'protocol' => $telecomData['protocol'] ?? 'sip',
@@ -3773,13 +3814,13 @@ Events beyond reasonable control including but not limited to:
             'compliance' => $telecomData['compliance'] ?? [
                 'fccCompliant' => true,
                 'karisLaw' => true,
-                'rayBaums' => true
+                'rayBaums' => true,
             ],
             'security' => $telecomData['security'] ?? [
                 'encryption' => true,
                 'fraudProtection' => true,
-                'callRecording' => false
-            ]
+                'callRecording' => false,
+            ],
         ];
 
         return ContractSchedule::create([
@@ -3794,7 +3835,7 @@ Events beyond reasonable control including but not limited to:
             'variable_values' => $scheduleData,
             'status' => 'active',
             'effective_date' => $contract->start_date,
-            'created_by' => auth()->id()
+            'created_by' => auth()->id(),
         ]);
     }
 
@@ -3804,7 +3845,7 @@ Events beyond reasonable control including but not limited to:
     protected function createHardwareSchedule(Contract $contract, array $data): ?ContractSchedule
     {
         $hardwareData = $data['hardware_schedule'] ?? [];
-        
+
         $scheduleData = [
             'selectedCategories' => $hardwareData['selectedCategories'] ?? [],
             'procurementModel' => $hardwareData['procurementModel'] ?? 'direct_resale',
@@ -3815,19 +3856,19 @@ Events beyond reasonable control including but not limited to:
                 'rackAndStack' => false,
                 'cabling' => false,
                 'powerConfiguration' => false,
-                'basicConfiguration' => false
+                'basicConfiguration' => false,
             ],
             'sla' => $hardwareData['sla'] ?? [
                 'installationTimeline' => 'Within 5 business days',
                 'configurationTimeline' => 'Within 2 business days',
-                'supportResponse' => '4_hours'
+                'supportResponse' => '4_hours',
             ],
             'warranty' => $hardwareData['warranty'] ?? [
                 'hardwarePeriod' => '1_year',
                 'supportPeriod' => '1_year',
                 'onSiteSupport' => false,
                 'advancedReplacement' => false,
-                'extendedOptions' => []
+                'extendedOptions' => [],
             ],
             'pricing' => $hardwareData['pricing'] ?? [
                 'markupModel' => 'fixed_percentage',
@@ -3835,8 +3876,8 @@ Events beyond reasonable control including but not limited to:
                 'volumeTiers' => [],
                 'hardwarePaymentTerms' => 'net_30',
                 'servicePaymentTerms' => 'net_30',
-                'taxExempt' => false
-            ]
+                'taxExempt' => false,
+            ],
         ];
 
         return ContractSchedule::create([
@@ -3851,7 +3892,7 @@ Events beyond reasonable control including but not limited to:
             'variable_values' => $scheduleData,
             'status' => 'active',
             'effective_date' => $contract->start_date,
-            'created_by' => auth()->id()
+            'created_by' => auth()->id(),
         ]);
     }
 
@@ -3861,50 +3902,50 @@ Events beyond reasonable control including but not limited to:
     protected function createComplianceSchedule(Contract $contract, array $data): ?ContractSchedule
     {
         $complianceData = $data['compliance_schedule'] ?? [];
-        
+
         $scheduleData = [
-                'selectedFrameworks' => $complianceData['selectedFrameworks'] ?? [],
-                'scope' => $complianceData['scope'] ?? '',
-                'riskLevel' => $complianceData['riskLevel'] ?? 'medium',
-                'industrySector' => $complianceData['industrySector'] ?? '',
-                'audits' => $complianceData['audits'] ?? [
-                    'internal' => false,
-                    'external' => false,
-                    'penetrationTesting' => false,
-                    'vulnerabilityScanning' => false,
-                    'riskAssessment' => false
+            'selectedFrameworks' => $complianceData['selectedFrameworks'] ?? [],
+            'scope' => $complianceData['scope'] ?? '',
+            'riskLevel' => $complianceData['riskLevel'] ?? 'medium',
+            'industrySector' => $complianceData['industrySector'] ?? '',
+            'audits' => $complianceData['audits'] ?? [
+                'internal' => false,
+                'external' => false,
+                'penetrationTesting' => false,
+                'vulnerabilityScanning' => false,
+                'riskAssessment' => false,
+            ],
+            'frequency' => $complianceData['frequency'] ?? [
+                'comprehensive' => 'annually',
+                'interim' => 'quarterly',
+                'vulnerability' => 'monthly',
+            ],
+            'deliverables' => $complianceData['deliverables'] ?? [
+                'executiveSummary' => false,
+                'detailedFindings' => false,
+                'remediationPlan' => false,
+                'complianceMatrix' => false,
+                'dashboardReporting' => false,
+            ],
+            'training' => $complianceData['training'] ?? [
+                'selectedPrograms' => [],
+                'deliveryMethod' => 'online',
+                'frequency' => 'annually',
+                'tracking' => [
+                    'attendance' => false,
+                    'assessments' => false,
+                    'certifications' => false,
                 ],
-                'frequency' => $complianceData['frequency'] ?? [
-                    'comprehensive' => 'annually',
-                    'interim' => 'quarterly',
-                    'vulnerability' => 'monthly'
-                ],
-                'deliverables' => $complianceData['deliverables'] ?? [
-                    'executiveSummary' => false,
-                    'detailedFindings' => false,
-                    'remediationPlan' => false,
-                    'complianceMatrix' => false,
-                    'dashboardReporting' => false
-                ],
-                'training' => $complianceData['training'] ?? [
-                    'selectedPrograms' => [],
-                    'deliveryMethod' => 'online',
-                    'frequency' => 'annually',
-                    'tracking' => [
-                        'attendance' => false,
-                        'assessments' => false,
-                        'certifications' => false
-                    ],
-                    'minimumScore' => 80
-                ],
-                'monitoring' => $complianceData['monitoring'] ?? [
-                    'siem' => false,
-                    'logManagement' => false,
-                    'fileIntegrity' => false,
-                    'accessMonitoring' => false,
-                    'changeManagement' => false
-                ]
-            ];
+                'minimumScore' => 80,
+            ],
+            'monitoring' => $complianceData['monitoring'] ?? [
+                'siem' => false,
+                'logManagement' => false,
+                'fileIntegrity' => false,
+                'accessMonitoring' => false,
+                'changeManagement' => false,
+            ],
+        ];
 
         return ContractSchedule::create([
             'contract_id' => $contract->id,
@@ -3918,7 +3959,7 @@ Events beyond reasonable control including but not limited to:
             'variable_values' => $scheduleData,
             'status' => 'active',
             'effective_date' => $contract->start_date,
-            'created_by' => auth()->id()
+            'created_by' => auth()->id(),
         ]);
     }
 }

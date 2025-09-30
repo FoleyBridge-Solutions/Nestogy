@@ -2,52 +2,48 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\Invoice;
-use App\Models\Quote;
 use App\Domains\Contract\Models\Contract;
 use App\Models\Client;
-use App\Models\Payment;
 use App\Models\CreditNote;
-use App\Models\RefundTransaction;
+use App\Models\Invoice;
+use App\Models\Quote;
 use App\Models\RecurringInvoice;
-use App\Models\RevenueMetric;
-use App\Models\AnalyticsSnapshot;
-use App\Models\KpiCalculation;
-use App\Models\CashFlowProjection;
-use App\Domains\Financial\Services\VoIPTaxService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
+use App\Models\RefundTransaction;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * FinancialAnalyticsService
- * 
+ *
  * Comprehensive financial analytics service providing real-time insights,
  * forecasting, and business intelligence across all financial components.
  */
 class FinancialAnalyticsService
 {
     protected int $companyId;
+
     protected VoIPTaxService $voipTaxService;
+
     protected static array $tableExistsCache = [];
-    
+
     public function __construct(int $companyId)
     {
         $this->companyId = $companyId;
-        $this->voipTaxService = new VoIPTaxService();
+        $this->voipTaxService = new VoIPTaxService;
         $this->voipTaxService->setCompanyId($companyId);
     }
-    
+
     /**
      * Check if table exists with caching to avoid repeated DB queries
      */
     protected function tableExists(string $tableName): bool
     {
-        if (!isset(self::$tableExistsCache[$tableName])) {
+        if (! isset(self::$tableExistsCache[$tableName])) {
             self::$tableExistsCache[$tableName] = DB::getSchemaBuilder()->hasTable($tableName);
         }
+
         return self::$tableExistsCache[$tableName];
     }
 
@@ -60,30 +56,30 @@ class FinancialAnalyticsService
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
         $previousMonth = $date->copy()->subMonth();
-        
+
         // Current MRR from recurring invoices and active contracts
         $currentMRR = $this->getCurrentMRR($startOfMonth, $endOfMonth);
-        
+
         // Previous month MRR for comparison
         $previousMRR = $this->getCurrentMRR(
             $previousMonth->copy()->startOfMonth(),
             $previousMonth->copy()->endOfMonth()
         );
-        
+
         // MRR breakdown by service type
         $breakdown = $this->getMRRBreakdown($startOfMonth, $endOfMonth);
-        
+
         // Calculate growth metrics
         $growth = [
             'absolute' => $currentMRR['total'] - $previousMRR['total'],
-            'percentage' => $previousMRR['total'] > 0 
-                ? (($currentMRR['total'] - $previousMRR['total']) / $previousMRR['total']) * 100 
+            'percentage' => $previousMRR['total'] > 0
+                ? (($currentMRR['total'] - $previousMRR['total']) / $previousMRR['total']) * 100
                 : 0,
         ];
-        
+
         // MRR movements (new, expansion, contraction, churn)
         $movements = $this->calculateMRRMovements($date);
-        
+
         return [
             'period' => $date->format('Y-m'),
             'current_mrr' => $currentMRR,
@@ -101,11 +97,11 @@ class FinancialAnalyticsService
     public function calculateARR(?Carbon $date = null): array
     {
         $mrrData = $this->calculateMRR($date);
-        
+
         return [
             'period' => $date ? $date->format('Y') : now()->format('Y'),
             'arr' => $mrrData['current_mrr']['total'] * 12,
-            'breakdown' => array_map(function($value) {
+            'breakdown' => array_map(function ($value) {
                 return $value * 12;
             }, $mrrData['breakdown']),
             'growth_rate' => $mrrData['growth']['percentage'],
@@ -119,25 +115,25 @@ class FinancialAnalyticsService
     public function calculateCustomerLifetimeValue(?int $clientId = null): array
     {
         $query = Client::where('company_id', $this->companyId);
-        
+
         if ($clientId) {
             $query->where('id', $clientId);
         }
-        
+
         $clients = $query->with(['invoices', 'contracts', 'payments'])->get();
-        
+
         $results = [];
-        
+
         foreach ($clients as $client) {
             $clv = $this->calculateClientCLV($client);
-            
+
             if ($clientId) {
                 return $clv;
             }
-            
+
             $results[] = $clv;
         }
-        
+
         // If calculating for all clients, return aggregated data
         return $this->aggregateCLVData($results);
     }
@@ -152,7 +148,7 @@ class FinancialAnalyticsService
             ->whereBetween('created_at', [$startDate, $endDate])
             ->with(['convertedInvoice', 'client'])
             ->get();
-        
+
         $funnel = [
             'quotes_created' => $quotes->count(),
             'quotes_sent' => $quotes->where('status', '!=', Quote::STATUS_DRAFT)->count(),
@@ -160,25 +156,25 @@ class FinancialAnalyticsService
             'quotes_accepted' => $quotes->where('status', Quote::STATUS_ACCEPTED)->count(),
             'quotes_converted' => $quotes->where('status', Quote::STATUS_CONVERTED)->count(),
         ];
-        
+
         // Conversion rates
         $conversionRates = [
-            'sent_to_viewed' => $funnel['quotes_sent'] > 0 
+            'sent_to_viewed' => $funnel['quotes_sent'] > 0
                 ? ($funnel['quotes_viewed'] / $funnel['quotes_sent']) * 100 : 0,
-            'viewed_to_accepted' => $funnel['quotes_viewed'] > 0 
+            'viewed_to_accepted' => $funnel['quotes_viewed'] > 0
                 ? ($funnel['quotes_accepted'] / $funnel['quotes_viewed']) * 100 : 0,
-            'accepted_to_converted' => $funnel['quotes_accepted'] > 0 
+            'accepted_to_converted' => $funnel['quotes_accepted'] > 0
                 ? ($funnel['quotes_converted'] / $funnel['quotes_accepted']) * 100 : 0,
-            'overall_conversion' => $funnel['quotes_sent'] > 0 
+            'overall_conversion' => $funnel['quotes_sent'] > 0
                 ? ($funnel['quotes_converted'] / $funnel['quotes_sent']) * 100 : 0,
         ];
-        
+
         // Revenue analysis
         $revenueData = $this->analyzeQuoteRevenueImpact($quotes);
-        
+
         // Time analysis
         $timeAnalysis = $this->analyzeQuoteTimelines($quotes);
-        
+
         return [
             'period' => [
                 'start' => $startDate->toDateString(),
@@ -213,16 +209,16 @@ class FinancialAnalyticsService
             ])
             ->groupBy('invoice_items.service_type')
             ->get();
-        
+
         $profitabilityData = [];
         $totalRevenue = 0;
-        
+
         foreach ($invoiceItems as $item) {
             // Calculate costs and margins (would integrate with cost tracking system)
             $estimatedCosts = $this->estimateServiceCosts($item->service_type, $item->net_revenue);
             $grossProfit = $item->net_revenue - $estimatedCosts;
             $marginPercentage = $item->net_revenue > 0 ? ($grossProfit / $item->net_revenue) * 100 : 0;
-            
+
             $profitabilityData[$item->service_type] = [
                 'service_type' => $item->service_type,
                 'transaction_count' => $item->transaction_count,
@@ -234,16 +230,16 @@ class FinancialAnalyticsService
                 'margin_percentage' => $marginPercentage,
                 'avg_transaction_value' => $item->avg_transaction_value,
             ];
-            
+
             $totalRevenue += $item->net_revenue;
         }
-        
+
         // Calculate service mix percentages
         foreach ($profitabilityData as &$service) {
-            $service['revenue_percentage'] = $totalRevenue > 0 
+            $service['revenue_percentage'] = $totalRevenue > 0
                 ? ($service['net_revenue'] / $totalRevenue) * 100 : 0;
         }
-        
+
         return [
             'period' => [
                 'start' => $startDate->toDateString(),
@@ -271,31 +267,31 @@ class FinancialAnalyticsService
     ): array {
         $projections = [];
         $period = CarbonPeriod::create($startDate, '1 month', $endDate);
-        
+
         // Historical data for trend analysis
         $historicalData = $this->getHistoricalCashFlowData();
-        
+
         foreach ($period as $date) {
             $monthStart = $date->copy()->startOfMonth();
             $monthEnd = $date->copy()->endOfMonth();
-            
+
             $projection = $this->calculateMonthlyProjection(
                 $monthStart,
                 $monthEnd,
                 $historicalData,
                 $model
             );
-            
+
             $projections[] = $projection;
         }
-        
+
         // Calculate cumulative projections
         $cumulativeBalance = $this->getCurrentCashBalance();
         foreach ($projections as &$projection) {
             $cumulativeBalance += $projection['net_cash_flow'];
             $projection['cumulative_balance'] = $cumulativeBalance;
         }
-        
+
         return [
             'model_type' => $model,
             'period' => [
@@ -316,16 +312,16 @@ class FinancialAnalyticsService
     {
         // VoIP tax analysis
         $voipTaxData = $this->analyzeVoipTaxCompliance($startDate, $endDate);
-        
+
         // General tax obligations
         $taxObligations = $this->calculateTaxObligations($startDate, $endDate);
-        
+
         // Exemption utilization
         $exemptionAnalysis = $this->analyzeExemptionUtilization($startDate, $endDate);
-        
+
         // Compliance scores
         $complianceScores = $this->calculateComplianceScores($startDate, $endDate);
-        
+
         return [
             'period' => [
                 'start' => $startDate->toDateString(),
@@ -355,54 +351,54 @@ class FinancialAnalyticsService
                     ->get();
             }
         } catch (\Exception $e) {
-            Log::warning('CreditNote table not accessible: ' . $e->getMessage());
+            Log::warning('CreditNote table not accessible: '.$e->getMessage());
             $creditNotes = collect();
         }
-        
-        // Refund analysis - check if table exists first  
+
+        // Refund analysis - check if table exists first
         $refunds = collect();
         try {
             if ($this->tableExists('refund_transactions')) {
-                $refunds = RefundTransaction::whereHas('refundRequest', function($query) {
-                        $query->where('company_id', $this->companyId);
-                    })
+                $refunds = RefundTransaction::whereHas('refundRequest', function ($query) {
+                    $query->where('company_id', $this->companyId);
+                })
                     ->whereBetween('processed_at', [$startDate, $endDate])
                     ->with(['refundRequest'])
                     ->get();
             }
         } catch (\Exception $e) {
-            Log::warning('RefundTransaction table not accessible: ' . $e->getMessage());
+            Log::warning('RefundTransaction table not accessible: '.$e->getMessage());
             $refunds = collect();
         }
-        
+
         $creditImpact = [
             'total_credit_amount' => $creditNotes->sum('total_amount'),
             'credit_count' => $creditNotes->count(),
             'avg_credit_amount' => $creditNotes->count() > 0 ? $creditNotes->avg('total_amount') : 0,
-            'by_reason' => $creditNotes->groupBy('reason')->map(function($group) {
+            'by_reason' => $creditNotes->groupBy('reason')->map(function ($group) {
                 return [
                     'count' => $group->count(),
                     'amount' => $group->sum('total_amount'),
                 ];
             }),
         ];
-        
+
         $refundImpact = [
             'total_refund_amount' => $refunds->sum('amount'),
             'refund_count' => $refunds->count(),
             'avg_refund_amount' => $refunds->count() > 0 ? $refunds->avg('amount') : 0,
-            'by_type' => $refunds->groupBy('refundRequest.refund_type')->map(function($group) {
+            'by_type' => $refunds->groupBy('refundRequest.refund_type')->map(function ($group) {
                 return [
                     'count' => $group->count(),
                     'amount' => $group->sum('amount'),
                 ];
             }),
         ];
-        
+
         // Revenue impact analysis
         $totalRevenue = $this->getTotalRevenueForPeriod($startDate, $endDate);
         $netImpact = $creditImpact['total_credit_amount'] + $refundImpact['total_refund_amount'];
-        
+
         return [
             'period' => [
                 'start' => $startDate->toDateString(),
@@ -432,7 +428,7 @@ class FinancialAnalyticsService
             'customer_health' => $this->calculateCustomerHealthScore(),
             'operational_efficiency' => $this->calculateOperationalEfficiencyScore(),
         ];
-        
+
         // Weighted overall score
         $weights = [
             'revenue_growth' => 0.25,
@@ -441,12 +437,12 @@ class FinancialAnalyticsService
             'customer_health' => 0.20,
             'operational_efficiency' => 0.10,
         ];
-        
+
         $overallScore = 0;
         foreach ($metrics as $metric => $score) {
             $overallScore += $score * $weights[$metric];
         }
-        
+
         return [
             'overall_score' => round($overallScore, 2),
             'rating' => $this->getHealthRating($overallScore),
@@ -469,17 +465,17 @@ class FinancialAnalyticsService
                 $recurringMRR = RecurringInvoice::where('company_id', $this->companyId)
                     ->where('status', 'active')
                     ->where('start_date', '<=', $endDate)
-                    ->where(function($query) use ($startDate) {
+                    ->where(function ($query) use ($startDate) {
                         $query->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $startDate);
+                            ->orWhere('end_date', '>=', $startDate);
                     })
                     ->sum('amount');
             }
         } catch (\Exception $e) {
-            Log::warning('RecurringInvoice table not accessible: ' . $e->getMessage());
+            Log::warning('RecurringInvoice table not accessible: '.$e->getMessage());
             $recurringMRR = 0;
         }
-        
+
         // MRR from active contracts - check if table exists first
         $contractMRR = 0;
         try {
@@ -487,20 +483,20 @@ class FinancialAnalyticsService
                 $contractMRR = Contract::where('company_id', $this->companyId)
                     ->where('status', Contract::STATUS_ACTIVE)
                     ->where('start_date', '<=', $endDate)
-                    ->where(function($query) use ($startDate) {
+                    ->where(function ($query) use ($startDate) {
                         $query->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $startDate);
+                            ->orWhere('end_date', '>=', $startDate);
                     })
                     ->get()
-                    ->sum(function($contract) {
+                    ->sum(function ($contract) {
                         return method_exists($contract, 'getMonthlyRecurringRevenue') ? $contract->getMonthlyRecurringRevenue() : 0;
                     });
             }
         } catch (\Exception $e) {
-            Log::warning('Contract table not accessible: ' . $e->getMessage());
+            Log::warning('Contract table not accessible: '.$e->getMessage());
             $contractMRR = 0;
         }
-        
+
         return [
             'recurring_invoices' => $recurringMRR,
             'contracts' => $contractMRR,
@@ -523,11 +519,11 @@ class FinancialAnalyticsService
     {
         // This would analyze customer additions, upgrades, downgrades, and churn
         // Implementation would depend on tracking customer plan changes
-        
+
         return [
             'new_business' => 0, // New customers MRR
             'expansion' => 0,    // Existing customer upgrades
-            'contraction' => 0,  // Existing customer downgrades  
+            'contraction' => 0,  // Existing customer downgrades
             'churn' => 0,        // Lost customers MRR
         ];
     }
@@ -537,19 +533,19 @@ class FinancialAnalyticsService
         $totalRevenue = $client->invoices()
             ->where('status', Invoice::STATUS_PAID)
             ->sum('amount');
-        
+
         $firstInvoice = $client->invoices()->oldest()->first();
         $lastInvoice = $client->invoices()->latest()->first();
-        
-        $monthsActive = $firstInvoice && $lastInvoice 
-            ? $firstInvoice->date->diffInMonths($lastInvoice->date) + 1 
+
+        $monthsActive = $firstInvoice && $lastInvoice
+            ? $firstInvoice->date->diffInMonths($lastInvoice->date) + 1
             : 1;
-        
+
         $averageMonthlyRevenue = $monthsActive > 0 ? $totalRevenue / $monthsActive : 0;
-        
+
         // Estimate customer acquisition cost (would integrate with marketing data)
         $estimatedCAC = 100; // Placeholder
-        
+
         return [
             'client_id' => $client->id,
             'client_name' => $client->name,
@@ -567,13 +563,13 @@ class FinancialAnalyticsService
     {
         $totalQuoteValue = $quotes->sum('amount');
         $convertedValue = $quotes->where('status', Quote::STATUS_CONVERTED)->sum('amount');
-        
+
         return [
             'total_quote_value' => $totalQuoteValue,
             'converted_value' => $convertedValue,
             'conversion_value_rate' => $totalQuoteValue > 0 ? ($convertedValue / $totalQuoteValue) * 100 : 0,
             'average_quote_value' => $quotes->count() > 0 ? $quotes->avg('amount') : 0,
-            'average_converted_value' => $quotes->where('status', Quote::STATUS_CONVERTED)->count() > 0 
+            'average_converted_value' => $quotes->where('status', Quote::STATUS_CONVERTED)->count() > 0
                 ? $quotes->where('status', Quote::STATUS_CONVERTED)->avg('amount') : 0,
         ];
     }
@@ -581,25 +577,25 @@ class FinancialAnalyticsService
     private function analyzeQuoteTimelines($quotes): array
     {
         $timelines = [];
-        
+
         foreach ($quotes->where('sent_at') as $quote) {
             $timeline = [];
-            
+
             if ($quote->viewed_at && $quote->sent_at) {
                 $timeline['sent_to_viewed_days'] = $quote->sent_at->diffInDays($quote->viewed_at);
             }
-            
+
             if ($quote->accepted_at && $quote->viewed_at) {
                 $timeline['viewed_to_accepted_days'] = $quote->viewed_at->diffInDays($quote->accepted_at);
             }
-            
+
             if ($quote->accepted_at && $quote->sent_at) {
                 $timeline['sent_to_accepted_days'] = $quote->sent_at->diffInDays($quote->accepted_at);
             }
-            
+
             $timelines[] = $timeline;
         }
-        
+
         return [
             'average_sent_to_viewed' => $this->calculateAverageFromTimelines($timelines, 'sent_to_viewed_days'),
             'average_viewed_to_accepted' => $this->calculateAverageFromTimelines($timelines, 'viewed_to_accepted_days'),
@@ -617,8 +613,9 @@ class FinancialAnalyticsService
             'professional_services' => 0.40,
             'default' => 0.35,
         ];
-        
+
         $percentage = $costPercentages[$serviceType] ?? $costPercentages['default'];
+
         return $revenue * $percentage;
     }
 
@@ -665,20 +662,20 @@ class FinancialAnalyticsService
                 return Contract::where('company_id', $this->companyId)
                     ->where('status', Contract::STATUS_ACTIVE)
                     ->where('start_date', '<=', $endDate)
-                    ->where(function($query) use ($startDate) {
+                    ->where(function ($query) use ($startDate) {
                         $query->whereNull('end_date')
-                              ->orWhere('end_date', '>=', $startDate);
+                            ->orWhere('end_date', '>=', $startDate);
                     })
                     ->whereJsonContains('voip_specifications->services', $serviceType)
                     ->get()
-                    ->sum(function($contract) {
+                    ->sum(function ($contract) {
                         return method_exists($contract, 'getMonthlyRecurringRevenue') ? $contract->getMonthlyRecurringRevenue() : 0;
                     });
             }
         } catch (\Exception $e) {
-            Log::warning("Contract table not accessible for service type {$serviceType}: " . $e->getMessage());
+            Log::warning("Contract table not accessible for service type {$serviceType}: ".$e->getMessage());
         }
-        
+
         return 0;
     }
 
@@ -708,18 +705,22 @@ class FinancialAnalyticsService
 
     private function findMostProfitableService(array $profitabilityData): ?array
     {
-        if (empty($profitabilityData)) return null;
-        
-        return array_reduce($profitabilityData, function($max, $service) {
+        if (empty($profitabilityData)) {
+            return null;
+        }
+
+        return array_reduce($profitabilityData, function ($max, $service) {
             return $max === null || $service['margin_percentage'] > $max['margin_percentage'] ? $service : $max;
         });
     }
 
     private function findHighestVolumeService(array $profitabilityData): ?array
     {
-        if (empty($profitabilityData)) return null;
-        
-        return array_reduce($profitabilityData, function($max, $service) {
+        if (empty($profitabilityData)) {
+            return null;
+        }
+
+        return array_reduce($profitabilityData, function ($max, $service) {
             return $max === null || $service['net_revenue'] > $max['net_revenue'] ? $service : $max;
         });
     }
@@ -742,10 +743,10 @@ class FinancialAnalyticsService
     private function generateScenarioAnalysis(array $projections): array
     {
         return [
-            'optimistic' => array_map(function($p) {
+            'optimistic' => array_map(function ($p) {
                 return array_merge($p, ['net_cash_flow' => $p['net_cash_flow'] * 1.2]);
             }, $projections),
-            'pessimistic' => array_map(function($p) {
+            'pessimistic' => array_map(function ($p) {
                 return array_merge($p, ['net_cash_flow' => $p['net_cash_flow'] * 0.8]);
             }, $projections),
         ];
@@ -810,7 +811,7 @@ class FinancialAnalyticsService
     private function analyzeCreditRefundTrends(Carbon $startDate, Carbon $endDate): array
     {
         $previousPeriod = $startDate->copy()->subMonth();
-        
+
         return [
             'month_over_month_change' => 5.2,
             'seasonal_patterns' => 'Credits tend to increase during Q4',
@@ -859,17 +860,26 @@ class FinancialAnalyticsService
 
     private function getHealthRating(float $score): string
     {
-        if ($score >= 90) return 'Excellent';
-        if ($score >= 80) return 'Good';
-        if ($score >= 70) return 'Fair';
-        if ($score >= 60) return 'Poor';
+        if ($score >= 90) {
+            return 'Excellent';
+        }
+        if ($score >= 80) {
+            return 'Good';
+        }
+        if ($score >= 70) {
+            return 'Fair';
+        }
+        if ($score >= 60) {
+            return 'Poor';
+        }
+
         return 'Critical';
     }
 
     private function generateHealthRecommendations(array $metrics): array
     {
         $recommendations = [];
-        
+
         foreach ($metrics as $metric => $score) {
             if ($score < 70) {
                 switch ($metric) {
@@ -891,13 +901,14 @@ class FinancialAnalyticsService
                 }
             }
         }
-        
+
         return $recommendations;
     }
 
     private function calculateAverageFromTimelines(array $timelines, string $field): float
     {
         $values = array_filter(array_column($timelines, $field));
+
         return count($values) > 0 ? array_sum($values) / count($values) : 0;
     }
 

@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Crypt;
 
 /**
  * RMM Integration Model
- * 
+ *
  * Represents RMM system integrations for companies.
  * Handles secure storage of API credentials and configuration.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $rmm_type
@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Crypt;
  */
 class RmmIntegration extends Model
 {
-    use HasFactory, BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -101,7 +101,7 @@ class RmmIntegration extends Model
      */
     public function getApiUrlAttribute(): ?string
     {
-        if (!$this->api_url_encrypted) {
+        if (! $this->api_url_encrypted) {
             return null;
         }
 
@@ -125,7 +125,7 @@ class RmmIntegration extends Model
      */
     public function getApiKeyAttribute(): ?string
     {
-        if (!$this->api_key_encrypted) {
+        if (! $this->api_key_encrypted) {
             return null;
         }
 
@@ -172,6 +172,7 @@ class RmmIntegration extends Model
         try {
             // This will be implemented when we create the service classes
             $service = app('rmm.factory')->make($this);
+
             return $service->testConnection();
         } catch (\Exception $e) {
             return [
@@ -215,7 +216,7 @@ class RmmIntegration extends Model
 
         if ($this->last_sync_at) {
             $minutesAgo = $this->last_sync_at->diffInMinutes(now());
-            
+
             if ($minutesAgo < 5) {
                 $status = 'recent';
                 $message = 'Recently synchronized';
@@ -273,7 +274,7 @@ class RmmIntegration extends Model
     {
         $settings = $this->settings ?: [];
         $defaultSettings = $this->getDefaultSettings();
-        
+
         return $settings[$key] ?? $defaultSettings[$key] ?? $default;
     }
 
@@ -313,10 +314,10 @@ class RmmIntegration extends Model
     public function scopeNeedsSync($query, int $intervalMinutes = 15)
     {
         return $query->where('is_active', true)
-                    ->where(function ($q) use ($intervalMinutes) {
-                        $q->whereNull('last_sync_at')
-                          ->orWhere('last_sync_at', '<', now()->subMinutes($intervalMinutes));
-                    });
+            ->where(function ($q) use ($intervalMinutes) {
+                $q->whereNull('last_sync_at')
+                    ->orWhere('last_sync_at', '<', now()->subMinutes($intervalMinutes));
+            });
     }
 
     // ===========================================
@@ -336,16 +337,16 @@ class RmmIntegration extends Model
      */
     public static function createWithCredentials(array $data): self
     {
-        $integration = new self();
+        $integration = new self;
         $integration->fill($data);
-        
+
         // Set default settings if not provided
-        if (!isset($data['settings'])) {
+        if (! isset($data['settings'])) {
             $integration->settings = $integration->getDefaultSettings();
         }
-        
+
         $integration->save();
-        
+
         return $integration;
     }
 
@@ -360,7 +361,7 @@ class RmmIntegration extends Model
     {
         return [
             'company_id' => 'required|exists:companies,id',
-            'rmm_type' => 'required|in:' . implode(',', array_keys(self::RMM_TYPE_LABELS)),
+            'rmm_type' => 'required|in:'.implode(',', array_keys(self::RMM_TYPE_LABELS)),
             'name' => 'required|string|max:255',
             'api_url' => 'required|url|max:255',
             'api_key' => 'required|string|max:255',
@@ -375,11 +376,11 @@ class RmmIntegration extends Model
     public static function getUpdateValidationRules(): array
     {
         $rules = self::getValidationRules();
-        
+
         // Make API credentials optional for updates
         $rules['api_url'] = 'nullable|url|max:255';
         $rules['api_key'] = 'nullable|string|max:255';
-        
+
         return $rules;
     }
 }

@@ -3,15 +3,14 @@
 namespace App\Domains\Core\Controllers;
 
 use App\Http\Controllers\Controller;
-
+use App\Models\Asset;
+use App\Models\Client;
+use App\Models\Invoice;
+use App\Models\Project;
+use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Client;
-use App\Models\Ticket;
-use App\Models\Asset;
-use App\Models\Invoice;
-use App\Models\User;
-use App\Models\Project;
 
 class SearchController extends Controller
 {
@@ -20,11 +19,11 @@ class SearchController extends Controller
         $query = $request->get('q', '');
         $limit = $request->get('limit', 10);
         $companyId = Auth::user()->company_id;
-        
+
         if (strlen($query) < 2) {
             return response()->json([
                 'results' => [],
-                'query' => $query
+                'query' => $query,
             ]);
         }
 
@@ -35,8 +34,8 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('email', 'like', "%{$query}%")
-                  ->orWhere('phone', 'like', "%{$query}%");
+                    ->orWhere('email', 'like', "%{$query}%")
+                    ->orWhere('phone', 'like', "%{$query}%");
             })
             ->limit($limit)
             ->get(['id', 'name', 'email']);
@@ -47,7 +46,7 @@ class SearchController extends Controller
                 'id' => $client->id,
                 'title' => $client->name,
                 'subtitle' => $client->email,
-                'url' => route('clients.show', $client->id)
+                'url' => route('clients.show', $client->id),
             ];
         }
 
@@ -56,8 +55,8 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('subject', 'like', "%{$query}%")
-                  ->orWhere('ticket_number', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%");
+                    ->orWhere('ticket_number', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
             })
             ->limit($limit)
             ->get(['id', 'ticket_number', 'subject', 'status']);
@@ -68,7 +67,7 @@ class SearchController extends Controller
                 'id' => $ticket->id,
                 'title' => "#{$ticket->ticket_number} - {$ticket->subject}",
                 'subtitle' => ucfirst($ticket->status),
-                'url' => route('tickets.show', $ticket->id)
+                'url' => route('tickets.show', $ticket->id),
             ];
         }
 
@@ -77,8 +76,8 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('serial_number', 'like', "%{$query}%")
-                  ->orWhere('asset_tag', 'like', "%{$query}%");
+                    ->orWhere('serial_number', 'like', "%{$query}%")
+                    ->orWhere('asset_tag', 'like', "%{$query}%");
             })
             ->limit($limit)
             ->get(['id', 'name', 'serial_number', 'type']);
@@ -89,14 +88,14 @@ class SearchController extends Controller
                 'id' => $asset->id,
                 'title' => $asset->name,
                 'subtitle' => "{$asset->type} - {$asset->serial_number}",
-                'url' => route('assets.show', $asset->id)
+                'url' => route('assets.show', $asset->id),
             ];
         }
 
         return response()->json([
             'results' => $results,
             'query' => $query,
-            'total' => count($results)
+            'total' => count($results),
         ]);
     }
 
@@ -112,20 +111,20 @@ class SearchController extends Controller
     {
         $query = $request->input('query', '');
         $companyId = Auth::user() ? Auth::user()->company_id : null;
-        
+
         // If user is not authenticated, return empty results
-        if (!$companyId) {
+        if (! $companyId) {
             return response()->json([
                 'suggestions' => $this->getDefaultCommands(),
-                'results' => []
+                'results' => [],
             ]);
         }
-        
+
         // If no query, return quick commands/suggestions
         if (empty($query)) {
             return response()->json([
                 'suggestions' => $this->getDefaultCommands(),
-                'results' => []
+                'results' => [],
             ]);
         }
 
@@ -135,7 +134,7 @@ class SearchController extends Controller
         // Search for matching commands first
         $commands = $this->getDefaultCommands();
         foreach ($commands as $command) {
-            if (stripos($command['command'], $query) !== false || 
+            if (stripos($command['command'], $query) !== false ||
                 stripos($command['description'], $query) !== false) {
                 $suggestions[] = $command;
             }
@@ -149,8 +148,8 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('email', 'like', "%{$query}%")
-                  ->orWhere('company_name', 'like', "%{$query}%");
+                    ->orWhere('email', 'like', "%{$query}%")
+                    ->orWhere('company_name', 'like', "%{$query}%");
             })
             ->limit(5)
             ->get(['id', 'name', 'email', 'company_name']);
@@ -162,7 +161,7 @@ class SearchController extends Controller
                 'title' => $client->name,
                 'subtitle' => $client->company_name ?: $client->email,
                 'icon' => 'user',
-                'url' => route('clients.show', $client->id)
+                'url' => route('clients.show', $client->id),
             ];
         }
 
@@ -171,7 +170,7 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('subject', 'like', "%{$query}%")
-                  ->orWhere('ticket_number', 'like', "%{$query}%");
+                    ->orWhere('ticket_number', 'like', "%{$query}%");
             })
             ->with('client:id,name')
             ->limit(5)
@@ -187,8 +186,8 @@ class SearchController extends Controller
                 'url' => route('tickets.show', $ticket->id),
                 'meta' => [
                     'status' => ucfirst($ticket->status),
-                    'priority' => $ticket->priority
-                ]
+                    'priority' => $ticket->priority,
+                ],
             ];
         }
 
@@ -197,8 +196,8 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('serial_number', 'like', "%{$query}%")
-                  ->orWhere('asset_tag', 'like', "%{$query}%");
+                    ->orWhere('serial_number', 'like', "%{$query}%")
+                    ->orWhere('asset_tag', 'like', "%{$query}%");
             })
             ->with('client:id,name')
             ->limit(5)
@@ -211,7 +210,7 @@ class SearchController extends Controller
                 'title' => $asset->name,
                 'subtitle' => $asset->client ? $asset->client->name : $asset->type,
                 'icon' => 'computer-desktop',
-                'url' => route('assets.show', $asset->id)
+                'url' => route('assets.show', $asset->id),
             ];
         }
 
@@ -235,8 +234,8 @@ class SearchController extends Controller
                 'url' => route('invoices.show', $invoice->id),
                 'meta' => [
                     'status' => ucfirst($invoice->status),
-                    'amount' => '$' . number_format($invoice->total, 2)
-                ]
+                    'amount' => '$'.number_format($invoice->total, 2),
+                ],
             ];
         }
 
@@ -259,15 +258,15 @@ class SearchController extends Controller
                 'icon' => 'briefcase',
                 'url' => route('projects.show', $project->id),
                 'meta' => [
-                    'status' => ucfirst($project->status)
-                ]
+                    'status' => ucfirst($project->status),
+                ],
             ];
         }
 
         return response()->json([
             'suggestions' => $suggestions,
             'results' => $results,
-            'query' => $query
+            'query' => $query,
         ]);
     }
 
@@ -282,81 +281,81 @@ class SearchController extends Controller
                 'description' => 'Go to dashboard',
                 'icon' => 'home',
                 'shortcut' => '⌘D',
-                'url' => '/dashboard'
+                'url' => '/dashboard',
             ],
             [
                 'command' => 'Clients',
                 'description' => 'View all clients',
                 'icon' => 'user-group',
                 'shortcut' => '⌘⇧C',
-                'url' => '/clients'
+                'url' => '/clients',
             ],
             [
                 'command' => 'New Client',
                 'description' => 'Create a new client',
                 'icon' => 'user-plus',
-                'url' => '/clients/create'
+                'url' => '/clients/create',
             ],
             [
                 'command' => 'Tickets',
                 'description' => 'View support tickets',
                 'icon' => 'ticket',
                 'shortcut' => '⌘T',
-                'url' => '/tickets'
+                'url' => '/tickets',
             ],
             [
                 'command' => 'New Ticket',
                 'description' => 'Create support ticket',
                 'icon' => 'plus-circle',
-                'url' => '/tickets/create'
+                'url' => '/tickets/create',
             ],
             [
                 'command' => 'Assets',
                 'description' => 'Manage assets',
                 'icon' => 'computer-desktop',
                 'shortcut' => '⌘A',
-                'url' => '/assets'
+                'url' => '/assets',
             ],
             [
                 'command' => 'Invoices',
                 'description' => 'View invoices',
                 'icon' => 'document-text',
                 'shortcut' => '⌘I',
-                'url' => '/financial/invoices'
+                'url' => '/financial/invoices',
             ],
             [
                 'command' => 'Projects',
                 'description' => 'View projects',
                 'icon' => 'briefcase',
                 'shortcut' => '⌘P',
-                'url' => '/projects'
+                'url' => '/projects',
             ],
             [
                 'command' => 'Reports',
                 'description' => 'View reports',
                 'icon' => 'chart-bar',
-                'url' => '/reports'
+                'url' => '/reports',
             ],
             [
                 'command' => 'Settings',
                 'description' => 'Application settings',
                 'icon' => 'cog-6-tooth',
                 'shortcut' => '⌘,',
-                'url' => '/settings'
+                'url' => '/settings',
             ],
             [
                 'command' => 'Profile',
                 'description' => 'Your profile',
                 'icon' => 'user',
-                'url' => '/users/profile'
+                'url' => '/users/profile',
             ],
             [
                 'command' => 'Help',
                 'description' => 'Help and documentation',
                 'icon' => 'question-mark-circle',
                 'shortcut' => '⌘?',
-                'url' => '/help'
-            ]
+                'url' => '/help',
+            ],
         ];
     }
 
@@ -375,11 +374,11 @@ class SearchController extends Controller
                 ->where('name', 'like', "{$query}%")
                 ->limit($limit)
                 ->pluck('name');
-            
+
             foreach ($clients as $name) {
                 $suggestions[] = [
                     'text' => $name,
-                    'type' => 'client'
+                    'type' => 'client',
                 ];
             }
         }
@@ -390,17 +389,17 @@ class SearchController extends Controller
                 ->where('subject', 'like', "{$query}%")
                 ->limit($limit)
                 ->pluck('subject');
-            
+
             foreach ($tickets as $subject) {
                 $suggestions[] = [
                     'text' => $subject,
-                    'type' => 'ticket'
+                    'type' => 'ticket',
                 ];
             }
         }
 
         return response()->json([
-            'suggestions' => $suggestions
+            'suggestions' => $suggestions,
         ]);
     }
 
@@ -416,19 +415,19 @@ class SearchController extends Controller
             ->where('lead', false); // Only show customers, not leads
 
         // Apply search filter if provided
-        if (!empty($query)) {
+        if (! empty($query)) {
             $clientsQuery->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('email', 'like', "%{$query}%")
-                  ->orWhere('phone', 'like', "%{$query}%")
-                  ->orWhere('company_name', 'like', "%{$query}%");
+                    ->orWhere('email', 'like', "%{$query}%")
+                    ->orWhere('phone', 'like', "%{$query}%")
+                    ->orWhere('company_name', 'like', "%{$query}%");
             });
         }
 
         // Get clients with only necessary fields for performance
         $clients = $clientsQuery
             ->select('id', 'name', 'company_name', 'email', 'phone', 'status', 'accessed_at')
-            ->orderByRaw('CASE WHEN name LIKE ? THEN 0 ELSE 1 END', [$query . '%']) // Prioritize exact matches
+            ->orderByRaw('CASE WHEN name LIKE ? THEN 0 ELSE 1 END', [$query.'%']) // Prioritize exact matches
             ->orderBy('name')
             ->limit($limit)
             ->get();
@@ -448,23 +447,25 @@ class SearchController extends Controller
 
         return response()->json($formattedClients);
     }
-    
+
     /**
      * Get initials from a name
      */
     private function getInitials($name)
     {
-        if (empty($name)) return '?';
-        
+        if (empty($name)) {
+            return '?';
+        }
+
         $words = explode(' ', $name);
         $initials = '';
-        
+
         foreach (array_slice($words, 0, 2) as $word) {
-            if (!empty($word)) {
+            if (! empty($word)) {
                 $initials .= strtoupper($word[0]);
             }
         }
-        
+
         return $initials ?: '?';
     }
 
@@ -477,7 +478,7 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('subject', 'like', "%{$query}%")
-                  ->orWhere('ticket_number', 'like', "%{$query}%");
+                    ->orWhere('ticket_number', 'like', "%{$query}%");
             })
             ->limit(20)
             ->get();
@@ -494,8 +495,8 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('serial_number', 'like', "%{$query}%")
-                  ->orWhere('asset_tag', 'like', "%{$query}%");
+                    ->orWhere('serial_number', 'like', "%{$query}%")
+                    ->orWhere('asset_tag', 'like', "%{$query}%");
             })
             ->limit(20)
             ->get();
@@ -512,9 +513,9 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('number', 'like', "%{$query}%")
-                  ->orWhereHas('client', function ($c) use ($query) {
-                      $c->where('name', 'like', "%{$query}%");
-                  });
+                    ->orWhereHas('client', function ($c) use ($query) {
+                        $c->where('name', 'like', "%{$query}%");
+                    });
             })
             ->limit(20)
             ->with('client')
@@ -532,7 +533,7 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('email', 'like', "%{$query}%");
+                    ->orWhere('email', 'like', "%{$query}%");
             })
             ->limit(20)
             ->get();
@@ -549,7 +550,7 @@ class SearchController extends Controller
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%");
+                    ->orWhere('description', 'like', "%{$query}%");
             })
             ->limit(20)
             ->get();

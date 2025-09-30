@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('contract_status_transitions', function (Blueprint $table) {
             $table->id();
-            
+
             // Multi-tenancy
             $table->unsignedBigInteger('company_id')->index();
-            
+
             // Transition definition
             $table->string('from_status_slug')->index();
             $table->string('to_status_slug')->index();
@@ -30,20 +30,20 @@ return new class extends Migration
             $table->boolean('requires_confirmation')->default(false);
             $table->string('confirmation_message')->nullable();
             $table->boolean('is_active')->default(true);
-            
+
             $table->timestamps();
-            
+
             // Foreign key constraints
             $table->foreign('company_id')
                 ->references('id')
                 ->on('companies')
                 ->onDelete('cascade');
-            
+
             // Indexes
             $table->index(['company_id', 'from_status_slug']);
             $table->index(['company_id', 'to_status_slug']);
             $table->index(['company_id', 'is_active']);
-            
+
             // Unique constraint
             $table->unique(['company_id', 'from_status_slug', 'to_status_slug'], 'unique_status_transition');
         });

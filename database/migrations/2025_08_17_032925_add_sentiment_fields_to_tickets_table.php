@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum('sentiment_label', ['POSITIVE', 'WEAK_POSITIVE', 'NEUTRAL', 'WEAK_NEGATIVE', 'NEGATIVE'])->nullable()->comment('Sentiment classification label');
             $table->timestamp('sentiment_analyzed_at')->nullable()->comment('When sentiment analysis was performed');
             $table->decimal('sentiment_confidence', 3, 2)->nullable()->comment('Confidence score for sentiment analysis (0.00 to 1.00)');
-            
+
             // Add index for sentiment-based queries
             $table->index(['sentiment_label', 'created_at'], 'idx_tickets_sentiment_created');
             $table->index(['sentiment_score', 'company_id'], 'idx_tickets_sentiment_company');
@@ -34,9 +34,9 @@ return new class extends Migration
             $table->dropIndex('idx_tickets_sentiment_company');
             $table->dropColumn([
                 'sentiment_score',
-                'sentiment_label', 
+                'sentiment_label',
                 'sentiment_analyzed_at',
-                'sentiment_confidence'
+                'sentiment_confidence',
             ]);
         });
     }

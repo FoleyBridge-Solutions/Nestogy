@@ -2,51 +2,61 @@
 
 namespace App\Livewire\Financial;
 
-use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Quote;
-use App\Models\Client;
 use App\Models\Category;
-use App\Models\Product;
+use App\Models\Client;
+use App\Models\Quote;
 use App\Models\QuoteTemplate;
 use App\Traits\QuotePricingCalculations;
+use Livewire\Component;
 
 class QuoteWizard extends Component
 {
     use QuotePricingCalculations;
 
     public $currentStep = 1;
+
     public $totalSteps = 3;
-    
+
     // Step names for display
     public $stepNames = [
         1 => 'Quote Details',
         2 => 'Items & Pricing',
-        3 => 'Review & Submit'
+        3 => 'Review & Submit',
     ];
 
     // Quote document properties
     public $client_id = '';
+
     public $category_id = '';
+
     public $date;
+
     public $expire_date = '';
+
     public $currency_code = 'USD';
+
     public $scope = '';
+
     public $note = '';
+
     public $terms_conditions = '';
+
     public $discount_type = 'fixed';
+
     public $discount_amount = 0;
+
     public $status = 'draft';
 
     // Items and pricing
     public $selectedItems = [];
+
     public $pricing = [
         'subtotal' => 0,
         'discount' => 0,
         'tax' => 0,
         'total' => 0,
         'savings' => 0,
-        'recurring' => ['monthly' => 0, 'annual' => 0]
+        'recurring' => ['monthly' => 0, 'annual' => 0],
     ];
 
     // Billing configuration
@@ -56,42 +66,52 @@ class QuoteWizard extends Component
         'paymentTerms' => 30,
         'startDate' => '',
         'endDate' => '',
-        'autoRenew' => false
+        'autoRenew' => false,
     ];
 
     // UI state
     public $loading = false;
+
     public $saving = false;
+
     public $errors = [];
+
     public $validationErrors = [];
+
     public $showAdvanced = false;
+
     public $quickMode = false;
 
     // Templates
     public $availableTemplates = [];
+
     public $suggestedTemplates = [];
+
     public $selectedTemplate = null;
 
     // Auto-save
     public $autoSaveEnabled = true;
+
     public $lastSaved = null;
 
     // Available data
     public $clients = [];
+
     public $categories = [];
+
     public $currencies = [];
 
     protected $listeners = [
         'itemsUpdated' => 'handleItemsUpdate',
         'pricingUpdated' => 'handlePricingUpdate',
         'templateSelected' => 'handleTemplateSelection',
-        'clientChanged' => 'handleClientChange'
+        'clientChanged' => 'handleClientChange',
     ];
 
     public function mount($quote = null)
     {
         $this->initializeData();
-        
+
         if ($quote) {
             $this->loadExistingQuote($quote);
         } else {
@@ -102,7 +122,7 @@ class QuoteWizard extends Component
     protected function initializeData()
     {
         $companyId = auth()->user()->company_id;
-        
+
         $this->clients = Client::where('company_id', $companyId)
             ->orderBy('name')
             ->get(['id', 'name', 'email', 'currency_code']);
@@ -117,7 +137,7 @@ class QuoteWizard extends Component
             'EUR' => 'Euro',
             'GBP' => 'British Pound',
             'CAD' => 'Canadian Dollar',
-            'AUD' => 'Australian Dollar'
+            'AUD' => 'Australian Dollar',
         ];
 
         $this->availableTemplates = QuoteTemplate::where('company_id', $companyId)
@@ -130,10 +150,10 @@ class QuoteWizard extends Component
     {
         $this->date = now()->format('Y-m-d');
         $this->billingConfig['startDate'] = now()->format('Y-m-d');
-        
+
         // Set default expiration (30 days)
         $this->expire_date = now()->addDays(30)->format('Y-m-d');
-        
+
         $this->scheduleAutoSave();
     }
 
@@ -163,7 +183,7 @@ class QuoteWizard extends Component
                 'subtotal' => $item->subtotal,
                 'type' => $item->type ?? 'product',
                 'billing_cycle' => $item->billing_cycle ?? 'one_time',
-                'order' => $item->order ?? 1
+                'order' => $item->order ?? 1,
             ];
         })->toArray();
 
@@ -201,16 +221,16 @@ class QuoteWizard extends Component
         if ($step <= $this->currentStep) {
             return true;
         }
-        
+
         // Step-specific validation for forward navigation
-        if ($step > 1 && !$this->validateStep(1)) {
+        if ($step > 1 && ! $this->validateStep(1)) {
             return false;
         }
-        
-        if ($step > 2 && !$this->validateStep(2)) {
+
+        if ($step > 2 && ! $this->validateStep(2)) {
             return false;
         }
-        
+
         return $step <= $this->totalSteps;
     }
 
@@ -223,7 +243,7 @@ class QuoteWizard extends Component
     public function validateStep($step)
     {
         $this->validationErrors = [];
-        
+
         if ($step >= 1) {
             if (empty($this->client_id)) {
                 $this->validationErrors['client_id'] = 'Please select a client';
@@ -286,7 +306,7 @@ class QuoteWizard extends Component
             if ($client && $client->currency_code) {
                 $this->currency_code = $client->currency_code;
             }
-            
+
             // Load client suggestions
             $this->loadClientSuggestions();
         }
@@ -308,7 +328,7 @@ class QuoteWizard extends Component
     public function addItem($item = null)
     {
         $newItem = [
-            'id' => 'temp_' . time() . '_' . rand(1000, 9999),
+            'id' => 'temp_'.time().'_'.rand(1000, 9999),
             'name' => $item['name'] ?? '',
             'description' => $item['description'] ?? '',
             'quantity' => $item['quantity'] ?? 1,
@@ -318,7 +338,7 @@ class QuoteWizard extends Component
             'subtotal' => 0,
             'type' => $item['type'] ?? 'product',
             'billing_cycle' => $item['billing_cycle'] ?? 'one_time',
-            'order' => count($this->selectedItems) + 1
+            'order' => count($this->selectedItems) + 1,
         ];
 
         $newItem['subtotal'] = $this->calculateItemSubtotal($newItem);
@@ -332,7 +352,7 @@ class QuoteWizard extends Component
         $this->selectedItems = array_values(array_filter($this->selectedItems, function ($item) use ($itemId) {
             return $item['id'] !== $itemId;
         }));
-        
+
         $this->reorderItems();
         $this->updatePricing();
         $this->scheduleAutoSave();
@@ -343,12 +363,12 @@ class QuoteWizard extends Component
         foreach ($this->selectedItems as $index => $item) {
             if ($item['id'] === $itemId) {
                 $this->selectedItems[$index][$field] = $value;
-                
+
                 if (in_array($field, ['quantity', 'unit_price', 'discount'])) {
                     $this->selectedItems[$index]['subtotal'] = $this->calculateItemSubtotal($this->selectedItems[$index]);
                     $this->updatePricing();
                 }
-                
+
                 $this->scheduleAutoSave();
                 break;
             }
@@ -383,7 +403,9 @@ class QuoteWizard extends Component
 
     protected function loadTemplate($template)
     {
-        if (!$template) return;
+        if (! $template) {
+            return;
+        }
 
         $this->scope = $template['scope'] ?? '';
         $this->note = $template['note'] ?? '';
@@ -392,8 +414,9 @@ class QuoteWizard extends Component
 
         if (isset($template['items']) && is_array($template['items'])) {
             $this->selectedItems = array_map(function ($item, $index) {
-                $item['id'] = 'template_' . time() . '_' . $index;
+                $item['id'] = 'template_'.time().'_'.$index;
                 $item['subtotal'] = $this->calculateItemSubtotal($item);
+
                 return $item;
             }, $template['items'], array_keys($template['items']));
         }
@@ -405,14 +428,14 @@ class QuoteWizard extends Component
     // === AUTO-SAVE ===
     protected function scheduleAutoSave()
     {
-        if ($this->autoSaveEnabled && !$this->saving) {
+        if ($this->autoSaveEnabled && ! $this->saving) {
             $this->dispatch('schedule-auto-save');
         }
     }
 
     public function performAutoSave()
     {
-        if ($this->saving || !$this->validateStep(1)) {
+        if ($this->saving || ! $this->validateStep(1)) {
             return;
         }
 
@@ -433,15 +456,15 @@ class QuoteWizard extends Component
                 'amount' => $this->pricing['total'],
                 'company_id' => auth()->user()->company_id,
                 'items' => $this->selectedItems,
-                'draft' => true
+                'draft' => true,
             ];
 
             // Store in session for now (could be database)
-            session(['quote_draft_' . auth()->id() => $data]);
-            
+            session(['quote_draft_'.auth()->id() => $data]);
+
             $this->lastSaved = now()->format('H:i:s');
             $this->dispatch('auto-save-success');
-            
+
         } catch (\Exception $e) {
             $this->dispatch('auto-save-error', ['message' => 'Auto-save failed']);
         } finally {
@@ -452,7 +475,7 @@ class QuoteWizard extends Component
     // === SAVE & SUBMIT ===
     public function saveQuote($submitType = 'draft')
     {
-        if (!$this->validateCurrentStep()) {
+        if (! $this->validateCurrentStep()) {
             return;
         }
 
@@ -473,7 +496,7 @@ class QuoteWizard extends Component
                 'discount_amount' => $this->discount_amount,
                 'amount' => $this->pricing['total'],
                 'status' => $submitType === 'send' ? Quote::STATUS_SENT : Quote::STATUS_DRAFT,
-                'created_by' => auth()->id()
+                'created_by' => auth()->id(),
             ];
 
             $quote = Quote::create($quoteData);
@@ -490,7 +513,7 @@ class QuoteWizard extends Component
                     'subtotal' => $item['subtotal'],
                     'type' => $item['type'] ?? 'product',
                     'billing_cycle' => $item['billing_cycle'] ?? 'one_time',
-                    'order' => $item['order'] ?? 1
+                    'order' => $item['order'] ?? 1,
                 ]);
             }
 
@@ -498,13 +521,13 @@ class QuoteWizard extends Component
 
             $this->dispatch('quote-saved', [
                 'quote_id' => $quote->id,
-                'message' => $submitType === 'send' ? 'Quote sent successfully!' : 'Quote saved successfully!'
+                'message' => $submitType === 'send' ? 'Quote sent successfully!' : 'Quote saved successfully!',
             ]);
 
             return redirect()->route('financial.quotes.show', $quote);
 
         } catch (\Exception $e) {
-            $this->errors['general'] = 'Failed to save quote: ' . $e->getMessage();
+            $this->errors['general'] = 'Failed to save quote: '.$e->getMessage();
         } finally {
             $this->saving = false;
         }
@@ -523,7 +546,7 @@ class QuoteWizard extends Component
 
     public function getCanProceedProperty()
     {
-        return $this->validateCurrentStep() && !$this->loading;
+        return $this->validateCurrentStep() && ! $this->loading;
     }
 
     public function getFormattedTotalProperty()
@@ -538,11 +561,12 @@ class QuoteWizard extends Component
             'EUR' => '€',
             'GBP' => '£',
             'CAD' => 'C$',
-            'AUD' => 'A$'
+            'AUD' => 'A$',
         ];
 
         $symbol = $symbols[$this->currency_code] ?? $this->currency_code;
-        return $symbol . number_format($amount, 2);
+
+        return $symbol.number_format($amount, 2);
     }
 
     public function render()

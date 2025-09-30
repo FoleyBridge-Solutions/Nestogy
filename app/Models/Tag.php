@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasArchive;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Tag extends Model
 {
-    use HasFactory, BelongsToCompany, HasArchive;
+    use BelongsToCompany, HasArchive, HasFactory;
 
     /**
      * The table associated with the model.
@@ -41,8 +41,11 @@ class Tag extends Model
      * Tag type constants
      */
     const TYPE_CLIENT = 1;
+
     const TYPE_TICKET = 2;
+
     const TYPE_ASSET = 3;
+
     const TYPE_DOCUMENT = 4;
 
     /**
@@ -102,7 +105,7 @@ class Tag extends Model
     {
         return [
             'name' => 'required|string|max:255',
-            'type' => 'required|integer|in:' . implode(',', array_keys(self::TYPE_LABELS)),
+            'type' => 'required|integer|in:'.implode(',', array_keys(self::TYPE_LABELS)),
             'color' => 'nullable|string|max:7|regex:/^#[a-fA-F0-9]{6}$/',
             'icon' => 'nullable|string|max:50',
         ];

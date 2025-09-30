@@ -8,11 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 /**
  * Refund Request Model
- * 
+ *
  * Manages the complete refund request lifecycle including:
  * - Request creation and validation
  * - Multi-level approval workflows
@@ -49,7 +48,7 @@ class RefundRequest extends Model
         'customer_notification_sent', 'notification_history', 'compliance_checks',
         'requires_legal_review', 'pci_compliant', 'audit_trail_id', 'requested_at',
         'reviewed_at', 'approved_at', 'processed_at', 'completed_at', 'cancelled_at',
-        'metadata', 'source_system'
+        'metadata', 'source_system',
     ];
 
     protected $casts = [
@@ -114,68 +113,111 @@ class RefundRequest extends Model
         'customer_notification_sent' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Refund Types
     const TYPE_FULL_REFUND = 'full_refund';
+
     const TYPE_PARTIAL_REFUND = 'partial_refund';
+
     const TYPE_SERVICE_CREDIT = 'service_credit';
+
     const TYPE_EQUIPMENT_RETURN = 'equipment_return';
+
     const TYPE_CHARGEBACK_REFUND = 'chargeback_refund';
+
     const TYPE_GOODWILL_REFUND = 'goodwill_refund';
+
     const TYPE_BILLING_ERROR_REFUND = 'billing_error_refund';
+
     const TYPE_CANCELLATION_REFUND = 'cancellation_refund';
+
     const TYPE_PRORATION_REFUND = 'proration_refund';
 
     // Refund Methods
     const METHOD_ORIGINAL_PAYMENT = 'original_payment';
+
     const METHOD_CREDIT_CARD = 'credit_card';
+
     const METHOD_BANK_TRANSFER = 'bank_transfer';
+
     const METHOD_ACH = 'ach';
+
     const METHOD_CHECK = 'check';
+
     const METHOD_PAYPAL = 'paypal';
+
     const METHOD_STRIPE = 'stripe';
+
     const METHOD_ACCOUNT_CREDIT = 'account_credit';
+
     const METHOD_MANUAL = 'manual';
 
     // Status
     const STATUS_PENDING = 'pending';
+
     const STATUS_UNDER_REVIEW = 'under_review';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     // Priority
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_URGENT = 'urgent';
 
     // Reason Codes
     const REASON_BILLING_ERROR = 'billing_error';
+
     const REASON_SERVICE_CANCELLATION = 'service_cancellation';
+
     const REASON_EQUIPMENT_RETURN = 'equipment_return';
+
     const REASON_PORTING_FAILURE = 'porting_failure';
+
     const REASON_SERVICE_QUALITY = 'service_quality';
+
     const REASON_DUPLICATE_PAYMENT = 'duplicate_payment';
+
     const REASON_CUSTOMER_REQUEST = 'customer_request';
+
     const REASON_CHARGEBACK = 'chargeback';
+
     const REASON_FRAUD = 'fraud';
+
     const REASON_SYSTEM_ERROR = 'system_error';
+
     const REASON_REGULATORY_REQUIREMENT = 'regulatory_requirement';
+
     const REASON_CONTRACT_TERMINATION = 'contract_termination';
 
     // Equipment Conditions
     const CONDITION_NEW = 'new';
+
     const CONDITION_EXCELLENT = 'excellent';
+
     const CONDITION_GOOD = 'good';
+
     const CONDITION_FAIR = 'fair';
+
     const CONDITION_POOR = 'poor';
+
     const CONDITION_DAMAGED = 'damaged';
+
     const CONDITION_MISSING = 'missing';
 
     /**
@@ -237,6 +279,7 @@ class RefundRequest extends Model
     public function scopeForCompany($query, $companyId = null)
     {
         $companyId = $companyId ?? Auth::user()?->company_id;
+
         return $query->where('company_id', $companyId);
     }
 
@@ -283,7 +326,7 @@ class RefundRequest extends Model
     public function scopeOverdue($query)
     {
         return $query->where('sla_deadline', '<', now())
-                    ->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED]);
+            ->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED]);
     }
 
     public function scopeByType($query, $type)
@@ -300,8 +343,8 @@ class RefundRequest extends Model
     {
         return $query->where(function ($q) {
             $q->where('requires_manager_approval', true)
-              ->orWhere('requires_finance_approval', true)
-              ->orWhere('requires_executive_approval', true);
+                ->orWhere('requires_finance_approval', true)
+                ->orWhere('requires_executive_approval', true);
         });
     }
 
@@ -317,7 +360,7 @@ class RefundRequest extends Model
         $companyId = Auth::user()?->company_id;
         $year = now()->year;
         $month = now()->format('m');
-        
+
         $lastRequest = self::where('company_id', $companyId)
             ->where('request_number', 'like', "REF-$year$month-%")
             ->orderBy('request_number', 'desc')
@@ -329,7 +372,7 @@ class RefundRequest extends Model
             $nextNumber = 1;
         }
 
-        return 'REF-' . $year . $month . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return 'REF-'.$year.$month.'-'.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -361,8 +404,8 @@ class RefundRequest extends Model
      */
     public function isSlaBreached(): bool
     {
-        return $this->sla_deadline && $this->sla_deadline < now() && 
-               !in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED]);
+        return $this->sla_deadline && $this->sla_deadline < now() &&
+               ! in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED]);
     }
 
     /**
@@ -370,7 +413,7 @@ class RefundRequest extends Model
      */
     public function getProcessingTimeHours(): ?int
     {
-        if (!$this->completed_at) {
+        if (! $this->completed_at) {
             return null;
         }
 
@@ -382,13 +425,13 @@ class RefundRequest extends Model
      */
     public function submitForReview(): bool
     {
-        if (!$this->canSubmitForReview()) {
+        if (! $this->canSubmitForReview()) {
             return false;
         }
 
         $this->update([
             'status' => self::STATUS_UNDER_REVIEW,
-            'reviewed_at' => now()
+            'reviewed_at' => now(),
         ]);
 
         $this->createApprovalWorkflow();
@@ -402,7 +445,7 @@ class RefundRequest extends Model
      */
     public function canSubmitForReview(): bool
     {
-        return $this->status === self::STATUS_PENDING && 
+        return $this->status === self::STATUS_PENDING &&
                $this->requested_amount > 0;
     }
 
@@ -411,7 +454,7 @@ class RefundRequest extends Model
      */
     public function approve(User $approver, ?float $approvedAmount = null, ?string $comments = null): bool
     {
-        if (!$this->isApprovable()) {
+        if (! $this->isApprovable()) {
             return false;
         }
 
@@ -420,10 +463,10 @@ class RefundRequest extends Model
             'approved_by' => $approver->id,
             'approved_at' => now(),
             'approved_amount' => $approvedAmount ?? $this->requested_amount,
-            'internal_notes' => $comments ? 
-                ($this->internal_notes ? $this->internal_notes . "\n\n" : '') . 
-                "Approved by {$approver->name}: $comments" : 
-                $this->internal_notes
+            'internal_notes' => $comments ?
+                ($this->internal_notes ? $this->internal_notes."\n\n" : '').
+                "Approved by {$approver->name}: $comments" :
+                $this->internal_notes,
         ]);
 
         $this->createAuditEntry('approved', $approver, $comments);
@@ -437,15 +480,15 @@ class RefundRequest extends Model
      */
     public function reject(User $rejector, string $reason): bool
     {
-        if (!$this->isApprovable()) {
+        if (! $this->isApprovable()) {
             return false;
         }
 
         $this->update([
             'status' => self::STATUS_REJECTED,
             'rejection_reason' => $reason,
-            'internal_notes' => ($this->internal_notes ? $this->internal_notes . "\n\n" : '') . 
-                              "Rejected by {$rejector->name}: $reason"
+            'internal_notes' => ($this->internal_notes ? $this->internal_notes."\n\n" : '').
+                              "Rejected by {$rejector->name}: $reason",
         ]);
 
         $this->createAuditEntry('rejected', $rejector, $reason);
@@ -459,18 +502,18 @@ class RefundRequest extends Model
      */
     public function startProcessing(User $processor): bool
     {
-        if (!$this->canBeProcessed()) {
+        if (! $this->canBeProcessed()) {
             return false;
         }
 
         $this->update([
             'status' => self::STATUS_PROCESSING,
             'processed_by' => $processor->id,
-            'processed_at' => now()
+            'processed_at' => now(),
         ]);
 
         $this->createAuditEntry('processing_started', $processor);
-        
+
         return true;
     }
 
@@ -483,8 +526,8 @@ class RefundRequest extends Model
             return false;
         }
 
-        $processingTime = $this->processed_at ? 
-            $this->processed_at->diffInHours(now()) : 
+        $processingTime = $this->processed_at ?
+            $this->processed_at->diffInHours(now()) :
             null;
 
         $this->update([
@@ -492,7 +535,7 @@ class RefundRequest extends Model
             'completed_at' => now(),
             'processed_amount' => $processedAmount,
             'processing_time_hours' => $processingTime,
-            'net_refund_amount' => $processedAmount - $this->processing_fee
+            'net_refund_amount' => $processedAmount - $this->processing_fee,
         ]);
 
         $this->createAuditEntry('completed', $this->processor);
@@ -513,8 +556,8 @@ class RefundRequest extends Model
         $this->update([
             'status' => self::STATUS_CANCELLED,
             'cancelled_at' => now(),
-            'internal_notes' => ($this->internal_notes ? $this->internal_notes . "\n\n" : '') . 
-                              "Cancelled by {$cancelledBy->name}: $reason"
+            'internal_notes' => ($this->internal_notes ? $this->internal_notes."\n\n" : '').
+                              "Cancelled by {$cancelledBy->name}: $reason",
         ]);
 
         $this->createAuditEntry('cancelled', $cancelledBy, $reason);
@@ -537,7 +580,7 @@ class RefundRequest extends Model
             self::TYPE_GOODWILL_REFUND => 'Goodwill Refund',
             self::TYPE_BILLING_ERROR_REFUND => 'Billing Error Refund',
             self::TYPE_CANCELLATION_REFUND => 'Cancellation Refund',
-            self::TYPE_PRORATION_REFUND => 'Proration Refund'
+            self::TYPE_PRORATION_REFUND => 'Proration Refund',
         ];
     }
 
@@ -555,7 +598,7 @@ class RefundRequest extends Model
             self::METHOD_PAYPAL => 'PayPal',
             self::METHOD_STRIPE => 'Stripe',
             self::METHOD_ACCOUNT_CREDIT => 'Account Credit',
-            self::METHOD_MANUAL => 'Manual'
+            self::METHOD_MANUAL => 'Manual',
         ];
     }
 
@@ -564,7 +607,7 @@ class RefundRequest extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'yellow',
             self::STATUS_UNDER_REVIEW => 'blue',
             self::STATUS_APPROVED => 'green',
@@ -582,7 +625,7 @@ class RefundRequest extends Model
      */
     public function getFormattedRequestedAmountAttribute(): string
     {
-        return number_format($this->requested_amount, 2) . ' ' . $this->currency_code;
+        return number_format($this->requested_amount, 2).' '.$this->currency_code;
     }
 
     /**
@@ -629,38 +672,38 @@ class RefundRequest extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($request) {
-            if (!$request->company_id) {
+            if (! $request->company_id) {
                 $request->company_id = Auth::user()?->company_id;
             }
-            
-            if (!$request->requested_by) {
+
+            if (! $request->requested_by) {
                 $request->requested_by = Auth::id();
             }
-            
-            if (!$request->request_number) {
+
+            if (! $request->request_number) {
                 $request->request_number = self::generateRequestNumber();
             }
-            
-            if (!$request->requested_at) {
+
+            if (! $request->requested_at) {
                 $request->requested_at = now();
             }
-            
+
             // Set default SLA deadline
-            if (!$request->sla_deadline) {
+            if (! $request->sla_deadline) {
                 $request->sla_deadline = now()->addHours($request->sla_hours ?? 48);
             }
         });
-        
+
         static::updating(function ($request) {
             // Check for SLA breach
-            if ($request->sla_deadline < now() && 
-                !in_array($request->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED]) &&
-                !$request->sla_breached) {
+            if ($request->sla_deadline < now() &&
+                ! in_array($request->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED]) &&
+                ! $request->sla_breached) {
                 $request->sla_breached = true;
             }
-            
+
             // Update processing time
             if ($request->isDirty('completed_at') && $request->completed_at) {
                 $request->processing_time_hours = $request->getProcessingTimeHours();

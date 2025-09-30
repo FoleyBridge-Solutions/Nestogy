@@ -29,7 +29,7 @@ class CompanySettingsService extends BaseSettingsService
                     'postal_code' => 'nullable|string|max:20',
                     'country' => 'nullable|string|max:2',
                 ];
-                
+
             case 'branding':
                 return [
                     'primary_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
@@ -40,7 +40,7 @@ class CompanySettingsService extends BaseSettingsService
                     'invoice_logo_url' => 'nullable|url',
                     'portal_theme' => 'nullable|in:light,dark,auto',
                 ];
-                
+
             case 'localization':
                 return [
                     'timezone' => 'required|timezone',
@@ -54,7 +54,7 @@ class CompanySettingsService extends BaseSettingsService
                     'language' => 'required|string|size:2',
                     'week_starts_on' => 'required|integer|between:0,6',
                 ];
-                
+
             default:
                 return [];
         }
@@ -71,14 +71,14 @@ class CompanySettingsService extends BaseSettingsService
                     'company_name' => 'My Company',
                     'country' => 'US',
                 ];
-                
+
             case 'branding':
                 return [
                     'primary_color' => '#3B82F6',
                     'secondary_color' => '#1E40AF',
                     'portal_theme' => 'light',
                 ];
-                
+
             case 'localization':
                 return [
                     'timezone' => 'America/New_York',
@@ -92,7 +92,7 @@ class CompanySettingsService extends BaseSettingsService
                     'language' => 'en',
                     'week_starts_on' => 0, // Sunday
                 ];
-                
+
             default:
                 return [];
         }
@@ -110,21 +110,21 @@ class CompanySettingsService extends BaseSettingsService
                     'description' => 'Basic company information and contact details',
                     'icon' => 'information-circle',
                 ];
-                
+
             case 'branding':
                 return [
                     'name' => 'Branding',
                     'description' => 'Customize colors, logos, and themes',
                     'icon' => 'paint-brush',
                 ];
-                
+
             case 'localization':
                 return [
                     'name' => 'Localization',
                     'description' => 'Regional settings, timezone, and formats',
                     'icon' => 'globe-alt',
                 ];
-                
+
             default:
                 return [];
         }

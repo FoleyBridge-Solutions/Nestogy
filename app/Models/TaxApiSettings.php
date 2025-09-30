@@ -3,16 +3,15 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Carbon\Carbon;
 
 /**
  * Tax API Settings Model
- * 
+ *
  * Manages API credentials and configuration for tax calculation services
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $provider
@@ -72,15 +71,22 @@ class TaxApiSettings extends Model
 
     // Provider constants
     const PROVIDER_TAXCLOUD = 'taxcloud';
+
     const PROVIDER_VAT_COMPLY = 'vat_comply';
+
     const PROVIDER_FCC = 'fcc';
+
     const PROVIDER_NOMINATIM = 'nominatim';
+
     const PROVIDER_CENSUS = 'census';
 
     // Status constants
     const STATUS_ACTIVE = 'active';
+
     const STATUS_INACTIVE = 'inactive';
+
     const STATUS_ERROR = 'error';
+
     const STATUS_QUOTA_EXCEEDED = 'quota_exceeded';
 
     /**
@@ -112,9 +118,9 @@ class TaxApiSettings extends Model
      */
     public function isAvailable(): bool
     {
-        return $this->enabled && 
-               $this->status === self::STATUS_ACTIVE && 
-               !$this->isOverQuota();
+        return $this->enabled &&
+               $this->status === self::STATUS_ACTIVE &&
+               ! $this->isOverQuota();
     }
 
     /**
@@ -125,7 +131,7 @@ class TaxApiSettings extends Model
         if ($this->monthly_limit === null) {
             return false;
         }
-        
+
         return $this->monthly_api_calls >= $this->monthly_limit;
     }
 
@@ -136,7 +142,7 @@ class TaxApiSettings extends Model
     {
         $this->increment('monthly_api_calls', $count);
         $this->update(['last_api_call' => now()]);
-        
+
         // Check if over quota
         if ($this->isOverQuota()) {
             $this->update(['status' => self::STATUS_QUOTA_EXCEEDED]);
@@ -174,19 +180,19 @@ class TaxApiSettings extends Model
     public function logAuditEvent(string $action, array $details = [], ?int $userId = null): void
     {
         $auditLog = $this->audit_log ?? [];
-        
+
         $auditLog[] = [
             'action' => $action,
             'details' => $details,
             'user_id' => $userId ?? auth()->id(),
             'timestamp' => now()->toISOString(),
         ];
-        
+
         // Keep only last 50 audit entries
         if (count($auditLog) > 50) {
             $auditLog = array_slice($auditLog, -50);
         }
-        
+
         $this->update(['audit_log' => $auditLog]);
     }
 
@@ -206,7 +212,7 @@ class TaxApiSettings extends Model
         $credentials = $this->credentials ?? [];
         $credentials[$key] = $value;
         $this->update(['credentials' => $credentials]);
-        
+
         $this->logAuditEvent('credential_updated', ['key' => $key]);
     }
 
@@ -226,7 +232,7 @@ class TaxApiSettings extends Model
         $configuration = $this->configuration ?? [];
         $configuration[$key] = $value;
         $this->update(['configuration' => $configuration]);
-        
+
         $this->logAuditEvent('configuration_updated', ['key' => $key, 'value' => $value]);
     }
 
@@ -236,8 +242,8 @@ class TaxApiSettings extends Model
     public static function getProviderSettings(int $companyId, string $provider): ?self
     {
         return static::where('company_id', $companyId)
-                     ->where('provider', $provider)
-                     ->first();
+            ->where('provider', $provider)
+            ->first();
     }
 
     /**
@@ -246,17 +252,17 @@ class TaxApiSettings extends Model
     public static function getActiveSettings(int $companyId): \Illuminate\Support\Collection
     {
         return static::where('company_id', $companyId)
-                     ->active()
-                     ->get();
+            ->active()
+            ->get();
     }
 
     /**
      * Create or update API settings
      */
     public static function configureProvider(
-        int $companyId, 
-        string $provider, 
-        array $credentials, 
+        int $companyId,
+        string $provider,
+        array $credentials,
         array $configuration = [],
         bool $enabled = true
     ): self {
@@ -272,12 +278,12 @@ class TaxApiSettings extends Model
                 'status' => $enabled ? self::STATUS_ACTIVE : self::STATUS_INACTIVE,
             ]
         );
-        
+
         $settings->logAuditEvent('provider_configured', [
             'enabled' => $enabled,
-            'has_credentials' => !empty($credentials),
+            'has_credentials' => ! empty($credentials),
         ]);
-        
+
         return $settings;
     }
 
@@ -351,7 +357,7 @@ class TaxApiSettings extends Model
                 ],
             ],
         ];
-        
+
         return $schemas[$provider] ?? [
             'name' => ucwords(str_replace('_', ' ', $provider)),
             'description' => 'Unknown provider',
@@ -373,12 +379,12 @@ class TaxApiSettings extends Model
             self::PROVIDER_NOMINATIM,
             self::PROVIDER_CENSUS,
         ];
-        
+
         $schemas = [];
         foreach ($providers as $provider) {
             $schemas[$provider] = static::getProviderSchema($provider);
         }
-        
+
         return $schemas;
     }
 
@@ -390,28 +396,28 @@ class TaxApiSettings extends Model
         try {
             // This would be implemented to test each provider's connection
             // For now, return a basic health check
-            
+
             $this->updateHealthStatus([
                 'test_time' => now()->toISOString(),
                 'status' => 'connection_test_passed',
             ], true);
-            
+
             return [
                 'success' => true,
                 'message' => 'Connection test passed',
                 'provider' => $this->provider,
             ];
-            
+
         } catch (\Exception $e) {
             $this->updateHealthStatus([
                 'test_time' => now()->toISOString(),
                 'status' => 'connection_test_failed',
                 'error' => $e->getMessage(),
             ], false);
-            
+
             return [
                 'success' => false,
-                'message' => 'Connection test failed: ' . $e->getMessage(),
+                'message' => 'Connection test failed: '.$e->getMessage(),
                 'provider' => $this->provider,
             ];
         }

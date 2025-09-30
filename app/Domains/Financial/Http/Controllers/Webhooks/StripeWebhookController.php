@@ -2,12 +2,11 @@
 
 namespace App\Domains\Financial\Http\Controllers\Webhooks;
 
+use App\Domains\Core\Services\StripeSubscriptionService;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\PaymentMethod;
-use App\Domains\Core\Services\StripeSubscriptionService;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
@@ -15,7 +14,7 @@ use Stripe\Webhook;
 
 /**
  * StripeWebhookController
- * 
+ *
  * Handles webhooks from Stripe for subscription events, payment updates,
  * invoice notifications, and other billing-related events.
  */
@@ -44,23 +43,23 @@ class StripeWebhookController extends Controller
             Log::warning('Stripe webhook signature verification failed', [
                 'error' => $e->getMessage(),
                 'payload' => substr($payload, 0, 200),
-                'signature' => substr($sigHeader, 0, 50)
+                'signature' => substr($sigHeader, 0, 50),
             ]);
-            
+
             return response('Invalid signature', 400);
         } catch (\Exception $e) {
             Log::error('Stripe webhook processing error', [
                 'error' => $e->getMessage(),
-                'payload' => substr($payload, 0, 200)
+                'payload' => substr($payload, 0, 200),
             ]);
-            
+
             return response('Webhook error', 400);
         }
 
         Log::info('Stripe webhook received', [
             'event_id' => $event->id,
             'event_type' => $event->type,
-            'created' => $event->created
+            'created' => $event->created,
         ]);
 
         try {
@@ -83,7 +82,7 @@ class StripeWebhookController extends Controller
                     $this->handleTrialWillEnd($event);
                     break;
 
-                // Payment method events
+                    // Payment method events
                 case 'payment_method.attached':
                     $this->handlePaymentMethodAttached($event);
                     break;
@@ -96,7 +95,7 @@ class StripeWebhookController extends Controller
                     $this->handlePaymentMethodUpdated($event);
                     break;
 
-                // Invoice events
+                    // Invoice events
                 case 'invoice.created':
                     $this->handleInvoiceCreated($event);
                     break;
@@ -113,7 +112,7 @@ class StripeWebhookController extends Controller
                     $this->handleInvoiceFinalized($event);
                     break;
 
-                // Customer events
+                    // Customer events
                 case 'customer.updated':
                     $this->handleCustomerUpdated($event);
                     break;
@@ -122,7 +121,7 @@ class StripeWebhookController extends Controller
                     $this->handleCustomerDeleted($event);
                     break;
 
-                // Payment intent events
+                    // Payment intent events
                 case 'payment_intent.succeeded':
                     $this->handlePaymentSucceeded($event);
                     break;
@@ -134,7 +133,7 @@ class StripeWebhookController extends Controller
                 default:
                     Log::info('Unhandled Stripe webhook event', [
                         'event_type' => $event->type,
-                        'event_id' => $event->id
+                        'event_id' => $event->id,
                     ]);
                     break;
             }
@@ -146,7 +145,7 @@ class StripeWebhookController extends Controller
                 'event_id' => $event->id,
                 'event_type' => $event->type,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response('Webhook processing error', 500);
@@ -159,13 +158,14 @@ class StripeWebhookController extends Controller
     protected function handleSubscriptionCreated(Event $event)
     {
         $subscription = $event->data->object;
-        
+
         $client = $this->findClientByStripeCustomerId($subscription->customer);
-        if (!$client) {
+        if (! $client) {
             Log::warning('Client not found for subscription created', [
                 'customer_id' => $subscription->customer,
-                'subscription_id' => $subscription->id
+                'subscription_id' => $subscription->id,
             ]);
+
             return;
         }
 
@@ -179,7 +179,7 @@ class StripeWebhookController extends Controller
 
         Log::info('Subscription created and synced', [
             'client_id' => $client->id,
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
     }
 
@@ -189,12 +189,13 @@ class StripeWebhookController extends Controller
     protected function handleSubscriptionUpdated(Event $event)
     {
         $subscription = $event->data->object;
-        
+
         $client = $this->findClientByStripeSubscriptionId($subscription->id);
-        if (!$client) {
+        if (! $client) {
             Log::warning('Client not found for subscription updated', [
-                'subscription_id' => $subscription->id
+                'subscription_id' => $subscription->id,
             ]);
+
             return;
         }
 
@@ -217,7 +218,7 @@ class StripeWebhookController extends Controller
         Log::info('Subscription updated and synced', [
             'client_id' => $client->id,
             'subscription_id' => $subscription->id,
-            'status' => $subscription->status
+            'status' => $subscription->status,
         ]);
     }
 
@@ -227,12 +228,13 @@ class StripeWebhookController extends Controller
     protected function handleSubscriptionDeleted(Event $event)
     {
         $subscription = $event->data->object;
-        
+
         $client = $this->findClientByStripeSubscriptionId($subscription->id);
-        if (!$client) {
+        if (! $client) {
             Log::warning('Client not found for subscription deleted', [
-                'subscription_id' => $subscription->id
+                'subscription_id' => $subscription->id,
             ]);
+
             return;
         }
 
@@ -245,7 +247,7 @@ class StripeWebhookController extends Controller
 
         Log::info('Subscription deleted and client updated', [
             'client_id' => $client->id,
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
     }
 
@@ -255,9 +257,9 @@ class StripeWebhookController extends Controller
     protected function handleTrialWillEnd(Event $event)
     {
         $subscription = $event->data->object;
-        
+
         $client = $this->findClientByStripeSubscriptionId($subscription->id);
-        if (!$client) {
+        if (! $client) {
             return;
         }
 
@@ -265,7 +267,7 @@ class StripeWebhookController extends Controller
         // You can implement email notification here
         Log::info('Trial will end notification', [
             'client_id' => $client->id,
-            'trial_end' => date('Y-m-d H:i:s', $subscription->trial_end)
+            'trial_end' => date('Y-m-d H:i:s', $subscription->trial_end),
         ]);
     }
 
@@ -275,20 +277,20 @@ class StripeWebhookController extends Controller
     protected function handlePaymentMethodAttached(Event $event)
     {
         $paymentMethod = $event->data->object;
-        
+
         $client = $this->findClientByStripeCustomerId($paymentMethod->customer);
-        if (!$client) {
+        if (! $client) {
             return;
         }
 
         // Update or create payment method record
         $existingPaymentMethod = PaymentMethod::where('provider_payment_method_id', $paymentMethod->id)->first();
-        
-        if (!$existingPaymentMethod) {
+
+        if (! $existingPaymentMethod) {
             $this->stripeService->storePaymentMethod($client, $paymentMethod);
             Log::info('New payment method stored from webhook', [
                 'client_id' => $client->id,
-                'payment_method_id' => $paymentMethod->id
+                'payment_method_id' => $paymentMethod->id,
             ]);
         }
     }
@@ -299,13 +301,13 @@ class StripeWebhookController extends Controller
     protected function handlePaymentMethodDetached(Event $event)
     {
         $paymentMethod = $event->data->object;
-        
+
         $existingPaymentMethod = PaymentMethod::where('provider_payment_method_id', $paymentMethod->id)->first();
         if ($existingPaymentMethod) {
             $existingPaymentMethod->deactivate('Detached from Stripe');
             Log::info('Payment method deactivated from webhook', [
                 'payment_method_id' => $existingPaymentMethod->id,
-                'stripe_id' => $paymentMethod->id
+                'stripe_id' => $paymentMethod->id,
             ]);
         }
     }
@@ -316,17 +318,17 @@ class StripeWebhookController extends Controller
     protected function handlePaymentMethodUpdated(Event $event)
     {
         $paymentMethod = $event->data->object;
-        
+
         $existingPaymentMethod = PaymentMethod::where('provider_payment_method_id', $paymentMethod->id)->first();
         if ($existingPaymentMethod && $paymentMethod->card) {
             $existingPaymentMethod->update([
                 'card_exp_month' => $paymentMethod->card->exp_month,
                 'card_exp_year' => $paymentMethod->card->exp_year,
             ]);
-            
+
             Log::info('Payment method updated from webhook', [
                 'payment_method_id' => $existingPaymentMethod->id,
-                'new_expiry' => $paymentMethod->card->exp_month . '/' . $paymentMethod->card->exp_year
+                'new_expiry' => $paymentMethod->card->exp_month.'/'.$paymentMethod->card->exp_year,
             ]);
         }
     }
@@ -337,9 +339,9 @@ class StripeWebhookController extends Controller
     protected function handleInvoicePaymentSucceeded(Event $event)
     {
         $invoice = $event->data->object;
-        
+
         $client = $this->findClientByStripeCustomerId($invoice->customer);
-        if (!$client) {
+        if (! $client) {
             return;
         }
 
@@ -354,7 +356,7 @@ class StripeWebhookController extends Controller
         Log::info('Invoice payment succeeded', [
             'client_id' => $client->id,
             'invoice_id' => $invoice->id,
-            'amount' => $invoice->amount_paid / 100
+            'amount' => $invoice->amount_paid / 100,
         ]);
     }
 
@@ -364,9 +366,9 @@ class StripeWebhookController extends Controller
     protected function handleInvoicePaymentFailed(Event $event)
     {
         $invoice = $event->data->object;
-        
+
         $client = $this->findClientByStripeCustomerId($invoice->customer);
-        if (!$client) {
+        if (! $client) {
             return;
         }
 
@@ -381,7 +383,7 @@ class StripeWebhookController extends Controller
         Log::info('Invoice payment failed', [
             'client_id' => $client->id,
             'invoice_id' => $invoice->id,
-            'amount' => $invoice->amount_due / 100
+            'amount' => $invoice->amount_due / 100,
         ]);
     }
 
@@ -406,13 +408,13 @@ class StripeWebhookController extends Controller
     protected function handleCustomerUpdated(Event $event)
     {
         $customer = $event->data->object;
-        
+
         $client = $this->findClientByStripeCustomerId($customer->id);
         if ($client) {
             // You could sync customer data here if needed
             Log::info('Customer updated', [
                 'client_id' => $client->id,
-                'customer_id' => $customer->id
+                'customer_id' => $customer->id,
             ]);
         }
     }
@@ -423,13 +425,13 @@ class StripeWebhookController extends Controller
     protected function handleCustomerDeleted(Event $event)
     {
         $customer = $event->data->object;
-        
+
         $client = $this->findClientByStripeCustomerId($customer->id);
         if ($client) {
             $client->update(['stripe_customer_id' => null]);
             Log::info('Customer deleted, client updated', [
                 'client_id' => $client->id,
-                'customer_id' => $customer->id
+                'customer_id' => $customer->id,
             ]);
         }
     }
@@ -442,7 +444,7 @@ class StripeWebhookController extends Controller
         $paymentIntent = $event->data->object;
         Log::info('Payment succeeded', [
             'payment_intent_id' => $paymentIntent->id,
-            'amount' => $paymentIntent->amount / 100
+            'amount' => $paymentIntent->amount / 100,
         ]);
     }
 
@@ -454,7 +456,7 @@ class StripeWebhookController extends Controller
         $paymentIntent = $event->data->object;
         Log::info('Payment failed', [
             'payment_intent_id' => $paymentIntent->id,
-            'failure_reason' => $paymentIntent->last_payment_error->message ?? 'Unknown'
+            'failure_reason' => $paymentIntent->last_payment_error->message ?? 'Unknown',
         ]);
     }
 
@@ -474,7 +476,7 @@ class StripeWebhookController extends Controller
 
         Log::info('Subscription activated, company reactivated', [
             'client_id' => $client->id,
-            'company_id' => $client->company_link_id
+            'company_id' => $client->company_link_id,
         ]);
     }
 
@@ -486,7 +488,7 @@ class StripeWebhookController extends Controller
         // Optionally send notifications or take action
         Log::warning('Subscription past due', [
             'client_id' => $client->id,
-            'company_id' => $client->company_link_id
+            'company_id' => $client->company_link_id,
         ]);
     }
 
@@ -506,7 +508,7 @@ class StripeWebhookController extends Controller
 
         Log::warning('Subscription deactivated, company suspended', [
             'client_id' => $client->id,
-            'company_id' => $client->company_link_id
+            'company_id' => $client->company_link_id,
         ]);
     }
 

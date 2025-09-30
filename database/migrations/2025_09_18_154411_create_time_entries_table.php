@@ -27,7 +27,7 @@ return new class extends Migration
             $table->time('end_time')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->index(['user_id', 'date']);
             $table->index(['company_id', 'billable']);
         });

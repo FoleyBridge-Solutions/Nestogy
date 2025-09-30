@@ -2,11 +2,11 @@
 
 namespace App\Domains\Email\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Email\Models\EmailAccount;
 use App\Domains\Email\Models\EmailMessage;
 use App\Domains\Email\Models\EmailSignature;
 use App\Domains\Email\Services\EmailService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -35,7 +35,7 @@ class ComposeController extends Controller
         $signatures = EmailSignature::forUser(Auth::id())
             ->where(function ($query) use ($selectedAccount) {
                 $query->whereNull('email_account_id')
-                      ->orWhere('email_account_id', $selectedAccount->id);
+                    ->orWhere('email_account_id', $selectedAccount->id);
             })
             ->get();
 
@@ -91,7 +91,7 @@ class ComposeController extends Controller
             foreach ($request->file('attachments') as $file) {
                 $path = $file->store('email_temp', 'local');
                 $attachments[] = [
-                    'path' => storage_path('app/' . $path),
+                    'path' => storage_path('app/'.$path),
                     'name' => $file->getClientOriginalName(),
                     'mime' => $file->getMimeType(),
                 ];
@@ -112,29 +112,29 @@ class ComposeController extends Controller
         if ($request->boolean('save_as_draft')) {
             try {
                 $draft = $this->emailService->saveDraft($emailData, $account);
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Draft saved successfully',
                     'draft_id' => $draft->id,
                 ]);
-                
+
             } catch (\Exception $e) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to save draft: ' . $e->getMessage(),
+                    'message' => 'Failed to save draft: '.$e->getMessage(),
                 ], 500);
             }
         } else {
             $result = $this->emailService->sendEmail($emailData, $account);
-            
+
             // Clean up temp files
             foreach ($attachments as $attachment) {
                 if (file_exists($attachment['path'])) {
                     unlink($attachment['path']);
                 }
             }
-            
+
             return response()->json($result, $result['success'] ? 200 : 500);
         }
     }
@@ -149,7 +149,7 @@ class ComposeController extends Controller
         $signatures = EmailSignature::forUser(Auth::id())
             ->where(function ($query) use ($selectedAccount) {
                 $query->whereNull('email_account_id')
-                      ->orWhere('email_account_id', $selectedAccount->id);
+                    ->orWhere('email_account_id', $selectedAccount->id);
             })
             ->get();
 
@@ -157,7 +157,7 @@ class ComposeController extends Controller
             'to' => $message->from_address,
             'cc' => '',
             'bcc' => '',
-            'subject' => 'Re: ' . preg_replace('/^re:\s*/i', '', $message->subject),
+            'subject' => 'Re: '.preg_replace('/^re:\s*/i', '', $message->subject),
             'body' => '',
             'original_message' => $message,
         ];
@@ -181,7 +181,7 @@ class ComposeController extends Controller
         $signatures = EmailSignature::forUser(Auth::id())
             ->where(function ($query) use ($selectedAccount) {
                 $query->whereNull('email_account_id')
-                      ->orWhere('email_account_id', $selectedAccount->id);
+                    ->orWhere('email_account_id', $selectedAccount->id);
             })
             ->get();
 
@@ -198,7 +198,7 @@ class ComposeController extends Controller
             'to' => $message->from_address,
             'cc' => implode(', ', $ccAddresses),
             'bcc' => '',
-            'subject' => 'Re: ' . preg_replace('/^re:\s*/i', '', $message->subject),
+            'subject' => 'Re: '.preg_replace('/^re:\s*/i', '', $message->subject),
             'body' => '',
             'original_message' => $message,
         ];
@@ -222,7 +222,7 @@ class ComposeController extends Controller
         $signatures = EmailSignature::forUser(Auth::id())
             ->where(function ($query) use ($selectedAccount) {
                 $query->whereNull('email_account_id')
-                      ->orWhere('email_account_id', $selectedAccount->id);
+                    ->orWhere('email_account_id', $selectedAccount->id);
             })
             ->get();
 
@@ -230,7 +230,7 @@ class ComposeController extends Controller
             'to' => '',
             'cc' => '',
             'bcc' => '',
-            'subject' => 'Fwd: ' . $message->subject,
+            'subject' => 'Fwd: '.$message->subject,
             'body' => '',
             'original_message' => $message,
             'include_attachments' => true,
@@ -272,7 +272,7 @@ class ComposeController extends Controller
             foreach ($request->file('attachments') as $file) {
                 $path = $file->store('email_temp', 'local');
                 $attachments[] = [
-                    'path' => storage_path('app/' . $path),
+                    'path' => storage_path('app/'.$path),
                     'name' => $file->getClientOriginalName(),
                     'mime' => $file->getMimeType(),
                 ];
@@ -328,7 +328,7 @@ class ComposeController extends Controller
             foreach ($request->file('attachments') as $file) {
                 $path = $file->store('email_temp', 'local');
                 $attachments[] = [
-                    'path' => storage_path('app/' . $path),
+                    'path' => storage_path('app/'.$path),
                     'name' => $file->getClientOriginalName(),
                     'mime' => $file->getMimeType(),
                 ];
@@ -339,7 +339,7 @@ class ComposeController extends Controller
         if ($request->boolean('include_attachments')) {
             foreach ($message->attachments as $attachment) {
                 $attachments[] = [
-                    'path' => storage_path('app/' . $attachment->storage_path),
+                    'path' => storage_path('app/'.$attachment->storage_path),
                     'name' => $attachment->filename,
                     'mime' => $attachment->content_type,
                 ];
@@ -374,7 +374,7 @@ class ComposeController extends Controller
     {
         $this->authorize('view', $draft);
 
-        if (!$draft->is_draft) {
+        if (! $draft->is_draft) {
             return response()->json([
                 'success' => false,
                 'message' => 'This is not a draft message',
@@ -402,7 +402,7 @@ class ComposeController extends Controller
 
         // Simple email parsing - could be enhanced with proper email parsing
         $emails = array_map('trim', explode(',', $addresses));
-        
+
         return array_filter($emails, function ($email) {
             return filter_var($email, FILTER_VALIDATE_EMAIL);
         });

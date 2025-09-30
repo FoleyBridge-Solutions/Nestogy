@@ -7,24 +7,27 @@ use Exception;
 
 /**
  * TaxCloud API Client
- * 
+ *
  * Free API for US sales tax calculations. TaxCloud provides
  * accurate sales tax rates for all US jurisdictions.
- * 
+ *
  * API Documentation: https://taxcloud.com/api/
  * Free tier: 10,000 API calls per month
  */
 class TaxCloudApiClient extends BaseApiClient
 {
     protected string $baseUrl = 'https://api.taxcloud.com/1.0/TaxCloud';
+
     protected ?string $apiLoginId;
+
     protected ?string $apiKey;
+
     protected ?string $customerId;
 
     public function __construct(int $companyId, array $config = [])
     {
         parent::__construct($companyId, TaxApiQueryCache::PROVIDER_TAXCLOUD, $config);
-        
+
         $this->apiLoginId = $config['api_login_id'] ?? config('services.taxcloud.api_login_id');
         $this->apiKey = $config['api_key'] ?? config('services.taxcloud.api_key');
         $this->customerId = $config['customer_id'] ?? config('services.taxcloud.customer_id');
@@ -54,14 +57,14 @@ class TaxCloudApiClient extends BaseApiClient
 
     /**
      * Lookup tax rates for an address
-     * 
-     * @param array $address Address components
-     * @param array $cartItems Items to calculate tax for
+     *
+     * @param  array  $address  Address components
+     * @param  array  $cartItems  Items to calculate tax for
      * @return array Tax calculation results
      */
     public function lookupTax(array $address, array $cartItems): array
     {
-        if (!$this->hasValidCredentials()) {
+        if (! $this->hasValidCredentials()) {
             return $this->getCredentialsErrorResponse();
         }
 
@@ -70,7 +73,7 @@ class TaxCloudApiClient extends BaseApiClient
             'cart_items' => $cartItems,
             'customer_id' => $this->customerId,
         ];
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_TAX_RATES,
             $parameters,
@@ -89,14 +92,14 @@ class TaxCloudApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->post("{$this->baseUrl}/Lookup", $requestData);
 
-                if (!$response->successful()) {
-                    throw new Exception("TaxCloud lookup failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('TaxCloud lookup failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 if (isset($data['ResponseType']) && $data['ResponseType'] === 'Error') {
-                    throw new Exception("TaxCloud API error: " . ($data['Messages'][0] ?? 'Unknown error'));
+                    throw new Exception('TaxCloud API error: '.($data['Messages'][0] ?? 'Unknown error'));
                 }
 
                 return $this->formatLookupResponse($data, $cartItems, $address);
@@ -107,20 +110,20 @@ class TaxCloudApiClient extends BaseApiClient
 
     /**
      * Verify an address using TaxCloud
-     * 
-     * @param array $address Address to verify
+     *
+     * @param  array  $address  Address to verify
      * @return array Address verification result
      */
     public function verifyAddress(array $address): array
     {
-        if (!$this->hasValidCredentials()) {
+        if (! $this->hasValidCredentials()) {
             return $this->getCredentialsErrorResponse();
         }
 
         $parameters = [
             'address' => $address,
         ];
-        
+
         return $this->makeRequest(
             'verify_address',
             $parameters,
@@ -140,14 +143,14 @@ class TaxCloudApiClient extends BaseApiClient
                 $response = $this->createHttpClient()
                     ->post("{$this->baseUrl}/VerifyAddress", $requestData);
 
-                if (!$response->successful()) {
-                    throw new Exception("TaxCloud address verification failed: " . $response->body());
+                if (! $response->successful()) {
+                    throw new Exception('TaxCloud address verification failed: '.$response->body());
                 }
 
                 $data = $response->json();
-                
+
                 if (isset($data['ResponseType']) && $data['ResponseType'] === 'Error') {
-                    throw new Exception("TaxCloud verification error: " . ($data['Messages'][0] ?? 'Unknown error'));
+                    throw new Exception('TaxCloud verification error: '.($data['Messages'][0] ?? 'Unknown error'));
                 }
 
                 return [
@@ -160,7 +163,7 @@ class TaxCloudApiClient extends BaseApiClient
                         'state' => $data['State'] ?? null,
                         'zip5' => $data['Zip5'] ?? null,
                         'zip4' => $data['Zip4'] ?? null,
-                        'zip' => ($data['Zip5'] ?? '') . ($data['Zip4'] ?? ''),
+                        'zip' => ($data['Zip5'] ?? '').($data['Zip4'] ?? ''),
                     ],
                     'error_number' => $data['ErrNumber'] ?? null,
                     'source' => 'taxcloud',
@@ -172,9 +175,9 @@ class TaxCloudApiClient extends BaseApiClient
 
     /**
      * Get tax information for a specific jurisdiction
-     * 
-     * @param string $state State abbreviation
-     * @param string $zip ZIP code
+     *
+     * @param  string  $state  State abbreviation
+     * @param  string  $zip  ZIP code
      * @return array Jurisdiction tax information
      */
     public function getJurisdictionTaxInfo(string $state, string $zip): array
@@ -183,7 +186,7 @@ class TaxCloudApiClient extends BaseApiClient
             'state' => $state,
             'zip' => $zip,
         ];
-        
+
         return $this->makeRequest(
             TaxApiQueryCache::TYPE_JURISDICTION,
             $parameters,
@@ -197,7 +200,7 @@ class TaxCloudApiClient extends BaseApiClient
                         'price' => 100.00,
                         'quantity' => 1,
                         'description' => 'Test item for jurisdiction lookup',
-                    ]
+                    ],
                 ];
 
                 $address = [
@@ -208,9 +211,9 @@ class TaxCloudApiClient extends BaseApiClient
                 ];
 
                 $lookup = $this->lookupTax($address, $cartItems);
-                
-                if (!$lookup['success']) {
-                    throw new Exception("Failed to get jurisdiction info: " . ($lookup['error'] ?? 'Unknown error'));
+
+                if (! $lookup['success']) {
+                    throw new Exception('Failed to get jurisdiction info: '.($lookup['error'] ?? 'Unknown error'));
                 }
 
                 return [
@@ -231,11 +234,11 @@ class TaxCloudApiClient extends BaseApiClient
 
     /**
      * Calculate tax for MSP services
-     * 
-     * @param float $amount Service amount
-     * @param string $serviceType Type of service
-     * @param array $customerAddress Customer address
-     * @param string $tic Tax Item Code for the service
+     *
+     * @param  float  $amount  Service amount
+     * @param  string  $serviceType  Type of service
+     * @param  array  $customerAddress  Customer address
+     * @param  string  $tic  Tax Item Code for the service
      * @return array Tax calculation result
      */
     public function calculateServiceTax(float $amount, string $serviceType, array $customerAddress, string $tic = '30070'): array
@@ -267,7 +270,7 @@ class TaxCloudApiClient extends BaseApiClient
                 'price' => $amount,
                 'quantity' => 1,
                 'description' => ucwords(str_replace('_', ' ', $serviceType)),
-            ]
+            ],
         ];
 
         return $this->lookupTax($customerAddress, $cartItems);
@@ -278,7 +281,7 @@ class TaxCloudApiClient extends BaseApiClient
      */
     protected function hasValidCredentials(): bool
     {
-        return !empty($this->apiLoginId) && !empty($this->apiKey) && !empty($this->customerId);
+        return ! empty($this->apiLoginId) && ! empty($this->apiKey) && ! empty($this->customerId);
     }
 
     /**
@@ -300,7 +303,7 @@ class TaxCloudApiClient extends BaseApiClient
     protected function formatCartItems(array $cartItems): array
     {
         $formatted = [];
-        
+
         foreach ($cartItems as $index => $item) {
             $formatted[] = [
                 'Index' => $item['index'] ?? $index,
@@ -310,7 +313,7 @@ class TaxCloudApiClient extends BaseApiClient
                 'Qty' => (float) ($item['quantity'] ?? 1),
             ];
         }
-        
+
         return $formatted;
     }
 
@@ -358,7 +361,7 @@ class TaxCloudApiClient extends BaseApiClient
         foreach ($cartItemsResponse as $index => $itemResponse) {
             $tax = (float) ($itemResponse['TaxAmount'] ?? 0);
             $totalTax += $tax;
-            
+
             $originalItem = $cartItems[$index] ?? [];
             $itemBreakdown[] = [
                 'index' => $index,
@@ -413,7 +416,7 @@ class TaxCloudApiClient extends BaseApiClient
         }
 
         $totalRate = array_sum($rates);
-        
+
         return [
             'success' => true,
             'total_tax_amount' => round($totalTax, 2),
@@ -433,8 +436,8 @@ class TaxCloudApiClient extends BaseApiClient
 
     /**
      * Get TIC (Tax Item Code) recommendations for MSP services
-     * 
-     * @param string $serviceDescription Description of the service
+     *
+     * @param  string  $serviceDescription  Description of the service
      * @return array TIC recommendations
      */
     public function getTicRecommendations(string $serviceDescription): array
@@ -486,13 +489,13 @@ class TaxCloudApiClient extends BaseApiClient
 
         foreach ($ticDatabase as $tic => $info) {
             $score = 0;
-            
+
             foreach ($info['keywords'] as $keyword) {
                 if (strpos($keywords, $keyword) !== false) {
                     $score++;
                 }
             }
-            
+
             if ($score > 0) {
                 $recommendations[] = [
                     'tic' => $tic,
@@ -505,7 +508,7 @@ class TaxCloudApiClient extends BaseApiClient
         }
 
         // Sort by score (highest first)
-        usort($recommendations, fn($a, $b) => $b['score'] <=> $a['score']);
+        usort($recommendations, fn ($a, $b) => $b['score'] <=> $a['score']);
 
         return [
             'service_description' => $serviceDescription,
@@ -522,11 +525,11 @@ class TaxCloudApiClient extends BaseApiClient
     {
         return [
             'configured' => $this->hasValidCredentials(),
-            'api_login_id_set' => !empty($this->apiLoginId),
-            'api_key_set' => !empty($this->apiKey),
-            'customer_id_set' => !empty($this->customerId),
+            'api_login_id_set' => ! empty($this->apiLoginId),
+            'api_key_set' => ! empty($this->apiKey),
+            'customer_id_set' => ! empty($this->customerId),
             'base_url' => $this->baseUrl,
-            'origin_address_configured' => !empty(config('services.company.address1')),
+            'origin_address_configured' => ! empty(config('services.company.address1')),
             'source' => 'taxcloud_config',
         ];
     }

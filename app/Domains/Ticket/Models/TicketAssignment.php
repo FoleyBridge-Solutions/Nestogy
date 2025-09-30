@@ -2,20 +2,20 @@
 
 namespace App\Domains\Ticket\Models;
 
+use App\Models\User;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\User;
 
 /**
  * Ticket Assignment Model
- * 
+ *
  * Represents assignment history and tracking for tickets
  */
 class TicketAssignment extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'ticket_id',

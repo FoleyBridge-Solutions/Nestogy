@@ -2,19 +2,18 @@
 
 namespace App\Domains\Ticket\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Domains\Ticket\Models\TicketPriorityQueue;
 use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Ticket\Models\TicketPriorityQueue;
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Carbon\Carbon;
 
 /**
  * Priority Queue Controller
- * 
+ *
  * Manages ticket priority queue with escalation rules, SLA tracking,
  * drag-and-drop reordering, and priority scoring algorithms following the domain architecture pattern.
  */
@@ -31,23 +30,23 @@ class PriorityQueueController extends Controller
 
         // Apply filters
         if ($search = $request->get('search')) {
-            $query->whereHas('ticket', function($q) use ($search) {
+            $query->whereHas('ticket', function ($q) use ($search) {
                 $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('ticket_number', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($cq) use ($search) {
-                      $cq->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('ticket_number', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
         if ($userId = $request->get('assignee_id')) {
-            $query->whereHas('ticket', function($q) use ($userId) {
+            $query->whereHas('ticket', function ($q) use ($userId) {
                 $q->where('assigned_to', $userId);
             });
         }
 
         if ($priority = $request->get('priority_level')) {
-            $query->whereHas('ticket', function($q) use ($priority) {
+            $query->whereHas('ticket', function ($q) use ($priority) {
                 $q->where('priority', $priority);
             });
         }
@@ -76,14 +75,14 @@ class PriorityQueueController extends Controller
         }
 
         $queueItems = $query->with(['ticket.client', 'ticket.assignee', 'escalationRule'])
-                           ->paginate($view === 'queue' ? 50 : 20)
-                           ->appends($request->query());
+            ->paginate($view === 'queue' ? 50 : 20)
+            ->appends($request->query());
 
         // Get filter options
         $assignees = User::where('company_id', auth()->user()->company_id)
-                        ->whereNull('archived_at')
-                        ->orderBy('name')
-                        ->get();
+            ->whereNull('archived_at')
+            ->orderBy('name')
+            ->get();
 
         $priorityLevels = ['Critical', 'High', 'Medium', 'Low'];
 
@@ -112,11 +111,11 @@ class PriorityQueueController extends Controller
     {
         // Get tickets not currently in priority queue
         $tickets = Ticket::where('company_id', auth()->user()->company_id)
-                        ->where('status', '!=', 'closed')
-                        ->whereDoesntHave('priorityQueue')
-                        ->with(['client', 'assignee'])
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+            ->where('status', '!=', 'closed')
+            ->whereDoesntHave('priorityQueue')
+            ->with(['client', 'assignee'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $priorityLevels = ['Critical', 'High', 'Medium', 'Low'];
 
@@ -140,7 +139,7 @@ class PriorityQueueController extends Controller
                 'integer',
                 Rule::exists('tickets', 'id')->where(function ($query) {
                     $query->where('company_id', auth()->user()->company_id)
-                          ->where('status', '!=', 'closed');
+                        ->where('status', '!=', 'closed');
                 }),
                 Rule::unique('ticket_priority_queue')->where(function ($query) {
                     return $query->where('company_id', auth()->user()->company_id);
@@ -154,8 +153,8 @@ class PriorityQueueController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $ticket = Ticket::findOrFail($request->ticket_id);
@@ -168,7 +167,7 @@ class PriorityQueueController extends Controller
 
         // Get next queue position
         $nextPosition = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
-                                          ->max('queue_position') + 1;
+            ->max('queue_position') + 1;
 
         $queueItem = TicketPriorityQueue::create([
             'company_id' => auth()->user()->company_id,
@@ -186,12 +185,12 @@ class PriorityQueueController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Ticket added to priority queue successfully',
-                'queue_item' => $queueItem->load(['ticket.client', 'ticket.assignee'])
+                'queue_item' => $queueItem->load(['ticket.client', 'ticket.assignee']),
             ], 201);
         }
 
         return redirect()->route('tickets.priority-queue.index')
-                        ->with('success', 'Ticket added to priority queue successfully.');
+            ->with('success', 'Ticket added to priority queue successfully.');
     }
 
     /**
@@ -202,12 +201,12 @@ class PriorityQueueController extends Controller
         $this->authorize('view', $queueItem);
 
         $queueItem->load([
-            'ticket.client', 
-            'ticket.assignee', 
+            'ticket.client',
+            'ticket.assignee',
             'escalationRule',
-            'ticket.timeEntries' => function($query) {
+            'ticket.timeEntries' => function ($query) {
                 $query->latest()->limit(5);
-            }
+            },
         ]);
 
         // Get priority score breakdown
@@ -244,7 +243,7 @@ class PriorityQueueController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -265,7 +264,7 @@ class PriorityQueueController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Priority queue item updated successfully',
-            'queue_item' => $queueItem->fresh()
+            'queue_item' => $queueItem->fresh(),
         ]);
     }
 
@@ -284,12 +283,12 @@ class PriorityQueueController extends Controller
         if (request()->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Ticket removed from priority queue successfully'
+                'message' => 'Ticket removed from priority queue successfully',
             ]);
         }
 
         return redirect()->route('tickets.priority-queue.index')
-                        ->with('success', 'Ticket removed from priority queue successfully.');
+            ->with('success', 'Ticket removed from priority queue successfully.');
     }
 
     /**
@@ -306,21 +305,21 @@ class PriorityQueueController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         DB::transaction(function () use ($request) {
             foreach ($request->items as $item) {
                 TicketPriorityQueue::where('id', $item['id'])
-                                  ->where('company_id', auth()->user()->company_id)
-                                  ->update(['queue_position' => $item['position']]);
+                    ->where('company_id', auth()->user()->company_id)
+                    ->update(['queue_position' => $item['position']]);
             }
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'Queue reordered successfully'
+            'message' => 'Queue reordered successfully',
         ]);
     }
 
@@ -338,7 +337,7 @@ class PriorityQueueController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -346,10 +345,10 @@ class PriorityQueueController extends Controller
 
         foreach ($request->queue_item_ids as $id) {
             $queueItem = TicketPriorityQueue::where('id', $id)
-                                           ->where('company_id', auth()->user()->company_id)
-                                           ->first();
+                ->where('company_id', auth()->user()->company_id)
+                ->first();
 
-            if ($queueItem && !$queueItem->escalated_at) {
+            if ($queueItem && ! $queueItem->escalated_at) {
                 $queueItem->escalate($request->escalation_reason);
                 $escalatedCount++;
             }
@@ -357,7 +356,7 @@ class PriorityQueueController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Escalated {$escalatedCount} items successfully"
+            'message' => "Escalated {$escalatedCount} items successfully",
         ]);
     }
 
@@ -369,8 +368,8 @@ class PriorityQueueController extends Controller
         $method = $request->get('method', 'score'); // score, sla, age
 
         $queueItems = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
-                                        ->with('ticket')
-                                        ->get();
+            ->with('ticket')
+            ->get();
 
         DB::transaction(function () use ($queueItems, $method) {
             $position = 1;
@@ -402,7 +401,7 @@ class PriorityQueueController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Queue auto-prioritized successfully',
-            'method' => $method
+            'method' => $method,
         ]);
     }
 
@@ -423,13 +422,13 @@ class PriorityQueueController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $queueItems = TicketPriorityQueue::whereIn('id', $request->queue_item_ids)
-                                        ->where('company_id', auth()->user()->company_id)
-                                        ->get();
+            ->where('company_id', auth()->user()->company_id)
+            ->get();
 
         $count = 0;
 
@@ -437,7 +436,7 @@ class PriorityQueueController extends Controller
             foreach ($queueItems as $item) {
                 switch ($request->action) {
                     case 'escalate':
-                        if (!$item->escalated_at) {
+                        if (! $item->escalated_at) {
                             $item->escalate($request->escalation_reason);
                             $count++;
                         }
@@ -452,7 +451,7 @@ class PriorityQueueController extends Controller
 
                     case 'set_sla':
                         $item->update([
-                            'sla_deadline' => now()->addHours($request->sla_hours)
+                            'sla_deadline' => now()->addHours($request->sla_hours),
                         ]);
                         $count++;
                         break;
@@ -474,12 +473,12 @@ class PriorityQueueController extends Controller
             'escalate' => 'escalated',
             'change_priority' => 'updated',
             'set_sla' => 'updated',
-            'remove' => 'removed'
+            'remove' => 'removed',
         ][$request->action];
 
         return response()->json([
             'success' => true,
-            'message' => "Successfully {$actionName} {$count} queue items"
+            'message' => "Successfully {$actionName} {$count} queue items",
         ]);
     }
 
@@ -489,8 +488,8 @@ class PriorityQueueController extends Controller
     public function getPriorityMatrix(Request $request)
     {
         $queueItems = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
-                                        ->with('ticket.client')
-                                        ->get();
+            ->with('ticket.client')
+            ->get();
 
         // Group by priority level and urgency
         $matrix = [
@@ -507,7 +506,7 @@ class PriorityQueueController extends Controller
 
         return response()->json([
             'success' => true,
-            'matrix' => $matrix
+            'matrix' => $matrix,
         ]);
     }
 
@@ -520,32 +519,32 @@ class PriorityQueueController extends Controller
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->whereHas('ticket', function($q) use ($search) {
+            $query->whereHas('ticket', function ($q) use ($search) {
                 $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('ticket_number', 'like', "%{$search}%");
+                    ->orWhere('ticket_number', 'like', "%{$search}%");
             });
         }
 
         if ($userId = $request->get('assignee_id')) {
-            $query->whereHas('ticket', function($q) use ($userId) {
+            $query->whereHas('ticket', function ($q) use ($userId) {
                 $q->where('assigned_to', $userId);
             });
         }
 
         $queueItems = $query->with(['ticket.client', 'ticket.assignee'])
-                           ->orderBy('queue_position')
-                           ->get();
+            ->orderBy('queue_position')
+            ->get();
 
-        $filename = 'priority-queue_' . date('Y-m-d_H-i-s') . '.csv';
+        $filename = 'priority-queue_'.date('Y-m-d_H-i-s').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($queueItems) {
+        $callback = function () use ($queueItems) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Position',
@@ -558,7 +557,7 @@ class PriorityQueueController extends Controller
                 'SLA Due',
                 'Is Escalated',
                 'Days in Queue',
-                'Created Date'
+                'Created Date',
             ]);
 
             // CSV data
@@ -577,7 +576,7 @@ class PriorityQueueController extends Controller
                     $item->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -594,19 +593,19 @@ class PriorityQueueController extends Controller
         $totalItems = $query->count();
         $escalatedItems = $query->whereNotNull('escalated_at')->count();
         $slaBreach = $query->where('sla_deadline', '<', now())->count();
-        
+
         // PostgreSQL compatible date difference calculation
-        $avgWaitTime = $query->selectRaw("AVG(EXTRACT(EPOCH FROM (NOW() - created_at)) / 86400) as avg_days")
-                            ->value('avg_days');
+        $avgWaitTime = $query->selectRaw('AVG(EXTRACT(EPOCH FROM (NOW() - created_at)) / 86400) as avg_days')
+            ->value('avg_days');
 
         // Get priority breakdown from tickets
         $priorityBreakdown = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
-                                  ->whereHas('ticket')
-                                  ->with('ticket:id,priority')
-                                  ->get()
-                                  ->groupBy('ticket.priority')
-                                  ->map->count()
-                                  ->toArray();
+            ->whereHas('ticket')
+            ->with('ticket:id,priority')
+            ->get()
+            ->groupBy('ticket.priority')
+            ->map->count()
+            ->toArray();
 
         return [
             'total_items' => $totalItems,
@@ -623,8 +622,8 @@ class PriorityQueueController extends Controller
     private function reorderQueue(): void
     {
         $items = TicketPriorityQueue::where('company_id', auth()->user()->company_id)
-                                  ->orderBy('queue_position')
-                                  ->get();
+            ->orderBy('queue_position')
+            ->get();
 
         $position = 1;
         foreach ($items as $item) {

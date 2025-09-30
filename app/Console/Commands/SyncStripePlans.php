@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\SubscriptionPlan;
 use App\Domains\Core\Services\StripeSubscriptionService;
+use App\Models\SubscriptionPlan;
 use Illuminate\Console\Command;
 
 class SyncStripePlans extends Command

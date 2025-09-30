@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\BelongsToCompany;
-use Carbon\Carbon;
 
 /**
  * Account Hold Model
- * 
+ *
  * Represents service suspension and restoration management with
  * comprehensive VoIP-specific controls and compliance tracking.
- * 
+ *
  * @property int $id
  * @property int $client_id
  * @property int|null $invoice_id
@@ -104,7 +104,7 @@ use Carbon\Carbon;
  */
 class AccountHold extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'account_holds';
 
@@ -134,7 +134,7 @@ class AccountHold extends Model
         'restoration_verified_at', 'legal_action_pending', 'collection_agency_involved',
         'collection_agency', 'legal_action_date', 'legal_notes', 'effectiveness_score',
         'resulted_in_payment', 'payment_amount_received', 'days_to_resolution',
-        'resolution_type', 'created_by', 'updated_by', 'lifted_by'
+        'resolution_type', 'created_by', 'updated_by', 'lifted_by',
     ];
 
     protected $casts = [
@@ -213,62 +213,96 @@ class AccountHold extends Model
         'lifted_by' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Hold type constants
     const TYPE_SERVICE_SUSPENSION = 'service_suspension';
+
     const TYPE_CREDIT_HOLD = 'credit_hold';
+
     const TYPE_BILLING_HOLD = 'billing_hold';
+
     const TYPE_COMPLIANCE_HOLD = 'compliance_hold';
+
     const TYPE_LEGAL_HOLD = 'legal_hold';
+
     const TYPE_FRAUD_HOLD = 'fraud_hold';
+
     const TYPE_PAYMENT_PLAN_VIOLATION = 'payment_plan_violation';
+
     const TYPE_DISPUTE_HOLD = 'dispute_hold';
+
     const TYPE_REGULATORY_HOLD = 'regulatory_hold';
+
     const TYPE_EQUIPMENT_RECOVERY = 'equipment_recovery';
+
     const TYPE_PORTING_RESTRICTION = 'porting_restriction';
 
     // Status constants
     const STATUS_PENDING = 'pending';
+
     const STATUS_ACTIVE = 'active';
+
     const STATUS_PARTIAL = 'partial';
+
     const STATUS_LIFTED = 'lifted';
+
     const STATUS_EXPIRED = 'expired';
+
     const STATUS_OVERRIDDEN = 'overridden';
 
     // Severity constants
     const SEVERITY_LOW = 'low';
+
     const SEVERITY_MEDIUM = 'medium';
+
     const SEVERITY_HIGH = 'high';
+
     const SEVERITY_CRITICAL = 'critical';
 
     // Approval status constants
     const APPROVAL_NOT_REQUIRED = 'not_required';
+
     const APPROVAL_PENDING = 'pending';
+
     const APPROVAL_APPROVED = 'approved';
+
     const APPROVAL_REJECTED = 'rejected';
 
     // Customer response constants
     const RESPONSE_NO_RESPONSE = 'no_response';
+
     const RESPONSE_ACKNOWLEDGED = 'acknowledged';
+
     const RESPONSE_DISPUTED = 'disputed';
+
     const RESPONSE_PAYMENT_PROMISED = 'payment_promised';
+
     const RESPONSE_HARDSHIP_CLAIMED = 'hardship_claimed';
+
     const RESPONSE_LEGAL_THREAT = 'legal_threat';
+
     const RESPONSE_ESCALATED = 'escalated';
 
     // Restoration method constants
     const RESTORATION_AUTOMATIC = 'automatic';
+
     const RESTORATION_MANUAL = 'manual';
+
     const RESTORATION_STAGED = 'staged';
+
     const RESTORATION_GRADUAL = 'gradual';
 
     // Resolution type constants
     const RESOLUTION_PAYMENT = 'payment';
+
     const RESOLUTION_PAYMENT_PLAN = 'payment_plan';
+
     const RESOLUTION_WRITEOFF = 'writeoff';
+
     const RESOLUTION_LEGAL_ACTION = 'legal_action';
+
     const RESOLUTION_SETTLEMENT = 'settlement';
 
     /**
@@ -356,7 +390,7 @@ class AccountHold extends Model
      */
     public function isInGracePeriod(): bool
     {
-        return $this->grace_period_expires_at && 
+        return $this->grace_period_expires_at &&
                Carbon::now()->lt($this->grace_period_expires_at);
     }
 
@@ -381,7 +415,7 @@ class AccountHold extends Model
      */
     public function requiresCustomerNotification(): bool
     {
-        return !$this->customer_notification_sent && 
+        return ! $this->customer_notification_sent &&
                $this->suspension_notice_hours > 0;
     }
 
@@ -390,14 +424,14 @@ class AccountHold extends Model
      */
     public function canBeLiftedBasedOnConditions(): bool
     {
-        if (!$this->lift_conditions) {
+        if (! $this->lift_conditions) {
             return true; // No conditions, can be lifted
         }
 
         foreach ($this->lift_conditions as $condition => $value) {
             switch ($condition) {
                 case 'payment_required':
-                    if ($value && !$this->resulted_in_payment) {
+                    if ($value && ! $this->resulted_in_payment) {
                         return false;
                     }
                     break;
@@ -412,7 +446,7 @@ class AccountHold extends Model
                     }
                     break;
                 case 'payment_plan':
-                    if ($value && !$this->paymentPlan) {
+                    if ($value && ! $this->paymentPlan) {
                         return false;
                     }
                     break;
@@ -450,7 +484,7 @@ class AccountHold extends Model
     /**
      * Lift the hold.
      */
-    public function lift(int $liftedBy = null, string $reason = null): void
+    public function lift(?int $liftedBy = null, ?string $reason = null): void
     {
         $this->update([
             'status' => self::STATUS_LIFTED,
@@ -514,7 +548,7 @@ class AccountHold extends Model
                 'method' => $method,
                 'sent_at' => Carbon::now()->toISOString(),
                 'type' => 'hold_notification',
-                'status' => 'sent'
+                'status' => 'sent',
             ];
         }
 
@@ -528,7 +562,7 @@ class AccountHold extends Model
     /**
      * Record customer response.
      */
-    public function recordCustomerResponse(string $responseType, string $feedback = null): void
+    public function recordCustomerResponse(string $responseType, ?string $feedback = null): void
     {
         $this->update([
             'customer_contacted' => true,
@@ -610,7 +644,7 @@ class AccountHold extends Model
     {
         // This would integrate with VoIP service management
         $this->update(['restoration_completed' => true]);
-        
+
         if ($this->restoration_verification_required) {
             // Schedule verification
             $this->scheduleRestorationVerification();
@@ -622,7 +656,7 @@ class AccountHold extends Model
      */
     protected function performStagedRestoration(): void
     {
-        if (!$this->restoration_steps) {
+        if (! $this->restoration_steps) {
             return;
         }
 
@@ -649,7 +683,7 @@ class AccountHold extends Model
     {
         // This would schedule a job to verify service restoration
         $verificationTime = Carbon::now()->addMinutes($this->restoration_time_minutes ?: 30);
-        
+
         // Schedule verification job here
     }
 
@@ -683,9 +717,9 @@ class AccountHold extends Model
             'content' => $content,
             'metadata' => [
                 'hold_reference' => $this->hold_reference,
-                'hold_type' => $this->hold_type
+                'hold_type' => $this->hold_type,
             ],
-            'created_by' => $this->created_by ?: 1
+            'created_by' => $this->created_by ?: 1,
         ]);
     }
 
@@ -719,7 +753,7 @@ class AccountHold extends Model
     public function scopeRequiresApproval($query)
     {
         return $query->where('requires_approval', true)
-                    ->where('approval_status', self::APPROVAL_PENDING);
+            ->where('approval_status', self::APPROVAL_PENDING);
     }
 
     /**
@@ -728,7 +762,7 @@ class AccountHold extends Model
     public function scopeExpired($query)
     {
         return $query->where('expires_at', '<', Carbon::now())
-                    ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_PENDING]);
+            ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_PENDING]);
     }
 
     /**
@@ -739,8 +773,8 @@ class AccountHold extends Model
         $prefix = 'AH';
         $year = now()->format('y');
         $sequence = self::whereYear('created_at', now()->year)->count() + 1;
-        
-        return "{$prefix}-{$year}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+        return "{$prefix}-{$year}-".str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -751,13 +785,13 @@ class AccountHold extends Model
         parent::boot();
 
         static::creating(function ($hold) {
-            if (!$hold->hold_reference) {
+            if (! $hold->hold_reference) {
                 $hold->hold_reference = self::generateHoldReference();
             }
-            if (!$hold->created_by) {
+            if (! $hold->created_by) {
                 $hold->created_by = auth()->id() ?? 1;
             }
-            
+
             // Set grace period expiration
             if ($hold->grace_period_hours > 0) {
                 $hold->grace_period_expires_at = Carbon::now()->addHours($hold->grace_period_hours);
@@ -768,12 +802,12 @@ class AccountHold extends Model
             // Update effectiveness score when relevant fields change
             if ($hold->isDirty(['resulted_in_payment', 'payment_amount_received', 'status'])) {
                 $hold->effectiveness_score = $hold->calculateEffectivenessScore();
-                
+
                 // Calculate days to resolution if hold was lifted
                 if ($hold->isDirty('status') && $hold->status === self::STATUS_LIFTED) {
                     $hold->days_to_resolution = Carbon::parse($hold->created_at)->diffInDays($hold->lifted_at);
                 }
-                
+
                 $hold->saveQuietly(); // Prevent infinite loop
             }
         });

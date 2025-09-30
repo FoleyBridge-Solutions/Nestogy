@@ -2,17 +2,17 @@
 
 namespace App\Domains\Contract\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * ContractAuditLog Model
- * 
+ *
  * Comprehensive audit trail for all contract-related activities.
  * Tracks user actions, system events, and maintains compliance records.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $contract_id
@@ -54,12 +54,19 @@ class ContractAuditLog extends Model
 
     // Category constants
     const CATEGORY_GENERAL = 'general';
+
     const CATEGORY_APPROVAL = 'approval';
+
     const CATEGORY_SIGNATURE = 'signature';
+
     const CATEGORY_COMPLIANCE = 'compliance';
+
     const CATEGORY_FINANCIAL = 'financial';
+
     const CATEGORY_MILESTONE = 'milestone';
+
     const CATEGORY_DOCUMENT = 'document';
+
     const CATEGORY_SYSTEM = 'system';
 
     /**
@@ -118,7 +125,7 @@ class ContractAuditLog extends Model
      */
     public function getCategoryLabelAttribute(): string
     {
-        return match($this->category) {
+        return match ($this->category) {
             self::CATEGORY_GENERAL => 'General',
             self::CATEGORY_APPROVAL => 'Approval',
             self::CATEGORY_SIGNATURE => 'Signature',
@@ -142,7 +149,7 @@ class ContractAuditLog extends Model
             if (is_array($value)) {
                 $value = json_encode($value);
             }
-            $formatted[] = ucwords(str_replace('_', ' ', $key)) . ': ' . $value;
+            $formatted[] = ucwords(str_replace('_', ' ', $key)).': '.$value;
         }
 
         return implode(', ', $formatted);
@@ -156,11 +163,11 @@ class ContractAuditLog extends Model
         parent::boot();
 
         static::creating(function ($auditLog) {
-            if (!$auditLog->company_id && auth()->user()) {
+            if (! $auditLog->company_id && auth()->user()) {
                 $auditLog->company_id = auth()->user()->company_id;
             }
-            
-            if (!$auditLog->occurred_at) {
+
+            if (! $auditLog->occurred_at) {
                 $auditLog->occurred_at = now();
             }
         });

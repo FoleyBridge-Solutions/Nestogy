@@ -25,7 +25,7 @@ class TicketTemplateSeeder extends Seeder
                     'steps_to_reproduce' => '',
                     'expected_outcome' => '',
                     'actual_outcome' => '',
-                    'priority_justification' => ''
+                    'priority_justification' => '',
                 ]),
                 'instructions' => 'Please provide detailed information about your issue including steps to reproduce and any error messages.',
                 'is_active' => true,
@@ -43,7 +43,7 @@ class TicketTemplateSeeder extends Seeder
                     'affected_systems' => '',
                     'maintenance_window' => '',
                     'rollback_plan' => '',
-                    'contact_person' => ''
+                    'contact_person' => '',
                 ]),
                 'instructions' => 'Use this template for scheduling and tracking system maintenance activities.',
                 'is_active' => true,
@@ -61,7 +61,7 @@ class TicketTemplateSeeder extends Seeder
                     'systems_affected' => '',
                     'business_impact' => '',
                     'initial_response' => '',
-                    'escalation_required' => ''
+                    'escalation_required' => '',
                 ]),
                 'instructions' => 'Use for critical incidents requiring immediate attention. Include all relevant details about the outage and impact.',
                 'is_active' => true,
@@ -79,7 +79,7 @@ class TicketTemplateSeeder extends Seeder
                     'justification' => '',
                     'approval_required' => '',
                     'timeline' => '',
-                    'additional_notes' => ''
+                    'additional_notes' => '',
                 ]),
                 'instructions' => 'Use for requesting new services, access, or resources.',
                 'is_active' => true,

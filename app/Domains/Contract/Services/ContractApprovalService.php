@@ -5,15 +5,15 @@ namespace App\Domains\Contract\Services;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractApproval;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Collection;
-use Carbon\Carbon;
 
 /**
  * ContractApprovalService
- * 
+ *
  * Enterprise contract approval workflow service with multi-level approvals,
  * role-based routing, automatic escalation, and comprehensive audit trails.
  */
@@ -28,7 +28,7 @@ class ContractApprovalService
             Log::info('Submitting contract for approval', [
                 'contract_id' => $contract->id,
                 'current_status' => $contract->status,
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             // Validate contract can be submitted for approval
@@ -46,7 +46,7 @@ class ContractApprovalService
                 ]);
 
                 Log::info('Contract approved automatically (no approval required)', [
-                    'contract_id' => $contract->id
+                    'contract_id' => $contract->id,
                 ]);
 
                 return true;
@@ -78,7 +78,7 @@ class ContractApprovalService
             Log::info('Contract submitted for approval', [
                 'contract_id' => $contract->id,
                 'approval_levels' => count($approvalRequirements),
-                'user_id' => Auth::id()
+                'user_id' => Auth::id(),
             ]);
 
             return true;
@@ -89,25 +89,25 @@ class ContractApprovalService
      * Process approval decision
      */
     public function processApproval(
-        Contract $contract, 
-        string $decision, 
-        string $comments = null,
+        Contract $contract,
+        string $decision,
+        ?string $comments = null,
         array $conditions = []
     ): bool {
         return DB::transaction(function () use ($contract, $decision, $comments, $conditions) {
             $user = Auth::user();
-            
+
             Log::info('Processing contract approval decision', [
                 'contract_id' => $contract->id,
                 'decision' => $decision,
                 'user_id' => $user->id,
-                'user_role' => $user->role ?? 'unknown'
+                'user_role' => $user->role ?? 'unknown',
             ]);
 
             // Find the pending approval for this user
             $approval = $this->findPendingApprovalForUser($contract, $user);
-            
-            if (!$approval) {
+
+            if (! $approval) {
                 throw new \Exception('No pending approval found for this user');
             }
 
@@ -118,16 +118,16 @@ class ContractApprovalService
             switch ($decision) {
                 case 'approve':
                     return $this->approveContract($contract, $approval, $comments, $conditions);
-                    
+
                 case 'reject':
                     return $this->rejectContract($contract, $approval, $comments);
-                    
+
                 case 'request_changes':
                     return $this->requestContractChanges($contract, $approval, $comments, $conditions);
-                    
+
                 case 'escalate':
                     return $this->escalateApproval($contract, $approval, $comments);
-                    
+
                 default:
                     throw new \Exception("Invalid approval decision: {$decision}");
             }
@@ -140,7 +140,7 @@ class ContractApprovalService
     public function checkApprovalStatus(Contract $contract): array
     {
         $approvals = $contract->approvals()->orderBy('approval_order')->get();
-        
+
         $pending = $approvals->where('status', 'pending')->count();
         $approved = $approvals->where('status', 'approved')->count();
         $rejected = $approvals->where('status', 'rejected')->count();
@@ -177,7 +177,7 @@ class ContractApprovalService
             ->where('status', 'pending')
             ->where(function ($query) use ($user) {
                 $query->where('approver_user_id', $user->id)
-                      ->orWhere('approver_role', $user->role);
+                    ->orWhere('approver_role', $user->role);
             })
             ->orderBy('required_by')
             ->orderBy('created_at')
@@ -187,7 +187,7 @@ class ContractApprovalService
     /**
      * Get approval statistics for dashboard
      */
-    public function getApprovalStatistics(int $companyId, Carbon $startDate = null, Carbon $endDate = null): array
+    public function getApprovalStatistics(int $companyId, ?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
         $query = ContractApproval::where('company_id', $companyId);
 
@@ -207,7 +207,7 @@ class ContractApprovalService
             'approved_count' => $approvals->where('status', 'approved')->count(),
             'rejected_count' => $approvals->where('status', 'rejected')->count(),
             'average_approval_time' => $this->calculateAverageApprovalTime($approvals),
-            'approval_rate' => $approvals->count() > 0 ? 
+            'approval_rate' => $approvals->count() > 0 ?
                 ($approvals->where('status', 'approved')->count() / $approvals->count()) * 100 : 0,
             'overdue_approvals' => $this->getOverdueApprovals($companyId)->count(),
         ];
@@ -218,15 +218,15 @@ class ContractApprovalService
      */
     protected function validateContractForApproval(Contract $contract): void
     {
-        if (!in_array($contract->status, [Contract::STATUS_DRAFT, Contract::STATUS_UNDER_NEGOTIATION])) {
+        if (! in_array($contract->status, [Contract::STATUS_DRAFT, Contract::STATUS_UNDER_NEGOTIATION])) {
             throw new \Exception('Contract must be in draft or under negotiation status to submit for approval');
         }
 
-        if (!$contract->contract_value || $contract->contract_value <= 0) {
+        if (! $contract->contract_value || $contract->contract_value <= 0) {
             throw new \Exception('Contract must have a valid contract value');
         }
 
-        if (!$contract->client_id) {
+        if (! $contract->client_id) {
             throw new \Exception('Contract must be associated with a client');
         }
     }
@@ -300,9 +300,9 @@ class ContractApprovalService
      * Approve contract
      */
     protected function approveContract(
-        Contract $contract, 
-        ContractApproval $approval, 
-        string $comments = null,
+        Contract $contract,
+        ContractApproval $approval,
+        ?string $comments = null,
         array $conditions = []
     ): bool {
         $approval->update([
@@ -316,12 +316,12 @@ class ContractApprovalService
             'contract_id' => $contract->id,
             'approval_id' => $approval->id,
             'level' => $approval->approval_level,
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         // Check if all required approvals are complete
         $approvalStatus = $this->checkApprovalStatus($contract);
-        
+
         if ($approvalStatus['is_fully_approved']) {
             $this->finalizeApproval($contract);
         } else {
@@ -336,9 +336,9 @@ class ContractApprovalService
      * Reject contract
      */
     protected function rejectContract(
-        Contract $contract, 
-        ContractApproval $approval, 
-        string $comments = null
+        Contract $contract,
+        ContractApproval $approval,
+        ?string $comments = null
     ): bool {
         $approval->update([
             'status' => 'rejected',
@@ -354,7 +354,7 @@ class ContractApprovalService
             'contract_id' => $contract->id,
             'approval_id' => $approval->id,
             'level' => $approval->approval_level,
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         // Notify contract creator of rejection
@@ -367,9 +367,9 @@ class ContractApprovalService
      * Request contract changes
      */
     protected function requestContractChanges(
-        Contract $contract, 
-        ContractApproval $approval, 
-        string $comments = null,
+        Contract $contract,
+        ContractApproval $approval,
+        ?string $comments = null,
         array $conditions = []
     ): bool {
         $approval->update([
@@ -387,7 +387,7 @@ class ContractApprovalService
             'contract_id' => $contract->id,
             'approval_id' => $approval->id,
             'level' => $approval->approval_level,
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         // Notify contract creator of requested changes
@@ -400,14 +400,14 @@ class ContractApprovalService
      * Escalate approval
      */
     protected function escalateApproval(
-        Contract $contract, 
-        ContractApproval $approval, 
-        string $comments = null
+        Contract $contract,
+        ContractApproval $approval,
+        ?string $comments = null
     ): bool {
         // Find next level approver
         $nextLevelApprover = $this->findNextLevelApprover($contract, $approval);
-        
-        if (!$nextLevelApprover) {
+
+        if (! $nextLevelApprover) {
             throw new \Exception('No higher level approver available for escalation');
         }
 
@@ -437,7 +437,7 @@ class ContractApprovalService
             'contract_id' => $contract->id,
             'approval_id' => $approval->id,
             'escalated_to' => $nextLevelApprover->id,
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         return true;
@@ -456,7 +456,7 @@ class ContractApprovalService
 
         Log::info('Contract fully approved', [
             'contract_id' => $contract->id,
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
         ]);
 
         // Notify relevant parties that contract is ready for signature
@@ -472,7 +472,7 @@ class ContractApprovalService
             ->where('status', 'pending')
             ->where(function ($query) use ($user) {
                 $query->where('approver_user_id', $user->id)
-                      ->orWhere('approver_role', $user->role);
+                    ->orWhere('approver_role', $user->role);
             })
             ->orderBy('approval_order')
             ->first();
@@ -483,10 +483,10 @@ class ContractApprovalService
      */
     protected function validateApprovalPermissions(ContractApproval $approval, User $user): void
     {
-        $canApprove = $approval->approver_user_id === $user->id || 
+        $canApprove = $approval->approver_user_id === $user->id ||
                      $approval->approver_role === $user->role;
 
-        if (!$canApprove) {
+        if (! $canApprove) {
             throw new \Exception('User does not have permission to approve this contract');
         }
 
@@ -494,7 +494,7 @@ class ContractApprovalService
             Log::warning('Approval processed after deadline', [
                 'approval_id' => $approval->id,
                 'required_by' => $approval->required_by,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
         }
     }
@@ -524,6 +524,7 @@ class ContractApprovalService
     protected function getCurrentApprovalLevel(Collection $approvals): int
     {
         $pendingApproval = $approvals->where('status', 'pending')->first();
+
         return $pendingApproval ? $pendingApproval->approval_order : 0;
     }
 
@@ -561,6 +562,7 @@ class ContractApprovalService
 
         $totalHours = $completedApprovals->sum(function ($approval) {
             $completedAt = $approval->approved_at ?? $approval->rejected_at;
+
             return $approval->submitted_at->diffInHours($completedAt);
         });
 
@@ -588,16 +590,16 @@ class ContractApprovalService
         // Implementation would send notifications to approvers
         Log::info('Approval notifications sent', [
             'contract_id' => $contract->id,
-            'level' => $level
+            'level' => $level,
         ]);
     }
 
-    protected function notifyContractCreator(Contract $contract, string $action, string $comments = null): void
+    protected function notifyContractCreator(Contract $contract, string $action, ?string $comments = null): void
     {
         // Implementation would notify contract creator
         Log::info('Contract creator notified', [
             'contract_id' => $contract->id,
-            'action' => $action
+            'action' => $action,
         ]);
     }
 }

@@ -30,7 +30,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_autoclose' => 'boolean',
             'ticket_autoclose_hours' => 'integer|min:1|max:8760',
             'ticket_new_ticket_notification_email' => 'nullable|email|max:255',
-            
+
             // Ticket Categorization Rules
             'ticket_categorization_rules' => 'nullable|array',
             'ticket_categorization_rules.enabled' => 'boolean',
@@ -42,7 +42,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_categorization_rules.keywords.*.keyword' => 'string|max:50',
             'ticket_categorization_rules.keywords.*.category' => 'string|max:100',
             'ticket_categorization_rules.keywords.*.priority' => 'string|in:low,medium,high,critical',
-            
+
             // Ticket Priority Rules
             'ticket_priority_rules' => 'nullable|array',
             'ticket_priority_rules.enabled' => 'boolean',
@@ -55,7 +55,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_priority_rules.escalation_hours.medium' => 'integer|min:1|max:72',
             'ticket_priority_rules.escalation_hours.high' => 'integer|min:1|max:24',
             'ticket_priority_rules.escalation_hours.critical' => 'integer|min:1|max:4',
-            
+
             // SLA Definitions
             'sla_definitions' => 'nullable|array',
             'sla_definitions.enabled' => 'boolean',
@@ -74,7 +74,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'sla_definitions.resolution_times.high' => 'integer|min:120|max:4320',
             'sla_definitions.resolution_times.medium' => 'integer|min:480|max:10080',
             'sla_definitions.resolution_times.low' => 'integer|min:1440|max:20160',
-            
+
             // SLA Escalation Policies
             'sla_escalation_policies' => 'nullable|array',
             'sla_escalation_policies.enabled' => 'boolean',
@@ -85,7 +85,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'sla_escalation_policies.escalation_levels.*.action' => 'string|in:notify_assignee,notify_manager,notify_client,change_priority,reassign',
             'sla_escalation_policies.escalation_levels.*.notification_channels' => 'nullable|array',
             'sla_escalation_policies.escalation_levels.*.notification_channels.*' => 'string|in:email,sms,slack,teams,webhook',
-            
+
             // Auto Assignment Rules
             'auto_assignment_rules' => 'nullable|array',
             'auto_assignment_rules.enabled' => 'boolean',
@@ -100,7 +100,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'auto_assignment_rules.assignment_rules.*.condition' => 'string|max:255',
             'auto_assignment_rules.assignment_rules.*.assignee_id' => 'integer|exists:users,id',
             'auto_assignment_rules.assignment_rules.*.priority' => 'integer|min:1|max:100',
-            
+
             // Routing Logic
             'routing_logic' => 'nullable|array',
             'routing_logic.enabled' => 'boolean',
@@ -116,7 +116,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'routing_logic.routing_rules.*.actions' => 'array',
             'routing_logic.routing_rules.*.priority' => 'integer|min:1|max:100',
             'routing_logic.routing_rules.*.enabled' => 'boolean',
-            
+
             // Approval Workflows
             'approval_workflows' => 'nullable|array',
             'approval_workflows.enabled' => 'boolean',
@@ -132,7 +132,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'approval_workflows.workflows.*.approvers.*' => 'integer|exists:users,id',
             'approval_workflows.workflows.*.require_all_approvers' => 'boolean',
             'approval_workflows.workflows.*.enabled' => 'boolean',
-            
+
             // Time Tracking
             'time_tracking_enabled' => 'boolean',
             'time_tracking_settings' => 'nullable|array',
@@ -146,7 +146,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'time_tracking_settings.billable_time_default' => 'boolean',
             'time_tracking_settings.show_timer_to_clients' => 'boolean',
             'time_tracking_settings.time_edit_deadline_hours' => 'integer|min:1|max:168',
-            
+
             // Customer Satisfaction
             'customer_satisfaction_enabled' => 'boolean',
             'csat_settings' => 'nullable|array',
@@ -160,7 +160,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'csat_settings.public_feedback' => 'boolean',
             'csat_settings.low_rating_threshold' => 'integer|min:1|max:5',
             'csat_settings.escalate_low_ratings' => 'boolean',
-            
+
             // Ticket Templates
             'ticket_templates' => 'nullable|array',
             'ticket_templates.enabled' => 'boolean',
@@ -175,7 +175,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_templates.templates.*.required_fields' => 'nullable|array',
             'ticket_templates.templates.*.auto_assign_to' => 'nullable|integer|exists:users,id',
             'ticket_templates.templates.*.enabled' => 'boolean',
-            
+
             // Ticket Automation Rules
             'ticket_automation_rules' => 'nullable|array',
             'ticket_automation_rules.enabled' => 'boolean',
@@ -189,7 +189,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_automation_rules.rules.*.actions' => 'array',
             'ticket_automation_rules.rules.*.enabled' => 'boolean',
             'ticket_automation_rules.rules.*.priority' => 'integer|min:1|max:100',
-            
+
             // Multi-channel Settings
             'multichannel_settings' => 'nullable|array',
             'multichannel_settings.email_enabled' => 'boolean',
@@ -204,7 +204,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'multichannel_settings.response_templates' => 'nullable|array',
             'multichannel_settings.auto_acknowledge' => 'boolean',
             'multichannel_settings.acknowledgment_template' => 'nullable|string|max:500',
-            
+
             // Queue Management
             'queue_management_settings' => 'nullable|array',
             'queue_management_settings.enabled' => 'boolean',
@@ -268,7 +268,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             if (isset($slaDef['response_times'], $slaDef['resolution_times'])) {
                 $responseTimes = $slaDef['response_times'];
                 $resolutionTimes = $slaDef['resolution_times'];
-                
+
                 foreach (['critical', 'high', 'medium', 'low'] as $priority) {
                     if (isset($responseTimes[$priority], $resolutionTimes[$priority])) {
                         if ($responseTimes[$priority] >= $resolutionTimes[$priority]) {
@@ -280,12 +280,12 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
                     }
                 }
             }
-            
+
             // Validate escalation hours sequence
             $priorityRules = $this->input('ticket_priority_rules', []);
             if (isset($priorityRules['escalation_hours'])) {
                 $escalationHours = $priorityRules['escalation_hours'];
-                
+
                 if (isset($escalationHours['critical'], $escalationHours['high']) &&
                     $escalationHours['critical'] >= $escalationHours['high']) {
                     $validator->errors()->add(
@@ -293,7 +293,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
                         'High priority escalation time must be greater than critical priority.'
                     );
                 }
-                
+
                 if (isset($escalationHours['high'], $escalationHours['medium']) &&
                     $escalationHours['high'] >= $escalationHours['medium']) {
                     $validator->errors()->add(
@@ -301,7 +301,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
                         'Medium priority escalation time must be greater than high priority.'
                     );
                 }
-                
+
                 if (isset($escalationHours['medium'], $escalationHours['low']) &&
                     $escalationHours['medium'] >= $escalationHours['low']) {
                     $validator->errors()->add(
@@ -310,20 +310,20 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
                     );
                 }
             }
-            
+
             // Validate CSAT rating scale and threshold
             $csatSettings = $this->input('csat_settings', []);
             if (isset($csatSettings['rating_scale'], $csatSettings['low_rating_threshold'])) {
                 $scale = $csatSettings['rating_scale'];
                 $threshold = $csatSettings['low_rating_threshold'];
-                
-                $maxThreshold = match($scale) {
+
+                $maxThreshold = match ($scale) {
                     '3_point' => 2,
                     '5_star' => 3,
                     '10_point' => 5,
                     default => 3
                 };
-                
+
                 if ($threshold > $maxThreshold) {
                     $validator->errors()->add(
                         'csat_settings.low_rating_threshold',

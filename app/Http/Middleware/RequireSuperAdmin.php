@@ -9,8 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * RequireSuperAdmin
- * 
- * Middleware that ensures only super-admin users from Company 1 
+ *
+ * Middleware that ensures only super-admin users from Company 1
  * can access protected routes.
  */
 class RequireSuperAdmin
@@ -21,13 +21,13 @@ class RequireSuperAdmin
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return redirect()->route('login');
         }
 
         // Check if user is a super-admin with cross-tenant access
-        if (!$user->canAccessCrossTenant()) {
+        if (! $user->canAccessCrossTenant()) {
             abort(403, 'Access denied. Super-admin privileges required.');
         }
 

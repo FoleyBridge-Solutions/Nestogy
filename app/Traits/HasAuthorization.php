@@ -2,12 +2,11 @@
 
 namespace App\Traits;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 /**
  * HasAuthorization Trait
- * 
+ *
  * Provides consistent authorization patterns for domain controllers.
  * Handles permission checks, policy authorization, and export controls.
  */
@@ -15,15 +14,15 @@ trait HasAuthorization
 {
     /**
      * Apply standard authorization middleware to controller.
-     * 
-     * @param string $domain The domain name (e.g., 'clients', 'assets')
-     * @param array $customPermissions Optional custom permission mappings
+     *
+     * @param  string  $domain  The domain name (e.g., 'clients', 'assets')
+     * @param  array  $customPermissions  Optional custom permission mappings
      */
     protected function applyAuthorizationMiddleware(string $domain, array $customPermissions = []): void
     {
         $this->middleware('auth');
         $this->middleware('company');
-        
+
         $permissions = array_merge([
             'view' => ['index', 'show'],
             'create' => ['create', 'store'],
@@ -45,15 +44,16 @@ trait HasAuthorization
     protected function checkPermission(string $domain, string $action): bool
     {
         $permission = "{$domain}.{$action}";
+
         return auth()->user()->hasPermission($permission);
     }
 
     /**
      * Authorize domain action or fail with 403.
      */
-    protected function authorizeAction(string $domain, string $action, string $message = null): void
+    protected function authorizeAction(string $domain, string $action, ?string $message = null): void
     {
-        if (!$this->checkPermission($domain, $action)) {
+        if (! $this->checkPermission($domain, $action)) {
             $message = $message ?: "Insufficient permissions for {$domain}.{$action}";
             abort(403, $message);
         }
@@ -69,14 +69,14 @@ trait HasAuthorization
 
         // Additional checks for sensitive exports
         if (in_array($exportType, ['sensitive', 'financial', 'personal'])) {
-            if (!Gate::allows('export-sensitive-data')) {
+            if (! Gate::allows('export-sensitive-data')) {
                 abort(403, 'Insufficient permissions to export sensitive data');
             }
         }
 
         // Check bulk export permissions for large operations
         if ($exportType === 'bulk') {
-            if (!Gate::allows('bulk-export')) {
+            if (! Gate::allows('bulk-export')) {
                 abort(403, 'Insufficient permissions for bulk export operations');
             }
         }
@@ -87,15 +87,15 @@ trait HasAuthorization
      */
     protected function authorizeApproval(string $workflowType, string $action = 'approve'): void
     {
-        $permission = $workflowType . '.' . $action;
-        
-        if (!auth()->user()->hasPermission($permission)) {
+        $permission = $workflowType.'.'.$action;
+
+        if (! auth()->user()->hasPermission($permission)) {
             abort(403, "Insufficient permissions for {$workflowType} {$action}");
         }
 
         // Additional gate checks for approval workflows
-        $gate = 'approve-' . str_replace('.', '-', $workflowType);
-        if (Gate::has($gate) && !Gate::allows($gate)) {
+        $gate = 'approve-'.str_replace('.', '-', $workflowType);
+        if (Gate::has($gate) && ! Gate::allows($gate)) {
             abort(403, "Approval workflow permissions denied for {$workflowType}");
         }
     }
@@ -125,12 +125,12 @@ trait HasAuthorization
      */
     protected function authorizeProjectAction($project, string $action, string $permission): void
     {
-        if (!$this->checkPermission('projects', $action)) {
+        if (! $this->checkPermission('projects', $action)) {
             abort(403, "Insufficient permissions for projects.{$action}");
         }
 
         // Check if user is project manager or team member
-        if (!auth()->user()->hasPermission('projects.manage') && !$this->checkTeamMembership($project)) {
+        if (! auth()->user()->hasPermission('projects.manage') && ! $this->checkTeamMembership($project)) {
             abort(403, 'You must be a project manager or team member to perform this action');
         }
     }
@@ -140,7 +140,7 @@ trait HasAuthorization
      */
     protected function checkCompanyScope($model): bool
     {
-        if (!method_exists($model, 'getAttribute') || !$model->getAttribute('company_id')) {
+        if (! method_exists($model, 'getAttribute') || ! $model->getAttribute('company_id')) {
             return false;
         }
 
@@ -152,8 +152,8 @@ trait HasAuthorization
      */
     protected function authorizeCompanyScope($model, string $action): void
     {
-        if (!$this->checkCompanyScope($model)) {
-            abort(403, "Access denied: Resource not within your company scope");
+        if (! $this->checkCompanyScope($model)) {
+            abort(403, 'Access denied: Resource not within your company scope');
         }
     }
 
@@ -164,8 +164,8 @@ trait HasAuthorization
     {
         $this->authorizeAction($domain, $action);
 
-        if ($model && !$this->checkCompanyScope($model)) {
-            abort(403, "Access denied: Resource not within your company scope");
+        if ($model && ! $this->checkCompanyScope($model)) {
+            abort(403, 'Access denied: Resource not within your company scope');
         }
     }
 
@@ -180,7 +180,7 @@ trait HasAuthorization
         }
 
         // Apply role-based filtering if needed
-        if (!auth()->user()->hasPermission("{$domain}.manage")) {
+        if (! auth()->user()->hasPermission("{$domain}.manage")) {
             // Additional filtering logic based on user role
             // This can be customized per domain
         }
@@ -216,14 +216,14 @@ trait HasAuthorization
         $this->logAuthorizationEvent('authorization_failure', null, [
             'message' => $message,
             'code' => $code,
-            'context' => $context
+            'context' => $context,
         ]);
 
         if (request()->expectsJson()) {
             response()->json([
                 'message' => $message,
                 'error' => 'Authorization failed',
-                'code' => $code
+                'code' => $code,
             ], $code)->throwResponse();
         }
 
@@ -235,15 +235,15 @@ trait HasAuthorization
      */
     protected function checkRateLimit(string $operation, int $maxAttempts = 10, int $decayMinutes = 60): void
     {
-        $key = "rate_limit:{$operation}:" . auth()->id();
-        
+        $key = "rate_limit:{$operation}:".auth()->id();
+
         if (cache()->has($key)) {
             $attempts = cache()->get($key, 0);
-            
+
             if ($attempts >= $maxAttempts) {
                 abort(429, "Rate limit exceeded for {$operation}. Please try again later.");
             }
-            
+
             cache()->put($key, $attempts + 1, now()->addMinutes($decayMinutes));
         } else {
             cache()->put($key, 1, now()->addMinutes($decayMinutes));

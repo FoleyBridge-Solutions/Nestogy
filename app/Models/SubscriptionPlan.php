@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * SubscriptionPlan Model
- * 
+ *
  * Manages subscription plans for the SaaS platform including pricing,
  * user limits, and feature flags for different plan tiers.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string $stripe_price_id
@@ -77,16 +77,22 @@ class SubscriptionPlan extends Model
      * Default plan constants
      */
     const PLAN_FREE = 'free';
+
     const PLAN_STARTER = 'starter'; // Keep for backward compatibility
+
     const PLAN_PRO = 'pro';
+
     const PLAN_PROFESSIONAL = 'professional'; // Keep for backward compatibility
+
     const PLAN_ENTERPRISE = 'enterprise';
-    
+
     /**
      * Pricing model constants
      */
     const PRICING_FIXED = 'fixed';
+
     const PRICING_PER_USER = 'per_user';
+
     const PRICING_HYBRID = 'hybrid';
 
     /**
@@ -111,11 +117,11 @@ class SubscriptionPlan extends Model
      */
     public function hasFeature(string $feature): bool
     {
-        if (!$this->features) {
+        if (! $this->features) {
             return false;
         }
 
-        return in_array($feature, $this->features) || 
+        return in_array($feature, $this->features) ||
                (isset($this->features[$feature]) && $this->features[$feature] === true);
     }
 
@@ -124,7 +130,7 @@ class SubscriptionPlan extends Model
      */
     public function getFeature(string $feature, $default = null)
     {
-        if (!$this->features) {
+        if (! $this->features) {
             return $default;
         }
 
@@ -145,14 +151,14 @@ class SubscriptionPlan extends Model
     public function calculateMonthlyCost(int $userCount = 1): float
     {
         $userCount = max($userCount, $this->minimum_users);
-        
+
         switch ($this->pricing_model) {
             case self::PRICING_PER_USER:
                 return $this->price_per_user_monthly * $userCount;
-                
+
             case self::PRICING_HYBRID:
                 return $this->base_price + ($this->price_per_user_monthly * $userCount);
-                
+
             case self::PRICING_FIXED:
             default:
                 return $this->price_monthly;
@@ -177,21 +183,21 @@ class SubscriptionPlan extends Model
     public function getFormattedPrice(int $userCount = 1): string
     {
         $totalCost = $this->calculateMonthlyCost($userCount);
-        
+
         if ($totalCost == 0) {
             return 'Free';
         }
-        
+
         switch ($this->pricing_model) {
             case self::PRICING_PER_USER:
-                return '$' . number_format($this->price_per_user_monthly, 0) . '/user/month';
-                
+                return '$'.number_format($this->price_per_user_monthly, 0).'/user/month';
+
             case self::PRICING_HYBRID:
-                return '$' . number_format($this->base_price, 0) . ' + $' . number_format($this->price_per_user_monthly, 0) . '/user/month';
-                
+                return '$'.number_format($this->base_price, 0).' + $'.number_format($this->price_per_user_monthly, 0).'/user/month';
+
             case self::PRICING_FIXED:
             default:
-                return '$' . number_format($this->price_monthly, 0) . '/month';
+                return '$'.number_format($this->price_monthly, 0).'/month';
         }
     }
 
@@ -203,23 +209,24 @@ class SubscriptionPlan extends Model
         // Check if per-user pricing with minimum
         if ($this->pricing_model === self::PRICING_PER_USER && $this->minimum_users) {
             if ($this->hasUnlimitedUsers()) {
-                return 'Unlimited users (minimum ' . $this->minimum_users . ')';
+                return 'Unlimited users (minimum '.$this->minimum_users.')';
             }
-            return 'Pay per user (minimum ' . $this->minimum_users . ')';
+
+            return 'Pay per user (minimum '.$this->minimum_users.')';
         }
 
         if ($this->hasUnlimitedUsers()) {
             return 'Unlimited users';
         }
 
-        // Use user_limit field 
+        // Use user_limit field
         $limit = $this->user_limit ?? 0;
 
         if ($limit > 0) {
-            return $limit . ' users included';
+            return $limit.' users included';
         }
 
-        return 'Up to ' . $limit . ' users';
+        return 'Up to '.$limit.' users';
     }
 
     /**
@@ -269,10 +276,11 @@ class SubscriptionPlan extends Model
     public static function getUpdateValidationRules(int $planId): array
     {
         $rules = self::getValidationRules();
-        $rules['stripe_price_id'] = 'required|string|unique:subscription_plans,stripe_price_id,' . $planId;
+        $rules['stripe_price_id'] = 'required|string|unique:subscription_plans,stripe_price_id,'.$planId;
+
         return $rules;
     }
-    
+
     /**
      * Check if this plan uses per-user pricing.
      */
@@ -280,7 +288,7 @@ class SubscriptionPlan extends Model
     {
         return $this->pricing_model === self::PRICING_PER_USER;
     }
-    
+
     /**
      * Check if this plan uses hybrid pricing.
      */
@@ -288,7 +296,7 @@ class SubscriptionPlan extends Model
     {
         return $this->pricing_model === self::PRICING_HYBRID;
     }
-    
+
     /**
      * Check if this plan uses fixed pricing.
      */
@@ -296,7 +304,7 @@ class SubscriptionPlan extends Model
     {
         return $this->pricing_model === self::PRICING_FIXED;
     }
-    
+
     /**
      * Get starting price display for marketing.
      */
@@ -305,7 +313,8 @@ class SubscriptionPlan extends Model
         // Check pricing model
         if ($this->pricing_model === self::PRICING_PER_USER) {
             $price = $this->price_per_user_monthly ?? 0;
-            return '$' . number_format($price, 0);
+
+            return '$'.number_format($price, 0);
         }
 
         // Fixed pricing plans
@@ -315,9 +324,9 @@ class SubscriptionPlan extends Model
             return 'Free';
         }
 
-        return '$' . number_format($price, 0);
+        return '$'.number_format($price, 0);
     }
-    
+
     /**
      * Get price explanation for marketing.
      */
@@ -335,5 +344,4 @@ class SubscriptionPlan extends Model
 
         return 'month';
     }
-
 }

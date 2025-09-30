@@ -2,22 +2,20 @@
 
 namespace App\Domains\Core\Services;
 
-use App\Models\User;
-use App\Models\Invoice;
 use App\Domains\Contract\Models\Contract;
-use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Financial\Models\Payment;
+use App\Domains\Ticket\Models\Ticket;
+use App\Models\Invoice;
+use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * NotificationService - Enhanced multi-channel notification system
- * 
+ *
  * Handles notification dispatch across email, database, and SMS channels,
  * with template management, queuing, delivery tracking, and user preferences.
  */
@@ -29,20 +27,30 @@ class NotificationService
      * Notification channels
      */
     const CHANNEL_EMAIL = 'email';
+
     const CHANNEL_DATABASE = 'database';
+
     const CHANNEL_SMS = 'sms';
+
     const CHANNEL_SLACK = 'slack';
 
     /**
      * Notification types
      */
     const TYPE_TICKET_ASSIGNED = 'ticket_assigned';
+
     const TYPE_TICKET_ESCALATED = 'ticket_escalated';
+
     const TYPE_INVOICE_SENT = 'invoice_sent';
+
     const TYPE_INVOICE_OVERDUE = 'invoice_overdue';
+
     const TYPE_PAYMENT_SUCCESS = 'payment_success';
+
     const TYPE_PAYMENT_FAILED = 'payment_failed';
+
     const TYPE_CONTRACT_RENEWED = 'contract_renewed';
+
     const TYPE_BULK_OPERATION = 'bulk_operation';
 
     /**
@@ -66,19 +74,19 @@ class NotificationService
         try {
             $this->emailService->sendEmail(
                 $user->email,
-                'Ticket Assigned: ' . $ticket->subject,
+                'Ticket Assigned: '.$ticket->subject,
                 'emails.ticket-assigned',
                 [
                     'user' => $user,
                     'ticket' => $ticket,
-                    'assignedBy' => auth()->user()
+                    'assignedBy' => auth()->user(),
                 ]
             );
 
             Log::info('Ticket assignment notification sent', [
                 'ticket_id' => $ticket->id,
                 'user_id' => $user->id,
-                'user_email' => $user->email
+                'user_email' => $user->email,
             ]);
 
             return true;
@@ -86,7 +94,7 @@ class NotificationService
             Log::error('Failed to send ticket assignment notification', [
                 'ticket_id' => $ticket->id,
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -103,13 +111,13 @@ class NotificationService
             if ($ticket->client && $ticket->client->email) {
                 $this->emailService->sendEmail(
                     $ticket->client->email,
-                    'Ticket Status Update: ' . $ticket->subject,
+                    'Ticket Status Update: '.$ticket->subject,
                     'emails.ticket-status-update',
                     [
                         'ticket' => $ticket,
                         'oldStatus' => $oldStatus,
                         'newStatus' => $newStatus,
-                        'client' => $ticket->client
+                        'client' => $ticket->client,
                     ]
                 );
             }
@@ -118,13 +126,13 @@ class NotificationService
             if ($ticket->assignedUser && $ticket->assignedUser->id !== auth()->id()) {
                 $this->emailService->sendEmail(
                     $ticket->assignedUser->email,
-                    'Ticket Status Update: ' . $ticket->subject,
+                    'Ticket Status Update: '.$ticket->subject,
                     'emails.ticket-status-update-internal',
                     [
                         'ticket' => $ticket,
                         'oldStatus' => $oldStatus,
                         'newStatus' => $newStatus,
-                        'user' => $ticket->assignedUser
+                        'user' => $ticket->assignedUser,
                     ]
                 );
             }
@@ -132,14 +140,14 @@ class NotificationService
             Log::info('Ticket status change notifications sent', [
                 'ticket_id' => $ticket->id,
                 'old_status' => $oldStatus,
-                'new_status' => $newStatus
+                'new_status' => $newStatus,
             ]);
 
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send ticket status change notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -158,26 +166,26 @@ class NotificationService
             foreach ($adminUsers as $admin) {
                 $this->emailService->sendEmail(
                     $admin->email,
-                    'New Ticket Created: ' . $ticket->subject,
+                    'New Ticket Created: '.$ticket->subject,
                     'emails.new-ticket',
                     [
                         'ticket' => $ticket,
                         'admin' => $admin,
-                        'client' => $ticket->client
+                        'client' => $ticket->client,
                     ]
                 );
             }
 
             Log::info('New ticket notifications sent', [
                 'ticket_id' => $ticket->id,
-                'admin_count' => $adminUsers->count()
+                'admin_count' => $adminUsers->count(),
             ]);
 
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send new ticket notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -194,43 +202,43 @@ class NotificationService
             if ($ticket->client && $ticket->client->email && isset($replyData['from_staff']) && $replyData['from_staff']) {
                 $this->emailService->sendEmail(
                     $ticket->client->email,
-                    'Reply to Ticket: ' . $ticket->subject,
+                    'Reply to Ticket: '.$ticket->subject,
                     'emails.ticket-reply-client',
                     [
                         'ticket' => $ticket,
                         'reply' => $replyData,
-                        'client' => $ticket->client
+                        'client' => $ticket->client,
                     ]
                 );
             }
 
             // Notify assigned user if reply is from client
-            if ($ticket->assignedUser && 
-                $ticket->assignedUser->email && 
-                (!isset($replyData['from_staff']) || !$replyData['from_staff'])) {
-                
+            if ($ticket->assignedUser &&
+                $ticket->assignedUser->email &&
+                (! isset($replyData['from_staff']) || ! $replyData['from_staff'])) {
+
                 $this->emailService->sendEmail(
                     $ticket->assignedUser->email,
-                    'Client Reply to Ticket: ' . $ticket->subject,
+                    'Client Reply to Ticket: '.$ticket->subject,
                     'emails.ticket-reply-staff',
                     [
                         'ticket' => $ticket,
                         'reply' => $replyData,
-                        'user' => $ticket->assignedUser
+                        'user' => $ticket->assignedUser,
                     ]
                 );
             }
 
             Log::info('Ticket reply notifications sent', [
                 'ticket_id' => $ticket->id,
-                'from_staff' => $replyData['from_staff'] ?? false
+                'from_staff' => $replyData['from_staff'] ?? false,
             ]);
 
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send ticket reply notifications', [
                 'ticket_id' => $ticket->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -249,14 +257,14 @@ class NotificationService
                 'user_id' => $user->id,
                 'title' => $title,
                 'message' => $message,
-                'data' => $data
+                'data' => $data,
             ]);
 
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send system notification', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -284,7 +292,7 @@ class NotificationService
                 } catch (\Exception $e) {
                     Log::warning('Failed to send bulk notification to user', [
                         'user_id' => $user->id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -292,13 +300,13 @@ class NotificationService
             Log::info('Bulk notification completed', [
                 'total_users' => $users->count(),
                 'successful_sends' => $successCount,
-                'subject' => $subject
+                'subject' => $subject,
             ]);
 
             return $successCount > 0;
         } catch (\Exception $e) {
             Log::error('Failed to send bulk notifications', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -321,20 +329,20 @@ class NotificationService
                     [
                         'user' => $user,
                         'message' => $message,
-                        'scheduledTime' => $scheduledTime
+                        'scheduledTime' => $scheduledTime,
                     ]
                 );
             }
 
             Log::info('Maintenance notifications sent', [
                 'user_count' => $allUsers->count(),
-                'scheduled_time' => $scheduledTime->format('Y-m-d H:i:s')
+                'scheduled_time' => $scheduledTime->format('Y-m-d H:i:s'),
             ]);
 
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send maintenance notifications', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -347,12 +355,8 @@ class NotificationService
 
     /**
      * Send multi-channel notification
-     * 
-     * @param mixed $notifiable
-     * @param string $type
-     * @param array $data
-     * @param array $channels
-     * @return array
+     *
+     * @param  mixed  $notifiable
      */
     public function notify($notifiable, string $type, array $data, array $channels = []): array
     {
@@ -443,7 +447,7 @@ class NotificationService
     protected function sendEmailNotification($notifiable, string $type, array $data): bool
     {
         $email = $notifiable->email ?? null;
-        if (!$email) {
+        if (! $email) {
             return false;
         }
 
@@ -468,9 +472,11 @@ class NotificationService
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
             return true;
         } catch (\Exception $e) {
             Log::error('Database notification failed', ['error' => $e->getMessage()]);
+
             return false;
         }
     }
@@ -485,6 +491,7 @@ class NotificationService
             'type' => $type,
             'phone' => $notifiable->phone ?? 'N/A',
         ]);
+
         return true;
     }
 
@@ -495,6 +502,7 @@ class NotificationService
     {
         // This would integrate with Slack API
         Log::info('Slack notification sent', ['type' => $type]);
+
         return true;
     }
 
@@ -503,7 +511,7 @@ class NotificationService
      */
     protected function filterByUserPreferences($notifiable, array $channels): array
     {
-        if (!$notifiable instanceof User) {
+        if (! $notifiable instanceof User) {
             return $channels;
         }
 
@@ -511,7 +519,7 @@ class NotificationService
         $preferences = Cache::remember(
             "user_prefs_{$notifiable->id}",
             3600,
-            fn() => $this->getUserPreferences($notifiable)
+            fn () => $this->getUserPreferences($notifiable)
         );
 
         if ($preferences['all_disabled'] ?? false) {
@@ -558,12 +566,12 @@ class NotificationService
     protected function getSubjectForType(string $type, array $data): string
     {
         $subjects = [
-            self::TYPE_TICKET_ESCALATED => 'URGENT: Ticket Escalated - ' . ($data['ticket_subject'] ?? ''),
-            self::TYPE_INVOICE_SENT => 'Invoice #' . ($data['invoice_number'] ?? ''),
-            self::TYPE_INVOICE_OVERDUE => 'Overdue: Invoice #' . ($data['invoice_number'] ?? ''),
-            self::TYPE_PAYMENT_SUCCESS => 'Payment Received - Invoice #' . ($data['invoice_number'] ?? ''),
-            self::TYPE_PAYMENT_FAILED => 'Payment Failed - Invoice #' . ($data['invoice_number'] ?? ''),
-            self::TYPE_CONTRACT_RENEWED => 'Contract Renewed - ' . ($data['contract_number'] ?? ''),
+            self::TYPE_TICKET_ESCALATED => 'URGENT: Ticket Escalated - '.($data['ticket_subject'] ?? ''),
+            self::TYPE_INVOICE_SENT => 'Invoice #'.($data['invoice_number'] ?? ''),
+            self::TYPE_INVOICE_OVERDUE => 'Overdue: Invoice #'.($data['invoice_number'] ?? ''),
+            self::TYPE_PAYMENT_SUCCESS => 'Payment Received - Invoice #'.($data['invoice_number'] ?? ''),
+            self::TYPE_PAYMENT_FAILED => 'Payment Failed - Invoice #'.($data['invoice_number'] ?? ''),
+            self::TYPE_CONTRACT_RENEWED => 'Contract Renewed - '.($data['contract_number'] ?? ''),
         ];
 
         return $subjects[$type] ?? 'Notification';
@@ -640,7 +648,7 @@ class NotificationService
         if ($invoice->client) {
             $this->notify($invoice->client, self::TYPE_INVOICE_SENT, [
                 'invoice_id' => $invoice->id,
-                'invoice_number' => $invoice->prefix . '-' . $invoice->number,
+                'invoice_number' => $invoice->prefix.'-'.$invoice->number,
                 'amount' => $invoice->amount,
                 'due_date' => $invoice->due_date,
             ]);
@@ -655,7 +663,7 @@ class NotificationService
         if ($invoice->client) {
             $this->notify($invoice->client, self::TYPE_INVOICE_OVERDUE, [
                 'invoice_id' => $invoice->id,
-                'invoice_number' => $invoice->prefix . '-' . $invoice->number,
+                'invoice_number' => $invoice->prefix.'-'.$invoice->number,
                 'amount' => $invoice->amount,
                 'days_overdue' => $invoice->due_date->diffInDays(now()),
             ]);
@@ -670,7 +678,7 @@ class NotificationService
         if ($payment->invoice && $payment->invoice->client) {
             $this->notify($payment->invoice->client, self::TYPE_PAYMENT_SUCCESS, [
                 'payment_id' => $payment->id,
-                'invoice_number' => $payment->invoice->prefix . '-' . $payment->invoice->number,
+                'invoice_number' => $payment->invoice->prefix.'-'.$payment->invoice->number,
                 'amount' => $payment->amount,
                 'payment_method' => $payment->payment_method,
             ]);
@@ -689,7 +697,7 @@ class NotificationService
         foreach ($admins as $admin) {
             $this->notify($admin, self::TYPE_PAYMENT_FAILED, [
                 'payment_id' => $payment->id,
-                'invoice_number' => $payment->invoice->prefix . '-' . $payment->invoice->number,
+                'invoice_number' => $payment->invoice->prefix.'-'.$payment->invoice->number,
                 'amount' => $payment->amount,
                 'retry_count' => $payment->retry_count,
             ]);

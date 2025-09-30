@@ -23,7 +23,7 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         $userId = $this->route('user')->id ?? $this->route('user');
-        
+
         $rules = [
             'name' => 'required|string|max:255',
             'email' => [
@@ -37,12 +37,12 @@ class UpdateUserRequest extends FormRequest
             'role' => 'sometimes|required|integer|in:1,2,3,4',
             'status' => 'sometimes|boolean',
         ];
-        
+
         // Password is optional on update
         if ($this->filled('password')) {
             $rules['password'] = ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()];
         }
-        
+
         return $rules;
     }
 

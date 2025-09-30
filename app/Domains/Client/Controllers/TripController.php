@@ -5,7 +5,6 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientTrip;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +13,7 @@ use Illuminate\Validation\Rule;
 class TripController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of trips for the selected client
      */
@@ -21,7 +21,7 @@ class TripController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -29,11 +29,11 @@ class TripController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('trip_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('destination_city', 'like', "%{$search}%");
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('destination_city', 'like', "%{$search}%");
             });
         }
 
@@ -73,8 +73,8 @@ class TripController extends Controller
         }
 
         $trips = $query->orderBy('start_date', 'desc')
-                      ->paginate(20)
-                      ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $statuses = ClientTrip::getStatuses();
         $tripTypes = ClientTrip::getTripTypes();
@@ -89,8 +89,8 @@ class TripController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $statuses = ClientTrip::getStatuses();
@@ -125,12 +125,12 @@ class TripController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'departure_time' => 'nullable|date',
             'return_time' => 'nullable|date|after:departure_time',
-            'status' => 'required|in:' . implode(',', array_keys(ClientTrip::getStatuses())),
-            'trip_type' => 'required|in:' . implode(',', array_keys(ClientTrip::getTripTypes())),
-            'transportation_mode' => 'required|in:' . implode(',', array_keys(ClientTrip::getTransportationModes())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientTrip::getStatuses())),
+            'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
+            'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
             'accommodation_details' => 'nullable|string',
             'estimated_expenses' => 'nullable|numeric|min:0',
-            'currency' => 'required|in:' . implode(',', array_keys(ClientTrip::getCurrencies())),
+            'currency' => 'required|in:'.implode(',', array_keys(ClientTrip::getCurrencies())),
             'mileage' => 'nullable|numeric|min:0',
             'per_diem_amount' => 'nullable|numeric|min:0',
             'billable_to_client' => 'boolean',
@@ -143,8 +143,8 @@ class TripController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process attendees
@@ -160,20 +160,20 @@ class TripController extends Controller
             $lines = explode("\n", $request->expense_breakdown);
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (!empty($line)) {
+                if (! empty($line)) {
                     // Try to parse "Category | Amount | Description" format
                     $parts = explode('|', $line);
                     if (count($parts) >= 2) {
                         $expenseBreakdown[] = [
                             'category' => trim($parts[0]),
                             'amount' => (float) trim($parts[1]),
-                            'description' => isset($parts[2]) ? trim($parts[2]) : ''
+                            'description' => isset($parts[2]) ? trim($parts[2]) : '',
                         ];
                     } else {
                         $expenseBreakdown[] = [
                             'category' => 'Other',
                             'amount' => 0,
-                            'description' => $line
+                            'description' => $line,
                         ];
                     }
                 }
@@ -210,12 +210,12 @@ class TripController extends Controller
             'expense_breakdown' => $expenseBreakdown,
             'created_by' => auth()->id(),
         ]);
-        
+
         $trip->company_id = auth()->user()->company_id;
         $trip->save();
 
         return redirect()->route('clients.trips.standalone.index')
-                        ->with('success', 'Trip created successfully.');
+            ->with('success', 'Trip created successfully.');
     }
 
     /**
@@ -226,7 +226,7 @@ class TripController extends Controller
         $this->authorize('view', $trip);
 
         $trip->load('client', 'creator', 'approver');
-        
+
         return view('clients.trips.show', compact('trip'));
     }
 
@@ -238,8 +238,8 @@ class TripController extends Controller
         $this->authorize('update', $trip);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $statuses = ClientTrip::getStatuses();
         $tripTypes = ClientTrip::getTripTypes();
@@ -275,13 +275,13 @@ class TripController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'departure_time' => 'nullable|date',
             'return_time' => 'nullable|date',
-            'status' => 'required|in:' . implode(',', array_keys(ClientTrip::getStatuses())),
-            'trip_type' => 'required|in:' . implode(',', array_keys(ClientTrip::getTripTypes())),
-            'transportation_mode' => 'required|in:' . implode(',', array_keys(ClientTrip::getTransportationModes())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientTrip::getStatuses())),
+            'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
+            'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
             'accommodation_details' => 'nullable|string',
             'estimated_expenses' => 'nullable|numeric|min:0',
             'actual_expenses' => 'nullable|numeric|min:0',
-            'currency' => 'required|in:' . implode(',', array_keys(ClientTrip::getCurrencies())),
+            'currency' => 'required|in:'.implode(',', array_keys(ClientTrip::getCurrencies())),
             'mileage' => 'nullable|numeric|min:0',
             'per_diem_amount' => 'nullable|numeric|min:0',
             'billable_to_client' => 'boolean',
@@ -297,8 +297,8 @@ class TripController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process attendees
@@ -314,20 +314,20 @@ class TripController extends Controller
             $lines = explode("\n", $request->expense_breakdown);
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (!empty($line)) {
+                if (! empty($line)) {
                     // Try to parse "Category | Amount | Description" format
                     $parts = explode('|', $line);
                     if (count($parts) >= 2) {
                         $expenseBreakdown[] = [
                             'category' => trim($parts[0]),
                             'amount' => (float) trim($parts[1]),
-                            'description' => isset($parts[2]) ? trim($parts[2]) : ''
+                            'description' => isset($parts[2]) ? trim($parts[2]) : '',
                         ];
                     } else {
                         $expenseBreakdown[] = [
                             'category' => 'Other',
                             'amount' => 0,
-                            'description' => $line
+                            'description' => $line,
                         ];
                     }
                 }
@@ -370,7 +370,7 @@ class TripController extends Controller
         $trip->save();
 
         return redirect()->route('clients.trips.standalone.index')
-                        ->with('success', 'Trip updated successfully.');
+            ->with('success', 'Trip updated successfully.');
     }
 
     /**
@@ -383,7 +383,7 @@ class TripController extends Controller
         $trip->delete();
 
         return redirect()->route('clients.trips.standalone.index')
-                        ->with('success', 'Trip deleted successfully.');
+            ->with('success', 'Trip deleted successfully.');
     }
 
     /**
@@ -395,10 +395,10 @@ class TripController extends Controller
 
         if ($trip->approve()) {
             return redirect()->route('clients.trips.standalone.show', $trip)
-                           ->with('success', 'Trip approved successfully.');
+                ->with('success', 'Trip approved successfully.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Failed to approve trip.');
+                ->with('error', 'Failed to approve trip.');
         }
     }
 
@@ -411,10 +411,10 @@ class TripController extends Controller
 
         if ($trip->start()) {
             return redirect()->route('clients.trips.standalone.show', $trip)
-                           ->with('success', 'Trip started successfully.');
+                ->with('success', 'Trip started successfully.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Trip cannot be started in its current status.');
+                ->with('error', 'Trip cannot be started in its current status.');
         }
     }
 
@@ -435,8 +435,8 @@ class TripController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $completionData = [
@@ -452,10 +452,10 @@ class TripController extends Controller
 
         if ($trip->complete($completionData)) {
             return redirect()->route('clients.trips.standalone.show', $trip)
-                           ->with('success', 'Trip completed successfully.');
+                ->with('success', 'Trip completed successfully.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Trip cannot be completed in its current status.');
+                ->with('error', 'Trip cannot be completed in its current status.');
         }
     }
 
@@ -468,10 +468,10 @@ class TripController extends Controller
 
         if ($trip->cancel($request->get('reason'))) {
             return redirect()->route('clients.trips.standalone.show', $trip)
-                           ->with('success', 'Trip cancelled successfully.');
+                ->with('success', 'Trip cancelled successfully.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Trip cannot be cancelled in its current status.');
+                ->with('error', 'Trip cannot be cancelled in its current status.');
         }
     }
 
@@ -488,16 +488,16 @@ class TripController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         if ($trip->submitForReimbursement($request->reimbursement_amount)) {
             return redirect()->route('clients.trips.standalone.show', $trip)
-                           ->with('success', 'Trip submitted for reimbursement successfully.');
+                ->with('success', 'Trip submitted for reimbursement successfully.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Trip cannot be submitted for reimbursement.');
+                ->with('error', 'Trip cannot be submitted for reimbursement.');
         }
     }
 
@@ -507,15 +507,15 @@ class TripController extends Controller
     public function export(Request $request)
     {
         $query = ClientTrip::with(['client', 'creator'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('trip_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%");
+                    ->orWhere('title', 'like', "%{$search}%");
             });
         }
 
@@ -529,16 +529,16 @@ class TripController extends Controller
 
         $trips = $query->orderBy('start_date', 'desc')->get();
 
-        $filename = 'trips_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'trips_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($trips) {
+        $callback = function () use ($trips) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Trip Number',
@@ -556,7 +556,7 @@ class TripController extends Controller
                 'Currency',
                 'Billable',
                 'Reimbursable',
-                'Created At'
+                'Created At',
             ]);
 
             // CSV data
@@ -580,7 +580,7 @@ class TripController extends Controller
                     $trip->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 

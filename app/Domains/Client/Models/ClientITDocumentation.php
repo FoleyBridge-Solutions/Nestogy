@@ -2,17 +2,17 @@
 
 namespace App\Domains\Client\Models;
 
+use App\Models\Client;
+use App\Models\User;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Client;
-use App\Models\User;
 
 class ClientITDocumentation extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'client_it_documentation';
 
@@ -197,7 +197,7 @@ class ClientITDocumentation extends Model
         if ($this->parent_document_id) {
             return $this->parentDocument->versions()->latest('version')->first();
         }
-        
+
         return $this->versions()->latest('version')->first() ?: $this;
     }
 
@@ -231,7 +231,7 @@ class ClientITDocumentation extends Model
     public function scopeNeedsReview($query)
     {
         return $query->where('next_review_at', '<=', now())
-                    ->orWhereNull('next_review_at');
+            ->orWhereNull('next_review_at');
     }
 
     /**
@@ -239,11 +239,11 @@ class ClientITDocumentation extends Model
      */
     public function scopeSearch($query, $search)
     {
-        return $query->where(function($q) use ($search) {
+        return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%")
-              ->orWhereJsonContains('tags', $search)
-              ->orWhere('it_category', 'like', "%{$search}%");
+                ->orWhere('description', 'like', "%{$search}%")
+                ->orWhereJsonContains('tags', $search)
+                ->orWhere('it_category', 'like', "%{$search}%");
         });
     }
 
@@ -260,7 +260,7 @@ class ClientITDocumentation extends Model
      */
     public function hasFile()
     {
-        return !empty($this->file_path);
+        return ! empty($this->file_path);
     }
 
     /**
@@ -276,22 +276,22 @@ class ClientITDocumentation extends Model
      */
     public function getFileSizeHumanAttribute()
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return null;
         }
 
         $bytes = $this->file_size;
-        
+
         if ($bytes >= 1073741824) {
-            $bytes = number_format($bytes / 1073741824, 2) . ' GB';
+            $bytes = number_format($bytes / 1073741824, 2).' GB';
         } elseif ($bytes >= 1048576) {
-            $bytes = number_format($bytes / 1048576, 2) . ' MB';
+            $bytes = number_format($bytes / 1048576, 2).' MB';
         } elseif ($bytes >= 1024) {
-            $bytes = number_format($bytes / 1024, 2) . ' KB';
+            $bytes = number_format($bytes / 1024, 2).' KB';
         } elseif ($bytes > 1) {
-            $bytes = $bytes . ' bytes';
+            $bytes = $bytes.' bytes';
         } elseif ($bytes == 1) {
-            $bytes = $bytes . ' byte';
+            $bytes = $bytes.' byte';
         } else {
             $bytes = '0 bytes';
         }
@@ -348,7 +348,7 @@ class ClientITDocumentation extends Model
      */
     public function getReviewStatusColorAttribute()
     {
-        if (!$this->next_review_at) {
+        if (! $this->next_review_at) {
             return 'gray';
         }
 

@@ -1,4 +1,5 @@
 <?php
+
 // Project routes
 
 use Illuminate\Support\Facades\Route;

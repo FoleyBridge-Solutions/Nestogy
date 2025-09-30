@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\Asset;
 use App\Models\Client;
 use App\Models\Company;
-use App\Models\Location;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -27,7 +26,7 @@ class AssetFactory extends Factory
     {
         $types = ['desktop', 'laptop', 'server', 'printer', 'network', 'mobile', 'software'];
         $type = $this->faker->randomElement($types);
-        
+
         return [
             'company_id' => Company::factory(),
             'client_id' => Client::factory(),
@@ -58,8 +57,8 @@ class AssetFactory extends Factory
             'mobile' => ['iPhone', 'iPad', 'Android Phone', 'Tablet'],
             'software' => ['Office Suite', 'Antivirus', 'Backup Software', 'Database License'],
         ];
-        
-        return $this->faker->randomElement($names[$type] ?? ['Asset']) . ' - ' . $this->faker->userName;
+
+        return $this->faker->randomElement($names[$type] ?? ['Asset']).' - '.$this->faker->userName;
     }
 
     /**
@@ -76,7 +75,7 @@ class AssetFactory extends Factory
             'mobile' => ['Apple', 'Samsung', 'Google', 'Microsoft'],
             'software' => ['Microsoft', 'Adobe', 'Autodesk', 'Oracle'],
         ];
-        
+
         return $this->faker->randomElement($manufacturers[$type] ?? ['Generic']);
     }
 
@@ -94,7 +93,7 @@ class AssetFactory extends Factory
             'mobile' => ['iPhone 14 Pro', 'Galaxy S23', 'Pixel 7', 'Surface Duo'],
             'software' => ['Office 365', 'Creative Cloud', 'AutoCAD 2023', 'Database 19c'],
         ];
-        
+
         return $this->faker->randomElement($models[$type] ?? ['Model X']);
     }
 

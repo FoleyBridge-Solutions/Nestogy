@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\BelongsToCompany;
-use Carbon\Carbon;
 
 /**
  * Dunning Campaign Model
- * 
- * Represents automated collection campaign management with sophisticated 
+ *
+ * Represents automated collection campaign management with sophisticated
  * triggering, escalation, and performance tracking capabilities.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string|null $description
@@ -55,7 +55,7 @@ use Carbon\Carbon;
  */
 class DunningCampaign extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'dunning_campaigns';
 
@@ -71,7 +71,7 @@ class DunningCampaign extends Model
         'require_dispute_resolution', 'success_rate', 'average_collection_time',
         'cost_per_collection', 'total_campaigns_run', 'total_collected',
         'auto_start', 'preferred_contact_time_start', 'preferred_contact_time_end',
-        'blackout_dates', 'time_zone_settings', 'created_by', 'updated_by'
+        'blackout_dates', 'time_zone_settings', 'created_by', 'updated_by',
     ];
 
     protected $casts = [
@@ -109,26 +109,36 @@ class DunningCampaign extends Model
         'updated_by' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     // Status constants
     const STATUS_ACTIVE = 'active';
+
     const STATUS_INACTIVE = 'inactive';
+
     const STATUS_PAUSED = 'paused';
+
     const STATUS_DRAFT = 'draft';
 
     // Campaign type constants
     const TYPE_GENTLE = 'gentle';
+
     const TYPE_STANDARD = 'standard';
+
     const TYPE_AGGRESSIVE = 'aggressive';
+
     const TYPE_LEGAL = 'legal';
+
     const TYPE_SETTLEMENT = 'settlement';
 
     // Risk level constants
     const RISK_LOW = 'low';
+
     const RISK_MEDIUM = 'medium';
+
     const RISK_HIGH = 'high';
+
     const RISK_CRITICAL = 'critical';
 
     /**
@@ -176,7 +186,7 @@ class DunningCampaign extends Model
      */
     public function canTriggerForInvoice(Invoice $invoice): bool
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return false;
         }
 
@@ -190,28 +200,28 @@ class DunningCampaign extends Model
         }
 
         // Check days overdue
-        $daysOverdue = $invoice->isOverdue() ? 
+        $daysOverdue = $invoice->isOverdue() ?
             Carbon::now()->diffInDays($invoice->due_date) : 0;
-        
+
         if ($daysOverdue < $this->trigger_days_overdue) {
             return false;
         }
 
         // Check client status filters
-        if ($this->client_status_filters && !in_array($invoice->client->status, $this->client_status_filters)) {
+        if ($this->client_status_filters && ! in_array($invoice->client->status, $this->client_status_filters)) {
             return false;
         }
 
         // Check service type filters (for VoIP-specific campaigns)
         if ($this->service_type_filters && $invoice->hasVoIPServices()) {
             $invoiceServiceTypes = $invoice->voipItems->pluck('service_type')->unique()->toArray();
-            if (!array_intersect($invoiceServiceTypes, $this->service_type_filters)) {
+            if (! array_intersect($invoiceServiceTypes, $this->service_type_filters)) {
                 return false;
             }
         }
 
         // Check jurisdiction filters
-        if ($this->jurisdiction_filters && !in_array($invoice->client->state, $this->jurisdiction_filters)) {
+        if ($this->jurisdiction_filters && ! in_array($invoice->client->state, $this->jurisdiction_filters)) {
             return false;
         }
 
@@ -220,7 +230,7 @@ class DunningCampaign extends Model
             $recentPaymentDays = $invoice->client->payments()
                 ->where('created_at', '>=', Carbon::now()->subDays($this->payment_history_threshold))
                 ->exists();
-            
+
             if ($recentPaymentDays) {
                 return false; // Recent payment, skip dunning
             }
@@ -232,17 +242,17 @@ class DunningCampaign extends Model
                 ->where('status', 'failed')
                 ->where('created_at', '>=', Carbon::now()->subDays(30))
                 ->count();
-            
+
             if ($failedPaymentsCount >= $this->max_failed_payments) {
                 // Escalate to different campaign or legal action
-                return $this->campaign_type === self::TYPE_AGGRESSIVE || 
+                return $this->campaign_type === self::TYPE_AGGRESSIVE ||
                        $this->campaign_type === self::TYPE_LEGAL;
             }
         }
 
         // Check contract status if required
         if ($this->consider_contract_status) {
-            if (!$invoice->client->hasActiveContract()) {
+            if (! $invoice->client->hasActiveContract()) {
                 return $this->campaign_type === self::TYPE_AGGRESSIVE ||
                        $this->campaign_type === self::TYPE_LEGAL;
             }
@@ -291,7 +301,7 @@ class DunningCampaign extends Model
     public function calculatePerformanceMetrics(): array
     {
         $actions = $this->actions()->where('created_at', '>=', Carbon::now()->subDays(30));
-        
+
         $totalActions = $actions->count();
         $successfulActions = $actions->where('resulted_in_payment', true)->count();
         $totalCollected = $actions->sum('amount_collected');
@@ -299,7 +309,7 @@ class DunningCampaign extends Model
 
         $successRate = $totalActions > 0 ? ($successfulActions / $totalActions) * 100 : 0;
         $roi = $totalCosts > 0 ? (($totalCollected - $totalCosts) / $totalCosts) * 100 : 0;
-        
+
         $avgCollectionTime = $actions->where('resulted_in_payment', true)
             ->avg('days_overdue');
 
@@ -311,7 +321,7 @@ class DunningCampaign extends Model
             'total_costs' => $totalCosts,
             'roi' => round($roi, 2),
             'average_collection_time' => round($avgCollectionTime ?: 0, 2),
-            'cost_per_collection' => $successfulActions > 0 ? 
+            'cost_per_collection' => $successfulActions > 0 ?
                 round($totalCosts / $successfulActions, 2) : 0,
         ];
     }
@@ -322,7 +332,7 @@ class DunningCampaign extends Model
     public function updatePerformanceMetrics(): void
     {
         $metrics = $this->calculatePerformanceMetrics();
-        
+
         $this->update([
             'success_rate' => $metrics['success_rate'],
             'average_collection_time' => $metrics['average_collection_time'],
@@ -335,11 +345,11 @@ class DunningCampaign extends Model
     /**
      * Check if it's within the preferred contact time.
      */
-    public function isWithinContactHours(Carbon $datetime = null): bool
+    public function isWithinContactHours(?Carbon $datetime = null): bool
     {
         $datetime = $datetime ?: Carbon::now();
-        
-        if (!$this->preferred_contact_time_start || !$this->preferred_contact_time_end) {
+
+        if (! $this->preferred_contact_time_start || ! $this->preferred_contact_time_end) {
             return true;
         }
 
@@ -353,30 +363,31 @@ class DunningCampaign extends Model
     /**
      * Check if the date is a blackout date.
      */
-    public function isBlackoutDate(Carbon $date = null): bool
+    public function isBlackoutDate(?Carbon $date = null): bool
     {
         $date = $date ?: Carbon::now();
-        
-        if (!$this->blackout_dates) {
+
+        if (! $this->blackout_dates) {
             return false;
         }
 
         $checkDate = $date->format('Y-m-d');
+
         return in_array($checkDate, $this->blackout_dates);
     }
 
     /**
      * Get the next available contact time.
      */
-    public function getNextAvailableContactTime(Carbon $from = null): Carbon
+    public function getNextAvailableContactTime(?Carbon $from = null): Carbon
     {
         $from = $from ?: Carbon::now();
-        
-        while ($this->isBlackoutDate($from) || !$this->isWithinContactHours($from)) {
+
+        while ($this->isBlackoutDate($from) || ! $this->isWithinContactHours($from)) {
             $from->addHour();
-            
+
             // Skip to next day if outside contact hours
-            if (!$this->isWithinContactHours($from)) {
+            if (! $this->isWithinContactHours($from)) {
                 $from->startOfDay()->addDay();
                 if ($this->preferred_contact_time_start) {
                     $startTime = Carbon::parse($this->preferred_contact_time_start);
@@ -460,7 +471,7 @@ class DunningCampaign extends Model
         parent::boot();
 
         static::creating(function ($campaign) {
-            if (!$campaign->created_by) {
+            if (! $campaign->created_by) {
                 $campaign->created_by = auth()->id() ?? 1;
             }
         });

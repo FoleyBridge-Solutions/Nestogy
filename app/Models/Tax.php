@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Tax Model
- * 
+ *
  * Represents tax rates for products and invoice items.
  * Supports percentage-based tax calculations.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property float $percent
@@ -73,7 +73,7 @@ class Tax extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -81,7 +81,7 @@ class Tax extends Model
      */
     public function getFormattedRate(): string
     {
-        return number_format($this->percent, 2) . '%';
+        return number_format($this->percent, 2).'%';
     }
 
     /**
@@ -121,7 +121,7 @@ class Tax extends Model
      */
     public function getDisplayName(): string
     {
-        return $this->name . ' (' . $this->getFormattedRate() . ')';
+        return $this->name.' ('.$this->getFormattedRate().')';
     }
 
     /**
@@ -153,7 +153,7 @@ class Tax extends Model
      */
     public function scopeSearch($query, string $search)
     {
-        return $query->where('name', 'like', '%' . $search . '%');
+        return $query->where('name', 'like', '%'.$search.'%');
     }
 
     /**
@@ -205,7 +205,7 @@ class Tax extends Model
     public static function getUpdateValidationRules(int $taxId): array
     {
         return [
-            'name' => 'required|string|max:255|unique:taxes,name,' . $taxId,
+            'name' => 'required|string|max:255|unique:taxes,name,'.$taxId,
             'percent' => 'required|numeric|min:0|max:100',
         ];
     }

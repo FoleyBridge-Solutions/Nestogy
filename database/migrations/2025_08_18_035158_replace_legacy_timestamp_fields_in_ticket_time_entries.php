@@ -13,7 +13,7 @@ return new class extends Migration
     {
         // Check which columns exist before dropping
         $existingColumns = collect(Schema::getColumnListing('ticket_time_entries'));
-        
+
         Schema::table('ticket_time_entries', function (Blueprint $table) use ($existingColumns) {
             // Drop the old timestamp fields if they exist
             $columnsToDrop = [];
@@ -23,16 +23,16 @@ return new class extends Migration
             if ($existingColumns->contains('end_time')) {
                 $columnsToDrop[] = 'end_time';
             }
-            
-            if (!empty($columnsToDrop)) {
+
+            if (! empty($columnsToDrop)) {
                 $table->dropColumn($columnsToDrop);
             }
-            
+
             // Add modern nullable timestamp fields if they don't exist
-            if (!$existingColumns->contains('started_at')) {
+            if (! $existingColumns->contains('started_at')) {
                 $table->dateTime('started_at')->nullable()->after('work_date');
             }
-            if (!$existingColumns->contains('ended_at')) {
+            if (! $existingColumns->contains('ended_at')) {
                 $table->dateTime('ended_at')->nullable()->after('started_at');
             }
         });

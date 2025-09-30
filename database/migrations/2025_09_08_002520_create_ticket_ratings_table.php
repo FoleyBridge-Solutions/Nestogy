@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('feedback')->nullable();
             $table->string('rating_type')->default('satisfaction')->comment('satisfaction, resolution, communication, etc');
             $table->timestamps();
-            
+
             $table->index(['ticket_id', 'created_at']);
             $table->index(['client_id', 'created_at']);
             $table->index('rating');

@@ -2,18 +2,18 @@
 
 namespace App\Domains\Knowledge\Controllers\Knowledge;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Knowledge\Models\KbArticle;
 use App\Domains\Knowledge\Models\KbCategory;
 use App\Domains\Knowledge\Services\ArticleSearchService;
 use App\Domains\Knowledge\Services\KnowledgeBaseService;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
 
 /**
  * Knowledge Base Search Controller
- * 
+ *
  * Search functionality for both internal and client portal use
  */
 class KbSearchController extends Controller
@@ -33,12 +33,12 @@ class KbSearchController extends Controller
         $query = $request->input('q', '');
         $categoryId = $request->input('category_id');
         $tags = $request->input('tags', []);
-        
+
         $results = collect();
         $facets = [];
         $totalResults = 0;
-        
-        if (!empty($query)) {
+
+        if (! empty($query)) {
             $searchResults = $this->searchService->searchWithFacets($query, [
                 'category_id' => $categoryId,
                 'tags' => is_array($tags) ? $tags : [$tags],
@@ -46,7 +46,7 @@ class KbSearchController extends Controller
                 'company_id' => $this->getCompanyId(),
                 'limit' => 20,
             ]);
-            
+
             $results = $searchResults['results'];
             $facets = $searchResults['facets'];
             $totalResults = $searchResults['total'];
@@ -73,7 +73,7 @@ class KbSearchController extends Controller
     public function search(Request $request): JsonResponse
     {
         $query = $request->input('q', '');
-        
+
         if (strlen($query) < 2) {
             return response()->json([
                 'results' => [],
@@ -114,13 +114,13 @@ class KbSearchController extends Controller
     public function autocomplete(Request $request): JsonResponse
     {
         $query = $request->input('q', '');
-        
+
         if (strlen($query) < 2) {
             return response()->json([]);
         }
 
         $suggestions = $this->searchService->getSuggestions($query, 8);
-        
+
         return response()->json($suggestions);
     }
 
@@ -167,7 +167,7 @@ class KbSearchController extends Controller
     {
         $subject = $request->input('subject', '');
         $description = $request->input('description', '');
-        
+
         if (strlen($subject) < 3) {
             return response()->json([
                 'suggestions' => [],
@@ -175,8 +175,8 @@ class KbSearchController extends Controller
             ]);
         }
 
-        $query = $subject . ' ' . $description;
-        
+        $query = $subject.' '.$description;
+
         $suggestions = $this->knowledgeBaseService->getSuggestedArticles($query, 5);
 
         return response()->json([
@@ -255,25 +255,25 @@ class KbSearchController extends Controller
             ->with(['category', 'author']);
 
         // Text search
-        if (!empty($params['q'])) {
+        if (! empty($params['q'])) {
             // Use search service for text matching
             $textResults = $this->searchService->search($params['q'], [
                 'visibility' => $this->getVisibilityOptions(),
                 'company_id' => $this->getCompanyId(),
                 'limit' => 1000, // Get all matches for further filtering
             ]);
-            
+
             $articleIds = $textResults->pluck('id');
             $builder->whereIn('id', $articleIds);
         }
 
         // Category filter
-        if (!empty($params['category_id'])) {
+        if (! empty($params['category_id'])) {
             $builder->where('category_id', $params['category_id']);
         }
 
         // Tag filter
-        if (!empty($params['tags'])) {
+        if (! empty($params['tags'])) {
             $tags = is_array($params['tags']) ? $params['tags'] : [$params['tags']];
             $builder->where(function ($query) use ($tags) {
                 foreach ($tags as $tag) {
@@ -283,20 +283,20 @@ class KbSearchController extends Controller
         }
 
         // Author filter
-        if (!empty($params['author_id'])) {
+        if (! empty($params['author_id'])) {
             $builder->where('author_id', $params['author_id']);
         }
 
         // Date range filter
-        if (!empty($params['date_from'])) {
+        if (! empty($params['date_from'])) {
             $builder->where('published_at', '>=', $params['date_from']);
         }
-        if (!empty($params['date_to'])) {
+        if (! empty($params['date_to'])) {
             $builder->where('published_at', '<=', $params['date_to']);
         }
 
         // Minimum views filter
-        if (!empty($params['min_views'])) {
+        if (! empty($params['min_views'])) {
             $builder->where('views_count', '>=', $params['min_views']);
         }
 
@@ -347,7 +347,7 @@ class KbSearchController extends Controller
         if (auth()->check()) {
             return auth()->user()->company_id;
         }
-        
+
         // For client portal, get from session or request
         return session('client_company_id') ?? request()->input('company_id');
     }
@@ -370,9 +370,9 @@ class KbSearchController extends Controller
     protected function getAvailableAuthors(): \Illuminate\Support\Collection
     {
         return \App\Models\User::whereHas('kbArticles', function ($query) {
-                $query->where('company_id', $this->getCompanyId())
-                      ->where('status', KbArticle::STATUS_PUBLISHED);
-            })
+            $query->where('company_id', $this->getCompanyId())
+                ->where('status', KbArticle::STATUS_PUBLISHED);
+        })
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -401,6 +401,7 @@ class KbSearchController extends Controller
         }
 
         arsort($tagCounts);
+
         return array_slice($tagCounts, 0, $limit);
     }
 

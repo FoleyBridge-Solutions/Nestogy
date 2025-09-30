@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Tax Jurisdiction Model
- * 
+ *
  * Represents geographic tax jurisdictions for VoIP taxation.
  * Includes federal, state, county, and municipal jurisdictions.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $jurisdiction_type
@@ -42,7 +42,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class TaxJurisdiction extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -97,11 +97,17 @@ class TaxJurisdiction extends Model
      * Jurisdiction type enumeration
      */
     const TYPE_FEDERAL = 'federal';
+
     const TYPE_STATE = 'state';
+
     const TYPE_COUNTY = 'county';
+
     const TYPE_CITY = 'city';
+
     const TYPE_MUNICIPALITY = 'municipality';
+
     const TYPE_SPECIAL_DISTRICT = 'special_district';
+
     const TYPE_ZIP_CODE = 'zip_code';
 
     /**
@@ -150,7 +156,7 @@ class TaxJurisdiction extends Model
     public function containsAddress(array $address): bool
     {
         // Check ZIP code match first (most common)
-        if (!empty($address['zip_code'])) {
+        if (! empty($address['zip_code'])) {
             if ($this->zip_code && $this->zip_code === $address['zip_code']) {
                 return true;
             }
@@ -166,18 +172,19 @@ class TaxJurisdiction extends Model
         }
 
         // Check FIPS codes if available
-        if ($this->fips_code && !empty($address['fips_code'])) {
+        if ($this->fips_code && ! empty($address['fips_code'])) {
             return strpos($address['fips_code'], $this->fips_code) === 0;
         }
 
         // Check boundaries if defined (for complex jurisdictions)
-        if ($this->boundaries && !empty($address['latitude']) && !empty($address['longitude'])) {
+        if ($this->boundaries && ! empty($address['latitude']) && ! empty($address['longitude'])) {
             return $this->isPointInBoundaries($address['latitude'], $address['longitude']);
         }
 
         // Fallback to name matching for cities/municipalities
         if (in_array($this->jurisdiction_type, [self::TYPE_CITY, self::TYPE_MUNICIPALITY])) {
             $city = $address['city'] ?? '';
+
             return strtolower($this->name) === strtolower($city);
         }
 
@@ -205,7 +212,7 @@ class TaxJurisdiction extends Model
 
             if ((($yi > $latitude) !== ($yj > $latitude)) &&
                 ($longitude < ($xj - $xi) * ($latitude - $yi) / ($yj - $yi) + $xi)) {
-                $inside = !$inside;
+                $inside = ! $inside;
             }
         }
 
@@ -251,7 +258,7 @@ class TaxJurisdiction extends Model
      */
     public function requiresTaxFiling(): bool
     {
-        return !empty($this->filing_requirements) && 
+        return ! empty($this->filing_requirements) &&
                ($this->filing_requirements['required'] ?? false);
     }
 
@@ -312,7 +319,7 @@ class TaxJurisdiction extends Model
             self::TYPE_COUNTY,
             self::TYPE_CITY,
             self::TYPE_MUNICIPALITY,
-            self::TYPE_SPECIAL_DISTRICT
+            self::TYPE_SPECIAL_DISTRICT,
         ]);
     }
 
@@ -322,9 +329,9 @@ class TaxJurisdiction extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('code', 'like', '%' . $search . '%')
-              ->orWhere('authority_name', 'like', '%' . $search . '%');
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('code', 'like', '%'.$search.'%')
+                ->orWhere('authority_name', 'like', '%'.$search.'%');
         });
     }
 
@@ -343,7 +350,7 @@ class TaxJurisdiction extends Model
     {
         return $query->where(function ($q) use ($zipCode) {
             $q->where('zip_code', $zipCode)
-              ->orWhereJsonContains('zip_codes', $zipCode);
+                ->orWhereJsonContains('zip_codes', $zipCode);
         });
     }
 
@@ -366,21 +373,21 @@ class TaxJurisdiction extends Model
         $query = static::active();
 
         // Filter by state first if available
-        if (!empty($address['state_code']) || !empty($address['state'])) {
+        if (! empty($address['state_code']) || ! empty($address['state'])) {
             $stateCode = $address['state_code'] ?? $address['state'];
             $query->where(function ($q) use ($stateCode) {
                 $q->where('state_code', $stateCode)
-                  ->orWhere('jurisdiction_type', self::TYPE_FEDERAL);
+                    ->orWhere('jurisdiction_type', self::TYPE_FEDERAL);
             });
         }
 
         // Filter by ZIP code if available
-        if (!empty($address['zip_code'])) {
+        if (! empty($address['zip_code'])) {
             $query->where(function ($q) use ($address) {
                 $q->where('zip_code', $address['zip_code'])
-                  ->orWhereJsonContains('zip_codes', $address['zip_code'])
-                  ->orWhere('jurisdiction_type', self::TYPE_FEDERAL)
-                  ->orWhere('jurisdiction_type', self::TYPE_STATE);
+                    ->orWhereJsonContains('zip_codes', $address['zip_code'])
+                    ->orWhere('jurisdiction_type', self::TYPE_FEDERAL)
+                    ->orWhere('jurisdiction_type', self::TYPE_STATE);
             });
         }
 
@@ -478,7 +485,7 @@ class TaxJurisdiction extends Model
         parent::boot();
 
         static::creating(function ($jurisdiction) {
-            if (!isset($jurisdiction->priority)) {
+            if (! isset($jurisdiction->priority)) {
                 // Set default priority based on jurisdiction type
                 $priorities = [
                     self::TYPE_FEDERAL => 1,
@@ -489,7 +496,7 @@ class TaxJurisdiction extends Model
                     self::TYPE_SPECIAL_DISTRICT => 50,
                     self::TYPE_ZIP_CODE => 60,
                 ];
-                
+
                 $jurisdiction->priority = $priorities[$jurisdiction->jurisdiction_type] ?? 999;
             }
         });

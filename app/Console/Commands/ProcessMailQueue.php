@@ -25,7 +25,7 @@ class ProcessMailQueue extends Command
     protected $description = 'Process pending emails in the mail queue';
 
     protected UnifiedMailService $mailService;
-    
+
     /**
      * Create a new command instance.
      */
@@ -41,31 +41,31 @@ class ProcessMailQueue extends Command
     public function handle(): int
     {
         $this->info('Processing mail queue...');
-        
+
         $limit = (int) $this->option('limit');
-        
+
         // Process pending emails
         $processed = $this->mailService->processPending($limit);
-        
+
         if ($processed > 0) {
             $this->info("Processed {$processed} pending email(s).");
-            
+
             Log::info('Mail queue processed', [
                 'processed' => $processed,
             ]);
         } else {
             $this->info('No pending emails to process.');
         }
-        
+
         // Retry failed emails if requested
         if ($this->option('retry')) {
             $this->info('Retrying failed emails...');
-            
+
             $retried = $this->mailService->retryFailed();
-            
+
             if ($retried > 0) {
                 $this->info("Retried {$retried} failed email(s).");
-                
+
                 Log::info('Failed emails retried', [
                     'retried' => $retried,
                 ]);
@@ -73,7 +73,7 @@ class ProcessMailQueue extends Command
                 $this->info('No failed emails to retry.');
             }
         }
-        
+
         return Command::SUCCESS;
     }
 }

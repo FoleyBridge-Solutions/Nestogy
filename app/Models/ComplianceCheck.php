@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * ComplianceCheck Model
- * 
+ *
  * Records individual compliance checks performed on requirements.
  * Tracks findings, recommendations, and compliance scores.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $contract_id
@@ -63,21 +63,31 @@ class ComplianceCheck extends Model
 
     // Status constants
     const STATUS_COMPLIANT = 'compliant';
+
     const STATUS_NON_COMPLIANT = 'non_compliant';
+
     const STATUS_PARTIAL_COMPLIANT = 'partial_compliant';
+
     const STATUS_NEEDS_REVIEW = 'needs_review';
+
     const STATUS_PENDING = 'pending';
 
     // Check type constants
     const TYPE_MANUAL = 'manual';
+
     const TYPE_AUTOMATED = 'automated';
+
     const TYPE_SCHEDULED = 'scheduled';
+
     const TYPE_TRIGGERED = 'triggered';
 
     // Risk level constants
     const RISK_LOW = 'low';
+
     const RISK_MEDIUM = 'medium';
+
     const RISK_HIGH = 'high';
+
     const RISK_CRITICAL = 'critical';
 
     /**
@@ -151,7 +161,7 @@ class ComplianceCheck extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_COMPLIANT => 'Compliant',
             self::STATUS_NON_COMPLIANT => 'Non-Compliant',
             self::STATUS_PARTIAL_COMPLIANT => 'Partially Compliant',
@@ -163,7 +173,7 @@ class ComplianceCheck extends Model
 
     public function getCheckTypeLabelAttribute(): string
     {
-        return match($this->check_type) {
+        return match ($this->check_type) {
             self::TYPE_MANUAL => 'Manual Check',
             self::TYPE_AUTOMATED => 'Automated Check',
             self::TYPE_SCHEDULED => 'Scheduled Check',
@@ -174,7 +184,7 @@ class ComplianceCheck extends Model
 
     public function getRiskLevelLabelAttribute(): string
     {
-        return match($this->risk_level) {
+        return match ($this->risk_level) {
             self::RISK_LOW => 'Low Risk',
             self::RISK_MEDIUM => 'Medium Risk',
             self::RISK_HIGH => 'High Risk',
@@ -185,7 +195,7 @@ class ComplianceCheck extends Model
 
     public function getRiskColorAttribute(): string
     {
-        return match($this->risk_level) {
+        return match ($this->risk_level) {
             self::RISK_LOW => 'success',
             self::RISK_MEDIUM => 'warning',
             self::RISK_HIGH => 'danger',
@@ -196,7 +206,7 @@ class ComplianceCheck extends Model
 
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_COMPLIANT => 'success',
             self::STATUS_NON_COMPLIANT => 'danger',
             self::STATUS_PARTIAL_COMPLIANT => 'warning',
@@ -212,7 +222,7 @@ class ComplianceCheck extends Model
             return $this->compliance_score;
         }
 
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_COMPLIANT => 100,
             self::STATUS_PARTIAL_COMPLIANT => 50,
             self::STATUS_NON_COMPLIANT => 0,
@@ -229,8 +239,8 @@ class ComplianceCheck extends Model
      */
     public function isPassing(): bool
     {
-        return $this->status === self::STATUS_COMPLIANT || 
-               ($this->status === self::STATUS_PARTIAL_COMPLIANT && 
+        return $this->status === self::STATUS_COMPLIANT ||
+               ($this->status === self::STATUS_PARTIAL_COMPLIANT &&
                 $this->compliance_score >= 75);
     }
 
@@ -319,15 +329,15 @@ class ComplianceCheck extends Model
         parent::boot();
 
         static::creating(function ($check) {
-            if (!$check->company_id && auth()->user()) {
+            if (! $check->company_id && auth()->user()) {
                 $check->company_id = auth()->user()->company_id;
             }
-            
-            if (!$check->checked_at) {
+
+            if (! $check->checked_at) {
                 $check->checked_at = now();
             }
 
-            if (!$check->checked_by && auth()->user()) {
+            if (! $check->checked_by && auth()->user()) {
                 $check->checked_by = auth()->id();
             }
         });

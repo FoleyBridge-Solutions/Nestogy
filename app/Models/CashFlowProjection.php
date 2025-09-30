@@ -3,16 +3,16 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * CashFlowProjection Model
- * 
+ *
  * Manages cash flow projections with multiple scenarios and confidence intervals.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $projection_type
@@ -55,7 +55,7 @@ use Carbon\Carbon;
  */
 class CashFlowProjection extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'cash_flow_projections';
 
@@ -136,27 +136,40 @@ class CashFlowProjection extends Model
 
     // Projection Types
     const TYPE_WEEKLY = 'weekly';
+
     const TYPE_MONTHLY = 'monthly';
+
     const TYPE_QUARTERLY = 'quarterly';
+
     const TYPE_ANNUAL = 'annual';
+
     const TYPE_CUSTOM = 'custom';
 
     // Projection Models
     const MODEL_LINEAR = 'linear';
+
     const MODEL_SEASONAL = 'seasonal';
+
     const MODEL_ML_BASED = 'ml_based';
+
     const MODEL_MANUAL = 'manual';
 
     // Status
     const STATUS_DRAFT = 'draft';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_PUBLISHED = 'published';
+
     const STATUS_ARCHIVED = 'archived';
 
     // Accuracy Ratings
     const ACCURACY_EXCELLENT = 'excellent';
+
     const ACCURACY_GOOD = 'good';
+
     const ACCURACY_FAIR = 'fair';
+
     const ACCURACY_POOR = 'poor';
 
     /**
@@ -181,8 +194,8 @@ class CashFlowProjection extends Model
     public function recordActuals(float $actualInflow, float $actualOutflow): void
     {
         $actualNetFlow = $actualInflow - $actualOutflow;
-        $variance = $this->net_cash_flow != 0 
-            ? (($actualNetFlow - $this->net_cash_flow) / abs($this->net_cash_flow)) * 100 
+        $variance = $this->net_cash_flow != 0
+            ? (($actualNetFlow - $this->net_cash_flow) / abs($this->net_cash_flow)) * 100
             : 0;
 
         $this->update([
@@ -201,7 +214,7 @@ class CashFlowProjection extends Model
     private function calculateAccuracyRating(float $variance): string
     {
         $absVariance = abs($variance);
-        
+
         return match (true) {
             $absVariance <= 5 => self::ACCURACY_EXCELLENT,
             $absVariance <= 15 => self::ACCURACY_GOOD,
@@ -215,7 +228,7 @@ class CashFlowProjection extends Model
      */
     public function isAccurate(float $acceptableVariance = 15): bool
     {
-        return $this->variance_percentage !== null && 
+        return $this->variance_percentage !== null &&
                abs($this->variance_percentage) <= $acceptableVariance;
     }
 

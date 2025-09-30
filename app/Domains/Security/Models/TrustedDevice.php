@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TrustedDevice extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -41,13 +41,19 @@ class TrustedDevice extends Model
     ];
 
     const TRUST_LEVEL_LOW = 25;
+
     const TRUST_LEVEL_MEDIUM = 50;
+
     const TRUST_LEVEL_HIGH = 75;
+
     const TRUST_LEVEL_FULL = 100;
 
     const VERIFICATION_EMAIL = 'email';
+
     const VERIFICATION_SMS = 'sms';
+
     const VERIFICATION_MANUAL = 'manual';
+
     const VERIFICATION_SUSPICIOUS_LOGIN = 'suspicious_login';
 
     public function company(): BelongsTo
@@ -67,7 +73,7 @@ class TrustedDevice extends Model
 
     public function isActive(): bool
     {
-        return $this->is_active && !$this->isExpired();
+        return $this->is_active && ! $this->isExpired();
     }
 
     public function isTrusted(): bool
@@ -78,18 +84,21 @@ class TrustedDevice extends Model
     public function updateLastUsed(): bool
     {
         $this->last_used_at = now();
+
         return $this->save();
     }
 
     public function extendExpiry(int $days = 30): bool
     {
         $this->expires_at = now()->addDays($days);
+
         return $this->save();
     }
 
     public function revoke(): bool
     {
         $this->is_active = false;
+
         return $this->save();
     }
 
@@ -99,7 +108,7 @@ class TrustedDevice extends Model
             return $this->device_name;
         }
 
-        if (!$this->device_fingerprint) {
+        if (! $this->device_fingerprint) {
             return 'Unknown Device';
         }
 
@@ -123,7 +132,7 @@ class TrustedDevice extends Model
 
     public function getLocationString(): string
     {
-        if (!$this->location_data) {
+        if (! $this->location_data) {
             return 'Unknown Location';
         }
 
@@ -160,7 +169,7 @@ class TrustedDevice extends Model
 
     public function getStatusString(): string
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return 'Revoked';
         }
 
@@ -183,7 +192,7 @@ class TrustedDevice extends Model
 
     public function matchesFingerprint(array $fingerprint): bool
     {
-        if (!$this->device_fingerprint || !$fingerprint) {
+        if (! $this->device_fingerprint || ! $fingerprint) {
             return false;
         }
 
@@ -207,7 +216,7 @@ class TrustedDevice extends Model
 
     public function matchesLocation(array $location, int $distanceThreshold = 100): bool
     {
-        if (!$this->location_data || !$location) {
+        if (! $this->location_data || ! $location) {
             return false;
         }
 
@@ -216,11 +225,12 @@ class TrustedDevice extends Model
         $newLat = $location['latitude'] ?? null;
         $newLon = $location['longitude'] ?? null;
 
-        if (!$currentLat || !$currentLon || !$newLat || !$newLon) {
+        if (! $currentLat || ! $currentLon || ! $newLat || ! $newLon) {
             return ($this->location_data['country_code'] ?? '') === ($location['country_code'] ?? '');
         }
 
         $distance = $this->calculateDistance($currentLat, $currentLon, $newLat, $newLon);
+
         return $distance <= $distanceThreshold;
     }
 
@@ -236,16 +246,17 @@ class TrustedDevice extends Model
              sin($dLon / 2) * sin($dLon / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
         return $earthRadius * $c;
     }
 
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-                    ->where(function ($q) {
-                        $q->whereNull('expires_at')
-                          ->orWhere('expires_at', '>', now());
-                    });
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            });
     }
 
     public function scopeExpired($query)

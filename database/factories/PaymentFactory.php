@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Payment;
 use App\Models\Client;
 use App\Models\Invoice;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -28,12 +28,12 @@ class PaymentFactory extends Factory
             Payment::METHOD_CREDIT_CARD,
             Payment::METHOD_BANK_TRANSFER,
             Payment::METHOD_PAYPAL,
-            Payment::METHOD_OTHER
+            Payment::METHOD_OTHER,
         ];
 
         $gateways = ['stripe', 'paypal', 'square', 'manual'];
         $gateway = $this->faker->randomElement($gateways);
-        
+
         return [
             'company_id' => 1,
             'client_id' => Client::inRandomOrder()->first()?->id ?? Client::factory(),
@@ -145,7 +145,7 @@ class PaymentFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'payment_method' => Payment::METHOD_CHECK,
-            'payment_reference' => 'CHK-' . $this->faker->numberBetween(1000, 9999),
+            'payment_reference' => 'CHK-'.$this->faker->numberBetween(1000, 9999),
             'gateway' => 'manual',
             'gateway_transaction_id' => null,
             'gateway_fee' => null,
@@ -155,10 +155,11 @@ class PaymentFactory extends Factory
     /**
      * Indicate that the payment has been refunded.
      */
-    public function refunded(float $refundAmount = null, string $reason = null): static
+    public function refunded(?float $refundAmount = null, ?string $reason = null): static
     {
         return $this->state(function (array $attributes) use ($refundAmount, $reason) {
             $amount = $refundAmount ?? $attributes['amount'];
+
             return [
                 'refund_amount' => min($amount, $attributes['amount']),
                 'refund_reason' => $reason ?? $this->faker->sentence(),
@@ -170,10 +171,11 @@ class PaymentFactory extends Factory
     /**
      * Indicate that the payment has a chargeback.
      */
-    public function chargeback(float $chargebackAmount = null, string $reason = null): static
+    public function chargeback(?float $chargebackAmount = null, ?string $reason = null): static
     {
         return $this->state(function (array $attributes) use ($chargebackAmount, $reason) {
             $amount = $chargebackAmount ?? $attributes['amount'];
+
             return [
                 'chargeback_amount' => min($amount, $attributes['amount']),
                 'chargeback_reason' => $reason ?? 'Disputed transaction',

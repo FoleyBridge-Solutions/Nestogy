@@ -2,45 +2,45 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\TaxCategory;
-use App\Models\TaxProfile;
 use App\Domains\Financial\Services\ServiceTaxCalculator;
 use App\Domains\Financial\Services\VoIPTaxService;
-use App\Domains\Financial\Services\TaxEngine\VatComplyApiClient;
-use App\Domains\Financial\Services\TaxEngine\NominatimApiClient;
-use App\Domains\Financial\Services\TaxEngine\CensusBureauApiClient;
-use App\Domains\Financial\Services\TaxEngine\FccApiClient;
-use App\Domains\Financial\Services\TaxEngine\TaxCloudApiClient;
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\TaxCalculation;
+use App\Models\TaxProfile;
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-use Exception;
 
 /**
  * Tax Engine Router
- * 
+ *
  * Routes tax calculations to appropriate engines based on product/service category
  * and aggregates results from multiple tax calculation services.
  */
 class TaxEngineRouter
 {
     protected ?int $companyId = null;
+
     protected array $engines = [];
+
     protected array $taxProfiles = [];
+
     protected array $apiClients = [];
-    
+
     /**
      * Tax engine type constants
      */
     const ENGINE_VOIP = 'voip';
+
     const ENGINE_GENERAL = 'general';
+
     const ENGINE_DIGITAL = 'digital';
+
     const ENGINE_EQUIPMENT = 'equipment';
-    
+
     /**
      * Category to engine mapping
      */
@@ -56,7 +56,7 @@ class TaxEngineRouter
         'toll_free' => self::ENGINE_VOIP,
         'unified_communications' => self::ENGINE_VOIP,
         'telecommunications' => self::ENGINE_VOIP,
-        
+
         // Digital services
         'cloud_services' => self::ENGINE_DIGITAL,
         'saas' => self::ENGINE_DIGITAL,
@@ -64,12 +64,12 @@ class TaxEngineRouter
         'hosting' => self::ENGINE_DIGITAL,
         'data_services' => self::ENGINE_DIGITAL,
         'internet_access' => self::ENGINE_DIGITAL,
-        
+
         // Equipment
         'equipment' => self::ENGINE_EQUIPMENT,
         'hardware' => self::ENGINE_EQUIPMENT,
         'devices' => self::ENGINE_EQUIPMENT,
-        
+
         // General services
         'professional_services' => self::ENGINE_GENERAL,
         'installation' => self::ENGINE_GENERAL,
@@ -77,7 +77,7 @@ class TaxEngineRouter
         'consulting' => self::ENGINE_GENERAL,
         'support' => self::ENGINE_GENERAL,
     ];
-    
+
     public function __construct(?int $companyId = null)
     {
         $this->companyId = $companyId;
@@ -85,7 +85,7 @@ class TaxEngineRouter
             $this->initializeEngines();
         }
     }
-    
+
     /**
      * Set the company ID for tax routing operations
      */
@@ -93,9 +93,10 @@ class TaxEngineRouter
     {
         $this->companyId = $companyId;
         $this->initializeEngines();
+
         return $this;
     }
-    
+
     /**
      * Ensure company ID is set before operations
      */
@@ -105,28 +106,28 @@ class TaxEngineRouter
             throw new \InvalidArgumentException('Company ID must be set before using tax engine operations. Use setCompanyId() method.');
         }
     }
-    
+
     /**
      * Initialize tax calculation engines and API clients
      */
     protected function initializeEngines(): void
     {
         // Initialize VoIP tax engine
-        $voipEngine = new VoIPTaxService();
+        $voipEngine = new VoIPTaxService;
         $voipEngine->setCompanyId($this->companyId);
         $this->engines[self::ENGINE_VOIP] = $voipEngine;
-        
+
         // Initialize general service tax calculator
         $this->engines[self::ENGINE_GENERAL] = new ServiceTaxCalculator($this->companyId);
-        
+
         // Digital and equipment engines use the general calculator with specific configurations
         $this->engines[self::ENGINE_DIGITAL] = new ServiceTaxCalculator($this->companyId);
         $this->engines[self::ENGINE_EQUIPMENT] = new ServiceTaxCalculator($this->companyId);
-        
+
         // Initialize API clients for enhanced tax calculations
         $this->initializeApiClients();
     }
-    
+
     /**
      * Initialize API clients for tax calculations
      */
@@ -135,34 +136,34 @@ class TaxEngineRouter
         try {
             // VAT compliance for international taxes
             $this->apiClients['vat_comply'] = new VatComplyApiClient($this->companyId);
-            
+
             // Nominatim for geocoding and address resolution
             $this->apiClients['nominatim'] = new NominatimApiClient($this->companyId);
-            
+
             // US Census Bureau for jurisdiction detection
             $this->apiClients['census'] = new CensusBureauApiClient($this->companyId);
-            
+
             // FCC for telecommunications taxes
             $this->apiClients['fcc'] = new FccApiClient($this->companyId);
-            
+
             // TaxCloud removed - using local data-driven tax system
-            
+
             Log::info('Tax API clients initialized successfully', [
                 'company_id' => $this->companyId,
-                'clients' => array_keys($this->apiClients)
+                'clients' => array_keys($this->apiClients),
             ]);
-            
+
         } catch (Exception $e) {
             Log::error('Failed to initialize tax API clients', [
                 'company_id' => $this->companyId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             // Continue without API clients - fallback to basic engines
             $this->apiClients = [];
         }
     }
-    
+
     /**
      * Calculate taxes for multiple items in bulk for better performance
      */
@@ -170,16 +171,16 @@ class TaxEngineRouter
     {
         $startTime = microtime(true);
         $this->ensureCompanyId();
-        
+
         $results = [];
         $groupedItems = [];
-        
+
         // Group items by engine type to batch similar calculations
         foreach ($items as $index => $params) {
             $categoryId = $params['category_id'] ?? null;
             $categoryType = $params['category_type'] ?? null;
             $engineType = $this->determineEngineType($categoryId, $categoryType);
-            
+
             $groupedItems[$engineType][] = [
                 'index' => $index,
                 'params' => $params,
@@ -187,22 +188,22 @@ class TaxEngineRouter
                 'category_type' => $categoryType,
             ];
         }
-        
+
         // Process each engine group
         foreach ($groupedItems as $engineType => $engineItems) {
             $engineResults = $this->calculateBulkForEngine($engineType, $engineItems, $calculationType);
-            
+
             // Merge results back to original order
             foreach ($engineResults as $result) {
                 $results[$result['original_index']] = $result;
             }
         }
-        
+
         // Sort results by original index
         ksort($results);
-        
+
         $executionTime = (microtime(true) - $startTime) * 1000;
-        
+
         return [
             'bulk_results' => array_values($results),
             'total_items' => count($items),
@@ -211,32 +212,32 @@ class TaxEngineRouter
             'engine_breakdown' => array_map('count', $groupedItems),
         ];
     }
-    
+
     /**
      * Calculate taxes for items using a specific engine
      */
     protected function calculateBulkForEngine(string $engineType, array $engineItems, string $calculationType): array
     {
         $results = [];
-        
+
         try {
             $engine = $this->engines[$engineType] ?? $this->engines[self::ENGINE_GENERAL];
-            
+
             if ($engineType === self::ENGINE_VOIP) {
                 // VoIP engine processes items individually but we can optimize address geocoding
                 $addressCache = [];
-                
+
                 foreach ($engineItems as $item) {
                     $params = $item['params'];
                     $customerAddress = $params['customer_address'] ?? [];
-                    
+
                     // Cache address enhancement
                     $addressKey = md5(json_encode($customerAddress));
-                    if (!isset($addressCache[$addressKey])) {
+                    if (! isset($addressCache[$addressKey])) {
                         $addressCache[$addressKey] = $this->enhanceCustomerAddress($customerAddress);
                     }
                     $enhancedAddress = $addressCache[$addressKey];
-                    
+
                     // Update params with enhanced address
                     $calculationParams = $this->prepareCalculationParams(
                         $engineType,
@@ -247,19 +248,20 @@ class TaxEngineRouter
                         $params['customer_id'] ?? null,
                         $this->getTaxProfile($item['category_id'], $item['category_type'])
                     );
-                    
+
                     $result = $engine->calculateTaxes($calculationParams);
                     $result['original_index'] = $item['index'];
                     $result['engine_used'] = $engineType;
-                    
+
                     $results[] = $result;
                 }
             } else {
                 // For ServiceTaxCalculator, we can process items in batches
                 $allItems = collect($engineItems)->map(function ($item) {
                     $params = $item['params'];
-                    return (object)[
-                        'id' => 'bulk_' . $item['index'],
+
+                    return (object) [
+                        'id' => 'bulk_'.$item['index'],
                         'name' => $params['name'] ?? 'Product/Service',
                         'price' => $params['base_price'] ?? 0,
                         'quantity' => $params['quantity'] ?? 1,
@@ -270,26 +272,26 @@ class TaxEngineRouter
                         'original_params' => $item['params'],
                     ];
                 });
-                
+
                 $calculations = $engine->calculate(
                     $allItems,
                     $engineItems[0]['params']['tax_data']['service_type'] ?? 'general',
                     $engineItems[0]['params']['customer_address'] ?? []
                 );
-                
+
                 foreach ($calculations as $calculation) {
                     $calculation['original_index'] = $allItems->firstWhere('id', $calculation['item_id'])->original_index;
                     $calculation['engine_used'] = $engineType;
                     $results[] = $calculation;
                 }
             }
-            
+
         } catch (\Exception $e) {
-            Log::error('Bulk tax calculation error for engine: ' . $engineType, [
+            Log::error('Bulk tax calculation error for engine: '.$engineType, [
                 'error' => $e->getMessage(),
                 'items_count' => count($engineItems),
             ]);
-            
+
             // Return zero tax results for failed calculations
             foreach ($engineItems as $item) {
                 $results[] = [
@@ -298,15 +300,15 @@ class TaxEngineRouter
                     'total_tax_amount' => 0,
                     'final_amount' => $item['params']['base_price'] ?? 0,
                     'tax_breakdown' => [],
-                    'error' => 'Calculation failed: ' . $e->getMessage(),
+                    'error' => 'Calculation failed: '.$e->getMessage(),
                     'engine_used' => $engineType,
                 ];
             }
         }
-        
+
         return $results;
     }
-    
+
     /**
      * Calculate comprehensive taxes for a product/service
      */
@@ -314,7 +316,7 @@ class TaxEngineRouter
     {
         $startTime = microtime(true);
         $this->ensureCompanyId();
-        
+
         // Extract parameters
         $basePrice = $params['base_price'] ?? 0;
         $quantity = $params['quantity'] ?? 1;
@@ -325,16 +327,16 @@ class TaxEngineRouter
         $customerId = $params['customer_id'] ?? null;
         $vatNumber = $params['vat_number'] ?? null;
         $customerCountry = $params['customer_country'] ?? null;
-        
+
         // Enhance customer address with geocoding if needed
         $enhancedAddress = $this->enhanceCustomerAddress($customerAddress);
-        
+
         // Determine which engine(s) to use
         $engineType = $this->determineEngineType($categoryId, $categoryType);
-        
+
         // Get tax profile for this category
         $taxProfile = $this->getTaxProfile($categoryId, $categoryType);
-        
+
         // Prepare calculation parameters
         $calculationParams = $this->prepareCalculationParams(
             $engineType,
@@ -345,13 +347,13 @@ class TaxEngineRouter
             $customerId,
             $taxProfile
         );
-        
+
         // Perform base calculation using appropriate engine
         $result = $this->performCalculation($engineType, $calculationParams);
-        
+
         // Enhance with API-based calculations
         $result = $this->enhanceWithApiCalculations($result, $calculationParams, $engineType, $vatNumber, $customerCountry);
-        
+
         // Add metadata to result
         $result['engine_used'] = $engineType;
         $result['tax_profile'] = $taxProfile ? [
@@ -359,19 +361,19 @@ class TaxEngineRouter
             'name' => $taxProfile['name'] ?? null,
             'category_type' => $categoryType,
         ] : null;
-        
+
         $result['api_enhancements'] = $this->getApiEnhancementStatus();
-        
+
         // Calculate execution time
         $executionTime = (microtime(true) - $startTime) * 1000; // Convert to milliseconds
         $result['calculation_time_ms'] = round($executionTime, 2);
-        
+
         // Create audit trail record
         $this->createAuditTrail($params, $result, $calculable, $calculationType, $executionTime);
-        
+
         return $result;
     }
-    
+
     /**
      * Determine which tax engine to use based on category
      */
@@ -381,7 +383,7 @@ class TaxEngineRouter
         if ($categoryType && isset(self::CATEGORY_ENGINE_MAP[$categoryType])) {
             return self::CATEGORY_ENGINE_MAP[$categoryType];
         }
-        
+
         // If category ID provided, look up category details with caching
         if ($categoryId) {
             $cacheKey = "category_engine_type_company_{$this->companyId}_cat_{$categoryId}";
@@ -396,16 +398,17 @@ class TaxEngineRouter
                         }
                     }
                 }
+
                 return self::ENGINE_GENERAL;
             });
-            
+
             return $engineType;
         }
-        
+
         // Default to general engine
         return self::ENGINE_GENERAL;
     }
-    
+
     /**
      * Get tax profile for a category
      */
@@ -416,7 +419,7 @@ class TaxEngineRouter
         if (isset($this->taxProfiles[$cacheKey])) {
             return $this->taxProfiles[$cacheKey];
         }
-        
+
         // Check Laravel cache
         $laravelCacheKey = "tax_profile_company_{$this->companyId}_{$categoryId}_{$categoryType}";
         $profile = Cache::remember($laravelCacheKey, 3600, function () use ($categoryId, $categoryType) {
@@ -437,17 +440,17 @@ class TaxEngineRouter
                     ];
                 }
             }
-            
+
             // Fallback to default profile
             return $this->getDefaultTaxProfile($categoryType);
         });
-        
+
         // Cache in memory for this request
         $this->taxProfiles[$cacheKey] = $profile;
-        
+
         return $profile;
     }
-    
+
     /**
      * Load actual TaxProfile from database
      */
@@ -455,7 +458,7 @@ class TaxEngineRouter
     {
         $query = TaxProfile::where('company_id', $this->companyId)
             ->where('is_active', true);
-        
+
         // Try exact category match first
         if ($categoryId) {
             $profile = $query->clone()->where('category_id', $categoryId)->ordered()->first();
@@ -463,7 +466,7 @@ class TaxEngineRouter
                 return $profile;
             }
         }
-        
+
         // Try profile type match
         if ($categoryType) {
             $profileType = $this->mapCategoryTypeToProfileType($categoryType);
@@ -472,10 +475,10 @@ class TaxEngineRouter
                 return $profile;
             }
         }
-        
+
         return null;
     }
-    
+
     /**
      * Map profile engine names to constants
      */
@@ -485,10 +488,10 @@ class TaxEngineRouter
             'VoIPTaxService' => self::ENGINE_VOIP,
             'ServiceTaxCalculator' => self::ENGINE_GENERAL,
         ];
-        
+
         return $mapping[$engine] ?? self::ENGINE_GENERAL;
     }
-    
+
     /**
      * Map category type to profile type
      */
@@ -509,10 +512,10 @@ class TaxEngineRouter
             'professional_services' => TaxProfile::TYPE_PROFESSIONAL,
             'consulting' => TaxProfile::TYPE_PROFESSIONAL,
         ];
-        
+
         return $mapping[$categoryType] ?? TaxProfile::TYPE_GENERAL;
     }
-    
+
     /**
      * Get default tax profile based on category type
      */
@@ -562,7 +565,7 @@ class TaxEngineRouter
                 'calculation_engine' => self::ENGINE_GENERAL,
             ],
         ];
-        
+
         return $profiles[$categoryType] ?? [
             'id' => 'general_default',
             'name' => 'General Tax Profile',
@@ -571,7 +574,7 @@ class TaxEngineRouter
             'calculation_engine' => self::ENGINE_GENERAL,
         ];
     }
-    
+
     /**
      * Prepare calculation parameters based on engine type
      */
@@ -592,7 +595,7 @@ class TaxEngineRouter
             'client_id' => $customerId,
             'calculation_date' => now(),
         ];
-        
+
         // Add engine-specific parameters
         switch ($engineType) {
             case self::ENGINE_VOIP:
@@ -601,21 +604,21 @@ class TaxEngineRouter
                 $params['minutes'] = $taxData['minutes'] ?? 0;
                 $params['extensions'] = $taxData['extensions'] ?? 0;
                 break;
-                
+
             case self::ENGINE_DIGITAL:
                 $params['service_type'] = 'cloud';
                 $params['data_usage'] = $taxData['data_usage'] ?? 0;
                 $params['storage_amount'] = $taxData['storage_amount'] ?? 0;
                 $params['user_count'] = $taxData['user_count'] ?? 1;
                 break;
-                
+
             case self::ENGINE_EQUIPMENT:
                 $params['service_type'] = 'equipment';
                 $params['weight'] = $taxData['weight'] ?? 0;
                 $params['dimensions'] = $taxData['dimensions'] ?? [];
                 $params['manufacturer'] = $taxData['manufacturer'] ?? '';
                 break;
-                
+
             case self::ENGINE_GENERAL:
             default:
                 $params['service_type'] = 'general';
@@ -623,10 +626,10 @@ class TaxEngineRouter
                 $params['service_location'] = $taxData['service_location'] ?? $customerAddress;
                 break;
         }
-        
+
         return $params;
     }
-    
+
     /**
      * Perform tax calculation using the appropriate engine
      */
@@ -634,36 +637,36 @@ class TaxEngineRouter
     {
         try {
             $engine = $this->engines[$engineType] ?? $this->engines[self::ENGINE_GENERAL];
-            
+
             if ($engineType === self::ENGINE_VOIP) {
                 // VoIP engine has different method signature
                 return $engine->calculateTaxes($params);
             } else {
                 // ServiceTaxCalculator expects items collection
                 $items = collect([
-                    (object)[
-                        'id' => 'temp_' . uniqid(),
+                    (object) [
+                        'id' => 'temp_'.uniqid(),
                         'name' => 'Product/Service',
                         'price' => $params['base_price'],
                         'quantity' => $params['quantity'],
                         'subtotal' => $params['amount'],
                         'service_type' => $params['service_type'] ?? 'general',
                         'client_id' => $params['client_id'] ?? null,
-                    ]
+                    ],
                 ]);
-                
+
                 $calculations = $engine->calculate(
                     $items,
                     $params['service_type'] ?? 'general',
                     $params['service_address'] ?? null
                 );
-                
+
                 // Get summary
                 $summary = $engine->getTaxSummary($calculations);
-                
+
                 // Format result to match VoIP engine output
                 $calculation = $calculations[0] ?? [];
-                
+
                 return [
                     'base_amount' => $params['amount'],
                     'service_type' => $params['service_type'] ?? 'general',
@@ -683,7 +686,7 @@ class TaxEngineRouter
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             // Return zero tax on error
             return [
                 'base_amount' => $params['amount'],
@@ -699,7 +702,7 @@ class TaxEngineRouter
             ];
         }
     }
-    
+
     /**
      * Get required fields for a category
      */
@@ -707,9 +710,10 @@ class TaxEngineRouter
     {
         $this->ensureCompanyId();
         $profile = $this->getDefaultTaxProfile($categoryType);
+
         return $profile['required_fields'] ?? [];
     }
-    
+
     /**
      * Get applicable tax types for a category
      */
@@ -717,18 +721,19 @@ class TaxEngineRouter
     {
         $this->ensureCompanyId();
         $profile = $this->getDefaultTaxProfile($categoryType);
+
         return $profile['tax_types'] ?? ['sales_tax'];
     }
-    
+
     /**
      * Enhance customer address with geocoding data
      */
     protected function enhanceCustomerAddress(array $customerAddress): array
     {
-        if (empty($customerAddress) || !isset($this->apiClients['nominatim'])) {
+        if (empty($customerAddress) || ! isset($this->apiClients['nominatim'])) {
             return $customerAddress;
         }
-        
+
         try {
             // Build address string for geocoding
             $addressParts = array_filter([
@@ -738,17 +743,17 @@ class TaxEngineRouter
                 $customerAddress['postal_code'] ?? $customerAddress['zip'] ?? '',
                 $customerAddress['country'] ?? 'US',
             ]);
-            
+
             if (empty($addressParts)) {
                 return $customerAddress;
             }
-            
+
             $addressString = implode(', ', $addressParts);
             $geocoded = $this->apiClients['nominatim']->geocode($addressString);
-            
-            if ($geocoded['found'] && !empty($geocoded['results'])) {
+
+            if ($geocoded['found'] && ! empty($geocoded['results'])) {
                 $result = $geocoded['results'][0];
-                
+
                 $customerAddress['geocoded'] = [
                     'latitude' => $result['latitude'],
                     'longitude' => $result['longitude'],
@@ -756,7 +761,7 @@ class TaxEngineRouter
                     'address_components' => $result['address'],
                     'administrative_levels' => $result['administrative_levels'],
                 ];
-                
+
                 // Get tax jurisdictions if using Census Bureau API
                 if (isset($this->apiClients['census'])) {
                     $jurisdictions = $this->apiClients['census']->getTaxJurisdictions(
@@ -765,124 +770,124 @@ class TaxEngineRouter
                         $customerAddress['state'] ?? null,
                         $customerAddress['postal_code'] ?? null
                     );
-                    
+
                     if ($jurisdictions['found']) {
                         $customerAddress['tax_jurisdictions'] = $jurisdictions['jurisdictions'];
                     }
                 }
             }
-            
+
         } catch (Exception $e) {
             Log::warning('Failed to enhance customer address with geocoding', [
                 'error' => $e->getMessage(),
-                'address' => $customerAddress
+                'address' => $customerAddress,
             ]);
         }
-        
+
         return $customerAddress;
     }
-    
+
     /**
      * Enhance tax calculations with API-based data
      */
     protected function enhanceWithApiCalculations(array $result, array $params, string $engineType, ?string $vatNumber = null, ?string $customerCountry = null): array
     {
         $enhancements = [];
-        
+
         try {
             // VAT calculations for international transactions
             if ($vatNumber && isset($this->apiClients['vat_comply'])) {
                 $enhancements['vat'] = $this->calculateVatEnhancements($vatNumber, $customerCountry, $params);
             }
-            
+
             // Telecommunications-specific enhancements
             if ($engineType === self::ENGINE_VOIP && isset($this->apiClients['fcc'])) {
                 $enhancements['telecom'] = $this->calculateTelecomEnhancements($params);
             }
-            
+
             // Enhanced jurisdiction detection
             if (isset($params['service_address']['geocoded'])) {
                 $enhancements['jurisdictions'] = $this->enhanceJurisdictionData($params['service_address']);
             }
-            
+
             // US sales tax now handled by local data-driven system
             // No longer using external TaxCloud API
-            
+
             // Merge enhancements into result
-            if (!empty($enhancements)) {
+            if (! empty($enhancements)) {
                 $result['api_enhancements'] = $enhancements;
                 $result = $this->mergeApiEnhancements($result, $enhancements);
             }
-            
+
         } catch (Exception $e) {
             Log::error('Failed to enhance tax calculations with API data', [
                 'error' => $e->getMessage(),
-                'engine_type' => $engineType
+                'engine_type' => $engineType,
             ]);
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Calculate VAT-related enhancements
      */
     protected function calculateVatEnhancements(?string $vatNumber, ?string $customerCountry, array $params): array
     {
         $enhancements = [];
-        
+
         try {
             $vatClient = $this->apiClients['vat_comply'];
-            
+
             // Validate VAT number if provided
             if ($vatNumber) {
                 $validation = $vatClient->validateVatNumber($vatNumber);
                 $enhancements['vat_validation'] = $validation;
-                
+
                 if ($validation['valid']) {
                     $customerCountry = $validation['country_code'] ?? $customerCountry;
                 }
             }
-            
+
             // Get VAT rates for customer country
             if ($customerCountry) {
                 $vatRates = $vatClient->getVatRates($customerCountry);
                 $enhancements['vat_rates'] = $vatRates;
-                
+
                 // Determine VAT treatment
                 $treatment = $vatClient->getVatTreatment(
                     'US', // Assuming supplier is in US
                     $customerCountry,
-                    !empty($vatNumber), // Is business if VAT number provided
+                    ! empty($vatNumber), // Is business if VAT number provided
                     $vatNumber
                 );
                 $enhancements['vat_treatment'] = $treatment;
             }
-            
+
         } catch (Exception $e) {
             Log::warning('Failed to calculate VAT enhancements', [
                 'error' => $e->getMessage(),
                 'vat_number' => $vatNumber,
-                'country' => $customerCountry
+                'country' => $customerCountry,
             ]);
         }
-        
+
         return $enhancements;
     }
-    
+
     /**
      * Calculate telecommunications-specific enhancements
      */
     protected function calculateTelecomEnhancements(array $params): array
     {
         $enhancements = [];
-        
+
         try {
             $fccClient = $this->apiClients['fcc'];
             $amount = $params['amount'] ?? 0;
             $stateCode = $params['service_address']['state'] ?? 'CA';
             $lineCount = $params['line_count'] ?? 1;
-            
+
             // Get comprehensive telecom taxes
             $telecomTaxes = $fccClient->calculateTelecomTaxes(
                 $amount * 0.7, // Assume 70% local
@@ -890,58 +895,58 @@ class TaxEngineRouter
                 $stateCode,
                 $lineCount
             );
-            
+
             $enhancements['telecom_taxes'] = $telecomTaxes;
-            
+
             // Get current USF rates
             $usfData = $fccClient->getUsfRate();
             $enhancements['usf_info'] = $usfData;
-            
+
         } catch (Exception $e) {
             Log::warning('Failed to calculate telecom enhancements', [
                 'error' => $e->getMessage(),
-                'params' => $params
+                'params' => $params,
             ]);
         }
-        
+
         return $enhancements;
     }
-    
+
     /**
      * Enhance jurisdiction data with additional geographic information
      */
     protected function enhanceJurisdictionData(array $addressData): array
     {
         $enhancements = [];
-        
+
         try {
             if (isset($addressData['geocoded']['latitude'], $addressData['geocoded']['longitude'])) {
                 $lat = $addressData['geocoded']['latitude'];
                 $lon = $addressData['geocoded']['longitude'];
-                
+
                 // Get FCC area information
                 if (isset($this->apiClients['fcc'])) {
                     $areaInfo = $this->apiClients['fcc']->getAreaInfo($lat, $lon);
                     $enhancements['fcc_area'] = $areaInfo;
                 }
-                
+
                 // Get Census geographic information
                 if (isset($this->apiClients['census'])) {
                     $geoInfo = $this->apiClients['census']->getGeographicInfo($lat, $lon);
                     $enhancements['census_geography'] = $geoInfo;
                 }
             }
-            
+
         } catch (Exception $e) {
             Log::warning('Failed to enhance jurisdiction data', [
                 'error' => $e->getMessage(),
-                'address_data' => $addressData
+                'address_data' => $addressData,
             ]);
         }
-        
+
         return $enhancements;
     }
-    
+
     /**
      * Merge API enhancements into the main result
      */
@@ -952,25 +957,25 @@ class TaxEngineRouter
             $vatRate = $enhancements['vat']['vat_rates']['rates']['standard'] ?? 0;
             if ($vatRate > 0) {
                 $vatAmount = ($result['base_amount'] ?? 0) * ($vatRate / 100);
-                
+
                 $result['tax_breakdown']['vat'] = [
                     'rate' => $vatRate,
                     'amount' => round($vatAmount, 2),
                     'description' => 'Value Added Tax',
                     'source' => 'vatcomply_api',
                 ];
-                
+
                 $result['total_tax_amount'] = ($result['total_tax_amount'] ?? 0) + $vatAmount;
                 $result['final_amount'] = ($result['base_amount'] ?? 0) + $result['total_tax_amount'];
             }
         }
-        
+
         // Add enhanced telecom taxes if available
         if (isset($enhancements['telecom']['tax_breakdown'])) {
             $telecomTaxes = $enhancements['telecom']['tax_breakdown'];
-            
+
             foreach ($telecomTaxes as $taxType => $taxData) {
-                $taxKey = 'api_' . $taxType;
+                $taxKey = 'api_'.$taxType;
                 $result['tax_breakdown'][$taxKey] = [
                     'rate' => $taxData['rate'] ?? null,
                     'amount' => $taxData['tax_amount'] ?? $taxData['total_fee'] ?? $taxData['contribution_amount'] ?? 0,
@@ -979,10 +984,10 @@ class TaxEngineRouter
                 ];
             }
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Get description for telecom tax types
      */
@@ -993,10 +998,10 @@ class TaxEngineRouter
             'usf_contribution' => 'Universal Service Fund Contribution',
             'e911_fee' => 'Enhanced 911 Emergency Fee',
         ];
-        
+
         return $descriptions[$taxType] ?? ucwords(str_replace('_', ' ', $taxType));
     }
-    
+
     /**
      * Calculate US sales tax using local data-driven system
      * No longer uses TaxCloud - replaced with intelligent local calculation
@@ -1008,10 +1013,10 @@ class TaxEngineRouter
         return [
             'available' => false,
             'message' => 'Using local data-driven tax system',
-            'source' => 'local_intelligent_system'
+            'source' => 'local_intelligent_system',
         ];
     }
-    
+
     /**
      * Map engine type to service type for TaxCloud
      */
@@ -1023,10 +1028,10 @@ class TaxEngineRouter
             self::ENGINE_EQUIPMENT => 'equipment',
             self::ENGINE_GENERAL => 'managed_services',
         ];
-        
+
         return $mapping[$engineType] ?? 'managed_services';
     }
-    
+
     /**
      * Get API enhancement status
      */
@@ -1041,7 +1046,7 @@ class TaxEngineRouter
             'taxcloud_enabled' => false, // Removed - using local data-driven system
         ];
     }
-    
+
     /**
      * Get API client for external use
      */
@@ -1049,30 +1054,30 @@ class TaxEngineRouter
     {
         return $this->apiClients[$clientName] ?? null;
     }
-    
+
     /**
      * Validate VAT number using API
      */
     public function validateVatNumber(string $vatNumber): array
     {
         $this->ensureCompanyId();
-        
-        if (!isset($this->apiClients['vat_comply'])) {
+
+        if (! isset($this->apiClients['vat_comply'])) {
             return [
                 'valid' => false,
                 'error' => 'VAT validation API not available',
                 'source' => 'router_fallback',
             ];
         }
-        
+
         try {
             return $this->apiClients['vat_comply']->validateVatNumber($vatNumber);
         } catch (Exception $e) {
             Log::error('VAT number validation failed', [
                 'vat_number' => $vatNumber,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return [
                 'valid' => false,
                 'error' => $e->getMessage(),
@@ -1080,21 +1085,21 @@ class TaxEngineRouter
             ];
         }
     }
-    
+
     /**
      * Get USF rates and telecom tax information
      */
     public function getTelecomTaxInfo(string $stateCode, int $lineCount = 1): array
     {
         $this->ensureCompanyId();
-        
-        if (!isset($this->apiClients['fcc'])) {
+
+        if (! isset($this->apiClients['fcc'])) {
             return [
                 'available' => false,
                 'error' => 'FCC API not available',
             ];
         }
-        
+
         try {
             return [
                 'available' => true,
@@ -1105,23 +1110,23 @@ class TaxEngineRouter
         } catch (Exception $e) {
             Log::error('Telecom tax info retrieval failed', [
                 'state_code' => $stateCode,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return [
                 'available' => false,
                 'error' => $e->getMessage(),
             ];
         }
     }
-    
+
     /**
      * Create audit trail record for tax calculation
      */
     protected function createAuditTrail(
-        array $inputParams, 
-        array $result, 
-        $calculable = null, 
+        array $inputParams,
+        array $result,
+        $calculable = null,
         string $calculationType = TaxCalculation::TYPE_PREVIEW,
         float $executionTimeMs = 0
     ): ?TaxCalculation {
@@ -1129,7 +1134,7 @@ class TaxEngineRouter
             // Count API calls made
             $apiCallsCount = 0;
             $apiCost = 0;
-            
+
             if (isset($result['api_enhancements'])) {
                 foreach ($result['api_enhancements'] as $enhancement) {
                     if (is_array($enhancement)) {
@@ -1138,7 +1143,7 @@ class TaxEngineRouter
                     }
                 }
             }
-            
+
             // Prepare customer data
             $customerData = [];
             if (isset($inputParams['vat_number'])) {
@@ -1150,7 +1155,7 @@ class TaxEngineRouter
             if (isset($inputParams['customer_id'])) {
                 $customerData['customer_id'] = $inputParams['customer_id'];
             }
-            
+
             $taxCalculation = TaxCalculation::createCalculation(
                 $this->companyId,
                 $calculable,
@@ -1158,37 +1163,37 @@ class TaxEngineRouter
                 $inputParams,
                 $calculationType
             );
-            
+
             // Update performance metrics
             $taxCalculation->update([
                 'calculation_time_ms' => round($executionTimeMs, 2),
                 'api_calls_count' => $apiCallsCount,
                 'api_cost' => $apiCost,
-                'customer_data' => !empty($customerData) ? $customerData : null,
+                'customer_data' => ! empty($customerData) ? $customerData : null,
             ]);
-            
+
             return $taxCalculation;
-            
+
         } catch (Exception $e) {
             Log::error('Failed to create tax calculation audit trail', [
                 'error' => $e->getMessage(),
                 'company_id' => $this->companyId,
                 'input_params' => $inputParams,
             ]);
-            
+
             return null;
         }
     }
-    
+
     /**
      * Get calculation history for a calculable entity
      */
     public function getCalculationHistory($calculable, int $limit = 10): Collection
     {
-        if (!$calculable || !$calculable->id) {
+        if (! $calculable || ! $calculable->id) {
             return collect();
         }
-        
+
         return TaxCalculation::where('company_id', $this->companyId)
             ->where('calculable_type', get_class($calculable))
             ->where('calculable_id', $calculable->id)
@@ -1196,31 +1201,31 @@ class TaxEngineRouter
             ->limit($limit)
             ->get();
     }
-    
+
     /**
      * Compare current calculation with previous ones
      */
     public function compareWithPrevious(array $currentParams, $calculable): array
     {
-        if (!$calculable) {
+        if (! $calculable) {
             return [
                 'has_previous' => false,
                 'comparison' => null,
             ];
         }
-        
+
         $previousCalculations = $this->getCalculationHistory($calculable, 5);
-        
+
         if ($previousCalculations->isEmpty()) {
             return [
                 'has_previous' => false,
                 'comparison' => null,
             ];
         }
-        
+
         $latest = $previousCalculations->first();
         $currentResult = $this->calculateTaxes($currentParams, null, TaxCalculation::TYPE_PREVIEW);
-        
+
         return [
             'has_previous' => true,
             'comparison' => [
@@ -1235,46 +1240,47 @@ class TaxEngineRouter
             'recent_calculations' => $previousCalculations->map->getSummary(),
         ];
     }
-    
+
     /**
      * Get tax calculation statistics for the company
      */
-    public function getCalculationStatistics(Carbon $from = null, Carbon $to = null): array
+    public function getCalculationStatistics(?Carbon $from = null, ?Carbon $to = null): array
     {
         $this->ensureCompanyId();
-        
+
         $from = $from ?? now()->subDays(30);
         $to = $to ?? now();
-        
+
         return TaxCalculation::getCompanyStatistics($this->companyId, $from, $to);
     }
-    
+
     /**
      * Validate a tax calculation
      */
     public function validateCalculation(string $calculationId, string $notes = ''): bool
     {
         $this->ensureCompanyId();
-        
+
         $calculation = TaxCalculation::where('company_id', $this->companyId)
             ->where('calculation_id', $calculationId)
             ->first();
-            
-        if (!$calculation) {
+
+        if (! $calculation) {
             return false;
         }
-        
+
         $calculation->validateCalculation($notes);
+
         return true;
     }
-    
+
     /**
      * Clear tax calculation caches for a company
      */
     public function clearTaxCaches(?int $specificCategoryId = null): void
     {
         $this->ensureCompanyId();
-        
+
         if ($specificCategoryId) {
             // Clear cache for specific category
             Cache::forget("category_engine_type_company_{$this->companyId}_cat_{$specificCategoryId}");
@@ -1287,30 +1293,30 @@ class TaxEngineRouter
                 "tax_rates_company_{$this->companyId}_*",
                 "jurisdiction_data_company_{$this->companyId}_*",
             ];
-            
+
             foreach ($cacheKeys as $pattern) {
                 // For production, you might want to use Redis SCAN or a more sophisticated cache tagging system
                 Cache::flush(); // Simplified for now - in production, implement selective cache clearing
             }
         }
-        
+
         // Clear memory caches
         $this->taxProfiles = [];
         $this->calculationCache = [];
-        
+
         Log::info('Tax caches cleared', [
             'company_id' => $this->companyId,
             'specific_category' => $specificCategoryId,
         ]);
     }
-    
+
     /**
      * Warm up tax calculation caches for commonly used categories
      */
     public function warmUpCaches(array $categoryIds = []): void
     {
         $this->ensureCompanyId();
-        
+
         if (empty($categoryIds)) {
             // Get popular categories for this company
             $categoryIds = Category::where('company_id', $this->companyId)
@@ -1320,28 +1326,28 @@ class TaxEngineRouter
                 ->pluck('id')
                 ->toArray();
         }
-        
+
         foreach ($categoryIds as $categoryId) {
             // Warm up engine type cache
             $this->determineEngineType($categoryId, null);
-            
+
             // Warm up tax profile cache
             $this->getTaxProfile($categoryId, null);
         }
-        
+
         Log::info('Tax caches warmed up', [
             'company_id' => $this->companyId,
             'categories_cached' => count($categoryIds),
         ]);
     }
-    
+
     /**
      * Get cache statistics for monitoring
      */
     public function getCacheStatistics(): array
     {
         $this->ensureCompanyId();
-        
+
         $stats = [
             'memory_cache_size' => [
                 'tax_profiles' => count($this->taxProfiles),
@@ -1350,32 +1356,32 @@ class TaxEngineRouter
             'company_id' => $this->companyId,
             'cache_enabled' => Cache::getStore() instanceof \Illuminate\Cache\Repository,
         ];
-        
+
         return $stats;
     }
-    
+
     /**
      * Recalculate taxes using stored parameters
      */
     public function recalculateFromAudit(string $calculationId): array
     {
         $this->ensureCompanyId();
-        
+
         $originalCalculation = TaxCalculation::where('company_id', $this->companyId)
             ->where('calculation_id', $calculationId)
             ->first();
-            
-        if (!$originalCalculation) {
+
+        if (! $originalCalculation) {
             throw new Exception("Calculation {$calculationId} not found");
         }
-        
+
         // Use stored input parameters for recalculation
         $result = $this->calculateTaxes(
             $originalCalculation->input_parameters,
             $originalCalculation->calculable,
             TaxCalculation::TYPE_ADJUSTMENT
         );
-        
+
         // Add comparison with original
         $result['recalculation'] = [
             'original_calculation_id' => $originalCalculation->calculation_id,
@@ -1384,7 +1390,7 @@ class TaxEngineRouter
             'tax_difference' => $result['total_tax_amount'] - $originalCalculation->total_tax_amount,
             'amount_difference' => $result['final_amount'] - $originalCalculation->final_amount,
         ];
-        
+
         return $result;
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Domains\Financial\Services\TaxEngine\IntelligentJurisdictionDiscoveryService;
-use App\Domains\Financial\Services\TaxEngine\NationwideTaxDiscoveryService;
 use App\Domains\Financial\Services\TaxEngine\LocalTaxRateService;
+use App\Domains\Financial\Services\TaxEngine\NationwideTaxDiscoveryService;
+use Illuminate\Console\Command;
 
 class TestIntelligentTaxSystem extends Command
 {
@@ -14,6 +14,7 @@ class TestIntelligentTaxSystem extends Command
     private const DEFAULT_BATCH_SIZE = 100;
 
     protected $signature = 'tax:test-intelligent';
+
     protected $description = 'Test the intelligent tax discovery system';
 
     public function handle()
@@ -23,7 +24,7 @@ class TestIntelligentTaxSystem extends Command
 
         // Test 1: Intelligent Pattern Discovery
         $this->info("\n1. Testing Intelligent Pattern Discovery:");
-        $discoveryService = new IntelligentJurisdictionDiscoveryService();
+        $discoveryService = new IntelligentJurisdictionDiscoveryService;
         $patterns = $discoveryService->discoverJurisdictionPatterns();
 
         if ($patterns['success']) {
@@ -37,7 +38,7 @@ class TestIntelligentTaxSystem extends Command
                 ]
             );
         } else {
-            $this->error("✗ Pattern discovery failed: " . $patterns['error']);
+            $this->error('✗ Pattern discovery failed: '.$patterns['error']);
         }
 
         // Test 2: Jurisdiction Code Discovery (replacing hardcoded)
@@ -60,7 +61,7 @@ class TestIntelligentTaxSystem extends Command
 
         // Test: Nationwide Tax Calculation
         $this->info("\n3. Testing Nationwide Tax Discovery:");
-        $nationwideService = new NationwideTaxDiscoveryService();
+        $nationwideService = new NationwideTaxDiscoveryService;
 
         $testAddresses = [
             [
@@ -68,22 +69,22 @@ class TestIntelligentTaxSystem extends Command
                 'address' => '123 Main St',
                 'city' => 'San Antonio',
                 'state' => 'TX',
-                'zip' => '78201'
+                'zip' => '78201',
             ],
             [
                 'amount' => 100.00,
                 'address' => '456 Broadway',
                 'city' => 'New York',
                 'state' => 'NY',
-                'zip' => '10001'
+                'zip' => '10001',
             ],
             [
                 'amount' => 100.00,
                 'address' => '789 Market St',
                 'city' => 'San Francisco',
                 'state' => 'CA',
-                'zip' => '94102'
-            ]
+                'zip' => '94102',
+            ],
         ];
 
         foreach ($testAddresses as $addr) {
@@ -97,7 +98,7 @@ class TestIntelligentTaxSystem extends Command
 
             if ($result['success']) {
                 $this->info("✓ {$addr['city']}, {$addr['state']}: Tax Rate: {$result['tax_rate']}%, Tax: \${$result['tax_amount']}");
-                if (!empty($result['breakdown'])) {
+                if (! empty($result['breakdown'])) {
                     foreach ($result['breakdown'] as $item) {
                         $this->line("  - {$item['jurisdiction']} ({$item['type']}): {$item['rate']}%");
                     }
@@ -112,7 +113,7 @@ class TestIntelligentTaxSystem extends Command
         $localService = new LocalTaxRateService(1);
         $status = $localService->getConfigurationStatus();
 
-        $this->info("Configuration Status:");
+        $this->info('Configuration Status:');
         $this->table(
             ['Property', 'Value'],
             [
@@ -133,14 +134,14 @@ class TestIntelligentTaxSystem extends Command
         if ($testCalc['success']) {
             $this->info("✓ Local calculation successful: Tax: \${$testCalc['tax_amount']}, Rate: {$testCalc['tax_rate']}%");
         } else {
-            $this->warn("⚠ Local calculation returned no tax");
+            $this->warn('⚠ Local calculation returned no tax');
         }
 
         $this->info("\n========================================");
-        $this->info("Intelligent Tax System Test Complete!");
-        $this->info("✓ No hardcoded patterns detected");
-        $this->info("✓ Dynamic discovery is operational");
-        $this->info("✓ Nationwide support is active");
+        $this->info('Intelligent Tax System Test Complete!');
+        $this->info('✓ No hardcoded patterns detected');
+        $this->info('✓ Dynamic discovery is operational');
+        $this->info('✓ Nationwide support is active');
 
         return Command::SUCCESS;
     }

@@ -26,7 +26,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'supported_currencies.*' => 'string|size:3',
             'exchange_rate_provider' => 'nullable|string|in:fixer,openexchangerates,currencylayer,exchangerate-api',
             'auto_update_exchange_rates' => 'boolean',
-            
+
             // Tax Configuration
             'tax_calculation_settings' => 'nullable|array',
             'tax_calculation_settings.enabled' => 'boolean',
@@ -34,37 +34,37 @@ class BillingFinancialSettingsRequest extends FormRequest
             'tax_calculation_settings.compound_tax' => 'boolean',
             'tax_calculation_settings.tax_inclusive' => 'boolean',
             'tax_engine_provider' => 'nullable|string|in:avalara,taxjar,taxcloud,manual',
-            
+
             // Payment Gateway Settings
             'payment_gateway_settings' => 'nullable|array',
             'payment_gateway_settings.default_gateway' => 'nullable|string|in:stripe,square,paypal,authorize_net,ach',
             'payment_gateway_settings.auto_charge' => 'boolean',
             'payment_gateway_settings.save_cards' => 'boolean',
             'payment_gateway_settings.require_cvv' => 'boolean',
-            
+
             // Payment Gateway Individual Fields (matching form fields)
             'paypal_enabled' => 'nullable|boolean',
             'paypal_client_id' => 'nullable|string|max:255',
             'paypal_client_secret' => 'nullable|string|max:255',
-            
+
             'stripe_enabled' => 'nullable|boolean',
             'stripe_publishable_key' => 'nullable|string|max:255',
             'stripe_secret_key' => 'nullable|string|max:255',
-            
+
             'ach_enabled' => 'nullable|boolean',
             'ach_bank_name' => 'nullable|string|max:255',
             'ach_routing_number' => 'nullable|string|max:9',
             'ach_account_number' => 'nullable|string|max:255',
-            
+
             'wire_enabled' => 'nullable|boolean',
             'wire_bank_name' => 'nullable|string|max:255',
             'wire_swift_code' => 'nullable|string|max:11',
             'wire_account_number' => 'nullable|string|max:255',
-            
+
             'check_enabled' => 'nullable|boolean',
             'check_payto_name' => 'nullable|string|max:255',
             'check_mailing_address' => 'nullable|string',
-            
+
             // Legacy nested array format (for backward compatibility)
             'stripe_settings' => 'nullable|array',
             'stripe_settings.enabled' => 'boolean',
@@ -72,26 +72,26 @@ class BillingFinancialSettingsRequest extends FormRequest
             'stripe_settings.secret_key' => 'nullable|string|max:255',
             'stripe_settings.webhook_secret' => 'nullable|string|max:255',
             'stripe_settings.connect_enabled' => 'boolean',
-            
+
             'square_settings' => 'nullable|array',
             'square_settings.enabled' => 'boolean',
             'square_settings.application_id' => 'nullable|string|max:255',
             'square_settings.access_token' => 'nullable|string|max:255',
             'square_settings.location_id' => 'nullable|string|max:255',
             'square_settings.sandbox_mode' => 'boolean',
-            
+
             'paypal_settings' => 'nullable|array',
             'paypal_settings.enabled' => 'boolean',
             'paypal_settings.client_id' => 'nullable|string|max:255',
             'paypal_settings.client_secret' => 'nullable|string|max:255',
             'paypal_settings.sandbox_mode' => 'boolean',
-            
+
             'authorize_net_settings' => 'nullable|array',
             'authorize_net_settings.enabled' => 'boolean',
             'authorize_net_settings.api_login_id' => 'nullable|string|max:255',
             'authorize_net_settings.transaction_key' => 'nullable|string|max:255',
             'authorize_net_settings.sandbox_mode' => 'boolean',
-            
+
             'ach_settings' => 'nullable|array',
             'ach_settings.enabled' => 'boolean',
             'ach_settings.provider' => 'nullable|string|in:plaid,dwolla,stripe',
@@ -99,7 +99,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'ach_settings.same_day_ach' => 'boolean',
             'wire_settings' => 'nullable|array',
             'check_settings' => 'nullable|array',
-            
+
             // Recurring Billing
             'recurring_billing_enabled' => 'boolean',
             'recurring_billing_settings' => 'nullable|array',
@@ -108,7 +108,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'recurring_billing_settings.grace_period_days' => 'integer|min:0|max:30',
             'recurring_billing_settings.auto_suspend' => 'boolean',
             'recurring_billing_settings.dunning_emails' => 'boolean',
-            
+
             // Late Fee Settings
             'late_fee_settings' => 'nullable|array',
             'late_fee_settings.enabled' => 'boolean',
@@ -117,7 +117,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'late_fee_settings.fixed_amount' => 'nullable|numeric|min:0',
             'late_fee_settings.grace_period_days' => 'integer|min:0|max:30',
             'late_fee_settings.max_fees' => 'integer|min:0|max:10',
-            
+
             // Collection Settings
             'collection_settings' => 'nullable|array',
             'collection_settings.enabled' => 'boolean',
@@ -126,14 +126,14 @@ class BillingFinancialSettingsRequest extends FormRequest
             'collection_settings.final_notice_days' => 'integer|min:1|max:90',
             'collection_settings.auto_suspend_days' => 'integer|min:1|max:120',
             'collection_settings.write_off_days' => 'integer|min:30|max:365',
-            
+
             // Accounting Integration
             'accounting_integration_settings' => 'nullable|array',
             'accounting_integration_settings.enabled' => 'boolean',
             'accounting_integration_settings.provider' => 'nullable|string|in:quickbooks,xero,sage,netsuite',
             'accounting_integration_settings.sync_frequency' => 'nullable|string|in:real_time,hourly,daily,weekly',
             'accounting_integration_settings.auto_sync' => 'boolean',
-            
+
             // QuickBooks Settings
             'quickbooks_settings' => 'nullable|array',
             'quickbooks_settings.enabled' => 'boolean',
@@ -143,7 +143,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'quickbooks_settings.access_token' => 'nullable|string|max:1000',
             'quickbooks_settings.refresh_token' => 'nullable|string|max:1000',
             'quickbooks_settings.sandbox_mode' => 'boolean',
-            
+
             // Xero Settings
             'xero_settings' => 'nullable|array',
             'xero_settings.enabled' => 'boolean',
@@ -152,7 +152,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'xero_settings.tenant_id' => 'nullable|string|max:255',
             'xero_settings.access_token' => 'nullable|string|max:1000',
             'xero_settings.refresh_token' => 'nullable|string|max:1000',
-            
+
             // Sage Settings
             'sage_settings' => 'nullable|array',
             'sage_settings.enabled' => 'boolean',
@@ -160,14 +160,14 @@ class BillingFinancialSettingsRequest extends FormRequest
             'sage_settings.database_name' => 'nullable|string|max:255',
             'sage_settings.username' => 'nullable|string|max:255',
             'sage_settings.password' => 'nullable|string|max:255',
-            
+
             // Revenue Recognition
             'revenue_recognition_enabled' => 'boolean',
             'revenue_recognition_settings' => 'nullable|array',
             'revenue_recognition_settings.method' => 'nullable|string|in:cash,accrual,contract',
             'revenue_recognition_settings.recognition_point' => 'nullable|string|in:invoice_date,payment_date,delivery_date',
             'revenue_recognition_settings.deferred_revenue' => 'boolean',
-            
+
             // Purchase Orders
             'purchase_order_settings' => 'nullable|array',
             'purchase_order_settings.enabled' => 'boolean',
@@ -176,7 +176,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'purchase_order_settings.auto_numbering' => 'boolean',
             'purchase_order_settings.number_prefix' => 'nullable|string|max:10',
             'purchase_order_settings.next_number' => 'nullable|integer|min:1',
-            
+
             // Expense Approval
             'expense_approval_settings' => 'nullable|array',
             'expense_approval_settings.enabled' => 'boolean',
@@ -184,7 +184,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'expense_approval_settings.require_receipts' => 'boolean',
             'expense_approval_settings.auto_approve_under_threshold' => 'boolean',
             'expense_approval_settings.approval_workflow' => 'nullable|array',
-            
+
             // Invoice Settings
             'invoice_prefix' => 'nullable|string|max:10',
             'invoice_next_number' => 'nullable|integer|min:1',
@@ -193,14 +193,14 @@ class BillingFinancialSettingsRequest extends FormRequest
             'invoice_from_email' => 'nullable|email|max:255',
             'invoice_late_fee_enable' => 'boolean',
             'invoice_late_fee_percent' => 'nullable|numeric|min:0|max:100',
-            
+
             // Quote Settings
             'quote_prefix' => 'nullable|string|max:10',
             'quote_next_number' => 'nullable|integer|min:1',
             'quote_footer' => 'nullable|string|max:1000',
             'quote_from_name' => 'nullable|string|max:255',
             'quote_from_email' => 'nullable|email|max:255',
-            
+
             // Default Settings
             'default_transfer_from_account' => 'nullable|integer|exists:accounts,id',
             'default_transfer_to_account' => 'nullable|integer|exists:accounts,id',
@@ -212,7 +212,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'default_hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
             'profitability_tracking_settings' => 'nullable|array',
             'profitability_tracking_settings.goal_margin' => 'nullable|numeric|min:0|max:100',
-            
+
             // Invoice Reminders
             'recurring_auto_send_invoice' => 'boolean',
             'send_invoice_reminders' => 'boolean',

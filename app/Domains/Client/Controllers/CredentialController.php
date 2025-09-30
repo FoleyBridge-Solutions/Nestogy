@@ -5,7 +5,6 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientCredential;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +13,7 @@ use Illuminate\Validation\Rule;
 class CredentialController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of credentials for the selected client
      */
@@ -21,7 +21,7 @@ class CredentialController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -29,16 +29,16 @@ class CredentialController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('service_name', 'like', "%{$search}%")
-                  ->orWhere('username', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('url', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('service_name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('url', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -76,8 +76,8 @@ class CredentialController extends Controller
         }
 
         $credentials = $query->orderBy('name')
-                            ->paginate(20)
-                            ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $credentialTypes = ClientCredential::getCredentialTypes();
         $environments = ClientCredential::getEnvironments();
@@ -91,8 +91,8 @@ class CredentialController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $credentialTypes = ClientCredential::getCredentialTypes();
@@ -117,7 +117,7 @@ class CredentialController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'credential_type' => 'required|in:' . implode(',', array_keys(ClientCredential::getCredentialTypes())),
+            'credential_type' => 'required|in:'.implode(',', array_keys(ClientCredential::getCredentialTypes())),
             'service_name' => 'nullable|string|max:255',
             'username' => 'nullable|string|max:255',
             'password' => 'nullable|string|max:1000',
@@ -135,15 +135,15 @@ class CredentialController extends Controller
             'expires_at' => 'nullable|date|after:today',
             'is_active' => 'boolean',
             'is_shared' => 'boolean',
-            'environment' => 'nullable|in:' . implode(',', array_keys(ClientCredential::getEnvironments())),
-            'access_level' => 'nullable|in:' . implode(',', array_keys(ClientCredential::getAccessLevels())),
+            'environment' => 'nullable|in:'.implode(',', array_keys(ClientCredential::getEnvironments())),
+            'access_level' => 'nullable|in:'.implode(',', array_keys(ClientCredential::getAccessLevels())),
             'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $credential = new ClientCredential($request->all());
@@ -152,7 +152,7 @@ class CredentialController extends Controller
         $credential->save();
 
         return redirect()->route('clients.credentials.standalone.index')
-                        ->with('success', 'Credential created successfully.');
+            ->with('success', 'Credential created successfully.');
     }
 
     /**
@@ -175,8 +175,8 @@ class CredentialController extends Controller
         $this->authorize('update', $credential);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $credentialTypes = ClientCredential::getCredentialTypes();
         $environments = ClientCredential::getEnvironments();
@@ -202,7 +202,7 @@ class CredentialController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'credential_type' => 'required|in:' . implode(',', array_keys(ClientCredential::getCredentialTypes())),
+            'credential_type' => 'required|in:'.implode(',', array_keys(ClientCredential::getCredentialTypes())),
             'service_name' => 'nullable|string|max:255',
             'username' => 'nullable|string|max:255',
             'password' => 'nullable|string|max:1000',
@@ -220,22 +220,22 @@ class CredentialController extends Controller
             'expires_at' => 'nullable|date|after:today',
             'is_active' => 'boolean',
             'is_shared' => 'boolean',
-            'environment' => 'nullable|in:' . implode(',', array_keys(ClientCredential::getEnvironments())),
-            'access_level' => 'nullable|in:' . implode(',', array_keys(ClientCredential::getAccessLevels())),
+            'environment' => 'nullable|in:'.implode(',', array_keys(ClientCredential::getEnvironments())),
+            'access_level' => 'nullable|in:'.implode(',', array_keys(ClientCredential::getAccessLevels())),
             'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $credential->fill($request->all());
         $credential->save();
 
         return redirect()->route('clients.credentials.standalone.index')
-                        ->with('success', 'Credential updated successfully.');
+            ->with('success', 'Credential updated successfully.');
     }
 
     /**
@@ -248,7 +248,7 @@ class CredentialController extends Controller
         $credential->delete();
 
         return redirect()->route('clients.credentials.standalone.index')
-                        ->with('success', 'Credential deleted successfully.');
+            ->with('success', 'Credential deleted successfully.');
     }
 
     /**
@@ -274,16 +274,16 @@ class CredentialController extends Controller
     public function export(Request $request)
     {
         $query = ClientCredential::with(['client', 'creator'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index (excluding sensitive fields)
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('service_name', 'like', "%{$search}%")
-                  ->orWhere('username', 'like', "%{$search}%");
+                    ->orWhere('service_name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%");
             });
         }
 
@@ -318,16 +318,16 @@ class CredentialController extends Controller
 
         $credentials = $query->orderBy('name')->get();
 
-        $filename = 'credentials_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'credentials_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($credentials) {
+        $callback = function () use ($credentials) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers (excluding sensitive data)
             fputcsv($file, [
                 'Credential Name',
@@ -343,7 +343,7 @@ class CredentialController extends Controller
                 'Access Level',
                 'Expires At',
                 'Last Accessed',
-                'Created By'
+                'Created By',
             ]);
 
             // CSV data
@@ -365,7 +365,7 @@ class CredentialController extends Controller
                     $credential->creator ? $credential->creator->name : '',
                 ]);
             }
-            
+
             fclose($file);
         };
 

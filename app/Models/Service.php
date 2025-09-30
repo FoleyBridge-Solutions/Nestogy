@@ -83,7 +83,7 @@ class Service extends Model
      */
     public function hasSetupRequirements(): bool
     {
-        return $this->has_setup_fee || !empty($this->requirements);
+        return $this->has_setup_fee || ! empty($this->requirements);
     }
 
     /**
@@ -103,7 +103,7 @@ class Service extends Model
             return true; // Available all days if not specified
         }
 
-        return isset($this->availability_schedule[$dayOfWeek]) && 
+        return isset($this->availability_schedule[$dayOfWeek]) &&
                $this->availability_schedule[$dayOfWeek]['available'] === true;
     }
 
@@ -112,12 +112,13 @@ class Service extends Model
      */
     public function getEstimatedCompletionDate($startDate = null): ?\DateTime
     {
-        if (!$this->sla_days) {
+        if (! $this->sla_days) {
             return null;
         }
 
-        $start = $startDate ? new \DateTime($startDate) : new \DateTime();
-        $interval = new \DateInterval('P' . $this->sla_days . 'D');
+        $start = $startDate ? new \DateTime($startDate) : new \DateTime;
+        $interval = new \DateInterval('P'.$this->sla_days.'D');
+
         return $start->add($interval);
     }
 
@@ -126,12 +127,12 @@ class Service extends Model
      */
     public function calculateCancellationFee($cancellationDate, $serviceDate): float
     {
-        if (!$this->has_cancellation_fee) {
+        if (! $this->has_cancellation_fee) {
             return 0;
         }
 
         $hoursNotice = (strtotime($serviceDate) - strtotime($cancellationDate)) / 3600;
-        
+
         if ($hoursNotice < $this->cancellation_notice_hours) {
             return $this->cancellation_fee;
         }
@@ -144,7 +145,7 @@ class Service extends Model
      */
     public function getFormattedDuration(): string
     {
-        if (!$this->duration_minutes) {
+        if (! $this->duration_minutes) {
             return 'Variable';
         }
 
@@ -154,7 +155,7 @@ class Service extends Model
         if ($hours > 0 && $minutes > 0) {
             return "{$hours}h {$minutes}min";
         } elseif ($hours > 0) {
-            return "{$hours} hour" . ($hours > 1 ? 's' : '');
+            return "{$hours} hour".($hours > 1 ? 's' : '');
         } else {
             return "{$minutes} minutes";
         }
@@ -165,12 +166,12 @@ class Service extends Model
      */
     public function canScheduleAt($dateTime): bool
     {
-        if (!$this->requires_scheduling) {
+        if (! $this->requires_scheduling) {
             return true;
         }
 
         $scheduledTime = new \DateTime($dateTime);
-        $now = new \DateTime();
+        $now = new \DateTime;
         $hoursNotice = ($scheduledTime->getTimestamp() - $now->getTimestamp()) / 3600;
 
         return $hoursNotice >= $this->min_notice_hours;

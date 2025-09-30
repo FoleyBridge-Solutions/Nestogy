@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Validator;
 
 /**
  * RMM Integrations Controller
- * 
+ *
  * Handles admin interface for managing RMM integrations.
  * Provides CRUD operations and integration testing.
  */
@@ -32,13 +32,13 @@ class RmmIntegrationsController extends Controller
     public function index(Request $request)
     {
         $query = RmmIntegration::where('company_id', auth()->user()->company_id)
-                              ->with(['company']);
+            ->with(['company']);
 
         // Apply search filter
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('rmm_type', 'like', "%{$search}%");
+                    ->orWhere('rmm_type', 'like', "%{$search}%");
             });
         }
 
@@ -53,8 +53,8 @@ class RmmIntegrationsController extends Controller
         }
 
         $integrations = $query->orderBy('created_at', 'desc')
-                             ->paginate(20)
-                             ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         // Get available types for filter dropdown
         $availableTypes = $this->rmmFactory->getAvailableTypes();
@@ -63,12 +63,12 @@ class RmmIntegrationsController extends Controller
             // Add security indicators for saved credentials
             $integrationsWithIndicators = $integrations->items();
             foreach ($integrationsWithIndicators as $integration) {
-                $integration->has_api_url = !empty($integration->api_url);
-                $integration->has_api_key = !empty($integration->api_key);
+                $integration->has_api_url = ! empty($integration->api_url);
+                $integration->has_api_key = ! empty($integration->api_key);
                 // Remove the actual encrypted values from the response for security
                 unset($integration->api_url_encrypted, $integration->api_key_encrypted);
             }
-            
+
             return response()->json([
                 'integrations' => $integrationsWithIndicators,
                 'pagination' => [
@@ -89,7 +89,7 @@ class RmmIntegrationsController extends Controller
     public function create()
     {
         $availableTypes = $this->rmmFactory->getAvailableTypes();
-        
+
         return view('admin.integrations.rmm.create', compact('availableTypes'));
     }
 
@@ -101,7 +101,7 @@ class RmmIntegrationsController extends Controller
         // Get validation rules without company_id since we set it in the controller
         $rules = RmmIntegration::getValidationRules();
         unset($rules['company_id']);
-        
+
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
@@ -112,10 +112,10 @@ class RmmIntegrationsController extends Controller
                     'errors' => $validator->errors(),
                 ], 422);
             }
-            
+
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         try {
@@ -135,10 +135,10 @@ class RmmIntegrationsController extends Controller
                         'message' => 'An integration of this type already exists for your company.',
                     ], 409);
                 }
-                
+
                 return redirect()->back()
-                               ->withInput()
-                               ->with('error', 'An integration of this type already exists for your company.');
+                    ->withInput()
+                    ->with('error', 'An integration of this type already exists for your company.');
             }
 
             // Create integration
@@ -167,7 +167,7 @@ class RmmIntegrationsController extends Controller
             }
 
             return redirect()->route('admin.integrations.rmm.show', $integration)
-                           ->with('success', 'RMM integration created successfully.');
+                ->with('success', 'RMM integration created successfully.');
 
         } catch (\Exception $e) {
             Log::error('Failed to create RMM integration', [
@@ -179,13 +179,13 @@ class RmmIntegrationsController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create integration: ' . $e->getMessage(),
+                    'message' => 'Failed to create integration: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()->back()
-                           ->withInput()
-                           ->with('error', 'Failed to create integration: ' . $e->getMessage());
+                ->withInput()
+                ->with('error', 'Failed to create integration: '.$e->getMessage());
         }
     }
 
@@ -225,7 +225,7 @@ class RmmIntegrationsController extends Controller
         $this->authorize('update', $integration);
 
         $availableTypes = $this->rmmFactory->getAvailableTypes();
-        
+
         return view('admin.integrations.rmm.edit', compact('integration', 'availableTypes'));
     }
 
@@ -240,8 +240,8 @@ class RmmIntegrationsController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         try {
@@ -277,7 +277,7 @@ class RmmIntegrationsController extends Controller
             }
 
             return redirect()->route('admin.integrations.rmm.show', $integration)
-                           ->with('success', 'Integration updated successfully.');
+                ->with('success', 'Integration updated successfully.');
 
         } catch (\Exception $e) {
             Log::error('Failed to update RMM integration', [
@@ -289,13 +289,13 @@ class RmmIntegrationsController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update integration: ' . $e->getMessage(),
+                    'message' => 'Failed to update integration: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()->back()
-                           ->withInput()
-                           ->with('error', 'Failed to update integration: ' . $e->getMessage());
+                ->withInput()
+                ->with('error', 'Failed to update integration: '.$e->getMessage());
         }
     }
 
@@ -324,7 +324,7 @@ class RmmIntegrationsController extends Controller
             }
 
             return redirect()->route('admin.integrations.rmm.index')
-                           ->with('success', "Integration '{$integrationName}' deleted successfully.");
+                ->with('success', "Integration '{$integrationName}' deleted successfully.");
 
         } catch (\Exception $e) {
             Log::error('Failed to delete RMM integration', [
@@ -336,12 +336,12 @@ class RmmIntegrationsController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to delete integration: ' . $e->getMessage(),
+                    'message' => 'Failed to delete integration: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()->back()
-                           ->with('error', 'Failed to delete integration: ' . $e->getMessage());
+                ->with('error', 'Failed to delete integration: '.$e->getMessage());
         }
     }
 
@@ -392,7 +392,7 @@ class RmmIntegrationsController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Connection test failed: ' . $e->getMessage(),
+                'message' => 'Connection test failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -427,7 +427,7 @@ class RmmIntegrationsController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Connection test failed: ' . $e->getMessage(),
+                'message' => 'Connection test failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -461,7 +461,7 @@ class RmmIntegrationsController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to trigger sync: ' . $e->getMessage(),
+                'message' => 'Failed to trigger sync: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -498,7 +498,7 @@ class RmmIntegrationsController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to trigger sync: ' . $e->getMessage(),
+                'message' => 'Failed to trigger sync: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -512,7 +512,7 @@ class RmmIntegrationsController extends Controller
 
         try {
             $integration->update([
-                'is_active' => !$integration->is_active,
+                'is_active' => ! $integration->is_active,
             ]);
 
             $status = $integration->is_active ? 'activated' : 'deactivated';
@@ -538,7 +538,7 @@ class RmmIntegrationsController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to toggle status: ' . $e->getMessage(),
+                'message' => 'Failed to toggle status: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -549,7 +549,7 @@ class RmmIntegrationsController extends Controller
     public function getAvailableTypes()
     {
         $types = $this->rmmFactory->getAvailableTypes();
-        
+
         return response()->json([
             'success' => true,
             'types' => $types,

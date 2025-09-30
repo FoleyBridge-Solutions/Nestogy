@@ -2,17 +2,17 @@
 
 namespace App\Domains\Project\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 /**
  * ProjectMilestone Model
- * 
+ *
  * Manages project milestones and deliverables with tracking capabilities.
- * 
+ *
  * @property int $id
  * @property int $project_id
  * @property string $name
@@ -80,17 +80,24 @@ class ProjectMilestone extends Model
      * Milestone status enumeration
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_IN_PROGRESS = 'in_progress';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_OVERDUE = 'overdue';
+
     const STATUS_CANCELLED = 'cancelled';
 
     /**
      * Milestone priority enumeration
      */
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_CRITICAL = 'critical';
 
     /**
@@ -114,7 +121,7 @@ class ProjectMilestone extends Model
      */
     public function getStatusLabel(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'Pending',
             self::STATUS_IN_PROGRESS => 'In Progress',
             self::STATUS_COMPLETED => 'Completed',
@@ -129,7 +136,7 @@ class ProjectMilestone extends Model
      */
     public function getPriorityLabel(): string
     {
-        return match($this->priority) {
+        return match ($this->priority) {
             self::PRIORITY_LOW => 'Low',
             self::PRIORITY_NORMAL => 'Normal',
             self::PRIORITY_HIGH => 'High',
@@ -143,7 +150,7 @@ class ProjectMilestone extends Model
      */
     public function isCompleted(): bool
     {
-        return $this->status === self::STATUS_COMPLETED && !is_null($this->completed_at);
+        return $this->status === self::STATUS_COMPLETED && ! is_null($this->completed_at);
     }
 
     /**
@@ -159,7 +166,7 @@ class ProjectMilestone extends Model
      */
     public function isOverdue(): bool
     {
-        if (!$this->due_date || $this->isCompleted()) {
+        if (! $this->due_date || $this->isCompleted()) {
             return false;
         }
 
@@ -171,11 +178,11 @@ class ProjectMilestone extends Model
      */
     public function isDueSoon(int $days = 7): bool
     {
-        if (!$this->due_date || $this->isCompleted()) {
+        if (! $this->due_date || $this->isCompleted()) {
             return false;
         }
 
-        return Carbon::now()->diffInDays($this->due_date, false) <= $days && 
+        return Carbon::now()->diffInDays($this->due_date, false) <= $days &&
                Carbon::now()->lte($this->due_date);
     }
 
@@ -184,7 +191,7 @@ class ProjectMilestone extends Model
      */
     public function getDaysUntilDue(): ?int
     {
-        if (!$this->due_date) {
+        if (! $this->due_date) {
             return null;
         }
 
@@ -197,7 +204,7 @@ class ProjectMilestone extends Model
     public function getCalculatedCompletion(): float
     {
         $totalTasks = $this->tasks()->count();
-        
+
         if ($totalTasks === 0) {
             return $this->completion_percentage ?? 0;
         }
@@ -252,7 +259,7 @@ class ProjectMilestone extends Model
      */
     public function getExpectedCompletion(): ?float
     {
-        if (!$this->due_date || !$this->project->start_date) {
+        if (! $this->due_date || ! $this->project->start_date) {
             return null;
         }
 
@@ -318,11 +325,11 @@ class ProjectMilestone extends Model
             ],
             'deliverables' => [
                 'total' => count($this->deliverables ?? []),
-                'completed' => count(array_filter($this->deliverables ?? [], fn($d) => $d['completed'] ?? false)),
+                'completed' => count(array_filter($this->deliverables ?? [], fn ($d) => $d['completed'] ?? false)),
             ],
             'acceptance_criteria' => [
                 'total' => count($this->acceptance_criteria ?? []),
-                'met' => count(array_filter($this->acceptance_criteria ?? [], fn($c) => $c['met'] ?? false)),
+                'met' => count(array_filter($this->acceptance_criteria ?? [], fn ($c) => $c['met'] ?? false)),
             ],
         ];
     }
@@ -341,8 +348,8 @@ class ProjectMilestone extends Model
     public function scopeOverdue($query)
     {
         return $query->where('status', '!=', self::STATUS_COMPLETED)
-                    ->whereNotNull('due_date')
-                    ->where('due_date', '<', Carbon::now());
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', Carbon::now());
     }
 
     /**
@@ -351,9 +358,9 @@ class ProjectMilestone extends Model
     public function scopeDueSoon($query, int $days = 7)
     {
         return $query->where('status', '!=', self::STATUS_COMPLETED)
-                    ->whereNotNull('due_date')
-                    ->where('due_date', '>=', Carbon::now())
-                    ->where('due_date', '<=', Carbon::now()->addDays($days));
+            ->whereNotNull('due_date')
+            ->where('due_date', '>=', Carbon::now())
+            ->where('due_date', '<=', Carbon::now()->addDays($days));
     }
 
     /**
@@ -382,8 +389,8 @@ class ProjectMilestone extends Model
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
-            'status' => 'required|in:' . implode(',', self::getAvailableStatuses()),
-            'priority' => 'required|in:' . implode(',', self::getAvailablePriorities()),
+            'status' => 'required|in:'.implode(',', self::getAvailableStatuses()),
+            'priority' => 'required|in:'.implode(',', self::getAvailablePriorities()),
             'deliverables' => 'nullable|array',
             'deliverables.*.name' => 'required|string|max:255',
             'deliverables.*.description' => 'nullable|string',
@@ -432,7 +439,7 @@ class ProjectMilestone extends Model
 
         // Set sort order for new milestones
         static::creating(function ($milestone) {
-            if (!$milestone->sort_order) {
+            if (! $milestone->sort_order) {
                 $maxOrder = static::where('project_id', $milestone->project_id)
                     ->max('sort_order') ?? 0;
                 $milestone->sort_order = $maxOrder + 1;

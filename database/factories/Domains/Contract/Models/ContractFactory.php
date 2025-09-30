@@ -28,26 +28,25 @@ class ContractFactory extends Factory
         $startDate = $this->faker->dateTimeBetween('-1 year', 'now');
         $endDate = $this->faker->dateTimeBetween($startDate, '+2 years');
         $contractTypes = ['managed_services', 'support', 'project', 'software', 'hardware'];
-        
+
         return [
             'company_id' => Company::factory(),
             'client_id' => Client::factory(),
-            'contract_number' => 'CNT-' . $this->faker->unique()->numberBetween(1000, 9999),
-            'title' => $this->faker->catchPhrase() . ' Agreement',
+            'contract_number' => 'CNT-'.$this->faker->unique()->numberBetween(1000, 9999),
+            'title' => $this->faker->catchPhrase().' Agreement',
             'description' => $this->faker->paragraphs(2, true),
-            'type' => $this->faker->randomElement($contractTypes),
+            'contract_type' => $this->faker->randomElement($contractTypes),
             'status' => $this->faker->randomElement(['draft', 'active', 'expired', 'terminated']),
             'start_date' => $startDate,
             'end_date' => $endDate,
-            'value' => $this->faker->randomFloat(2, 5000, 100000),
-            'billing_frequency' => $this->faker->randomElement(['monthly', 'quarterly', 'annually']),
+            'contract_value' => $this->faker->randomFloat(2, 5000, 100000),
+            'currency_code' => 'USD',
             'auto_renew' => $this->faker->boolean(60),
-            'renewal_terms' => $this->faker->numberBetween(6, 24) . ' months',
-            'notice_period' => $this->faker->randomElement([30, 60, 90]),
+            'renewal_notice_days' => $this->faker->randomElement([30, 60, 90]),
             'payment_terms' => $this->faker->randomElement(['Net 15', 'Net 30', 'Net 45']),
             'created_by' => User::factory(),
             'signed_date' => $this->faker->optional()->dateTimeBetween($startDate, 'now'),
-            'notes' => $this->faker->optional()->paragraph(),
+            'signature_status' => $this->faker->randomElement(['pending', 'signed', null]),
         ];
     }
 
@@ -70,9 +69,8 @@ class ContractFactory extends Factory
     public function managedServices(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'managed_services',
+            'contract_type' => 'managed_services',
             'title' => 'Managed Services Agreement',
-            'billing_frequency' => 'monthly',
             'auto_renew' => true,
         ]);
     }

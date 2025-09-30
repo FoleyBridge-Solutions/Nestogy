@@ -2,19 +2,19 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Company;
+use App\Models\CompanyHierarchy;
+use App\Models\CrossCompanyUser;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Company;
-use App\Models\CrossCompanyUser;
-use App\Models\CompanyHierarchy;
 
 /**
  * SubsidiaryAccessMiddleware
- * 
+ *
  * Handles cross-company access validation and company switching
  * for users with multi-company permissions in organizational hierarchies.
  */
@@ -25,7 +25,7 @@ class SubsidiaryAccessMiddleware
      */
     public function handle(Request $request, Closure $next, ...$permissions): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
@@ -33,17 +33,17 @@ class SubsidiaryAccessMiddleware
         $requestedCompanyId = $this->getRequestedCompanyId($request);
 
         // If no specific company is requested, use current context
-        if (!$requestedCompanyId) {
+        if (! $requestedCompanyId) {
             $requestedCompanyId = Session::get('current_company_id', $user->company_id);
         }
 
         // Validate access to the requested company
-        if (!$this->validateCompanyAccess($user, $requestedCompanyId)) {
+        if (! $this->validateCompanyAccess($user, $requestedCompanyId)) {
             Log::warning('SubsidiaryAccessMiddleware: Access denied', [
                 'user_id' => $user->id,
                 'user_company_id' => $user->company_id,
                 'requested_company_id' => $requestedCompanyId,
-                'permissions' => $permissions
+                'permissions' => $permissions,
             ]);
 
             if ($request->expectsJson()) {
@@ -51,7 +51,7 @@ class SubsidiaryAccessMiddleware
             }
 
             return redirect()->back()->withErrors([
-                'company_access' => 'You do not have permission to access this company.'
+                'company_access' => 'You do not have permission to access this company.',
             ]);
         }
 
@@ -59,12 +59,12 @@ class SubsidiaryAccessMiddleware
         $this->setCompanyContext($request, $requestedCompanyId);
 
         // Check specific permissions if provided
-        if (!empty($permissions)) {
-            if (!$this->hasRequiredPermissions($user, $requestedCompanyId, $permissions)) {
+        if (! empty($permissions)) {
+            if (! $this->hasRequiredPermissions($user, $requestedCompanyId, $permissions)) {
                 Log::warning('SubsidiaryAccessMiddleware: Permission denied', [
                     'user_id' => $user->id,
                     'company_id' => $requestedCompanyId,
-                    'required_permissions' => $permissions
+                    'required_permissions' => $permissions,
                 ]);
 
                 if ($request->expectsJson()) {
@@ -72,7 +72,7 @@ class SubsidiaryAccessMiddleware
                 }
 
                 return redirect()->back()->withErrors([
-                    'permissions' => 'You do not have the required permissions for this action.'
+                    'permissions' => 'You do not have the required permissions for this action.',
                 ]);
             }
         }
@@ -120,7 +120,7 @@ class SubsidiaryAccessMiddleware
 
         // Check if company exists
         $company = Company::find($companyId);
-        if (!$company) {
+        if (! $company) {
             return false;
         }
 
@@ -194,10 +194,11 @@ class SubsidiaryAccessMiddleware
         if ($crossCompanyAccess) {
             // Check each required permission
             foreach ($permissions as $permission) {
-                if (!$crossCompanyAccess->hasPermission($permission)) {
+                if (! $crossCompanyAccess->hasPermission($permission)) {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -211,7 +212,7 @@ class SubsidiaryAccessMiddleware
                 $user->id
             );
 
-            if (!$hasPermission) {
+            if (! $hasPermission) {
                 return false;
             }
         }
@@ -224,7 +225,7 @@ class SubsidiaryAccessMiddleware
      */
     protected function logCompanyAccess(int $companyId): void
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return;
         }
 
@@ -253,25 +254,25 @@ class SubsidiaryAccessMiddleware
      */
     public function handleCompanySwitch(Request $request): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json(['error' => 'Authentication required'], 401);
         }
 
         $targetCompanyId = (int) $request->input('company_id');
         $user = Auth::user();
 
-        if (!$this->validateCompanyAccess($user, $targetCompanyId)) {
+        if (! $this->validateCompanyAccess($user, $targetCompanyId)) {
             return response()->json([
                 'error' => 'Access denied to requested company',
-                'company_id' => $targetCompanyId
+                'company_id' => $targetCompanyId,
             ], 403);
         }
 
         // Set new company context
         Session::put('current_company_id', $targetCompanyId);
-        
+
         $company = Company::find($targetCompanyId);
-        
+
         Log::info('Company switched', [
             'user_id' => $user->id,
             'from_company_id' => $user->company_id,
@@ -285,7 +286,7 @@ class SubsidiaryAccessMiddleware
                 'name' => $company->name,
                 'type' => $company->company_type,
             ],
-            'message' => 'Company context switched successfully'
+            'message' => 'Company context switched successfully',
         ]);
     }
 
@@ -294,7 +295,7 @@ class SubsidiaryAccessMiddleware
      */
     public function getAvailableCompanies(): array
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return [];
         }
 
@@ -313,9 +314,9 @@ class SubsidiaryAccessMiddleware
         if ($userSettings && $userSettings->canManageSubsidiaries()) {
             $subsidiaries = CompanyHierarchy::getDescendants($user->company_id)
                 ->pluck('descendant_id')
-                ->map(fn($id) => Company::find($id))
+                ->map(fn ($id) => Company::find($id))
                 ->filter();
-            
+
             $companies = $companies->merge($subsidiaries);
         }
 
@@ -323,9 +324,9 @@ class SubsidiaryAccessMiddleware
         if ($userSettings && $userSettings->isSubsidiaryAdmin()) {
             $parents = CompanyHierarchy::getAncestors($user->company_id)
                 ->pluck('ancestor_id')
-                ->map(fn($id) => Company::find($id))
+                ->map(fn ($id) => Company::find($id))
                 ->filter();
-            
+
             $companies = $companies->merge($parents);
         }
 

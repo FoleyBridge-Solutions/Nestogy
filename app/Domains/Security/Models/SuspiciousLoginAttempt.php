@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 class SuspiciousLoginAttempt extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -48,18 +48,29 @@ class SuspiciousLoginAttempt extends Model
     ];
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_DENIED = 'denied';
+
     const STATUS_EXPIRED = 'expired';
 
     const REASON_NEW_COUNTRY = 'new_country';
+
     const REASON_NEW_REGION = 'new_region';
+
     const REASON_VPN_DETECTED = 'vpn_detected';
+
     const REASON_PROXY_DETECTED = 'proxy_detected';
+
     const REASON_TOR_DETECTED = 'tor_detected';
+
     const REASON_SUSPICIOUS_ISP = 'suspicious_isp';
+
     const REASON_HIGH_RISK_COUNTRY = 'high_risk_country';
+
     const REASON_IMPOSSIBLE_TRAVEL = 'impossible_travel';
+
     const REASON_NEW_DEVICE = 'new_device';
 
     protected static function booted()
@@ -68,7 +79,7 @@ class SuspiciousLoginAttempt extends Model
             if (empty($model->verification_token)) {
                 $model->verification_token = Str::random(64);
             }
-            
+
             if (empty($model->expires_at)) {
                 $model->expires_at = now()->addMinutes(config('security.suspicious_login.token_expiry', 60));
             }
@@ -97,7 +108,7 @@ class SuspiciousLoginAttempt extends Model
 
     public function isPending(): bool
     {
-        return $this->status === self::STATUS_PENDING && !$this->isExpired();
+        return $this->status === self::STATUS_PENDING && ! $this->isExpired();
     }
 
     public function isApproved(): bool
@@ -110,9 +121,9 @@ class SuspiciousLoginAttempt extends Model
         return $this->status === self::STATUS_DENIED;
     }
 
-    public function approve(string $approvalIp = null, string $approvalUserAgent = null): bool
+    public function approve(?string $approvalIp = null, ?string $approvalUserAgent = null): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -120,13 +131,13 @@ class SuspiciousLoginAttempt extends Model
         $this->approved_at = now();
         $this->approval_ip = $approvalIp ?: request()->ip();
         $this->approval_user_agent = $approvalUserAgent ?: request()->userAgent();
-        
+
         return $this->save();
     }
 
-    public function deny(string $approvalIp = null, string $approvalUserAgent = null): bool
+    public function deny(?string $approvalIp = null, ?string $approvalUserAgent = null): bool
     {
-        if (!$this->isPending()) {
+        if (! $this->isPending()) {
             return false;
         }
 
@@ -134,13 +145,13 @@ class SuspiciousLoginAttempt extends Model
         $this->denied_at = now();
         $this->approval_ip = $approvalIp ?: request()->ip();
         $this->approval_user_agent = $approvalUserAgent ?: request()->userAgent();
-        
+
         return $this->save();
     }
 
     public function getLocationString(): string
     {
-        if (!$this->location_data) {
+        if (! $this->location_data) {
             return 'Unknown Location';
         }
 
@@ -155,7 +166,7 @@ class SuspiciousLoginAttempt extends Model
 
     public function getDeviceString(): string
     {
-        if (!$this->device_fingerprint) {
+        if (! $this->device_fingerprint) {
             return 'Unknown Device';
         }
 
@@ -203,7 +214,7 @@ class SuspiciousLoginAttempt extends Model
 
     public function getDetectionReasonsString(): string
     {
-        if (!$this->detection_reasons) {
+        if (! $this->detection_reasons) {
             return 'Unknown reasons';
         }
 
@@ -238,7 +249,7 @@ class SuspiciousLoginAttempt extends Model
     public function scopePending($query)
     {
         return $query->where('status', self::STATUS_PENDING)
-                    ->where('expires_at', '>', now());
+            ->where('expires_at', '>', now());
     }
 
     public function scopeApproved($query)
@@ -255,7 +266,7 @@ class SuspiciousLoginAttempt extends Model
     {
         return $query->where(function ($q) {
             $q->where('status', self::STATUS_PENDING)
-              ->where('expires_at', '<=', now());
+                ->where('expires_at', '<=', now());
         });
     }
 

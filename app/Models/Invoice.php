@@ -2,25 +2,22 @@
 
 namespace App\Models;
 
+use App\Domains\Financial\Services\VoIPTaxService;
+use App\Domains\PhysicalMail\Traits\HasPhysicalMail;
+use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
-use App\Domains\Financial\Services\VoIPTaxService;
-use App\Models\TaxExemption;
-use App\Models\TaxExemptionUsage;
-use App\Models\Recurring;
-use App\Traits\BelongsToCompany;
-use App\Domains\PhysicalMail\Traits\HasPhysicalMail;
 
 /**
  * Invoice Model
- * 
+ *
  * Represents client invoices with line items, payments, and status tracking.
  * Supports multi-currency and public access via URL keys.
- * 
+ *
  * @property int $id
  * @property string|null $prefix
  * @property int $number
@@ -41,7 +38,7 @@ use App\Domains\PhysicalMail\Traits\HasPhysicalMail;
  */
 class Invoice extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasPhysicalMail;
+    use BelongsToCompany, HasFactory, HasPhysicalMail, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -103,9 +100,13 @@ class Invoice extends Model
      * Invoice status enumeration
      */
     const STATUS_DRAFT = 'Draft';
+
     const STATUS_SENT = 'Sent';
+
     const STATUS_PAID = 'Paid';
+
     const STATUS_OVERDUE = 'Overdue';
+
     const STATUS_CANCELLED = 'Cancelled';
 
     /**
@@ -162,7 +163,7 @@ class Invoice extends Model
     public function taxExemptions(): HasMany
     {
         return $this->hasMany(TaxExemption::class, 'client_id', 'client_id')
-                    ->where('company_id', $this->company_id);
+            ->where('company_id', $this->company_id);
     }
 
     /**
@@ -187,9 +188,9 @@ class Invoice extends Model
     public function latestTaxCalculation()
     {
         return $this->taxCalculations()
-                   ->where('status', '!=', 'voided')
-                   ->latest()
-                   ->first();
+            ->where('status', '!=', 'voided')
+            ->latest()
+            ->first();
     }
 
     /**
@@ -198,8 +199,8 @@ class Invoice extends Model
     public function getFormattedTaxBreakdown(): array
     {
         $taxCalculation = $this->latestTaxCalculation();
-        
-        if (!$taxCalculation) {
+
+        if (! $taxCalculation) {
             return [
                 'total_tax' => 0,
                 'jurisdictions' => [],
@@ -226,7 +227,7 @@ class Invoice extends Model
      */
     public function calculateVoIPTaxes(?array $serviceAddress = null): array
     {
-        $taxService = new VoIPTaxService();
+        $taxService = new VoIPTaxService;
         $taxService->setCompanyId($this->company_id);
         $allCalculations = [];
         $totalTaxAmount = 0;
@@ -250,7 +251,7 @@ class Invoice extends Model
                 $totalTaxAmount += $calculation['total_tax_amount'];
 
                 // Record exemption usage if any exemptions were applied
-                if (!empty($calculation['exemptions_applied'])) {
+                if (! empty($calculation['exemptions_applied'])) {
                     $taxService->recordExemptionUsage(
                         $calculation['exemptions_applied'],
                         $this->id
@@ -307,7 +308,7 @@ class Invoice extends Model
     public function getVoIPTaxBreakdown(): array
     {
         $breakdown = [];
-        
+
         foreach ($this->voipItems as $item) {
             if ($item->voip_tax_data) {
                 $breakdown[$item->id] = [
@@ -360,10 +361,10 @@ class Invoice extends Model
     public function getFullNumber(): string
     {
         if ($this->prefix) {
-            return $this->prefix . '-' . str_pad($this->number, 4, '0', STR_PAD_LEFT);
+            return $this->prefix.'-'.str_pad($this->number, 4, '0', STR_PAD_LEFT);
         }
 
-        return 'INV-' . str_pad($this->number, 4, '0', STR_PAD_LEFT);
+        return 'INV-'.str_pad($this->number, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -372,10 +373,10 @@ class Invoice extends Model
     public function isOverdue(): bool
     {
         // If no due_date is set, invoice cannot be overdue
-        if (!$this->due_date) {
+        if (! $this->due_date) {
             return false;
         }
-        
+
         return $this->status !== self::STATUS_PAID &&
                $this->status !== self::STATUS_CANCELLED &&
                Carbon::now()->gt($this->due_date);
@@ -454,12 +455,12 @@ class Invoice extends Model
      */
     public function recalculateVoIPTaxes(?array $serviceAddress = null): void
     {
-        if (!$this->hasVoIPServices()) {
+        if (! $this->hasVoIPServices()) {
             return;
         }
 
         $taxCalculations = $this->calculateVoIPTaxes($serviceAddress);
-        
+
         // Update individual items with new tax calculations
         foreach ($taxCalculations['calculations'] as $calculation) {
             $item = $this->items()->find($calculation['item_id']);
@@ -477,7 +478,7 @@ class Invoice extends Model
         \Log::info('Invoice VoIP taxes recalculated', [
             'invoice_id' => $this->id,
             'total_tax' => $taxCalculations['total_tax_amount'],
-            'items_processed' => count($taxCalculations['calculations'])
+            'items_processed' => count($taxCalculations['calculations']),
         ]);
     }
 
@@ -486,11 +487,11 @@ class Invoice extends Model
      */
     public function getPublicUrl(): string
     {
-        if (!$this->url_key) {
+        if (! $this->url_key) {
             $this->generateUrlKey();
         }
 
-        return url('/invoice/' . $this->url_key);
+        return url('/invoice/'.$this->url_key);
     }
 
     /**
@@ -539,7 +540,8 @@ class Invoice extends Model
     public function formatCurrency(float $amount): string
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($amount, 2);
+
+        return $symbol.number_format($amount, 2);
     }
 
     /**
@@ -565,7 +567,7 @@ class Invoice extends Model
     public function scopeOverdue($query)
     {
         return $query->whereNotIn('status', [self::STATUS_PAID, self::STATUS_CANCELLED])
-                    ->where('due_date', '<', Carbon::now());
+            ->where('due_date', '<', Carbon::now());
     }
 
     /**
@@ -599,7 +601,7 @@ class Invoice extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('number', $search)
-              ->orWhere('note', 'like', '%' . $search . '%');
+                ->orWhere('note', 'like', '%'.$search.'%');
         });
     }
 
@@ -646,7 +648,7 @@ class Invoice extends Model
 
         // Auto-increment invoice number
         static::creating(function ($invoice) {
-            if (!$invoice->number) {
+            if (! $invoice->number) {
                 $lastInvoice = static::where('client_id', $invoice->client_id)
                     ->where('prefix', $invoice->prefix)
                     ->orderBy('number', 'desc')
@@ -656,7 +658,7 @@ class Invoice extends Model
             }
 
             // Generate URL key
-            if (!$invoice->url_key) {
+            if (! $invoice->url_key) {
                 $invoice->url_key = bin2hex(random_bytes(16));
             }
         });
@@ -737,8 +739,8 @@ class Invoice extends Model
     private function getPaymentTerms(): string
     {
         $days = $this->due->diffInDays($this->date);
-        
-        return match($days) {
+
+        return match ($days) {
             0 => 'Due upon receipt',
             30 => 'Net 30',
             60 => 'Net 60',
@@ -746,47 +748,47 @@ class Invoice extends Model
             default => "Net {$days}",
         };
     }
-    
+
     /**
      * Render invoice HTML for physical mail
      */
     public function renderForPhysicalMail(): string
     {
         $html = '<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">';
-        
+
         // Header
         $html .= '<div style="border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px;">';
         $html .= '<h1 style="color: #333; margin: 0;">INVOICE</h1>';
         $html .= '<div style="float: right; text-align: right;">';
-        $html .= '<strong>Invoice #:</strong> ' . $this->getFormattedNumber() . '<br>';
-        $html .= '<strong>Date:</strong> ' . $this->date->format('F j, Y') . '<br>';
-        $html .= '<strong>Due Date:</strong> ' . $this->due->format('F j, Y');
+        $html .= '<strong>Invoice #:</strong> '.$this->getFormattedNumber().'<br>';
+        $html .= '<strong>Date:</strong> '.$this->date->format('F j, Y').'<br>';
+        $html .= '<strong>Due Date:</strong> '.$this->due->format('F j, Y');
         $html .= '</div>';
         $html .= '<div style="clear: both;"></div>';
         $html .= '</div>';
-        
+
         // From and To sections
         $html .= '<div style="margin-bottom: 30px;">';
         $html .= '<div style="width: 48%; float: left;">';
         $html .= '<strong>From:</strong><br>';
-        $html .= config('nestogy.company_name') . '<br>';
-        $html .= config('nestogy.company_address_line1') . '<br>';
-        $html .= config('nestogy.company_city') . ', ' . config('nestogy.company_state') . ' ' . config('nestogy.company_postal_code');
+        $html .= config('nestogy.company_name').'<br>';
+        $html .= config('nestogy.company_address_line1').'<br>';
+        $html .= config('nestogy.company_city').', '.config('nestogy.company_state').' '.config('nestogy.company_postal_code');
         $html .= '</div>';
-        
+
         $html .= '<div style="width: 48%; float: right;">';
         $html .= '<strong>Bill To:</strong><br>';
-        $html .= $this->client->name . '<br>';
+        $html .= $this->client->name.'<br>';
         if ($this->client->address) {
-            $html .= $this->client->address . '<br>';
+            $html .= $this->client->address.'<br>';
         }
         if ($this->client->city) {
-            $html .= $this->client->city . ', ' . $this->client->state . ' ' . $this->client->zip_code;
+            $html .= $this->client->city.', '.$this->client->state.' '.$this->client->zip_code;
         }
         $html .= '</div>';
         $html .= '<div style="clear: both;"></div>';
         $html .= '</div>';
-        
+
         // Line items table
         $html .= '<table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">';
         $html .= '<thead>';
@@ -798,37 +800,37 @@ class Invoice extends Model
         $html .= '</tr>';
         $html .= '</thead>';
         $html .= '<tbody>';
-        
+
         foreach ($this->items as $item) {
             $html .= '<tr>';
-            $html .= '<td style="padding: 10px; border: 1px solid #ddd;">' . $item->description . '</td>';
-            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">' . $item->quantity . '</td>';
-            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$' . number_format($item->price, 2) . '</td>';
-            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$' . number_format($item->quantity * $item->price, 2) . '</td>';
+            $html .= '<td style="padding: 10px; border: 1px solid #ddd;">'.$item->description.'</td>';
+            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">'.$item->quantity.'</td>';
+            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$'.number_format($item->price, 2).'</td>';
+            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$'.number_format($item->quantity * $item->price, 2).'</td>';
             $html .= '</tr>';
         }
-        
+
         // Totals
         $html .= '<tr>';
         $html .= '<td colspan="3" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Subtotal:</strong></td>';
-        $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$' . number_format($this->amount - $this->discount_amount, 2) . '</td>';
+        $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$'.number_format($this->amount - $this->discount_amount, 2).'</td>';
         $html .= '</tr>';
-        
+
         if ($this->discount_amount > 0) {
             $html .= '<tr>';
             $html .= '<td colspan="3" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Discount:</strong></td>';
-            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">-$' . number_format($this->discount_amount, 2) . '</td>';
+            $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd;">-$'.number_format($this->discount_amount, 2).'</td>';
             $html .= '</tr>';
         }
-        
+
         $html .= '<tr style="background-color: #f0f0f0;">';
         $html .= '<td colspan="3" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Total Due:</strong></td>';
-        $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd; font-size: 1.2em;"><strong>$' . number_format($this->amount, 2) . '</strong></td>';
+        $html .= '<td style="padding: 10px; text-align: right; border: 1px solid #ddd; font-size: 1.2em;"><strong>$'.number_format($this->amount, 2).'</strong></td>';
         $html .= '</tr>';
-        
+
         $html .= '</tbody>';
         $html .= '</table>';
-        
+
         // Notes
         if ($this->note) {
             $html .= '<div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-left: 3px solid #333;">';
@@ -836,15 +838,15 @@ class Invoice extends Model
             $html .= nl2br(e($this->note));
             $html .= '</div>';
         }
-        
+
         // Payment terms
         $html .= '<div style="margin-top: 30px; text-align: center; color: #666;">';
-        $html .= '<p><strong>Payment Terms:</strong> ' . $this->getPaymentTerms() . '</p>';
+        $html .= '<p><strong>Payment Terms:</strong> '.$this->getPaymentTerms().'</p>';
         $html .= '<p>Thank you for your business!</p>';
         $html .= '</div>';
-        
+
         $html .= '</div>';
-        
+
         return $html;
     }
 }

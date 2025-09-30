@@ -2,8 +2,8 @@
 
 namespace App\Domains\Asset\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Asset\Models\AssetMaintenance;
+use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\User;
 use App\Models\Vendor;
@@ -19,19 +19,19 @@ class MaintenanceController extends Controller
     public function index(Request $request)
     {
         $query = AssetMaintenance::with(['asset.client', 'technician', 'vendor'])
-            ->whereHas('asset', function($q) {
+            ->whereHas('asset', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('maintenance_type', 'like', "%{$search}%")
-                  ->orWhereHas('asset', function($assetQuery) use ($search) {
-                      $assetQuery->where('name', 'like', "%{$search}%")
-                                 ->orWhere('serial', 'like', "%{$search}%");
-                  });
+                    ->orWhere('maintenance_type', 'like', "%{$search}%")
+                    ->orWhereHas('asset', function ($assetQuery) use ($search) {
+                        $assetQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('serial', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -59,16 +59,16 @@ class MaintenanceController extends Controller
         }
 
         $maintenance = $query->orderBy('scheduled_date', 'desc')
-                           ->paginate(20)
-                           ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $assets = Asset::where('company_id', auth()->user()->company_id)
-                      ->orderBy('name')
-                      ->get();
+            ->orderBy('name')
+            ->get();
 
         $vendors = Vendor::where('company_id', auth()->user()->company_id)
-                         ->orderBy('name')
-                         ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('assets.maintenance.index', compact('maintenance', 'assets', 'vendors'));
     }
@@ -79,17 +79,17 @@ class MaintenanceController extends Controller
     public function create(Request $request)
     {
         $assets = Asset::where('company_id', auth()->user()->company_id)
-                      ->orderBy('name')
-                      ->get();
+            ->orderBy('name')
+            ->get();
 
         $technicians = User::where('company_id', auth()->user()->company_id)
-                          ->where('role', '!=', 'client')
-                          ->orderBy('name')
-                          ->get();
+            ->where('role', '!=', 'client')
+            ->orderBy('name')
+            ->get();
 
         $vendors = Vendor::where('company_id', auth()->user()->company_id)
-                         ->orderBy('name')
-                         ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedAssetId = $request->get('asset_id');
 
@@ -134,8 +134,8 @@ class MaintenanceController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $maintenance = new AssetMaintenance($request->all());
@@ -143,7 +143,7 @@ class MaintenanceController extends Controller
         $maintenance->save();
 
         return redirect()->route('assets.maintenance.index')
-                        ->with('success', 'Maintenance record created successfully.');
+            ->with('success', 'Maintenance record created successfully.');
     }
 
     /**
@@ -166,17 +166,17 @@ class MaintenanceController extends Controller
         $this->authorize('update', $maintenance);
 
         $assets = Asset::where('company_id', auth()->user()->company_id)
-                      ->orderBy('name')
-                      ->get();
+            ->orderBy('name')
+            ->get();
 
         $technicians = User::where('company_id', auth()->user()->company_id)
-                          ->where('role', '!=', 'client')
-                          ->orderBy('name')
-                          ->get();
+            ->where('role', '!=', 'client')
+            ->orderBy('name')
+            ->get();
 
         $vendors = Vendor::where('company_id', auth()->user()->company_id)
-                         ->orderBy('name')
-                         ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('assets.maintenance.edit', compact('maintenance', 'assets', 'technicians', 'vendors'));
     }
@@ -221,15 +221,15 @@ class MaintenanceController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $maintenance->fill($request->all());
         $maintenance->save();
 
         return redirect()->route('assets.maintenance.index')
-                        ->with('success', 'Maintenance record updated successfully.');
+            ->with('success', 'Maintenance record updated successfully.');
     }
 
     /**
@@ -242,7 +242,7 @@ class MaintenanceController extends Controller
         $maintenance->delete();
 
         return redirect()->route('assets.maintenance.index')
-                        ->with('success', 'Maintenance record deleted successfully.');
+            ->with('success', 'Maintenance record deleted successfully.');
     }
 
     /**
@@ -251,15 +251,15 @@ class MaintenanceController extends Controller
     public function export(Request $request)
     {
         $query = AssetMaintenance::with(['asset.client', 'technician', 'vendor'])
-            ->whereHas('asset', function($q) {
+            ->whereHas('asset', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('maintenance_type', 'like', "%{$search}%");
+                    ->orWhere('maintenance_type', 'like', "%{$search}%");
             });
         }
 
@@ -277,16 +277,16 @@ class MaintenanceController extends Controller
 
         $maintenance = $query->orderBy('scheduled_date', 'desc')->get();
 
-        $filename = 'asset_maintenance_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'asset_maintenance_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($maintenance) {
+        $callback = function () use ($maintenance) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Asset Name',
@@ -300,7 +300,7 @@ class MaintenanceController extends Controller
                 'Cost',
                 'Status',
                 'Description',
-                'Next Maintenance'
+                'Next Maintenance',
             ]);
 
             // CSV data
@@ -314,13 +314,13 @@ class MaintenanceController extends Controller
                     $record->completed_date?->format('Y-m-d'),
                     $record->technician->name ?? '',
                     $record->vendor->name ?? '',
-                    $record->cost ? '$' . number_format($record->cost, 2) : '',
+                    $record->cost ? '$'.number_format($record->cost, 2) : '',
                     ucfirst($record->status),
                     $record->description,
                     $record->next_maintenance_date?->format('Y-m-d'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -340,7 +340,7 @@ class MaintenanceController extends Controller
         ]);
 
         return redirect()->back()
-                        ->with('success', 'Maintenance marked as completed.');
+            ->with('success', 'Maintenance marked as completed.');
     }
 
     /**
@@ -369,6 +369,6 @@ class MaintenanceController extends Controller
         ]);
 
         return redirect()->back()
-                        ->with('success', 'Next maintenance scheduled successfully.');
+            ->with('success', 'Next maintenance scheduled successfully.');
     }
 }

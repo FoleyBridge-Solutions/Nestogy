@@ -2,19 +2,19 @@
 
 namespace App\Domains\Core\Controllers\Settings;
 
+use App\Domains\Core\Services\Settings\CommunicationSettingsService;
+use App\Domains\Core\Services\Settings\CompanySettingsService;
+use App\Domains\Core\Services\Settings\FinancialSettingsService;
 use App\Http\Controllers\Controller;
 use App\Models\SettingsConfiguration;
-use App\Domains\Core\Services\Settings\CompanySettingsService;
-use App\Domains\Core\Services\Settings\CommunicationSettingsService;
-use App\Domains\Core\Services\Settings\FinancialSettingsService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UnifiedSettingsController extends Controller
 {
     protected array $services = [];
-    
+
     public function __construct()
     {
         // Initialize domain services
@@ -31,7 +31,7 @@ class UnifiedSettingsController extends Controller
     public function index()
     {
         $domains = SettingsConfiguration::getDomains();
-        
+
         // Get settings summary for each domain
         $summary = [];
         foreach ($domains as $domain => $info) {
@@ -41,7 +41,7 @@ class UnifiedSettingsController extends Controller
                 'last_updated' => $this->getLastUpdated($domain),
             ];
         }
-        
+
         return view('settings.unified.index', compact('domains', 'summary'));
     }
 
@@ -51,14 +51,14 @@ class UnifiedSettingsController extends Controller
     public function showDomain(string $domain)
     {
         $domains = SettingsConfiguration::getDomains();
-        
-        if (!isset($domains[$domain])) {
+
+        if (! isset($domains[$domain])) {
             abort(404, 'Settings domain not found');
         }
-        
+
         $domainInfo = $domains[$domain];
         $categories = [];
-        
+
         // Get settings for each category
         foreach ($domainInfo['categories'] as $category) {
             if (isset($this->services[$domain])) {
@@ -70,7 +70,7 @@ class UnifiedSettingsController extends Controller
                 ];
             }
         }
-        
+
         return view('settings.unified.domain', compact('domain', 'domainInfo', 'categories'));
     }
 
@@ -79,22 +79,22 @@ class UnifiedSettingsController extends Controller
      */
     public function showCategory(string $domain, string $category)
     {
-        if (!isset($this->services[$domain])) {
+        if (! isset($this->services[$domain])) {
             abort(404, 'Settings domain not found');
         }
-        
+
         $service = $this->services[$domain];
         $settings = $service->getSettings($category);
         $metadata = $service->getCategoryMetadata($category);
         $defaults = $service->getDefaultSettings($category);
-        
+
         // If no settings exist, use defaults
         if (empty($settings)) {
             $settings = $defaults;
         }
-        
+
         $domainInfo = SettingsConfiguration::getDomains()[$domain];
-        
+
         return view('settings.unified.category', compact(
             'domain',
             'domainInfo',
@@ -110,31 +110,32 @@ class UnifiedSettingsController extends Controller
      */
     public function updateCategory(Request $request, string $domain, string $category)
     {
-        if (!isset($this->services[$domain])) {
+        if (! isset($this->services[$domain])) {
             return back()->with('error', 'Settings domain not found');
         }
-        
+
         try {
             DB::beginTransaction();
-            
+
             $service = $this->services[$domain];
             $service->saveSettings($category, $request->all());
-            
+
             DB::commit();
-            
+
             Log::info('Settings updated', [
                 'domain' => $domain,
                 'category' => $category,
                 'company_id' => auth()->user()->company_id,
                 'user_id' => auth()->id(),
             ]);
-            
+
             return back()->with('success', 'Settings updated successfully');
-            
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
+
             return back()->withErrors($e->validator)->withInput();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to update settings', [
@@ -142,8 +143,8 @@ class UnifiedSettingsController extends Controller
                 'category' => $category,
                 'error' => $e->getMessage(),
             ]);
-            
-            return back()->with('error', 'Failed to update settings: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to update settings: '.$e->getMessage());
         }
     }
 
@@ -152,29 +153,29 @@ class UnifiedSettingsController extends Controller
      */
     public function testCategory(Request $request, string $domain, string $category)
     {
-        if (!isset($this->services[$domain])) {
+        if (! isset($this->services[$domain])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Settings domain not found',
             ], 404);
         }
-        
+
         try {
             $service = $this->services[$domain];
             $result = $service->testConfiguration($category, $request->all());
-            
+
             return response()->json($result);
-            
+
         } catch (\Exception $e) {
             Log::error('Configuration test failed', [
                 'domain' => $domain,
                 'category' => $category,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'Test failed: ' . $e->getMessage(),
+                'message' => 'Test failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -186,13 +187,13 @@ class UnifiedSettingsController extends Controller
     {
         $companyId = auth()->user()->company_id;
         $settings = SettingsConfiguration::where('company_id', $companyId)->get();
-        
+
         $export = [
             'company_id' => $companyId,
             'exported_at' => now()->toIso8601String(),
             'settings' => [],
         ];
-        
+
         foreach ($settings as $setting) {
             $export['settings'][] = [
                 'domain' => $setting->domain,
@@ -201,9 +202,9 @@ class UnifiedSettingsController extends Controller
                 'metadata' => $setting->metadata,
             ];
         }
-        
+
         return response()->json($export)
-            ->header('Content-Disposition', 'attachment; filename="settings-export-' . date('Y-m-d') . '.json"');
+            ->header('Content-Disposition', 'attachment; filename="settings-export-'.date('Y-m-d').'.json"');
     }
 
     /**
@@ -214,18 +215,18 @@ class UnifiedSettingsController extends Controller
         $request->validate([
             'file' => 'required|file|mimes:json|max:2048',
         ]);
-        
+
         try {
             $content = json_decode($request->file('file')->get(), true);
-            
-            if (!isset($content['settings'])) {
+
+            if (! isset($content['settings'])) {
                 return back()->with('error', 'Invalid settings file format');
             }
-            
+
             DB::beginTransaction();
-            
+
             $companyId = auth()->user()->company_id;
-            
+
             foreach ($content['settings'] as $item) {
                 SettingsConfiguration::updateOrCreate(
                     [
@@ -241,18 +242,18 @@ class UnifiedSettingsController extends Controller
                     ]
                 );
             }
-            
+
             DB::commit();
-            
+
             return back()->with('success', 'Settings imported successfully');
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Settings import failed', [
                 'error' => $e->getMessage(),
             ]);
-            
-            return back()->with('error', 'Failed to import settings: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to import settings: '.$e->getMessage());
         }
     }
 
@@ -261,25 +262,25 @@ class UnifiedSettingsController extends Controller
      */
     public function resetToDefaults(string $domain, string $category)
     {
-        if (!isset($this->services[$domain])) {
+        if (! isset($this->services[$domain])) {
             return back()->with('error', 'Settings domain not found');
         }
-        
+
         try {
             $service = $this->services[$domain];
             $defaults = $service->getDefaultSettings($category);
             $service->saveSettings($category, $defaults);
-            
+
             return back()->with('success', 'Settings reset to defaults');
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to reset settings', [
                 'domain' => $domain,
                 'category' => $category,
                 'error' => $e->getMessage(),
             ]);
-            
-            return back()->with('error', 'Failed to reset settings: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to reset settings: '.$e->getMessage());
         }
     }
 
@@ -302,91 +303,99 @@ class UnifiedSettingsController extends Controller
             ->where('domain', $domain)
             ->latest('updated_at')
             ->first();
-        
+
         return $latest ? $latest->updated_at->diffForHumans() : null;
     }
-    
+
     /**
      * API Methods for backward compatibility
      */
-    
     public function update(Request $request)
     {
         // Delegate to updateCategory based on the request data
         return response()->json(['message' => 'Settings updated successfully']);
     }
-    
+
     public function company()
     {
-        $service = new CompanySettingsService();
+        $service = new CompanySettingsService;
+
         return response()->json($service->getSettings('general'));
     }
-    
+
     public function updateCompany(Request $request)
     {
-        $service = new CompanySettingsService();
+        $service = new CompanySettingsService;
         $service->updateSettings('general', $request->all());
+
         return response()->json(['message' => 'Company settings updated']);
     }
-    
+
     public function email()
     {
-        $service = new CommunicationSettingsService();
+        $service = new CommunicationSettingsService;
+
         return response()->json($service->getSettings('email'));
     }
-    
+
     public function updateEmail(Request $request)
     {
-        $service = new CommunicationSettingsService();
+        $service = new CommunicationSettingsService;
         $service->updateSettings('email', $request->all());
+
         return response()->json(['message' => 'Email settings updated']);
     }
-    
+
     public function testEmail(Request $request)
     {
-        $service = new CommunicationSettingsService();
+        $service = new CommunicationSettingsService;
         try {
             $service->testEmailSettings($request->all());
+
             return response()->json(['success' => true, 'message' => 'Test email sent successfully']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }
-    
+
     public function integrations()
     {
         $service = $this->getServiceForDomain('integrations');
+
         return response()->json($service->getSettings('overview'));
     }
-    
+
     public function updateIntegrations(Request $request)
     {
         $service = $this->getServiceForDomain('integrations');
         $service->updateSettings('overview', $request->all());
+
         return response()->json(['message' => 'Integration settings updated']);
     }
-    
+
     public function createBackup()
     {
         // Implement backup functionality
         return response()->json(['message' => 'Backup created successfully']);
     }
-    
+
     public function logs()
     {
         // Return system logs
         return response()->json(['logs' => []]);
     }
-    
+
     public function billingDefaults()
     {
-        $service = new FinancialSettingsService();
+        $service = new FinancialSettingsService;
+
         return response()->json($service->getSettings('billing'));
     }
-    
+
     public function taxSettings()
     {
-        $service = new FinancialSettingsService();
+        $service = new FinancialSettingsService;
+
         return response()->json($service->getSettings('tax'));
     }
 }

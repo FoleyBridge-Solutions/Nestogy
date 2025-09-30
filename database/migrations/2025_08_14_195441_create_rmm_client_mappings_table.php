@@ -27,11 +27,11 @@ return new class extends Migration
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->foreign('integration_id')->references('id')->on('rmm_integrations')->onDelete('cascade');
-            
+
             // Ensure unique mapping per integration
             $table->unique(['integration_id', 'client_id'], 'unique_integration_client_mapping');
             $table->unique(['integration_id', 'rmm_client_id'], 'unique_integration_rmm_client_mapping');
-            
+
             // Index for company scoping
             $table->index(['company_id', 'is_active']);
         });

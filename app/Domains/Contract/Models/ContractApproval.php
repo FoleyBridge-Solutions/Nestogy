@@ -2,18 +2,18 @@
 
 namespace App\Domains\Contract\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * ContractApproval Model
- * 
+ *
  * Manages contract approval workflow tracking with multi-level approvals,
  * role-based routing, escalation, and comprehensive audit trails.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property int $contract_id
@@ -80,19 +80,30 @@ class ContractApproval extends Model
 
     // Status constants
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_CHANGES_REQUESTED = 'changes_requested';
+
     const STATUS_ESCALATED = 'escalated';
+
     const STATUS_EXPIRED = 'expired';
 
     // Approval level constants
     const LEVEL_MANAGER = 'manager';
+
     const LEVEL_DIRECTOR = 'director';
+
     const LEVEL_EXECUTIVE = 'executive';
+
     const LEVEL_LEGAL = 'legal';
+
     const LEVEL_FINANCE = 'finance';
+
     const LEVEL_TECHNICAL = 'technical';
+
     const LEVEL_ESCALATED = 'escalated';
 
     /**
@@ -149,14 +160,14 @@ class ContractApproval extends Model
     public function scopeOverdue($query)
     {
         return $query->where('status', self::STATUS_PENDING)
-                    ->where('required_by', '<', now());
+            ->where('required_by', '<', now());
     }
 
     public function scopeForUser($query, User $user)
     {
         return $query->where(function ($q) use ($user) {
             $q->where('approver_user_id', $user->id)
-              ->orWhere('approver_role', $user->role);
+                ->orWhere('approver_role', $user->role);
         });
     }
 
@@ -175,7 +186,7 @@ class ContractApproval extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'Pending Approval',
             self::STATUS_APPROVED => 'Approved',
             self::STATUS_REJECTED => 'Rejected',
@@ -188,7 +199,7 @@ class ContractApproval extends Model
 
     public function getApprovalLevelLabelAttribute(): string
     {
-        return match($this->approval_level) {
+        return match ($this->approval_level) {
             self::LEVEL_MANAGER => 'Manager Approval',
             self::LEVEL_DIRECTOR => 'Director Approval',
             self::LEVEL_EXECUTIVE => 'Executive Approval',
@@ -202,25 +213,25 @@ class ContractApproval extends Model
 
     public function getIsOverdueAttribute(): bool
     {
-        return $this->status === self::STATUS_PENDING && 
-               $this->required_by && 
+        return $this->status === self::STATUS_PENDING &&
+               $this->required_by &&
                $this->required_by->isPast();
     }
 
     public function getApprovalTimeAttribute(): ?int
     {
-        if (!$this->submitted_at) {
+        if (! $this->submitted_at) {
             return null;
         }
 
         $completedAt = $this->approved_at ?? $this->rejected_at ?? $this->requested_at;
-        
+
         return $completedAt ? $this->submitted_at->diffInHours($completedAt) : null;
     }
 
     public function getDaysUntilDueAttribute(): ?int
     {
-        if (!$this->required_by || $this->status !== self::STATUS_PENDING) {
+        if (! $this->required_by || $this->status !== self::STATUS_PENDING) {
             return null;
         }
 
@@ -240,16 +251,16 @@ class ContractApproval extends Model
             return false;
         }
 
-        return $this->approver_user_id === $user->id || 
+        return $this->approver_user_id === $user->id ||
                $this->approver_role === $user->role;
     }
 
     /**
      * Mark approval as approved
      */
-    public function approve(string $comments = null, array $conditions = []): bool
+    public function approve(?string $comments = null, array $conditions = []): bool
     {
-        if (!$this->canBeApproved()) {
+        if (! $this->canBeApproved()) {
             return false;
         }
 
@@ -268,9 +279,9 @@ class ContractApproval extends Model
     /**
      * Mark approval as rejected
      */
-    public function reject(string $comments = null): bool
+    public function reject(?string $comments = null): bool
     {
-        if (!$this->canBeRejected()) {
+        if (! $this->canBeRejected()) {
             return false;
         }
 
@@ -288,9 +299,9 @@ class ContractApproval extends Model
     /**
      * Request changes to contract
      */
-    public function requestChanges(string $comments = null, array $conditions = []): bool
+    public function requestChanges(?string $comments = null, array $conditions = []): bool
     {
-        if (!$this->canRequestChanges()) {
+        if (! $this->canRequestChanges()) {
             return false;
         }
 
@@ -309,9 +320,9 @@ class ContractApproval extends Model
     /**
      * Escalate approval to higher level
      */
-    public function escalate(int $escalatedToUserId, string $comments = null): bool
+    public function escalate(int $escalatedToUserId, ?string $comments = null): bool
     {
-        if (!$this->canBeEscalated()) {
+        if (! $this->canBeEscalated()) {
             return false;
         }
 
@@ -426,7 +437,7 @@ class ContractApproval extends Model
     /**
      * Get approval workflow statistics
      */
-    public static function getWorkflowStatistics(int $companyId, Carbon $startDate = null, Carbon $endDate = null): array
+    public static function getWorkflowStatistics(int $companyId, ?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
         $query = static::where('company_id', $companyId);
 
@@ -475,7 +486,7 @@ class ContractApproval extends Model
     /**
      * Log approval actions for audit trail
      */
-    protected function logApprovalAction(string $action, string $comments = null): void
+    protected function logApprovalAction(string $action, ?string $comments = null): void
     {
         $metadata = $this->metadata ?? [];
         $metadata['audit_trail'][] = [
@@ -496,7 +507,7 @@ class ContractApproval extends Model
         parent::boot();
 
         static::creating(function ($approval) {
-            if (!$approval->company_id && auth()->user()) {
+            if (! $approval->company_id && auth()->user()) {
                 $approval->company_id = auth()->user()->company_id;
             }
         });

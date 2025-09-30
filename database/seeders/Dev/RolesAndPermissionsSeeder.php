@@ -4,7 +4,6 @@ namespace Database\Seeders\Dev;
 
 use Illuminate\Database\Seeder;
 use Silber\Bouncer\BouncerFacade as Bouncer;
-use App\Models\Company;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -20,10 +19,10 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Create abilities (permissions)
         $this->createAbilities();
-        
+
         // Create roles
         $this->createRoles();
-        
+
         // Assign abilities to roles
         $this->assignAbilitiesToRoles();
 
@@ -44,14 +43,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'clients.create' => 'Create clients',
             'clients.edit' => 'Edit clients',
             'clients.delete' => 'Delete clients',
-            
+
             // Asset management
             'assets.*' => 'Full asset management access',
             'assets.view' => 'View assets',
             'assets.create' => 'Create assets',
             'assets.edit' => 'Edit assets',
             'assets.delete' => 'Delete assets',
-            
+
             // Ticket management
             'tickets.*' => 'Full ticket management access',
             'tickets.view' => 'View tickets',
@@ -60,7 +59,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'tickets.delete' => 'Delete tickets',
             'tickets.assign' => 'Assign tickets',
             'tickets.close' => 'Close tickets',
-            
+
             // Financial management
             'financial.*' => 'Full financial management access',
             'financial.view' => 'View financial data',
@@ -74,7 +73,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'financial.expenses.create' => 'Create expenses',
             'financial.expenses.approve' => 'Approve expenses',
             'financial.reports' => 'View financial reports',
-            
+
             // Contract management
             'contracts.*' => 'Full contract management access',
             'contracts.view' => 'View contracts',
@@ -82,7 +81,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'contracts.edit' => 'Edit contracts',
             'contracts.delete' => 'Delete contracts',
             'contracts.approve' => 'Approve contracts',
-            
+
             // Project management
             'projects.*' => 'Full project management access',
             'projects.view' => 'View projects',
@@ -90,7 +89,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'projects.edit' => 'Edit projects',
             'projects.delete' => 'Delete projects',
             'projects.manage' => 'Manage project tasks',
-            
+
             // Lead management
             'leads.*' => 'Full lead management access',
             'leads.view' => 'View leads',
@@ -98,26 +97,26 @@ class RolesAndPermissionsSeeder extends Seeder
             'leads.edit' => 'Edit leads',
             'leads.delete' => 'Delete leads',
             'leads.convert' => 'Convert leads to clients',
-            
+
             // Marketing
             'marketing.*' => 'Full marketing access',
             'marketing.campaigns' => 'Manage marketing campaigns',
             'marketing.emails' => 'Send marketing emails',
             'marketing.analytics' => 'View marketing analytics',
-            
+
             // Knowledge Base
             'knowledge.*' => 'Full knowledge base access',
             'knowledge.view' => 'View knowledge base',
             'knowledge.create' => 'Create KB articles',
             'knowledge.edit' => 'Edit KB articles',
             'knowledge.delete' => 'Delete KB articles',
-            
+
             // Reports
             'reports.*' => 'Full reports access',
             'reports.view' => 'View reports',
             'reports.create' => 'Create custom reports',
             'reports.export' => 'Export reports',
-            
+
             // User management
             'users.*' => 'Full user management access',
             'users.view' => 'View users',
@@ -125,14 +124,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'users.edit' => 'Edit users',
             'users.delete' => 'Delete users',
             'users.roles' => 'Manage user roles',
-            
+
             // Settings
             'settings.*' => 'Full settings access',
             'settings.view' => 'View settings',
             'settings.edit' => 'Edit settings',
             'settings.company' => 'Manage company settings',
             'settings.integrations' => 'Manage integrations',
-            
+
             // System administration
             'system.*' => 'Full system administration',
             'system.backup' => 'Manage backups',

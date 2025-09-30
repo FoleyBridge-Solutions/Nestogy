@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientService extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -142,7 +142,7 @@ class ClientService extends Model
     public function scopeEndingSoon($query, $days = 30)
     {
         return $query->whereNotNull('end_date')
-                    ->whereBetween('end_date', [now(), now()->addDays($days)]);
+            ->whereBetween('end_date', [now(), now()->addDays($days)]);
     }
 
     /**
@@ -151,7 +151,7 @@ class ClientService extends Model
     public function scopeDueForRenewal($query, $days = 30)
     {
         return $query->whereNotNull('renewal_date')
-                    ->whereBetween('renewal_date', [now(), now()->addDays($days)]);
+            ->whereBetween('renewal_date', [now(), now()->addDays($days)]);
     }
 
     /**
@@ -159,9 +159,9 @@ class ClientService extends Model
      */
     public function scopeNeedingReview($query)
     {
-        return $query->where(function($q) {
+        return $query->where(function ($q) {
             $q->whereNull('next_review_date')
-              ->orWhere('next_review_date', '<=', now());
+                ->orWhere('next_review_date', '<=', now());
         });
     }
 
@@ -178,8 +178,8 @@ class ClientService extends Model
      */
     public function isEndingSoon($days = 30)
     {
-        return $this->end_date && 
-               $this->end_date->isFuture() && 
+        return $this->end_date &&
+               $this->end_date->isFuture() &&
                $this->end_date->diffInDays(now()) <= $days;
     }
 
@@ -188,8 +188,8 @@ class ClientService extends Model
      */
     public function isDueForRenewal($days = 30)
     {
-        return $this->renewal_date && 
-               $this->renewal_date->isFuture() && 
+        return $this->renewal_date &&
+               $this->renewal_date->isFuture() &&
                $this->renewal_date->diffInDays(now()) <= $days;
     }
 
@@ -198,7 +198,7 @@ class ClientService extends Model
      */
     public function needsReview()
     {
-        return !$this->next_review_date || $this->next_review_date->isPast();
+        return ! $this->next_review_date || $this->next_review_date->isPast();
     }
 
     /**
@@ -248,11 +248,11 @@ class ClientService extends Model
      */
     public function getAnnualRevenueAttribute()
     {
-        if (!$this->monthly_cost) {
+        if (! $this->monthly_cost) {
             return 0;
         }
 
-        $multiplier = match($this->billing_cycle) {
+        $multiplier = match ($this->billing_cycle) {
             'weekly' => 52,
             'monthly' => 12,
             'quarterly' => 4,
@@ -269,7 +269,7 @@ class ClientService extends Model
      */
     public function getRemainingValueAttribute()
     {
-        if (!$this->end_date || !$this->monthly_cost) {
+        if (! $this->end_date || ! $this->monthly_cost) {
             return 0;
         }
 

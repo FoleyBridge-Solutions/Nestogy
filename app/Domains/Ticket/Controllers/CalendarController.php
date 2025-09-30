@@ -2,18 +2,18 @@
 
 namespace App\Domains\Ticket\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Domains\Ticket\Models\TicketCalendarEvent;
 use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Ticket\Models\TicketCalendarEvent;
+use App\Http\Controllers\Controller;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Carbon\Carbon;
 
 /**
  * Calendar Controller
- * 
+ *
  * Manages ticket calendar events with scheduling, conflict detection,
  * recurring events, and comprehensive calendar views following the domain architecture pattern.
  */
@@ -26,9 +26,9 @@ class CalendarController extends Controller
     {
         $view = $request->get('view', 'month'); // month, week, day
         $date = $request->get('date', now()->toDateString());
-        
+
         $currentDate = Carbon::parse($date);
-        
+
         // Calculate date range based on view
         switch ($view) {
             case 'week':
@@ -47,7 +47,7 @@ class CalendarController extends Controller
         }
 
         $query = TicketCalendarEvent::where('company_id', auth()->user()->company_id)
-                                   ->whereBetween('starts_at', [$startDate, $endDate]);
+            ->whereBetween('starts_at', [$startDate, $endDate]);
 
         // Apply filters
         if ($userId = $request->get('user_id')) {
@@ -63,14 +63,14 @@ class CalendarController extends Controller
         }
 
         $events = $query->with(['ticket.client', 'assignee', 'createdBy'])
-                       ->orderBy('starts_at')
-                       ->get();
+            ->orderBy('starts_at')
+            ->get();
 
         // Get filter options
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('status', 'active')
-                    ->orderBy('name')
-                    ->get();
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
 
         $eventTypes = ['meeting', 'maintenance', 'deployment', 'review', 'training', 'other'];
         $eventStatuses = ['scheduled', 'in_progress', 'completed', 'cancelled'];
@@ -91,7 +91,7 @@ class CalendarController extends Controller
         }
 
         return view('tickets.calendar.index', compact(
-            'events', 'view', 'currentDate', 'startDate', 'endDate', 
+            'events', 'view', 'currentDate', 'startDate', 'endDate',
             'users', 'eventTypes', 'eventStatuses'
         ));
     }
@@ -102,15 +102,15 @@ class CalendarController extends Controller
     public function create(Request $request)
     {
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('status', 'active')
-                    ->orderBy('name')
-                    ->get();
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
 
         $tickets = Ticket::where('company_id', auth()->user()->company_id)
-                        ->where('status', '!=', 'closed')
-                        ->with('client')
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+            ->where('status', '!=', 'closed')
+            ->with('client')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $eventTypes = ['meeting', 'maintenance', 'deployment', 'review', 'training', 'other'];
 
@@ -160,8 +160,8 @@ class CalendarController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Check for conflicts
@@ -171,11 +171,11 @@ class CalendarController extends Controller
             $request->ends_at
         );
 
-        if ($conflicts->isNotEmpty() && !$request->boolean('ignore_conflicts')) {
+        if ($conflicts->isNotEmpty() && ! $request->boolean('ignore_conflicts')) {
             return redirect()->back()
-                           ->withErrors(['conflicts' => 'This event conflicts with existing events'])
-                           ->withInput()
-                           ->with('conflicts', $conflicts);
+                ->withErrors(['conflicts' => 'This event conflicts with existing events'])
+                ->withInput()
+                ->with('conflicts', $conflicts);
         }
 
         $event = TicketCalendarEvent::create([
@@ -213,12 +213,12 @@ class CalendarController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Event created successfully',
-                'event' => $event->load(['ticket.client', 'assignee'])
+                'event' => $event->load(['ticket.client', 'assignee']),
             ], 201);
         }
 
         return redirect()->route('tickets.calendar.index')
-                        ->with('success', 'Event "' . $event->title . '" created successfully.');
+            ->with('success', 'Event "'.$event->title.'" created successfully.');
     }
 
     /**
@@ -249,15 +249,15 @@ class CalendarController extends Controller
         $this->authorize('update', $event);
 
         $users = User::where('company_id', auth()->user()->company_id)
-                    ->where('status', 'active')
-                    ->orderBy('name')
-                    ->get();
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
 
         $tickets = Ticket::where('company_id', auth()->user()->company_id)
-                        ->where('status', '!=', 'closed')
-                        ->with('client')
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+            ->where('status', '!=', 'closed')
+            ->with('client')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $eventTypes = ['meeting', 'maintenance', 'deployment', 'review', 'training', 'other'];
 
@@ -301,15 +301,15 @@ class CalendarController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Check for conflicts if time or assignee changed
         $timeChanged = $event->starts_at != $request->starts_at || $event->ends_at != $request->ends_at;
         $assigneeChanged = $event->assigned_to != $request->assigned_to;
-        
-        if (($timeChanged || $assigneeChanged) && !$request->boolean('ignore_conflicts')) {
+
+        if (($timeChanged || $assigneeChanged) && ! $request->boolean('ignore_conflicts')) {
             $conflicts = $this->checkForConflicts(
                 $request->assigned_to ?: $event->assigned_to,
                 $request->starts_at,
@@ -319,9 +319,9 @@ class CalendarController extends Controller
 
             if ($conflicts->isNotEmpty()) {
                 return redirect()->back()
-                               ->withErrors(['conflicts' => 'This event conflicts with existing events'])
-                               ->withInput()
-                               ->with('conflicts', $conflicts);
+                    ->withErrors(['conflicts' => 'This event conflicts with existing events'])
+                    ->withInput()
+                    ->with('conflicts', $conflicts);
             }
         }
 
@@ -336,7 +336,7 @@ class CalendarController extends Controller
             'location',
             'status',
             'attendees',
-            'reminder_minutes'
+            'reminder_minutes',
         ]) + [
             'is_all_day' => $request->boolean('is_all_day'),
         ]);
@@ -345,12 +345,12 @@ class CalendarController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Event updated successfully',
-                'event' => $event->load(['ticket.client', 'assignee'])
+                'event' => $event->load(['ticket.client', 'assignee']),
             ]);
         }
 
         return redirect()->route('tickets.calendar.index')
-                        ->with('success', 'Event "' . $event->title . '" updated successfully.');
+            ->with('success', 'Event "'.$event->title.'" updated successfully.');
     }
 
     /**
@@ -366,12 +366,12 @@ class CalendarController extends Controller
         if (request()->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Event deleted successfully'
+                'message' => 'Event deleted successfully',
             ]);
         }
 
         return redirect()->route('tickets.calendar.index')
-                        ->with('success', 'Event "' . $eventTitle . '" deleted successfully.');
+            ->with('success', 'Event "'.$eventTitle.'" deleted successfully.');
     }
 
     /**
@@ -389,7 +389,7 @@ class CalendarController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -403,7 +403,7 @@ class CalendarController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Event status updated successfully',
-            'event' => $event->fresh()
+            'event' => $event->fresh(),
         ]);
     }
 
@@ -422,7 +422,7 @@ class CalendarController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -438,7 +438,7 @@ class CalendarController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot move event due to conflicts',
-                'conflicts' => $conflicts
+                'conflicts' => $conflicts,
             ], 422);
         }
 
@@ -450,7 +450,7 @@ class CalendarController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Event moved successfully',
-            'event' => $event->fresh()
+            'event' => $event->fresh(),
         ]);
     }
 
@@ -467,14 +467,14 @@ class CalendarController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $events = TicketCalendarEvent::where('company_id', auth()->user()->company_id)
-                                    ->whereBetween('starts_at', [$request->start, $request->end])
-                                    ->with(['ticket.client', 'assignee'])
-                                    ->get();
+            ->whereBetween('starts_at', [$request->start, $request->end])
+            ->with(['ticket.client', 'assignee'])
+            ->get();
 
         return response()->json($events);
     }
@@ -493,7 +493,7 @@ class CalendarController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -505,7 +505,7 @@ class CalendarController extends Controller
 
         return response()->json([
             'available' => $conflicts->isEmpty(),
-            'conflicts' => $conflicts
+            'conflicts' => $conflicts,
         ]);
     }
 
@@ -518,9 +518,9 @@ class CalendarController extends Controller
         $endDate = $request->get('end', now()->endOfMonth());
 
         $events = TicketCalendarEvent::where('company_id', auth()->user()->company_id)
-                                    ->whereBetween('starts_at', [$startDate, $endDate])
-                                    ->with(['ticket.client', 'assignee'])
-                                    ->get();
+            ->whereBetween('starts_at', [$startDate, $endDate])
+            ->with(['ticket.client', 'assignee'])
+            ->get();
 
         // TODO: Implement ICS generation
         return response()->json(['message' => 'ICS export - implementation pending']);
@@ -532,16 +532,16 @@ class CalendarController extends Controller
     private function checkForConflicts($userId, $startTime, $endTime, $excludeEventId = null)
     {
         $query = TicketCalendarEvent::where('company_id', auth()->user()->company_id)
-                                   ->where('assigned_to', $userId)
-                                   ->where('status', '!=', 'cancelled')
-                                   ->where(function ($q) use ($startTime, $endTime) {
-                                       $q->whereBetween('starts_at', [$startTime, $endTime])
-                                         ->orWhereBetween('ends_at', [$startTime, $endTime])
-                                         ->orWhere(function ($subQ) use ($startTime, $endTime) {
-                                             $subQ->where('starts_at', '<=', $startTime)
-                                                  ->where('ends_at', '>=', $endTime);
-                                         });
-                                   });
+            ->where('assigned_to', $userId)
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($q) use ($startTime, $endTime) {
+                $q->whereBetween('starts_at', [$startTime, $endTime])
+                    ->orWhereBetween('ends_at', [$startTime, $endTime])
+                    ->orWhere(function ($subQ) use ($startTime, $endTime) {
+                        $subQ->where('starts_at', '<=', $startTime)
+                            ->where('ends_at', '>=', $endTime);
+                    });
+            });
 
         if ($excludeEventId) {
             $query->where('id', '!=', $excludeEventId);

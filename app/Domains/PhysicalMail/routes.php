@@ -11,7 +11,7 @@ Route::middleware(['api'])->prefix('api/physical-mail')->name('physical-mail.')-
 });
 
 Route::middleware(['api', 'auth:sanctum'])->prefix('api/physical-mail')->name('physical-mail.')->group(function () {
-    
+
     // Mail orders
     Route::get('/', [PhysicalMailController::class, 'index'])->name('index');
     Route::post('/send', [PhysicalMailController::class, 'send'])->name('send');
@@ -19,7 +19,7 @@ Route::middleware(['api', 'auth:sanctum'])->prefix('api/physical-mail')->name('p
     Route::post('/{order}/cancel', [PhysicalMailController::class, 'cancel'])->name('cancel');
     Route::get('/{order}/tracking', [PhysicalMailController::class, 'tracking'])->name('tracking');
     Route::post('/{order}/progress-test', [PhysicalMailController::class, 'progressTest'])->name('progress-test');
-    
+
     // Special endpoints
     Route::post('/invoice/send', [PhysicalMailController::class, 'sendInvoice'])->name('invoice.send');
 });
@@ -29,7 +29,7 @@ Route::post('/api/webhooks/postgrid', [WebhookController::class, 'handle'])->nam
 
 // Web routes for physical mail management
 Route::middleware(['web', 'auth'])->prefix('mail')->name('mail.')->group(function () {
-    
+
     // Dashboard views with controller methods
     Route::get('/', [PhysicalMailController::class, 'webIndex'])->name('index');
     Route::get('/send', [PhysicalMailController::class, 'webSend'])->name('send');

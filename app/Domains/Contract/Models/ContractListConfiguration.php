@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * ContractListConfiguration Model
- * 
+ *
  * Configures how contract lists are displayed including columns,
  * filters, sorting, and available actions.
  */
 class ContractListConfiguration extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'contract_list_configurations';
 

@@ -2,15 +2,15 @@
 
 namespace App\Domains\Product\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Product;
-use App\Models\Category;
 use App\Domains\Product\Requests\StoreProductRequest;
 use App\Domains\Product\Requests\UpdateProductRequest;
 use App\Domains\Product\Services\ProductService;
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -32,8 +32,8 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -103,19 +103,19 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         $this->authorize('create', Product::class);
-        
+
         $data = $request->validated();
-        
+
         // Handle tax profile and tax-specific data
         if ($request->filled('tax_profile_id')) {
             $data['tax_profile_id'] = $request->input('tax_profile_id');
         }
-        
+
         // Handle category-specific tax data (e.g., VoIP line count, equipment weight)
         if ($request->filled('tax_data')) {
             $data['tax_data'] = $request->input('tax_data');
         }
-        
+
         // Handle calculated tax data if provided
         if ($request->filled('calculated_tax_rate')) {
             $data['tax_rate'] = $request->input('calculated_tax_rate');
@@ -144,19 +144,19 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product)
     {
         $this->authorize('update', $product);
-        
+
         $data = $request->validated();
-        
+
         // Handle tax profile and tax-specific data
         if ($request->filled('tax_profile_id')) {
             $data['tax_profile_id'] = $request->input('tax_profile_id');
         }
-        
+
         // Handle category-specific tax data (e.g., VoIP line count, equipment weight)
         if ($request->filled('tax_data')) {
             $data['tax_data'] = $request->input('tax_data');
         }
-        
+
         // Handle calculated tax data if provided
         if ($request->filled('calculated_tax_rate')) {
             $data['tax_rate'] = $request->input('calculated_tax_rate');

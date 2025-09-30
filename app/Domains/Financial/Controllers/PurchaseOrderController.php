@@ -16,8 +16,8 @@ class PurchaseOrderController extends Controller
                 'total' => 0,
                 'pending' => 0,
                 'approved' => 0,
-                'received' => 0
-            ]
+                'received' => 0,
+            ],
         ]);
     }
 

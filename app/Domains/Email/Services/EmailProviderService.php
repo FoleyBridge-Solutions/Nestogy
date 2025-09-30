@@ -2,12 +2,12 @@
 
 namespace App\Domains\Email\Services;
 
-use App\Models\Company;
 use App\Domains\Email\Models\EmailAccount;
 use App\Domains\Email\Services\Providers\EmailProviderInterface;
-use App\Domains\Email\Services\Providers\MicrosoftGraphProvider;
 use App\Domains\Email\Services\Providers\GoogleWorkspaceProvider;
 use App\Domains\Email\Services\Providers\ManualProvider;
+use App\Domains\Email\Services\Providers\MicrosoftGraphProvider;
+use App\Models\Company;
 use Illuminate\Support\Facades\Log;
 
 class EmailProviderService
@@ -32,6 +32,7 @@ class EmailProviderService
     public function getAuthorizationUrl(Company $company, string $state): string
     {
         $provider = $this->getProvider($company);
+
         return $provider->getAuthorizationUrl($state);
     }
 
@@ -41,6 +42,7 @@ class EmailProviderService
     public function exchangeCodeForTokens(Company $company, string $code): array
     {
         $provider = $this->getProvider($company);
+
         return $provider->exchangeCodeForTokens($code);
     }
 
@@ -101,6 +103,7 @@ class EmailProviderService
                 'account_id' => $account->id,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -110,7 +113,7 @@ class EmailProviderService
      */
     public function tokensNeedRefresh(EmailAccount $account): bool
     {
-        if (!$account->oauth_expires_at) {
+        if (! $account->oauth_expires_at) {
             return false;
         }
 

@@ -2,22 +2,20 @@
 
 namespace App\Models;
 
+use App\Domains\Financial\Services\VoIPTaxService;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\BelongsToCompany;
-use App\Domains\Financial\Services\VoIPTaxService;
-use App\Models\TaxCategory;
-use App\Models\TaxExemptionUsage;
 
 /**
  * InvoiceItem Model
- * 
+ *
  * Represents line items on invoices, quotes, and recurring invoices.
  * Supports quantity, pricing, discounts, and tax calculations.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string|null $description
@@ -40,7 +38,7 @@ use App\Models\TaxExemptionUsage;
  */
 class InvoiceItem extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -174,14 +172,14 @@ class InvoiceItem extends Model
      */
     public function calculateVoIPTaxes(?array $serviceAddress = null): array
     {
-        if (!$this->service_type) {
+        if (! $this->service_type) {
             return [];
         }
 
         $companyId = $this->invoice?->company_id ?? $this->quote?->company_id ?? 1;
         $clientId = $this->invoice?->client_id ?? $this->quote?->client_id;
 
-        $taxService = new VoIPTaxService();
+        $taxService = new VoIPTaxService;
         $taxService->setCompanyId($companyId);
 
         $params = [
@@ -195,10 +193,10 @@ class InvoiceItem extends Model
         ];
 
         $taxCalculation = $taxService->calculateTaxes($params);
-        
+
         // Store detailed tax data
         $this->voip_tax_data = $taxCalculation;
-        
+
         return $taxCalculation;
     }
 
@@ -247,26 +245,28 @@ class InvoiceItem extends Model
             $taxService = \App\Services\TaxEngine\TaxServiceFactory::getService($stateCode, $companyId);
 
             // If no service is configured for this state, try to use TaxJar directly
-            if (!$taxService) {
-                $taxService = new \App\Services\TaxEngine\TaxJarService();
+            if (! $taxService) {
+                $taxService = new \App\Services\TaxEngine\TaxJarService;
                 $taxService->setCompanyId($companyId);
             }
 
             $params = [
                 'amount' => $amount,
                 'service_address' => $address,
-                'service_type' => 'general'
+                'service_type' => 'general',
             ];
 
             $result = $taxService->calculateTaxes($params);
+
             return $result['total_tax_amount'] ?? 0.0;
 
         } catch (\Exception $e) {
             \Log::warning('Sales tax calculation failed, using 0', [
                 'item_id' => $this->id,
                 'amount' => $amount,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return 0.0;
         }
     }
@@ -278,13 +278,13 @@ class InvoiceItem extends Model
     {
         // Calculate subtotal (quantity * price)
         $subtotal = $this->quantity * $this->price;
-        
+
         // Apply discount
         $discountedSubtotal = $subtotal - $this->discount;
-        
+
         // Calculate tax
         $taxAmount = 0;
-        
+
         // Use VoIP tax calculation if service type is specified
         if ($this->service_type) {
             $taxCalculation = $this->calculateVoIPTaxes();
@@ -296,7 +296,7 @@ class InvoiceItem extends Model
             // Use TaxJar for general sales tax calculation
             $taxAmount = $this->calculateSalesTax($discountedSubtotal);
         }
-        
+
         // Calculate total
         $total = $discountedSubtotal + $taxAmount;
 
@@ -312,7 +312,7 @@ class InvoiceItem extends Model
      */
     public function isVoIPService(): bool
     {
-        return !empty($this->service_type);
+        return ! empty($this->service_type);
     }
 
     /**
@@ -344,7 +344,7 @@ class InvoiceItem extends Model
      */
     public function getFormattedPrice(): string
     {
-        return '$' . number_format($this->price, 2);
+        return '$'.number_format($this->price, 2);
     }
 
     /**
@@ -352,7 +352,7 @@ class InvoiceItem extends Model
      */
     public function getFormattedDiscount(): string
     {
-        return '$' . number_format($this->discount, 2);
+        return '$'.number_format($this->discount, 2);
     }
 
     /**
@@ -360,7 +360,7 @@ class InvoiceItem extends Model
      */
     public function getFormattedSubtotal(): string
     {
-        return '$' . number_format($this->subtotal, 2);
+        return '$'.number_format($this->subtotal, 2);
     }
 
     /**
@@ -368,7 +368,7 @@ class InvoiceItem extends Model
      */
     public function getFormattedTax(): string
     {
-        return '$' . number_format($this->tax, 2);
+        return '$'.number_format($this->tax, 2);
     }
 
     /**
@@ -376,7 +376,7 @@ class InvoiceItem extends Model
      */
     public function getFormattedTotal(): string
     {
-        return '$' . number_format($this->total, 2);
+        return '$'.number_format($this->total, 2);
     }
 
     /**
@@ -412,7 +412,7 @@ class InvoiceItem extends Model
      */
     public function getFormattedDiscountPercentage(): string
     {
-        return number_format($this->getDiscountPercentage(), 2) . '%';
+        return number_format($this->getDiscountPercentage(), 2).'%';
     }
 
     /**
@@ -531,13 +531,13 @@ class InvoiceItem extends Model
         static::saving(function ($item) {
             // Calculate subtotal
             $subtotal = $item->quantity * $item->price;
-            
+
             // Apply discount
             $discountedSubtotal = $subtotal - $item->discount;
-            
+
             // Calculate tax
             $taxAmount = 0;
-            
+
             // Use VoIP tax calculation if service type is specified
             if ($item->service_type) {
                 try {
@@ -548,7 +548,7 @@ class InvoiceItem extends Model
                     \Log::warning('VoIP tax calculation failed for item', [
                         'item_id' => $item->id,
                         'service_type' => $item->service_type,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             } elseif ($item->taxRate) {
@@ -558,7 +558,7 @@ class InvoiceItem extends Model
                 // Use TaxJar for general sales tax
                 $taxAmount = $item->calculateSalesTax($discountedSubtotal);
             }
-            
+
             // Calculate total
             $total = $discountedSubtotal + $taxAmount;
 

@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Company Model
- * 
+ *
  * Represents companies in the multi-tenant ERP system.
  * Each company has its own settings and can have multiple users, clients, etc.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string|null $address
@@ -119,7 +119,7 @@ class Company extends Model
      * Default currency codes
      */
     const DEFAULT_CURRENCY = 'USD';
-    
+
     /**
      * Supported currencies
      */
@@ -179,7 +179,7 @@ class Company extends Model
     {
         return $this->hasMany(\App\Models\ContractConfiguration::class);
     }
-    
+
     /**
      * Get the company's mail settings.
      */
@@ -292,7 +292,7 @@ class Company extends Model
     public function getLogoUrl(): ?string
     {
         if ($this->logo) {
-            return asset('storage/companies/' . $this->logo);
+            return asset('storage/companies/'.$this->logo);
         }
 
         return null;
@@ -328,7 +328,7 @@ class Company extends Model
      */
     public function formatCurrency(float $amount): string
     {
-        return $this->getCurrencySymbol() . number_format($amount, 2);
+        return $this->getCurrencySymbol().number_format($amount, 2);
     }
 
     /**
@@ -336,7 +336,7 @@ class Company extends Model
      */
     public function hasLogo(): bool
     {
-        return !empty($this->logo);
+        return ! empty($this->logo);
     }
 
     /**
@@ -344,7 +344,7 @@ class Company extends Model
      */
     public function hasCompleteAddress(): bool
     {
-        return !empty($this->address) && !empty($this->city) && !empty($this->state);
+        return ! empty($this->address) && ! empty($this->city) && ! empty($this->state);
     }
 
     /**
@@ -368,8 +368,8 @@ class Company extends Model
      */
     public function scopeSearch($query, string $search)
     {
-        return $query->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%');
+        return $query->where('name', 'like', '%'.$search.'%')
+            ->orWhere('email', 'like', '%'.$search.'%');
     }
 
     /**
@@ -397,7 +397,7 @@ class Company extends Model
             'website' => 'nullable|url|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'locale' => 'nullable|string|max:10',
-            'currency' => 'required|string|size:3|in:' . implode(',', array_keys(self::SUPPORTED_CURRENCIES)),
+            'currency' => 'required|string|size:3|in:'.implode(',', array_keys(self::SUPPORTED_CURRENCIES)),
         ];
     }
 
@@ -407,6 +407,7 @@ class Company extends Model
     public static function getUpdateValidationRules(int $companyId): array
     {
         $rules = self::getValidationRules();
+
         // No unique constraints to modify for company updates
         return $rules;
     }
@@ -423,23 +424,31 @@ class Company extends Model
      * Rate calculation methods
      */
     const RATE_METHOD_FIXED = 'fixed_rates';
+
     const RATE_METHOD_MULTIPLIERS = 'multipliers';
-    
+
     /**
      * Time rounding methods
      */
     const ROUNDING_NONE = 'none';
+
     const ROUNDING_UP = 'up';
+
     const ROUNDING_DOWN = 'down';
+
     const ROUNDING_NEAREST = 'nearest';
-    
+
     /**
      * Rate types
      */
     const RATE_STANDARD = 'standard';
+
     const RATE_AFTER_HOURS = 'after_hours';
+
     const RATE_EMERGENCY = 'emergency';
+
     const RATE_WEEKEND = 'weekend';
+
     const RATE_HOLIDAY = 'holiday';
 
     /**
@@ -450,14 +459,14 @@ class Company extends Model
         if ($this->rate_calculation_method === self::RATE_METHOD_FIXED) {
             return $this->getFixedRate($rateType);
         }
-        
+
         // Use multiplier method
         $baseRate = $this->default_standard_rate ?? 150.00;
         $multiplier = $this->getMultiplier($rateType);
-        
+
         return round($baseRate * $multiplier, 2);
     }
-    
+
     /**
      * Get fixed rate for rate type.
      */
@@ -470,10 +479,10 @@ class Company extends Model
             self::RATE_WEEKEND => $this->default_weekend_rate ?? 200.00,
             self::RATE_HOLIDAY => $this->default_holiday_rate ?? 250.00,
         ];
-        
+
         return $rates[$rateType] ?? $rates[self::RATE_STANDARD];
     }
-    
+
     /**
      * Get multiplier for rate type.
      */
@@ -486,10 +495,10 @@ class Company extends Model
             self::RATE_WEEKEND => $this->weekend_multiplier ?? 1.5,
             self::RATE_HOLIDAY => $this->holiday_multiplier ?? 2.0,
         ];
-        
+
         return $multipliers[$rateType] ?? 1.0;
     }
-    
+
     /**
      * Get available rate types.
      */
@@ -503,14 +512,14 @@ class Company extends Model
             self::RATE_HOLIDAY => 'Holiday',
         ];
     }
-    
+
     /**
      * Round time according to company settings.
      */
     public function roundTime(float $hours): float
     {
         $increment = $this->minimum_billing_increment ?? 0.25;
-        
+
         switch ($this->time_rounding_method) {
             case self::ROUNDING_UP:
                 return ceil($hours / $increment) * $increment;
@@ -556,7 +565,7 @@ class Company extends Model
     {
         return CompanyHierarchy::getDescendants($this->id)
             ->pluck('descendant_id')
-            ->map(fn($id) => Company::find($id))
+            ->map(fn ($id) => Company::find($id))
             ->filter();
     }
 
@@ -567,7 +576,7 @@ class Company extends Model
     {
         return CompanyHierarchy::getAncestors($this->id)
             ->pluck('ancestor_id')
-            ->map(fn($id) => Company::find($id))
+            ->map(fn ($id) => Company::find($id))
             ->filter();
     }
 
@@ -598,7 +607,7 @@ class Company extends Model
      */
     public function getEffectiveBillingParent(): Company
     {
-        if ($this->billing_type === 'independent' || !$this->billing_parent_id) {
+        if ($this->billing_type === 'independent' || ! $this->billing_parent_id) {
             return $this;
         }
 
@@ -626,7 +635,7 @@ class Company extends Model
      */
     public function createSubsidiary(array $data): ?Company
     {
-        if (!$this->canCreateSubsidiaries()) {
+        if (! $this->canCreateSubsidiaries()) {
             return null;
         }
 

@@ -2,20 +2,19 @@
 
 namespace App\Domains\Client\Controllers\Api\Portal;
 
-use App\Http\Controllers\Controller;
-use App\Models\Client;
 use App\Domains\Client\Services\ClientPortalService;
 use App\Domains\Security\Services\PortalAuthService;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\Client;
+use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
-use Exception;
 
 /**
  * Base Portal API Controller
- * 
+ *
  * Provides common functionality for all portal API endpoints including:
  * - Client authentication and authorization
  * - Rate limiting and security checks
@@ -27,13 +26,14 @@ use Exception;
 abstract class PortalApiController extends Controller
 {
     protected ClientPortalService $portalService;
+
     protected PortalAuthService $authService;
-    
+
     public function __construct(ClientPortalService $portalService, PortalAuthService $authService)
     {
         $this->portalService = $portalService;
         $this->authService = $authService;
-        
+
         // Apply portal-specific middleware
         $this->middleware('portal.auth')->except(['login', 'register', 'forgotPassword', 'resetPassword']);
         $this->middleware('portal.session')->except(['login', 'register']);
@@ -46,6 +46,7 @@ abstract class PortalApiController extends Controller
     protected function getAuthenticatedClient(): ?Client
     {
         $portalSession = request()->get('portal_session');
+
         return $portalSession?->client;
     }
 
@@ -55,8 +56,8 @@ abstract class PortalApiController extends Controller
     protected function requireAuthentication(): Client
     {
         $client = $this->getAuthenticatedClient();
-        
-        if (!$client) {
+
+        if (! $client) {
             abort(401, 'Portal authentication required');
         }
 
@@ -69,8 +70,8 @@ abstract class PortalApiController extends Controller
     protected function checkPermission(string $permission): bool
     {
         $client = $this->getAuthenticatedClient();
-        
-        if (!$client || !$client->portalAccess) {
+
+        if (! $client || ! $client->portalAccess) {
             return false;
         }
 
@@ -82,7 +83,7 @@ abstract class PortalApiController extends Controller
      */
     protected function requirePermission(string $permission): void
     {
-        if (!$this->checkPermission($permission)) {
+        if (! $this->checkPermission($permission)) {
             abort(403, "Permission '{$permission}' required");
         }
     }
@@ -93,8 +94,8 @@ abstract class PortalApiController extends Controller
     protected function applyRateLimit(string $key, int $maxAttempts = 60, int $decaySeconds = 60): void
     {
         $client = $this->getAuthenticatedClient();
-        $rateLimitKey = "portal_api:{$key}:" . ($client?->id ?? request()->ip());
-        
+        $rateLimitKey = "portal_api:{$key}:".($client?->id ?? request()->ip());
+
         if (RateLimiter::tooManyAttempts($rateLimitKey, $maxAttempts)) {
             $retryAfter = RateLimiter::availableIn($rateLimitKey);
             abort(429, "Too many requests. Retry after {$retryAfter} seconds.");
@@ -137,7 +138,7 @@ abstract class PortalApiController extends Controller
             'timestamp' => now()->toISOString(),
         ];
 
-        if (!empty($data)) {
+        if (! empty($data)) {
             $response['data'] = $data;
         }
 
@@ -155,7 +156,7 @@ abstract class PortalApiController extends Controller
             'timestamp' => now()->toISOString(),
         ];
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             $response['errors'] = $errors;
         }
 
@@ -179,12 +180,12 @@ abstract class PortalApiController extends Controller
             unset($serviceResponse['success']);
             $message = $serviceResponse['message'] ?? $defaultSuccessMessage;
             unset($serviceResponse['message']);
-            
+
             return $this->successResponse($message, $serviceResponse);
         } else {
             $message = $serviceResponse['message'] ?? 'Operation failed';
             $statusCode = isset($serviceResponse['error_code']) ? $this->getStatusCodeFromErrorCode($serviceResponse['error_code']) : 400;
-            
+
             return $this->errorResponse($message, $statusCode);
         }
     }
@@ -194,7 +195,7 @@ abstract class PortalApiController extends Controller
      */
     private function getStatusCodeFromErrorCode(string $errorCode): int
     {
-        return match($errorCode) {
+        return match ($errorCode) {
             'VALIDATION_FAILED' => 422,
             'PERMISSION_DENIED' => 403,
             'NOT_FOUND' => 404,
@@ -211,19 +212,19 @@ abstract class PortalApiController extends Controller
     protected function validateRequired(Request $request, array $fields): array
     {
         $errors = [];
-        
+
         foreach ($fields as $field => $name) {
             if (is_numeric($field)) {
                 $field = $name;
                 $name = ucfirst(str_replace('_', ' ', $field));
             }
-            
-            if (!$request->has($field) || empty($request->get($field))) {
+
+            if (! $request->has($field) || empty($request->get($field))) {
                 $errors[$field] = ["{$name} is required"];
             }
         }
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             throw new \Illuminate\Validation\ValidationException(
                 validator($request->all(), []),
                 response()->json([
@@ -295,7 +296,7 @@ abstract class PortalApiController extends Controller
     protected function getFilterParams(Request $request, array $allowedFilters = []): array
     {
         $filters = [];
-        
+
         foreach ($allowedFilters as $filter) {
             if ($request->has($filter)) {
                 $filters[$filter] = $request->get($filter);

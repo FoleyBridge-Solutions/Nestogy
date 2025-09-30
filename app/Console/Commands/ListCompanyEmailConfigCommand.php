@@ -2,15 +2,16 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Company;
+use Illuminate\Console\Command;
 
 class ListCompanyEmailConfigCommand extends Command
 {
-
     // Class constants to reduce duplication
     private const CONFIG_SMTP = 'smtp';
+
     private const CONFIG_IMAP = 'imap';
+
     private const MSG_LIST_START = 'Listing company email configurations...';
 
     /**
@@ -41,10 +42,11 @@ class ListCompanyEmailConfigCommand extends Command
 
         if ($companies->isEmpty()) {
             $this->warn('No companies found in the database.');
+
             return Command::SUCCESS;
         }
 
-        $this->info("📊 Company Email Configuration Status");
+        $this->info('📊 Company Email Configuration Status');
         $this->line(str_repeat('=', 60));
 
         $configuredCount = 0;
@@ -59,7 +61,7 @@ class ListCompanyEmailConfigCommand extends Command
             }
 
             // Skip unconfigured companies if filter is active
-            if ($onlyConfigured && !$hasConfig) {
+            if ($onlyConfigured && ! $hasConfig) {
                 continue;
             }
 
@@ -105,15 +107,15 @@ class ListCompanyEmailConfigCommand extends Command
         $displayedCompanies = count($tableData);
 
         $this->line(str_repeat('=', 60));
-        $this->info("📈 Summary:");
+        $this->info('📈 Summary:');
         $this->line("   Total Companies: {$totalCompanies}");
         $this->line("   Configured for Email: {$configuredCount}");
         $this->line("   Displayed: {$displayedCompanies}");
 
         if ($configuredCount > 0) {
-            $this->line("");
-            $this->info("💡 To test email for a company, run:");
-            $this->line("   php artisan email:test-send {company_id} {email@example.com}");
+            $this->line('');
+            $this->info('💡 To test email for a company, run:');
+            $this->line('   php artisan email:test-send {company_id} {email@example.com}');
         }
 
         return Command::SUCCESS;
@@ -125,9 +127,9 @@ class ListCompanyEmailConfigCommand extends Command
     protected function hasValidSmtpConfig($setting): bool
     {
         return $setting
-            && !empty($setting->smtp_host)
-            && !empty($setting->smtp_port)
-            && !empty($setting->smtp_username)
-            && !empty($setting->smtp_password);
+            && ! empty($setting->smtp_host)
+            && ! empty($setting->smtp_port)
+            && ! empty($setting->smtp_username)
+            && ! empty($setting->smtp_password);
     }
 }

@@ -3,15 +3,13 @@
 namespace App\Domains\Integration\Services;
 
 use App\Domains\Integration\Models\Integration;
-use App\Domains\Integration\Models\RMMAlert;
-use App\Domains\Integration\Models\DeviceMapping;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Integration Monitoring Service
- * 
+ *
  * Provides monitoring, metrics collection, and health checks
  * for RMM integrations. Tracks performance and reliability.
  */
@@ -26,8 +24,8 @@ class IntegrationMonitoringService
         bool $successful = true,
         ?string $errorMessage = null
     ): void {
-        $metricKey = "webhook_metrics:{$integration->id}:" . date('Y-m-d:H');
-        
+        $metricKey = "webhook_metrics:{$integration->id}:".date('Y-m-d:H');
+
         $metrics = Cache::get($metricKey, [
             'total_requests' => 0,
             'successful_requests' => 0,
@@ -37,10 +35,10 @@ class IntegrationMonitoringService
             'max_processing_time' => null,
             'errors' => [],
         ]);
-        
+
         $metrics['total_requests']++;
         $metrics['total_processing_time'] += $processingTime;
-        
+
         if ($successful) {
             $metrics['successful_requests']++;
         } else {
@@ -50,24 +48,24 @@ class IntegrationMonitoringService
                     'timestamp' => now()->toISOString(),
                     'message' => $errorMessage,
                 ];
-                
+
                 // Keep only last 10 errors
                 $metrics['errors'] = array_slice($metrics['errors'], -10);
             }
         }
-        
+
         // Update min/max processing times
         if ($metrics['min_processing_time'] === null || $processingTime < $metrics['min_processing_time']) {
             $metrics['min_processing_time'] = $processingTime;
         }
-        
+
         if ($metrics['max_processing_time'] === null || $processingTime > $metrics['max_processing_time']) {
             $metrics['max_processing_time'] = $processingTime;
         }
-        
+
         // Cache for 2 hours
         Cache::put($metricKey, $metrics, 7200);
-        
+
         Log::info('Webhook processing metrics recorded', [
             'integration_id' => $integration->id,
             'processing_time_ms' => round($processingTime * 1000, 2),
@@ -89,15 +87,15 @@ class IntegrationMonitoringService
                 'failed_requests' => 0,
                 'average_processing_time' => 0.0,
                 'success_rate' => 100.0,
-            ]
+            ],
         ];
-        
+
         $totalProcessingTime = 0.0;
-        
+
         for ($i = 0; $i < $hoursBack; $i++) {
             $hour = now()->subHours($i);
-            $metricKey = "webhook_metrics:{$integration->id}:" . $hour->format('Y-m-d:H');
-            
+            $metricKey = "webhook_metrics:{$integration->id}:".$hour->format('Y-m-d:H');
+
             $hourlyMetrics = Cache::get($metricKey, [
                 'total_requests' => 0,
                 'successful_requests' => 0,
@@ -107,34 +105,34 @@ class IntegrationMonitoringService
                 'max_processing_time' => null,
                 'errors' => [],
             ]);
-            
+
             $metrics['hourly_data'][] = [
                 'hour' => $hour->format('Y-m-d H:00'),
                 'total_requests' => $hourlyMetrics['total_requests'],
                 'successful_requests' => $hourlyMetrics['successful_requests'],
                 'failed_requests' => $hourlyMetrics['failed_requests'],
-                'average_processing_time' => $hourlyMetrics['total_requests'] > 0 
+                'average_processing_time' => $hourlyMetrics['total_requests'] > 0
                     ? $hourlyMetrics['total_processing_time'] / $hourlyMetrics['total_requests']
                     : 0,
                 'min_processing_time' => $hourlyMetrics['min_processing_time'],
                 'max_processing_time' => $hourlyMetrics['max_processing_time'],
             ];
-            
+
             $metrics['summary']['total_requests'] += $hourlyMetrics['total_requests'];
             $metrics['summary']['successful_requests'] += $hourlyMetrics['successful_requests'];
             $metrics['summary']['failed_requests'] += $hourlyMetrics['failed_requests'];
             $totalProcessingTime += $hourlyMetrics['total_processing_time'];
         }
-        
+
         // Calculate averages and rates
         if ($metrics['summary']['total_requests'] > 0) {
             $metrics['summary']['average_processing_time'] = $totalProcessingTime / $metrics['summary']['total_requests'];
             $metrics['summary']['success_rate'] = ($metrics['summary']['successful_requests'] / $metrics['summary']['total_requests']) * 100;
         }
-        
+
         // Reverse to show oldest first
         $metrics['hourly_data'] = array_reverse($metrics['hourly_data']);
-        
+
         return $metrics;
     }
 
@@ -148,53 +146,53 @@ class IntegrationMonitoringService
             'checks' => [],
             'last_checked' => now()->toISOString(),
         ];
-        
+
         try {
             // Check 1: Integration is active
             $health['checks']['integration_active'] = [
                 'status' => $integration->is_active ? 'pass' : 'fail',
                 'message' => $integration->is_active ? 'Integration is active' : 'Integration is inactive',
             ];
-            
+
             // Check 2: Recent webhook activity
             $recentAlerts = $integration->rmmAlerts()->recent(24)->count();
             $health['checks']['recent_activity'] = [
                 'status' => $recentAlerts > 0 ? 'pass' : 'warn',
-                'message' => $recentAlerts > 0 
-                    ? "Received {$recentAlerts} alerts in last 24 hours" 
+                'message' => $recentAlerts > 0
+                    ? "Received {$recentAlerts} alerts in last 24 hours"
                     : 'No recent webhook activity',
                 'value' => $recentAlerts,
             ];
-            
+
             // Check 3: Processing success rate
             $totalRecent = $integration->rmmAlerts()->recent(24 * 7)->count(); // Last 7 days
             $processedRecent = $integration->rmmAlerts()->recent(24 * 7)->processed()->count();
             $successRate = $totalRecent > 0 ? ($processedRecent / $totalRecent) * 100 : 100;
-            
+
             $health['checks']['processing_success_rate'] = [
                 'status' => $successRate >= 95 ? 'pass' : ($successRate >= 80 ? 'warn' : 'fail'),
                 'message' => "Processing success rate: {$successRate}%",
                 'value' => $successRate,
             ];
-            
+
             // Check 4: Device mapping health
             $totalDevices = $integration->deviceMappings()->count();
             $staleDevices = $integration->deviceMappings()->stale(48)->count(); // 48 hours
             $stalePercentage = $totalDevices > 0 ? ($staleDevices / $totalDevices) * 100 : 0;
-            
+
             $health['checks']['device_mapping_health'] = [
                 'status' => $stalePercentage < 20 ? 'pass' : ($stalePercentage < 50 ? 'warn' : 'fail'),
                 'message' => "{$staleDevices} of {$totalDevices} devices are stale",
                 'value' => $stalePercentage,
             ];
-            
+
             // Check 5: Credential validity (simplified check)
             $credentials = $integration->getCredentials();
             $health['checks']['credentials'] = [
-                'status' => !empty($credentials) ? 'pass' : 'fail',
-                'message' => !empty($credentials) ? 'Credentials are configured' : 'Credentials are missing',
+                'status' => ! empty($credentials) ? 'pass' : 'fail',
+                'message' => ! empty($credentials) ? 'Credentials are configured' : 'Credentials are missing',
             ];
-            
+
             // Check 6: Webhook endpoint accessibility
             $webhookUrl = $integration->getWebhookEndpoint();
             $health['checks']['webhook_endpoint'] = [
@@ -202,27 +200,27 @@ class IntegrationMonitoringService
                 'message' => "Webhook endpoint: {$webhookUrl}",
                 'url' => $webhookUrl,
             ];
-            
+
             // Determine overall status
             $failedChecks = collect($health['checks'])->where('status', 'fail')->count();
             $warnChecks = collect($health['checks'])->where('status', 'warn')->count();
-            
+
             if ($failedChecks > 0) {
                 $health['overall_status'] = 'unhealthy';
             } elseif ($warnChecks > 0) {
                 $health['overall_status'] = 'degraded';
             }
-            
+
         } catch (\Exception $e) {
             Log::error('Health check failed for integration', [
                 'integration_id' => $integration->id,
                 'error' => $e->getMessage(),
             ]);
-            
+
             $health['overall_status'] = 'error';
             $health['error'] = $e->getMessage();
         }
-        
+
         return $health;
     }
 
@@ -248,7 +246,7 @@ class IntegrationMonitoringService
             'health_summary' => $this->performHealthCheck($integration),
             'recommendations' => $this->generateRecommendations($integration),
         ];
-        
+
         return $report;
     }
 
@@ -258,7 +256,7 @@ class IntegrationMonitoringService
     protected function getAlertStatistics(Integration $integration, int $daysBack): array
     {
         $startDate = now()->subDays($daysBack)->startOfDay();
-        
+
         return [
             'total_alerts' => $integration->rmmAlerts()
                 ->where('created_at', '>=', $startDate)
@@ -320,7 +318,7 @@ class IntegrationMonitoringService
     {
         $recommendations = [];
         $health = $this->performHealthCheck($integration);
-        
+
         // Analyze health check results and generate recommendations
         foreach ($health['checks'] as $checkName => $check) {
             switch ($checkName) {
@@ -335,7 +333,7 @@ class IntegrationMonitoringService
                         ];
                     }
                     break;
-                    
+
                 case 'processing_success_rate':
                     if ($check['status'] === 'fail') {
                         $recommendations[] = [
@@ -347,7 +345,7 @@ class IntegrationMonitoringService
                         ];
                     }
                     break;
-                    
+
                 case 'device_mapping_health':
                     if ($check['status'] !== 'pass') {
                         $recommendations[] = [
@@ -361,11 +359,11 @@ class IntegrationMonitoringService
                     break;
             }
         }
-        
+
         // Add general recommendations
         $totalAlerts = $integration->rmmAlerts()->recent(24 * 7)->count();
         $duplicateAlerts = $integration->rmmAlerts()->recent(24 * 7)->duplicate()->count();
-        
+
         if ($totalAlerts > 0 && ($duplicateAlerts / $totalAlerts) > 0.3) {
             $recommendations[] = [
                 'type' => 'optimization',
@@ -375,7 +373,7 @@ class IntegrationMonitoringService
                 'action' => 'Review duplicate detection rules and RMM alert configuration.',
             ];
         }
-        
+
         return $recommendations;
     }
 
@@ -385,7 +383,7 @@ class IntegrationMonitoringService
     public function clearMetricsCache(Integration $integration): void
     {
         $pattern = "webhook_metrics:{$integration->id}:*";
-        
+
         // This would require a more sophisticated cache clearing mechanism in production
         // For now, log the action
         Log::info('Metrics cache clear requested', [
@@ -400,7 +398,7 @@ class IntegrationMonitoringService
     public function getSystemHealthSummary(int $companyId): array
     {
         $integrations = Integration::forCompany($companyId)->get();
-        
+
         $summary = [
             'total_integrations' => $integrations->count(),
             'healthy' => 0,
@@ -410,7 +408,7 @@ class IntegrationMonitoringService
             'overall_status' => 'healthy',
             'integration_details' => [],
         ];
-        
+
         foreach ($integrations as $integration) {
             $health = $this->performHealthCheck($integration);
             $summary['integration_details'][] = [
@@ -420,17 +418,17 @@ class IntegrationMonitoringService
                 'status' => $health['overall_status'],
                 'is_active' => $integration->is_active,
             ];
-            
+
             $summary[$health['overall_status']]++;
         }
-        
+
         // Determine overall system status
         if ($summary['error'] > 0 || $summary['unhealthy'] > 0) {
             $summary['overall_status'] = 'unhealthy';
         } elseif ($summary['degraded'] > 0) {
             $summary['overall_status'] = 'degraded';
         }
-        
+
         return $summary;
     }
 }

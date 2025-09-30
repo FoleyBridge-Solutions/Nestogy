@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientCertificate extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -99,7 +99,7 @@ class ClientCertificate extends Model
     public function scopeExpiringSoon($query, $days = 30)
     {
         return $query->where('expires_at', '>', now())
-                    ->where('expires_at', '<=', now()->addDays($days));
+            ->where('expires_at', '<=', now()->addDays($days));
     }
 
     /**
@@ -131,13 +131,13 @@ class ClientCertificate extends Model
      */
     public function isExpiringSoon($days = null)
     {
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return false;
         }
 
         $alertDays = $days ?: $this->days_before_expiry_alert ?: 30;
-        
-        return !$this->isExpired() && 
+
+        return ! $this->isExpired() &&
                $this->expires_at->diffInDays(now()) <= $alertDays;
     }
 
@@ -146,7 +146,7 @@ class ClientCertificate extends Model
      */
     public function getDaysUntilExpiryAttribute()
     {
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return null;
         }
 
@@ -201,7 +201,7 @@ class ClientCertificate extends Model
      */
     public function getPrimaryDomainAttribute()
     {
-        if (!$this->domain_names || empty($this->domain_names)) {
+        if (! $this->domain_names || empty($this->domain_names)) {
             return null;
         }
 
@@ -213,7 +213,7 @@ class ClientCertificate extends Model
      */
     public function getAdditionalDomainsAttribute()
     {
-        if (!$this->domain_names || count($this->domain_names) <= 1) {
+        if (! $this->domain_names || count($this->domain_names) <= 1) {
             return [];
         }
 
@@ -225,7 +225,7 @@ class ClientCertificate extends Model
      */
     public function getFormattedDomainsAttribute()
     {
-        if (!$this->domain_names || empty($this->domain_names)) {
+        if (! $this->domain_names || empty($this->domain_names)) {
             return 'No domains specified';
         }
 
@@ -233,7 +233,7 @@ class ClientCertificate extends Model
             return $this->domain_names[0];
         }
 
-        return $this->domain_names[0] . ' +' . (count($this->domain_names) - 1) . ' more';
+        return $this->domain_names[0].' +'.(count($this->domain_names) - 1).' more';
     }
 
     /**
@@ -241,7 +241,7 @@ class ClientCertificate extends Model
      */
     public function getSecurityLevelAttribute()
     {
-        if (!$this->key_size) {
+        if (! $this->key_size) {
             return 'unknown';
         }
 
@@ -267,6 +267,7 @@ class ClientCertificate extends Model
         ];
 
         $algorithm = strtolower($this->algorithm ?? '');
+
         return $algorithms[$algorithm] ?? strtoupper($algorithm);
     }
 
@@ -275,7 +276,7 @@ class ClientCertificate extends Model
      */
     public function hasCertificateFiles()
     {
-        return !empty($this->certificate_path) || !empty($this->private_key_path);
+        return ! empty($this->certificate_path) || ! empty($this->private_key_path);
     }
 
     /**
@@ -287,7 +288,7 @@ class ClientCertificate extends Model
             return 'critical';
         }
 
-        if (!$this->expires_at) {
+        if (! $this->expires_at) {
             return 'none';
         }
 

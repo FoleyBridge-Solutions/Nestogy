@@ -38,7 +38,7 @@ class StoreITDocumentationRequest extends FormRequest
             ],
             'access_level' => [
                 'required',
-                'string', 
+                'string',
                 Rule::in(array_keys(ClientITDocumentation::getAccessLevels())),
             ],
             'review_schedule' => [
@@ -132,7 +132,7 @@ class StoreITDocumentationRequest extends FormRequest
                 ->sortBy('order')
                 ->values()
                 ->toArray();
-            
+
             $this->merge(['procedure_steps' => $steps]);
         }
     }

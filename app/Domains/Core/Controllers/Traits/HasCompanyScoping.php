@@ -11,7 +11,7 @@ trait HasCompanyScoping
     {
         return $query->where('company_id', auth()->user()->company_id);
     }
-    
+
     protected function getCompanyFilters(Request $request): array
     {
         return array_merge(
@@ -19,7 +19,7 @@ trait HasCompanyScoping
             ['company_id' => auth()->user()->company_id]
         );
     }
-    
+
     protected function validateCompanyAccess($model): void
     {
         if ($model->company_id !== auth()->user()->company_id) {

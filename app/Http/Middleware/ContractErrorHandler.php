@@ -2,15 +2,15 @@
 
 namespace App\Http\Middleware;
 
+use App\Exceptions\ContractException;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Exceptions\ContractException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * ContractErrorHandler Middleware
- * 
+ *
  * Comprehensive error handling middleware for contract operations
  * with logging, user-friendly responses, and recovery mechanisms.
  */
@@ -152,7 +152,7 @@ class ContractErrorHandler
     protected function shouldReport($exception): bool
     {
         // Don't report validation exceptions or 404s
-        return !($exception instanceof \Illuminate\Validation\ValidationException ||
+        return ! ($exception instanceof \Illuminate\Validation\ValidationException ||
                  $exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException);
     }
 
@@ -162,16 +162,16 @@ class ContractErrorHandler
     protected function getSanitizedRequestData(Request $request): array
     {
         $data = $request->all();
-        
+
         // Remove sensitive fields
         $sensitiveFields = ['password', 'password_confirmation', 'token', 'signature_data'];
-        
+
         foreach ($sensitiveFields as $field) {
             if (isset($data[$field])) {
                 $data[$field] = '[REDACTED]';
             }
         }
-        
+
         return $data;
     }
 }

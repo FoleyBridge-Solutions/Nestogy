@@ -17,20 +17,20 @@ class QuoteController extends Controller
     public function index(Request $request)
     {
         $query = ClientQuote::with(['client', 'creator'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('quote_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -67,12 +67,12 @@ class QuoteController extends Controller
         }
 
         $quotes = $query->orderBy('created_at', 'desc')
-                        ->paginate(20)
-                        ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $statuses = ClientQuote::getStatuses();
         $currencies = ClientQuote::getCurrencies();
@@ -86,8 +86,8 @@ class QuoteController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $statuses = ClientQuote::getStatuses();
@@ -112,13 +112,13 @@ class QuoteController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'currency' => 'required|in:' . implode(',', array_keys(ClientQuote::getCurrencies())),
+            'currency' => 'required|in:'.implode(',', array_keys(ClientQuote::getCurrencies())),
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
-            'discount_type' => 'nullable|in:' . implode(',', array_keys(ClientQuote::getDiscountTypes())),
+            'discount_type' => 'nullable|in:'.implode(',', array_keys(ClientQuote::getDiscountTypes())),
             'valid_until' => 'nullable|date|after:today',
             'issued_date' => 'nullable|date',
-            'status' => 'required|in:' . implode(',', array_keys(ClientQuote::getStatuses())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientQuote::getStatuses())),
             'conversion_probability' => 'nullable|numeric|min:0|max:100',
             'follow_up_date' => 'nullable|date',
             'terms_conditions' => 'nullable|string',
@@ -131,8 +131,8 @@ class QuoteController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process line items
@@ -141,20 +141,20 @@ class QuoteController extends Controller
             $lines = explode("\n", $request->line_items);
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (!empty($line)) {
+                if (! empty($line)) {
                     // Try to parse "Description | Qty | Price" format
                     $parts = explode('|', $line);
                     if (count($parts) >= 3) {
                         $lineItems[] = [
                             'description' => trim($parts[0]),
                             'quantity' => (float) trim($parts[1]),
-                            'unit_price' => (float) trim($parts[2])
+                            'unit_price' => (float) trim($parts[2]),
                         ];
                     } else {
                         $lineItems[] = [
                             'description' => $line,
                             'quantity' => 1,
-                            'unit_price' => 0
+                            'unit_price' => 0,
                         ];
                     }
                 }
@@ -183,16 +183,16 @@ class QuoteController extends Controller
             'line_items' => $lineItems,
             'created_by' => auth()->id(),
         ]);
-        
+
         $quote->company_id = auth()->user()->company_id;
-        
+
         // Calculate totals
         $quote->calculateTotals();
-        
+
         $quote->save();
 
         return redirect()->route('clients.quotes.standalone.index')
-                        ->with('success', 'Quote created successfully.');
+            ->with('success', 'Quote created successfully.');
     }
 
     /**
@@ -203,7 +203,7 @@ class QuoteController extends Controller
         $this->authorize('view', $quote);
 
         $quote->load('client', 'creator', 'approver', 'invoice');
-        
+
         return view('clients.quotes.show', compact('quote'));
     }
 
@@ -215,8 +215,8 @@ class QuoteController extends Controller
         $this->authorize('update', $quote);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $statuses = ClientQuote::getStatuses();
         $currencies = ClientQuote::getCurrencies();
@@ -242,13 +242,13 @@ class QuoteController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'currency' => 'required|in:' . implode(',', array_keys(ClientQuote::getCurrencies())),
+            'currency' => 'required|in:'.implode(',', array_keys(ClientQuote::getCurrencies())),
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
-            'discount_type' => 'nullable|in:' . implode(',', array_keys(ClientQuote::getDiscountTypes())),
+            'discount_type' => 'nullable|in:'.implode(',', array_keys(ClientQuote::getDiscountTypes())),
             'valid_until' => 'nullable|date',
             'issued_date' => 'nullable|date',
-            'status' => 'required|in:' . implode(',', array_keys(ClientQuote::getStatuses())),
+            'status' => 'required|in:'.implode(',', array_keys(ClientQuote::getStatuses())),
             'conversion_probability' => 'nullable|numeric|min:0|max:100',
             'follow_up_date' => 'nullable|date',
             'terms_conditions' => 'nullable|string',
@@ -261,8 +261,8 @@ class QuoteController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         // Process line items
@@ -271,20 +271,20 @@ class QuoteController extends Controller
             $lines = explode("\n", $request->line_items);
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (!empty($line)) {
+                if (! empty($line)) {
                     // Try to parse "Description | Qty | Price" format
                     $parts = explode('|', $line);
                     if (count($parts) >= 3) {
                         $lineItems[] = [
                             'description' => trim($parts[0]),
                             'quantity' => (float) trim($parts[1]),
-                            'unit_price' => (float) trim($parts[2])
+                            'unit_price' => (float) trim($parts[2]),
                         ];
                     } else {
                         $lineItems[] = [
                             'description' => $line,
                             'quantity' => 1,
-                            'unit_price' => 0
+                            'unit_price' => 0,
                         ];
                     }
                 }
@@ -317,7 +317,7 @@ class QuoteController extends Controller
         $quote->save();
 
         return redirect()->route('clients.quotes.standalone.index')
-                        ->with('success', 'Quote updated successfully.');
+            ->with('success', 'Quote updated successfully.');
     }
 
     /**
@@ -330,7 +330,7 @@ class QuoteController extends Controller
         $quote->delete();
 
         return redirect()->route('clients.quotes.standalone.index')
-                        ->with('success', 'Quote deleted successfully.');
+            ->with('success', 'Quote deleted successfully.');
     }
 
     /**
@@ -342,10 +342,10 @@ class QuoteController extends Controller
 
         if ($quote->send()) {
             return redirect()->route('clients.quotes.standalone.show', $quote)
-                           ->with('success', 'Quote sent to client successfully.');
+                ->with('success', 'Quote sent to client successfully.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Quote cannot be sent in its current status.');
+                ->with('error', 'Quote cannot be sent in its current status.');
         }
     }
 
@@ -360,16 +360,16 @@ class QuoteController extends Controller
         if ($request->has('signature')) {
             $signatureData = [
                 'signature' => $request->signature,
-                'ip' => $request->ip()
+                'ip' => $request->ip(),
             ];
         }
 
         if ($quote->accept($signatureData)) {
             return redirect()->route('clients.quotes.standalone.show', $quote)
-                           ->with('success', 'Quote accepted successfully.');
+                ->with('success', 'Quote accepted successfully.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Quote cannot be accepted in its current status.');
+                ->with('error', 'Quote cannot be accepted in its current status.');
         }
     }
 
@@ -382,10 +382,10 @@ class QuoteController extends Controller
 
         if ($quote->decline($request->get('reason'))) {
             return redirect()->route('clients.quotes.standalone.show', $quote)
-                           ->with('success', 'Quote declined.');
+                ->with('success', 'Quote declined.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Quote cannot be declined in its current status.');
+                ->with('error', 'Quote cannot be declined in its current status.');
         }
     }
 
@@ -400,10 +400,10 @@ class QuoteController extends Controller
 
         if ($invoice) {
             return redirect()->route('clients.quotes.standalone.show', $quote)
-                           ->with('success', 'Quote converted to invoice successfully.');
+                ->with('success', 'Quote converted to invoice successfully.');
         } else {
             return redirect()->back()
-                           ->with('error', 'Quote cannot be converted in its current status.');
+                ->with('error', 'Quote cannot be converted in its current status.');
         }
     }
 
@@ -422,17 +422,17 @@ class QuoteController extends Controller
             'accepted_date',
             'declined_date',
             'converted_date',
-            'invoice_id'
+            'invoice_id',
         ]);
 
         $newQuote->quote_number = ClientQuote::generateQuoteNumber();
         $newQuote->status = 'draft';
-        $newQuote->title = $quote->title . ' (Copy)';
+        $newQuote->title = $quote->title.' (Copy)';
         $newQuote->created_by = auth()->id();
         $newQuote->save();
 
         return redirect()->route('clients.quotes.standalone.edit', $newQuote)
-                        ->with('success', 'Quote duplicated successfully.');
+            ->with('success', 'Quote duplicated successfully.');
     }
 
     /**
@@ -441,15 +441,15 @@ class QuoteController extends Controller
     public function export(Request $request)
     {
         $query = ClientQuote::with(['client', 'creator'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('quote_number', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%");
+                    ->orWhere('title', 'like', "%{$search}%");
             });
         }
 
@@ -463,16 +463,16 @@ class QuoteController extends Controller
 
         $quotes = $query->orderBy('created_at', 'desc')->get();
 
-        $filename = 'quotes_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'quotes_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($quotes) {
+        $callback = function () use ($quotes) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Quote Number',
@@ -485,7 +485,7 @@ class QuoteController extends Controller
                 'Valid Until',
                 'Issued Date',
                 'Conversion Probability',
-                'Created At'
+                'Created At',
             ]);
 
             // CSV data
@@ -500,11 +500,11 @@ class QuoteController extends Controller
                     $quote->currency,
                     $quote->valid_until ? $quote->valid_until->format('Y-m-d') : '',
                     $quote->issued_date ? $quote->issued_date->format('Y-m-d') : '',
-                    $quote->conversion_probability . '%',
+                    $quote->conversion_probability.'%',
                     $quote->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 

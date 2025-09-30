@@ -30,7 +30,7 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes
             $table->index('company_id');
             $table->index('category_id');
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->index('profile_type');
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'priority']);
-            
+
             // Foreign keys
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('set null');

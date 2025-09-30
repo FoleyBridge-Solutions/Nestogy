@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Network Model
- * 
+ *
  * Represents network configurations for client locations.
  * Manages VLAN, IP ranges, gateways, and DHCP configurations.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property string|null $description
@@ -101,7 +101,7 @@ class Network extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -109,7 +109,7 @@ class Network extends Model
      */
     public function hasVlan(): bool
     {
-        return !is_null($this->vlan);
+        return ! is_null($this->vlan);
     }
 
     /**
@@ -117,7 +117,7 @@ class Network extends Model
      */
     public function hasDhcpRange(): bool
     {
-        return !empty($this->dhcp_range);
+        return ! empty($this->dhcp_range);
     }
 
     /**
@@ -139,9 +139,9 @@ class Network extends Model
     public function getFormattedNetwork(): string
     {
         $info = $this->network;
-        
+
         if ($this->vlan) {
-            $info .= ' (VLAN ' . $this->vlan . ')';
+            $info .= ' (VLAN '.$this->vlan.')';
         }
 
         return $info;
@@ -152,18 +152,18 @@ class Network extends Model
      */
     public function getNetworkDetails(): array
     {
-        if (!$this->network || !str_contains($this->network, '/')) {
+        if (! $this->network || ! str_contains($this->network, '/')) {
             return [];
         }
 
         [$network, $prefix] = explode('/', $this->network);
         $prefix = (int) $prefix;
-        
+
         // Calculate subnet mask
-        $mask = str_repeat('1', $prefix) . str_repeat('0', 32 - $prefix);
+        $mask = str_repeat('1', $prefix).str_repeat('0', 32 - $prefix);
         $mask = chunk_split($mask, 8, '.');
         $mask = rtrim($mask, '.');
-        $subnetMask = implode('.', array_map(function($octet) {
+        $subnetMask = implode('.', array_map(function ($octet) {
             return bindec($octet);
         }, explode('.', $mask)));
 
@@ -188,7 +188,7 @@ class Network extends Model
      */
     public function containsIp(string $ip): bool
     {
-        if (!$this->network || !str_contains($this->network, '/')) {
+        if (! $this->network || ! str_contains($this->network, '/')) {
             return false;
         }
 
@@ -221,7 +221,7 @@ class Network extends Model
 
         for ($i = $start; $i <= $end; $i++) {
             $ip = long2ip($i);
-            if (!in_array($ip, $usedIps)) {
+            if (! in_array($ip, $usedIps)) {
                 $available[] = $ip;
             }
         }
@@ -235,6 +235,7 @@ class Network extends Model
     public function getNextAvailableIp(): ?string
     {
         $available = $this->getAvailableIps();
+
         return $available[0] ?? null;
     }
 
@@ -273,6 +274,7 @@ class Network extends Model
         }
 
         $usedCount = $this->getUsedIpCount() + 1; // +1 for gateway
+
         return round(($usedCount / $details['total_hosts']) * 100, 2);
     }
 
@@ -282,10 +284,10 @@ class Network extends Model
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', '%' . $search . '%')
-              ->orWhere('network', 'like', '%' . $search . '%')
-              ->orWhere('gateway', 'like', '%' . $search . '%')
-              ->orWhere('vlan', $search);
+            $q->where('name', 'like', '%'.$search.'%')
+                ->orWhere('network', 'like', '%'.$search.'%')
+                ->orWhere('gateway', 'like', '%'.$search.'%')
+                ->orWhere('vlan', $search);
         });
     }
 
@@ -372,7 +374,7 @@ class Network extends Model
 
         // Update accessed_at when network is retrieved
         static::retrieved(function ($network) {
-            if (!$network->wasRecentlyCreated) {
+            if (! $network->wasRecentlyCreated) {
                 $network->updateAccessedAt();
             }
         });
@@ -380,7 +382,7 @@ class Network extends Model
         // Validate network configuration before saving
         static::saving(function ($network) {
             // Validate that gateway is within the network range
-            if (!$network->containsIp($network->gateway)) {
+            if (! $network->containsIp($network->gateway)) {
                 throw new \InvalidArgumentException('Gateway IP must be within the network range');
             }
         });

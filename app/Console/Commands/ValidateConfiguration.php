@@ -2,15 +2,16 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Domains\Core\Services\ConfigurationValidationService;
+use Illuminate\Console\Command;
 
 class ValidateConfiguration extends Command
 {
-
     // Class constants to reduce duplication
     private const VALIDATION_PASS = 'pass';
+
     private const VALIDATION_FAIL = 'fail';
+
     private const MSG_VALIDATE_START = 'Validating configuration...';
 
     /**
@@ -50,6 +51,7 @@ class ValidateConfiguration extends Command
         // Output as JSON if requested
         if ($this->option('json')) {
             $this->line(json_encode($report, JSON_PRETTY_PRINT));
+
             return $isValid ? 0 : 1;
         }
 
@@ -68,6 +70,7 @@ class ValidateConfiguration extends Command
 
         if (empty($missing)) {
             $this->info('✓ All required configurations are present');
+
             return 0;
         }
 
@@ -85,7 +88,7 @@ class ValidateConfiguration extends Command
     protected function displayResults(array $report): void
     {
         // Display errors
-        if (!empty($report['errors'])) {
+        if (! empty($report['errors'])) {
             $this->error('Configuration Errors Found:');
             foreach ($report['errors'] as $error) {
                 $this->line("  ✗ {$error}", 'error');
@@ -94,7 +97,7 @@ class ValidateConfiguration extends Command
         }
 
         // Display warnings if requested
-        if ($this->option('show-warnings') && !empty($report['warnings'])) {
+        if ($this->option('show-warnings') && ! empty($report['warnings'])) {
             $this->warn('Configuration Warnings:');
             foreach ($report['warnings'] as $warning) {
                 $this->line("  ⚠ {$warning}", 'warn');
@@ -124,7 +127,7 @@ class ValidateConfiguration extends Command
             $this->newLine();
             $this->info('✓ Configuration validation passed!');
 
-            if ($report['warning_count'] > 0 && !$this->option('show-warnings')) {
+            if ($report['warning_count'] > 0 && ! $this->option('show-warnings')) {
                 $this->line('  (Use --show-warnings to see warnings)');
             }
         } else {

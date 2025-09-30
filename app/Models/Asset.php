@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasArchive;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Asset extends Model
 {
-    use HasFactory, BelongsToCompany, HasArchive;
+    use BelongsToCompany, HasArchive, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -75,7 +75,7 @@ class Asset extends Model
         'Firewall',
         'Access Point',
         'Storage',
-        'Other'
+        'Other',
     ];
 
     // Asset statuses
@@ -87,13 +87,16 @@ class Asset extends Model
         'Broken - Not Repairable',
         'Out for Repair',
         'Lost/Stolen',
-        'Unknown'
+        'Unknown',
     ];
 
     // Support statuses
     const SUPPORT_STATUS_SUPPORTED = 'supported';
+
     const SUPPORT_STATUS_UNSUPPORTED = 'unsupported';
+
     const SUPPORT_STATUS_PENDING_ASSIGNMENT = 'pending_assignment';
+
     const SUPPORT_STATUS_EXCLUDED = 'excluded';
 
     const SUPPORT_STATUSES = [
@@ -286,7 +289,7 @@ class Asset extends Model
      */
     public function getFullNameAttribute()
     {
-        return $this->type . ' - ' . $this->name;
+        return $this->type.' - '.$this->name;
     }
 
     /**
@@ -302,8 +305,8 @@ class Asset extends Model
      */
     public function getIsWarrantyExpiringSoonAttribute()
     {
-        return $this->warranty_expire && 
-               $this->warranty_expire->isFuture() && 
+        return $this->warranty_expire &&
+               $this->warranty_expire->isFuture() &&
                $this->warranty_expire->diffInDays(now()) <= 30;
     }
 
@@ -312,10 +315,10 @@ class Asset extends Model
      */
     public function getAgeInYearsAttribute()
     {
-        if (!$this->purchase_date) {
+        if (! $this->purchase_date) {
             return null;
         }
-        
+
         return $this->purchase_date->diffInYears(now());
     }
 
@@ -343,7 +346,7 @@ class Asset extends Model
             'Router' => 'fa-route',
             'Firewall' => 'fa-shield-alt',
             'Access Point' => 'fa-wifi',
-            'Other' => 'fa-cube'
+            'Other' => 'fa-cube',
         ];
 
         return $icons[$this->type] ?? 'fa-cube';
@@ -362,7 +365,7 @@ class Asset extends Model
             'Broken - Not Repairable' => 'danger',
             'Out for Repair' => 'warning',
             'Lost/Stolen' => 'danger',
-            'Unknown' => 'secondary'
+            'Unknown' => 'secondary',
         ];
 
         return $colors[$this->status] ?? 'secondary';
@@ -406,7 +409,7 @@ class Asset extends Model
      */
     public function supportsRemoteManagement(): bool
     {
-        return $this->hasRmmConnection() && 
+        return $this->hasRmmConnection() &&
                $this->primaryRmmConnection()->integration->is_active;
     }
 
@@ -480,7 +483,7 @@ class Asset extends Model
      */
     public function getSupportLevelDisplayAttribute(): string
     {
-        if (!$this->support_level) {
+        if (! $this->support_level) {
             return 'None';
         }
 
@@ -492,7 +495,7 @@ class Asset extends Model
      */
     public function needsSupportEvaluation(int $daysOld = 30): bool
     {
-        if (!$this->support_last_evaluated_at) {
+        if (! $this->support_last_evaluated_at) {
             return true;
         }
 
@@ -504,7 +507,7 @@ class Asset extends Model
      */
     public function daysSinceLastSupportEvaluation(): ?int
     {
-        if (!$this->support_last_evaluated_at) {
+        if (! $this->support_last_evaluated_at) {
             return null;
         }
 
@@ -565,10 +568,10 @@ class Asset extends Model
     public function scopeNeedingSupportEvaluation($query, int $daysOld = 30)
     {
         $cutoffDate = now()->subDays($daysOld);
-        
+
         return $query->where(function ($q) use ($cutoffDate) {
             $q->whereNull('support_last_evaluated_at')
-              ->orWhere('support_last_evaluated_at', '<', $cutoffDate);
+                ->orWhere('support_last_evaluated_at', '<', $cutoffDate);
         });
     }
 

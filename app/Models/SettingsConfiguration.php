@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
-use App\Traits\BelongsToCompany;
 
 class SettingsConfiguration extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -34,11 +34,17 @@ class SettingsConfiguration extends Model
      * Available domains
      */
     const DOMAIN_COMPANY = 'company';
+
     const DOMAIN_COMMUNICATION = 'communication';
+
     const DOMAIN_FINANCIAL = 'financial';
+
     const DOMAIN_SECURITY = 'security';
+
     const DOMAIN_INTEGRATIONS = 'integrations';
+
     const DOMAIN_OPERATIONS = 'operations';
+
     const DOMAIN_SYSTEM = 'system';
 
     /**
@@ -106,14 +112,14 @@ class SettingsConfiguration extends Model
     public static function getSettings(int $companyId, string $domain, string $category): array
     {
         $cacheKey = "settings_{$companyId}_{$domain}_{$category}";
-        
+
         return Cache::remember($cacheKey, now()->addHours(1), function () use ($companyId, $domain, $category) {
             $config = self::where('company_id', $companyId)
                 ->where('domain', $domain)
                 ->where('category', $category)
                 ->where('is_active', true)
                 ->first();
-            
+
             return $config ? $config->settings : [];
         });
     }
@@ -139,7 +145,7 @@ class SettingsConfiguration extends Model
 
         // Clear cache
         Cache::forget("settings_{$companyId}_{$domain}_{$category}");
-        
+
         return $config;
     }
 
@@ -149,6 +155,7 @@ class SettingsConfiguration extends Model
     public static function get(int $companyId, string $domain, string $category, string $key, $default = null)
     {
         $settings = self::getSettings($companyId, $domain, $category);
+
         return data_get($settings, $key, $default);
     }
 

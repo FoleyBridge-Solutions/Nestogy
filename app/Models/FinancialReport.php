@@ -3,18 +3,18 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 /**
  * FinancialReport Model
- * 
+ *
  * Manages scheduled and on-demand financial reports with automated generation
  * and delivery capabilities.
- * 
+ *
  * @property int $id
  * @property int $company_id
  * @property string $report_type
@@ -41,7 +41,7 @@ use Carbon\Carbon;
  */
 class FinancialReport extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'financial_reports';
 
@@ -89,30 +89,46 @@ class FinancialReport extends Model
 
     // Report Types
     const TYPE_DAILY = 'daily';
+
     const TYPE_WEEKLY = 'weekly';
+
     const TYPE_MONTHLY = 'monthly';
+
     const TYPE_QUARTERLY = 'quarterly';
+
     const TYPE_ANNUAL = 'annual';
+
     const TYPE_CUSTOM = 'custom';
 
     // Status
     const STATUS_SCHEDULED = 'scheduled';
+
     const STATUS_GENERATING = 'generating';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_FAILED = 'failed';
 
     // Frequency
     const FREQUENCY_ONCE = 'once';
+
     const FREQUENCY_DAILY = 'daily';
+
     const FREQUENCY_WEEKLY = 'weekly';
+
     const FREQUENCY_MONTHLY = 'monthly';
+
     const FREQUENCY_QUARTERLY = 'quarterly';
+
     const FREQUENCY_ANNUALLY = 'annually';
 
     // Formats
     const FORMAT_PDF = 'pdf';
+
     const FORMAT_EXCEL = 'excel';
+
     const FORMAT_CSV = 'csv';
+
     const FORMAT_JSON = 'json';
 
     /**
@@ -128,8 +144,8 @@ class FinancialReport extends Model
      */
     public function isDueForGeneration(): bool
     {
-        return $this->is_active && 
-               $this->next_generation_at && 
+        return $this->is_active &&
+               $this->next_generation_at &&
                Carbon::now()->gte($this->next_generation_at);
     }
 
@@ -189,7 +205,7 @@ class FinancialReport extends Model
      */
     public function getFormattedFileSize(): string
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return 'N/A';
         }
 
@@ -202,7 +218,7 @@ class FinancialReport extends Model
             $unitIndex++;
         }
 
-        return round($size, 2) . ' ' . $units[$unitIndex];
+        return round($size, 2).' '.$units[$unitIndex];
     }
 
     /**
@@ -219,8 +235,8 @@ class FinancialReport extends Model
     public function scopeDueForGeneration($query)
     {
         return $query->active()
-                    ->where('next_generation_at', '<=', now())
-                    ->whereIn('status', [self::STATUS_SCHEDULED, self::STATUS_FAILED]);
+            ->where('next_generation_at', '<=', now())
+            ->whereIn('status', [self::STATUS_SCHEDULED, self::STATUS_FAILED]);
     }
 
     /**

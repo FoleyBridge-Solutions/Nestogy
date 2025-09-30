@@ -3,15 +3,13 @@
 namespace App\Domains\Ticket\Services;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Domains\Ticket\Models\TicketComment;
-use App\Domains\Ticket\Services\TicketNotificationService;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Resolution Service
- * 
+ *
  * Handles ticket resolution and reopening logic with proper validation,
  * notifications, and audit trail.
  */
@@ -26,13 +24,6 @@ class ResolutionService
 
     /**
      * Resolve a ticket
-     * 
-     * @param Ticket $ticket
-     * @param User $resolver
-     * @param string|null $summary
-     * @param bool $allowClientReopen
-     * @param array $options
-     * @return bool
      */
     public function resolveTicket(
         Ticket $ticket,
@@ -50,7 +41,7 @@ class ResolutionService
             }
 
             // Check permissions
-            if (!$resolver->can('resolve', $ticket)) {
+            if (! $resolver->can('resolve', $ticket)) {
                 throw new \Exception('User does not have permission to resolve this ticket');
             }
 
@@ -96,7 +87,7 @@ class ResolutionService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Failed to resolve ticket', [
                 'ticket_id' => $ticket->id,
                 'error' => $e->getMessage(),
@@ -108,12 +99,6 @@ class ResolutionService
 
     /**
      * Reopen a resolved ticket
-     * 
-     * @param Ticket $ticket
-     * @param User $user
-     * @param string|null $reason
-     * @param array $options
-     * @return bool
      */
     public function reopenTicket(
         Ticket $ticket,
@@ -125,7 +110,7 @@ class ResolutionService
             DB::beginTransaction();
 
             // Validate ticket can be reopened
-            if (!$ticket->canBeReopenedBy($user)) {
+            if (! $ticket->canBeReopenedBy($user)) {
                 throw new \Exception('You do not have permission to reopen this ticket');
             }
 
@@ -178,7 +163,7 @@ class ResolutionService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Failed to reopen ticket', [
                 'ticket_id' => $ticket->id,
                 'error' => $e->getMessage(),
@@ -190,11 +175,6 @@ class ResolutionService
 
     /**
      * Close a resolved ticket permanently
-     * 
-     * @param Ticket $ticket
-     * @param User $user
-     * @param string|null $note
-     * @return bool
      */
     public function closeResolvedTicket(
         Ticket $ticket,
@@ -205,12 +185,12 @@ class ResolutionService
             DB::beginTransaction();
 
             // Check if ticket is resolved
-            if (!$ticket->is_resolved) {
+            if (! $ticket->is_resolved) {
                 throw new \Exception('Only resolved tickets can be closed');
             }
 
             // Check permissions
-            if (!$user->can('close', $ticket)) {
+            if (! $user->can('close', $ticket)) {
                 throw new \Exception('User does not have permission to close this ticket');
             }
 
@@ -254,7 +234,7 @@ class ResolutionService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Failed to close ticket', [
                 'ticket_id' => $ticket->id,
                 'error' => $e->getMessage(),
@@ -266,11 +246,6 @@ class ResolutionService
 
     /**
      * Prevent client from reopening a ticket
-     * 
-     * @param Ticket $ticket
-     * @param User $user
-     * @param string|null $reason
-     * @return bool
      */
     public function lockTicketFromReopening(
         Ticket $ticket,
@@ -279,7 +254,7 @@ class ResolutionService
     ): bool {
         try {
             // Check permissions
-            if (!$user->can('manage', $ticket)) {
+            if (! $user->can('manage', $ticket)) {
                 throw new \Exception('User does not have permission to manage this ticket');
             }
 
@@ -315,10 +290,6 @@ class ResolutionService
 
     /**
      * Generate default resolution summary
-     * 
-     * @param Ticket $ticket
-     * @param array $options
-     * @return string
      */
     protected function generateResolutionSummary(Ticket $ticket, array $options): string
     {
@@ -332,18 +303,14 @@ class ResolutionService
 
         // Add resolution type if specified
         if (isset($options['resolution_type'])) {
-            $parts[] = 'Resolution: ' . $options['resolution_type'];
+            $parts[] = 'Resolution: '.$options['resolution_type'];
         }
 
-        return implode('. ', $parts) . '.';
+        return implode('. ', $parts).'.';
     }
 
     /**
      * Generate default reopen reason
-     * 
-     * @param User $user
-     * @param array $options
-     * @return string
      */
     protected function generateReopenReason(User $user, array $options): string
     {
@@ -356,15 +323,12 @@ class ResolutionService
 
     /**
      * Escalate a reopened ticket
-     * 
-     * @param Ticket $ticket
-     * @return void
      */
     protected function escalateReopenedTicket(Ticket $ticket): void
     {
         // Increase priority if not already critical
         if ($ticket->priority !== Ticket::PRIORITY_CRITICAL) {
-            $newPriority = match($ticket->priority) {
+            $newPriority = match ($ticket->priority) {
                 Ticket::PRIORITY_LOW => Ticket::PRIORITY_MEDIUM,
                 Ticket::PRIORITY_MEDIUM => Ticket::PRIORITY_HIGH,
                 Ticket::PRIORITY_HIGH => Ticket::PRIORITY_CRITICAL,
@@ -387,11 +351,9 @@ class ResolutionService
 
     /**
      * Get resolution statistics for a period
-     * 
-     * @param int $companyId
-     * @param \Carbon\Carbon $startDate
-     * @param \Carbon\Carbon $endDate
-     * @return array
+     *
+     * @param  \Carbon\Carbon  $startDate
+     * @param  \Carbon\Carbon  $endDate
      */
     public function getResolutionStats(int $companyId, $startDate, $endDate): array
     {
@@ -405,8 +367,8 @@ class ResolutionService
         return [
             'total_tickets' => $tickets->count(),
             'resolved_count' => $resolved->count(),
-            'resolution_rate' => $tickets->count() > 0 
-                ? round(($resolved->count() / $tickets->count()) * 100, 2) 
+            'resolution_rate' => $tickets->count() > 0
+                ? round(($resolved->count() / $tickets->count()) * 100, 2)
                 : 0,
             'reopened_count' => $reopened->count(),
             'reopen_rate' => $resolved->count() > 0

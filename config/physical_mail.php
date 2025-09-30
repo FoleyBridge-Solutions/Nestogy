@@ -39,7 +39,7 @@ return [
             'postalOrZip' => env('COMPANY_ZIP', '10001'),
             'country' => env('COMPANY_COUNTRY', 'US'),
         ],
-        
+
         'mailing_class' => env('DEFAULT_MAILING_CLASS', 'first_class'),
         'color' => env('DEFAULT_MAIL_COLOR', true),
         'double_sided' => env('DEFAULT_MAIL_DOUBLE_SIDED', true),
@@ -177,7 +177,7 @@ return [
     |
     */
     'webhooks' => [
-        'endpoint' => env('APP_URL') . '/api/webhooks/postgrid',
+        'endpoint' => env('APP_URL').'/api/webhooks/postgrid',
         'events' => [
             'letter.created',
             'letter.updated',

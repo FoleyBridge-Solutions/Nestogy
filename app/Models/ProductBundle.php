@@ -5,13 +5,13 @@ namespace App\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductBundle extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -48,20 +48,20 @@ class ProductBundle extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'product_bundle_items', 'bundle_id', 'product_id')
-                    ->withPivot([
-                        'quantity',
-                        'is_required',
-                        'is_default',
-                        'discount_type',
-                        'discount_value',
-                        'price_override',
-                        'min_quantity',
-                        'max_quantity',
-                        'allowed_variants',
-                        'sort_order'
-                    ])
-                    ->withTimestamps()
-                    ->orderBy('pivot_sort_order');
+            ->withPivot([
+                'quantity',
+                'is_required',
+                'is_default',
+                'discount_type',
+                'discount_value',
+                'price_override',
+                'min_quantity',
+                'max_quantity',
+                'allowed_variants',
+                'sort_order',
+            ])
+            ->withTimestamps()
+            ->orderBy('pivot_sort_order');
     }
 
     /**
@@ -77,7 +77,7 @@ class ProductBundle extends Model
      */
     public function isAvailable(): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -141,20 +141,20 @@ class ProductBundle extends Model
 
         foreach ($products as $product) {
             // Skip optional products not selected
-            if ($selectedProductIds !== null && 
-                !$product->pivot->is_required && 
-                !in_array($product->id, $selectedProductIds)) {
+            if ($selectedProductIds !== null &&
+                ! $product->pivot->is_required &&
+                ! in_array($product->id, $selectedProductIds)) {
                 continue;
             }
 
             $quantity = $product->pivot->quantity;
-            
+
             // Check for price override
             if ($product->pivot->price_override !== null) {
                 $itemPrice = $product->pivot->price_override;
             } else {
                 $itemPrice = $product->base_price;
-                
+
                 // Apply item-specific discount
                 if ($product->pivot->discount_type === 'percentage') {
                     $itemPrice *= (1 - $product->pivot->discount_value / 100);
@@ -162,7 +162,7 @@ class ProductBundle extends Model
                     $itemPrice -= $product->pivot->discount_value;
                 }
             }
-            
+
             $total += $itemPrice * $quantity;
         }
 
@@ -189,9 +189,9 @@ class ProductBundle extends Model
 
         foreach ($products as $product) {
             // Skip optional products not selected
-            if ($selectedProductIds !== null && 
-                !$product->pivot->is_required && 
-                !in_array($product->id, $selectedProductIds)) {
+            if ($selectedProductIds !== null &&
+                ! $product->pivot->is_required &&
+                ! in_array($product->id, $selectedProductIds)) {
                 continue;
             }
 
@@ -199,7 +199,7 @@ class ProductBundle extends Model
         }
 
         $bundlePrice = $this->calculatePrice($selectedProductIds);
-        
+
         return max(0, $originalTotal - $bundlePrice);
     }
 
@@ -213,9 +213,9 @@ class ProductBundle extends Model
 
         foreach ($products as $product) {
             // Skip optional products not selected
-            if ($selectedProductIds !== null && 
-                !$product->pivot->is_required && 
-                !in_array($product->id, $selectedProductIds)) {
+            if ($selectedProductIds !== null &&
+                ! $product->pivot->is_required &&
+                ! in_array($product->id, $selectedProductIds)) {
                 continue;
             }
 
@@ -228,7 +228,7 @@ class ProductBundle extends Model
 
         $bundlePrice = $this->calculatePrice($selectedProductIds);
         $savings = $originalTotal - $bundlePrice;
-        
+
         return ($savings / $originalTotal) * 100;
     }
 
@@ -239,26 +239,26 @@ class ProductBundle extends Model
     {
         $errors = [];
 
-        if (!$this->isConfigurable()) {
+        if (! $this->isConfigurable()) {
             return $errors;
         }
 
         foreach ($this->products as $product) {
             $isSelected = in_array($product->id, $selectedProductIds);
-            
+
             // Check required products
-            if ($product->pivot->is_required && !$isSelected) {
+            if ($product->pivot->is_required && ! $isSelected) {
                 $errors[] = "Product '{$product->name}' is required in this bundle";
             }
-            
+
             // Check quantity constraints
             if ($isSelected) {
                 $selectedQuantity = $this->getSelectedQuantity($product->id, $selectedProductIds);
-                
+
                 if ($product->pivot->min_quantity && $selectedQuantity < $product->pivot->min_quantity) {
                     $errors[] = "Minimum quantity for '{$product->name}' is {$product->pivot->min_quantity}";
                 }
-                
+
                 if ($product->pivot->max_quantity && $selectedQuantity > $product->pivot->max_quantity) {
                     $errors[] = "Maximum quantity for '{$product->name}' is {$product->pivot->max_quantity}";
                 }
@@ -276,6 +276,7 @@ class ProductBundle extends Model
         // This would depend on how selection is structured
         // For now, return the pivot quantity
         $product = $this->products()->find($productId);
+
         return $product ? $product->pivot->quantity : 0;
     }
 
@@ -285,8 +286,8 @@ class ProductBundle extends Model
     public function duplicate(): ProductBundle
     {
         $newBundle = $this->replicate();
-        $newBundle->name = $this->name . ' (Copy)';
-        $newBundle->sku = $this->sku ? $this->sku . '-COPY' : null;
+        $newBundle->name = $this->name.' (Copy)';
+        $newBundle->sku = $this->sku ? $this->sku.'-COPY' : null;
         $newBundle->save();
 
         // Copy bundle items
@@ -305,14 +306,14 @@ class ProductBundle extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
-                    ->where(function ($q) {
-                        $q->whereNull('available_from')
-                          ->orWhere('available_from', '<=', now());
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('available_until')
-                          ->orWhere('available_until', '>=', now());
-                    });
+            ->where(function ($q) {
+                $q->whereNull('available_from')
+                    ->orWhere('available_from', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('available_until')
+                    ->orWhere('available_until', '>=', now());
+            });
     }
 
     /**

@@ -4,13 +4,13 @@ namespace App\Domains\Integration\Http\Controllers\Webhooks;
 
 use App\Domains\Integration\Services\WebhookService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
  * ConnectWise Automate Webhook Controller
- * 
+ *
  * Handles webhooks from ConnectWise Automate RMM system.
  * Processes device alerts, status updates, and monitoring data.
  */
@@ -112,7 +112,7 @@ class ConnectWiseWebhookController extends Controller
                 'headers' => [
                     'content_type' => $request->header('Content-Type'),
                     'user_agent' => $request->userAgent(),
-                    'api_key_present' => !empty($request->header('X-CW-API-Key')),
+                    'api_key_present' => ! empty($request->header('X-CW-API-Key')),
                 ],
                 'payload_preview' => $this->getPayloadPreview($request->all()),
             ];
@@ -138,11 +138,11 @@ class ConnectWiseWebhookController extends Controller
     protected function getPayloadPreview(array $payload): array
     {
         $preview = [];
-        
+
         // Show key fields without sensitive data
         $safeFields = [
             'ComputerID',
-            'ComputerName', 
+            'ComputerName',
             'ClientID',
             'AlertID',
             'AlertMessage',
@@ -150,15 +150,15 @@ class ConnectWiseWebhookController extends Controller
             'AlertType',
             'DateStamp',
         ];
-        
+
         foreach ($safeFields as $field) {
             if (isset($payload[$field])) {
                 $preview[$field] = $payload[$field];
             }
         }
-        
+
         $preview['total_fields'] = count($payload);
-        
+
         return $preview;
     }
 }

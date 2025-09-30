@@ -2,17 +2,17 @@
 
 namespace App\Http\Middleware\Portal;
 
-use App\Models\ClientPortalSession;
 use App\Models\Client;
+use App\Models\ClientPortalSession;
 use Closure;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Portal Authentication Middleware
- * 
+ *
  * Handles portal-specific authentication including:
  * - Session validation and management
  * - Client authentication verification
@@ -29,15 +29,15 @@ class PortalAuthMiddleware
     {
         // Get session ID from header or request parameter
         $sessionId = $this->getSessionId($request);
-        
-        if (!$sessionId) {
+
+        if (! $sessionId) {
             return $this->unauthorizedResponse('Portal session required');
         }
 
         // Validate and retrieve session
         $session = $this->validateSession($sessionId, $request);
-        
-        if (!$session) {
+
+        if (! $session) {
             return $this->unauthorizedResponse('Invalid or expired session');
         }
 
@@ -65,14 +65,14 @@ class PortalAuthMiddleware
     {
         // Check multiple sources for session ID
         $sessionId = $request->header('X-Portal-Session');
-        
-        if (!$sessionId) {
+
+        if (! $sessionId) {
             $authHeader = $request->header('Authorization');
             if ($authHeader && is_string($authHeader) && str_starts_with($authHeader, 'Bearer ')) {
                 $sessionId = substr($authHeader, 7);
             }
         }
-        
+
         return $sessionId
             ?? $request->input('session_id')
             ?? $request->cookie('portal_session');
@@ -89,31 +89,35 @@ class PortalAuthMiddleware
                 ->where('is_active', true)
                 ->first();
 
-            if (!$session) {
+            if (! $session) {
                 return null;
             }
 
             // Check if session is expired
             if ($session->expires_at && $session->expires_at->isPast()) {
                 $this->invalidateSession($session, 'expired');
+
                 return null;
             }
 
             // Verify client is still active
-            if (!$session->client || $session->client->status !== 'active') {
+            if (! $session->client || $session->client->status !== 'active') {
                 $this->invalidateSession($session, 'client_inactive');
+
                 return null;
             }
 
             // Check portal access permissions
-            if (!$session->client->portalAccess || !$session->client->portalAccess->is_enabled) {
+            if (! $session->client->portalAccess || ! $session->client->portalAccess->is_enabled) {
                 $this->invalidateSession($session, 'access_disabled');
+
                 return null;
             }
 
             // Security checks
-            if (!$this->performSecurityChecks($session, $request)) {
+            if (! $this->performSecurityChecks($session, $request)) {
                 $this->invalidateSession($session, 'security_violation');
+
                 return null;
             }
 
@@ -125,7 +129,7 @@ class PortalAuthMiddleware
                 'error' => $e->getMessage(),
                 'ip' => $request->ip(),
             ]);
-            
+
             return null;
         }
     }
@@ -137,18 +141,19 @@ class PortalAuthMiddleware
     {
         // IP address validation (if enabled)
         $portalAccess = $session->client->portalAccess;
-        
-        if ($portalAccess->ip_restrictions && !empty($portalAccess->allowed_ips)) {
+
+        if ($portalAccess->ip_restrictions && ! empty($portalAccess->allowed_ips)) {
             $clientIp = $request->ip();
             $allowedIps = $portalAccess->allowed_ips;
-            
-            if (!in_array($clientIp, $allowedIps) && !$this->isIpInRange($clientIp, $allowedIps)) {
+
+            if (! in_array($clientIp, $allowedIps) && ! $this->isIpInRange($clientIp, $allowedIps)) {
                 Log::warning('Portal access from unauthorized IP', [
                     'session_id' => $session->id,
                     'client_id' => $session->client_id,
                     'client_ip' => $clientIp,
                     'allowed_ips' => $allowedIps,
                 ]);
+
                 return false;
             }
         }
@@ -158,13 +163,13 @@ class PortalAuthMiddleware
             $now = Carbon::now($portalAccess->timezone ?? 'UTC');
             $currentTime = $now->format('H:i');
             $currentDay = $now->dayOfWeek; // 0 = Sunday, 6 = Saturday
-            
+
             $restrictions = $portalAccess->allowed_hours ?? [];
-            
-            if (!empty($restrictions)) {
+
+            if (! empty($restrictions)) {
                 $dayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][$currentDay];
                 $allowedHours = $restrictions[$dayKey] ?? null;
-                
+
                 if ($allowedHours && isset($allowedHours['start'], $allowedHours['end'])) {
                     if ($currentTime < $allowedHours['start'] || $currentTime > $allowedHours['end']) {
                         Log::info('Portal access outside allowed hours', [
@@ -173,6 +178,7 @@ class PortalAuthMiddleware
                             'current_time' => $currentTime,
                             'allowed_hours' => $allowedHours,
                         ]);
+
                         return false;
                     }
                 }
@@ -210,7 +216,7 @@ class PortalAuthMiddleware
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -219,7 +225,8 @@ class PortalAuthMiddleware
      */
     private function ipInCidr(string $ip, string $cidr): bool
     {
-        list($subnet, $mask) = explode('/', $cidr);
+        [$subnet, $mask] = explode('/', $cidr);
+
         return (ip2long($ip) & ~((1 << (32 - $mask)) - 1)) === ip2long($subnet);
     }
 
@@ -228,7 +235,8 @@ class PortalAuthMiddleware
      */
     private function ipInRange(string $ip, string $range): bool
     {
-        list($start, $end) = explode('-', $range);
+        [$start, $end] = explode('-', $range);
+
         return ip2long($ip) >= ip2long($start) && ip2long($ip) <= ip2long($end);
     }
 
@@ -237,9 +245,9 @@ class PortalAuthMiddleware
      */
     private function isRateLimited(ClientPortalSession $session, Request $request): bool
     {
-        $cacheKey = "portal_rate_limit:{$session->client_id}:" . $request->ip();
+        $cacheKey = "portal_rate_limit:{$session->client_id}:".$request->ip();
         $attempts = cache()->get($cacheKey, 0);
-        
+
         // Allow 100 requests per minute per client/IP combination
         if ($attempts > 100) {
             Log::warning('Portal rate limit exceeded', [
@@ -248,10 +256,12 @@ class PortalAuthMiddleware
                 'ip' => $request->ip(),
                 'attempts' => $attempts,
             ]);
+
             return true;
         }
-        
+
         cache()->put($cacheKey, $attempts + 1, now()->addMinute());
+
         return false;
     }
 
@@ -266,7 +276,7 @@ class PortalAuthMiddleware
                 ->where('created_at', '>=', now()->subHours(1))
                 ->distinct('ip_address')
                 ->count('ip_address');
-            
+
             if ($recentSessions > 5) { // More than 5 different IPs in 1 hour
                 Log::warning('Suspicious IP activity detected', [
                     'session_id' => $session->id,
@@ -275,6 +285,7 @@ class PortalAuthMiddleware
                     'session_ip' => $session->ip_address,
                     'recent_ip_count' => $recentSessions,
                 ]);
+
                 return true;
             }
         }
@@ -328,17 +339,17 @@ class PortalAuthMiddleware
     private function updateRiskScore(ClientPortalSession $session, Request $request): void
     {
         $riskScore = $session->risk_score ?? 0;
-        
+
         // Decrease risk score for normal activity
         if ($session->last_activity && $session->last_activity->diffInMinutes(Carbon::now()) > 5) {
             $riskScore = max(0, $riskScore - 1);
         }
-        
+
         // Increase risk score for suspicious patterns
         if ($session->ip_address !== $request->ip()) {
             $riskScore += 5;
         }
-        
+
         $session->update(['risk_score' => min(100, $riskScore)]);
     }
 
@@ -375,7 +386,7 @@ class PortalAuthMiddleware
     {
         try {
             $statusCode = $response instanceof JsonResponse ? $response->getStatusCode() : 200;
-            
+
             Log::info('Portal activity', [
                 'session_id' => $session->id,
                 'client_id' => $session->client_id,

@@ -5,7 +5,6 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientNetwork;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +13,7 @@ use Illuminate\Validation\Rule;
 class NetworkController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of networks for the selected client
      */
@@ -21,7 +21,7 @@ class NetworkController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -29,12 +29,12 @@ class NetworkController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('ip_range', 'like', "%{$search}%")
-                  ->orWhere('provider', 'like', "%{$search}%")
-                  ->orWhere('ssid', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%");
+                    ->orWhere('ip_range', 'like', "%{$search}%")
+                    ->orWhere('provider', 'like', "%{$search}%")
+                    ->orWhere('ssid', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%");
             });
         }
 
@@ -75,15 +75,15 @@ class NetworkController extends Controller
         }
 
         $networks = $query->orderBy('name')
-                         ->paginate(20)
-                         ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         // Get unique providers for filter
         $providers = $client->networks()
-                     ->whereNotNull('provider')
-                     ->distinct()
-                     ->orderBy('provider')
-                     ->pluck('provider');
+            ->whereNotNull('provider')
+            ->distinct()
+            ->orderBy('provider')
+            ->pluck('provider');
 
         $networkTypes = ClientNetwork::getNetworkTypes();
 
@@ -96,8 +96,8 @@ class NetworkController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $networkTypes = ClientNetwork::getNetworkTypes();
@@ -122,7 +122,7 @@ class NetworkController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'network_type' => 'required|in:' . implode(',', array_keys(ClientNetwork::getNetworkTypes())),
+            'network_type' => 'required|in:'.implode(',', array_keys(ClientNetwork::getNetworkTypes())),
             'ip_range' => 'nullable|string|max:100',
             'subnet_mask' => 'nullable|string|max:50',
             'gateway' => 'nullable|ip',
@@ -132,7 +132,7 @@ class NetworkController extends Controller
             'vlan_id' => 'nullable|integer|min:1|max:4094',
             'ssid' => 'nullable|string|max:255',
             'wifi_password' => 'nullable|string|max:255',
-            'security_type' => 'nullable|in:' . implode(',', array_keys(ClientNetwork::getSecurityTypes())),
+            'security_type' => 'nullable|in:'.implode(',', array_keys(ClientNetwork::getSecurityTypes())),
             'bandwidth' => 'nullable|string|max:100',
             'provider' => 'nullable|string|max:255',
             'circuit_id' => 'nullable|string|max:255',
@@ -150,29 +150,29 @@ class NetworkController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $networkData = $request->all();
-        
+
         // Process array fields
         if ($request->dns_servers) {
             $networkData['dns_servers'] = array_map('trim', explode(',', $request->dns_servers));
         }
-        
+
         if ($request->static_routes) {
             $networkData['static_routes'] = array_map('trim', explode("\n", $request->static_routes));
         }
-        
+
         if ($request->firewall_rules) {
             $networkData['firewall_rules'] = array_map('trim', explode("\n", $request->firewall_rules));
         }
-        
+
         if ($request->vpn_config) {
             $networkData['vpn_config'] = json_decode($request->vpn_config, true) ?: [];
         }
-        
+
         if ($request->equipment) {
             $networkData['equipment'] = array_map('trim', explode("\n", $request->equipment));
         }
@@ -182,7 +182,7 @@ class NetworkController extends Controller
         $network->save();
 
         return redirect()->route('clients.networks.standalone.index')
-                        ->with('success', 'Network created successfully.');
+            ->with('success', 'Network created successfully.');
     }
 
     /**
@@ -205,8 +205,8 @@ class NetworkController extends Controller
         $this->authorize('update', $network);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $networkTypes = ClientNetwork::getNetworkTypes();
         $securityTypes = ClientNetwork::getSecurityTypes();
@@ -232,7 +232,7 @@ class NetworkController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'network_type' => 'required|in:' . implode(',', array_keys(ClientNetwork::getNetworkTypes())),
+            'network_type' => 'required|in:'.implode(',', array_keys(ClientNetwork::getNetworkTypes())),
             'ip_range' => 'nullable|string|max:100',
             'subnet_mask' => 'nullable|string|max:50',
             'gateway' => 'nullable|ip',
@@ -242,7 +242,7 @@ class NetworkController extends Controller
             'vlan_id' => 'nullable|integer|min:1|max:4094',
             'ssid' => 'nullable|string|max:255',
             'wifi_password' => 'nullable|string|max:255',
-            'security_type' => 'nullable|in:' . implode(',', array_keys(ClientNetwork::getSecurityTypes())),
+            'security_type' => 'nullable|in:'.implode(',', array_keys(ClientNetwork::getSecurityTypes())),
             'bandwidth' => 'nullable|string|max:100',
             'provider' => 'nullable|string|max:255',
             'circuit_id' => 'nullable|string|max:255',
@@ -260,29 +260,29 @@ class NetworkController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $networkData = $request->all();
-        
+
         // Process array fields
         if ($request->dns_servers) {
             $networkData['dns_servers'] = array_map('trim', explode(',', $request->dns_servers));
         }
-        
+
         if ($request->static_routes) {
             $networkData['static_routes'] = array_map('trim', explode("\n", $request->static_routes));
         }
-        
+
         if ($request->firewall_rules) {
             $networkData['firewall_rules'] = array_map('trim', explode("\n", $request->firewall_rules));
         }
-        
+
         if ($request->vpn_config) {
             $networkData['vpn_config'] = json_decode($request->vpn_config, true) ?: [];
         }
-        
+
         if ($request->equipment) {
             $networkData['equipment'] = array_map('trim', explode("\n", $request->equipment));
         }
@@ -291,7 +291,7 @@ class NetworkController extends Controller
         $network->save();
 
         return redirect()->route('clients.networks.standalone.index')
-                        ->with('success', 'Network updated successfully.');
+            ->with('success', 'Network updated successfully.');
     }
 
     /**
@@ -304,7 +304,7 @@ class NetworkController extends Controller
         $network->delete();
 
         return redirect()->route('clients.networks.standalone.index')
-                        ->with('success', 'Network deleted successfully.');
+            ->with('success', 'Network deleted successfully.');
     }
 
     /**
@@ -313,16 +313,16 @@ class NetworkController extends Controller
     public function export(Request $request)
     {
         $query = ClientNetwork::with('client')
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('ip_range', 'like', "%{$search}%")
-                  ->orWhere('provider', 'like', "%{$search}%");
+                    ->orWhere('ip_range', 'like', "%{$search}%")
+                    ->orWhere('provider', 'like', "%{$search}%");
             });
         }
 
@@ -354,16 +354,16 @@ class NetworkController extends Controller
 
         $networks = $query->orderBy('name')->get();
 
-        $filename = 'networks_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'networks_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($networks) {
+        $callback = function () use ($networks) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Network Name',
@@ -379,7 +379,7 @@ class NetworkController extends Controller
                 'Monitoring',
                 'Location',
                 'Last Audit',
-                'Notes'
+                'Notes',
             ]);
 
             // CSV data
@@ -401,7 +401,7 @@ class NetworkController extends Controller
                     $network->notes,
                 ]);
             }
-            
+
             fclose($file);
         };
 

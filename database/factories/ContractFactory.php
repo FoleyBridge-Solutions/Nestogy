@@ -29,15 +29,15 @@ class ContractFactory extends Factory
         $endDate = $this->faker->dateTimeBetween($startDate, '+2 years');
         $termMonths = $startDate->diff($endDate)->m + ($startDate->diff($endDate)->y * 12);
         $contractTypes = ['managed_services', 'support', 'project', 'software', 'hardware', 'voip', 'cloud'];
-        
+
         return [
             'company_id' => Company::first()?->id ?? 1,
             'client_id' => Client::inRandomOrder()->first()?->id ?? Client::factory(),
-            'contract_number' => 'CNT-' . $this->faker->unique()->numberBetween(1000, 9999),
+            'contract_number' => 'CNT-'.$this->faker->unique()->numberBetween(1000, 9999),
             'contract_type' => $this->faker->randomElement($contractTypes),
             'status' => $this->faker->randomElement(['draft', 'active', 'expired', 'terminated']),
             'signature_status' => $this->faker->randomElement(['pending', 'signed', 'expired', null]),
-            'title' => $this->faker->catchPhrase() . ' Agreement',
+            'title' => $this->faker->catchPhrase().' Agreement',
             'description' => $this->faker->paragraphs(2, true),
             'start_date' => $startDate,
             'end_date' => $endDate,

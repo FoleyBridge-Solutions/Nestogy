@@ -2,35 +2,35 @@
 
 namespace App\Domains\Core\Services;
 
+use App\Models\Asset;
 use App\Models\Client;
-use App\Models\Ticket;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\Asset;
 use App\Models\Project;
+use App\Models\Ticket;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 /**
  * RealtimeDashboardService
- * 
+ *
  * Provides real-time data for dashboard widgets without caching
  * to ensure live updates. Optimized queries for performance.
  */
 class RealtimeDashboardService
 {
     protected int $companyId;
+
     protected array $widgetRegistry;
-    
+
     public function __construct(int $companyId)
     {
         $this->companyId = $companyId;
         $this->initializeWidgetRegistry();
     }
-    
+
     /**
      * Initialize widget registry with available widget types
      */
@@ -54,23 +54,23 @@ class RealtimeDashboardService
             'project_status' => 'getProjectStatus',
         ];
     }
-    
+
     /**
      * Get widget data by type
      */
     public function getWidgetData(string $widgetType, array $config = []): array
     {
-        if (!isset($this->widgetRegistry[$widgetType])) {
+        if (! isset($this->widgetRegistry[$widgetType])) {
             throw new \InvalidArgumentException("Unknown widget type: {$widgetType}");
         }
-        
+
         $method = $this->widgetRegistry[$widgetType];
         $startTime = microtime(true);
-        
+
         try {
             $data = $this->$method($config);
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
-            
+
             return [
                 'success' => true,
                 'widget_type' => $widgetType,
@@ -86,7 +86,7 @@ class RealtimeDashboardService
                 'error' => $e->getMessage(),
                 'config' => $config,
             ]);
-            
+
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -94,26 +94,26 @@ class RealtimeDashboardService
             ];
         }
     }
-    
+
     /**
      * Get multiple widget data in parallel
      */
     public function getMultipleWidgetData(array $widgets): array
     {
         $results = [];
-        
+
         foreach ($widgets as $widget) {
             $widgetType = $widget['type'] ?? null;
             $config = $widget['config'] ?? [];
-            
+
             if ($widgetType) {
                 $results[$widgetType] = $this->getWidgetData($widgetType, $config);
             }
         }
-        
+
         return $results;
     }
-    
+
     /**
      * Revenue KPI Widget
      */
@@ -121,27 +121,27 @@ class RealtimeDashboardService
     {
         $period = $config['period'] ?? 'month';
         $startDate = $this->getPeriodStart($period);
-        
+
         $currentRevenue = Payment::where('company_id', $this->companyId)
             ->where('created_at', '>=', $startDate)
             ->where('status', 'completed')
             ->sum('amount');
-        
+
         $previousPeriodStart = $this->getPreviousPeriodStart($period);
         $previousPeriodEnd = $startDate->copy()->subDay();
-        
+
         $previousRevenue = Payment::where('company_id', $this->companyId)
             ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
             ->where('status', 'completed')
             ->sum('amount');
-        
-        $growth = $previousRevenue > 0 
+
+        $growth = $previousRevenue > 0
             ? round((($currentRevenue - $previousRevenue) / $previousRevenue) * 100, 1)
             : 0;
-        
+
         return [
             'value' => $currentRevenue,
-            'formatted' => '$' . number_format($currentRevenue, 2),
+            'formatted' => '$'.number_format($currentRevenue, 2),
             'growth' => $growth,
             'growth_type' => $growth >= 0 ? 'increase' : 'decrease',
             'previous_value' => $previousRevenue,
@@ -149,7 +149,7 @@ class RealtimeDashboardService
             'sparkline' => $this->getRevenueSparkline($period),
         ];
     }
-    
+
     /**
      * MRR KPI Widget
      */
@@ -160,20 +160,20 @@ class RealtimeDashboardService
             ->where('is_recurring', true)
             ->where('status', 'active')
             ->sum('monthly_amount');
-        
+
         // Get last month's MRR for comparison
         $lastMonthMRR = Cache::get("mrr_last_month_{$this->companyId}", $mrr * 0.95);
-        
-        $growth = $lastMonthMRR > 0 
+
+        $growth = $lastMonthMRR > 0
             ? round((($mrr - $lastMonthMRR) / $lastMonthMRR) * 100, 1)
             : 0;
-        
+
         // Store current MRR for next comparison
         Cache::put("mrr_last_month_{$this->companyId}", $mrr, now()->endOfMonth());
-        
+
         return [
             'value' => $mrr,
-            'formatted' => '$' . number_format($mrr, 2),
+            'formatted' => '$'.number_format($mrr, 2),
             'growth' => $growth,
             'growth_type' => $growth >= 0 ? 'increase' : 'decrease',
             'new_mrr' => $this->getNewMRR(),
@@ -181,7 +181,7 @@ class RealtimeDashboardService
             'net_new_mrr' => $this->getNewMRR() - $this->getChurnedMRR(),
         ];
     }
-    
+
     /**
      * Ticket Status Widget
      */
@@ -191,23 +191,23 @@ class RealtimeDashboardService
             ->selectRaw('status, priority, COUNT(*) as count')
             ->groupBy('status', 'priority')
             ->get();
-        
+
         $statusBreakdown = [];
         $priorityBreakdown = [];
         $total = 0;
-        
+
         foreach ($tickets as $ticket) {
             $statusBreakdown[$ticket->status] = ($statusBreakdown[$ticket->status] ?? 0) + $ticket->count;
             $priorityBreakdown[$ticket->priority] = ($priorityBreakdown[$ticket->priority] ?? 0) + $ticket->count;
             $total += $ticket->count;
         }
-        
+
         // Get SLA compliance
         $slaBreached = Ticket::where('company_id', $this->companyId)
             ->where('sla_breached', true)
             ->whereNull('resolved_at')
             ->count();
-        
+
         return [
             'total' => $total,
             'by_status' => $statusBreakdown,
@@ -217,7 +217,7 @@ class RealtimeDashboardService
             'open_critical' => $priorityBreakdown['Critical'] ?? 0,
         ];
     }
-    
+
     /**
      * Client Health Widget
      */
@@ -231,7 +231,7 @@ class RealtimeDashboardService
                 },
                 'invoices as overdue_invoices' => function ($query) {
                     $query->where('status', 'Sent')
-                          ->where('due_date', '<', now());
+                        ->where('due_date', '<', now());
                 },
             ])
             ->withSum([
@@ -240,22 +240,22 @@ class RealtimeDashboardService
                 },
             ], 'amount')
             ->get();
-        
+
         $healthScores = [];
         foreach ($clients as $client) {
             $score = 100;
-            
+
             // Deduct for open tickets
             $score -= min($client->open_tickets * 5, 30);
-            
+
             // Deduct for overdue invoices
             $score -= min($client->overdue_invoices * 10, 40);
-            
+
             // Add for recent revenue
             if ($client->revenue_30d > 0) {
                 $score = min($score + 10, 100);
             }
-            
+
             $healthScores[] = [
                 'client_id' => $client->id,
                 'client_name' => $client->name,
@@ -265,20 +265,20 @@ class RealtimeDashboardService
                 'overdue_invoices' => $client->overdue_invoices,
             ];
         }
-        
+
         // Sort by score ascending to show problematic clients first
-        usort($healthScores, fn($a, $b) => $a['score'] <=> $b['score']);
-        
+        usort($healthScores, fn ($a, $b) => $a['score'] <=> $b['score']);
+
         return [
             'clients' => array_slice($healthScores, 0, 10),
             'summary' => [
-                'healthy' => count(array_filter($healthScores, fn($c) => $c['status'] === 'healthy')),
-                'warning' => count(array_filter($healthScores, fn($c) => $c['status'] === 'warning')),
-                'critical' => count(array_filter($healthScores, fn($c) => $c['status'] === 'critical')),
+                'healthy' => count(array_filter($healthScores, fn ($c) => $c['status'] === 'healthy')),
+                'warning' => count(array_filter($healthScores, fn ($c) => $c['status'] === 'warning')),
+                'critical' => count(array_filter($healthScores, fn ($c) => $c['status'] === 'critical')),
             ],
         ];
     }
-    
+
     /**
      * Team Performance Widget
      */
@@ -286,7 +286,7 @@ class RealtimeDashboardService
     {
         $period = $config['period'] ?? 'today';
         $startDate = $this->getPeriodStart($period);
-        
+
         $technicians = User::where('company_id', $this->companyId)
             ->whereHas('roles', function ($query) {
                 $query->whereIn('name', ['technician', 'admin']);
@@ -294,14 +294,14 @@ class RealtimeDashboardService
             ->withCount([
                 'assignedTickets as tickets_resolved' => function ($query) use ($startDate) {
                     $query->where('status', 'Closed')
-                          ->where('resolved_at', '>=', $startDate);
+                        ->where('resolved_at', '>=', $startDate);
                 },
                 'assignedTickets as tickets_open' => function ($query) {
                     $query->whereIn('status', ['Open', 'In Progress']);
                 },
             ])
             ->get();
-        
+
         $performance = [];
         foreach ($technicians as $tech) {
             $performance[] = [
@@ -313,10 +313,10 @@ class RealtimeDashboardService
                 'status' => $tech->last_activity >= now()->subMinutes(5) ? 'online' : 'offline',
             ];
         }
-        
+
         // Sort by tickets resolved
-        usort($performance, fn($a, $b) => $b['tickets_resolved'] <=> $a['tickets_resolved']);
-        
+        usort($performance, fn ($a, $b) => $b['tickets_resolved'] <=> $a['tickets_resolved']);
+
         return [
             'team' => $performance,
             'total_resolved' => array_sum(array_column($performance, 'tickets_resolved')),
@@ -324,7 +324,7 @@ class RealtimeDashboardService
             'avg_efficiency' => round(array_sum(array_column($performance, 'efficiency_score')) / max(count($performance), 1), 1),
         ];
     }
-    
+
     /**
      * Revenue Chart Widget
      */
@@ -332,13 +332,13 @@ class RealtimeDashboardService
     {
         $period = $config['period'] ?? 'last_30_days';
         $groupBy = $config['group_by'] ?? 'day';
-        
+
         $startDate = $this->getPeriodStart($period);
-        
+
         $query = Payment::where('company_id', $this->companyId)
             ->where('created_at', '>=', $startDate)
             ->where('status', 'completed');
-        
+
         if ($groupBy === 'day') {
             $data = $query->selectRaw('created_at::date as date, SUM(amount) as total')
                 ->groupBy('date')
@@ -350,7 +350,7 @@ class RealtimeDashboardService
                 ->orderBy('month')
                 ->get();
         }
-        
+
         return [
             'labels' => $data->pluck($groupBy === 'day' ? 'date' : 'month')->toArray(),
             'values' => $data->pluck('total')->toArray(),
@@ -360,7 +360,7 @@ class RealtimeDashboardService
             'group_by' => $groupBy,
         ];
     }
-    
+
     /**
      * Activity Feed Widget
      */
@@ -368,9 +368,9 @@ class RealtimeDashboardService
     {
         $limit = $config['limit'] ?? 10;
         $types = $config['types'] ?? ['ticket', 'invoice', 'payment'];
-        
+
         $activities = [];
-        
+
         if (in_array('ticket', $types)) {
             $tickets = Ticket::where('company_id', $this->companyId)
                 ->with('client:id,name', 'assignee:id,name')
@@ -389,7 +389,7 @@ class RealtimeDashboardService
                 });
             $activities = array_merge($activities, $tickets->toArray());
         }
-        
+
         if (in_array('payment', $types)) {
             $payments = Payment::where('company_id', $this->companyId)
                 ->with('client:id,name')
@@ -399,7 +399,7 @@ class RealtimeDashboardService
                 ->map(function ($payment) {
                     return [
                         'type' => 'payment',
-                        'title' => "Payment received: $" . number_format($payment->amount, 2),
+                        'title' => 'Payment received: $'.number_format($payment->amount, 2),
                         'client' => $payment->client->name ?? 'Unknown',
                         'method' => $payment->payment_method,
                         'timestamp' => $payment->created_at,
@@ -407,26 +407,26 @@ class RealtimeDashboardService
                 });
             $activities = array_merge($activities, $payments->toArray());
         }
-        
+
         // Sort by timestamp
-        usort($activities, fn($a, $b) => $b['timestamp'] <=> $a['timestamp']);
-        
+        usort($activities, fn ($a, $b) => $b['timestamp'] <=> $a['timestamp']);
+
         return array_slice($activities, 0, $limit);
     }
-    
+
     /**
      * Alerts Widget
      */
     protected function getAlerts(array $config): array
     {
         $alerts = [];
-        
+
         // Critical tickets
         $criticalTickets = Ticket::where('company_id', $this->companyId)
             ->where('priority', 'Critical')
             ->whereIn('status', ['Open', 'In Progress'])
             ->count();
-        
+
         if ($criticalTickets > 0) {
             $alerts[] = [
                 'type' => 'error',
@@ -436,28 +436,28 @@ class RealtimeDashboardService
                 'timestamp' => now(),
             ];
         }
-        
+
         // Overdue invoices
         $overdueAmount = Invoice::where('company_id', $this->companyId)
             ->where('status', 'Sent')
             ->where('due_date', '<', now()->subDays(30))
             ->sum('amount');
-        
+
         if ($overdueAmount > 0) {
             $alerts[] = [
                 'type' => 'warning',
                 'title' => 'Overdue Invoices',
-                'message' => '$' . number_format($overdueAmount, 2) . ' overdue by 30+ days',
+                'message' => '$'.number_format($overdueAmount, 2).' overdue by 30+ days',
                 'action' => '/financial/invoices?status=overdue',
                 'timestamp' => now(),
             ];
         }
-        
+
         // Low performing assets
         $lowPerformingAssets = Asset::where('company_id', $this->companyId)
             ->where('health_score', '<', 50)
             ->count();
-        
+
         if ($lowPerformingAssets > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -467,17 +467,17 @@ class RealtimeDashboardService
                 'timestamp' => now(),
             ];
         }
-        
+
         return $alerts;
     }
-    
+
     /**
      * Forecast Widget
      */
     protected function getForecast(array $config): array
     {
         $months = $config['months'] ?? 3;
-        
+
         // Get historical data for trend analysis
         $historicalRevenue = Payment::where('company_id', $this->companyId)
             ->where('created_at', '>=', now()->subMonths(6))
@@ -487,21 +487,21 @@ class RealtimeDashboardService
             ->orderBy('month')
             ->pluck('total')
             ->toArray();
-        
+
         // Simple linear regression for forecast
         $forecast = [];
         $avgGrowth = 0;
-        
+
         if (count($historicalRevenue) > 1) {
             $growthRates = [];
             for ($i = 1; $i < count($historicalRevenue); $i++) {
-                if ($historicalRevenue[$i-1] > 0) {
-                    $growthRates[] = ($historicalRevenue[$i] - $historicalRevenue[$i-1]) / $historicalRevenue[$i-1];
+                if ($historicalRevenue[$i - 1] > 0) {
+                    $growthRates[] = ($historicalRevenue[$i] - $historicalRevenue[$i - 1]) / $historicalRevenue[$i - 1];
                 }
             }
             $avgGrowth = count($growthRates) > 0 ? array_sum($growthRates) / count($growthRates) : 0;
         }
-        
+
         $lastRevenue = end($historicalRevenue) ?: 0;
         for ($i = 1; $i <= $months; $i++) {
             $forecastValue = $lastRevenue * (1 + $avgGrowth);
@@ -512,18 +512,17 @@ class RealtimeDashboardService
             ];
             $lastRevenue = $forecastValue;
         }
-        
+
         return [
             'forecast' => $forecast,
             'growth_rate' => round($avgGrowth * 100, 1),
             'based_on_months' => count($historicalRevenue),
         ];
     }
-    
+
     /**
      * Helper methods
      */
-    
     protected function getPeriodStart(string $period): Carbon
     {
         return match ($period) {
@@ -537,7 +536,7 @@ class RealtimeDashboardService
             default => now()->startOfMonth(),
         };
     }
-    
+
     protected function getPreviousPeriodStart(string $period): Carbon
     {
         return match ($period) {
@@ -551,7 +550,7 @@ class RealtimeDashboardService
             default => now()->subMonth()->startOfMonth(),
         };
     }
-    
+
     protected function getRevenueSparkline(string $period): array
     {
         $days = match ($period) {
@@ -559,7 +558,7 @@ class RealtimeDashboardService
             'month' => 30,
             default => 7,
         };
-        
+
         $data = Payment::where('company_id', $this->companyId)
             ->where('created_at', '>=', now()->subDays($days))
             ->where('status', 'completed')
@@ -568,10 +567,10 @@ class RealtimeDashboardService
             ->orderBy('date')
             ->pluck('total')
             ->toArray();
-        
+
         return $data;
     }
-    
+
     protected function getNewMRR(): float
     {
         return Invoice::where('company_id', $this->companyId)
@@ -579,7 +578,7 @@ class RealtimeDashboardService
             ->where('created_at', '>=', now()->startOfMonth())
             ->sum('monthly_amount');
     }
-    
+
     protected function getChurnedMRR(): float
     {
         return Invoice::where('company_id', $this->companyId)
@@ -588,7 +587,7 @@ class RealtimeDashboardService
             ->where('updated_at', '>=', now()->startOfMonth())
             ->sum('monthly_amount');
     }
-    
+
     protected function getAverageResolutionTime(): string
     {
         $avgMinutes = Ticket::where('company_id', $this->companyId)
@@ -596,54 +595,54 @@ class RealtimeDashboardService
             ->where('resolved_at', '>=', now()->subDays(30))
             ->selectRaw('AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))/60) as avg_minutes')
             ->value('avg_minutes');
-        
-        if (!$avgMinutes) {
+
+        if (! $avgMinutes) {
             return 'N/A';
         }
-        
+
         $hours = floor($avgMinutes / 60);
         $minutes = $avgMinutes % 60;
-        
+
         return $hours > 0 ? "{$hours}h {$minutes}m" : "{$minutes}m";
     }
-    
+
     protected function calculateEfficiencyScore($technician): float
     {
         $resolved = $technician->tickets_resolved;
         $open = $technician->tickets_open;
-        
+
         if ($resolved + $open === 0) {
             return 0;
         }
-        
+
         return round(($resolved / ($resolved + $open)) * 100, 1);
     }
-    
+
     protected function getTopClients(array $config): array
     {
         $limit = $config['limit'] ?? 5;
         $period = $config['period'] ?? 'month';
         $startDate = $this->getPeriodStart($period);
-        
+
         $clients = Client::where('company_id', $this->companyId)
             ->withSum(['payments as revenue' => function ($query) use ($startDate) {
                 $query->where('created_at', '>=', $startDate)
-                      ->where('status', 'completed');
+                    ->where('status', 'completed');
             }], 'amount')
             ->orderBy('revenue', 'desc')
             ->limit($limit)
             ->get();
-        
+
         return $clients->map(function ($client) {
             return [
                 'id' => $client->id,
                 'name' => $client->name,
                 'revenue' => $client->revenue ?? 0,
-                'formatted_revenue' => '$' . number_format($client->revenue ?? 0, 2),
+                'formatted_revenue' => '$'.number_format($client->revenue ?? 0, 2),
             ];
         })->toArray();
     }
-    
+
     protected function getResourceUtilization(array $config): array
     {
         $resources = User::where('company_id', $this->companyId)
@@ -656,7 +655,7 @@ class RealtimeDashboardService
                 },
             ])
             ->get();
-        
+
         $utilization = [];
         foreach ($resources as $resource) {
             $utilization[] = [
@@ -667,18 +666,18 @@ class RealtimeDashboardService
                 'status' => $resource->active_tasks > 4 ? 'overloaded' : ($resource->active_tasks > 2 ? 'busy' : 'available'),
             ];
         }
-        
+
         return [
             'resources' => $utilization,
             'summary' => [
                 'total' => count($utilization),
-                'available' => count(array_filter($utilization, fn($r) => $r['status'] === 'available')),
-                'busy' => count(array_filter($utilization, fn($r) => $r['status'] === 'busy')),
-                'overloaded' => count(array_filter($utilization, fn($r) => $r['status'] === 'overloaded')),
+                'available' => count(array_filter($utilization, fn ($r) => $r['status'] === 'available')),
+                'busy' => count(array_filter($utilization, fn ($r) => $r['status'] === 'busy')),
+                'overloaded' => count(array_filter($utilization, fn ($r) => $r['status'] === 'overloaded')),
             ],
         ];
     }
-    
+
     protected function getProjectStatus(array $config): array
     {
         $projects = Project::where('company_id', $this->companyId)
@@ -688,12 +687,12 @@ class RealtimeDashboardService
                 $query->where('status', 'completed');
             }])
             ->get();
-        
+
         return $projects->map(function ($project) {
-            $progress = $project->tasks_count > 0 
-                ? round(($project->completed_tasks / $project->tasks_count) * 100) 
+            $progress = $project->tasks_count > 0
+                ? round(($project->completed_tasks / $project->tasks_count) * 100)
                 : 0;
-            
+
             return [
                 'id' => $project->id,
                 'name' => $project->name,

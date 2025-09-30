@@ -2,9 +2,9 @@
 
 namespace App\Domains\Project\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\User;
 
 class ProjectExpense extends Model
 {
@@ -31,8 +31,11 @@ class ProjectExpense extends Model
     ];
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_REIMBURSED = 'reimbursed';
 
     /**

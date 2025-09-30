@@ -5,11 +5,10 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientVendor;
+use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use App\Domains\Core\Services\NavigationService;
-use App\Traits\UsesSelectedClient;
 
 class VendorController extends Controller
 {
@@ -22,7 +21,7 @@ class VendorController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -31,16 +30,16 @@ class VendorController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('vendor_name', 'like', "%{$search}%")
-                  ->orWhere('contact_person', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('contact_person', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -84,8 +83,8 @@ class VendorController extends Controller
         }
 
         $vendors = $query->orderBy('vendor_name')
-                        ->paginate(20)
-                        ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $vendorTypes = ClientVendor::getVendorTypes();
         $vendorCategories = ClientVendor::getVendorCategories();
@@ -100,7 +99,7 @@ class VendorController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -129,7 +128,7 @@ class VendorController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -140,8 +139,8 @@ class VendorController extends Controller
             ],
             'vendor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'vendor_type' => 'required|in:' . implode(',', array_keys(ClientVendor::getVendorTypes())),
-            'category' => 'nullable|in:' . implode(',', array_keys(ClientVendor::getVendorCategories())),
+            'vendor_type' => 'required|in:'.implode(',', array_keys(ClientVendor::getVendorTypes())),
+            'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
@@ -154,14 +153,14 @@ class VendorController extends Controller
             'country' => 'nullable|string|max:100',
             'tax_id' => 'nullable|string|max:50',
             'account_number' => 'nullable|string|max:100',
-            'payment_terms' => 'nullable|in:' . implode(',', array_keys(ClientVendor::getPaymentTerms())),
-            'preferred_payment_method' => 'nullable|in:' . implode(',', array_keys(ClientVendor::getPaymentMethods())),
-            'relationship_status' => 'required|in:' . implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
+            'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
+            'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
+            'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
             'start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:start_date',
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
             'currency' => 'nullable|string|size:3',
-            'billing_frequency' => 'nullable|in:' . implode(',', array_keys(ClientVendor::getBillingFrequencies())),
+            'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
             'last_order_date' => 'nullable|date|before_or_equal:today',
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
@@ -186,33 +185,33 @@ class VendorController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $vendorData = $request->all();
-        
+
         // Process array fields
         if ($request->certifications) {
             $vendorData['certifications'] = array_map('trim', explode(',', $request->certifications));
         }
-        
+
         if ($request->insurance_info) {
             $vendorData['insurance_info'] = json_decode($request->insurance_info, true) ?: [];
         }
-        
+
         if ($request->backup_contacts) {
             $vendorData['backup_contacts'] = array_map('trim', explode("\n", $request->backup_contacts));
         }
-        
+
         if ($request->service_areas) {
             $vendorData['service_areas'] = array_map('trim', explode(',', $request->service_areas));
         }
-        
+
         if ($request->specializations) {
             $vendorData['specializations'] = array_map('trim', explode(',', $request->specializations));
         }
-        
+
         if ($request->tags) {
             $vendorData['tags'] = array_map('trim', explode(',', $request->tags));
         }
@@ -222,7 +221,7 @@ class VendorController extends Controller
         $vendor->save();
 
         return redirect()->route('clients.vendors.index', ['client' => $client->id])
-                        ->with('success', 'Vendor created successfully.');
+            ->with('success', 'Vendor created successfully.');
     }
 
     /**
@@ -245,8 +244,8 @@ class VendorController extends Controller
         $this->authorize('update', $vendor);
 
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $vendorTypes = ClientVendor::getVendorTypes();
         $vendorCategories = ClientVendor::getVendorCategories();
@@ -257,7 +256,7 @@ class VendorController extends Controller
 
         return view('clients.vendors.edit', compact(
             'vendor',
-            'clients', 
+            'clients',
             'vendorTypes',
             'vendorCategories',
             'relationshipStatuses',
@@ -284,8 +283,8 @@ class VendorController extends Controller
             ],
             'vendor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'vendor_type' => 'required|in:' . implode(',', array_keys(ClientVendor::getVendorTypes())),
-            'category' => 'nullable|in:' . implode(',', array_keys(ClientVendor::getVendorCategories())),
+            'vendor_type' => 'required|in:'.implode(',', array_keys(ClientVendor::getVendorTypes())),
+            'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
@@ -298,14 +297,14 @@ class VendorController extends Controller
             'country' => 'nullable|string|max:100',
             'tax_id' => 'nullable|string|max:50',
             'account_number' => 'nullable|string|max:100',
-            'payment_terms' => 'nullable|in:' . implode(',', array_keys(ClientVendor::getPaymentTerms())),
-            'preferred_payment_method' => 'nullable|in:' . implode(',', array_keys(ClientVendor::getPaymentMethods())),
-            'relationship_status' => 'required|in:' . implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
+            'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
+            'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
+            'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
             'start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:start_date',
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
             'currency' => 'nullable|string|size:3',
-            'billing_frequency' => 'nullable|in:' . implode(',', array_keys(ClientVendor::getBillingFrequencies())),
+            'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
             'last_order_date' => 'nullable|date|before_or_equal:today',
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
@@ -330,33 +329,33 @@ class VendorController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $vendorData = $request->all();
-        
+
         // Process array fields
         if ($request->certifications) {
             $vendorData['certifications'] = array_map('trim', explode(',', $request->certifications));
         }
-        
+
         if ($request->insurance_info) {
             $vendorData['insurance_info'] = json_decode($request->insurance_info, true) ?: [];
         }
-        
+
         if ($request->backup_contacts) {
             $vendorData['backup_contacts'] = array_map('trim', explode("\n", $request->backup_contacts));
         }
-        
+
         if ($request->service_areas) {
             $vendorData['service_areas'] = array_map('trim', explode(',', $request->service_areas));
         }
-        
+
         if ($request->specializations) {
             $vendorData['specializations'] = array_map('trim', explode(',', $request->specializations));
         }
-        
+
         if ($request->tags) {
             $vendorData['tags'] = array_map('trim', explode(',', $request->tags));
         }
@@ -365,7 +364,7 @@ class VendorController extends Controller
         $vendor->save();
 
         return redirect()->route('clients.vendors.index', ['client' => $vendor->client_id])
-                        ->with('success', 'Vendor updated successfully.');
+            ->with('success', 'Vendor updated successfully.');
     }
 
     /**
@@ -378,7 +377,7 @@ class VendorController extends Controller
         $vendor->delete();
 
         return redirect()->route('clients.vendors.index', ['client' => $vendor->client_id])
-                        ->with('success', 'Vendor deleted successfully.');
+            ->with('success', 'Vendor deleted successfully.');
     }
 
     /**
@@ -387,16 +386,16 @@ class VendorController extends Controller
     public function export(Request $request)
     {
         $query = ClientVendor::with('client')
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('vendor_name', 'like', "%{$search}%")
-                  ->orWhere('contact_person', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('contact_person', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -431,16 +430,16 @@ class VendorController extends Controller
 
         $vendors = $query->orderBy('vendor_name')->get();
 
-        $filename = 'vendors_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'vendors_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($vendors) {
+        $callback = function () use ($vendors) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'Vendor Name',
@@ -458,7 +457,7 @@ class VendorController extends Controller
                 'Overall Rating',
                 'Total Spent',
                 'Last Order Date',
-                'Contract End Date'
+                'Contract End Date',
             ]);
 
             // CSV data
@@ -482,7 +481,7 @@ class VendorController extends Controller
                     $vendor->contract_end_date ? $vendor->contract_end_date->format('Y-m-d') : '',
                 ]);
             }
-            
+
             fclose($file);
         };
 

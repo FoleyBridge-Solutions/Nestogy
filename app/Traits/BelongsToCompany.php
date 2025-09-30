@@ -2,10 +2,10 @@
 
 namespace App\Traits;
 
-use Illuminate\Database\Eloquent\Builder;
 use App\Models\CompanyHierarchy;
 use App\Models\CrossCompanyUser;
 use App\Models\SubsidiaryPermission;
+use Illuminate\Database\Eloquent\Builder;
 
 trait BelongsToCompany
 {
@@ -24,7 +24,7 @@ trait BelongsToCompany
         // Add global scope to filter by company
         static::addGlobalScope('company', function (Builder $builder) {
             if (auth()->check() && auth()->user()->company_id) {
-                $builder->where($builder->getModel()->getTable() . '.company_id', auth()->user()->company_id);
+                $builder->where($builder->getModel()->getTable().'.company_id', auth()->user()->company_id);
             }
         });
     }
@@ -38,11 +38,11 @@ trait BelongsToCompany
             // If no company ID provided, use the current user's company
             $companyId = auth()->check() ? auth()->user()->company_id : null;
         }
-        
+
         if ($companyId) {
             return $query->withoutGlobalScope('company')->where('company_id', $companyId);
         }
-        
+
         return $query;
     }
 
@@ -55,8 +55,8 @@ trait BelongsToCompany
         if ($companyId === null) {
             $companyId = auth()->check() ? auth()->user()->company_id : null;
         }
-        
-        if (!$companyId) {
+
+        if (! $companyId) {
             return $query->withoutGlobalScope('company')->whereNull('company_id');
         }
 
@@ -77,7 +77,7 @@ trait BelongsToCompany
         }
 
         return $query->withoutGlobalScope('company')
-                    ->whereIn('company_id', array_unique($companyIds));
+            ->whereIn('company_id', array_unique($companyIds));
     }
 
     /**
@@ -85,13 +85,13 @@ trait BelongsToCompany
      */
     public function scopeWithCrossCompanyAccess($query)
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return $query->withoutGlobalScope('company')->whereNull('company_id');
         }
 
         $user = auth()->user();
         $userCompanyId = $user->company_id;
-        
+
         // Get companies the user can access
         $accessibleCompanies = CrossCompanyUser::getAccessibleCompanies($user->id);
         $accessibleCompanyIds = $accessibleCompanies->pluck('id')->toArray();
@@ -109,7 +109,7 @@ trait BelongsToCompany
         $accessibleCompanyIds = array_merge($accessibleCompanyIds, $permissionCompanies);
 
         return $query->withoutGlobalScope('company')
-                    ->whereIn('company_id', array_unique($accessibleCompanyIds));
+            ->whereIn('company_id', array_unique($accessibleCompanyIds));
     }
 
     /**
@@ -120,8 +120,8 @@ trait BelongsToCompany
         if ($parentCompanyId === null) {
             $parentCompanyId = auth()->check() ? auth()->user()->company_id : null;
         }
-        
-        if (!$parentCompanyId) {
+
+        if (! $parentCompanyId) {
             return $query->withoutGlobalScope('company')->whereNull('company_id');
         }
 
@@ -130,7 +130,7 @@ trait BelongsToCompany
             ->toArray();
 
         return $query->withoutGlobalScope('company')
-                    ->whereIn('company_id', $subsidiaryIds);
+            ->whereIn('company_id', $subsidiaryIds);
     }
 
     /**
@@ -141,8 +141,8 @@ trait BelongsToCompany
         if ($childCompanyId === null) {
             $childCompanyId = auth()->check() ? auth()->user()->company_id : null;
         }
-        
-        if (!$childCompanyId) {
+
+        if (! $childCompanyId) {
             return $query->withoutGlobalScope('company')->whereNull('company_id');
         }
 
@@ -151,7 +151,7 @@ trait BelongsToCompany
             ->toArray();
 
         return $query->withoutGlobalScope('company')
-                    ->whereIn('company_id', $parentIds);
+            ->whereIn('company_id', $parentIds);
     }
 
     /**
@@ -162,13 +162,13 @@ trait BelongsToCompany
         if ($userCompanyId === null) {
             $userCompanyId = auth()->check() ? auth()->user()->company_id : null;
         }
-        
-        if (!$userCompanyId) {
+
+        if (! $userCompanyId) {
             return $query->withoutGlobalScope('company')->whereNull('company_id');
         }
 
         $modelClass = get_class($query->getModel());
-        
+
         $permittedCompanies = SubsidiaryPermission::where('grantee_company_id', $userCompanyId)
             ->where('resource_type', $modelClass)
             ->where('permission_type', $permissionType)
@@ -180,7 +180,7 @@ trait BelongsToCompany
         $permittedCompanies[] = $userCompanyId;
 
         return $query->withoutGlobalScope('company')
-                    ->whereIn('company_id', array_unique($permittedCompanies));
+            ->whereIn('company_id', array_unique($permittedCompanies));
     }
 
     /**
@@ -192,12 +192,12 @@ trait BelongsToCompany
             $userId = auth()->id();
         }
 
-        if (!$userId) {
+        if (! $userId) {
             return false;
         }
 
         $user = \App\Models\User::find($userId);
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -213,6 +213,7 @@ trait BelongsToCompany
 
         // Check subsidiary permissions
         $modelClass = get_class($this);
+
         return SubsidiaryPermission::hasPermission(
             $user->company_id,
             $modelClass,
@@ -230,12 +231,12 @@ trait BelongsToCompany
             $userId = auth()->id();
         }
 
-        if (!$userId) {
+        if (! $userId) {
             return false;
         }
 
         $user = \App\Models\User::find($userId);
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -256,6 +257,7 @@ trait BelongsToCompany
 
         // Check subsidiary permissions
         $modelClass = get_class($this);
+
         return SubsidiaryPermission::hasPermission(
             $user->company_id,
             $modelClass,

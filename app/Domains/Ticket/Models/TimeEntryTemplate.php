@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Time Entry Template Model
- * 
+ *
  * Represents pre-defined templates for common time tracking tasks
  * with default hours, work types, and smart categorization keywords.
  */
 class TimeEntryTemplate extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -49,7 +49,7 @@ class TimeEntryTemplate extends Model
      */
     public function matchesKeywords(string $text): int
     {
-        if (!$this->keywords || empty($this->keywords)) {
+        if (! $this->keywords || empty($this->keywords)) {
             return 0;
         }
 
@@ -70,18 +70,18 @@ class TimeEntryTemplate extends Model
      */
     public function getConfidenceScore(string $subject, string $details = ''): float
     {
-        $text = strtolower($subject . ' ' . $details);
+        $text = strtolower($subject.' '.$details);
         $keywordMatches = $this->matchesKeywords($text);
-        
-        if (!$this->keywords || empty($this->keywords)) {
+
+        if (! $this->keywords || empty($this->keywords)) {
             return 0.0;
         }
 
         $score = ($keywordMatches / count($this->keywords)) * 100;
-        
+
         // Boost score based on usage frequency (popular templates get slight boost)
         $usageBoost = min($this->usage_count * 0.5, 10);
-        
+
         return min($score + $usageBoost, 100);
     }
 
@@ -115,10 +115,10 @@ class TimeEntryTemplate extends Model
         ], $overrides);
 
         $timeEntry = TicketTimeEntry::create($data);
-        
+
         // Increment usage count
         $this->incrementUsage();
-        
+
         return $timeEntry;
     }
 
@@ -153,8 +153,8 @@ class TimeEntryTemplate extends Model
 
     public function scopeForTicket($query, string $subject, string $details = '')
     {
-        $text = strtolower($subject . ' ' . $details);
-        
+        $text = strtolower($subject.' '.$details);
+
         return $query->active()->get()->sortByDesc(function ($template) use ($text) {
             return $template->getConfidenceScore($text);
         });
@@ -170,14 +170,14 @@ class TimeEntryTemplate extends Model
     public static function getSuggestionsForTicket(int $companyId, string $subject, string $details = '', int $limit = 5): \Illuminate\Support\Collection
     {
         $templates = self::where('company_id', $companyId)->active()->get();
-        
+
         $suggestions = $templates->map(function ($template) use ($subject, $details) {
             $confidence = $template->getConfidenceScore($subject, $details);
-            
+
             if ($confidence < 10) { // Only show if at least 10% confidence
                 return null;
             }
-            
+
             return [
                 'template' => $template,
                 'confidence' => $confidence,

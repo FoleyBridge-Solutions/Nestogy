@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateRecurringRequest extends FormRequest
 {
@@ -33,7 +32,7 @@ class UpdateRecurringRequest extends FormRequest
             'status' => 'required|boolean',
             'auto_send' => 'required|boolean',
             'category_id' => 'nullable|integer|exists:categories,id',
-            
+
             // VoIP-specific fields
             'billing_type' => 'required|in:flat,usage_based,tiered,hybrid,volume_discount',
             'pricing_model' => 'required|in:flat,usage_based,tiered,hybrid,volume_discount',
@@ -41,7 +40,7 @@ class UpdateRecurringRequest extends FormRequest
             'contract_escalation_enabled' => 'required|boolean',
             'proration_enabled' => 'required|boolean',
             'tax_calculation_enabled' => 'required|boolean',
-            
+
             // Service tiers (array validation)
             'service_tiers' => 'nullable|array',
             'service_tiers.*.service_type' => 'required|string|max:100',
@@ -49,25 +48,25 @@ class UpdateRecurringRequest extends FormRequest
             'service_tiers.*.base_rate' => 'required|numeric|min:0',
             'service_tiers.*.overage_rate' => 'required|numeric|min:0',
             'service_tiers.*.tier_structure' => 'nullable|array',
-            
+
             // Volume discounts
             'volume_discounts' => 'nullable|array',
             'volume_discounts.*.threshold' => 'required|numeric|min:0',
             'volume_discounts.*.discount_type' => 'required|in:percentage,fixed',
             'volume_discounts.*.discount_value' => 'required|numeric|min:0',
-            
+
             // Contract escalations
             'contract_escalations' => 'nullable|array',
             'contract_escalations.*.effective_date' => 'required|date',
             'contract_escalations.*.percentage' => 'required|numeric|min:0|max:100',
             'contract_escalations.*.description' => 'nullable|string|max:255',
-            
+
             // Service bundles
             'service_bundles' => 'nullable|array',
             'service_bundles.*.name' => 'required|string|max:255',
             'service_bundles.*.bundle_price' => 'required|numeric|min:0',
             'service_bundles.*.included_services' => 'required|array',
-            
+
             // Additional metadata
             'metadata' => 'nullable|array',
         ];
@@ -101,7 +100,7 @@ class UpdateRecurringRequest extends FormRequest
             'auto_send.required' => 'Auto send setting is required.',
             'auto_send.boolean' => 'Auto send must be true or false.',
             'category_id.exists' => 'The selected category is invalid.',
-            
+
             // VoIP-specific messages
             'billing_type.required' => 'Billing type is required.',
             'billing_type.in' => 'Invalid billing type.',
@@ -115,7 +114,7 @@ class UpdateRecurringRequest extends FormRequest
             'proration_enabled.boolean' => 'Proration must be true or false.',
             'tax_calculation_enabled.required' => 'Tax calculation setting is required.',
             'tax_calculation_enabled.boolean' => 'Tax calculation must be true or false.',
-            
+
             // Service tier messages
             'service_tiers.array' => 'Service tiers must be an array.',
             'service_tiers.*.service_type.required' => 'Service type is required for each tier.',
@@ -125,7 +124,7 @@ class UpdateRecurringRequest extends FormRequest
             'service_tiers.*.base_rate.numeric' => 'Base rate must be a number.',
             'service_tiers.*.overage_rate.required' => 'Overage rate is required for each tier.',
             'service_tiers.*.overage_rate.numeric' => 'Overage rate must be a number.',
-            
+
             // Volume discount messages
             'volume_discounts.*.threshold.required' => 'Threshold is required for each volume discount.',
             'volume_discounts.*.threshold.numeric' => 'Threshold must be a number.',
@@ -133,14 +132,14 @@ class UpdateRecurringRequest extends FormRequest
             'volume_discounts.*.discount_type.in' => 'Discount type must be percentage or fixed.',
             'volume_discounts.*.discount_value.required' => 'Discount value is required for each volume discount.',
             'volume_discounts.*.discount_value.numeric' => 'Discount value must be a number.',
-            
+
             // Contract escalation messages
             'contract_escalations.*.effective_date.required' => 'Effective date is required for each escalation.',
             'contract_escalations.*.effective_date.date' => 'Effective date must be a valid date.',
             'contract_escalations.*.percentage.required' => 'Percentage is required for each escalation.',
             'contract_escalations.*.percentage.numeric' => 'Percentage must be a number.',
             'contract_escalations.*.percentage.max' => 'Percentage cannot exceed 100.',
-            
+
             // Service bundle messages
             'service_bundles.*.name.required' => 'Bundle name is required.',
             'service_bundles.*.bundle_price.required' => 'Bundle price is required.',

@@ -24,7 +24,7 @@ class ContractPolicy
     public function view(User $user, Contract $contract): bool
     {
         // User must have permission and contract must belong to their company
-        return $user->can('contracts.view') && 
+        return $user->can('contracts.view') &&
                $contract->company_id === $user->company_id;
     }
 
@@ -42,7 +42,7 @@ class ContractPolicy
     public function update(User $user, Contract $contract): bool
     {
         // User must have permission and contract must belong to their company
-        if (!$user->can('contracts.edit') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.edit') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
@@ -56,7 +56,7 @@ class ContractPolicy
     public function delete(User $user, Contract $contract): bool
     {
         // User must have delete permission and contract must belong to their company
-        if (!$user->can('contracts.delete') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.delete') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
@@ -69,7 +69,7 @@ class ContractPolicy
      */
     public function restore(User $user, Contract $contract): bool
     {
-        return $user->can('contracts.delete') && 
+        return $user->can('contracts.delete') &&
                $contract->company_id === $user->company_id;
     }
 
@@ -79,7 +79,7 @@ class ContractPolicy
     public function forceDelete(User $user, Contract $contract): bool
     {
         // Only super admins can force delete
-        return $user->hasRole('super-admin') && 
+        return $user->hasRole('super-admin') &&
                $contract->company_id === $user->company_id;
     }
 
@@ -89,7 +89,7 @@ class ContractPolicy
     public function approve(User $user, Contract $contract): bool
     {
         // User must have approval permission and contract must belong to their company
-        if (!$user->can('contracts.approve') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.approve') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
@@ -103,14 +103,14 @@ class ContractPolicy
     public function sendForSignature(User $user, Contract $contract): bool
     {
         // User must have signature permission and contract must belong to their company
-        if (!$user->can('contracts.signature') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.signature') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
         // Contract must be ready for signature
         return in_array($contract->status, [
             Contract::STATUS_PENDING_SIGNATURE,
-            Contract::STATUS_UNDER_NEGOTIATION
+            Contract::STATUS_UNDER_NEGOTIATION,
         ]);
     }
 
@@ -120,7 +120,7 @@ class ContractPolicy
     public function sign(User $user, Contract $contract): bool
     {
         // User must have signature permission and contract must belong to their company
-        if (!$user->can('contracts.signature') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.signature') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
@@ -135,7 +135,7 @@ class ContractPolicy
     public function activate(User $user, Contract $contract): bool
     {
         // User must have activation permission and contract must belong to their company
-        if (!$user->can('contracts.activate') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.activate') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
@@ -150,14 +150,14 @@ class ContractPolicy
     public function terminate(User $user, Contract $contract): bool
     {
         // User must have termination permission and contract must belong to their company
-        if (!$user->can('contracts.terminate') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.terminate') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
         // Only active or suspended contracts can be terminated
         return in_array($contract->status, [
             Contract::STATUS_ACTIVE,
-            Contract::STATUS_SUSPENDED
+            Contract::STATUS_SUSPENDED,
         ]);
     }
 
@@ -167,7 +167,7 @@ class ContractPolicy
     public function suspend(User $user, Contract $contract): bool
     {
         // User must have suspension permission and contract must belong to their company
-        if (!$user->can('contracts.suspend') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.suspend') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
@@ -181,7 +181,7 @@ class ContractPolicy
     public function reactivate(User $user, Contract $contract): bool
     {
         // User must have activation permission and contract must belong to their company
-        if (!$user->can('contracts.activate') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.activate') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
@@ -195,7 +195,7 @@ class ContractPolicy
     public function createAmendment(User $user, Contract $contract): bool
     {
         // User must have amendment permission and contract must belong to their company
-        if (!$user->can('contracts.amend') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.amend') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
@@ -209,7 +209,7 @@ class ContractPolicy
     public function renew(User $user, Contract $contract): bool
     {
         // User must have renewal permission and contract must belong to their company
-        if (!$user->can('contracts.renew') || $contract->company_id !== $user->company_id) {
+        if (! $user->can('contracts.renew') || $contract->company_id !== $user->company_id) {
             return false;
         }
 
@@ -224,7 +224,7 @@ class ContractPolicy
     public function generateDocument(User $user, Contract $contract): bool
     {
         // User must have view permission and contract must belong to their company
-        return $user->can('contracts.view') && 
+        return $user->can('contracts.view') &&
                $contract->company_id === $user->company_id;
     }
 
@@ -234,7 +234,7 @@ class ContractPolicy
     public function viewFinancials(User $user, Contract $contract): bool
     {
         // User must have financial permission and contract must belong to their company
-        return $user->can('contracts.financials') && 
+        return $user->can('contracts.financials') &&
                $contract->company_id === $user->company_id;
     }
 
@@ -290,7 +290,7 @@ class ContractPolicy
 
         // Super admins can modify most contracts (except terminated/cancelled)
         if ($user->hasRole('super-admin')) {
-            return !in_array($contract->status, [
+            return ! in_array($contract->status, [
                 Contract::STATUS_TERMINATED,
                 Contract::STATUS_CANCELLED,
             ]);
@@ -316,7 +316,7 @@ class ContractPolicy
      */
     public function viewHistory(User $user, Contract $contract): bool
     {
-        return $user->can('contracts.history') && 
+        return $user->can('contracts.history') &&
                $contract->company_id === $user->company_id;
     }
 
@@ -325,7 +325,7 @@ class ContractPolicy
      */
     public function manageMilestones(User $user, Contract $contract): bool
     {
-        return $user->can('contracts.milestones') && 
+        return $user->can('contracts.milestones') &&
                $contract->company_id === $user->company_id &&
                in_array($contract->status, [
                    Contract::STATUS_ACTIVE,

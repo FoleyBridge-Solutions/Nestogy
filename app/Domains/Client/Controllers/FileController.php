@@ -5,7 +5,6 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientFile;
-use App\Domains\Core\Services\NavigationService;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +15,7 @@ use Illuminate\Validation\Rule;
 class FileController extends Controller
 {
     use UsesSelectedClient;
+
     /**
      * Display a listing of files for the selected client
      */
@@ -23,7 +23,7 @@ class FileController extends Controller
     {
         $client = $this->getSelectedClient($request);
 
-        if (!$client) {
+        if (! $client) {
             return redirect()->route('clients.select-screen');
         }
 
@@ -31,15 +31,15 @@ class FileController extends Controller
 
         // Apply search filters
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('original_filename', 'like', "%{$search}%")
-                  ->orWhere('tags', 'like', "%{$search}%")
-                  ->orWhereHas('client', function($clientQuery) use ($search) {
-                      $clientQuery->where('name', 'like', "%{$search}%")
-                                  ->orWhere('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('original_filename', 'like', "%{$search}%")
+                    ->orWhere('tags', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($clientQuery) use ($search) {
+                        $clientQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -51,7 +51,7 @@ class FileController extends Controller
         // Apply file type filter
         if ($fileType = $request->get('file_type')) {
             $extensions = $this->getExtensionsByType($fileType);
-            $query->where(function($q) use ($extensions) {
+            $query->where(function ($q) use ($extensions) {
                 foreach ($extensions as $ext) {
                     $q->orWhere('original_filename', 'like', "%.{$ext}");
                 }
@@ -64,8 +64,8 @@ class FileController extends Controller
         }
 
         $files = $query->orderBy('created_at', 'desc')
-                      ->paginate(20)
-                      ->appends($request->query());
+            ->paginate(20)
+            ->appends($request->query());
 
         $folders = ClientFile::getFolders();
 
@@ -78,8 +78,8 @@ class FileController extends Controller
     public function create(Request $request)
     {
         $clients = Client::where('company_id', auth()->user()->company_id)
-                        ->orderBy('name')
-                        ->get();
+            ->orderBy('name')
+            ->get();
 
         $selectedClientId = $request->get('client_id');
         $folders = ClientFile::getFolders();
@@ -102,7 +102,7 @@ class FileController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'folder' => 'required|in:' . implode(',', array_keys(ClientFile::getFolders())),
+            'folder' => 'required|in:'.implode(',', array_keys(ClientFile::getFolders())),
             'file' => 'required|file|max:102400', // 100MB max
             'is_public' => 'boolean',
             'tags' => 'nullable|string',
@@ -110,14 +110,14 @@ class FileController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()
-                           ->withErrors($validator)
-                           ->withInput();
+                ->withErrors($validator)
+                ->withInput();
         }
 
         $file = $request->file('file');
         $originalFilename = $file->getClientOriginalName();
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $filePath = 'clients/files/' . $filename;
+        $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
+        $filePath = 'clients/files/'.$filename;
 
         // Store the file
         $file->storeAs('clients/files', $filename, config('filesystems.default'));
@@ -145,12 +145,12 @@ class FileController extends Controller
             'tags' => $tags,
             'storage_disk' => config('filesystems.default'),
         ]);
-        
+
         $clientFile->company_id = auth()->user()->company_id;
         $clientFile->save();
 
         return redirect()->route('clients.files.standalone.index')
-                        ->with('success', 'File uploaded successfully.');
+            ->with('success', 'File uploaded successfully.');
     }
 
     /**
@@ -175,7 +175,7 @@ class FileController extends Controller
         $file->delete(); // The model's boot method will handle file deletion
 
         return redirect()->route('clients.files.standalone.index')
-                        ->with('success', 'File deleted successfully.');
+            ->with('success', 'File deleted successfully.');
     }
 
     /**
@@ -185,7 +185,7 @@ class FileController extends Controller
     {
         $this->authorize('view', $file);
 
-        if (!$file->fileExists()) {
+        if (! $file->fileExists()) {
             abort(404, 'File not found');
         }
 
@@ -201,16 +201,16 @@ class FileController extends Controller
     public function export(Request $request)
     {
         $query = ClientFile::with(['client', 'uploader'])
-            ->whereHas('client', function($q) {
+            ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
         // Apply same filters as index
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('original_filename', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('original_filename', 'like', "%{$search}%");
             });
         }
 
@@ -224,16 +224,16 @@ class FileController extends Controller
 
         $files = $query->orderBy('created_at', 'desc')->get();
 
-        $filename = 'files_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'files_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($files) {
+        $callback = function () use ($files) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($file, [
                 'File Name',
@@ -247,7 +247,7 @@ class FileController extends Controller
                 'Upload Date',
                 'Download Count',
                 'Public',
-                'Tags'
+                'Tags',
             ]);
 
             // CSV data
@@ -267,7 +267,7 @@ class FileController extends Controller
                     is_array($file->tags) ? implode(', ', $file->tags) : '',
                 ]);
             }
-            
+
             fclose($file);
         };
 

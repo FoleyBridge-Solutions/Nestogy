@@ -2,18 +2,18 @@
 
 namespace App\Domains\Report\Controllers\Report;
 
-use App\Http\Controllers\Controller;
 use App\Domains\Report\Services\DashboardService;
 use App\Domains\Report\Services\ExecutiveReportService;
 use App\Domains\Report\Services\WidgetService;
+use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
-use Carbon\Carbon;
 
 /**
  * Executive Dashboard Controller
- * 
+ *
  * High-level dashboards for executives and management
  */
 class ExecutiveDashboardController extends Controller
@@ -33,12 +33,12 @@ class ExecutiveDashboardController extends Controller
     public function index(Request $request): View
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Default to current month if no date range specified
-        $startDate = $request->input('start_date') 
+        $startDate = $request->input('start_date')
             ? Carbon::parse($request->input('start_date'))
             : now()->startOfMonth();
-        
+
         $endDate = $request->input('end_date')
             ? Carbon::parse($request->input('end_date'))
             : now()->endOfMonth();
@@ -52,7 +52,7 @@ class ExecutiveDashboardController extends Controller
         // Get comparison period (previous month/period)
         $comparisonStart = $startDate->copy()->subDays($startDate->diffInDays($endDate));
         $comparisonEnd = $startDate->copy()->subDay();
-        
+
         $comparisonData = $this->dashboardService->getExecutiveDashboard(
             $companyId,
             $comparisonStart,
@@ -73,11 +73,11 @@ class ExecutiveDashboardController extends Controller
     public function service(Request $request): View
     {
         $companyId = auth()->user()->company_id;
-        
-        $startDate = $request->input('start_date') 
+
+        $startDate = $request->input('start_date')
             ? Carbon::parse($request->input('start_date'))
             : now()->startOfMonth();
-        
+
         $endDate = $request->input('end_date')
             ? Carbon::parse($request->input('end_date'))
             : now()->endOfMonth();
@@ -101,11 +101,11 @@ class ExecutiveDashboardController extends Controller
     public function financial(Request $request): View
     {
         $companyId = auth()->user()->company_id;
-        
-        $startDate = $request->input('start_date') 
+
+        $startDate = $request->input('start_date')
             ? Carbon::parse($request->input('start_date'))
             : now()->startOfMonth();
-        
+
         $endDate = $request->input('end_date')
             ? Carbon::parse($request->input('end_date'))
             : now()->endOfMonth();
@@ -129,7 +129,7 @@ class ExecutiveDashboardController extends Controller
     public function clientHealth(): View
     {
         $companyId = auth()->user()->company_id;
-        
+
         $healthScorecard = $this->executiveService->generateClientHealthScorecard($companyId);
 
         return view('reports.executive.client-health', compact('healthScorecard'));
@@ -143,10 +143,10 @@ class ExecutiveDashboardController extends Controller
         $client = \App\Models\Client::where('company_id', auth()->user()->company_id)
             ->findOrFail($clientId);
 
-        $startDate = $request->input('start_date') 
+        $startDate = $request->input('start_date')
             ? Carbon::parse($request->input('start_date'))
             : now()->startOfMonth();
-        
+
         $endDate = $request->input('end_date')
             ? Carbon::parse($request->input('end_date'))
             : now()->endOfMonth();
@@ -204,10 +204,10 @@ class ExecutiveDashboardController extends Controller
     public function data(Request $request): JsonResponse
     {
         $companyId = auth()->user()->company_id;
-        
+
         $startDate = Carbon::parse($request->input('start_date', now()->startOfMonth()));
         $endDate = Carbon::parse($request->input('end_date', now()->endOfMonth()));
-        
+
         $dashboardType = $request->input('type', 'executive');
 
         try {
@@ -240,10 +240,10 @@ class ExecutiveDashboardController extends Controller
     public function export(Request $request)
     {
         $companyId = auth()->user()->company_id;
-        
+
         $startDate = Carbon::parse($request->input('start_date', now()->startOfMonth()));
         $endDate = Carbon::parse($request->input('end_date', now()->endOfMonth()));
-        
+
         $dashboardType = $request->input('type', 'executive');
         $format = $request->input('format', 'pdf');
 
@@ -255,10 +255,11 @@ class ExecutiveDashboardController extends Controller
                 default => throw new \InvalidArgumentException("Unknown dashboard type: {$dashboardType}"),
             };
 
-            $filename = "dashboard-{$dashboardType}-" . $startDate->format('Y-m-d') . "-to-" . $endDate->format('Y-m-d');
+            $filename = "dashboard-{$dashboardType}-".$startDate->format('Y-m-d').'-to-'.$endDate->format('Y-m-d');
 
             if ($format === 'pdf') {
                 $pdf = app('dompdf.wrapper')->loadView("reports.executive.pdf.{$dashboardType}", compact('data', 'startDate', 'endDate'));
+
                 return $pdf->download("{$filename}.pdf");
             } elseif ($format === 'excel') {
                 // Implementation for Excel export would go here
@@ -279,7 +280,7 @@ class ExecutiveDashboardController extends Controller
     public function realtime(Request $request): JsonResponse
     {
         $companyId = auth()->user()->company_id;
-        
+
         try {
             // Get real-time metrics (shorter cache times)
             $metrics = [

@@ -2,34 +2,33 @@
 
 namespace App\Domains\Client\Controllers;
 
-use App\Http\Controllers\Controller;
-
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Models\Company;
-use App\Models\CompanyHierarchy;
-use App\Models\SubsidiaryPermission;
-use App\Models\CrossCompanyUser;
-use App\Models\User;
 use App\Domains\Client\Services\SubsidiaryCreationService;
 use App\Domains\Security\Services\HierarchyPermissionService;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSubsidiaryRequest;
 use App\Http\Requests\UpdateSubsidiaryRequest;
+use App\Models\Company;
+use App\Models\CompanyHierarchy;
+use App\Models\CrossCompanyUser;
+use App\Models\SubsidiaryPermission;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 /**
  * SubsidiaryManagementController
- * 
+ *
  * Handles all subsidiary management operations including creation,
  * hierarchy visualization, permission management, and user assignments.
  */
 class SubsidiaryManagementController extends Controller
 {
     protected SubsidiaryCreationService $subsidiaryService;
+
     protected HierarchyPermissionService $permissionService;
 
     public function __construct(
@@ -38,9 +37,9 @@ class SubsidiaryManagementController extends Controller
     ) {
         $this->middleware('auth');
         $this->middleware('subsidiary.access:manage_subsidiaries')->only([
-            'create', 'store', 'edit', 'update', 'destroy'
+            'create', 'store', 'edit', 'update', 'destroy',
         ]);
-        
+
         $this->subsidiaryService = $subsidiaryService;
         $this->permissionService = $permissionService;
     }
@@ -54,13 +53,13 @@ class SubsidiaryManagementController extends Controller
         $company = $user->company;
 
         // Check if user can manage subsidiaries
-        if (!$user->settings?->canManageSubsidiaries() && !$company->canCreateSubsidiaries()) {
+        if (! $user->settings?->canManageSubsidiaries() && ! $company->canCreateSubsidiaries()) {
             abort(403, 'You do not have permission to manage subsidiaries.');
         }
 
         // Get hierarchy tree
         $hierarchyTree = $company->getHierarchyTree();
-        
+
         // Get statistics
         $stats = [
             'total_subsidiaries' => CompanyHierarchy::getDescendants($company->id)->count(),
@@ -97,7 +96,7 @@ class SubsidiaryManagementController extends Controller
         $user = Auth::user();
         $company = $user->company;
 
-        if (!$company->canCreateSubsidiaries()) {
+        if (! $company->canCreateSubsidiaries()) {
             abort(403, 'This company cannot create subsidiaries.');
         }
 
@@ -136,7 +135,7 @@ class SubsidiaryManagementController extends Controller
 
             return redirect()
                 ->route('subsidiaries.show', $subsidiary)
-                ->with('success', 'Subsidiary "' . $subsidiary->name . '" created successfully.');
+                ->with('success', 'Subsidiary "'.$subsidiary->name.'" created successfully.');
 
         } catch (\Exception $e) {
             Log::error('Failed to create subsidiary', [
@@ -148,14 +147,14 @@ class SubsidiaryManagementController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create subsidiary: ' . $e->getMessage(),
+                    'message' => 'Failed to create subsidiary: '.$e->getMessage(),
                 ], 422);
             }
 
             return redirect()
                 ->back()
                 ->withInput()
-                ->withErrors(['error' => 'Failed to create subsidiary: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to create subsidiary: '.$e->getMessage()]);
         }
     }
 
@@ -165,9 +164,9 @@ class SubsidiaryManagementController extends Controller
     public function show(Company $subsidiary): View|JsonResponse
     {
         $user = Auth::user();
-        
+
         // Verify access to this subsidiary
-        if (!$user->company->canAccessCompany($subsidiary->id)) {
+        if (! $user->company->canAccessCompany($subsidiary->id)) {
             abort(403, 'You do not have access to this subsidiary.');
         }
 
@@ -178,7 +177,7 @@ class SubsidiaryManagementController extends Controller
             'users',
             'crossCompanyUsers.user',
             'grantedPermissions.granteeCompany',
-            'receivedPermissions.granterCompany'
+            'receivedPermissions.granterCompany',
         ]);
 
         // Get subsidiary statistics
@@ -217,9 +216,9 @@ class SubsidiaryManagementController extends Controller
     public function edit(Company $subsidiary): View
     {
         $user = Auth::user();
-        
+
         // Verify management access
-        if (!$this->canManageSubsidiary($user, $subsidiary)) {
+        if (! $this->canManageSubsidiary($user, $subsidiary)) {
             abort(403, 'You do not have permission to edit this subsidiary.');
         }
 
@@ -231,7 +230,7 @@ class SubsidiaryManagementController extends Controller
      */
     public function update(UpdateSubsidiaryRequest $request, Company $subsidiary): RedirectResponse|JsonResponse
     {
-        if (!$this->canManageSubsidiary(Auth::user(), $subsidiary)) {
+        if (! $this->canManageSubsidiary(Auth::user(), $subsidiary)) {
             abort(403, 'You do not have permission to update this subsidiary.');
         }
 
@@ -269,14 +268,14 @@ class SubsidiaryManagementController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update subsidiary: ' . $e->getMessage(),
+                    'message' => 'Failed to update subsidiary: '.$e->getMessage(),
                 ], 422);
             }
 
             return redirect()
                 ->back()
                 ->withInput()
-                ->withErrors(['error' => 'Failed to update subsidiary: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to update subsidiary: '.$e->getMessage()]);
         }
     }
 
@@ -285,7 +284,7 @@ class SubsidiaryManagementController extends Controller
      */
     public function destroy(Company $subsidiary): RedirectResponse|JsonResponse
     {
-        if (!$this->canManageSubsidiary(Auth::user(), $subsidiary)) {
+        if (! $this->canManageSubsidiary(Auth::user(), $subsidiary)) {
             abort(403, 'You do not have permission to delete this subsidiary.');
         }
 
@@ -318,13 +317,13 @@ class SubsidiaryManagementController extends Controller
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to remove subsidiary: ' . $e->getMessage(),
+                    'message' => 'Failed to remove subsidiary: '.$e->getMessage(),
                 ], 422);
             }
 
             return redirect()
                 ->back()
-                ->withErrors(['error' => 'Failed to remove subsidiary: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to remove subsidiary: '.$e->getMessage()]);
         }
     }
 
@@ -335,10 +334,10 @@ class SubsidiaryManagementController extends Controller
     {
         $user = Auth::user();
         $companyId = $request->get('company_id', $user->company_id);
-        
+
         $company = Company::findOrFail($companyId);
-        
-        if (!$user->company->canAccessCompany($companyId)) {
+
+        if (! $user->company->canAccessCompany($companyId)) {
             abort(403, 'Access denied to company hierarchy.');
         }
 
@@ -355,7 +354,7 @@ class SubsidiaryManagementController extends Controller
      */
     public function permissions(Request $request, Company $subsidiary): View|JsonResponse
     {
-        if (!$this->canManageSubsidiary(Auth::user(), $subsidiary)) {
+        if (! $this->canManageSubsidiary(Auth::user(), $subsidiary)) {
             abort(403, 'You do not have permission to manage permissions for this subsidiary.');
         }
 
@@ -420,7 +419,7 @@ class SubsidiaryManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to grant permission: ' . $e->getMessage(),
+                'message' => 'Failed to grant permission: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -445,7 +444,7 @@ class SubsidiaryManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to revoke permission: ' . $e->getMessage(),
+                'message' => 'Failed to revoke permission: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -455,7 +454,7 @@ class SubsidiaryManagementController extends Controller
      */
     public function users(Request $request, Company $subsidiary): View|JsonResponse
     {
-        if (!$this->canManageSubsidiary(Auth::user(), $subsidiary)) {
+        if (! $this->canManageSubsidiary(Auth::user(), $subsidiary)) {
             abort(403, 'You do not have permission to manage users for this subsidiary.');
         }
 
@@ -517,7 +516,7 @@ class SubsidiaryManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to grant user access: ' . $e->getMessage(),
+                'message' => 'Failed to grant user access: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -527,8 +526,8 @@ class SubsidiaryManagementController extends Controller
      */
     public function revokeUserAccess(CrossCompanyUser $crossCompanyUser): JsonResponse
     {
-        if ($crossCompanyUser->authorized_by !== Auth::id() && 
-            !Auth::user()->settings?->isSuperAdmin()) {
+        if ($crossCompanyUser->authorized_by !== Auth::id() &&
+            ! Auth::user()->settings?->isSuperAdmin()) {
             abort(403, 'You can only revoke access you authorized.');
         }
 
@@ -543,7 +542,7 @@ class SubsidiaryManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to revoke user access: ' . $e->getMessage(),
+                'message' => 'Failed to revoke user access: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -576,7 +575,7 @@ class SubsidiaryManagementController extends Controller
     protected function canManageSubsidiary(User $user, Company $subsidiary): bool
     {
         // User must have subsidiary management permissions
-        if (!$user->settings?->canManageSubsidiaries()) {
+        if (! $user->settings?->canManageSubsidiaries()) {
             return false;
         }
 

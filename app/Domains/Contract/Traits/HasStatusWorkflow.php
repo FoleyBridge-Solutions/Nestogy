@@ -6,7 +6,7 @@ use Carbon\Carbon;
 
 /**
  * HasStatusWorkflow Trait
- * 
+ *
  * Provides common status workflow methods for contract models.
  * Eliminates duplication of status change logic with configuration support.
  */
@@ -22,13 +22,13 @@ trait HasStatusWorkflow
     ): void {
         $config = $this->getCompanyConfig();
         $newStatus = $config[$configKey] ?? $this->getDefaultStatus($configKey);
-        
+
         $updateData = array_merge(['status' => $newStatus], $additionalData);
-        
+
         if ($timestampField) {
             $updateData[$timestampField] = now();
         }
-        
+
         $this->update($updateData);
     }
 
@@ -57,7 +57,7 @@ trait HasStatusWorkflow
     {
         $status = $currentStatus ?? $this->status;
         $allowedStatuses = $this->getConfigValue($configKey, []);
-        
+
         return in_array($status, $allowedStatuses);
     }
 
@@ -67,7 +67,7 @@ trait HasStatusWorkflow
     public function markAsSigned(?Carbon $signedAt = null): void
     {
         $config = $this->getCompanyConfig();
-        
+
         $this->update([
             'status' => $config['default_signed_status'] ?? 'signed',
             'signature_status' => $config['default_signed_signature_status'] ?? 'fully_executed',
@@ -103,7 +103,7 @@ trait HasStatusWorkflow
     {
         $config = $this->getCompanyConfig();
         $suspendedStatus = $config['default_suspended_status'] ?? 'suspended';
-        
+
         $metadata = $this->metadata ?? [];
         $metadata['suspension_reason'] = $reason;
         $metadata['suspended_at'] = now();
@@ -121,7 +121,7 @@ trait HasStatusWorkflow
     {
         $config = $this->getCompanyConfig();
         $activeStatus = $config['default_active_status'] ?? 'active';
-        
+
         $metadata = $this->metadata ?? [];
         $metadata['reactivated_at'] = now();
         unset($metadata['suspension_reason'], $metadata['suspended_at']);

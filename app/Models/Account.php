@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Account Model
- * 
+ *
  * Represents financial accounts for tracking payments and expenses.
  * Supports multi-currency and bank integration via Plaid.
- * 
+ *
  * @property int $id
  * @property string $name
  * @property float $opening_balance
@@ -65,11 +65,17 @@ class Account extends Model
      * Account types enumeration
      */
     const TYPE_CHECKING = 1;
+
     const TYPE_SAVINGS = 2;
+
     const TYPE_CREDIT_CARD = 3;
+
     const TYPE_CASH = 4;
+
     const TYPE_INVESTMENT = 5;
+
     const TYPE_LOAN = 6;
+
     const TYPE_OTHER = 7;
 
     /**
@@ -114,7 +120,7 @@ class Account extends Model
      */
     public function isArchived(): bool
     {
-        return !is_null($this->archived_at);
+        return ! is_null($this->archived_at);
     }
 
     /**
@@ -122,7 +128,7 @@ class Account extends Model
      */
     public function hasPlaidIntegration(): bool
     {
-        return !empty($this->plaid_id);
+        return ! empty($this->plaid_id);
     }
 
     /**
@@ -132,7 +138,7 @@ class Account extends Model
     {
         $paymentsTotal = $this->payments()->sum('amount');
         $expensesTotal = $this->expenses()->sum('amount');
-        
+
         return $this->opening_balance + $paymentsTotal - $expensesTotal;
     }
 
@@ -158,7 +164,8 @@ class Account extends Model
     public function formatCurrency(float $amount): string
     {
         $symbol = $this->getCurrencySymbol();
-        return $symbol . number_format($amount, 2);
+
+        return $symbol.number_format($amount, 2);
     }
 
     /**
@@ -207,7 +214,7 @@ class Account extends Model
      */
     public function scopeSearch($query, string $search)
     {
-        return $query->where('name', 'like', '%' . $search . '%');
+        return $query->where('name', 'like', '%'.$search.'%');
     }
 
     /**

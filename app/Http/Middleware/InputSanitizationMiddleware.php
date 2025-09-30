@@ -2,16 +2,15 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AuditLog;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\AuditLog;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\UploadedFile;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * InputSanitizationMiddleware
- * 
+ *
  * Sanitizes and validates input data to prevent XSS, SQL injection,
  * and other security vulnerabilities.
  */
@@ -31,7 +30,7 @@ class InputSanitizationMiddleware
         '/\bexec(\s|\()/i',
         '/\bscript\s*>/i',
         '/\b(or|and)\s+\d+\s*=\s*\d+/i',
-        
+
         // XSS patterns
         '/<script[^>]*>.*?<\/script>/is',
         '/<iframe[^>]*>.*?<\/iframe>/is',
@@ -40,11 +39,11 @@ class InputSanitizationMiddleware
         '/<embed[^>]*>/i',
         '/<object[^>]*>/i',
         '/vbscript\s*:/i',
-        
+
         // Path traversal
         '/\.\.\//',
         '/\.\.\\\\/',
-        
+
         // Command injection
         '/;\s*(ls|cat|rm|mv|cp|wget|curl|bash|sh)\s/i',
         '/\|\s*(ls|cat|rm|mv|cp|wget|curl|bash|sh)\s/i',
@@ -101,7 +100,7 @@ class InputSanitizationMiddleware
 
         // Validate file uploads
         if ($request->hasFile('file') || $request->allFiles()) {
-            if (!$this->validateFileUploads($request)) {
+            if (! $this->validateFileUploads($request)) {
                 return $this->handleMaliciousUpload($request);
             }
         }
@@ -144,13 +143,14 @@ class InputSanitizationMiddleware
         $flatData = $this->flattenArray($data);
 
         foreach ($flatData as $value) {
-            if (!is_string($value)) {
+            if (! is_string($value)) {
                 continue;
             }
 
             foreach ($this->dangerousPatterns as $pattern) {
                 if (preg_match($pattern, $value)) {
                     $this->logDangerousPattern($request, $pattern, $value);
+
                     return true;
                 }
             }
@@ -186,7 +186,7 @@ class InputSanitizationMiddleware
     {
         $input = $request->all();
         $sanitized = $this->sanitizeArray($input);
-        
+
         // Replace request input with sanitized data
         $request->replace($sanitized);
     }
@@ -199,7 +199,7 @@ class InputSanitizationMiddleware
         foreach ($data as $key => $value) {
             // Sanitize key
             $sanitizedKey = $this->sanitizeString($key);
-            
+
             if ($sanitizedKey !== $key) {
                 unset($data[$key]);
                 $key = $sanitizedKey;
@@ -245,16 +245,16 @@ class InputSanitizationMiddleware
     protected function validateFileUploads(Request $request): bool
     {
         $files = $request->allFiles();
-        
+
         foreach ($files as $key => $file) {
             if (is_array($file)) {
                 foreach ($file as $uploadedFile) {
-                    if (!$this->validateSingleFile($uploadedFile)) {
+                    if (! $this->validateSingleFile($uploadedFile)) {
                         return false;
                     }
                 }
             } else {
-                if (!$this->validateSingleFile($file)) {
+                if (! $this->validateSingleFile($file)) {
                     return false;
                 }
             }
@@ -271,26 +271,29 @@ class InputSanitizationMiddleware
         // Check file size
         if ($file->getSize() > $this->maxFileSize) {
             $this->logFileValidationError($file, 'File size exceeds limit');
+
             return false;
         }
 
         // Check MIME type
         $mimeType = $file->getMimeType();
-        if (!in_array($mimeType, $this->allowedMimeTypes)) {
-            $this->logFileValidationError($file, 'Invalid MIME type: ' . $mimeType);
+        if (! in_array($mimeType, $this->allowedMimeTypes)) {
+            $this->logFileValidationError($file, 'Invalid MIME type: '.$mimeType);
+
             return false;
         }
 
         // Check file extension
         $extension = strtolower($file->getClientOriginalExtension());
         if (in_array($extension, $this->blockedExtensions)) {
-            $this->logFileValidationError($file, 'Blocked file extension: ' . $extension);
+            $this->logFileValidationError($file, 'Blocked file extension: '.$extension);
+
             return false;
         }
 
         // Additional checks for images
         if (str_starts_with($mimeType, 'image/')) {
-            if (!$this->validateImageFile($file)) {
+            if (! $this->validateImageFile($file)) {
                 return false;
             }
         }
@@ -298,6 +301,7 @@ class InputSanitizationMiddleware
         // Check for PHP code in file content
         if ($this->containsPhpCode($file)) {
             $this->logFileValidationError($file, 'File contains PHP code');
+
             return false;
         }
 
@@ -313,6 +317,7 @@ class InputSanitizationMiddleware
             $imageInfo = getimagesize($file->getPathname());
             if ($imageInfo === false) {
                 $this->logFileValidationError($file, 'Invalid image file');
+
                 return false;
             }
 
@@ -323,12 +328,14 @@ class InputSanitizationMiddleware
                     $exifString = json_encode($exif);
                     if (stripos($exifString, '<?php') !== false) {
                         $this->logFileValidationError($file, 'Image EXIF contains PHP code');
+
                         return false;
                     }
                 }
             }
         } catch (\Exception $e) {
-            $this->logFileValidationError($file, 'Image validation error: ' . $e->getMessage());
+            $this->logFileValidationError($file, 'Image validation error: '.$e->getMessage());
+
             return false;
         }
 
@@ -341,7 +348,7 @@ class InputSanitizationMiddleware
     protected function containsPhpCode(UploadedFile $file): bool
     {
         $content = file_get_contents($file->getPathname());
-        
+
         $phpPatterns = [
             '/<\?php/i',
             '/<\?=/i',
@@ -416,12 +423,12 @@ class InputSanitizationMiddleware
      */
     protected function blockIpTemporarily(string $ip): void
     {
-        $key = 'blocked_ip_' . $ip;
+        $key = 'blocked_ip_'.$ip;
         $attempts = cache()->increment($key);
-        
+
         if ($attempts >= 3) {
             // Block for 1 hour after 3 attempts
-            cache()->put('ip_blocked_' . $ip, true, now()->addHour());
+            cache()->put('ip_blocked_'.$ip, true, now()->addHour());
         }
     }
 }

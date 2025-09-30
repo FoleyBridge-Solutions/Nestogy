@@ -2,24 +2,22 @@
 
 namespace App\Domains\Security\Controllers;
 
-use App\Http\Controllers\Controller;
-
 use App\Domains\Core\Controllers\BaseResourceController;
-use App\Domains\Security\Services\IpLookupService;
-use App\Domains\Security\Services\SuspiciousLoginService;
 use App\Domains\Security\Models\IpLookupLog;
 use App\Domains\Security\Models\SuspiciousLoginAttempt;
 use App\Domains\Security\Models\TrustedDevice;
+use App\Domains\Security\Services\IpLookupService;
+use App\Domains\Security\Services\SuspiciousLoginService;
 use App\Models\AuditLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Illuminate\View\View;
 
 class SecurityDashboardController extends BaseResourceController
 {
     protected IpLookupService $ipLookupService;
+
     protected SuspiciousLoginService $suspiciousLoginService;
 
     public function __construct(
@@ -28,7 +26,7 @@ class SecurityDashboardController extends BaseResourceController
     ) {
         $this->ipLookupService = $ipLookupService;
         $this->suspiciousLoginService = $suspiciousLoginService;
-        
+
         parent::__construct();
     }
 
@@ -97,7 +95,7 @@ class SecurityDashboardController extends BaseResourceController
                 'high' => [60, 79],
                 'critical' => [80, 100],
             ];
-            
+
             if (isset($riskThresholds[$riskLevel])) {
                 [$min, $max] = $riskThresholds[$riskLevel];
                 $query->whereBetween('risk_score', [$min, $max]);

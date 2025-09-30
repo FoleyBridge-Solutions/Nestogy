@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Domains\Contract\Services\DynamicContractRouteService;
 use App\Domains\Contract\Models\ContractNavigationItem;
+use App\Domains\Contract\Services\DynamicContractRouteService;
 use App\Models\Company;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -59,9 +59,10 @@ class GenerateDynamicRoutes extends Command
     protected function generateCompanyRoutes(int $companyId): int
     {
         $company = Company::find($companyId);
-        
-        if (!$company) {
+
+        if (! $company) {
             $this->error("Company with ID {$companyId} not found.");
+
             return 1;
         }
 
@@ -69,19 +70,20 @@ class GenerateDynamicRoutes extends Command
 
         try {
             $this->routeService->registerCompanyRoutes($companyId);
-            
+
             $registeredRoutes = $this->routeService->getRegisteredRoutes();
             $routeCount = count($registeredRoutes);
 
             $this->info("Successfully generated {$routeCount} routes for {$company->name}");
-            
+
             if ($this->option('verbose')) {
-                $this->table(['Route Name'], array_map(fn($route) => [$route], $registeredRoutes));
+                $this->table(['Route Name'], array_map(fn ($route) => [$route], $registeredRoutes));
             }
 
             return 0;
         } catch (\Exception $e) {
             $this->error("Failed to generate routes: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -99,22 +101,23 @@ class GenerateDynamicRoutes extends Command
 
             foreach ($companies as $company) {
                 $this->line("Processing company: {$company->name}");
-                
+
                 $routesBefore = count($this->routeService->getRegisteredRoutes());
                 $this->routeService->registerCompanyRoutes($company->id);
                 $routesAfter = count($this->routeService->getRegisteredRoutes());
-                
+
                 $companyRoutes = $routesAfter - $routesBefore;
                 $totalRoutes += $companyRoutes;
-                
+
                 $this->info("  Generated {$companyRoutes} routes");
             }
 
-            $this->info("Successfully generated {$totalRoutes} total routes for " . $companies->count() . " companies");
+            $this->info("Successfully generated {$totalRoutes} total routes for ".$companies->count().' companies');
 
             return 0;
         } catch (\Exception $e) {
             $this->error("Failed to generate routes: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -146,32 +149,35 @@ class GenerateDynamicRoutes extends Command
 
             $errors = $this->routeService->validateNavigationConfig($config);
 
-            if (!empty($errors)) {
-                $this->warn("  Found " . count($errors) . " errors:");
+            if (! empty($errors)) {
+                $this->warn('  Found '.count($errors).' errors:');
                 foreach ($errors as $error) {
                     $this->error("    - {$error}");
                 }
                 $totalErrors += count($errors);
             } else {
-                $this->info("  No errors found");
+                $this->info('  No errors found');
             }
         }
 
         if ($totalErrors > 0) {
             $this->error("Total validation errors: {$totalErrors}");
+
             return 1;
         }
 
         $this->info('All route configurations are valid!');
+
         return 0;
     }
 
     protected function exportRoutes(): int
     {
         $exportFile = $this->option('export');
-        
-        if (!$exportFile) {
+
+        if (! $exportFile) {
             $this->error('Export file path is required when using --export option');
+
             return 1;
         }
 
@@ -221,6 +227,7 @@ class GenerateDynamicRoutes extends Command
             return 0;
         } catch (\Exception $e) {
             $this->error("Failed to export routes: {$e->getMessage()}");
+
             return 1;
         }
     }
@@ -232,9 +239,11 @@ class GenerateDynamicRoutes extends Command
         try {
             $this->routeService->clearRoutes();
             $this->info('Dynamic routes cleared successfully');
+
             return 0;
         } catch (\Exception $e) {
             $this->error("Failed to clear routes: {$e->getMessage()}");
+
             return 1;
         }
     }

@@ -14,7 +14,7 @@ trait HasActivity
         });
 
         static::updated(function ($model) {
-            if ($model->wasChanged() && !$model->wasRecentlyCreated) {
+            if ($model->wasChanged() && ! $model->wasRecentlyCreated) {
                 $model->logActivity('updated', $model->getChanges());
             }
         });
@@ -34,7 +34,7 @@ trait HasActivity
             'user_id' => Auth::id(),
             'company_id' => $this->company_id ?? Auth::user()?->company_id,
             'properties' => $properties,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
 
         Log::info("Model activity: {$action}", $data);
@@ -45,7 +45,7 @@ trait HasActivity
 
     protected function getActivityName(): string
     {
-        return $this->name ?? $this->title ?? class_basename($this) . ' #' . $this->id;
+        return $this->name ?? $this->title ?? class_basename($this).' #'.$this->id;
     }
 
     public function markAsAccessed(): bool

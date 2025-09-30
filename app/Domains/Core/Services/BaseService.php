@@ -2,26 +2,29 @@
 
 namespace App\Domains\Core\Services;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Exceptions\BaseException;
+use App\Exceptions\PermissionException;
+use App\Exceptions\ServiceException;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\QueryException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use App\Exceptions\BaseException;
-use App\Exceptions\ServiceException;
-use App\Exceptions\NotFoundException;
-use App\Exceptions\PermissionException;
 use Throwable;
 
 abstract class BaseService
 {
     protected string $modelClass;
+
     protected array $defaultEagerLoad = [];
+
     protected array $searchableFields = ['name'];
+
     protected string $defaultSortField = 'created_at';
+
     protected string $defaultSortDirection = 'desc';
 
     public function __construct()
@@ -36,8 +39,8 @@ abstract class BaseService
         $query = $this->buildBaseQuery();
         $query = $this->applyFilters($query, $filters);
         $query = $this->applySorting($query, $filters);
-        
-        if (!empty($this->defaultEagerLoad)) {
+
+        if (! empty($this->defaultEagerLoad)) {
             $query->with($this->defaultEagerLoad);
         }
 
@@ -49,8 +52,8 @@ abstract class BaseService
         $query = $this->buildBaseQuery();
         $query = $this->applyFilters($query, $filters);
         $query = $this->applySorting($query, $filters);
-        
-        if (!empty($this->defaultEagerLoad)) {
+
+        if (! empty($this->defaultEagerLoad)) {
             $query->with($this->defaultEagerLoad);
         }
 
@@ -60,8 +63,8 @@ abstract class BaseService
     public function findById(int $id): ?Model
     {
         $query = $this->buildBaseQuery();
-        
-        if (!empty($this->defaultEagerLoad)) {
+
+        if (! empty($this->defaultEagerLoad)) {
             $query->with($this->defaultEagerLoad);
         }
 
@@ -71,8 +74,8 @@ abstract class BaseService
     public function findByIdOrFail(int $id): Model
     {
         $query = $this->buildBaseQuery();
-        
-        if (!empty($this->defaultEagerLoad)) {
+
+        if (! empty($this->defaultEagerLoad)) {
             $query->with($this->defaultEagerLoad);
         }
 
@@ -85,12 +88,12 @@ abstract class BaseService
             return DB::transaction(function () use ($data) {
                 $data = $this->prepareCreateData($data);
                 $data['company_id'] = Auth::user()->company_id;
-                
+
                 $model = $this->modelClass::create($data);
-                
+
                 $this->afterCreate($model, $data);
                 $this->logActivity($model, 'created');
-                
+
                 return $model;
             });
         } catch (QueryException $e) {
@@ -105,13 +108,13 @@ abstract class BaseService
         try {
             return DB::transaction(function () use ($model, $data) {
                 $data = $this->prepareUpdateData($data, $model);
-                
+
                 $model->update($data);
                 $model = $model->fresh();
-                
+
                 $this->afterUpdate($model, $data);
                 $this->logActivity($model, 'updated');
-                
+
                 return $model;
             });
         } catch (QueryException $e) {
@@ -125,16 +128,16 @@ abstract class BaseService
     {
         return DB::transaction(function () use ($model) {
             $this->beforeArchive($model);
-            
+
             if (method_exists($model, 'archive')) {
                 $result = $model->archive();
             } else {
                 $result = $model->update(['archived_at' => now()]);
             }
-            
+
             $this->afterArchive($model);
             $this->logActivity($model, 'archived');
-            
+
             return $result;
         });
     }
@@ -143,16 +146,16 @@ abstract class BaseService
     {
         return DB::transaction(function () use ($model) {
             $this->beforeRestore($model);
-            
+
             if (method_exists($model, 'restore')) {
                 $result = $model->restore();
             } else {
                 $result = $model->update(['archived_at' => null]);
             }
-            
+
             $this->afterRestore($model);
             $this->logActivity($model, 'restored');
-            
+
             return $result;
         });
     }
@@ -161,12 +164,12 @@ abstract class BaseService
     {
         return DB::transaction(function () use ($model) {
             $this->beforeDelete($model);
-            
+
             $result = $model->delete();
-            
+
             $this->afterDelete($model);
             $this->logActivity($model, 'deleted');
-            
+
             return $result;
         });
     }
@@ -176,20 +179,20 @@ abstract class BaseService
         return DB::transaction(function () use ($ids, $data) {
             $models = $this->buildBaseQuery()->whereIn('id', $ids)->get();
             $updated = 0;
-            
+
             foreach ($models as $model) {
                 if ($this->canUpdate($model)) {
                     $model->update($data);
                     $updated++;
                 }
             }
-            
+
             $this->logActivity(null, 'bulk_updated', [
                 'ids' => $ids,
                 'count' => $updated,
-                'data' => $data
+                'data' => $data,
             ]);
-            
+
             return $updated;
         });
     }
@@ -199,19 +202,19 @@ abstract class BaseService
         return DB::transaction(function () use ($ids) {
             $models = $this->buildBaseQuery()->whereIn('id', $ids)->get();
             $archived = 0;
-            
+
             foreach ($models as $model) {
                 if ($this->canArchive($model)) {
                     $this->archive($model);
                     $archived++;
                 }
             }
-            
+
             $this->logActivity(null, 'bulk_archived', [
                 'ids' => $ids,
-                'count' => $archived
+                'count' => $archived,
             ]);
-            
+
             return $archived;
         });
     }
@@ -219,33 +222,33 @@ abstract class BaseService
     public function search(string $query, int $limit = 10): Collection
     {
         $queryBuilder = $this->buildBaseQuery();
-        
+
         $queryBuilder->where(function ($q) use ($query) {
             foreach ($this->searchableFields as $field) {
                 $q->orWhere($field, 'like', "%{$query}%");
             }
         });
-        
+
         return $queryBuilder->limit($limit)->get();
     }
 
     protected function buildBaseQuery()
     {
         $query = $this->modelClass::where('company_id', Auth::user()->company_id);
-        
+
         // Apply default filters (e.g., exclude archived)
-        if (in_array('archived_at', $this->modelClass::make()->getFillable()) || 
+        if (in_array('archived_at', $this->modelClass::make()->getFillable()) ||
             method_exists($this->modelClass::make(), 'getArchivedAtColumn')) {
             $query->whereNull('archived_at');
         }
-        
+
         return $query;
     }
 
     protected function applyFilters($query, array $filters)
     {
         // Apply search filter
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 foreach ($this->searchableFields as $field) {
@@ -255,21 +258,21 @@ abstract class BaseService
         }
 
         // Apply status filter
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         // Apply type filter
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
         // Apply date range filters
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('created_at', '<=', $filters['date_to']);
         }
 
@@ -285,7 +288,7 @@ abstract class BaseService
     {
         $sortBy = $filters['sort'] ?? $this->defaultSortField;
         $sortDirection = $filters['direction'] ?? $this->defaultSortDirection;
-        
+
         return $query->orderBy($sortBy, $sortDirection);
     }
 
@@ -360,7 +363,7 @@ abstract class BaseService
             'action' => $action,
             'model_type' => $this->modelClass,
             'user_id' => Auth::id(),
-            'company_id' => Auth::user()->company_id
+            'company_id' => Auth::user()->company_id,
         ];
 
         if ($model) {
@@ -368,7 +371,7 @@ abstract class BaseService
             $logData['model_name'] = $model->name ?? $model->title ?? null;
         }
 
-        if (!empty($metadata)) {
+        if (! empty($metadata)) {
             $logData['metadata'] = $metadata;
         }
 
@@ -378,7 +381,7 @@ abstract class BaseService
     public function getStatistics(): array
     {
         $query = $this->buildBaseQuery();
-        
+
         $stats = [
             'total' => (clone $query)->count(),
             'active' => (clone $query)->where('status', 'active')->count(),
@@ -516,6 +519,7 @@ abstract class BaseService
 
         if ($e instanceof ModelNotFoundException) {
             $modelName = class_basename($this->modelClass);
+
             return $this->createDomainException(
                 "{$modelName} not found during {$operation}",
                 404,
@@ -555,7 +559,8 @@ abstract class BaseService
         }
 
         // Fallback to generic service exception
-        return new class($message, $statusCode, null, $context, $userMessage, $statusCode) extends ServiceException {
+        return new class($message, $statusCode, null, $context, $userMessage, $statusCode) extends ServiceException
+        {
             protected function getDefaultUserMessage(): string
             {
                 return 'A service error occurred. Please try again later.';
@@ -569,6 +574,7 @@ abstract class BaseService
     protected function getDomainName(): string
     {
         $className = class_basename($this);
+
         return str_replace('Service', '', $className);
     }
 
@@ -578,9 +584,10 @@ abstract class BaseService
     protected function checkPermission(string $action, ?Model $model = null): void
     {
         $user = Auth::user();
-        
-        if (!$user) {
-            throw new class('Authentication required', 401) extends PermissionException {
+
+        if (! $user) {
+            throw new class('Authentication required', 401) extends PermissionException
+            {
                 protected function getDefaultUserMessage(): string
                 {
                     return 'You must be logged in to perform this action.';
@@ -589,9 +596,10 @@ abstract class BaseService
         }
 
         $resource = $model ?? $this->modelClass;
-        
-        if (!$user->can($action, $resource)) {
-            throw new class($action, class_basename($this->modelClass)) extends PermissionException {
+
+        if (! $user->can($action, $resource)) {
+            throw new class($action, class_basename($this->modelClass)) extends PermissionException
+            {
                 protected function getDefaultUserMessage(): string
                 {
                     return 'You do not have permission to perform this action.';
@@ -606,9 +614,10 @@ abstract class BaseService
     protected function validateCompanyOwnership(Model $model): void
     {
         $user = Auth::user();
-        
+
         if ($model->company_id !== $user->company_id) {
-            throw new class('Access denied', 'Resource') extends PermissionException {
+            throw new class('Access denied', 'Resource') extends PermissionException
+            {
                 protected function getDefaultUserMessage(): string
                 {
                     return 'You do not have access to this resource.';
@@ -628,9 +637,10 @@ abstract class BaseService
             ->toArray();
 
         $invalidIds = array_diff($ids, $validIds);
-        
-        if (!empty($invalidIds)) {
-            throw new class('Access denied', 'Resources') extends PermissionException {
+
+        if (! empty($invalidIds)) {
+            throw new class('Access denied', 'Resources') extends PermissionException
+            {
                 protected function getDefaultUserMessage(): string
                 {
                     return 'You do not have access to some of the requested resources.';

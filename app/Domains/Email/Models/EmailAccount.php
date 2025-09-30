@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class EmailAccount extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -161,8 +161,8 @@ class EmailAccount extends Model
 
     public function needsTokenRefresh(): bool
     {
-        return $this->isOAuthProvider() && 
-               $this->oauth_expires_at && 
+        return $this->isOAuthProvider() &&
+               $this->oauth_expires_at &&
                $this->oauth_expires_at->isPast();
     }
 
@@ -211,7 +211,7 @@ class EmailAccount extends Model
         return $query->active()
             ->where(function ($q) {
                 $q->whereNull('last_synced_at')
-                  ->orWhereRaw('TIMESTAMPDIFF(MINUTE, last_synced_at, NOW()) >= sync_interval_minutes');
+                    ->orWhereRaw('TIMESTAMPDIFF(MINUTE, last_synced_at, NOW()) >= sync_interval_minutes');
             });
     }
 }
