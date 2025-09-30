@@ -317,16 +317,29 @@ class EditContact extends Component
      */
     public function sendInvitation()
     {
-        $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
-        $result = $invitationService->sendInvitation($this->contact, auth()->user());
+        try {
+            $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
+            $result = $invitationService->sendInvitation($this->contact, auth()->user());
 
-        if ($result['success']) {
-            session()->flash('success', 'Portal invitation sent successfully!');
-            // Refresh the contact model to get updated invitation status
-            $this->contact->refresh();
-            $this->mount($this->contact);
-        } else {
-            session()->flash('error', 'Failed to send invitation: '.$result['message']);
+            if ($result['success']) {
+                session()->flash('success', 'Portal invitation sent successfully!');
+                // Refresh the contact model to get updated invitation status
+                $this->contact->refresh();
+                $this->mount($this->contact);
+            } else {
+                \Log::warning('Portal invitation failed', [
+                    'contact_id' => $this->contact->id,
+                    'result' => $result,
+                ]);
+                session()->flash('error', 'Failed to send invitation: '.$result['message']);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Exception sending portal invitation', [
+                'contact_id' => $this->contact->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            session()->flash('error', 'An error occurred while sending the invitation. Please try again.');
         }
     }
 
@@ -335,15 +348,27 @@ class EditContact extends Component
      */
     public function resendInvitation()
     {
-        $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
-        $result = $invitationService->resendInvitation($this->contact, auth()->user());
+        try {
+            $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
+            $result = $invitationService->resendInvitation($this->contact, auth()->user());
 
-        if ($result['success']) {
-            session()->flash('success', 'Portal invitation resent successfully!');
-            $this->contact->refresh();
-            $this->mount($this->contact);
-        } else {
-            session()->flash('error', 'Failed to resend invitation: '.$result['message']);
+            if ($result['success']) {
+                session()->flash('success', 'Portal invitation resent successfully!');
+                $this->contact->refresh();
+                $this->mount($this->contact);
+            } else {
+                \Log::warning('Portal invitation resend failed', [
+                    'contact_id' => $this->contact->id,
+                    'result' => $result,
+                ]);
+                session()->flash('error', 'Failed to resend invitation: '.$result['message']);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Exception resending portal invitation', [
+                'contact_id' => $this->contact->id,
+                'error' => $e->getMessage(),
+            ]);
+            session()->flash('error', 'An error occurred while resending the invitation. Please try again.');
         }
     }
 

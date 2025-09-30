@@ -86,7 +86,17 @@ class PortalInvitationService
             ]);
 
             // Send invitation email
-            $this->sendInvitationEmail($contact, $token);
+            $emailSent = $this->sendInvitationEmail($contact, $token);
+            
+            if (!$emailSent) {
+                // Rollback invitation status if email failed
+                $contact->update([
+                    'invitation_status' => 'failed',
+                    'invitation_token' => null,
+                ]);
+                
+                return $this->errorResponse('Failed to send invitation email. Please check your email configuration.');
+            }
 
             // Log activity
             activity()
@@ -376,42 +386,64 @@ class PortalInvitationService
     /**
      * Send invitation email
      */
-    protected function sendInvitationEmail(Contact $contact, string $token): void
+    protected function sendInvitationEmail(Contact $contact, string $token): bool
     {
-        $invitationUrl = route('client.invitation.show', ['token' => $token]);
+        try {
+            $invitationUrl = route('client.invitation.show', ['token' => $token]);
 
-        // Use unified mail service
-        $mailService = app(UnifiedMailService::class);
+            // Use unified mail service
+            $mailService = app(UnifiedMailService::class);
 
-        // Prepare email content
-        $emailBody = view('emails.portal-invitation', [
-            'contact' => $contact,
-            'contactName' => $contact->name,
-            'clientName' => $contact->client->name,
-            'companyName' => $contact->client->company->name ?? 'Nestogy',
-            'invitationUrl' => $invitationUrl,
-            'expiresAt' => $contact->invitation_expires_at,
-            'expiresInHours' => now()->diffInHours($contact->invitation_expires_at),
-        ])->render();
+            // Prepare email content
+            $emailBody = view('emails.portal-invitation', [
+                'contact' => $contact,
+                'contactName' => $contact->name,
+                'clientName' => $contact->client->name,
+                'companyName' => $contact->client->company->name ?? 'Nestogy',
+                'invitationUrl' => $invitationUrl,
+                'expiresAt' => $contact->invitation_expires_at,
+                'expiresInHours' => now()->diffInHours($contact->invitation_expires_at),
+            ])->render();
 
-        // Send the email immediately (portal invitations are time-sensitive)
-        $mailService->sendNow([
-            'company_id' => $contact->company_id,
-            'client_id' => $contact->client_id,
-            'contact_id' => $contact->id,
-            'to_email' => $contact->email,
-            'to_name' => $contact->name,
-            'subject' => "You're invited to access your ".($contact->client->company->name ?? 'Nestogy').' Client Portal',
-            'html_body' => $emailBody,
-            'category' => 'portal',
-            'priority' => 'critical',
-            'related_type' => Contact::class,
-            'related_id' => $contact->id,
-            'metadata' => [
-                'invitation_token' => substr($token, 0, 8).'...',
-                'expires_at' => $contact->invitation_expires_at->toIso8601String(),
-            ],
-        ]);
+            // Send the email immediately (portal invitations are time-sensitive)
+            $sent = $mailService->sendNow([
+                'company_id' => $contact->company_id,
+                'client_id' => $contact->client_id,
+                'contact_id' => $contact->id,
+                'to_email' => $contact->email,
+                'to_name' => $contact->name,
+                'subject' => "You're invited to access your ".($contact->client->company->name ?? 'Nestogy').' Client Portal',
+                'html_body' => $emailBody,
+                'category' => 'portal',
+                'priority' => 'critical',
+                'related_type' => Contact::class,
+                'related_id' => $contact->id,
+                'metadata' => [
+                    'invitation_token' => substr($token, 0, 8).'...',
+                    'expires_at' => $contact->invitation_expires_at->toIso8601String(),
+                ],
+            ]);
+            
+            if (!$sent) {
+                Log::error('Failed to send portal invitation email', [
+                    'contact_id' => $contact->id,
+                    'contact_email' => $contact->email,
+                    'reason' => 'sendNow returned false',
+                ]);
+            }
+            
+            return $sent;
+            
+        } catch (Exception $e) {
+            Log::error('Exception sending portal invitation email', [
+                'contact_id' => $contact->id,
+                'contact_email' => $contact->email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return false;
+        }
     }
 
     /**
