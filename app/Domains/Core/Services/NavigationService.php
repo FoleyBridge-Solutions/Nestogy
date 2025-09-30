@@ -2945,14 +2945,6 @@ class NavigationService
     }
 
     /**
-     * Get the currently selected client ID from session
-     */
-    public static function getSelectedClient(): ?int
-    {
-        return session('selected_client_id');
-    }
-
-    /**
      * Clear the selected client from session
      */
     public static function clearSelectedClient(): void
