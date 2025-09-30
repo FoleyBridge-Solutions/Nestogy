@@ -79,6 +79,11 @@ class UnifiedSettingsController extends Controller
      */
     public function showCategory(string $domain, string $category)
     {
+        // Redirect email to Livewire component
+        if ($domain === 'communication' && $category === 'email') {
+            return redirect()->route('settings.email');
+        }
+        
         if (! isset($this->services[$domain])) {
             abort(404, 'Settings domain not found');
         }
@@ -110,31 +115,47 @@ class UnifiedSettingsController extends Controller
      */
     public function updateCategory(Request $request, string $domain, string $category)
     {
+        Log::info('Settings update attempt', [
+            'domain' => $domain,
+            'category' => $category,
+            'data' => $request->all(),
+            'url' => $request->url(),
+            'method' => $request->method(),
+        ]);
+
         if (! isset($this->services[$domain])) {
-            return back()->with('error', 'Settings domain not found');
+            Log::error('Settings domain not found', ['domain' => $domain]);
+            return redirect()->back()->with('error', 'Settings domain not found');
         }
 
         try {
             DB::beginTransaction();
 
             $service = $this->services[$domain];
-            $service->saveSettings($category, $request->all());
+            $result = $service->saveSettings($category, $request->all());
 
             DB::commit();
 
-            Log::info('Settings updated', [
+            Log::info('Settings updated successfully', [
                 'domain' => $domain,
                 'category' => $category,
                 'company_id' => auth()->user()->company_id,
                 'user_id' => auth()->id(),
+                'config_id' => $result->id,
             ]);
 
-            return back()->with('success', 'Settings updated successfully');
+            return redirect()->back()->with('success', 'Settings updated successfully');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
+            
+            Log::error('Validation failed', [
+                'domain' => $domain,
+                'category' => $category,
+                'errors' => $e->errors(),
+            ]);
 
-            return back()->withErrors($e->validator)->withInput();
+            return redirect()->back()->withErrors($e->validator)->withInput();
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -142,9 +163,10 @@ class UnifiedSettingsController extends Controller
                 'domain' => $domain,
                 'category' => $category,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            return back()->with('error', 'Failed to update settings: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update settings: '.$e->getMessage());
         }
     }
 

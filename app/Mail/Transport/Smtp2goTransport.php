@@ -3,130 +3,108 @@
 namespace App\Mail\Transport;
 
 use Illuminate\Support\Facades\Log;
-use SMTP2GOMailer\SMTP2GOMailer;
+use SMTP2GO\ApiClient;
+use SMTP2GO\Collections\Mail\AddressCollection;
+use SMTP2GO\Collections\Mail\AttachmentCollection;
+use SMTP2GO\Service\Mail\Send as MailSend;
+use SMTP2GO\Types\Mail\Address;
+use SMTP2GO\Types\Mail\Attachment;
+use SMTP2GO\Types\Mail\CustomHeader;
 use Symfony\Component\Mailer\SentMessage;
 use Symfony\Component\Mailer\Transport\AbstractTransport;
-use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\MessageConverter;
 
 class Smtp2goTransport extends AbstractTransport
 {
-    /**
-     * The SMTP2GO API key.
-     */
     protected string $apiKey;
 
-    /**
-     * The SMTP2GO Mailer instance.
-     */
-    protected SMTP2GOMailer $mailer;
-
-    /**
-     * Create a new SMTP2GO transport instance.
-     */
     public function __construct(string $apiKey)
     {
         parent::__construct();
         $this->apiKey = $apiKey;
-        $this->mailer = new SMTP2GOMailer($apiKey);
     }
 
-    /**
-     * Send the message via SMTP2GO API.
-     */
     protected function doSend(SentMessage $message): void
     {
         $email = MessageConverter::toEmail($message->getOriginalMessage());
 
         try {
-            // Reset the mailer for each new message
-            $this->mailer = new SMTP2GOMailer($this->apiKey);
-
-            // Set sender
+            // Build sender
             $from = $email->getFrom()[0];
-            $this->mailer->setFrom($from->getAddress(), $from->getName() ?: '');
+            $sender = new Address($from->getAddress(), $from->getName() ?: '');
 
-            // Set recipients
+            // Build recipients
+            $toAddresses = [];
             foreach ($email->getTo() as $recipient) {
-                $this->mailer->addTo($recipient->getAddress(), $recipient->getName() ?: '');
+                $toAddresses[] = new Address($recipient->getAddress(), $recipient->getName() ?: '');
+            }
+            $recipients = new AddressCollection($toAddresses);
+
+            // Get subject and body
+            $subject = $email->getSubject() ?: '';
+            $htmlBody = $email->getHtmlBody();
+            $textBody = $email->getTextBody();
+            
+            // Use HTML or text body
+            $body = $htmlBody ?: $textBody ?: '';
+
+            // Create mail service
+            $sendService = new MailSend($sender, $recipients, $subject, $body);
+
+            // Add text body if both exist
+            if ($htmlBody && $textBody) {
+                $sendService->setTextBody($textBody);
             }
 
-            // Add CC recipients if any
+            // Add CC recipients
             if ($cc = $email->getCc()) {
                 foreach ($cc as $recipient) {
-                    $this->mailer->addCc($recipient->getAddress(), $recipient->getName() ?: '');
+                    $sendService->addAddress('cc', new Address($recipient->getAddress(), $recipient->getName() ?: ''));
                 }
             }
 
-            // Add BCC recipients if any
+            // Add BCC recipients
             if ($bcc = $email->getBcc()) {
                 foreach ($bcc as $recipient) {
-                    $this->mailer->addBcc($recipient->getAddress(), $recipient->getName() ?: '');
+                    $sendService->addAddress('bcc', new Address($recipient->getAddress(), $recipient->getName() ?: ''));
                 }
             }
 
             // Set reply-to if present
             if ($replyTo = $email->getReplyTo()) {
-                $this->mailer->setReplyTo($replyTo[0]->getAddress(), $replyTo[0]->getName() ?: '');
-            }
-
-            // Set subject
-            $this->mailer->setSubject($email->getSubject());
-
-            // Set email body
-            $htmlBody = $email->getHtmlBody();
-            $textBody = $email->getTextBody();
-
-            if ($htmlBody && $textBody) {
-                // Both HTML and text versions
-                $this->mailer->setHtmlBody($htmlBody);
-                $this->mailer->setTextBody($textBody);
-            } elseif ($htmlBody) {
-                // HTML only
-                $this->mailer->setHtmlBody($htmlBody);
-            } elseif ($textBody) {
-                // Text only
-                $this->mailer->setTextBody($textBody);
-            }
-
-            // Handle attachments
-            foreach ($email->getAttachments() as $attachment) {
-                $this->mailer->addAttachment(
-                    $attachment->getBody(),
-                    $attachment->getFilename(),
-                    $attachment->getMediaType().'/'.$attachment->getMediaSubtype()
+                $sendService->addCustomHeader(
+                    new CustomHeader('Reply-To', $replyTo[0]->getAddress())
                 );
             }
 
-            // Add custom headers
-            $customHeaders = [];
-            foreach ($email->getHeaders()->all() as $header) {
-                $name = $header->getName();
-                // Skip standard headers that are handled separately
-                if (! in_array(strtolower($name), ['from', 'to', 'cc', 'bcc', 'subject', 'reply-to', 'content-type', 'mime-version'])) {
-                    $customHeaders[$name] = $header->getBodyAsString();
-                }
+            // Handle attachments
+            $attachments = [];
+            foreach ($email->getAttachments() as $attachment) {
+                $attachments[] = new Attachment(
+                    $attachment->getFilename(),
+                    $attachment->getBody(),
+                    $attachment->getMediaType().'/'.$attachment->getMediaSubtype()
+                );
+            }
+            if (!empty($attachments)) {
+                $sendService->setAttachments(new AttachmentCollection($attachments));
             }
 
-            if (! empty($customHeaders)) {
-                $this->mailer->setCustomHeaders($customHeaders);
-            }
+            // Create API client and send
+            $apiClient = new ApiClient($this->apiKey);
+            $success = $apiClient->consume($sendService);
 
-            // Send the email
-            $response = $this->mailer->send();
-
-            // Check if successful
-            if (isset($response['data']['succeeded']) && $response['data']['succeeded'] > 0) {
+            if ($success) {
+                $responseBody = $apiClient->getResponseBody();
                 Log::info('Email sent via SMTP2GO', [
-                    'email_id' => $response['data']['email_id'] ?? null,
-                    'request_id' => $response['request_id'] ?? null,
-                    'succeeded' => $response['data']['succeeded'],
+                    'response' => $responseBody,
                 ]);
             } else {
-                $error = $response['data']['error'] ?? 'Unknown error occurred';
+                $responseBody = $apiClient->getResponseBody();
+                $error = $responseBody['data']['error'] ?? 'Unknown error occurred';
                 Log::error('SMTP2GO send failed', [
                     'error' => $error,
-                    'response' => $response,
+                    'response' => $responseBody,
                 ]);
                 throw new \Exception("SMTP2GO API Error: {$error}");
             }
@@ -139,9 +117,6 @@ class Smtp2goTransport extends AbstractTransport
         }
     }
 
-    /**
-     * Get string representation of the transport.
-     */
     public function __toString(): string
     {
         return 'smtp2go';

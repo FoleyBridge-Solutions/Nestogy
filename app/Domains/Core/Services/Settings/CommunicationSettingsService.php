@@ -20,7 +20,7 @@ class CommunicationSettingsService extends BaseSettingsService
         switch ($category) {
             case 'email':
                 return [
-                    'driver' => 'required|in:smtp,mailgun,sendgrid,ses,postmark,log',
+                    'driver' => 'required|in:smtp,smtp2go,mailgun,sendgrid,ses,postmark,log',
                     'from_email' => 'required|email',
                     'from_name' => 'required|string|max:255',
                     'reply_to' => 'nullable|email',
@@ -33,14 +33,17 @@ class CommunicationSettingsService extends BaseSettingsService
                     'smtp_encryption' => 'nullable|in:tls,ssl,none',
 
                     // API provider validation
-                    'api_key' => 'required_if:driver,mailgun,sendgrid,ses,postmark|nullable|string',
+                    'api_key' => 'required_if:driver,smtp2go,mailgun,sendgrid,ses,postmark|nullable|string',
                     'api_domain' => 'nullable|string',
 
                     // Features
-                    'track_opens' => 'boolean',
-                    'track_clicks' => 'boolean',
-                    'auto_retry_failed' => 'boolean',
-                    'max_retry_attempts' => 'integer|between:1,10',
+                    'track_opens' => 'nullable|in:0,1',
+                    'track_clicks' => 'nullable|in:0,1',
+                    'auto_retry_failed' => 'nullable|in:0,1',
+                    'max_retry_attempts' => 'nullable|integer|between:1,10',
+                    
+                    // Test email (not saved, just for testing)
+                    'test_email' => 'nullable|email',
                 ];
 
             case 'physical_mail':
@@ -78,13 +81,27 @@ class CommunicationSettingsService extends BaseSettingsService
     protected function processBeforeSave(string $category, array $data): array
     {
         if ($category === 'email') {
-            // Encrypt password if provided and not already encrypted
-            if (! empty($data['smtp_password']) && ! $this->isEncrypted($data['smtp_password'])) {
+            // Remove test_email field as it's not meant to be saved
+            unset($data['test_email']);
+            
+            // Convert checkbox values to proper booleans
+            $data['track_opens'] = ($data['track_opens'] ?? '0') === '1';
+            $data['track_clicks'] = ($data['track_clicks'] ?? '0') === '1';
+            $data['auto_retry_failed'] = ($data['auto_retry_failed'] ?? '0') === '1';
+            
+            // Handle SMTP password - if empty, remove it (keep existing)
+            if (empty($data['smtp_password'])) {
+                unset($data['smtp_password']);
+            } elseif (! $this->isEncrypted($data['smtp_password'])) {
+                // Only encrypt if not already encrypted
                 $data['smtp_password'] = Crypt::encryptString($data['smtp_password']);
             }
 
-            // Encrypt API key if provided and not already encrypted
-            if (! empty($data['api_key']) && ! $this->isEncrypted($data['api_key'])) {
+            // Handle API key - if empty, remove it (keep existing)
+            if (empty($data['api_key'])) {
+                unset($data['api_key']);
+            } elseif (! $this->isEncrypted($data['api_key'])) {
+                // Only encrypt if not already encrypted
                 $data['api_key'] = Crypt::encryptString($data['api_key']);
             }
         }
@@ -169,6 +186,15 @@ class CommunicationSettingsService extends BaseSettingsService
                     'password' => $this->isEncrypted($data['smtp_password'] ?? '')
                         ? Crypt::decryptString($data['smtp_password'])
                         : $data['smtp_password'],
+                ];
+
+            case 'smtp2go':
+                // SMTP2GO uses their REST API
+                return [
+                    'transport' => 'smtp2go',
+                    'api_key' => $this->isEncrypted($data['api_key'] ?? '')
+                        ? Crypt::decryptString($data['api_key'])
+                        : $data['api_key'],
                 ];
 
             case 'mailgun':

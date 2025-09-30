@@ -183,7 +183,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('clients', [\App\Domains\Report\Controllers\ReportController::class, 'clients'])->name('clients');
         Route::get('projects', [\App\Domains\Report\Controllers\ReportController::class, 'projects'])->name('projects');
         Route::get('users', [\App\Domains\Report\Controllers\ReportController::class, 'users'])->name('users');
-        Route::get('sentiment-analytics', [\App\Http\Controllers\Domains\Report\Controllers\SentimentAnalyticsController::class, 'index'])->name('sentiment-analytics');
+        Route::get('sentiment-analytics', [\App\Domains\Report\Http\Controllers\SentimentAnalyticsController::class, 'index'])->name('sentiment-analytics');
 
         // Additional report routes
         Route::get('category/{category}', [\App\Domains\Report\Controllers\ReportController::class, 'category'])->name('category');

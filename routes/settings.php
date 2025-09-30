@@ -26,7 +26,7 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
     })->name('security');
 
     Route::get('/email', function () {
-        return redirect()->route('settings.category.show', ['domain' => 'communication', 'category' => 'email']);
+        return view('settings.email-livewire');
     })->name('email');
 
     Route::get('/company-email-provider', function () {

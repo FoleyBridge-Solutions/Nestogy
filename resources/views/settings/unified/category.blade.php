@@ -23,17 +23,30 @@
         <flux:text class="mt-2">{{ $metadata['description'] }}</flux:text>
     </flux:card>
 
-    <!-- Success/Error Messages -->
-    @if(session('success'))
-        <flux:toast variant="success" dismissible class="mb-6">
-            {{ session('success') }}
-        </flux:toast>
+    <!-- Validation Errors (if any) -->
+    @if ($errors->any())
+        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div class="font-medium text-red-800 dark:text-red-200 mb-2">Please correct the following errors:</div>
+            <ul class="text-sm text-red-700 dark:text-red-300 space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>• {{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
-    @if(session('error'))
-        <flux:toast variant="danger" dismissible class="mb-6">
-            {{ session('error') }}
-        </flux:toast>
+    <!-- Success Message -->
+    @if (session('success'))
+        <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div class="font-medium text-green-800 dark:text-green-200">{{ session('success') }}</div>
+        </div>
+    @endif
+
+    <!-- Error Message -->
+    @if (session('error'))
+        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div class="font-medium text-red-800 dark:text-red-200">{{ session('error') }}</div>
+        </div>
     @endif
 
     <!-- Settings Form -->
@@ -53,15 +66,15 @@
                     @include('settings.unified.forms.financial-billing', ['settings' => $settings])
                 @else
                     <!-- Generic form for other categories -->
-                    <flux:field.group>
+                    <div class="space-y-6">
                         @foreach($settings as $key => $value)
                             <flux:field>
                                 <flux:label>{{ ucfirst(str_replace('_', ' ', $key)) }}</flux:label>
                                 @if(is_bool($value))
-                                    <flux:select name="{{ $key }}">
-                                        <flux:option value="1" {{ $value ? 'selected' : '' }}>Yes</flux:option>
-                                        <flux:option value="0" {{ !$value ? 'selected' : '' }}>No</flux:option>
-                                    </flux:select>
+                                    <select name="{{ $key }}" class="w-full rounded-lg border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800">
+                                        <option value="1" {{ $value ? 'selected' : '' }}>Yes</option>
+                                        <option value="0" {{ !$value ? 'selected' : '' }}>No</option>
+                                    </select>
                                 @elseif(is_array($value))
                                     <flux:textarea name="{{ $key }}" rows="3">{{ json_encode($value) }}</flux:textarea>
                                 @else
@@ -69,7 +82,7 @@
                                 @endif
                             </flux:field>
                         @endforeach
-                    </flux:field.group>
+                    </div>
                 @endif
             </div>
             
@@ -78,12 +91,12 @@
             <div class="flex items-center justify-between">
                 <flux:button.group>
                     @if(in_array($category, ['email', 'physical_mail']) && $domain === 'communication')
-                        <flux:button type="button" variant="secondary" icon="beaker" onclick="testConfiguration()">
+                        <flux:button type="button" icon="beaker" onclick="testConfiguration()">
                             Test Configuration
                         </flux:button>
                     @endif
                     
-                    <flux:button type="button" variant="secondary" icon="arrow-uturn-left" onclick="resetToDefaults()">
+                    <flux:button type="button" icon="arrow-uturn-left" onclick="resetToDefaults()">
                         Reset to Defaults
                     </flux:button>
                 </flux:button.group>

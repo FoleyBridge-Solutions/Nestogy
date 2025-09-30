@@ -3,6 +3,7 @@
 namespace App\Domains\Core\Services\Settings;
 
 use App\Models\SettingsConfiguration;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -75,12 +76,23 @@ abstract class BaseSettingsService
         $rules = $this->getValidationRules($category);
 
         if (empty($rules)) {
+            Log::debug('No validation rules for category', ['category' => $category]);
             return $data;
         }
+
+        Log::debug('Validating settings', [
+            'category' => $category,
+            'rules' => $rules,
+            'data' => $data,
+        ]);
 
         $validator = Validator::make($data, $rules, $this->getValidationMessages($category));
 
         if ($validator->fails()) {
+            Log::error('Settings validation failed', [
+                'category' => $category,
+                'errors' => $validator->errors()->toArray(),
+            ]);
             throw new ValidationException($validator);
         }
 
