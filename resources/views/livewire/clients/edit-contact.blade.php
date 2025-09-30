@@ -287,6 +287,9 @@
                                                     </p>
                                                 @elseif($contact->invitation_status === 'revoked')
                                                     <flux:badge variant="gray">Invitation Revoked</flux:badge>
+                                                    <p class="text-sm text-gray-600 mt-2">
+                                                        The invitation was revoked. You can send a new one.
+                                                    </p>
                                                 @endif
                                             </div>
                                             <div class="space-x-2">
@@ -297,7 +300,7 @@
                                                     <flux:button wire:click="revokeInvitation" variant="danger" size="sm">
                                                         Revoke
                                                     </flux:button>
-                                                @elseif($contact->invitation_status === 'expired')
+                                                @elseif($contact->invitation_status === 'expired' || $contact->invitation_status === 'revoked')
                                                     <flux:button wire:click="sendInvitation" variant="primary" size="sm">
                                                         Send New Invitation
                                                     </flux:button>

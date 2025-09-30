@@ -58,10 +58,24 @@ Artisan::command('nestogy:escalate-tickets', function () {
 
 // Email processing command
 Artisan::command('nestogy:process-emails', function () {
-    $this->info('Processing incoming emails...');
-    // Add email processing logic here
-    $this->info('Email processing completed!');
-})->purpose('Process incoming emails and create tickets');
+    $this->info('Processing mail queue...');
+    
+    // Process pending emails from the mail queue
+    $mailService = app(\App\Domains\Email\Services\UnifiedMailService::class);
+    $processed = $mailService->processPending(100);
+    
+    if ($processed > 0) {
+        $this->info("Processed {$processed} pending email(s).");
+    } else {
+        $this->info('No pending emails to process.');
+    }
+    
+    // Also retry failed emails
+    $retried = $mailService->retryFailed();
+    if ($retried > 0) {
+        $this->info("Retried {$retried} failed email(s).");
+    }
+})->purpose('Process mail queue and send pending emails');
 
 // Data cleanup command
 Artisan::command('nestogy:cleanup', function () {

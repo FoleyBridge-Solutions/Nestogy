@@ -394,8 +394,8 @@ class PortalInvitationService
             'expiresInHours' => now()->diffInHours($contact->invitation_expires_at),
         ])->render();
 
-        // Queue the email
-        $mailService->queue([
+        // Send the email immediately (portal invitations are time-sensitive)
+        $mailService->sendNow([
             'company_id' => $contact->company_id,
             'client_id' => $contact->client_id,
             'contact_id' => $contact->id,
@@ -404,7 +404,7 @@ class PortalInvitationService
             'subject' => "You're invited to access your ".($contact->client->company->name ?? 'Nestogy').' Client Portal',
             'html_body' => $emailBody,
             'category' => 'portal',
-            'priority' => 'high',
+            'priority' => 'critical',
             'related_type' => Contact::class,
             'related_id' => $contact->id,
             'metadata' => [
