@@ -90,9 +90,9 @@
                 
                 <flux:select wire:model.live="status">
                     <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
+                    <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="inactive" {{ $status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="suspended" {{ $status === 'suspended' ? 'selected' : '' }}>Suspended</option>
                 </flux:select>
                 
                 <flux:select wire:model.live="perPage">
@@ -204,8 +204,8 @@
                         </flux:table.cell>
                         
                         <flux:table.cell>
-                            <flux:badge variant="{{ $client->is_active ? 'success' : 'danger' }}">
-                                {{ $client->is_active ? 'Active' : 'Inactive' }}
+                            <flux:badge variant="{{ $client->status === 'active' ? 'success' : ($client->status === 'suspended' ? 'warning' : 'danger') }}">
+                                {{ ucfirst($client->status) }}
                             </flux:badge>
                         </flux:table.cell>
                         

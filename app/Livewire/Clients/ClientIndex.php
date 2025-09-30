@@ -42,6 +42,11 @@ class ClientIndex extends Component
         $this->selectedClient = NavigationService::getSelectedClient();
         $this->showLeads = request()->has('lead');
         $this->returnUrl = session('client_selection_return_url');
+        
+        // Preserve the default status if not in the request
+        if (!request()->has('status')) {
+            $this->status = 'active';
+        }
     }
 
     public function updatingSearch()
