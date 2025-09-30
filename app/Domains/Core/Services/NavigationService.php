@@ -2943,12 +2943,4 @@ class NavigationService
             session(['selected_client_id' => $clientId]);
         }
     }
-
-    /**
-     * Clear the selected client from session
-     */
-    public static function clearSelectedClient(): void
-    {
-        session()->forget('selected_client_id');
-    }
 }
