@@ -56,7 +56,12 @@ class CommentService
 
             // Queue sentiment analysis for manual comments
             if ($source === TicketComment::SOURCE_MANUAL && ! empty($content)) {
-                \App\Jobs\AnalyzeTicketSentiment::dispatch($comment->company_id, $comment->id, 'comment');
+                \App\Jobs\AnalyzeTicketSentiment::dispatch(
+                    $comment->company_id,
+                    'comment',
+                    $ticket->id,
+                    $comment->id
+                );
             }
 
             // Update ticket status if needed
