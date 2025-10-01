@@ -256,9 +256,9 @@ class TicketIndex extends Component
             })
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('ticket_number', 'like', '%'.$this->search.'%')
+                    $q->whereRaw("CAST(number AS TEXT) LIKE ?", ['%'.$this->search.'%'])
                         ->orWhere('subject', 'like', '%'.$this->search.'%')
-                        ->orWhere('description', 'like', '%'.$this->search.'%');
+                        ->orWhere('details', 'like', '%'.$this->search.'%');
                 });
             })
             ->when(! empty($this->selectedPriorities), function ($query) {
