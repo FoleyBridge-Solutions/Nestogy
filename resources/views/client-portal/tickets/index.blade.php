@@ -3,9 +3,8 @@
 @section('title', 'Support Tickets')
 
 @section('content')
-<div class="container mx-auto mx-auto mx-auto px-6">
-    <!-- Header -->
-    <div class="mb-6">
+<!-- Header -->
+<div class="mb-6">
         <div class="flex justify-between items-center">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Support Tickets</h1>
@@ -109,7 +108,7 @@
                         name="search" 
                         value="{{ request('search') }}"
                         placeholder="Search tickets..."
-                        icon="search" />
+                        icon="magnifying-glass" />
                 </div>
                 <div>
                     <flux:select name="status" onchange="this.form.submit()">
@@ -237,7 +236,5 @@
                     {{ $tickets->links() }}
                 </div>
             @endif
-        
     </flux:card>
-</div>
 @endsection

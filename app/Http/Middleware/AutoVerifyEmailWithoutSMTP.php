@@ -17,7 +17,9 @@ class AutoVerifyEmailWithoutSMTP
     public function handle(Request $request, Closure $next): Response
     {
         // Check if user is authenticated and SMTP is not configured
+        // Only apply to User model (admin users), not Contact model (client portal users)
         if ($request->user() &&
+            $request->user() instanceof \App\Models\User &&
             (config('mail.mailer') === 'log' || ! config('mail.host')) &&
             ! $request->user()->hasVerifiedEmail() &&
             $request->user()->isAdmin()) {

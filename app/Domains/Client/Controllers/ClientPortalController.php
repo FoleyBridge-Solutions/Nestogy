@@ -123,70 +123,7 @@ class ClientPortalController extends Controller
      */
     public function dashboard()
     {
-        $contact = auth('client')->user();
-        $client = $contact->client;
-
-        // Get contact roles and permissions
-        $roles = $contact->getRoles();
-        $permissions = $contact->portal_permissions ?? [];
-
-        // Base dashboard data that all contacts can see
-        $dashboardData = [
-            'contact' => $contact,
-            'client' => $client,
-            'roles' => $roles,
-            'permissions' => $permissions,
-        ];
-
-        // Role-based content sections
-        if ($this->canViewContracts($contact)) {
-            $contracts = Contract::where('client_id', $client->id)
-                ->with(['milestones', 'signatures', 'invoices'])
-                ->get();
-
-            $dashboardData['contracts'] = $contracts;
-            $dashboardData['contractStats'] = [
-                'total_contracts' => $contracts->count(),
-                'active_contracts' => $contracts->where('status', 'active')->count(),
-                'pending_signatures' => $contracts->flatMap->signatures->where('status', 'pending')->count(),
-                'overdue_milestones' => $contracts->flatMap->milestones
-                    ->where('due_date', '<', now())
-                    ->where('status', '!=', 'completed')
-                    ->count(),
-                'total_contract_value' => $contracts->sum('contract_value'),
-            ];
-        }
-
-        // Billing-specific content
-        if ($this->canViewInvoices($contact)) {
-            $dashboardData['invoices'] = $this->getInvoicesForContact($contact);
-            $dashboardData['invoiceStats'] = $this->getInvoiceStatsForContact($contact);
-        }
-
-        // Technical-specific content
-        if ($this->canViewTickets($contact)) {
-            $dashboardData['tickets'] = $this->getTicketsForContact($contact);
-            $dashboardData['ticketStats'] = $this->getTicketStatsForContact($contact);
-        }
-
-        if ($this->canViewAssets($contact)) {
-            $dashboardData['assets'] = $this->getAssetsForContact($contact);
-            $dashboardData['assetStats'] = $this->getAssetStatsForContact($contact);
-        }
-
-        // Project management for primary contacts
-        if ($this->canViewProjects($contact)) {
-            $dashboardData['projects'] = $this->getProjectsForContact($contact);
-            $dashboardData['projectStats'] = $this->getProjectStatsForContact($contact);
-        }
-
-        // Recent activity and notifications
-        $dashboardData['recentActivity'] = $this->getRecentActivityForContact($contact);
-        $dashboardData['upcomingMilestones'] = $this->getUpcomingMilestonesForContact($contact);
-        $dashboardData['pendingActions'] = $this->getPendingActionsForContact($contact);
-        $dashboardData['notifications'] = $this->getNotificationsForContact($contact);
-
-        return view('client-portal.dashboard', $dashboardData);
+        return view('client-portal.dashboard');
     }
 
     /**
@@ -740,13 +677,12 @@ class ClientPortalController extends Controller
     protected function getTicketsForContact(Contact $contact)
     {
         if (! $contact->client) {
-            return collect();
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
         }
 
         return $contact->client->tickets()
             ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+            ->paginate(10);
     }
 
     protected function getTicketStatsForContact(Contact $contact): array
@@ -835,12 +771,10 @@ class ClientPortalController extends Controller
         $activities = [];
 
         if ($this->canViewContracts($contact)) {
-            $contractActivity = Contract::where('client_id', $contact->client->id)
-                ->with('auditLogs')
-                ->get()
-                ->flatMap->auditLogs
-                ->take(5);
-            $activities = array_merge($activities, $contractActivity->toArray());
+            $contracts = Contract::where('client_id', $contact->client->id)->get();
+            foreach ($contracts as $contract) {
+                $activities = array_merge($activities, $contract->getAuditHistory());
+            }
         }
 
         if ($this->canViewTickets($contact)) {
@@ -850,6 +784,10 @@ class ClientPortalController extends Controller
         if ($this->canViewInvoices($contact)) {
             // Add invoice activity
         }
+
+        usort($activities, function ($a, $b) {
+            return $b['date'] <=> $a['date'];
+        });
 
         return array_slice($activities, 0, 10);
     }

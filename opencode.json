@@ -8,7 +8,12 @@
     },
     "livewire-server": {
       "type": "local",
-      "command": ["node", "/root/.augment/mcp-servers/livewire-mcp-server/build/index.js"],
+      "command": ["npx", "-y", "github:benjibee/livewire-mcp-server"],
+      "enabled": true
+    },
+    "laravel-server": {
+      "type": "local",
+      "command": ["laravel-mcp-server"],
       "enabled": true
     },
     "postgrid": {

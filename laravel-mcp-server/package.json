@@ -1,0 +1,34 @@
+{
+  "name": "laravel-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Laravel 12 documentation",
+  "type": "module",
+  "main": "./build/index.js",
+  "bin": {
+    "laravel-mcp-server": "./build/index.js"
+  },
+  "files": [
+    "build/**/*"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x build/index.js",
+    "watch": "tsc --watch",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "laravel",
+    "documentation",
+    "laravel-12",
+    "model-context-protocol"
+  ],
+  "author": "Nestogy",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0"
+  }
+}

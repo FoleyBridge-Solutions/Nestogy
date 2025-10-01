@@ -3,9 +3,8 @@
 @section('title', 'Support Ticket #' . ($ticket->number ?? $ticket->id))
 
 @section('content')
-<div class="container mx-auto mx-auto mx-auto px-6">
-    <!-- Header -->
-    <div class="mb-6">
+<!-- Header -->
+<div class="mb-6">
         <nav class="flex items-center mb-6">
             <a href="{{ route('client.tickets') }}" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center">
                 <i class="fas fa-arrow-left mr-2"></i>
@@ -146,137 +145,126 @@
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Primary Content Area -->
-        <div class="lg:flex-1 px-6-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-6">
             <!-- Ticket Details Card -->
-            <flux:card class="space-y-6">
-                <div>
-                    <flux:heading size="lg">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        Ticket Details
-                    </flux:heading>
+            <flux:card>
+                <flux:heading size="lg">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Ticket Details
+                </flux:heading>
+                
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    {!! nl2br(e($ticket->details)) !!}
                 </div>
-                <div>
-                    <div class="prose prose-sm max-w-none dark:prose-invert">
-                        {!! nl2br(e($ticket->details)) !!}
-                    </div>
-                    
-                    @if($ticket->attachments && count($ticket->attachments) > 0)
-                        <flux:separator class="my-4" />
-                        <div>
-                            <h6 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Attachments</h6>
-                            <div class="grid grid-cols-2 gap-2">
-                                @foreach($ticket->attachments as $attachment)
-                                    <a href="{{ $attachment['url'] ?? '#' }}" class="flex items-center p-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
-                                        <i class="fas fa-paperclip text-gray-400 mr-2"></i>
-                                        <span class="text-sm text-gray-600 dark:text-gray-400 truncate">{{ $attachment['name'] ?? 'Attachment' }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
+                
+                @if($ticket->attachments && count($ticket->attachments) > 0)
+                    <flux:separator />
+                    <div>
+                        <h6 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Attachments</h6>
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach($ticket->attachments as $attachment)
+                                <a href="{{ $attachment['url'] ?? '#' }}" class="flex items-center gap-2 p-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    <i class="fas fa-paperclip text-gray-400"></i>
+                                    <span class="text-sm text-gray-600 dark:text-gray-400 truncate">{{ $attachment['name'] ?? 'Attachment' }}</span>
+                                </a>
+                            @endforeach
                         </div>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </flux:card>
 
             <!-- Conversation Thread -->
-            <flux:card class="space-y-6">
-                <div>
-                    <flux:heading size="lg">
-                        <i class="fas fa-comments mr-2"></i>
-                        Conversation
-                    </flux:heading>
-                </div>
-                <div class="p-0">
-                    <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @forelse($ticket->replies ?? [] as $reply)
-                            <div class="p-6 {{ $reply->is_staff ? 'bg-blue-50 dark:bg-gray-800' : '' }}">
-                                <div class="flex items-start space-x-3">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white">
-                                            <i class="fas fa-user"></i>
-                                        </div>
+            <flux:card>
+                <flux:heading size="lg">
+                    <i class="fas fa-comments mr-2"></i>
+                    Conversation
+                </flux:heading>
+                
+                <div class="divide-y divide-gray-200 dark:divide-gray-700 -mx-6">
+                    @forelse($ticket->replies ?? [] as $reply)
+                        <div class="px-6 py-4 {{ $reply->is_staff ? 'bg-blue-50 dark:bg-gray-800' : '' }}">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white">
+                                        <i class="fas fa-user"></i>
                                     </div>
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <div>
-                                                <span class="font-medium text-gray-900 dark:text-gray-100">
-                                                    {{ $reply->user->name ?? 'Support Team' }}
-                                                </span>
-                                                @if($reply->is_staff)
-                                                    <flux:badge size="sm" class="ml-2">Staff</flux:badge>
-                                                @endif
-                                            </div>
-                                            <span class="text-sm text-gray-500 dark:text-gray-400">
-                                                {{ $reply->created_at->diffForHumans() }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-medium text-gray-900 dark:text-gray-100">
+                                                {{ $reply->user->name ?? 'Support Team' }}
                                             </span>
+                                            @if($reply->is_staff)
+                                                <flux:badge size="sm">Staff</flux:badge>
+                                            @endif
                                         </div>
-                                        <div class="prose prose-sm max-w-none dark:prose-invert">
-                                            {!! nl2br(e($reply->message)) !!}
-                                        </div>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                            {{ $reply->created_at->diffForHumans() }}
+                                        </span>
+                                    </div>
+                                    <div class="text-sm text-gray-700 dark:text-gray-300">
+                                        {!! nl2br(e($reply->message)) !!}
                                     </div>
                                 </div>
                             </div>
-                        @empty
-                            <div class="p-6 text-center text-gray-500 dark:text-gray-400">
-                                No replies yet. Your ticket is awaiting response.
-                            </div>
-                        @endforelse
-                    </div>
+                        </div>
+                    @empty
+                        <div class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                            No replies yet. Your ticket is awaiting response.
+                        </div>
+                    @endforelse
                 </div>
             </flux:card>
 
             <!-- Reply Form -->
             @if(!in_array($ticket->status, ['Closed', 'Resolved']))
-                <flux:card id="reply" class="space-y-6">
-                    <div>
-                        <flux:heading size="lg">
-                            <i class="fas fa-reply mr-2"></i>
-                            Add Reply
-                        </flux:heading>
-                    </div>
-                    <div>
-                        <form action="{{ route('client.tickets.reply', $ticket->id) ?? '#' }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            
-                            <flux:field class="mb-6">
-                                <flux:label for="message" required>Your Message</flux:label>
-                                <flux:textarea 
-                                    id="message" 
-                                    name="message" 
-                                    rows="5"
-                                    placeholder="Type your reply here..."
-                                    required>{{ old('message') }}</flux:textarea>
-                                <flux:error for="message" />
-                            </flux:field>
-                            
-                            <flux:field class="mb-6">
-                                <flux:label for="attachments">Attachments</flux:label>
-                                <flux:input 
-                                    type="file" 
-                                    id="attachments" 
-                                    name="attachments[]" 
-                                    multiple />
-                            </flux:field>
-                            
-                            <div class="flex justify-between">
-                                <flux:button type="button" variant="ghost" onclick="window.location.reload()">
-                                    <i class="fas fa-sync mr-2"></i>Refresh
-                                </flux:button>
-                                <flux:button type="submit" variant="primary">
-                                    <i class="fas fa-paper-plane mr-2"></i>Send Reply
-                                </flux:button>
-                            </div>
-                        </form>
-                    </div>
+                <flux:card id="reply">
+                    <flux:heading size="lg">
+                        <i class="fas fa-reply mr-2"></i>
+                        Add Reply
+                    </flux:heading>
+                    
+                    <form action="{{ route('client.tickets.comment', $ticket->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                        @csrf
+                        
+                        <flux:field>
+                            <flux:label for="message" required>Your Message</flux:label>
+                            <flux:textarea 
+                                id="message" 
+                                name="message" 
+                                rows="5"
+                                placeholder="Type your reply here..."
+                                required>{{ old('message') }}</flux:textarea>
+                            <flux:error for="message" />
+                        </flux:field>
+                        
+                        <flux:field>
+                            <flux:label for="attachments">Attachments</flux:label>
+                            <flux:input 
+                                type="file" 
+                                id="attachments" 
+                                name="attachments[]" 
+                                multiple />
+                        </flux:field>
+                        
+                        <div class="flex justify-between">
+                            <flux:button type="button" variant="ghost" onclick="window.location.reload()">
+                                <i class="fas fa-sync mr-2"></i>Refresh
+                            </flux:button>
+                            <flux:button type="submit" variant="primary">
+                                <i class="fas fa-paper-plane mr-2"></i>Send Reply
+                            </flux:button>
+                        </div>
+                    </form>
                 </flux:card>
             @else
-                <flux:card class="space-y-6">
+                <flux:card>
                     <div class="text-center py-8">
-                        <i class="fas fa-lock text-4xl text-gray-400 mb-6"></i>
+                        <i class="fas fa-lock text-4xl text-gray-400 mb-4"></i>
                         <p class="text-gray-600 dark:text-gray-400">This ticket is {{ strtolower($ticket->status) }} and cannot accept new replies.</p>
                         @if($ticket->status === 'Resolved')
-                            <flux:button href="{{ route('client.tickets.reopen', $ticket->id) ?? '#' }}" variant="primary" class="mt-6">
-                                <i class="fas fa-redo mr-2"></i>Reopen Ticket
-                            </flux:button>
+                            <p class="mt-4 text-sm text-gray-500">To reopen this ticket, please create a new ticket or contact support.</p>
                         @endif
                     </div>
                 </flux:card>
@@ -284,52 +272,42 @@
         </div>
 
         <!-- Sidebar -->
-        <div class="lg:flex-1 px-6-span-1 space-y-6">
+        <div class="lg:col-span-1 space-y-6">
             <!-- Ticket Information -->
-            <flux:card class="space-y-6">
-                <div>
-                    <flux:heading size="lg">
-                        <i class="fas fa-info mr-2"></i>
-                        Information
-                    </flux:heading>
-                </div>
-                <div>
-                    <dl class="space-y-3">
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Ticket ID</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $ticket->number ?? $ticket->id }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Department</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $ticket->department ?? 'Support' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned To</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $ticket->assigned_to->name ?? 'Unassigned' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
-                            <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $ticket->updated_at->diffForHumans() }}</dd>
-                        </div>
-                    </dl>
-                </div>
+            <flux:card>
+                <flux:heading size="lg">
+                    <i class="fas fa-info mr-2"></i>
+                    Information
+                </flux:heading>
+                
+                <dl class="space-y-3">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Ticket ID</dt>
+                        <dd class="text-sm text-gray-900 dark:text-gray-100 font-mono">{{ $ticket->number ?? $ticket->id }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Department</dt>
+                        <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $ticket->department ?? 'Support' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned To</dt>
+                        <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $ticket->assigned_to->name ?? 'Unassigned' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
+                        <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $ticket->updated_at->diffForHumans() }}</dd>
+                    </div>
+                </dl>
             </flux:card>
 
             <!-- Quick Actions -->
-            <flux:card class="space-y-6">
-                <div>
-                    <flux:heading size="lg">
-                        <i class="fas fa-bolt mr-2"></i>
-                        Quick Actions
-                    </flux:heading>
-                </div>
+            <flux:card>
+                <flux:heading size="lg">
+                    <i class="fas fa-bolt mr-2"></i>
+                    Quick Actions
+                </flux:heading>
+                
                 <div class="space-y-2">
-                    @if(!in_array($ticket->status, ['Closed']))
-                        <flux:button variant="ghost" class="w-full justify-start" href="{{ route('client.tickets.close', $ticket->id) ?? '#' }}">
-                            <i class="fas fa-times-circle mr-2"></i>Close Ticket
-                        </flux:button>
-                    @endif
-                    
                     <flux:button variant="ghost" class="w-full justify-start" onclick="window.print()">
                         <i class="fas fa-print mr-2"></i>Print Ticket
                     </flux:button>
@@ -342,29 +320,25 @@
 
             <!-- Related Articles -->
             @if(isset($relatedArticles) && count($relatedArticles) > 0)
-                <flux:card class="space-y-6">
-                    <div>
-                        <flux:heading size="lg">
-                            <i class="fas fa-book mr-2"></i>
-                            Related Articles
-                        </flux:heading>
-                    </div>
-                    <div>
-                        <ul class="space-y-2">
-                            @foreach($relatedArticles as $article)
-                                <li>
-                                    <a href="{{ $article->url }}" class="text-sm text-blue-600 hover:underline">
-                                        {{ $article->title }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
+                <flux:card>
+                    <flux:heading size="lg">
+                        <i class="fas fa-book mr-2"></i>
+                        Related Articles
+                    </flux:heading>
+                    
+                    <ul class="space-y-2">
+                        @foreach($relatedArticles as $article)
+                            <li>
+                                <a href="{{ $article->url }}" class="text-sm text-blue-600 hover:underline">
+                                    {{ $article->title }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
                 </flux:card>
             @endif
         </div>
     </div>
-</div>
 
 <style>
 /* Custom styles for ticket view - minimal necessary styles only */
