@@ -54,6 +54,9 @@ class EditContact extends Component
 
     public string $password_confirmation = '';
 
+    // Portal Permissions
+    public array $portal_permissions = [];
+
     // Communication preferences
     public string $preferred_contact_method = 'email';
 
@@ -132,6 +135,7 @@ class EditContact extends Component
         // Portal Access
         $this->has_portal_access = (bool) $this->contact->has_portal_access;
         $this->auth_method = $this->contact->auth_method ?? 'password';
+        $this->portal_permissions = $this->contact->portal_permissions ?? [];
 
         // Communication preferences
         $this->preferred_contact_method = $this->contact->preferred_contact_method ?? 'email';
@@ -290,6 +294,7 @@ class EditContact extends Component
             // Portal access
             'has_portal_access' => $this->has_portal_access,
             'auth_method' => $this->has_portal_access ? $this->auth_method : null,
+            'portal_permissions' => $this->has_portal_access ? $this->portal_permissions : [],
         ];
 
         // Handle password if portal access is enabled and password is provided

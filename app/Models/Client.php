@@ -332,6 +332,14 @@ class Client extends Model
     }
 
     /**
+     * Get the client's quotes.
+     */
+    public function quotes()
+    {
+        return $this->hasMany(\App\Models\Quote::class);
+    }
+
+    /**
      * Get the client's active contract.
      */
     public function activeContract()

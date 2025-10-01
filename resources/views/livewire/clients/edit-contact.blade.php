@@ -359,6 +359,21 @@
                                         </p>
                                     @endif
                                 @endif
+
+                                {{-- Portal Permissions --}}
+                                <flux:separator />
+                                
+                                <flux:checkbox.group wire:model="portal_permissions" label="Portal Permissions">
+                                    <flux:description>Control what this contact can access in the client portal</flux:description>
+                                    <flux:checkbox value="can_view_contracts" label="View Contracts" />
+                                    <flux:checkbox value="can_view_invoices" label="View Invoices" />
+                                    <flux:checkbox value="can_view_tickets" label="View Support Tickets" />
+                                    <flux:checkbox value="can_create_tickets" label="Create Support Tickets" />
+                                    <flux:checkbox value="can_approve_quotes" label="Approve Quotes" />
+                                    <flux:checkbox value="can_view_assets" label="View Assets" />
+                                    <flux:checkbox value="can_view_projects" label="View Projects" />
+                                    <flux:checkbox value="can_view_reports" label="View Reports" />
+                                </flux:checkbox.group>
                             @endif
                         </div>
                     </flux:card>

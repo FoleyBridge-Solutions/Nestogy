@@ -141,7 +141,7 @@ class ClientPortalController extends Controller
         $client = $contact->client;
 
         $query = Contract::where('client_id', $client->id)
-            ->with(['milestones', 'signatures', 'invoices']);
+            ->with(['signatures', 'invoices']);
 
         if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);
@@ -165,9 +165,6 @@ class ClientPortalController extends Controller
         $this->authorizeClientAccess($contract);
 
         $contract->load([
-            'milestones' => function ($query) {
-                $query->orderBy('due_date', 'asc');
-            },
             'signatures',
             'invoices' => function ($query) {
                 $query->with('payments')->orderBy('created_at', 'desc');
@@ -175,22 +172,13 @@ class ClientPortalController extends Controller
             'approvals' => function ($query) {
                 $query->orderBy('created_at', 'desc');
             },
-            'auditLogs' => function ($query) {
-                $query->orderBy('created_at', 'desc')->limit(10);
-            },
         ]);
-
-        $nextMilestone = $contract->milestones
-            ->where('status', '!=', 'completed')
-            ->where('due_date', '>=', now())
-            ->first();
 
         $pendingSignatures = $contract->signatures->where('status', 'pending');
         $outstandingInvoices = $contract->invoices->where('status', 'Sent');
 
         return view('client-portal.contracts.show', compact(
             'contract',
-            'nextMilestone',
             'pendingSignatures',
             'outstandingInvoices'
         ));

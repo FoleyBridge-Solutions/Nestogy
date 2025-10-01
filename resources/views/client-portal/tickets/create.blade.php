@@ -108,11 +108,11 @@
 
                         <!-- Action Buttons -->
                         <div class="flex items-center justify-between">
-                            <a href="{{ route('client.tickets') }}" class="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
-                                <i class="fas fa-times mr-2"></i>Cancel
-                            </a>
-                            <flux:button type="submit" variant="primary" size="lg">
-                                <i class="fas fa-paper-plane mr-2"></i>Submit Ticket
+                            <flux:button href="{{ route('client.tickets') }}" variant="ghost">
+                                Cancel
+                            </flux:button>
+                            <flux:button type="submit" variant="primary" icon="paper-plane">
+                                Submit Ticket
                             </flux:button>
                         </div>
                     </form>

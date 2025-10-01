@@ -3,317 +3,154 @@
 @section('title', 'Contracts')
 
 @section('content')
-<div class="portal-container mx-auto mx-auto">
-    <!-- Header -->
-    <div class="portal-flex flex-wrap -mx-4 portal-mb-6">
-        <div class="portal-flex-1 px-6-12">
-            <div class="portal-flex portal-justify-between portal-items-center">
-                <div>
-                    <h1 class="portal-text-3xl portal-mb-0 text-gray-800">Contracts</h1>
-                    <p class="text-gray-600">View and manage your service contracts and agreements</p>
-                </div>
-            </div>
+<!-- Header -->
+<div class="mb-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Contracts</h1>
+            <p class="text-gray-600 dark:text-gray-400">View and manage your service contracts and agreements</p>
         </div>
     </div>
-
-    <!-- Filter Options -->
-    <div class="portal-flex flex-wrap -mx-4 portal-mb-6">
-        <div class="portal-flex-1 px-6-12">
-            <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden portal-shadow">
-                <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
-                    <form method="GET" action="{{ route('client.contracts') }}" class="portal-flex portal-items-center space-x-4">
-                        <div class="portal-flex-1 px-6-auto">
-                            <label for="status" class="portal-text-sm portal-font-medium text-gray-700 portal-mr-2">
-                                Status:
-                            </label>
-                            <select name="status" id="status" class="portal-block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="this.form.submit()">
-                                <option value="">All Statuses</option>
-                                <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
-                                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
-                                <option value="expired" {{ request('status') === 'expired' ? 'selected' : '' }}>Expired</option>
-                                <option value="terminated" {{ request('status') === 'terminated' ? 'selected' : '' }}>Terminated</option>
-                            </select>
-                        </div>
-                        
-                        <div class="portal-flex-1 px-6-auto">
-                            <label for="type" class="portal-text-sm portal-font-medium text-gray-700 portal-mr-2">
-                                Type:
-                            </label>
-                            <select name="type" id="type" class="portal-block w-full px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="this.form.submit()">
-                                <option value="">All Types</option>
-                                <option value="service" {{ request('type') === 'service' ? 'selected' : '' }}>Service</option>
-                                <option value="maintenance" {{ request('type') === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                                <option value="support" {{ request('type') === 'support' ? 'selected' : '' }}>Support</option>
-                                <option value="project" {{ request('type') === 'project' ? 'selected' : '' }}>Project</option>
-                                <option value="consulting" {{ request('type') === 'consulting' ? 'selected' : '' }}>Consulting</option>
-                            </select>
-                        </div>
-                        
-                        @if(request('status') || request('type'))
-                        <div class="portal-flex-1 px-6-auto">
-                            <a href="{{ route('client.contracts') }}" class="portal-px-6 py-2 font-medium rounded-md transition-colors portal-border border-gray-600 text-gray-600 hover:bg-gray-50 portal-px-6 py-2 font-medium rounded-md transition-colors-sm">
-                                Clear Filters
-                            </a>
-                        </div>
-                        @endif
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Contracts Table -->
-    <div class="portal-flex flex-wrap -mx-4">
-        <div class="portal-flex-1 px-6-12">
-            <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden portal-shadow">
-                <div class="px-6 py-6 portal-border-b portal-bg-gray-50 py-6">
-                    <h6 class="portal-mb-0 portal-font-bold portal-text-blue-600 dark:text-blue-400">
-                        <i class="fas fa-file-contract portal-mr-2"></i>Your Contracts
-                        @if($contracts->total() > 0)
-                            <span class="portal-text-sm portal-font-normal text-gray-600">
-                                ({{ $contracts->total() }} total)
-                            </span>
-                        @endif
-                    </h6>
-                </div>
-                <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
-                    @if($contracts->count() > 0)
-                    <div class="portal-min-w-full divide-y divide-gray-200 dark:divide-gray-700-responsive">
-                        <table class="portal-min-w-full divide-y divide-gray-200 dark:divide-gray-700 portal-min-w-full">
-                            <thead>
-                                <tr>
-                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
-                                        Contract
-                                    </th>
-                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
-                                        Type
-                                    </th>
-                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
-                                        Status
-                                    </th>
-                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
-                                        Value
-                                    </th>
-                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
-                                        Start Date
-                                    </th>
-                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
-                                        End Date
-                                    </th>
-                                    <th class="px-6 py-6 text-left portal-text-xs portal-font-medium text-gray-500 portal-uppercase">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="portal-divide-y portal-divide-gray-200">
-                                @foreach($contracts as $contract)
-                                <tr class="portal-min-w-full divide-y divide-gray-200 dark:divide-gray-700-flex flex-wrap -mx-4">
-                                    <td class="px-6 py-6">
-                                        <div class="portal-text-sm portal-font-medium text-gray-900">
-                                            {{ $contract->title }}
-                                        </div>
-                                        <div class="portal-text-xs text-gray-500">
-                                            #{{ $contract->contract_number }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-6 portal-text-sm">
-                                        {{ ucwords(str_replace('_', ' ', $contract->contract_type ?? 'service')) }}
-                                    </td>
-                                    <td class="px-6 py-6">
-                                        <span class="inline-flex px-2 py-1 portal-text-xs portal-font-medium rounded-full
-                                            @if($contract->status === 'active') bg-green-100 text-green-800
-                                            @elseif($contract->status === 'pending') bg-yellow-100 text-yellow-800
-                                            @elseif($contract->status === 'draft') bg-blue-100 text-blue-800
-                                            @elseif($contract->status === 'expired') bg-red-100 text-red-800
-                                            @elseif($contract->status === 'terminated') bg-gray-100 text-gray-800
-                                           @else bg-gray-100 text-gray-800 @endif">
-                                            {{ ucfirst($contract->status ?? 'active') }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-6 portal-text-sm">
-                                        @if($contract->contract_value)
-                                            ${{ number_format($contract->contract_value, 2) }}
-                                            @if($contract->currency_code && $contract->currency_code !== 'USD')
-                                                <span class="portal-text-xs text-gray-500">{{ $contract->currency_code }}</span>
-                                            @endif
-                                        @else
-                                            <span class="text-gray-400">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-6 portal-text-sm text-gray-500">
-                                        @if($contract->start_date)
-                                            {{ $contract->start_date->format('M j, Y') }}
-                                        @else
-                                            <span class="text-gray-400">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-6 portal-text-sm text-gray-500">
-                                        @if($contract->end_date)
-                                            {{ $contract->end_date->format('M j, Y') }}
-                                            @if($contract->end_date->isPast())
-                                                <span class="portal-text-xs text-red-600">(Expired)</span>
-                                            @elseif($contract->end_date->diffInDays() <= 30)
-                                                <span class="portal-text-xs text-orange-600">(Expiring Soon)</span>
-                                            @endif
-                                        @else
-                                            <span class="text-gray-400">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-6 portal-text-sm">
-                                        <div class="portal-flex space-x-2">
-                                            <a href="{{ route('client.contracts.show', $contract) ?? '#' }}" 
-                                               class="portal-px-4 py-2 font-medium rounded-md transition-colors portal-px-6 py-1 text-sm portal-px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            @if($contract->document_path)
-                                            <a href="{{ route('client.contracts.download', $contract) ?? '#' }}" 
-                                               class="portal-px-4 py-2 font-medium rounded-md transition-colors portal-px-6 py-1 text-sm portal-px-6 py-2 font-medium rounded-md transition-colors-outline-secondary">
-                                                <i class="fas fa-download"></i>
-                                            </a>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    @if($contracts->hasPages())
-                        <div class="px-6 py-6 portal-border-t">
-                            {{ $contracts->appends(request()->query())->links() }}
-                        </div>
-                    @endif
-
-                    @else
-                    <div class="text-center py-8">
-                        <div class="portal-mb-6">
-                            <i class="fas fa-file-contract fa-3x text-gray-300"></i>
-                        </div>
-                        <h3 class="portal-text-lg portal-font-medium text-gray-900 portal-mb-2">
-                            @if(request('status') || request('type'))
-                                No Contracts Found
-                            @else
-                                No Contracts
-                            @endif
-                        </h3>
-                        <p class="portal-text-sm text-gray-500 portal-mb-6">
-                            @if(request('status') || request('type'))
-                                No contracts match your current filters. Try adjusting the filters above.
-                            @else
-                                You don't have any contracts yet. Contracts will appear here once they are created.
-                            @endif
-                        </p>
-                        @if(request('status') || request('type'))
-                        <a href="{{ route('client.contracts') }}" class="portal-px-6 py-2 font-medium rounded-md transition-colors portal-px-6 py-2 font-medium rounded-md transition-colors-outline-primary">
-                            Clear Filters
-                        </a>
-                        @endif
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Summary Cards -->
-    @if($contracts->count() > 0)
-    <div class="portal-flex flex-wrap -mx-4 portal-mb-6">
-        <div class="portal-flex-1 px-6-12">
-            <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden portal-shadow">
-                <div class="px-6 py-6 portal-border-b portal-bg-gray-50 py-6">
-                    <h6 class="portal-mb-0 portal-font-bold portal-text-blue-600 dark:text-blue-400">
-                        <i class="fas fa-chart-bar portal-mr-2"></i>Contract Summary
-                    </h6>
-                </div>
-                <div class="portal-bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden-body">
-                    <div class="portal-flex flex-wrap -mx-4">
-                        <div class="portal-w-1/2 px-6 portal-flex-1 px-6-xl-3 portal-mb-6">
-                            <div class="text-center">
-                                <div class="portal-text-2xl portal-font-bold text-green-600">
-                                    {{ $contracts->where('status', 'active')->count() }}
-                                </div>
-                                <div class="portal-text-sm text-gray-600">Active Contracts</div>
-                            </div>
-                        </div>
-                        
-                        <div class="portal-w-1/2 px-6 portal-flex-1 px-6-xl-3 portal-mb-6">
-                            <div class="text-center">
-                                <div class="portal-text-2xl portal-font-bold text-blue-600">
-                                    ${{ number_format($contracts->where('status', 'active')->sum('contract_value'), 2) }}
-                                </div>
-                                <div class="portal-text-sm text-gray-600">Total Active Value</div>
-                            </div>
-                        </div>
-                        
-                        <div class="portal-w-1/2 px-6 portal-flex-1 px-6-xl-3 portal-mb-6">
-                            <div class="text-center">
-                                <div class="portal-text-2xl portal-font-bold text-orange-600">
-                                    {{ $contracts->filter(function($contract) { return $contract->end_date && $contract->end_date->diffInDays() <= 30; })->count() }}
-                                </div>
-                                <div class="portal-text-sm text-gray-600">Expiring Soon</div>
-                            </div>
-                        </div>
-                        
-                        <div class="portal-w-1/2 px-6 portal-flex-1 px-6-xl-3 portal-mb-6">
-                            <div class="text-center">
-                                <div class="portal-text-2xl portal-font-bold text-red-600">
-                                    {{ $contracts->filter(function($contract) { return $contract->end_date && $contract->end_date->isPast(); })->count() }}
-                                </div>
-                                <div class="portal-text-sm text-gray-600">Expired</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 </div>
+
+<!-- Filters -->
+<flux:card class="mb-6">
+    <form method="GET" action="{{ route('client.contracts') }}" class="flex gap-4">
+        <flux:field>
+            <flux:label>Status</flux:label>
+            <flux:select name="status" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
+                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                <option value="expired" {{ request('status') === 'expired' ? 'selected' : '' }}>Expired</option>
+                <option value="terminated" {{ request('status') === 'terminated' ? 'selected' : '' }}>Terminated</option>
+            </flux:select>
+        </flux:field>
+        
+        <flux:field>
+            <flux:label>Type</flux:label>
+            <flux:select name="type" onchange="this.form.submit()">
+                <option value="">All Types</option>
+                <option value="service" {{ request('type') === 'service' ? 'selected' : '' }}>Service</option>
+                <option value="maintenance" {{ request('type') === 'maintenance' ? 'selected' : '' }}>Maintenance</option>
+                <option value="support" {{ request('type') === 'support' ? 'selected' : '' }}>Support</option>
+                <option value="project" {{ request('type') === 'project' ? 'selected' : '' }}>Project</option>
+                <option value="consulting" {{ request('type') === 'consulting' ? 'selected' : '' }}>Consulting</option>
+            </flux:select>
+        </flux:field>
+    </form>
+</flux:card>
+
+<!-- Contracts List -->
+<flux:card>
+    <div class="mb-4">
+        <flux:heading size="lg">Your Contracts</flux:heading>
+    </div>
+    
+    @if($contracts->count() > 0)
+        <div class="space-y-4">
+            @foreach($contracts as $contract)
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    {{ $contract->name ?? 'Contract #' . $contract->contract_number }}
+                                </h3>
+                                @php
+                                    $statusVariant = match($contract->status) {
+                                        'active' => 'success',
+                                        'pending' => 'warning',
+                                        'expired', 'terminated' => 'danger',
+                                        'draft' => 'secondary',
+                                        default => 'secondary'
+                                    };
+                                @endphp
+                                <flux:badge variant="{{ $statusVariant }}">
+                                    {{ ucfirst($contract->status ?? 'pending') }}
+                                </flux:badge>
+                                
+                                @if($contract->contract_type)
+                                    <flux:badge variant="secondary">
+                                        {{ ucfirst($contract->contract_type) }}
+                                    </flux:badge>
+                                @endif
+                            </div>
+                            
+                            @if($contract->description)
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                    {{ Str::limit($contract->description, 150) }}
+                                </p>
+                            @endif
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                @if($contract->start_date)
+                                    <div>
+                                        <div class="font-medium text-gray-700 dark:text-gray-300">Start Date</div>
+                                        <div>{{ $contract->start_date->format('M j, Y') }}</div>
+                                    </div>
+                                @endif
+                                
+                                @if($contract->end_date)
+                                    <div>
+                                        <div class="font-medium text-gray-700 dark:text-gray-300">End Date</div>
+                                        <div>{{ $contract->end_date->format('M j, Y') }}</div>
+                                    </div>
+                                @endif
+                                
+                                @if(isset($contract->total_value))
+                                    <div>
+                                        <div class="font-medium text-gray-700 dark:text-gray-300">Contract Value</div>
+                                        <div>${{ number_format($contract->total_value, 2) }}</div>
+                                    </div>
+                                @endif
+                                
+                                @if($contract->renewal_date)
+                                    <div>
+                                        <div class="font-medium text-gray-700 dark:text-gray-300">Renewal Date</div>
+                                        <div>{{ $contract->renewal_date->format('M j, Y') }}</div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2 ml-4">
+                            @if(Route::has('client.contracts.show'))
+                                <flux:button href="{{ route('client.contracts.show', $contract->id) }}" variant="ghost" size="sm" icon="eye">
+                                    View
+                                </flux:button>
+                            @endif
+                            
+                            @if($contract->status === 'pending' && $contract->signatures && Route::has('client.contracts.sign'))
+                                <flux:button href="{{ route('client.contracts.sign', $contract->id) }}" variant="primary" size="sm" icon="pencil">
+                                    Sign
+                                </flux:button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        
+        <!-- Pagination -->
+        @if($contracts->hasPages())
+            <div class="mt-6">
+                {{ $contracts->links() }}
+            </div>
+        @endif
+    @else
+        <div class="text-center py-12">
+            <i class="fas fa-file-contract fa-4x text-gray-300 dark:text-gray-600 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No Contracts Found</h3>
+            <p class="text-gray-500 dark:text-gray-400">
+                @if(request('status') || request('type'))
+                    No contracts match your current filters.
+                @else
+                    You don't have any contracts at the moment.
+                @endif
+            </p>
+        </div>
+    @endif
+</flux:card>
 @endsection
-
-@push('styles')
-<style>
-.space-x-2 > * + * { margin-left: 0.5rem; }
-.space-x-4 > * + * { margin-left: 1rem; }
-
-.portal-block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm {
-    width: auto;
-    min-width: 120px;
-    padding: 0.5rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    background-color: white;
-}
-
-.portal-block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm:focus {
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    border-color: #3b82f6;
-}
-
-/* Badge colors for status indicators */
-.bg-green-100 { background-color: #dcfce7; } .text-green-800 { color: #166534; }
-.bg-yellow-100 { background-color: #fef3c7; } .text-yellow-800 { color: #92400e; }
-.bg-red-100 { background-color: #fee2e2; } .text-red-800 { color: #991b1b; }
-.bg-blue-100 { background-color: #dbeafe; } .text-blue-800 { color: #1e40af; }
-.bg-orange-100 { background-color: #fed7aa; } .text-orange-800 { color: #9a3412; }
-.bg-gray-100 { background-color: #f3f4f6; } .text-gray-800 { color: #1f2937; }
-
-/* Hover effects */
-.portal-table-flex flex-wrap:hover {
-    background-color: #f9fafb;
-}
-
-/* Summary card styles */
-.text-green-600 { color: #059669; }
-.text-blue-600 { color: #2563eb; }
-.text-orange-600 { color: #ea580c; }
-.text-red-600 { color: #dc2626; }
-</style>
-@endpush
