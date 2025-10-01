@@ -26,53 +26,55 @@
     @if(!empty($categories))
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($categories as $categoryKey => $categoryData)
-                <flux:card href="{{ route('settings.category.show', ['domain' => $domain, 'category' => $categoryKey]) }}" class="hover:shadow-lg transition-all">
-                    <div class="flex items-center justify-between mb-4">
-                        @if($categoryData['metadata']['icon'] ?? null)
-                            <flux:avatar icon="{{ $categoryData['metadata']['icon'] }}" size="md" />
-                        @else
-                            <flux:avatar icon="folder" size="md" />
-                        @endif
-                        <flux:icon name="chevron-right" class="w-5 h-5 text-gray-400" />
-                    </div>
-                    
-                    <flux:heading size="md">
-                        {{ $categoryData['metadata']['name'] ?? ucfirst(str_replace('_', ' ', $categoryKey)) }}
-                    </flux:heading>
-                    
-                    @if($categoryData['metadata']['description'] ?? null)
-                        <flux:text size="sm" class="mt-1">
-                            {{ $categoryData['metadata']['description'] }}
-                        </flux:text>
-                    @endif
-                    
-                    <!-- Settings Preview -->
-                    @if(is_array($categoryData['settings']) && count($categoryData['settings']) > 0)
-                        <flux:separator class="my-3" />
-                        <div class="space-y-1">
-                            @php
-                                $previewSettings = array_slice($categoryData['settings'], 0, 3);
-                            @endphp
-                            @foreach($previewSettings as $key => $value)
-                                <flux:text size="xs" variant="muted" class="truncate">
-                                    <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
-                                    {{ is_bool($value) ? ($value ? 'Yes' : 'No') : (is_array($value) ? json_encode($value) : $value) }}
-                                </flux:text>
-                            @endforeach
-                            
-                            @if(count($categoryData['settings']) > 3)
-                                <flux:text size="xs" variant="primary">
-                                    +{{ count($categoryData['settings']) - 3 }} more settings
-                                </flux:text>
+                <a href="{{ route('settings.category.show', ['domain' => $domain, 'category' => $categoryKey]) }}" class="block">
+                    <flux:card class="hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            @if($categoryData['metadata']['icon'] ?? null)
+                                <flux:avatar icon="{{ $categoryData['metadata']['icon'] }}" size="md" />
+                            @else
+                                <flux:avatar icon="folder" size="md" />
                             @endif
+                            <flux:icon name="chevron-right" class="w-5 h-5 text-gray-400" />
                         </div>
-                    @else
-                        <flux:separator class="my-3" />
-                        <flux:text size="xs" variant="muted">
-                            No settings configured yet
-                        </flux:text>
-                    @endif
-                </flux:card>
+                        
+                        <flux:heading size="md">
+                            {{ $categoryData['metadata']['name'] ?? ucfirst(str_replace('_', ' ', $categoryKey)) }}
+                        </flux:heading>
+                        
+                        @if($categoryData['metadata']['description'] ?? null)
+                            <flux:text size="sm" class="mt-1">
+                                {{ $categoryData['metadata']['description'] }}
+                            </flux:text>
+                        @endif
+                        
+                        <!-- Settings Preview -->
+                        @if(is_array($categoryData['settings']) && count($categoryData['settings']) > 0)
+                            <flux:separator class="my-3" />
+                            <div class="space-y-1">
+                                @php
+                                    $previewSettings = array_slice($categoryData['settings'], 0, 3);
+                                @endphp
+                                @foreach($previewSettings as $key => $value)
+                                    <flux:text size="xs" variant="muted" class="truncate">
+                                        <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
+                                        {{ is_bool($value) ? ($value ? 'Yes' : 'No') : (is_array($value) ? json_encode($value) : $value) }}
+                                    </flux:text>
+                                @endforeach
+                                
+                                @if(count($categoryData['settings']) > 3)
+                                    <flux:text size="xs" variant="primary">
+                                        +{{ count($categoryData['settings']) - 3 }} more settings
+                                    </flux:text>
+                                @endif
+                            </div>
+                        @else
+                            <flux:separator class="my-3" />
+                            <flux:text size="xs" variant="muted">
+                                No settings configured yet
+                            </flux:text>
+                        @endif
+                    </flux:card>
+                </a>
             @endforeach
         </div>
     @else

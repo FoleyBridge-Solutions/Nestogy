@@ -11,6 +11,12 @@
 
     <title>{{ $currentCompany?->name ?? config('app.name', 'Nestogy ERP') }} - @yield('title', 'Dashboard')</title>
 
+    <!-- Favicon -->
+    @php
+        $faviconUrl = ($currentCompany?->branding['favicon_url'] ?? null) ?: asset('favicon.ico');
+    @endphp
+    <link rel="icon" type="image/x-icon" href="{{ $faviconUrl }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
@@ -36,14 +42,45 @@
         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
     </script>
     
-    <!-- Company Customization Styles -->
-    @if(auth()->check() && auth()->user()->company_id)
+    <!-- Company Branding Styles -->
+    @if(auth()->check() && auth()->user()->company)
         @php
-            $settingsService = app(\App\Domains\Core\Services\SettingsService::class);
-            $companyCss = $settingsService->generateCompanyCss(auth()->user()->company);
+            $company = auth()->user()->company;
+            $branding = $company->branding ?? [];
+            $accentColor = $branding['accent_color'] ?? '#3b82f6';
+            $accentContentColor = $branding['accent_content_color'] ?? '#2563eb';
+            $accentForegroundColor = $branding['accent_foreground_color'] ?? '#ffffff';
+            $baseScheme = $branding['base_color_scheme'] ?? 'zinc';
         @endphp
         <style>
-            {!! $companyCss !!}
+            @layer theme {
+                :root {
+                    --color-accent: {{ $accentColor }};
+                    --color-accent-content: {{ $accentContentColor }};
+                    --color-accent-foreground: {{ $accentForegroundColor }};
+                    
+                    @if($baseScheme !== 'zinc')
+                    /* Override base color scheme to {{ $baseScheme }} */
+                    --color-zinc-50: var(--color-{{ $baseScheme }}-50);
+                    --color-zinc-100: var(--color-{{ $baseScheme }}-100);
+                    --color-zinc-200: var(--color-{{ $baseScheme }}-200);
+                    --color-zinc-300: var(--color-{{ $baseScheme }}-300);
+                    --color-zinc-400: var(--color-{{ $baseScheme }}-400);
+                    --color-zinc-500: var(--color-{{ $baseScheme }}-500);
+                    --color-zinc-600: var(--color-{{ $baseScheme }}-600);
+                    --color-zinc-700: var(--color-{{ $baseScheme }}-700);
+                    --color-zinc-800: var(--color-{{ $baseScheme }}-800);
+                    --color-zinc-900: var(--color-{{ $baseScheme }}-900);
+                    --color-zinc-950: var(--color-{{ $baseScheme }}-950);
+                    @endif
+                }
+                
+                .dark {
+                    --color-accent: {{ $accentColor }};
+                    --color-accent-content: {{ $accentContentColor }};
+                    --color-accent-foreground: {{ $accentForegroundColor }};
+                }
+            }
         </style>
     @endif
     
@@ -89,13 +126,20 @@
         <!-- Single Row Navigation with Everything -->
         <flux:navbar class="w-full px-4">
             <!-- Brand (Far Left) -->
+            @php
+                $company = Auth::user()?->company;
+                $companyBranding = $company?->branding ?? [];
+                $logoLight = $companyBranding['logo_url'] ?? asset('static-assets/img/branding/nestogy-logo.png');
+                $logoDark = $companyBranding['logo_dark_url'] ?? $logoLight;
+                $companyName = $company?->name ?? config('app.name', 'Nestogy');
+            @endphp
             <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
-                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+                        logo="{{ $logoLight }}" 
+                        name="{{ $companyName }}" 
                         class="dark:hidden" />
             <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
-                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+                        logo="{{ $logoDark }}" 
+                        name="{{ $companyName }}" 
                         class="hidden dark:flex" />
             
             <!-- Mobile Toggle -->
@@ -200,12 +244,12 @@
         <flux:sidebar collapsible="mobile" sticky class="lg:hidden bg-white dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
             <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
-                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+                        logo="{{ $logoLight }}" 
+                        name="{{ $companyName }}" 
                         class="px-2 py-2 dark:hidden" />
             <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
-                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
+                        logo="{{ $logoDark }}" 
+                        name="{{ $companyName }}" 
                         class="px-2 py-2 hidden dark:flex" />
             
             <x-flux-sidebar

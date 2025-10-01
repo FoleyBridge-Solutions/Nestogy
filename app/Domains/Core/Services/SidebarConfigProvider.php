@@ -1095,8 +1095,8 @@ class SidebarConfigProvider
                         ['name' => 'Access Control', 'route' => 'settings.category.show', 'params' => ['domain' => 'security', 'category' => 'access'], 'icon' => 'shield-check', 'key' => 'access'],
                         ['name' => 'Authentication', 'route' => 'settings.category.show', 'params' => ['domain' => 'security', 'category' => 'auth'], 'icon' => 'finger-print', 'key' => 'auth'],
                         ['name' => 'Compliance', 'route' => 'settings.category.show', 'params' => ['domain' => 'security', 'category' => 'compliance'], 'icon' => 'clipboard-document-check', 'key' => 'compliance'],
-                        ['name' => 'Permissions', 'route' => 'settings.permissions.index', 'icon' => 'key', 'key' => 'permissions'],
-                        ['name' => 'Roles', 'route' => 'settings.roles.index', 'icon' => 'identification', 'key' => 'roles'],
+                        ['name' => 'Permissions', 'url' => '/settings/permissions/manage?tab=matrix', 'icon' => 'key', 'key' => 'permissions'],
+                        ['name' => 'Roles', 'url' => '/settings/permissions/manage?tab=roles', 'icon' => 'identification', 'key' => 'roles'],
                     ],
                 ],
                 [

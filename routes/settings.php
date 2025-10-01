@@ -34,7 +34,7 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
     })->name('company-email-provider');
 
     Route::get('/user-management', function () {
-        return redirect()->route('settings.category.show', ['domain' => 'company', 'category' => 'users']);
+        return redirect()->route('settings.permissions.manage');
     })->name('user-management');
 
     Route::get('/billing-financial', function () {
@@ -137,21 +137,7 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
     Route::get('/export', [UnifiedSettingsController::class, 'export'])->name('export');
     Route::post('/import', [UnifiedSettingsController::class, 'import'])->name('import');
 
-    // Domain-based Settings (Clean URLs)
-    Route::prefix('{domain}')->group(function () {
-        // Domain index
-        Route::get('/', [UnifiedSettingsController::class, 'showDomain'])->name('domain.index');
-
-        // Category-specific routes
-        Route::prefix('{category}')->group(function () {
-            Route::get('/', [UnifiedSettingsController::class, 'showCategory'])->name('category.show');
-            Route::put('/', [UnifiedSettingsController::class, 'updateCategory'])->name('category.update');
-            Route::post('/test', [UnifiedSettingsController::class, 'testCategory'])->name('category.test');
-            Route::post('/reset', [UnifiedSettingsController::class, 'resetToDefaults'])->name('category.reset');
-        });
-    });
-
-    // Roles & Permissions (these stay separate due to their complexity)
+    // Roles & Permissions (MUST come before domain-based routes to avoid conflicts)
     Route::prefix('roles')->name('roles.')->group(function () {
         Route::get('/', [RoleController::class, 'index'])->name('index');
         Route::get('/create', [RoleController::class, 'create'])->name('create');
@@ -165,9 +151,26 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
 
     Route::prefix('permissions')->name('permissions.')->group(function () {
         Route::get('/', [PermissionController::class, 'index'])->name('index');
+        Route::get('/manage', function () {
+            return view('settings.permissions-manage');
+        })->name('manage');
         Route::get('/matrix', [PermissionController::class, 'matrix'])->name('matrix');
         Route::post('/matrix', [PermissionController::class, 'updateMatrix'])->name('matrix.update');
         Route::get('/user/{user}', [PermissionController::class, 'userPermissions'])->name('user');
         Route::put('/user/{user}', [PermissionController::class, 'updateUserPermissions'])->name('user.update');
+    });
+
+    // Domain-based Settings (Clean URLs) - MUST come AFTER specific routes
+    Route::prefix('{domain}')->group(function () {
+        // Domain index
+        Route::get('/', [UnifiedSettingsController::class, 'showDomain'])->name('domain.index');
+
+        // Category-specific routes
+        Route::prefix('{category}')->group(function () {
+            Route::get('/', [UnifiedSettingsController::class, 'showCategory'])->name('category.show');
+            Route::put('/', [UnifiedSettingsController::class, 'updateCategory'])->name('category.update');
+            Route::post('/test', [UnifiedSettingsController::class, 'testCategory'])->name('category.test');
+            Route::post('/reset', [UnifiedSettingsController::class, 'resetToDefaults'])->name('category.reset');
+        });
     });
 });

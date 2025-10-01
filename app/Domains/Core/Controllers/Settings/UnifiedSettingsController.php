@@ -5,6 +5,7 @@ namespace App\Domains\Core\Controllers\Settings;
 use App\Domains\Core\Services\Settings\CommunicationSettingsService;
 use App\Domains\Core\Services\Settings\CompanySettingsService;
 use App\Domains\Core\Services\Settings\FinancialSettingsService;
+use App\Domains\Core\Services\Settings\SecuritySettingsService;
 use App\Http\Controllers\Controller;
 use App\Models\SettingsConfiguration;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class UnifiedSettingsController extends Controller
             SettingsConfiguration::DOMAIN_COMPANY => app(CompanySettingsService::class),
             SettingsConfiguration::DOMAIN_COMMUNICATION => app(CommunicationSettingsService::class),
             SettingsConfiguration::DOMAIN_FINANCIAL => app(FinancialSettingsService::class),
+            SettingsConfiguration::DOMAIN_SECURITY => app(SecuritySettingsService::class),
         ];
     }
 
@@ -82,6 +84,31 @@ class UnifiedSettingsController extends Controller
         // Redirect email to Livewire component
         if ($domain === 'communication' && $category === 'email') {
             return redirect()->route('settings.email');
+        }
+        
+        // Redirect permissions to Livewire component
+        if ($domain === 'security' && $category === 'permissions') {
+            return redirect()->route('settings.permissions.manage');
+        }
+        
+        // Redirect users to permissions management
+        if ($domain === 'company' && $category === 'users') {
+            return redirect()->route('settings.permissions.manage');
+        }
+        
+        // Redirect roles to permissions management
+        if ($domain === 'security' && $category === 'roles') {
+            return redirect()->route('settings.roles.index');
+        }
+        
+        // Redirect compliance (placeholder - needs implementation)
+        if ($domain === 'security' && $category === 'compliance') {
+            return back()->with('error', 'Compliance settings are not yet configured.');
+        }
+        
+        // Redirect subsidiaries (placeholder - needs implementation)
+        if ($domain === 'company' && $category === 'subsidiaries') {
+            return back()->with('error', 'Subsidiaries management is not yet configured.');
         }
         
         if (! isset($this->services[$domain])) {

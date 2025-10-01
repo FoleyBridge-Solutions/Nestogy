@@ -57,7 +57,7 @@ class SettingsConfiguration extends Model
                 'name' => 'Company',
                 'icon' => 'building-office',
                 'description' => 'Company information and branding',
-                'categories' => ['general', 'branding', 'localization'],
+                'categories' => ['general', 'branding', 'users', 'subsidiaries'],
             ],
             self::DOMAIN_COMMUNICATION => [
                 'name' => 'Communication',
@@ -75,7 +75,7 @@ class SettingsConfiguration extends Model
                 'name' => 'Security',
                 'icon' => 'shield-check',
                 'description' => 'Security and access control',
-                'categories' => ['authentication', 'permissions', 'audit'],
+                'categories' => ['access', 'authentication', 'compliance', 'permissions', 'roles'],
             ],
             self::DOMAIN_INTEGRATIONS => [
                 'name' => 'Integrations',

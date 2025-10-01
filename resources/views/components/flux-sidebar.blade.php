@@ -100,7 +100,7 @@ $mobile = $mobile ?? false;
                                     $badgeAttr = ($badgeData['count'] > 0) ? ($badgeData['count'] > 99 ? '99+' : $badgeData['count']) : null;
                                 @endphp
                                 <a
-                                    href="{{ route($item['route'], $routeParams) }}"
+                                    href="{{ isset($item['url']) ? $item['url'] : route($item['route'], $routeParams) }}"
                                     class="group flex items-center px-3 py-3 text-sm font-bold rounded-lg {{ $isActive ? 'bg-indigo-50 border-r-4 border-indigo-500 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100' }} {{ $mobile ? 'py-6 text-base' : '' }}"
                                 >
                                     @if($iconAttr)
@@ -185,7 +185,7 @@ $mobile = $mobile ?? false;
                                         $badgeAttr = ($badgeData['count'] > 0) ? ($badgeData['count'] > 99 ? '99+' : $badgeData['count']) : null;
                                     @endphp
                                     <a
-                                        href="{{ route($item['route'], $routeParams) }}"
+                                        href="{{ isset($item['url']) ? $item['url'] : route($item['route'], $routeParams) }}"
                                         class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ $isActive ? 'bg-indigo-50 border-r-4 border-indigo-500 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100' }} {{ $mobile ? 'py-2 text-base min-h-[44px]' : '' }}"
                                     >
                                         @if($iconAttr)

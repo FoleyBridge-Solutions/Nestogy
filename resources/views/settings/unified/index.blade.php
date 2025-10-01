@@ -48,31 +48,33 @@
                 $lastUpdated = $summary[$domainKey]['last_updated'] ?? null;
             @endphp
             
-            <flux:card href="{{ route('settings.domain.index', $domainKey) }}" class="hover:shadow-lg transition-all">
-                <div class="flex items-center justify-between mb-4">
-                    <flux:avatar icon="{{ $domain['icon'] ?? 'cog-6-tooth' }}" size="lg" />
-                    @if($configured)
-                        <flux:badge variant="success" icon="check">Configured</flux:badge>
+            <a href="{{ route('settings.domain.index', $domainKey) }}" class="block">
+                <flux:card class="hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <flux:avatar icon="{{ $domain['icon'] ?? 'cog-6-tooth' }}" size="lg" />
+                        @if($configured)
+                            <flux:badge variant="success" icon="check">Configured</flux:badge>
+                        @endif
+                    </div>
+                    
+                    <flux:heading size="md">{{ $domain['name'] }}</flux:heading>
+                    <flux:text size="sm" class="mt-1">{{ $domain['description'] }}</flux:text>
+                    
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        @foreach($domain['categories'] as $category)
+                            <flux:badge color="zinc">
+                                {{ str_replace('_', ' ', ucfirst($category)) }}
+                            </flux:badge>
+                        @endforeach
+                    </div>
+                    
+                    @if($lastUpdated)
+                        <flux:text size="xs" variant="muted" class="mt-4">
+                            Last updated {{ $lastUpdated }}
+                        </flux:text>
                     @endif
-                </div>
-                
-                <flux:heading size="md">{{ $domain['name'] }}</flux:heading>
-                <flux:text size="sm" class="mt-1">{{ $domain['description'] }}</flux:text>
-                
-                <div class="mt-4 flex flex-wrap gap-2">
-                    @foreach($domain['categories'] as $category)
-                        <flux:badge color="zinc">
-                            {{ str_replace('_', ' ', ucfirst($category)) }}
-                        </flux:badge>
-                    @endforeach
-                </div>
-                
-                @if($lastUpdated)
-                    <flux:text size="xs" variant="muted" class="mt-4">
-                        Last updated {{ $lastUpdated }}
-                    </flux:text>
-                @endif
-            </flux:card>
+                </flux:card>
+            </a>
         @endforeach
     </div>
 
@@ -91,7 +93,7 @@
                 <span>Billing</span>
             </a>
             
-            <a href="{{ route('settings.roles.index') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+            <a href="{{ route('settings.permissions.manage') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                 <flux:icon name="user-group" class="w-5 h-5" />
                 <span>Roles & Permissions</span>
             </a>

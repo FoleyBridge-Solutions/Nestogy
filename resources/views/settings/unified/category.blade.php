@@ -62,8 +62,16 @@
                     @include('settings.unified.forms.communication-physical-mail', ['settings' => $settings])
                 @elseif($category === 'general' && $domain === 'company')
                     @include('settings.unified.forms.company-general', ['settings' => $settings])
+                @elseif($category === 'branding' && $domain === 'company')
+                    @include('settings.unified.forms.company-branding', ['settings' => $settings])
                 @elseif($category === 'billing' && $domain === 'financial')
                     @include('settings.unified.forms.financial-billing', ['settings' => $settings])
+                @elseif($category === 'authentication' && $domain === 'security')
+                    @include('settings.unified.forms.security-authentication', ['settings' => $settings])
+                @elseif($category === 'access' && $domain === 'security')
+                    @include('settings.unified.forms.security-access', ['settings' => $settings])
+                @elseif($category === 'audit' && $domain === 'security')
+                    @include('settings.unified.forms.security-audit', ['settings' => $settings])
                 @else
                     <!-- Generic form for other categories -->
                     <div class="space-y-6">

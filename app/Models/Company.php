@@ -54,6 +54,9 @@ class Company extends Model
         'logo',
         'locale',
         'currency',
+        'branding',
+        'company_info',
+        'social_links',
         'client_record_id',
         'is_active',
         'suspended_at',
@@ -91,28 +94,17 @@ class Company extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'client_record_id' => 'integer',
         'is_active' => 'boolean',
         'suspended_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'hourly_rate_config' => 'array',
-        'default_standard_rate' => 'decimal:2',
-        'default_after_hours_rate' => 'decimal:2',
-        'default_emergency_rate' => 'decimal:2',
-        'default_weekend_rate' => 'decimal:2',
-        'default_holiday_rate' => 'decimal:2',
-        'after_hours_multiplier' => 'decimal:2',
-        'emergency_multiplier' => 'decimal:2',
-        'weekend_multiplier' => 'decimal:2',
-        'holiday_multiplier' => 'decimal:2',
-        'minimum_billing_increment' => 'decimal:2',
-        // Hierarchy casts
         'subsidiary_settings' => 'array',
         'inherited_permissions' => 'array',
-        'can_create_subsidiaries' => 'boolean',
-        // Email provider casts
         'email_provider_config' => 'array',
+        'branding' => 'array',
+        'company_info' => 'array',
+        'social_links' => 'array',
     ];
 
     /**
