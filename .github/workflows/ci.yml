@@ -25,10 +25,10 @@ jobs:
 
       - name: Configure Flux Pro credentials
         run: |
-          composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
+          composer config --global http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
 
       - name: Install dependencies with composer
-        run: composer update --no-ansi --no-interaction --no-progress
+        run: composer install --no-ansi --no-interaction --no-progress --prefer-dist
 
       - name: Run tests with phpunit/phpunit
         run: vendor/bin/phpunit --coverage-clover=coverage.xml
