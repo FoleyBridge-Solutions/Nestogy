@@ -33,10 +33,11 @@ jobs:
       - name: Install dependencies with composer
         run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
 
-      - name: Generate application key
+      - name: Setup environment and generate key
         run: |
           cp .env.example .env
-          php artisan key:generate
+          echo "APP_KEY=" >> .env
+          php artisan key:generate --ansi
 
       - name: Run tests with phpunit/phpunit
         run: vendor/bin/phpunit --coverage-clover=coverage.xml
