@@ -25,7 +25,16 @@ jobs:
 
       - name: Configure Flux Pro credentials
         run: |
-          echo '{"http-basic":{"composer.fluxui.dev":{"username":"${{ secrets.FLUX_USERNAME }}","password":"${{ secrets.FLUX_LICENSE_KEY }}"}}}' > auth.json
+          cat > auth.json << EOF
+          {
+            "http-basic": {
+              "composer.fluxui.dev": {
+                "username": "${{ secrets.FLUX_USERNAME }}",
+                "password": "${{ secrets.FLUX_LICENSE_KEY }}"
+              }
+            }
+          }
+          EOF
 
       - name: Install dependencies with composer
         run: composer install --no-ansi --no-interaction --no-progress --prefer-dist
