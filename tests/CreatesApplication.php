@@ -13,6 +13,18 @@ trait CreatesApplication
 
         $app->make(Kernel::class)->bootstrap();
 
+        // Register domain routes for testing
+        try {
+            $routeManager = $app->make(\App\Domains\Core\Services\DomainRouteManager::class);
+            $routeManager->registerDomainRoutes();
+        } catch (\Exception $e) {
+            // If DomainRouteManager fails, manually load critical route files
+            $domainRouteFiles = glob(app_path('Domains/*/routes.php'));
+            foreach ($domainRouteFiles as $routeFile) {
+                require_once $routeFile;
+            }
+        }
+
         return $app;
     }
 }
