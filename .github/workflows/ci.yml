@@ -54,6 +54,12 @@ jobs:
           echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
           echo "STRIPE_SECRET=sk_test_dummy" >> .env
           echo "STRIPE_PUBLISHABLE=pk_test_dummy" >> .env
+          echo "DB_CONNECTION=pgsql" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_DATABASE=nestogy_test" >> .env
+          echo "DB_USERNAME=nestogy" >> .env
+          echo "DB_PASSWORD=nestogy_dev_pass" >> .env
 
       - name: Run database migrations
         run: php artisan migrate --force --seed
