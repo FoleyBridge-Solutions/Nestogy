@@ -161,21 +161,27 @@ return new class extends Migration
             });
         }
 
-        // Add indexes safely - PostgreSQL compatible
-        $existingIndexes = collect(\DB::select("SELECT indexname FROM pg_indexes WHERE tablename = 'products'"))->pluck('indexname');
-
-        Schema::table('products', function (Blueprint $table) use ($existingIndexes) {
-            if (! $existingIndexes->contains('products_company_id_is_active_index')) {
+        // Add indexes - use try/catch to handle existing indexes
+        Schema::table('products', function (Blueprint $table) {
+            try {
                 $table->index(['company_id', 'is_active']);
+            } catch (\Exception $e) {
+                // Index already exists
             }
-            if (! $existingIndexes->contains('products_company_id_type_index')) {
+            try {
                 $table->index(['company_id', 'type']);
+            } catch (\Exception $e) {
+                // Index already exists
             }
-            if (! $existingIndexes->contains('products_sku_index')) {
+            try {
                 $table->index('sku');
+            } catch (\Exception $e) {
+                // Index already exists
             }
-            if (! $existingIndexes->contains('products_billing_model_index')) {
+            try {
                 $table->index('billing_model');
+            } catch (\Exception $e) {
+                // Index already exists
             }
         });
     }
