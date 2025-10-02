@@ -10,6 +10,21 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: nestogy_test
+          POSTGRES_USER: nestogy
+          POSTGRES_PASSWORD: nestogy_test_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -36,6 +51,12 @@ jobs:
       - name: Run tests with phpunit/phpunit
         env:
           APP_KEY: base64:test1234567890123456789012345678901234567890123=
+          DB_CONNECTION: pgsql
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_DATABASE: nestogy_test
+          DB_USERNAME: nestogy
+          DB_PASSWORD: nestogy_test_pass
         run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: SonarQube Scan
