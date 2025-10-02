@@ -25,7 +25,7 @@ jobs:
 
       - name: Configure Flux Pro credentials
         run: |
-          composer config --auth http-basic.composer.fluxui.dev token ${{ secrets.FLUX_PRO_TOKEN }}
+          composer config http-basic.composer.fluxui.dev token ${{ secrets.FLUX_PRO_TOKEN }}
 
       - name: Install dependencies with composer
         run: composer update --no-ansi --no-interaction --no-progress
