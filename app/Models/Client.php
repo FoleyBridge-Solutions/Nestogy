@@ -594,6 +594,26 @@ class Client extends Model
             ->first();
     }
 
+    public function rateCards()
+    {
+        return $this->hasMany(\App\Domains\Financial\Models\RateCard::class);
+    }
+
+    public function activeRateCards()
+    {
+        return $this->hasMany(\App\Domains\Financial\Models\RateCard::class)
+            ->where('is_active', true);
+    }
+
+    public function getEffectiveRateCard(string $serviceType = 'standard', ?\Carbon\Carbon $date = null)
+    {
+        return \App\Domains\Financial\Models\RateCard::findApplicableRate(
+            $this->id,
+            $serviceType,
+            $date
+        );
+    }
+
     /**
      * Boot the model and set up event listeners.
      */

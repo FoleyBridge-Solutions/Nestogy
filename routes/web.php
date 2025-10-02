@@ -292,6 +292,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/cancel-subscription', [\App\Domains\Financial\Controllers\BillingController::class, 'cancelSubscription'])->name('cancel-subscription');
         Route::post('/reactivate-subscription', [\App\Domains\Financial\Controllers\BillingController::class, 'reactivateSubscription'])->name('reactivate-subscription');
         Route::get('/portal', [\App\Domains\Financial\Controllers\BillingController::class, 'billingPortal'])->name('portal');
+        Route::get('/time-entries', \App\Livewire\Billing\TimeEntryApproval::class)->name('time-entries');
     });
 });
 
@@ -526,6 +527,7 @@ Route::prefix('client-portal')->name('client.')->group(function () {
         Route::post('tickets', [\App\Domains\Client\Controllers\ClientPortalController::class, 'storeTicket'])->name('tickets.store');
         Route::get('tickets/{ticket}', [\App\Domains\Client\Controllers\ClientPortalController::class, 'showTicket'])->name('tickets.show');
         Route::post('tickets/{ticket}/comment', [\App\Domains\Client\Controllers\ClientPortalController::class, 'addTicketComment'])->name('tickets.comment');
+        Route::get('tickets/{ticket}/survey', \App\Livewire\Portal\TicketSatisfactionSurvey::class)->name('tickets.survey');
 
         // Assets
         Route::get('assets', [\App\Domains\Client\Controllers\ClientPortalController::class, 'assets'])->name('assets');
@@ -548,3 +550,9 @@ Route::prefix('client-portal')->name('client.')->group(function () {
 Route::middleware(['auth', 'verified'])->get('/settings/physical-mail', function () {
     return view('settings.physical-mail');
 })->name('settings.physical-mail');
+Route::get('/notifications', function () { 
+    return redirect()->route('settings.notifications'); 
+})->name('notifications.index')->middleware(['auth', 'verified']);
+Route::get('/manager/dashboard', \App\Livewire\Manager\TeamDashboard::class)->name('manager.dashboard')->middleware(['auth', 'verified']);
+Route::get('/manager/capacity', \App\Livewire\Manager\TechCapacityView::class)->name('manager.capacity')->middleware(['auth', 'verified']);
+Route::get('/mobile/time-tracker/{ticketId?}', \App\Livewire\MobileTimeTracker::class)->name('mobile.time-tracker')->middleware(['auth', 'verified']);

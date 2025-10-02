@@ -51,7 +51,7 @@ class CheckSlaBreaches extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info('Starting SLA breach check...');
 

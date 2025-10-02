@@ -68,6 +68,7 @@ class Ticket extends Model
         'reopened_at',
         'reopened_by',
         'resolution_count',
+        'estimated_resolution_at',
         // Sentiment analysis fields
         'sentiment_score',
         'sentiment_label',
@@ -107,6 +108,7 @@ class Ticket extends Model
         'reopened_by' => 'integer',
         'client_can_reopen' => 'boolean',
         'resolution_count' => 'integer',
+        'estimated_resolution_at' => 'datetime',
         'sentiment_score' => 'decimal:2',
         'sentiment_confidence' => 'decimal:2',
     ];
@@ -307,6 +309,16 @@ class Ticket extends Model
     public function assignments(): HasMany
     {
         return $this->hasMany(TicketAssignment::class);
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(\App\Models\TicketRating::class);
+    }
+
+    public function latestRating()
+    {
+        return $this->hasOne(\App\Models\TicketRating::class)->latestOfMany();
     }
 
     // ===========================================

@@ -107,6 +107,8 @@ class SidebarConfigProvider
                 return $this->getProjectsConfig();
             case 'reports':
                 return $this->getReportsConfig();
+            case 'manager':
+                return $this->getManagerConfig();
             case 'settings':
                 return $this->getSettingsConfig();
             case 'physical-mail':
@@ -596,6 +598,29 @@ class SidebarConfigProvider
                         ],
                     ],
                 ],
+                [
+                    'type' => 'section',
+                    'title' => 'MOBILE TOOLS',
+                    'expandable' => true,
+                    'default_expanded' => false,
+                    'items' => [
+                        [
+                            'name' => 'Mobile Time Tracker',
+                            'route' => 'mobile.time-tracker',
+                            'icon' => 'device-phone-mobile',
+                            'key' => 'mobile-tracker',
+                            'description' => 'Mobile-optimized time tracking interface',
+                        ],
+                        [
+                            'name' => 'Quick Ticket View',
+                            'route' => 'tickets.index',
+                            'params' => ['mobile' => '1'],
+                            'icon' => 'list-bullet',
+                            'key' => 'mobile-tickets',
+                            'description' => 'Mobile-friendly ticket list',
+                        ],
+                    ],
+                ],
             ],
         ];
     }
@@ -957,6 +982,13 @@ class SidebarConfigProvider
                             'description' => 'Manage customer invoices',
                         ],
                         [
+                            'name' => 'Time Entry Approval',
+                            'route' => 'billing.time-entries',
+                            'icon' => 'clock',
+                            'key' => 'time-entries',
+                            'description' => 'Review and approve billable time for invoicing',
+                        ],
+                        [
                             'name' => 'Payments',
                             'route' => 'financial.payments.index',
                             'icon' => 'credit-card',
@@ -969,6 +1001,14 @@ class SidebarConfigProvider
                             'icon' => 'arrow-path',
                             'key' => 'recurring',
                             'description' => 'Manage subscriptions',
+                        ],
+                        [
+                            'name' => 'Rate Cards',
+                            'route' => 'financial.invoices.index',
+                            'params' => ['tab' => 'rate-cards'],
+                            'icon' => 'currency-dollar',
+                            'key' => 'rate-cards',
+                            'description' => 'Manage client-specific billing rates',
                         ],
                     ],
                 ],
@@ -1060,6 +1100,152 @@ class SidebarConfigProvider
     }
 
     /**
+     * Get manager sidebar configuration
+     */
+    protected function getManagerConfig(): array
+    {
+        $user = auth()->user();
+
+        // Real-time statistics for badges
+        $overdueTicketsCount = 0;
+        $unassignedCount = 0;
+        $atRiskCount = 0;
+
+        if ($user && $user->company_id) {
+            try {
+                // SLA breached tickets
+                $overdueTicketsCount = \App\Domains\Ticket\Models\Ticket::where('company_id', $user->company_id)
+                    ->whereNotIn('status', ['closed', 'resolved'])
+                    ->whereHas('priorityQueue', function ($q) {
+                        $q->where('sla_deadline', '<', now());
+                    })
+                    ->count();
+
+                // Unassigned tickets
+                $unassignedCount = \App\Domains\Ticket\Models\Ticket::where('company_id', $user->company_id)
+                    ->whereNull('assigned_to')
+                    ->whereNotIn('status', ['closed', 'resolved'])
+                    ->count();
+
+                // At-risk tickets (within 2 hours of SLA deadline)
+                $atRiskCount = \App\Domains\Ticket\Models\Ticket::where('company_id', $user->company_id)
+                    ->whereNotIn('status', ['closed', 'resolved'])
+                    ->whereHas('priorityQueue', function ($q) {
+                        $q->where('sla_deadline', '>', now())
+                          ->where('sla_deadline', '<=', now()->addHours(2));
+                    })
+                    ->count();
+            } catch (\Exception $e) {
+                // Silently handle any database issues
+            }
+        }
+
+        return [
+            'title' => 'Manager Tools',
+            'icon' => 'briefcase',
+            'sections' => [
+                [
+                    'type' => 'primary',
+                    'items' => [
+                        [
+                            'name' => 'Team Dashboard',
+                            'route' => 'manager.dashboard',
+                            'icon' => 'chart-bar',
+                            'key' => 'dashboard',
+                            'description' => 'Real-time team performance and ticket overview',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'TEAM MANAGEMENT',
+                    'expandable' => true,
+                    'default_expanded' => true,
+                    'items' => [
+                        [
+                            'name' => 'Tech Capacity',
+                            'route' => 'manager.capacity',
+                            'icon' => 'users',
+                            'key' => 'capacity',
+                            'description' => 'View workload and capacity across technicians',
+                        ],
+                        [
+                            'name' => 'Unassigned Tickets',
+                            'route' => 'tickets.index',
+                            'params' => ['filter' => 'unassigned'],
+                            'icon' => 'exclamation-triangle',
+                            'key' => 'unassigned',
+                            'badge' => $unassignedCount > 0 ? $unassignedCount : null,
+                            'badge_type' => 'warning',
+                            'description' => 'Tickets awaiting assignment',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'SLA MONITORING',
+                    'expandable' => true,
+                    'default_expanded' => true,
+                    'items' => [
+                        [
+                            'name' => 'SLA Breaches',
+                            'route' => 'tickets.index',
+                            'params' => ['filter' => 'sla_breached'],
+                            'icon' => 'shield-exclamation',
+                            'key' => 'sla-breaches',
+                            'badge' => $overdueTicketsCount > 0 ? $overdueTicketsCount : null,
+                            'badge_type' => 'danger',
+                            'description' => 'Tickets that have breached SLA deadlines',
+                        ],
+                        [
+                            'name' => 'At Risk',
+                            'route' => 'tickets.index',
+                            'params' => ['filter' => 'sla_at_risk'],
+                            'icon' => 'clock',
+                            'key' => 'sla-at-risk',
+                            'badge' => $atRiskCount > 0 ? $atRiskCount : null,
+                            'badge_type' => 'warning',
+                            'description' => 'Tickets approaching SLA deadlines (< 2 hours)',
+                        ],
+                    ],
+                ],
+                [
+                    'type' => 'section',
+                    'title' => 'REPORTS',
+                    'expandable' => true,
+                    'default_expanded' => false,
+                    'items' => [
+                        [
+                            'name' => 'Team Performance',
+                            'route' => 'reports.index',
+                            'params' => ['type' => 'team-performance'],
+                            'icon' => 'chart-line',
+                            'key' => 'team-performance',
+                            'description' => 'Technician productivity and performance metrics',
+                        ],
+                        [
+                            'name' => 'SLA Compliance',
+                            'route' => 'reports.index',
+                            'params' => ['type' => 'sla-compliance'],
+                            'icon' => 'shield-check',
+                            'key' => 'sla-compliance',
+                            'description' => 'SLA compliance rates and trends',
+                        ],
+                        [
+                            'name' => 'Client Satisfaction',
+                            'route' => 'reports.index',
+                            'params' => ['type' => 'satisfaction'],
+                            'icon' => 'face-smile',
+                            'key' => 'satisfaction',
+                            'description' => 'Customer satisfaction survey results',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
      * Get settings sidebar configuration
      */
     protected function getSettingsConfig(): array
@@ -1106,7 +1292,7 @@ class SidebarConfigProvider
                     'default_expanded' => false,
                     'items' => [
                         ['name' => 'Email', 'route' => 'settings.category.show', 'params' => ['domain' => 'communication', 'category' => 'email'], 'icon' => 'envelope', 'key' => 'email'],
-                        ['name' => 'Notifications', 'route' => 'settings.category.show', 'params' => ['domain' => 'communication', 'category' => 'notifications'], 'icon' => 'bell', 'key' => 'notifications'],
+                        ['name' => 'Notification Preferences', 'route' => 'settings.notifications', 'icon' => 'bell', 'key' => 'notifications', 'description' => 'Configure email and in-app notification preferences'],
                         ['name' => 'Physical Mail', 'route' => 'settings.category.show', 'params' => ['domain' => 'communication', 'category' => 'physical-mail'], 'icon' => 'paper-airplane', 'key' => 'physical-mail'],
                         ['name' => 'Templates', 'route' => 'settings.category.show', 'params' => ['domain' => 'communication', 'category' => 'templates'], 'icon' => 'document-duplicate', 'key' => 'templates'],
                     ],

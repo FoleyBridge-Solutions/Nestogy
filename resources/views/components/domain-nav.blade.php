@@ -42,6 +42,13 @@ $domains = [
         'params' => [],
         'icon' => 'chart-bar'
     ],
+    'manager' => [
+        'name' => 'Manager',
+        'route' => 'manager.dashboard',
+        'params' => [],
+        'icon' => 'briefcase',
+        'permission' => 'view-manager-tools'
+    ],
     'products' => [
         'name' => 'Products',
         'route' => 'products.index',
@@ -131,12 +138,7 @@ $domains = [
                 </div>
 
                 <!-- Notifications -->
-                <button class="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500 transition duration-150 ease-in-out mr-4">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5-5V9a7 7 0 00-14 0v3l-5 5h5a7 7 0 1014 0z"></path>
-                    </svg>
-                    <span class="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white bg-red-400"></span>
-                </button>
+                @livewire('notification-center')
 
                 <!-- Settings Dropdown -->
                 <x-dropdown align="right" width="48">

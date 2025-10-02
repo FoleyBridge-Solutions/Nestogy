@@ -73,6 +73,12 @@ return [
         'notifications' => env('PORTAL_FEATURE_NOTIFICATIONS', true),
     ],
 
+    'tickets' => [
+        'show_assigned_technician' => env('PORTAL_TICKETS_SHOW_TECH', true),
+        'show_estimated_resolution' => env('PORTAL_TICKETS_SHOW_ESTIMATE', true),
+        'allow_client_reopen' => env('PORTAL_TICKETS_ALLOW_REOPEN', true),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Portal Branding

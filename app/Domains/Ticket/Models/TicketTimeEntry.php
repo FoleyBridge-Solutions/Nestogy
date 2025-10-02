@@ -327,6 +327,32 @@ class TicketTimeEntry extends Model
         return $query->where('entry_type', $type);
     }
 
+    public function scopeInvoiced($query)
+    {
+        return $query->whereNotNull('invoice_id');
+    }
+
+    public function scopeUninvoiced($query)
+    {
+        return $query->whereNull('invoice_id');
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->whereNotNull('approved_at');
+    }
+
+    public function scopeUnapproved($query)
+    {
+        return $query->whereNull('approved_at');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending')
+            ->orWhereNull('status');
+    }
+
     // ===========================================
     // ACCESSORS & MUTATORS
     // ===========================================

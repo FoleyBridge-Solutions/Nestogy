@@ -5,10 +5,12 @@ This document outlines the new domain-based navigation system implemented for Ne
 ## Overview
 
 The navigation system has been redesigned to provide:
-- **Top Navigation Bar**: For switching between domains (Clients, Tickets, Assets, Financial, Projects, Reports)
+- **Top Navigation Bar**: For switching between domains (Clients, Tickets, Assets, Financial, Projects, Reports, Manager)
 - **Domain-Specific Sidebars**: Each domain has its own sidebar with relevant sections and actions
 - **Responsive Design**: Mobile-friendly with collapsible sidebars
 - **Active State Management**: Automatic highlighting of active domains and navigation items
+- **Real-time Notifications**: Integrated notification center with badge counts
+- **Role-Based Access**: Manager tools and specialized features shown based on permissions
 
 ## Architecture
 
@@ -18,8 +20,9 @@ The navigation system has been redesigned to provide:
    - Displays domain tabs in the top navigation
    - Includes user profile dropdown with settings and logout
    - Features quick search functionality
-   - Shows notifications bell
+   - Shows **NotificationCenter** with live badge counts (NEW)
    - Responsive with mobile hamburger menu
+   - Role-based domain visibility (e.g., Manager domain for managers only)
 
 2. **Domain Sidebar** (`resources/views/components/domain-sidebar.blade.php`)
    - Dynamic sidebar content based on active domain
@@ -55,6 +58,9 @@ Each domain has its own navigation configuration in the sidebar component:
 - Open Tickets (filtered)
 - Scheduled Tickets
 - Export functionality
+- **Mobile Tools section** (NEW):
+  - Mobile Time Tracker
+  - Quick Ticket View
 
 #### Assets Domain
 - All Assets
@@ -65,9 +71,13 @@ Each domain has its own navigation configuration in the sidebar component:
 
 #### Financial Domain
 - Dashboard overview
-- **Invoicing section**: All Invoices, Create Invoice, Export
-- **Payments section**: All Payments, Record Payment
-- **Expenses section**: All Expenses, Add Expense
+- **Billing & Invoicing section**: 
+  - All Invoices
+  - Time Entry Approval (NEW)
+  - Payments
+  - Recurring Billing
+  - Rate Cards (NEW)
+- **Accounting section**: Chart of Accounts, Journal Entries, Tax Settings
 
 #### Projects Domain
 - All Projects
@@ -80,6 +90,19 @@ Each domain has its own navigation configuration in the sidebar component:
 - Reports Dashboard
 - **Financial Reports**: Overview, Invoices, Payments
 - **Operational Reports**: Tickets, Assets, Clients, Projects, Users
+
+#### Manager Domain (NEW - Role-Based)
+- **Team Dashboard**: Real-time team performance and ticket overview
+- **Team Management section**:
+  - Tech Capacity view
+  - Unassigned Tickets (with badge count)
+- **SLA Monitoring section**:
+  - SLA Breaches (with badge count)
+  - At Risk tickets (with badge count)
+- **Reports section**:
+  - Team Performance
+  - SLA Compliance
+  - Client Satisfaction
 
 ## Usage
 
@@ -151,6 +174,36 @@ The navigation uses Tailwind CSS classes and can be customized by modifying the 
 - Validate breadcrumb generation
 - Test filtered views (My Tickets, Active Projects, etc.)
 
+## Recent Updates (October 2025)
+
+### Navigation Enhancements v1.0
+- ✅ Added **Manager Domain** for team management and SLA monitoring
+- ✅ Integrated **NotificationCenter** component into top navigation
+- ✅ Added **Time Entry Approval** to Financial domain
+- ✅ Added **Rate Cards** to Financial domain
+- ✅ Updated Settings with direct **Notification Preferences** link
+- ✅ Added **Mobile Tools** section to Tickets domain
+- ✅ Fixed broken `/notifications` route (redirects to settings)
+- ✅ Real-time badge counts for SLA breaches, unassigned tickets, and at-risk items
+
+### Component Integration
+- **Manager Dashboard**: `/manager/dashboard` - Team performance overview
+- **Tech Capacity View**: `/manager/capacity` - Technician workload analysis
+- **Time Entry Approval**: `/billing/time-entries` - Review and approve billable time
+- **Mobile Time Tracker**: `/mobile/time-tracker` - Mobile-optimized time tracking
+- **Notification Preferences**: `/settings/notifications` - Configure notification settings
+- **Notification Center**: Live dropdown in top navigation
+
+### Routes Added
+```
+GET /manager/dashboard → App\Livewire\Manager\TeamDashboard
+GET /manager/capacity → App\Livewire\Manager\TechCapacityView
+GET /billing/time-entries → App\Livewire\Billing\TimeEntryApproval
+GET /mobile/time-tracker/{ticketId?} → App\Livewire\MobileTimeTracker
+GET /settings/notifications → App\Livewire\Settings\NotificationPreferences
+GET /notifications → Redirect to /settings/notifications
+```
+
 ## Future Enhancements
 - Domain-specific dashboards
 - Saved navigation states
@@ -158,3 +211,5 @@ The navigation uses Tailwind CSS classes and can be customized by modifying the 
 - Navigation analytics
 - Quick action shortcuts
 - Keyboard navigation support
+- Rate Cards management UI
+- Enhanced mobile navigation gestures

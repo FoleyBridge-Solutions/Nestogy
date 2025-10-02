@@ -346,6 +346,20 @@
     <!-- Flux Toast Component -->
     <flux:toast />
     
+    <!-- Global Toast Handler -->
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('flux-toast', (event) => {
+                const data = Array.isArray(event) ? event[0] : event;
+                Flux.toast({
+                    text: data.text,
+                    variant: data.variant || 'info',
+                    duration: data.duration || 3000
+                });
+            });
+        });
+    </script>
+    
     <!-- Alpine.js removed - using Flux/Livewire components -->
     <script>
 

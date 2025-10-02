@@ -174,3 +174,4 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
         });
     });
 });
+Route::get('/notifications', \App\Livewire\Settings\NotificationPreferences::class)->name('notifications');

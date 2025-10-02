@@ -289,10 +289,33 @@
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Department</dt>
                         <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $ticket->department ?? 'Support' }}</dd>
                     </div>
-                    <div>
-                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned To</dt>
-                        <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $ticket->assigned_to->name ?? 'Unassigned' }}</dd>
-                    </div>
+                    @if(config('portal.tickets.show_assigned_technician', true))
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned To</dt>
+                            <dd class="text-sm text-gray-900 dark:text-gray-100">
+                                @if($ticket->assignee)
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-user-circle text-gray-400"></i>
+                                        <span>{{ $ticket->assignee->name }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-gray-500">Unassigned</span>
+                                @endif
+                            </dd>
+                        </div>
+                    @endif
+                    @if(config('portal.tickets.show_estimated_resolution', true) && $ticket->estimated_resolution_at)
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Estimated Resolution</dt>
+                            <dd class="text-sm text-gray-900 dark:text-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-calendar-check text-gray-400"></i>
+                                    <span>{{ $ticket->estimated_resolution_at->format('M j, Y g:i A') }}</span>
+                                </div>
+                                <span class="text-xs text-gray-500">{{ $ticket->estimated_resolution_at->diffForHumans() }}</span>
+                            </dd>
+                        </div>
+                    @endif
                     <div>
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
                         <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $ticket->updated_at->diffForHumans() }}</dd>

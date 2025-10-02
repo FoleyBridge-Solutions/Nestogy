@@ -184,6 +184,21 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/daily-summary.log'));
 
+        // Send satisfaction survey reminders for resolved tickets
+        
+        // Send daily digest emails to users
+        $schedule->command('digest:send-daily')
+            ->daily()
+            ->at('08:00')
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/daily-digest.log'));
+        $schedule->job(new \App\Jobs\SendSatisfactionSurveyReminders)
+            ->daily()
+            ->at('10:00')
+            ->withoutOverlapping()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/satisfaction-surveys.log'));
+
         // RMM Agent Sync - Sync agents from all active RMM integrations
         $schedule->call(function () {
             $integrations = \App\Domains\Integration\Models\RmmIntegration::where('is_active', true)->get();

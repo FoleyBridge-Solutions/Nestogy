@@ -158,6 +158,14 @@ class Invoice extends Model
     }
 
     /**
+     * Get time entries associated with this invoice.
+     */
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(\App\Domains\Ticket\Models\TicketTimeEntry::class);
+    }
+
+    /**
      * Get tax exemptions for this invoice's client.
      */
     public function taxExemptions(): HasMany
