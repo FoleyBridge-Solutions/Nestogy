@@ -31,7 +31,12 @@ jobs:
           echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_LICENSE_KEY}\"}}}" > auth.json
 
       - name: Install dependencies with composer
-        run: composer install --no-ansi --no-interaction --no-progress --prefer-dist
+        run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
+
+      - name: Generate application key
+        run: |
+          cp .env.example .env
+          php artisan key:generate
 
       - name: Run tests with phpunit/phpunit
         run: vendor/bin/phpunit --coverage-clover=coverage.xml
