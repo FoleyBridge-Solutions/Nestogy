@@ -149,9 +149,6 @@ return new class extends Migration
             }
 
             // Replace archived_at with proper soft deletes
-            if ($existingColumns->contains('archived_at')) {
-                $table->dropColumn('archived_at');
-            }
             if (! $existingColumns->contains('deleted_at')) {
                 $table->softDeletes()->after('updated_at');
             }
