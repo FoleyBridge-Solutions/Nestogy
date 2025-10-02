@@ -33,13 +33,9 @@ jobs:
       - name: Install dependencies with composer
         run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
 
-      - name: Setup environment and generate key
-        run: |
-          cp .env.example .env
-          echo "APP_KEY=" >> .env
-          php artisan key:generate --ansi
-
       - name: Run tests with phpunit/phpunit
+        env:
+          APP_KEY: base64:test1234567890123456789012345678901234567890123=
         run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: SonarQube Scan
