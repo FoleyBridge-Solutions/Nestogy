@@ -52,6 +52,8 @@ jobs:
         run: |
           echo "APP_ENV=testing" > .env
           echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
+          echo "STRIPE_SECRET=sk_test_dummy" >> .env
+          echo "STRIPE_PUBLISHABLE=pk_test_dummy" >> .env
 
       - name: Run database migrations
         run: php artisan migrate --force --seed
