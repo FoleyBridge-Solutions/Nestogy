@@ -39,35 +39,60 @@ class TicketCreate extends Component
             'client_id' => 'required|exists:clients,id',
             'contact_ids' => 'nullable|array',
             'contact_ids.*' => 'exists:contacts,id',
-            'subject' => 'required|string|max:255',
+            'subject' => 'required|string|min:5|max:255',
             'priority' => 'required|in:Low,Medium,High,Critical',
             'assigned_to' => 'nullable|exists:users,id',
             'asset_id' => 'nullable|exists:assets,id',
-            'details' => 'required|string',
-            'status' => 'required|string',
+            'details' => 'required|string|min:10',
+            'status' => 'required|string|in:Open,In Progress,On Hold,Resolved,Closed',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'client_id.required' => 'Please select a client for this ticket.',
+            'subject.required' => 'Please enter a subject for this ticket.',
+            'subject.min' => 'Subject must be at least 5 characters.',
+            'details.required' => 'Please provide details about the issue.',
+            'details.min' => 'Details must be at least 10 characters.',
+            'priority.required' => 'Please select a priority level.',
         ];
     }
 
     public function save()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        $ticket = \App\Domains\Ticket\Models\Ticket::create([
-            'client_id' => $this->client_id,
-            'contact_id' => !empty($this->contact_ids) ? $this->contact_ids[0] : null,
-            'subject' => $this->subject,
-            'priority' => $this->priority,
-            'assigned_to' => $this->assigned_to,
-            'asset_id' => $this->asset_id,
-            'details' => $this->details,
-            'status' => $this->status,
-            'company_id' => Auth::user()->company_id,
-            'created_by' => Auth::id(),
-        ]);
+            $ticket = \App\Domains\Ticket\Models\Ticket::create([
+                'client_id' => $this->client_id,
+                'contact_id' => !empty($this->contact_ids) ? $this->contact_ids[0] : null,
+                'subject' => $this->subject,
+                'priority' => $this->priority,
+                'assigned_to' => $this->assigned_to,
+                'asset_id' => $this->asset_id,
+                'details' => $this->details,
+                'status' => $this->status,
+                'company_id' => Auth::user()->company_id,
+                'created_by' => Auth::id(),
+            ]);
 
-        session()->flash('success', 'Ticket created successfully.');
-        
-        return redirect()->route('tickets.show', $ticket->id);
+            session()->flash('success', 'Ticket created successfully.');
+            
+            return redirect()->route('tickets.show', $ticket->id);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Ticket creation failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'client_id' => $this->client_id,
+            ]);
+            
+            session()->flash('error', 'Failed to create ticket. Please try again or contact support.');
+            return null;
+        }
     }
 
     public function render()

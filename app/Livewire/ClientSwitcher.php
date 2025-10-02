@@ -28,6 +28,30 @@ class ClientSwitcher extends Component
     protected $user;
 
     /**
+     * Get the current user, initializing if needed (for test compatibility)
+     */
+    protected function getUser()
+    {
+        if (!isset($this->user) || !$this->user) {
+            $this->user = Auth::user();
+        }
+        
+        return $this->user;
+    }
+
+    /**
+     * Get the favorite service, initializing if needed (for test compatibility)
+     */
+    protected function getFavoriteService()
+    {
+        if (!isset($this->favoriteService)) {
+            $this->favoriteService = app(ClientFavoriteService::class);
+        }
+        
+        return $this->favoriteService;
+    }
+
+    /**
      * Mount - runs once on initial component load
      */
     public function mount()
@@ -69,7 +93,7 @@ class ClientSwitcher extends Component
         }
 
         return Client::where('id', $this->selectedClientId)
-            ->where('company_id', $this->user?->company_id)
+            ->where('company_id', $this->getUser()?->company_id)
             ->withCount(['tickets', 'invoices'])
             ->first();
     }
@@ -80,11 +104,11 @@ class ClientSwitcher extends Component
     #[Computed(cache: true, key: 'client-switcher-favorites')]
     public function favoriteClients()
     {
-        if (! $this->user) {
+        if (! $this->getUser()) {
             return collect();
         }
 
-        return $this->favoriteService->getFavoriteClients($this->user, 5);
+        return $this->getFavoriteService()->getFavoriteClients($this->getUser(), 5);
     }
 
     /**
@@ -93,16 +117,16 @@ class ClientSwitcher extends Component
     #[Computed]
     public function recentClients()
     {
-        if (! $this->user) {
+        if (! $this->getUser()) {
             return collect();
         }
 
         // Get recent clients from the service (uses accessed_at field)
-        $recentClients = $this->favoriteService->getRecentClients($this->user, 5);
+        $recentClients = $this->getFavoriteService()->getRecentClients($this->getUser(), 5);
 
         // If no recent clients, show the first 5 active clients as a fallback
         if ($recentClients->isEmpty() && $this->favoriteClients->isEmpty()) {
-            return Client::where('company_id', $this->user->company_id)
+            return Client::where('company_id', $this->getUser()->company_id)
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->limit(5)
@@ -123,7 +147,7 @@ class ClientSwitcher extends Component
     #[Computed]
     public function searchResults()
     {
-        if (! $this->user || strlen($this->searchQuery) < 2) {
+        if (! $this->getUser() || strlen($this->searchQuery) < 2) {
             return collect();
         }
 
@@ -133,7 +157,7 @@ class ClientSwitcher extends Component
             ->values()
             ->toArray();
 
-        return Client::where('company_id', $this->user->company_id)
+        return Client::where('company_id', $this->getUser()->company_id)
             ->where('status', 'active')
             ->when($excludeIds, fn ($q) => $q->whereNotIn('id', $excludeIds))
             ->where(function ($q) {
@@ -184,7 +208,7 @@ class ClientSwitcher extends Component
     {
         // Validate client exists and user has access
         $client = Client::where('id', $clientId)
-            ->where('company_id', $this->user->company_id)
+            ->where('company_id', $this->getUser()->company_id)
             ->first();
 
         if (! $client) {
@@ -198,7 +222,7 @@ class ClientSwitcher extends Component
         $this->selectedClientId = $client->id;
 
         // Mark as accessed for recent tracking
-        $this->favoriteService->markAsAccessed($client);
+        $this->getFavoriteService()->markAsAccessed($client);
         NavigationService::addToRecentClients($client->id);
 
         // Clear search
@@ -237,11 +261,11 @@ class ClientSwitcher extends Component
         }
 
         $client = Client::find($clientId);
-        if (! $client || $client->company_id !== $this->user->company_id) {
+        if (! $client || $client->company_id !== $this->getUser()->company_id) {
             return;
         }
 
-        $isFavorite = $this->favoriteService->toggle($this->user, $client);
+        $isFavorite = $this->getFavoriteService()->toggle($this->getUser(), $client);
 
         // Bust the favorites cache
         unset($this->favoriteClients);
@@ -396,13 +420,13 @@ class ClientSwitcher extends Component
      */
     public function isClientFavorite($clientId)
     {
-        if (! $this->user || ! $clientId) {
+        if (! $this->getUser() || ! $clientId) {
             return false;
         }
 
         // Cache the favorite status check to avoid duplicate queries
         static $favoriteCache = [];
-        $cacheKey = $this->user->id.'_'.$clientId;
+        $cacheKey = $this->getUser()->id.'_'.$clientId;
 
         if (isset($favoriteCache[$cacheKey])) {
             return $favoriteCache[$cacheKey];
@@ -415,7 +439,7 @@ class ClientSwitcher extends Component
             return false;
         }
 
-        $isFavorite = $this->favoriteService->isFavorite($this->user, $client);
+        $isFavorite = $this->getFavoriteService()->isFavorite($this->getUser(), $client);
         $favoriteCache[$cacheKey] = $isFavorite;
 
         return $isFavorite;

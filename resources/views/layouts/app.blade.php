@@ -132,6 +132,11 @@
                     }
                 });
             </script>
+            
+            <!-- Notification Center -->
+            @auth
+                @livewire('notifications.notification-center')
+            @endauth
             <flux:navbar.item icon="envelope" 
                             href="{{ route('email.inbox.index') }}" 
                             class="max-lg:hidden"

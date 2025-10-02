@@ -1017,8 +1017,14 @@ class ClientPortalController extends Controller
             abort(403, 'You do not have permission to view tickets.');
         }
 
-        // Find the ticket - assuming we have a Ticket model
-        $ticket = $contact->client->tickets()->findOrFail($ticket);
+        $ticket = \App\Domains\Ticket\Models\Ticket::withoutGlobalScope('company')
+            ->where('client_id', $contact->client_id)
+            ->where('company_id', $contact->company_id)
+            ->with(['comments' => function ($query) {
+                $query->where('visibility', 'public')
+                    ->orderBy('created_at', 'asc');
+            }, 'comments.author', 'assignee'])
+            ->findOrFail($ticket);
 
         return view('client-portal.tickets.show', compact('ticket', 'contact'));
     }
@@ -1031,33 +1037,69 @@ class ClientPortalController extends Controller
             abort(403, 'You do not have permission to comment on tickets.');
         }
 
-        $ticket = $contact->client->tickets()->findOrFail($ticket);
+        $ticket = \App\Domains\Ticket\Models\Ticket::withoutGlobalScope('company')
+            ->where('client_id', $contact->client_id)
+            ->where('company_id', $contact->company_id)
+            ->with('assignee')
+            ->findOrFail($ticket);
+
+        // Check if ticket is closed or resolved
+        if (in_array($ticket->status, ['Closed', 'Resolved'])) {
+            return redirect()->back()->withErrors(['comment' => 'Cannot reply to a closed or resolved ticket.']);
+        }
 
         $request->validate([
-            'comment' => 'required|string',
-            'attachments.*' => 'nullable|file|max:10240',
+            'comment' => 'required|string|min:3|max:5000',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif|max:10240',
         ]);
 
         try {
             $comment = $ticket->comments()->create([
-                'comment' => $request->comment,
-                'user_type' => 'client',
-                'user_id' => $contact->id,
-                'is_internal' => false,
+                'content' => $request->comment,
+                'visibility' => 'public',
+                'source' => 'manual',
+                'author_type' => 'customer',
+                'author_id' => $contact->id,
+                'company_id' => $ticket->company_id,
             ]);
 
             // Handle file attachments if any
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
                     $path = $file->store('ticket-attachments', 'public');
+                    $filename = \Illuminate\Support\Str::random(40).'.'.$file->extension();
 
                     $comment->attachments()->create([
-                        'filename' => $file->getClientOriginalName(),
+                        'company_id' => $ticket->company_id,
+                        'filename' => $filename,
+                        'original_filename' => $file->getClientOriginalName(),
                         'path' => $path,
                         'size' => $file->getSize(),
                         'mime_type' => $file->getMimeType(),
-                        'uploaded_by' => 'client',
-                        'uploaded_by_id' => $contact->id,
+                        'uploaded_by' => $contact->id,
+                    ]);
+                }
+            }
+
+            // Change status if awaiting customer
+            if ($ticket->status === 'Awaiting Customer') {
+                $ticket->update(['status' => 'Open']);
+            }
+
+            // Send notification to assigned technician
+            if ($ticket->assigned_to && $ticket->assignee) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($ticket->assignee->email)
+                        ->send(new \App\Mail\Tickets\TicketCommentAdded($ticket, $comment));
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to send ticket comment email', [
+                        'error' => $e->getMessage(),
+                        'ticket_id' => $ticket->id,
+                        'ticket_class' => get_class($ticket),
+                        'comment_id' => $comment->id,
+                        'comment_class' => get_class($comment),
+                        'trace' => $e->getTraceAsString(),
                     ]);
                 }
             }
@@ -1065,7 +1107,13 @@ class ClientPortalController extends Controller
             return redirect()->back()->with('success', 'Comment added successfully.');
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Unable to add comment.');
+            \Illuminate\Support\Facades\Log::error('Failed to add ticket comment', [
+                'ticket_id' => $ticket->id,
+                'contact_id' => $contact->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Unable to add comment. Please try again.');
         }
     }
 

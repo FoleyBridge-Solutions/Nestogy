@@ -8,7 +8,7 @@ use App\Models\Contact;
 use App\Models\Invoice;
 use App\Models\Location;
 use App\Models\Project;
-use App\Models\TicketReply;
+
 use App\Models\User;
 use App\Models\Vendor;
 use App\Traits\BelongsToCompany;
@@ -29,6 +29,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Ticket extends Model
 {
     use BelongsToCompany, HasArchive, HasFactory;
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory()
+    {
+        return \Database\Factories\TicketFactory::new();
+    }
 
     protected $fillable = [
         'company_id',
@@ -251,11 +259,7 @@ class Ticket extends Model
         return $this->belongsTo(Invoice::class);
     }
 
-    public function replies(): HasMany
-    {
-        // Legacy relationship - deprecated, use comments() instead
-        return $this->hasMany(TicketReply::class);
-    }
+
 
     public function comments(): HasMany
     {
@@ -732,14 +736,14 @@ class Ticket extends Model
     {
         $activities = collect();
 
-        // Add replies
-        $this->replies()->with('user')->orderBy('created_at', 'desc')->limit($limit)->get()->each(function ($reply) use ($activities) {
+        // Add comments
+        $this->comments()->with('author')->orderBy('created_at', 'desc')->limit($limit)->get()->each(function ($comment) use ($activities) {
             $activities->push([
-                'type' => 'reply',
-                'description' => 'Reply added',
-                'user' => $reply->user,
-                'created_at' => $reply->created_at,
-                'data' => $reply,
+                'type' => 'comment',
+                'description' => 'Comment added',
+                'user' => $comment->author,
+                'created_at' => $comment->created_at,
+                'data' => $comment,
             ]);
         });
 

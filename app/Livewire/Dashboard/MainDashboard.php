@@ -88,6 +88,8 @@ class MainDashboard extends Component
             'operations' => [
                 ['type' => 'sla-monitor', 'size' => 'full'],
                 ['type' => 'ticket-queue', 'size' => 'full'],
+                ['type' => 'team-activity', 'size' => 'half'],
+                ['type' => 'tech-workload', 'size' => 'half'],
                 ['type' => 'resource-allocation', 'size' => 'half'],
                 ['type' => 'ticket-chart', 'size' => 'half'],
                 ['type' => 'response-times', 'size' => 'half'],

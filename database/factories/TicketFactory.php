@@ -2,14 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Domains\Ticket\Models\Ticket;
 use App\Models\Client;
 use App\Models\Company;
-use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Ticket>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Domains\Ticket\Models\Ticket>
  */
 class TicketFactory extends Factory
 {

@@ -8,25 +8,14 @@ use App\Livewire\ClientSwitcher;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class ClientSwitcherSimpleTest extends TestCase
 {
-    use RefreshDatabase;
+    use \Tests\RefreshesDatabase;
     
     protected $seed = false;
-    
-    protected function refreshTestDatabase()
-    {
-        // This runs AFTER database refresh but BEFORE setUp
-        if (!$this->app) {
-            $this->refreshApplication();
-        }
-        
-        $this->app[\Illuminate\Contracts\Console\Kernel::class]->setArtisan(null);
-    }
 
     protected Company $company;
     protected User $user;
@@ -36,22 +25,6 @@ class ClientSwitcherSimpleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
-        // CRITICAL: Re-register domain routes for EVERY test
-        // RefreshDatabase causes app to refresh which clears routes
-        try {
-            $routeManager = app(\App\Domains\Core\Services\DomainRouteManager::class);
-            $routeManager->registerDomainRoutes();
-            
-            // Debug: check if route was registered
-            if (!\Illuminate\Support\Facades\Route::has('clients.index')) {
-                // Manually require the route file as fallback
-                require_once app_path('Domains/Client/routes.php');
-            }
-        } catch (\Exception $e) {
-            // If registration fails, manually load the file
-            require_once app_path('Domains/Client/routes.php');
-        }
 
         $this->company = Company::factory()->create();
         $this->user = User::factory()->create(['company_id' => $this->company->id]);

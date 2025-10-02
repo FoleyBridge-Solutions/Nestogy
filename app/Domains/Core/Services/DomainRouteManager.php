@@ -149,8 +149,11 @@ class DomainRouteManager
             }
         } else {
             // Routes define their own middleware/prefix/name, just include the file
+            // Use Route::group() instead of require_once to allow re-registration in tests
             try {
-                require_once $routeFile;
+                Route::group([], function () use ($routeFile) {
+                    require $routeFile;
+                });
                 $this->registeredDomains[$domainName] = $config;
             } catch (\Exception $e) {
                 if (app()->environment('local')) {

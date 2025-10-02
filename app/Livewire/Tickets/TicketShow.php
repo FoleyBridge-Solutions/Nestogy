@@ -84,13 +84,24 @@ class TicketShow extends Component
     ];
 
     protected $rules = [
-        'comment' => 'required|min:3',
-        'attachments.*' => 'file|max:10240', // 10MB max
-        'status' => 'required|in:open,in_progress,pending,resolved,closed',
-        'priority' => 'required|in:low,medium,high,urgent',
+        'comment' => 'required|min:5|max:5000',
+        'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png,gif',
+        'status' => 'required|in:Open,In Progress,On Hold,Resolved,Closed',
+        'priority' => 'required|in:Low,Medium,High,Critical',
         'assignedTo' => 'nullable|exists:users,id',
-        'timeSpent' => 'nullable|numeric|min:0',
-        'timeDescription' => 'nullable|string|max:255',
+        'timeSpent' => 'nullable|numeric|min:0.1|max:999',
+        'timeDescription' => 'required_with:timeSpent|string|max:500',
+    ];
+
+    protected $messages = [
+        'comment.required' => 'Please enter a comment.',
+        'comment.min' => 'Comment must be at least 5 characters.',
+        'comment.max' => 'Comment must not exceed 5000 characters.',
+        'attachments.*.max' => 'Each file must not exceed 10MB.',
+        'attachments.*.mimes' => 'Only PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, JPEG, PNG, GIF files are allowed.',
+        'timeSpent.min' => 'Time spent must be at least 0.1 hours.',
+        'timeSpent.max' => 'Time spent must not exceed 999 hours.',
+        'timeDescription.required_with' => 'Please describe the work performed.',
     ];
 
     public function mount(Ticket $ticket)
@@ -126,95 +137,109 @@ class TicketShow extends Component
 
     public function addComment()
     {
-        $this->validate([
-            'comment' => 'required|min:3',
-            'attachments.*' => 'file|max:10240',
-        ]);
+        try {
+            $this->validate([
+                'comment' => 'required|min:5|max:5000',
+                'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,txt,jpg,jpeg,png,gif',
+            ]);
 
-        $commentService = app(CommentService::class);
+            $commentService = app(CommentService::class);
 
-        // Reopen ticket if requested and it's resolved/closed
-        if ($this->reopenOnComment && in_array($this->ticket->status, ['resolved', 'closed'])) {
-            $oldStatus = $this->ticket->status;
-            $this->ticket->status = 'open';
-            $this->ticket->reopened_at = now();
-            $this->ticket->reopened_by = Auth::id();
-            $this->ticket->save();
+            if ($this->reopenOnComment && in_array($this->ticket->status, ['resolved', 'closed'])) {
+                $oldStatus = $this->ticket->status;
+                $this->ticket->status = 'open';
+                $this->ticket->reopened_at = now();
+                $this->ticket->reopened_by = Auth::id();
+                $this->ticket->save();
 
-            // Add system comment about reopening
-            $commentService->addSystemComment(
+                $commentService->addSystemComment(
+                    $this->ticket,
+                    "Ticket reopened from {$oldStatus} status"
+                );
+            }
+
+            $newComment = $commentService->addComment(
                 $this->ticket,
-                "Ticket reopened from {$oldStatus} status"
+                $this->comment,
+                $this->internalNote ? \App\Domains\Ticket\Models\TicketComment::VISIBILITY_INTERNAL : \App\Domains\Ticket\Models\TicketComment::VISIBILITY_PUBLIC,
+                Auth::user()
             );
-        }
 
-        $newComment = $commentService->addComment(
-            $this->ticket,
-            $this->comment,
-            $this->internalNote ? \App\Domains\Ticket\Models\TicketComment::VISIBILITY_INTERNAL : \App\Domains\Ticket\Models\TicketComment::VISIBILITY_PUBLIC,
-            Auth::user()
-        );
+            if ($this->attachments) {
+                foreach ($this->attachments as $attachment) {
+                    $path = $attachment->store('ticket-attachments', 'public');
+                    $newComment->attachments()->create([
+                        'filename' => $attachment->getClientOriginalName(),
+                        'path' => $path,
+                        'size' => $attachment->getSize(),
+                        'mime_type' => $attachment->getMimeType(),
+                    ]);
+                }
+            }
 
-        // Handle attachments
-        if ($this->attachments) {
-            foreach ($this->attachments as $attachment) {
-                $path = $attachment->store('ticket-attachments', 'public');
-                $newComment->attachments()->create([
-                    'filename' => $attachment->getClientOriginalName(),
-                    'path' => $path,
-                    'size' => $attachment->getSize(),
-                    'mime_type' => $attachment->getMimeType(),
+            if ($this->timeTracking && $this->timeSpent) {
+                $timeService = app(TimeTrackingService::class);
+                $timeService->logTime($this->ticket, [
+                    'user_id' => Auth::id(),
+                    'minutes' => $this->timeSpent * 60,
+                    'description' => $this->timeDescription,
+                    'billable' => true,
+                    'date' => now(),
                 ]);
             }
-        }
 
-        // Log time if provided
-        if ($this->timeTracking && $this->timeSpent) {
-            $timeService = app(TimeTrackingService::class);
-            $timeService->logTime($this->ticket, [
+            cache()->forget('ticket_comment_draft_'.$this->ticket->id.'_'.Auth::id());
+            $this->reset(['comment', 'internalNote', 'attachments', 'timeSpent', 'timeDescription', 'reopenOnComment', 'draftSaved']);
+            $this->refreshTicketData();
+            $this->status = $this->ticket->status;
+
+            session()->flash('message', 'Comment added successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Failed to add comment to ticket', [
+                'error' => $e->getMessage(),
+                'ticket_id' => $this->ticket->id,
                 'user_id' => Auth::id(),
-                'minutes' => $this->timeSpent * 60,
-                'description' => $this->timeDescription,
-                'billable' => true,
-                'date' => now(),
             ]);
+            
+            session()->flash('error', 'Failed to add comment. Please try again.');
         }
-
-        // Clear draft
-        cache()->forget('ticket_comment_draft_'.$this->ticket->id.'_'.Auth::id());
-
-        // Reset form
-        $this->reset(['comment', 'internalNote', 'attachments', 'timeSpent', 'timeDescription', 'reopenOnComment', 'draftSaved']);
-
-        // Refresh ticket data
-        $this->refreshTicketData();
-        $this->status = $this->ticket->status; // Update status in component
-
-        session()->flash('message', 'Comment added successfully.');
     }
 
     public function updateStatus()
     {
-        $this->validate([
-            'newStatus' => 'required|in:open,in_progress,pending,resolved,closed',
-            'statusChangeReason' => 'required|min:10',
-        ]);
+        try {
+            $this->validate([
+                'newStatus' => 'required|in:Open,In Progress,On Hold,Resolved,Closed',
+                'statusChangeReason' => 'required|min:10|max:500',
+            ]);
 
-        $oldStatus = $this->ticket->status;
-        $this->ticket->status = $this->newStatus;
-        $this->ticket->save();
+            $oldStatus = $this->ticket->status;
+            $this->ticket->status = $this->newStatus;
+            $this->ticket->save();
 
-        // Add system comment about status change
-        $commentService = app(CommentService::class);
-        $commentService->addSystemComment(
-            $this->ticket,
-            "Status changed from {$oldStatus} to {$this->newStatus}. Reason: {$this->statusChangeReason}"
-        );
+            $commentService = app(CommentService::class);
+            $commentService->addSystemComment(
+                $this->ticket,
+                "Status changed from {$oldStatus} to {$this->newStatus}. Reason: {$this->statusChangeReason}"
+            );
 
-        $this->status = $this->newStatus;
-        $this->reset(['showStatusChangeModal', 'newStatus', 'statusChangeReason']);
+            $this->status = $this->newStatus;
+            $this->reset(['showStatusChangeModal', 'newStatus', 'statusChangeReason']);
 
-        session()->flash('message', 'Ticket status updated successfully.');
+            session()->flash('message', 'Ticket status updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Failed to update ticket status', [
+                'error' => $e->getMessage(),
+                'ticket_id' => $this->ticket->id,
+                'user_id' => Auth::id(),
+            ]);
+            
+            session()->flash('error', 'Failed to update status. Please try again.');
+        }
     }
 
     public function updatePriority()

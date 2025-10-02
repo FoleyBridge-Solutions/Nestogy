@@ -112,6 +112,19 @@ class TicketComment extends Model
         return $this->belongsTo(User::class, 'author_id');
     }
 
+    /**
+     * Get the author name regardless of author type
+     */
+    public function getAuthorNameAttribute(): string
+    {
+        if ($this->author_type === self::AUTHOR_CUSTOMER) {
+            $contact = \App\Models\Contact::find($this->author_id);
+            return $contact ? $contact->name : 'Customer';
+        }
+
+        return $this->author ? $this->author->name : 'System';
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');

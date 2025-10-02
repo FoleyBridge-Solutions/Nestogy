@@ -181,8 +181,8 @@
                 </flux:heading>
                 
                 <div class="divide-y divide-gray-200 dark:divide-gray-700 -mx-6">
-                    @forelse($ticket->replies ?? [] as $reply)
-                        <div class="px-6 py-4 {{ $reply->is_staff ? 'bg-blue-50 dark:bg-gray-800' : '' }}">
+                    @forelse($ticket->comments ?? [] as $comment)
+                        <div class="px-6 py-4 {{ $comment->author_type === 'staff' ? 'bg-blue-50 dark:bg-gray-800' : '' }}">
                             <div class="flex items-start gap-3">
                                 <div class="flex-shrink-0">
                                     <div class="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white">
@@ -193,18 +193,18 @@
                                     <div class="flex items-center justify-between gap-2 mb-1">
                                         <div class="flex items-center gap-2">
                                             <span class="font-medium text-gray-900 dark:text-gray-100">
-                                                {{ $reply->user->name ?? 'Support Team' }}
+                                                {{ $comment->author_name }}
                                             </span>
-                                            @if($reply->is_staff)
+                                            @if($comment->author_type === 'user' || $comment->author_type === 'staff')
                                                 <flux:badge size="sm">Staff</flux:badge>
                                             @endif
                                         </div>
                                         <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                            {{ $reply->created_at->diffForHumans() }}
+                                            {{ $comment->created_at->diffForHumans() }}
                                         </span>
                                     </div>
                                     <div class="text-sm text-gray-700 dark:text-gray-300">
-                                        {!! nl2br(e($reply->message)) !!}
+                                        {!! nl2br(e($comment->content)) !!}
                                     </div>
                                 </div>
                             </div>
@@ -229,14 +229,14 @@
                         @csrf
                         
                         <flux:field>
-                            <flux:label for="message" required>Your Message</flux:label>
+                            <flux:label for="comment" required>Your Message</flux:label>
                             <flux:textarea 
-                                id="message" 
-                                name="message" 
+                                id="comment" 
+                                name="comment" 
                                 rows="5"
                                 placeholder="Type your reply here..."
-                                required>{{ old('message') }}</flux:textarea>
-                            <flux:error for="message" />
+                                required>{{ old('comment') }}</flux:textarea>
+                            <flux:error for="comment" />
                         </flux:field>
                         
                         <flux:field>

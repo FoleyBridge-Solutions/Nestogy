@@ -553,6 +553,4 @@ Route::middleware(['auth', 'verified'])->get('/settings/physical-mail', function
 Route::get('/notifications', function () { 
     return redirect()->route('settings.notifications'); 
 })->name('notifications.index')->middleware(['auth', 'verified']);
-Route::get('/manager/dashboard', \App\Livewire\Manager\TeamDashboard::class)->name('manager.dashboard')->middleware(['auth', 'verified']);
-Route::get('/manager/capacity', \App\Livewire\Manager\TechCapacityView::class)->name('manager.capacity')->middleware(['auth', 'verified']);
 Route::get('/mobile/time-tracker/{ticketId?}', \App\Livewire\MobileTimeTracker::class)->name('mobile.time-tracker')->middleware(['auth', 'verified']);

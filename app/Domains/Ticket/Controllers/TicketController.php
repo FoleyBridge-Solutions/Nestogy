@@ -769,12 +769,13 @@ class TicketController extends Controller
                 $statusChangeNote .= "\n\nNotes: ".$request->notes;
             }
 
-            \App\Models\TicketReply::create([
+            \App\Domains\Ticket\Models\TicketComment::create([
                 'ticket_id' => $ticket->id,
                 'company_id' => auth()->user()->company_id,
-                'reply' => $statusChangeNote,
-                'type' => 'internal',
-                'replied_by' => auth()->id(),
+                'content' => $statusChangeNote,
+                'visibility' => 'internal',
+                'author_type' => 'user',
+                'author_id' => auth()->id(),
             ]);
 
             Log::info('Ticket status updated', [

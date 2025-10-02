@@ -148,7 +148,6 @@
                         
                         @switch($widget['type'])
                             @case('ticket-queue')
-                                {{-- Ticket queue loads immediately for operations view --}}
                                 <livewire:dashboard.widgets.ticket-queue 
                                     :lazy="false"
                                     wire:key="ticket-queue-ops" />
@@ -157,6 +156,16 @@
                                 <livewire:dashboard.widgets.sla-monitor 
                                     lazy
                                     wire:key="sla-monitor-ops" />
+                                @break
+                            @case('team-activity')
+                                <livewire:dashboard.widgets.team-activity 
+                                    lazy
+                                    wire:key="team-activity-ops" />
+                                @break
+                            @case('tech-workload')
+                                <livewire:dashboard.widgets.tech-workload 
+                                    lazy
+                                    wire:key="tech-workload-ops" />
                                 @break
                             @case('resource-allocation')
                                 <livewire:dashboard.widgets.resource-allocation 

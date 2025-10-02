@@ -102,6 +102,8 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
         return redirect()->route('settings.category.show', ['domain' => 'communication', 'category' => 'notifications']);
     })->name('notifications-alerts');
 
+    Route::get('/notification-preferences', \App\Livewire\Settings\NotificationPreferences::class)->name('notification-preferences');
+
     Route::get('/payment-gateways', function () {
         return redirect()->route('settings.category.show', ['domain' => 'financial', 'category' => 'payments']);
     })->name('payment-gateways');
@@ -174,4 +176,3 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
         });
     });
 });
-Route::get('/notifications', \App\Livewire\Settings\NotificationPreferences::class)->name('notifications');

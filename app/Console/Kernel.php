@@ -23,10 +23,10 @@ class Kernel extends ConsoleKernel
             ->appendOutputTo(storage_path('logs/email-processing.log'));
 
         // SLA Breach Detection - Check for SLA breaches every 15 minutes
-        $schedule->command('tickets:check-sla-breaches')
+        $schedule->job(new \App\Jobs\CheckSLABreaches)
             ->everyFifteenMinutes()
             ->withoutOverlapping()
-            ->runInBackground()
+            ->onOneServer()
             ->appendOutputTo(storage_path('logs/sla-breaches.log'));
 
         // Ticket Escalation - Check for tickets that need escalation every 30 minutes
@@ -192,6 +192,13 @@ class Kernel extends ConsoleKernel
             ->at('08:00')
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/daily-digest.log'));
+        
+        // Send manager daily digest
+        $schedule->command('digest:send-manager')
+            ->daily()
+            ->at('08:00')
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/manager-digest.log'));
         $schedule->job(new \App\Jobs\SendSatisfactionSurveyReminders)
             ->daily()
             ->at('10:00')

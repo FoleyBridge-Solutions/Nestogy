@@ -13,18 +13,30 @@ trait CreatesApplication
 
         $app->make(Kernel::class)->bootstrap();
 
-        // Register domain routes for testing
+        // CRITICAL: Ensure domain routes are registered for tests
+        // The bootstrap process should register them, but we ensure it here
+        // to handle cases where RefreshDatabase clears the router
+        $this->ensureDomainRoutesRegistered($app);
+
+        return $app;
+    }
+
+    protected function ensureDomainRoutesRegistered(Application $app): void
+    {
+        // Check if routes are already registered
+        if (\Illuminate\Support\Facades\Route::has('clients.index')) {
+            return; // Routes already registered
+        }
+
         try {
             $routeManager = $app->make(\App\Domains\Core\Services\DomainRouteManager::class);
             $routeManager->registerDomainRoutes();
         } catch (\Exception $e) {
-            // If DomainRouteManager fails, manually load critical route files
-            $domainRouteFiles = glob(app_path('Domains/*/routes.php'));
-            foreach ($domainRouteFiles as $routeFile) {
-                require_once $routeFile;
+            // Log the error but don't fail - some tests might not need routes
+            if (method_exists($this, 'markTestSkipped')) {
+                // We're in a test context, log the error
+                error_log("Failed to register domain routes: " . $e->getMessage());
             }
         }
-
-        return $app;
     }
 }
