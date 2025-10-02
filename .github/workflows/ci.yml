@@ -24,17 +24,12 @@ jobs:
           extensions: pgsql, pdo_pgsql
 
       - name: Configure Flux Pro credentials
+        env:
+          FLUX_USERNAME: ${{ secrets.FLUX_USERNAME }}
+          FLUX_LICENSE_KEY: ${{ secrets.FLUX_LICENSE_KEY }}
         run: |
-          cat > auth.json << EOF
-          {
-            "http-basic": {
-              "composer.fluxui.dev": {
-                "username": "${{ secrets.FLUX_USERNAME }}",
-                "password": "${{ secrets.FLUX_LICENSE_KEY }}"
-              }
-            }
-          }
-          EOF
+          echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_LICENSE_KEY}\"}}}" > auth.json
+          cat auth.json
 
       - name: Install dependencies with composer
         run: composer install --no-ansi --no-interaction --no-progress --prefer-dist
