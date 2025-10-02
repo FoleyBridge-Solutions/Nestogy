@@ -16,7 +16,7 @@ jobs:
         env:
           POSTGRES_DB: nestogy_test
           POSTGRES_USER: nestogy
-          POSTGRES_PASSWORD: nestogy_test_pass
+          POSTGRES_PASSWORD: nestogy_dev_pass
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -51,12 +51,6 @@ jobs:
       - name: Run tests with phpunit/phpunit
         env:
           APP_KEY: base64:test1234567890123456789012345678901234567890123=
-          DB_CONNECTION: pgsql
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_DATABASE: nestogy_test
-          DB_USERNAME: nestogy
-          DB_PASSWORD: nestogy_test_pass
         run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: SonarQube Scan
