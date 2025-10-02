@@ -48,9 +48,15 @@ jobs:
       - name: Install dependencies with composer
         run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
 
+      - name: Setup environment file
+        run: |
+          echo "APP_ENV=testing" > .env
+          echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
+
+      - name: Run database migrations
+        run: php artisan migrate --force --seed
+
       - name: Run tests with phpunit/phpunit
-        env:
-          APP_KEY: base64:test1234567890123456789012345678901234567890123=
         run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: SonarQube Scan
