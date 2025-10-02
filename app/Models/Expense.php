@@ -34,6 +34,11 @@ class Expense extends Model
         'created_at' => 'datetime', 'updated_at' => 'datetime', 'archived_at' => 'datetime',
     ];
 
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
@@ -46,7 +51,7 @@ class Expense extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(ExpenseCategory::class);
     }
 
     public function account(): BelongsTo

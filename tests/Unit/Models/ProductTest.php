@@ -46,7 +46,7 @@ class ProductTest extends ModelTestCase
     {
         $fillable = (new Product)->getFillable();
 
-        $expectedFillable = ['company_id', 'name', 'price', 'description'];
+        $expectedFillable = ['company_id', 'name', 'base_price', 'description'];
         
         foreach ($expectedFillable as $attribute) {
             $this->assertContains($attribute, $fillable);

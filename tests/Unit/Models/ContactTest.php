@@ -103,9 +103,9 @@ class ContactTest extends TestCase
         $contact = Contact::factory()->create([
             'company_id' => $company->id,
             'client_id' => $client->id,
-            'is_primary' => true,
+            'primary' => true,
         ]);
 
-        $this->assertTrue($contact->is_primary);
+        $this->assertTrue($contact->primary);
     }
 }

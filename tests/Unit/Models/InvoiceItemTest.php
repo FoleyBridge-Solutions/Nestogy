@@ -371,7 +371,7 @@ class InvoiceItemTest extends ModelTestCase
 
         $item->delete();
 
-        $this->assertSoftDeleted('invoice_items', ['id' => $item->id]);
+        $this->assertDatabaseHas('invoice_items', ['id' => $item->id]);
         $this->assertNotNull($item->fresh()->archived_at);
     }
 

@@ -39,6 +39,7 @@ class CompanyFactory extends Factory
             'is_active' => true,
             'suspended_at' => null,
             'suspension_reason' => null,
+            'minimum_billing_increment' => 0.25,
         ];
     }
 

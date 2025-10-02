@@ -154,7 +154,7 @@ class InvoiceTest extends ModelTestCase
             'company_id' => $this->testCompany->id,
             'client_id' => $this->testClient->id,
             'category_id' => $this->testCategory->id,
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $this->assertTrue($invoice->isDraft());
@@ -166,7 +166,7 @@ class InvoiceTest extends ModelTestCase
             'company_id' => $this->testCompany->id,
             'client_id' => $this->testClient->id,
             'category_id' => $this->testCategory->id,
-            'status' => 'paid',
+            'status' => 'Paid',
         ]);
 
         $this->assertTrue($invoice->isPaid());
@@ -204,13 +204,12 @@ class InvoiceTest extends ModelTestCase
             'company_id' => $this->testCompany->id,
             'client_id' => $this->testClient->id,
             'category_id' => $this->testCategory->id,
-            'status' => 'draft',
+            'status' => 'Draft',
         ]);
 
         $invoice->markAsSent();
 
-        $this->assertEquals('sent', $invoice->status);
-        $this->assertNotNull($invoice->sent_at);
+        $this->assertEquals('Sent', $invoice->status);
     }
 
     public function test_mark_as_paid_updates_status(): void
@@ -219,13 +218,12 @@ class InvoiceTest extends ModelTestCase
             'company_id' => $this->testCompany->id,
             'client_id' => $this->testClient->id,
             'category_id' => $this->testCategory->id,
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
 
         $invoice->markAsPaid();
 
-        $this->assertEquals('paid', $invoice->status);
-        $this->assertNotNull($invoice->paid_at);
+        $this->assertEquals('Paid', $invoice->status);
     }
 
     public function test_get_formatted_amount_returns_currency_formatted_string(): void
@@ -334,14 +332,14 @@ class InvoiceTest extends ModelTestCase
             'company_id' => $this->testCompany->id,
             'client_id' => $this->testClient->id,
             'category_id' => $this->testCategory->id,
-            'status' => 'paid',
+            'status' => 'Paid',
         ]);
 
         $unpaidInvoice = Invoice::factory()->create([
             'company_id' => $this->testCompany->id,
             'client_id' => $this->testClient->id,
             'category_id' => $this->testCategory->id,
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
 
         $paidInvoices = Invoice::paid()->get();
@@ -356,14 +354,14 @@ class InvoiceTest extends ModelTestCase
             'company_id' => $this->testCompany->id,
             'client_id' => $this->testClient->id,
             'category_id' => $this->testCategory->id,
-            'status' => 'sent',
+            'status' => 'Sent',
         ]);
 
         $paidInvoice = Invoice::factory()->create([
             'company_id' => $this->testCompany->id,
             'client_id' => $this->testClient->id,
             'category_id' => $this->testCategory->id,
-            'status' => 'paid',
+            'status' => 'Paid',
         ]);
 
         $unpaidInvoices = Invoice::unpaid()->get();

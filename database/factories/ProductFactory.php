@@ -16,9 +16,17 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
+        $company = \App\Models\Company::factory()->create();
+        $category = \App\Models\Category::create([
+            'name' => 'Products',
+            'type' => 'product',
+            'company_id' => $company->id,
+            'color' => '#007bff',
+        ]);
+
         return [
-            'company_id' => 1,
-            'category_id' => 1,
+            'company_id' => $company->id,
+            'category_id' => $category->id,
             'name' => fake()->words(3, true),
             'description' => fake()->optional()->sentence(),
             'sku' => fake()->unique()->bothify('SKU-####'),
@@ -26,7 +34,7 @@ class ProductFactory extends Factory
             'base_price' => fake()->randomFloat(2, 10, 1000),
             'cost' => fake()->optional()->randomFloat(2, 5, 500),
             'currency_code' => 'USD',
-            'unit_type' => 'each',
+            'unit_type' => 'units',
             'billing_model' => 'one_time',
             'is_active' => true,
         ];

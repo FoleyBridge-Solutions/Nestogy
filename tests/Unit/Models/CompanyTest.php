@@ -273,7 +273,7 @@ class CompanyTest extends TestCase
     public function test_round_time_with_no_increment_returns_original(): void
     {
         $company = Company::factory()->create([
-            'minimum_billing_increment' => null,
+            'minimum_billing_increment' => 0,
         ]);
 
         $rounded = $company->roundTime(1.234);

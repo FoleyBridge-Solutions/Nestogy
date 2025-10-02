@@ -16,13 +16,29 @@ class ExpenseFactory extends Factory
      */
     public function definition(): array
     {
+        $company = \App\Models\Company::factory()->create();
+        $category = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
+            'name' => 'General Expense',
+            'company_id' => $company->id,
+            'color' => '#dc3545',
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $user = \App\Models\User::factory()->create(['company_id' => $company->id]);
+
         return [
+            'company_id' => $company->id,
+            'category_id' => $category,
+            'user_id' => $user->id,
             'description' => fake()->sentence(),
             'amount' => fake()->randomFloat(2, 10, 500),
-            'currency_code' => 'USD',
-            'date' => fake()->dateTimeThisYear(),
-            'reference' => fake()->optional()->bothify('EXP-####'),
-            'payment_method' => fake()->randomElement(['cash', 'check', 'credit_card', 'bank_transfer']),
+            'expense_date' => fake()->dateTimeThisYear(),
+            'receipt_path' => fake()->optional()->filePath(),
+            'notes' => fake()->optional()->sentence(),
+            'is_billable' => fake()->boolean(30),
+            'client_id' => null,
+            'status' => 'pending',
         ];
     }
 }

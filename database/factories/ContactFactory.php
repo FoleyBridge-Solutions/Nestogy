@@ -56,6 +56,11 @@ class ContactFactory extends Factory
         ]);
     }
 
+    public function isPrimary(): static
+    {
+        return $this->primary();
+    }
+
     /**
      * Indicate that the contact is a billing contact.
      */
