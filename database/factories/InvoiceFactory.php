@@ -30,9 +30,26 @@ class InvoiceFactory extends Factory
         $amount = $this->faker->randomFloat(2, 100, 10000);
         $discountAmount = $this->faker->optional(0.3)->randomFloat(2, 0, $amount * 0.2);
 
+        $company = Company::first() ?? Company::factory()->create();
+        $client = Client::where('company_id', $company->id)->inRandomOrder()->first() 
+            ?? Client::factory()->create(['company_id' => $company->id]);
+        
+        $category = \App\Models\Category::where('type', 'income')
+            ->where('company_id', $company->id)
+            ->first();
+        
+        if (!$category) {
+            $category = \App\Models\Category::create([
+                'name' => 'Income',
+                'type' => 'income',
+                'company_id' => $company->id,
+                'color' => '#28a745',
+            ]);
+        }
+
         return [
-            'company_id' => Company::first()?->id ?? 1,
-            'client_id' => Client::inRandomOrder()->first()?->id ?? Client::factory(),
+            'company_id' => $company->id,
+            'client_id' => $client->id,
             'prefix' => 'INV',
             'number' => $this->faker->unique()->numberBetween(1000, 9999),
             'scope' => $this->faker->optional()->word(),
@@ -44,7 +61,7 @@ class InvoiceFactory extends Factory
             'currency_code' => 'USD',
             'note' => $this->faker->optional()->paragraph(),
             'url_key' => $this->faker->uuid(),
-            'category_id' => \App\Models\Category::where('type', 'income')->inRandomOrder()->first()?->id ?? 1,
+            'category_id' => $category->id,
             'created_at' => $date,
             'updated_at' => $date,
         ];
