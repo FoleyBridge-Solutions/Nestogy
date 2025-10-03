@@ -1,0 +1,96 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\PortalNotification;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class PortalNotificationFactory extends Factory
+{
+    protected $model = PortalNotification::class;
+
+    public function definition(): array
+    {
+        return [
+            'company_id' => 1,
+            'type' => null,
+            'category' => null,
+            'priority' => null,
+            'title' => null,
+            'message' => null,
+            'description' => $this->faker->sentence,
+            'data' => null,
+            'icon' => null,
+            'color' => null,
+            'action_url' => null,
+            'action_text' => null,
+            'show_in_portal' => null,
+            'send_email' => $this->faker->safeEmail,
+            'send_sms' => null,
+            'send_push' => null,
+            'delivery_channels' => null,
+            'email_subject' => $this->faker->safeEmail,
+            'email_body' => $this->faker->safeEmail,
+            'email_template' => $this->faker->safeEmail,
+            'email_sent_at' => $this->faker->safeEmail,
+            'email_delivered' => $this->faker->safeEmail,
+            'email_error' => $this->faker->safeEmail,
+            'sms_message' => null,
+            'sms_sent_at' => null,
+            'sms_delivered' => null,
+            'sms_error' => null,
+            'push_title' => null,
+            'push_body' => null,
+            'push_data' => null,
+            'push_sent_at' => null,
+            'push_delivered' => null,
+            'push_error' => null,
+            'status' => 'active',
+            'is_read' => true,
+            'read_at' => null,
+            'is_dismissed' => true,
+            'dismissed_at' => null,
+            'requires_action' => null,
+            'action_completed' => null,
+            'action_completed_at' => null,
+            'scheduled_at' => null,
+            'expires_at' => null,
+            'is_recurring' => true,
+            'recurring_pattern' => null,
+            'next_occurrence' => null,
+            'target_conditions' => null,
+            'personalization_data' => null,
+            'language' => null,
+            'timezone' => null,
+            'related_model_type' => null,
+            'group_key' => null,
+            'thread_position' => null,
+            'is_summary' => true,
+            'tracking_data' => null,
+            'view_count' => null,
+            'first_viewed_at' => null,
+            'last_viewed_at' => null,
+            'click_count' => null,
+            'first_clicked_at' => null,
+            'last_clicked_at' => null,
+            'variant' => null,
+            'experiment_data' => null,
+            'requires_acknowledgment' => null,
+            'acknowledged_at' => null,
+            'acknowledgment_method' => null,
+            'audit_trail' => null,
+            'respects_do_not_disturb' => null,
+            'client_preferences' => null,
+            'can_be_disabled' => null,
+            'frequency_limit' => null,
+            'source_system' => null,
+            'webhook_data' => null,
+            'trigger_webhooks' => null,
+            'metadata' => null,
+            'custom_fields' => null,
+            'internal_notes' => null,
+            'created_by' => null,
+            'updated_by' => null
+        ];
+    }
+}
