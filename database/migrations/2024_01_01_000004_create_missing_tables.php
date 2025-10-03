@@ -322,6 +322,260 @@ return new class extends Migration
             $table->index('created_by');
             $table->unique(['company_id', 'name']); // Unique template names per company
         });
+
+        // Additional missing tables
+        Schema::create('account_holds', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('analytics_snapshots', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('auto_payments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('cash_flow_projections', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('client_portal_sessions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('client_portal_users', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('collection_notes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->text('notes')->nullable();
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('compliance_checks', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('compliance_requirements', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('credit_applications', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('credit_note_approvals', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('status')->default('active');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('credit_note_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('description')->nullable();
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('credit_notes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('dunning_actions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('dunning_campaigns', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->boolean('is_active')->default(false);
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('dunning_sequences', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('financial_reports', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('kpi_calculations', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('payment_plans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('quote_invoice_conversions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('recurring_invoices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('refund_requests', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('status')->default('active');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('refund_transactions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('revenue_metrics', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('tax_categories', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('tax_exemptions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('usage_alerts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('usage_buckets', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('usage_pools', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('usage_records', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
+
+        Schema::create('usage_tiers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes('archived_at');
+        });
     }
 
     /**
