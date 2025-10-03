@@ -329,7 +329,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('analytics_snapshots', function (Blueprint $table) {
@@ -337,7 +337,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('auto_payments', function (Blueprint $table) {
@@ -345,7 +345,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('cash_flow_projections', function (Blueprint $table) {
@@ -353,14 +353,14 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('client_portal_sessions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('client_portal_users', function (Blueprint $table) {
@@ -368,7 +368,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('collection_notes', function (Blueprint $table) {
@@ -376,7 +376,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->text('notes')->nullable();
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('compliance_checks', function (Blueprint $table) {
@@ -384,7 +384,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('compliance_requirements', function (Blueprint $table) {
@@ -392,7 +392,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('credit_applications', function (Blueprint $table) {
@@ -400,7 +400,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('credit_note_approvals', function (Blueprint $table) {
@@ -408,7 +408,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('status')->default('active');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('credit_note_items', function (Blueprint $table) {
@@ -417,7 +417,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('credit_notes', function (Blueprint $table) {
@@ -426,7 +426,7 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('dunning_actions', function (Blueprint $table) {
@@ -434,7 +434,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('dunning_campaigns', function (Blueprint $table) {
@@ -443,7 +443,7 @@ return new class extends Migration
             $table->string('name');
             $table->boolean('is_active')->default(false);
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('dunning_sequences', function (Blueprint $table) {
@@ -451,7 +451,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('financial_reports', function (Blueprint $table) {
@@ -459,7 +459,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('kpi_calculations', function (Blueprint $table) {
@@ -467,7 +467,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('payment_plans', function (Blueprint $table) {
@@ -476,14 +476,14 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('quote_invoice_conversions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('recurring_invoices', function (Blueprint $table) {
@@ -492,7 +492,7 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('refund_requests', function (Blueprint $table) {
@@ -501,7 +501,7 @@ return new class extends Migration
             $table->string('status')->default('active');
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('refund_transactions', function (Blueprint $table) {
@@ -509,7 +509,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('revenue_metrics', function (Blueprint $table) {
@@ -518,7 +518,7 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('tax_categories', function (Blueprint $table) {
@@ -526,7 +526,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('tax_exemptions', function (Blueprint $table) {
@@ -534,7 +534,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('usage_alerts', function (Blueprint $table) {
@@ -542,7 +542,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('usage_buckets', function (Blueprint $table) {
@@ -550,7 +550,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('usage_pools', function (Blueprint $table) {
@@ -558,7 +558,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('usage_records', function (Blueprint $table) {
@@ -566,7 +566,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
 
         Schema::create('usage_tiers', function (Blueprint $table) {
@@ -574,7 +574,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
-            $table->softDeletes('archived_at');
+            $table->softDeletes();
         });
     }
 
