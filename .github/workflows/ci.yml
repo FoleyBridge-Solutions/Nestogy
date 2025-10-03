@@ -84,3 +84,8 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
+
+      - name: Deploy to Laravel Cloud
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          curl -X POST "https://cloud.laravel.com/deploy/9fbf5ee1-0a95-4c7a-80cd-33ef5cce3957/Wi1QZa0TPiaou4YJ"
