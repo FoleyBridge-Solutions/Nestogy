@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Ticket;
+use App\Domains\Ticket\Models\Ticket;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

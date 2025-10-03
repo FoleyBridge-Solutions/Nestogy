@@ -16,8 +16,14 @@
     
     <source>
         <include>
-            <directory suffix=".php">./app/Models</directory>
+            <directory suffix=".php">./app</directory>
         </include>
+        <exclude>
+            <directory>./app/Console</directory>
+            <directory>./app/Exceptions</directory>
+            <directory>./app/Providers</directory>
+            <file>./app/Helpers/ConfigHelper.php</file>
+        </exclude>
     </source>
     
     <coverage>

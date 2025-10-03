@@ -36,16 +36,6 @@ class SubscriptionPlanFactory extends Factory
             ],
             'is_active' => true,
             'sort_order' => $this->faker->numberBetween(1, 10),
-            'trial_days' => $this->faker->randomElement([0, 7, 14, 30]),
-            'annual_price' => null,
-            'max_clients' => $this->faker->optional(0.5)->numberBetween(10, 1000),
-            'max_storage_gb' => $this->faker->optional(0.5)->numberBetween(10, 100),
-            'max_tickets_per_month' => $this->faker->optional(0.5)->numberBetween(100, 5000),
-            'max_projects' => $this->faker->optional(0.5)->numberBetween(10, 100),
-            'advanced_reporting' => $this->faker->boolean(0.3),
-            'api_access' => $this->faker->boolean(0.8),
-            'custom_branding' => $this->faker->boolean(0.2),
-            'priority_support' => $this->faker->boolean(0.3),
         ];
     }
 

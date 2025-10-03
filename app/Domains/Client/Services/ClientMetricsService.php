@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Services;
 
 use App\Models\Client;
-use App\Models\Ticket;
+use App\Domains\Ticket\Models\Ticket;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;

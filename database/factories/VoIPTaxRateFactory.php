@@ -16,14 +16,14 @@ class VoIPTaxRateFactory extends Factory
         return [
             'company_id' => 1,
             'tax_jurisdiction_id' => TaxJurisdiction::factory(),
-            'tax_category_id' => TaxCategory::factory(),
+            'tax_category_id' => null, // TaxCategoryFactory does not exist
             'tax_name' => $this->faker->words(3, true),
             'rate_type' => $this->faker->randomElement(['percentage', 'fixed_amount', 'per_line', 'tiered']),
             'percentage_rate' => $this->faker->randomFloat(2, 0, 15),
             'fixed_amount' => $this->faker->randomFloat(2, 0.50, 5.00),
             'effective_date' => now(),
             'service_types' => $this->faker->randomElements(['local', 'long_distance', 'international', 'voip_fixed', 'voip_nomadic'], 3),
-            'status' => VoIPTaxRate::STATUS_ACTIVE,
+            'status' => 'active',
             'last_updated' => now(),
         ];
     }

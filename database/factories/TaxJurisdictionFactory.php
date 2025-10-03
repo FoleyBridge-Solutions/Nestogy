@@ -14,14 +14,10 @@ class TaxJurisdictionFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->city,
+            'code' => strtoupper($this->faker->unique()->lexify('???')),
             'jurisdiction_type' => $this->faker->randomElement(['federal', 'state', 'county', 'city']),
             'authority_name' => $this->faker->company,
-            'tax_id_required' => $this->faker->boolean,
-            'status' => 'active',
-            'boundary_data' => [
-                'zip_codes' => $this->faker->randomElements(['90210', '90211', '90212'], 2),
-                'fips_codes' => [$this->faker->numerify('####')],
-            ],
+            'is_active' => true,
         ];
     }
 
@@ -34,7 +30,7 @@ class TaxJurisdictionFactory extends Factory
         ]);
     }
 
-    public function state(): static
+    public function stateLevel(): static
     {
         return $this->state(fn (array $attributes) => [
             'name' => $this->faker->state,

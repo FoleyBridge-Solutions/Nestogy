@@ -12,7 +12,7 @@ use App\Models\Asset;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Tag;
-use App\Models\Ticket;
+use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;

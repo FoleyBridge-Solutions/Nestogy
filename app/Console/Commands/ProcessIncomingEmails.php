@@ -6,7 +6,7 @@ use App\Domains\Email\Services\ImapService;
 use App\Domains\Ticket\Services\TicketService;
 use App\Models\Client;
 use App\Models\Contact;
-use App\Models\Ticket;
+use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
