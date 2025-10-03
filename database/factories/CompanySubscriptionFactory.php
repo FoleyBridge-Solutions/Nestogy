@@ -14,17 +14,17 @@ class CompanySubscriptionFactory extends Factory
         return [
             'company_id' => 1,
             'status' => 'active',
-            'max_users' => null,
-            'current_user_count' => null,
-            'monthly_amount' => null,
-            'trial_ends_at' => null,
-            'current_period_start' => null,
-            'current_period_end' => null,
-            'canceled_at' => null,
-            'suspended_at' => null,
-            'grace_period_ends_at' => null,
-            'features' => null,
-            'metadata' => null
+            'max_users' => $this->faker->optional()->word,
+            'current_user_count' => $this->faker->optional()->word,
+            'monthly_amount' => $this->faker->randomFloat(2, 0, 10000),
+            'trial_ends_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
+            'current_period_start' => $this->faker->optional()->word,
+            'current_period_end' => $this->faker->optional()->word,
+            'canceled_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
+            'suspended_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
+            'grace_period_ends_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
+            'features' => $this->faker->optional()->word,
+            'metadata' => $this->faker->optional()->word
         ];
     }
 }

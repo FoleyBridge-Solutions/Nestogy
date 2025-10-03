@@ -13,11 +13,11 @@ class QuoteApprovalFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'approval_level' => null,
+            'approval_level' => $this->faker->optional()->word,
             'status' => 'active',
-            'comments' => null,
-            'approved_at' => null,
-            'rejected_at' => null
+            'comments' => $this->faker->optional()->word,
+            'approved_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
+            'rejected_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now')
         ];
     }
 }

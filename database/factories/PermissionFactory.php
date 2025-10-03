@@ -14,10 +14,10 @@ class PermissionFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
-            'title' => null,
-            'entity_type' => null,
-            'only_owned' => null,
-            'options' => null
+            'title' => $this->faker->words(3, true),
+            'entity_type' => $this->faker->numberBetween(1, 5),
+            'only_owned' => $this->faker->optional()->word,
+            'options' => $this->faker->optional()->word
         ];
     }
 }

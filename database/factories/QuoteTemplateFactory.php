@@ -14,15 +14,15 @@ class QuoteTemplateFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
-            'description' => $this->faker->sentence,
-            'category' => null,
-            'template_items' => null,
-            'service_config' => null,
-            'pricing_config' => null,
-            'tax_config' => null,
-            'terms_conditions' => null,
-            'is_active' => true,
-            'created_by' => null
+            'description' => $this->faker->optional()->sentence,
+            'category' => $this->faker->optional()->word,
+            'template_items' => $this->faker->optional()->word,
+            'service_config' => $this->faker->optional()->word,
+            'pricing_config' => $this->faker->optional()->word,
+            'tax_config' => $this->faker->optional()->word,
+            'terms_conditions' => $this->faker->optional()->word,
+            'is_active' => $this->faker->boolean(70),
+            'created_by' => $this->faker->optional()->word
         ];
     }
 }

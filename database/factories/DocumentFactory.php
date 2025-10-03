@@ -13,17 +13,17 @@ class DocumentFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'documentable_type' => null,
+            'documentable_type' => $this->faker->numberBetween(1, 5),
             'name' => $this->faker->words(3, true),
-            'description' => $this->faker->sentence,
-            'file_path' => null,
+            'description' => $this->faker->optional()->sentence,
+            'file_path' => $this->faker->optional()->word,
             'file_name' => $this->faker->words(3, true),
-            'file_size' => null,
-            'mime_type' => null,
-            'category' => null,
-            'is_private' => true,
-            'uploaded_by' => null,
-            'tags' => null
+            'file_size' => $this->faker->optional()->word,
+            'mime_type' => $this->faker->numberBetween(1, 5),
+            'category' => $this->faker->optional()->word,
+            'is_private' => $this->faker->boolean(70),
+            'uploaded_by' => $this->faker->optional()->word,
+            'tags' => $this->faker->optional()->word
         ];
     }
 }

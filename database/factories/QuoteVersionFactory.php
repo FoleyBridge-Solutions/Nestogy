@@ -13,11 +13,11 @@ class QuoteVersionFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'version_number' => null,
-            'quote_data' => null,
-            'changes' => null,
-            'change_reason' => null,
-            'created_by' => null
+            'version_number' => $this->faker->optional()->word,
+            'quote_data' => $this->faker->optional()->word,
+            'changes' => $this->faker->optional()->word,
+            'change_reason' => $this->faker->optional()->word,
+            'created_by' => $this->faker->optional()->word
         ];
     }
 }

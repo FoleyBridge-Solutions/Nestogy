@@ -13,18 +13,18 @@ class FileFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'fileable_type' => null,
+            'fileable_type' => $this->faker->numberBetween(1, 5),
             'name' => $this->faker->words(3, true),
-            'description' => $this->faker->sentence,
-            'file_path' => null,
+            'description' => $this->faker->optional()->sentence,
+            'file_path' => $this->faker->optional()->word,
             'file_name' => $this->faker->words(3, true),
             'original_name' => $this->faker->words(3, true),
-            'file_size' => null,
-            'mime_type' => null,
-            'file_type' => null,
-            'is_public' => true,
-            'uploaded_by' => null,
-            'metadata' => null
+            'file_size' => $this->faker->optional()->word,
+            'mime_type' => $this->faker->numberBetween(1, 5),
+            'file_type' => $this->faker->numberBetween(1, 5),
+            'is_public' => $this->faker->boolean(70),
+            'uploaded_by' => $this->faker->optional()->word,
+            'metadata' => $this->faker->optional()->word
         ];
     }
 }

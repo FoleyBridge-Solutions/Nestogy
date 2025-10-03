@@ -15,15 +15,15 @@ class MailTemplateFactory extends Factory
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
             'display_name' => $this->faker->words(3, true),
-            'category' => null,
-            'subject' => null,
-            'html_template' => null,
-            'text_template' => null,
-            'available_variables' => null,
-            'default_data' => null,
-            'is_active' => true,
-            'is_system' => true,
-            'settings' => null
+            'category' => $this->faker->optional()->word,
+            'subject' => $this->faker->optional()->word,
+            'html_template' => $this->faker->optional()->word,
+            'text_template' => $this->faker->optional()->word,
+            'available_variables' => $this->faker->optional()->word,
+            'default_data' => $this->faker->optional()->word,
+            'is_active' => $this->faker->boolean(70),
+            'is_system' => $this->faker->boolean(70),
+            'settings' => $this->faker->optional()->word
         ];
     }
 }

@@ -14,7 +14,7 @@ class TaxFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
-            'percent' => null
+            'percent' => $this->faker->optional()->word
         ];
     }
 }

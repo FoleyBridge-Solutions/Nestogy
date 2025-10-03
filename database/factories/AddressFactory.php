@@ -13,14 +13,14 @@ class AddressFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'type' => null,
-            'address' => null,
-            'address2' => null,
-            'city' => null,
-            'state' => null,
-            'zip' => null,
-            'country' => null,
-            'is_primary' => true
+            'type' => $this->faker->numberBetween(1, 5),
+            'address' => $this->faker->optional()->word,
+            'address2' => $this->faker->optional()->word,
+            'city' => $this->faker->optional()->word,
+            'state' => $this->faker->optional()->word,
+            'zip' => $this->faker->optional()->word,
+            'country' => $this->faker->optional()->word,
+            'is_primary' => $this->faker->boolean(70)
         ];
     }
 }

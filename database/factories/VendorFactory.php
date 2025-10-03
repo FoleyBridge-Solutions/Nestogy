@@ -14,19 +14,19 @@ class VendorFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
-            'description' => $this->faker->sentence,
+            'description' => $this->faker->optional()->sentence,
             'contact_name' => $this->faker->words(3, true),
-            'phone' => null,
-            'extension' => null,
+            'phone' => $this->faker->optional()->phoneNumber,
+            'extension' => $this->faker->optional()->word,
             'email' => $this->faker->safeEmail,
-            'website' => null,
-            'hours' => null,
-            'sla' => null,
-            'code' => null,
-            'account_number' => null,
-            'notes' => null,
-            'template' => null,
-            'accessed_at' => null
+            'website' => $this->faker->optional()->word,
+            'hours' => $this->faker->optional()->word,
+            'sla' => $this->faker->optional()->word,
+            'code' => $this->faker->word,
+            'account_number' => $this->faker->optional()->word,
+            'notes' => $this->faker->optional()->sentence,
+            'template' => $this->faker->optional()->word,
+            'accessed_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now')
         ];
     }
 }

@@ -13,13 +13,13 @@ class TimeEntryFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'hours' => null,
-            'billable' => null,
-            'rate' => null,
-            'description' => $this->faker->sentence,
-            'date' => null,
-            'start_time' => null,
-            'end_time' => null
+            'hours' => $this->faker->optional()->word,
+            'billable' => $this->faker->optional()->word,
+            'rate' => $this->faker->optional()->word,
+            'description' => $this->faker->optional()->sentence,
+            'date' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
+            'start_time' => $this->faker->optional()->word,
+            'end_time' => $this->faker->optional()->word
         ];
     }
 }

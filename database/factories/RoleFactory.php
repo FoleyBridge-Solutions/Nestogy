@@ -14,8 +14,8 @@ class RoleFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
-            'title' => null,
-            'scope' => null
+            'title' => $this->faker->words(3, true),
+            'scope' => $this->faker->optional()->word
         ];
     }
 }

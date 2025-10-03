@@ -14,9 +14,9 @@ class ExpenseCategoryFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
-            'description' => $this->faker->sentence,
-            'color' => null,
-            'is_active' => true
+            'description' => $this->faker->optional()->sentence,
+            'color' => $this->faker->optional()->word,
+            'is_active' => $this->faker->boolean(70)
         ];
     }
 }

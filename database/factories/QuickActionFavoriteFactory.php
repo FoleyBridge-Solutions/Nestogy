@@ -13,8 +13,8 @@ class QuickActionFavoriteFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'system_action' => null,
-            'position' => null
+            'system_action' => $this->faker->optional()->word,
+            'position' => $this->faker->optional()->word
         ];
     }
 }

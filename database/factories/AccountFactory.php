@@ -14,10 +14,10 @@ class AccountFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
-            'opening_balance' => null,
-            'currency_code' => null,
-            'notes' => null,
-            'type' => null
+            'opening_balance' => $this->faker->randomFloat(2, 0, 10000),
+            'currency_code' => 'USD',
+            'notes' => $this->faker->optional()->sentence,
+            'type' => $this->faker->numberBetween(1, 5)
         ];
     }
 }

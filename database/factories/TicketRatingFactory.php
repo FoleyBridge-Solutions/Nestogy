@@ -13,9 +13,9 @@ class TicketRatingFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'rating' => null,
-            'feedback' => null,
-            'rating_type' => null
+            'rating' => $this->faker->optional()->word,
+            'feedback' => $this->faker->optional()->word,
+            'rating_type' => $this->faker->numberBetween(1, 5)
         ];
     }
 }

@@ -14,9 +14,9 @@ class CategoryFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
-            'type' => null,
-            'color' => null,
-            'icon' => null
+            'type' => $this->faker->numberBetween(1, 5),
+            'color' => $this->faker->optional()->word,
+            'icon' => $this->faker->optional()->word
         ];
     }
 }

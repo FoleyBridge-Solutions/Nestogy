@@ -13,14 +13,14 @@ class ContractConfigurationFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'configuration' => null,
-            'metadata' => null,
-            'is_active' => true,
-            'version' => null,
-            'description' => $this->faker->sentence,
-            'activated_at' => null,
-            'created_by' => null,
-            'updated_by' => null
+            'configuration' => $this->faker->optional()->word,
+            'metadata' => $this->faker->optional()->word,
+            'is_active' => $this->faker->boolean(70),
+            'version' => $this->faker->optional()->word,
+            'description' => $this->faker->optional()->sentence,
+            'activated_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
+            'created_by' => $this->faker->optional()->word,
+            'updated_by' => $this->faker->optional()->dateTimeBetween('-1 year', 'now')
         ];
     }
 }

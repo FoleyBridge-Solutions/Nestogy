@@ -14,13 +14,13 @@ class NetworkFactory extends Factory
         return [
             'company_id' => 1,
             'name' => $this->faker->words(3, true),
-            'description' => $this->faker->sentence,
-            'vlan' => null,
-            'network' => null,
-            'gateway' => null,
-            'dhcp_range' => null,
-            'notes' => null,
-            'accessed_at' => null
+            'description' => $this->faker->optional()->sentence,
+            'vlan' => $this->faker->optional()->word,
+            'network' => $this->faker->optional()->word,
+            'gateway' => $this->faker->optional()->word,
+            'dhcp_range' => $this->faker->optional()->word,
+            'notes' => $this->faker->optional()->sentence,
+            'accessed_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now')
         ];
     }
 }

@@ -13,19 +13,19 @@ class TaxApiSettingsFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'provider' => null,
-            'enabled' => null,
-            'credentials' => null,
-            'configuration' => null,
-            'monthly_api_calls' => null,
-            'monthly_limit' => null,
-            'last_api_call' => null,
-            'monthly_cost' => null,
+            'provider' => $this->faker->optional()->word,
+            'enabled' => $this->faker->boolean(70),
+            'credentials' => $this->faker->optional()->word,
+            'configuration' => $this->faker->optional()->word,
+            'monthly_api_calls' => $this->faker->optional()->word,
+            'monthly_limit' => $this->faker->optional()->word,
+            'last_api_call' => $this->faker->optional()->word,
+            'monthly_cost' => $this->faker->optional()->word,
             'status' => 'active',
-            'last_error' => null,
-            'last_health_check' => null,
-            'health_data' => null,
-            'audit_log' => null
+            'last_error' => $this->faker->optional()->word,
+            'last_health_check' => $this->faker->optional()->word,
+            'health_data' => $this->faker->optional()->word,
+            'audit_log' => $this->faker->optional()->word
         ];
     }
 }

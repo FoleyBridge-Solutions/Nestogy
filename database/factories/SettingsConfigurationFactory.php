@@ -13,13 +13,13 @@ class SettingsConfigurationFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'domain' => null,
-            'category' => null,
-            'settings' => null,
-            'metadata' => null,
-            'is_active' => true,
-            'last_modified_at' => null,
-            'last_modified_by' => null
+            'domain' => $this->faker->optional()->word,
+            'category' => $this->faker->optional()->word,
+            'settings' => $this->faker->optional()->word,
+            'metadata' => $this->faker->optional()->word,
+            'is_active' => $this->faker->boolean(70),
+            'last_modified_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
+            'last_modified_by' => $this->faker->optional()->word
         ];
     }
 }

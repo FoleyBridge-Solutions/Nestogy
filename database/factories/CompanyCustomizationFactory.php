@@ -13,7 +13,7 @@ class CompanyCustomizationFactory extends Factory
     {
         return [
             'company_id' => 1,
-            'customizations' => null
+            'customizations' => $this->faker->optional()->word
         ];
     }
 }
