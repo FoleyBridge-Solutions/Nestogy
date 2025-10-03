@@ -650,7 +650,8 @@ class CommandPalette extends Component
         // Use the stored current route
         $currentRouteName = $this->currentRoute;
 
-        if ($user) {
+        // Skip quick actions for Contact users (client portal)
+        if ($user && ! $user instanceof \App\Models\Contact) {
             // Get ALL favorite quick actions first - these should be the primary items shown
             $allActions = QuickActionService::getActionsForUser($user);
             $favoriteIds = QuickActionService::getFavoriteIdentifiers($user);

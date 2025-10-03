@@ -26,6 +26,14 @@ return Application::configure(basePath: dirname(__DIR__))
                     \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO
         );
 
+        // Configure guest redirects for different guards
+        $middleware->redirectGuestsTo(function ($request) {
+            if ($request->is('client-portal/*')) {
+                return route('client.login');
+            }
+            return route('login');
+        });
+
         // Register custom authentication middleware
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,

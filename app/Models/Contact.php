@@ -780,4 +780,55 @@ class Contact extends Authenticatable
             'invitation_token' => null, // Clear token after use
         ]);
     }
+
+    /**
+     * Check if contact has a permission.
+     * Contacts don't have granular permissions like Users, they only have portal_permissions.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        if (! $this->portal_permissions || ! is_array($this->portal_permissions)) {
+            return false;
+        }
+
+        return in_array($permission, $this->portal_permissions);
+    }
+
+    /**
+     * Check if contact has any of the given permissions.
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if contact has all of the given permissions.
+     */
+    public function hasAllPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if (! $this->hasPermission($permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if contact has a role.
+     * Contacts don't have roles in the same way users do.
+     * This is a stub method for compatibility.
+     */
+    public function hasRole(string $role): bool
+    {
+        return false;
+    }
 }

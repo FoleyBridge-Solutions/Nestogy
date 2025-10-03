@@ -104,7 +104,7 @@ class ClientSwitcher extends Component
     #[Computed(cache: true, key: 'client-switcher-favorites')]
     public function favoriteClients()
     {
-        if (! $this->getUser()) {
+        if (! $this->getUser() || $this->getUser() instanceof \App\Models\Contact) {
             return collect();
         }
 
@@ -117,7 +117,7 @@ class ClientSwitcher extends Component
     #[Computed]
     public function recentClients()
     {
-        if (! $this->getUser()) {
+        if (! $this->getUser() || $this->getUser() instanceof \App\Models\Contact) {
             return collect();
         }
 

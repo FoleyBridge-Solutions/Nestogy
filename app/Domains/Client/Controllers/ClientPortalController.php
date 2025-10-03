@@ -1067,14 +1067,14 @@ class ClientPortalController extends Controller
             // Handle file attachments if any
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
-                    $path = $file->store('ticket-attachments', 'public');
                     $filename = \Illuminate\Support\Str::random(40).'.'.$file->extension();
+                    $content = base64_encode($file->get());
 
                     $comment->attachments()->create([
                         'company_id' => $ticket->company_id,
                         'filename' => $filename,
                         'original_filename' => $file->getClientOriginalName(),
-                        'path' => $path,
+                        'content' => $content,
                         'size' => $file->getSize(),
                         'mime_type' => $file->getMimeType(),
                         'uploaded_by' => $contact->id,
