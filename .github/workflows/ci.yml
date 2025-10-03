@@ -48,6 +48,18 @@ jobs:
       - name: Install dependencies with composer
         run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
       - name: Setup environment file
         run: |
           echo "APP_ENV=testing" > .env
