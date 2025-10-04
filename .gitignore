@@ -34,3 +34,5 @@ server.log
 /tax_jurisdiction_rates-2025Q3.csv
 /docs-2.x
 /flux-ui-mcpcoverage.xml
+coverage.xml
+/storage/claude/
