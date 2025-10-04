@@ -1,0 +1,37 @@
+# Error Summary from Test Run
+
+## Tests: 476, Assertions: 652, Errors: 35
+
+### Errors Fixed This Session (43 → 35):
+- PortalNotificationTest ✅
+- RecurringTest ✅  
+- PricingRuleTest ✅
+- QuoteApprovalFactory (partially - still failing)
+- RefundTransactionFactory ✅
+- SubsidiaryPermissionFactory ✅
+- QuoteInvoiceConversionFactory ✅
+- ServiceFactory ✅
+
+### Remaining 35 Errors by Test:
+
+1-2. CompanyMailSettingsTest (2 errors)
+3. PhysicalMailSettingsTest (1 error) 
+4-5. QuickActionFavoriteTest (2 errors)
+6-7. QuoteApprovalTest (2 errors) - still failing despite fix
+8-9. QuoteInvoiceConversionTest (2 errors) - still failing despite fix  
+10-11. RefundTransactionTest (2 errors) - still failing despite fix
+12-13. ServiceTaxRateTest (2 errors)
+14-15. ServiceTest (2 errors) - still failing despite fix
+16-17. SettingTest (2 errors)
+18-19. SubsidiaryPermissionTest (2 errors) - still failing despite fix
+20-21. TagTest (2 errors)
+22-23. TaxApiQueryCacheTest (2 errors)
+24-25. TaxApiSettingsTest (2 errors)
+26-27. TaxCalculationTest (2 errors)
+28-29. TicketRatingTest (2 errors)
+30-31. TimeEntryTest (2 errors)
+32-33. UsageRecordTest (2 errors)
+34-35. UsageTierTest (2 errors) - ERROR: column "description" does not exist
+
+## Next Steps:
+Need to investigate why fixes didn't work for some tests and continue fixing remaining ones.

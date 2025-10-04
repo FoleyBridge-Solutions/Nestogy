@@ -30,8 +30,7 @@ class ContractFactory extends Factory
         $termMonths = $startDate->diff($endDate)->m + ($startDate->diff($endDate)->y * 12);
         $contractTypes = ['managed_services', 'support', 'project', 'software', 'hardware', 'voip', 'cloud'];
 
-        return [
-            'company_id' => Company::first()?->id ?? 1,
+        return ['company_id' => Company::first()?->id ?? 1,
             'client_id' => Client::inRandomOrder()->first()?->id ?? Client::factory(),
             'contract_number' => 'CNT-'.$this->faker->unique()->numberBetween(1000, 9999),
             'contract_type' => $this->faker->randomElement($contractTypes),
@@ -39,9 +38,7 @@ class ContractFactory extends Factory
             'signature_status' => $this->faker->randomElement(['pending', 'signed', 'expired', null]),
             'title' => $this->faker->catchPhrase().' Agreement',
             'description' => $this->faker->paragraphs(2, true),
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'term_months' => $termMonths,
+            'start_date' => $startDate,            'term_months' => $termMonths,
             'renewal_type' => $this->faker->randomElement(['auto', 'manual', 'none']),
             'renewal_notice_days' => $this->faker->randomElement([30, 60, 90]),
             'auto_renewal' => $this->faker->boolean(60),
@@ -70,7 +67,7 @@ class ContractFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'status' => 'active',
+            'status' => $this->faker->randomElement(['active', 'inactive', 'pending']),
                 'signed_date' => $this->faker->dateTimeBetween($attributes['start_date'], 'now'),
             ];
         });

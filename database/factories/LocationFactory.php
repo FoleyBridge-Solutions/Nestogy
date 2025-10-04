@@ -24,8 +24,7 @@ class LocationFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'company_id' => Company::factory(),
+        return ['company_id' => Company::factory(),
             'client_id' => Client::factory(),
             'name' => $this->faker->company().' - '.$this->faker->randomElement(['Main Office', 'Branch', 'Warehouse', 'Data Center']),
             'description' => $this->faker->optional()->sentence(),

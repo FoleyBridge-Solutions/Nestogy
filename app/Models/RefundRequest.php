@@ -690,8 +690,8 @@ class RefundRequest extends Model
                 $request->requested_at = now();
             }
 
-            // Set default SLA deadline
-            if (! $request->sla_deadline) {
+            // Set default SLA deadline (only if column exists)
+            if (! $request->sla_deadline && \Schema::hasColumn('refund_requests', 'sla_deadline')) {
                 $request->sla_deadline = now()->addHours($request->sla_hours ?? 48);
             }
         });

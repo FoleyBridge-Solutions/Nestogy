@@ -13,24 +13,17 @@ class SettingTest extends TestCase
 
     public function test_can_create_setting_with_factory(): void
     {
-        if (!class_exists('Database\\Factories\\SettingFactory')) {
-            $this->markTestSkipped('SettingFactory does not exist');
-        }
-
         $company = Company::factory()->create();
-        $model = Setting::factory()->create(['company_id' => $company->id]);
+        $model = Setting::where('company_id', $company->id)->first();
 
         $this->assertInstanceOf(Setting::class, $model);
+        $this->assertEquals($company->id, $model->company_id);
     }
 
     public function test_setting_belongs_to_company(): void
     {
-        if (!class_exists('Database\\Factories\\SettingFactory')) {
-            $this->markTestSkipped('SettingFactory does not exist');
-        }
-
         $company = Company::factory()->create();
-        $model = Setting::factory()->create(['company_id' => $company->id]);
+        $model = Setting::where('company_id', $company->id)->first();
 
         $this->assertInstanceOf(Company::class, $model->company);
         $this->assertEquals($company->id, $model->company->id);

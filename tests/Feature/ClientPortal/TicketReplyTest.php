@@ -13,6 +13,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class TicketReplyTest extends TestCase
 {
@@ -42,9 +43,7 @@ class TicketReplyTest extends TestCase
 
     // ==========================================
     // 1. AUTHENTICATION & AUTHORIZATION TESTS
-    // ==========================================
-
-    /** @test */
+    // ==========================================    #[Test]
     public function guest_cannot_reply_to_ticket()
     {
         $response = $this->post(route('client.tickets.comment', $this->ticket->id), [
@@ -54,7 +53,7 @@ class TicketReplyTest extends TestCase
         $response->assertRedirect(route('client.login'));
     }
 
-    /** @test */
+    #[Test]
     public function client_cannot_reply_to_other_company_ticket()
     {
         $otherCompany = Client::factory()->create();
@@ -71,7 +70,7 @@ class TicketReplyTest extends TestCase
         $response->assertNotFound();
     }
 
-    /** @test */
+    #[Test]
     public function client_can_reply_to_own_company_ticket()
     {
         $response = $this->actingAs($this->contact, 'client')
@@ -85,9 +84,7 @@ class TicketReplyTest extends TestCase
 
     // ==========================================
     // 2. VALIDATION TESTS
-    // ==========================================
-
-    /** @test */
+    // ==========================================    #[Test]
     public function message_is_required()
     {
         $response = $this->actingAs($this->contact, 'client')
@@ -98,7 +95,7 @@ class TicketReplyTest extends TestCase
         $response->assertSessionHasErrors('comment');
     }
 
-    /** @test */
+    #[Test]
     public function message_has_minimum_length()
     {
         $response = $this->actingAs($this->contact, 'client')
@@ -109,7 +106,7 @@ class TicketReplyTest extends TestCase
         $response->assertSessionHasErrors('comment');
     }
 
-    /** @test */
+    #[Test]
     public function message_has_maximum_length()
     {
         $response = $this->actingAs($this->contact, 'client')
@@ -118,10 +115,7 @@ class TicketReplyTest extends TestCase
             ]);
 
         $response->assertSessionHasErrors('comment');
-    }
-
-    /** @test */
-    public function attachments_are_optional()
+    }    public function attachments_are_optional()
     {
         $response = $this->actingAs($this->contact, 'client')
             ->post(route('client.tickets.comment', $this->ticket->id), [
@@ -132,7 +126,7 @@ class TicketReplyTest extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
-    /** @test */
+    #[Test]
     public function attachment_file_size_limit()
     {
         Storage::fake('public');
@@ -148,7 +142,7 @@ class TicketReplyTest extends TestCase
         $response->assertSessionHasErrors('attachments.0');
     }
 
-    /** @test */
+    #[Test]
     public function attachment_file_type_validation()
     {
         Storage::fake('public');
@@ -162,10 +156,7 @@ class TicketReplyTest extends TestCase
             ]);
 
         $response->assertSessionHasErrors('attachments.0');
-    }
-
-    /** @test */
-    public function maximum_number_of_attachments()
+    }    public function maximum_number_of_attachments()
     {
         Storage::fake('public');
 
@@ -185,9 +176,7 @@ class TicketReplyTest extends TestCase
 
     // ==========================================
     // 3. COMMENT CREATION TESTS
-    // ==========================================
-
-    /** @test */
+    // ==========================================    #[Test]
     public function comment_is_created_with_correct_fields()
     {
         $this->actingAs($this->contact, 'client')
@@ -206,7 +195,7 @@ class TicketReplyTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function comment_belongs_to_correct_ticket()
     {
         $this->actingAs($this->contact, 'client')
@@ -218,7 +207,7 @@ class TicketReplyTest extends TestCase
         $this->assertEquals('Test reply', $this->ticket->fresh()->comments->first()->content);
     }
 
-    /** @test */
+    #[Test]
     public function ticket_updated_timestamp_changes()
     {
         $originalUpdatedAt = $this->ticket->updated_at;
@@ -235,9 +224,7 @@ class TicketReplyTest extends TestCase
 
     // ==========================================
     // 4. ATTACHMENT TESTS
-    // ==========================================
-
-    /** @test */
+    // ==========================================    #[Test]
     public function single_attachment_is_saved()
     {
         Storage::fake('public');
@@ -256,7 +243,7 @@ class TicketReplyTest extends TestCase
         $this->assertEquals('document.pdf', $comment->attachments->first()->original_filename);
     }
 
-    /** @test */
+    #[Test]
     public function multiple_attachments_are_saved()
     {
         Storage::fake('public');
@@ -278,7 +265,7 @@ class TicketReplyTest extends TestCase
         $this->assertCount(3, $comment->attachments);
     }
 
-    /** @test */
+    #[Test]
     public function attachment_metadata_is_correct()
     {
         Storage::fake('public');
@@ -301,9 +288,7 @@ class TicketReplyTest extends TestCase
 
     // ==========================================
     // 5. STATUS CHANGE TESTS
-    // ==========================================
-
-    /** @test */
+    // ==========================================    #[Test]
     public function awaiting_customer_status_changes_to_open()
     {
         $this->ticket->update(['status' => 'Awaiting Customer']);
@@ -316,7 +301,7 @@ class TicketReplyTest extends TestCase
         $this->assertEquals('Open', $this->ticket->fresh()->status);
     }
 
-    /** @test */
+    #[Test]
     public function other_statuses_remain_unchanged()
     {
         $this->ticket->update(['status' => 'In Progress']);
@@ -329,7 +314,7 @@ class TicketReplyTest extends TestCase
         $this->assertEquals('In Progress', $this->ticket->fresh()->status);
     }
 
-    /** @test */
+    #[Test]
     public function cannot_reply_to_closed_ticket()
     {
         $this->ticket->update(['status' => 'Closed']);
@@ -343,7 +328,7 @@ class TicketReplyTest extends TestCase
         $this->assertCount(0, $this->ticket->fresh()->comments);
     }
 
-    /** @test */
+    #[Test]
     public function cannot_reply_to_resolved_ticket()
     {
         $this->ticket->update(['status' => 'Resolved']);
@@ -359,9 +344,7 @@ class TicketReplyTest extends TestCase
 
     // ==========================================
     // 6. NOTIFICATION TESTS
-    // ==========================================
-
-    /** @test */
+    // ==========================================    #[Test]
     public function email_sent_to_assigned_technician()
     {
         Mail::fake();
@@ -382,7 +365,7 @@ class TicketReplyTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function no_email_if_ticket_unassigned()
     {
         Mail::fake();
@@ -399,9 +382,7 @@ class TicketReplyTest extends TestCase
 
     // ==========================================
     // 7. EDGE CASES & SECURITY
-    // ==========================================
-
-    /** @test */
+    // ==========================================    #[Test]
     public function xss_protection_in_comment_content()
     {
         $maliciousContent = '<script>alert("XSS")</script>Hello';
@@ -417,7 +398,7 @@ class TicketReplyTest extends TestCase
         $this->assertEquals($maliciousContent, $comment->content);
     }
 
-    /** @test */
+    #[Test]
     public function unicode_characters_in_comment()
     {
         $unicodeMessage = 'Hello 你好 مرحبا שלום 🎉';
@@ -431,7 +412,7 @@ class TicketReplyTest extends TestCase
         $this->assertEquals($unicodeMessage, $comment->content);
     }
 
-    /** @test */
+    #[Test]
     public function concurrent_comments_dont_conflict()
     {
         $this->actingAs($this->contact, 'client')
@@ -447,7 +428,7 @@ class TicketReplyTest extends TestCase
         $this->assertCount(2, $this->ticket->fresh()->comments);
     }
 
-    /** @test */
+    #[Test]
     public function large_comment_content()
     {
         $largeMessage = str_repeat('Lorem ipsum dolor sit amet. ', 100);

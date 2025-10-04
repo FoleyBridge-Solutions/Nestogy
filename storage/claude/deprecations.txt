@@ -1,0 +1,31 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12 with PCOV 1.0.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+...............................................................  63 / 735 (  8%)
+............................................................... 126 / 735 ( 17%)
+............................................................... 189 / 735 ( 25%)
+............................................................... 252 / 735 ( 34%)
+............................................................... 315 / 735 ( 42%)
+............................................................... 378 / 735 ( 51%)
+............................................................... 441 / 735 ( 60%)
+............................................................... 504 / 735 ( 68%)
+............................................................... 567 / 735 ( 77%)
+............................................................... 630 / 735 ( 85%)
+............................................................... 693 / 735 ( 94%)
+..........................S...............                      735 / 735 (100%)
+
+Time: 03:12.780, Memory: 367.00 MB
+
+OK, but there were issues!
+Tests: 735, Assertions: 1224, PHPUnit Deprecations: 47, Skipped: 1.
+
+Generating code coverage report in Clover XML format ... done [00:12.791]

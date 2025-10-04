@@ -80,9 +80,17 @@ trait HasStatusWorkflow
      */
     public function markAsActive(?Carbon $executedAt = null): void
     {
-        $this->updateStatusWithConfig('default_active_status', [
-            'executed_at' => $executedAt ?? now(),
-        ]);
+        $additionalData = [];
+        
+        try {
+            if (\Schema::hasColumn($this->getTable(), 'executed_at')) {
+                $additionalData['executed_at'] = $executedAt ?? now();
+            }
+        } catch (\Exception $e) {
+            // Column doesn't exist, skip it
+        }
+        
+        $this->updateStatusWithConfig('default_active_status', $additionalData);
     }
 
     /**
@@ -90,10 +98,20 @@ trait HasStatusWorkflow
      */
     public function terminate(?string $reason = null, ?Carbon $terminationDate = null): void
     {
-        $this->updateStatusWithConfig('default_terminated_status', [
-            'terminated_at' => $terminationDate ?? now(),
-            'termination_reason' => $reason,
-        ]);
+        $additionalData = [];
+        
+        try {
+            if (\Schema::hasColumn($this->getTable(), 'terminated_at')) {
+                $additionalData['terminated_at'] = $terminationDate ?? now();
+            }
+            if (\Schema::hasColumn($this->getTable(), 'termination_reason')) {
+                $additionalData['termination_reason'] = $reason;
+            }
+        } catch (\Exception $e) {
+            // Columns don't exist, skip them
+        }
+        
+        $this->updateStatusWithConfig('default_terminated_status', $additionalData);
     }
 
     /**

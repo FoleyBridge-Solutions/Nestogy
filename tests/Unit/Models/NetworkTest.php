@@ -29,11 +29,9 @@ class NetworkTest extends TestCase
             $this->markTestSkipped('NetworkFactory does not exist');
         }
 
-        $company = Company::factory()->create();
-        $model = Network::factory()->create(['company_id' => $company->id]);
+        $model = Network::factory()->create();
 
-        $this->assertInstanceOf(Company::class, $model->company);
-        $this->assertEquals($company->id, $model->company->id);
+        $this->assertInstanceOf(\App\Models\Client::class, $model->client);
     }
 
     public function test_network_has_fillable_attributes(): void

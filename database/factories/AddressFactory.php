@@ -11,15 +11,15 @@ class AddressFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
-            'type' => $this->faker->numberBetween(1, 5),
-            'address' => $this->faker->optional()->word,
-            'address2' => $this->faker->optional()->word,
-            'city' => $this->faker->optional()->word,
-            'state' => $this->faker->optional()->word,
-            'zip' => $this->faker->optional()->word,
-            'country' => $this->faker->optional()->word,
+        return ['company_id' => \App\Models\Company::factory(),
+            'client_id' => \App\Models\Client::factory(),
+            'type' => $this->faker->randomElement(['billing', 'shipping', 'service', 'other']),
+            'address' => $this->faker->streetAddress(),
+            'address2' => $this->faker->optional()->secondaryAddress(),
+            'city' => $this->faker->city(),
+            'state' => $this->faker->stateAbbr(),
+            'zip' => $this->faker->postcode(),
+            'country' => 'US',
             'is_primary' => $this->faker->boolean(70)
         ];
     }

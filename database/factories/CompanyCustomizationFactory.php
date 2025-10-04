@@ -11,9 +11,8 @@ class CompanyCustomizationFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
-            'customizations' => $this->faker->optional()->word
+        return ['company_id' => \App\Models\Company::factory(),
+            'customizations' => json_encode([])
         ];
     }
 }

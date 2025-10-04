@@ -17,8 +17,7 @@ class CompanyHierarchyTest extends TestCase
             $this->markTestSkipped('CompanyHierarchyFactory does not exist');
         }
 
-        $company = Company::factory()->create();
-        $model = CompanyHierarchy::factory()->create(['company_id' => $company->id]);
+        $model = CompanyHierarchy::factory()->create();
 
         $this->assertInstanceOf(CompanyHierarchy::class, $model);
     }
@@ -29,11 +28,10 @@ class CompanyHierarchyTest extends TestCase
             $this->markTestSkipped('CompanyHierarchyFactory does not exist');
         }
 
-        $company = Company::factory()->create();
-        $model = CompanyHierarchy::factory()->create(['company_id' => $company->id]);
+        $model = CompanyHierarchy::factory()->create();
 
-        $this->assertInstanceOf(Company::class, $model->company);
-        $this->assertEquals($company->id, $model->company->id);
+        $this->assertInstanceOf(Company::class, $model->ancestor);
+        $this->assertInstanceOf(Company::class, $model->descendant);
     }
 
     public function test_company_hierarchy_has_fillable_attributes(): void

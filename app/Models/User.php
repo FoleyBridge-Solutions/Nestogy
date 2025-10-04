@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domains\Ticket\Models\Ticket;
 use App\Traits\HasEnhancedPermissions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

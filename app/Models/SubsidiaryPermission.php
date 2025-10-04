@@ -106,6 +106,14 @@ class SubsidiaryPermission extends Model
     ];
 
     /**
+     * Get the company this permission belongs to.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
      * Get the company that granted the permission.
      */
     public function granterCompany(): BelongsTo

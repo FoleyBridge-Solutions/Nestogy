@@ -1,0 +1,1469 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+...............................................................  63 / 476 ( 13%)
+............................................................... 126 / 476 ( 26%)
+.....EE.E...................................................... 189 / 476 ( 39%)
+............................................................... 252 / 476 ( 52%)
+............................................................... 315 / 476 ( 66%)
+.........EE.................................EE....EE........... 378 / 476 ( 79%)
+........EE.......EE.EE.EE....EE....EE.E..EE................EE.E 441 / 476 ( 92%)
+E..........EE.EE...................                             476 / 476 (100%)
+
+Time: 01:27.657, Memory: 233.00 MB
+
+There were 32 errors:
+
+1) Tests\Unit\Models\CompanyMailSettingsTest::test_can_create_company_mail_settings_with_factory
+Illuminate\Database\QueryException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "max_retry_attempts" of relation "company_mail_settings" violates not-null constraint
+DETAIL:  Failing row contains (1, 223, sendgrid, t, reynolds.com, 465, null, null, null, 38, null, null, us-east-1, dicki.info, null, https://greenfelder.com/quos-exercitationem-omnis-ipsa-nobis-vit..., null, null, oschoen@example.net, Brody Bauch, null, null, 37, 219, 7617, t, t, t, null, 2025-07-01 11:05:36, f, null, null, 2025-10-03 22:33:12, 2025-10-03 22:33:12, eyJpdiI6IldrUk9IVlpSQUFtSHVmQjY4Z0xEbHc9PSIsInZhbHVlIjoiZ2hOSjUx..., eyJpdiI6InRZc3NaTzNLUG9YQnlIMCt1bnlWelE9PSIsInZhbHVlIjoiSlNpNThS..., koepp.com, null). (Connection: pgsql, SQL: insert into "company_mail_settings" ("company_id", "driver", "is_active", "smtp_host", "smtp_port", "smtp_encryption", "smtp_username", "smtp_password", "smtp_timeout", "api_key", "api_secret", "api_domain", "ses_key", "ses_secret", "ses_region", "mailgun_domain", "mailgun_secret", "mailgun_endpoint", "postmark_token", "sendgrid_api_key", "from_email", "from_name", "reply_to", "reply_to_email", "reply_to_name", "rate_limit_per_minute", "rate_limit_per_hour", "rate_limit_per_day", "track_opens", "track_clicks", "auto_retry_failed", "max_retry_attempts", "last_test_at", "last_test_successful", "last_test_error", "fallback_config", "updated_at", "created_at") values (223, sendgrid, 1, reynolds.com, 465, ?, ?, ?, 38, eyJpdiI6IldrUk9IVlpSQUFtSHVmQjY4Z0xEbHc9PSIsInZhbHVlIjoiZ2hOSjUxUTFSaE5QaE1pR1lnR0NCT1RSNVQxaHNMQzlsMGU5YmQxK0tNOUh6aFlzRHU5eVlvSGpLSDVvNGIxcENWVk5STmtad0hoU1k0c3NORTdrNEhuOGh1YjVLOXNzTHVLT2N0SGFGdzA9IiwibWFjIjoiYTYzN2FiYTRkNWM5NmFlMzIxZGU5OTZkN2E1ZmE3YzBlMjkzZTNjMTU0YTY5ODgwMjAzYWZlNjAyZmZjMDZlMSIsInRhZyI6IiJ9, eyJpdiI6InRZc3NaTzNLUG9YQnlIMCt1bnlWelE9PSIsInZhbHVlIjoiSlNpNThSd0wyc0tZQ0ZJMTNWMlV1d3RLVWM4clpGbXZVU1Vpa05nM2o1TEFqUTZOSVVXK1pyYVk5eGJxbGJWRXJzZ0Q4Q0FsTGxzNmxpYmJLK3JJaWk3WTNUM1NRQzZRQ2dUa1pINXN5THc9IiwibWFjIjoiYmVkNGIwNTJiMDlkMjUxODUyNTgwMjE2ZTJkOGYwYjY3NjFhZGVlZDY0ODUxOTY3YWJlODEwZjMxNzQyODU0MyIsInRhZyI6IiJ9, koepp.com, ?, ?, us-east-1, dicki.info, ?, https://greenfelder.com/quos-exercitationem-omnis-ipsa-nobis-vitae-voluptatum-quas-libero.html, ?, ?, oschoen@example.net, Brody Bauch, ?, ?, ?, 37, 219, 7617, 1, 1, 1, ?, 2025-07-01 11:05:36, 0, ?, ?, 2025-10-03 22:33:12, 2025-10-03 22:33:12) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/CompanyMailSettingsTest.php:21
+
+Caused by
+PDOException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "max_retry_attempts" of relation "company_mail_settings" violates not-null constraint
+DETAIL:  Failing row contains (1, 223, sendgrid, t, reynolds.com, 465, null, null, null, 38, null, null, us-east-1, dicki.info, null, https://greenfelder.com/quos-exercitationem-omnis-ipsa-nobis-vit..., null, null, oschoen@example.net, Brody Bauch, null, null, 37, 219, 7617, t, t, t, null, 2025-07-01 11:05:36, f, null, null, 2025-10-03 22:33:12, 2025-10-03 22:33:12, eyJpdiI6IldrUk9IVlpSQUFtSHVmQjY4Z0xEbHc9PSIsInZhbHVlIjoiZ2hOSjUx..., eyJpdiI6InRZc3NaTzNLUG9YQnlIMCt1bnlWelE9PSIsInZhbHVlIjoiSlNpNThS..., koepp.com, null).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/CompanyMailSettingsTest.php:21
+
+2) Tests\Unit\Models\CompanyMailSettingsTest::test_company_mail_settings_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "max_retry_attempts" of relation "company_mail_settings" violates not-null constraint
+DETAIL:  Failing row contains (2, 224, ses, t, null, null, null, null, null, 18, null, null, us-west-2, kuvalis.org, null, http://bayer.com/et-sunt-provident-assumenda-et, eyJpdiI6IldHRzFJdlY4WHlQTWl6WUxyY0U4SEE9PSIsInZhbHVlIjoiYlFCL3FZ..., null, phermann@example.net, Prof. Ava Buckridge, null, Van Deckow II, 89, 998, 1783, t, f, f, null, null, f, null, "[]", 2025-10-03 22:33:12, 2025-10-03 22:33:12, null, null, schinner.com, darren.macejkovic@example.com). (Connection: pgsql, SQL: insert into "company_mail_settings" ("company_id", "driver", "is_active", "smtp_host", "smtp_port", "smtp_encryption", "smtp_username", "smtp_password", "smtp_timeout", "api_key", "api_secret", "api_domain", "ses_key", "ses_secret", "ses_region", "mailgun_domain", "mailgun_secret", "mailgun_endpoint", "postmark_token", "sendgrid_api_key", "from_email", "from_name", "reply_to", "reply_to_email", "reply_to_name", "rate_limit_per_minute", "rate_limit_per_hour", "rate_limit_per_day", "track_opens", "track_clicks", "auto_retry_failed", "max_retry_attempts", "last_test_at", "last_test_successful", "last_test_error", "fallback_config", "updated_at", "created_at") values (224, ses, 1, ?, ?, ?, ?, ?, 18, ?, ?, schinner.com, ?, ?, us-west-2, kuvalis.org, ?, http://bayer.com/et-sunt-provident-assumenda-et, eyJpdiI6IldHRzFJdlY4WHlQTWl6WUxyY0U4SEE9PSIsInZhbHVlIjoiYlFCL3FZd2RMeFNpeEJuSmI5bWhBMDVTRFQ4Mkl0Uld6dDhRUWhDVjlxQkl3U2VjK0N0eStUNDhjemxOQ29NL3FlbHBDUWgvbEZyL1FNVFNQVjdwakVNblI1aGxnR1pYcmprbkdrV1ZSbnM9IiwibWFjIjoiNzEwMWQ3MmIzNWJjZWI1NWViNzc4MWIwN2U5ZjZiODg3YWI0YzU4YzYzNmEzYzBmNGZjMTQyZmQyZWZiMGYxYSIsInRhZyI6IiJ9, ?, phermann@example.net, Prof. Ava Buckridge, darren.macejkovic@example.com, ?, Van Deckow II, 89, 998, 1783, 1, 0, 0, ?, ?, 0, ?, "[]", 2025-10-03 22:33:12, 2025-10-03 22:33:12) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/CompanyMailSettingsTest.php:33
+
+Caused by
+PDOException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "max_retry_attempts" of relation "company_mail_settings" violates not-null constraint
+DETAIL:  Failing row contains (2, 224, ses, t, null, null, null, null, null, 18, null, null, us-west-2, kuvalis.org, null, http://bayer.com/et-sunt-provident-assumenda-et, eyJpdiI6IldHRzFJdlY4WHlQTWl6WUxyY0U4SEE9PSIsInZhbHVlIjoiYlFCL3FZ..., null, phermann@example.net, Prof. Ava Buckridge, null, Van Deckow II, 89, 998, 1783, t, f, f, null, null, f, null, "[]", 2025-10-03 22:33:12, 2025-10-03 22:33:12, null, null, schinner.com, darren.macejkovic@example.com).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/CompanyMailSettingsTest.php:33
+
+3) Tests\Unit\Models\CompanySubscriptionTest::test_can_create_company_subscription_with_factory
+Illuminate\Database\QueryException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too long for type character varying(50) (Connection: pgsql, SQL: insert into "subscription_plans" ("name", "slug", "stripe_price_id", "price_monthly", "user_limit", "description", "features", "is_active", "sort_order", "updated_at", "created_at") values (enterprise, eius-saepe-delectus-id-earum-cupiditate-repellat-dolorem-provident, price_ad62c2d6-9ee0-34d3-9003-b55df84ae914, 236.42, 32, Occaecati facere enim molestiae nihil non est dolores., ["core_psa_features","basic_reporting","priority_support","api_access"], 1, 2, 2025-10-03 22:33:12, 2025-10-03 22:33:12) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:529
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Arr.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Collection.php:814
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:521
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:475
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:459
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/GuardsAttributes.php:157
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:458
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:429
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:318
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/CompanySubscriptionTest.php:21
+
+Caused by
+PDOException: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too long for type character varying(50)
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:529
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Arr.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Collection.php:814
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:521
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:475
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:459
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/GuardsAttributes.php:157
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:458
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:429
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:318
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/CompanySubscriptionTest.php:21
+
+4) Tests\Unit\Models\PhysicalMailSettingsTest::test_can_create_physical_mail_settings_with_factory
+Illuminate\Database\QueryException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "markup_percentage" of relation "physical_mail_settings" violates not-null constraint
+DETAIL:  Failing row contains (1, 463, null, 75763, null, f, quas porro et, cum aliquid adipisci, 6, null, 613, ME, null, VA, priority, f, t, top_first_page, postcard, t, null, t, f, f, f, f, f, 2025-09-12 10:33:34, active, 2025-10-03 22:33:41, 2025-10-03 22:33:41). (Connection: pgsql, SQL: insert into "physical_mail_settings" ("company_id", "test_key", "live_key", "webhook_secret", "force_test_mode", "from_company_name", "from_contact_name", "from_address_line1", "from_address_line2", "from_city", "from_state", "from_zip", "from_country", "default_mailing_class", "default_color_printing", "default_double_sided", "default_address_placement", "default_size", "track_costs", "markup_percentage", "include_tax", "enable_ncoa", "enable_address_verification", "enable_return_envelopes", "enable_bulk_mail", "is_active", "last_connection_test", "last_connection_status", "updated_at", "created_at") values (463, ?, 75763, ?, 0, quas porro et, cum aliquid adipisci, 6, ?, 613, ME, ?, VA, priority, 0, 1, top_first_page, postcard, 1, ?, 1, 0, 0, 0, 0, 0, 2025-09-12 10:33:34, active, 2025-10-03 22:33:41, 2025-10-03 22:33:41) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/PhysicalMailSettingsTest.php:21
+
+Caused by
+PDOException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "markup_percentage" of relation "physical_mail_settings" violates not-null constraint
+DETAIL:  Failing row contains (1, 463, null, 75763, null, f, quas porro et, cum aliquid adipisci, 6, null, 613, ME, null, VA, priority, f, t, top_first_page, postcard, t, null, t, f, f, f, f, f, 2025-09-12 10:33:34, active, 2025-10-03 22:33:41, 2025-10-03 22:33:41).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/PhysicalMailSettingsTest.php:21
+
+5) Tests\Unit\Models\PhysicalMailSettingsTest::test_physical_mail_settings_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "markup_percentage" of relation "physical_mail_settings" violates not-null constraint
+DETAIL:  Failing row contains (2, 464, null, 483492661, null, t, qui eos quia, ut eum magni, null, null, 93055817, OR, 174, MD, priority, f, t, top_all_pages, postcard, t, null, t, f, f, t, f, t, null, active, 2025-10-03 22:33:42, 2025-10-03 22:33:42). (Connection: pgsql, SQL: insert into "physical_mail_settings" ("company_id", "test_key", "live_key", "webhook_secret", "force_test_mode", "from_company_name", "from_contact_name", "from_address_line1", "from_address_line2", "from_city", "from_state", "from_zip", "from_country", "default_mailing_class", "default_color_printing", "default_double_sided", "default_address_placement", "default_size", "track_costs", "markup_percentage", "include_tax", "enable_ncoa", "enable_address_verification", "enable_return_envelopes", "enable_bulk_mail", "is_active", "last_connection_test", "last_connection_status", "updated_at", "created_at") values (464, ?, 483492661, ?, 1, qui eos quia, ut eum magni, ?, ?, 93055817, OR, 174, MD, priority, 0, 1, top_all_pages, postcard, 1, ?, 1, 0, 0, 1, 0, 1, ?, active, 2025-10-03 22:33:42, 2025-10-03 22:33:42) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/PhysicalMailSettingsTest.php:33
+
+Caused by
+PDOException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "markup_percentage" of relation "physical_mail_settings" violates not-null constraint
+DETAIL:  Failing row contains (2, 464, null, 483492661, null, t, qui eos quia, ut eum magni, null, null, 93055817, OR, 174, MD, priority, f, t, top_all_pages, postcard, t, null, t, f, f, t, f, t, null, active, 2025-10-03 22:33:42, 2025-10-03 22:33:42).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/PhysicalMailSettingsTest.php:33
+
+6) Tests\Unit\Models\QuickActionFavoriteTest::test_can_create_quick_action_favorite_with_factory
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "company_id" of relation "quick_action_favorites" does not exist
+LINE 1: insert into "quick_action_favorites" ("company_id", "system_...
+                                              ^ (Connection: pgsql, SQL: insert into "quick_action_favorites" ("company_id", "system_action", "position", "updated_at", "created_at") values (511, ?, 19, 2025-10-03 22:33:47, 2025-10-03 22:33:47) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/tests/Unit/Models/QuickActionFavoriteTest.php:20
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "company_id" of relation "quick_action_favorites" does not exist
+LINE 1: insert into "quick_action_favorites" ("company_id", "system_...
+                                              ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/tests/Unit/Models/QuickActionFavoriteTest.php:20
+
+7) Tests\Unit\Models\QuickActionFavoriteTest::test_quick_action_favorite_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "company_id" of relation "quick_action_favorites" does not exist
+LINE 1: insert into "quick_action_favorites" ("company_id", "system_...
+                                              ^ (Connection: pgsql, SQL: insert into "quick_action_favorites" ("company_id", "system_action", "position", "updated_at", "created_at") values (512, 55042, 34, 2025-10-03 22:33:47, 2025-10-03 22:33:47) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/tests/Unit/Models/QuickActionFavoriteTest.php:31
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "company_id" of relation "quick_action_favorites" does not exist
+LINE 1: insert into "quick_action_favorites" ("company_id", "system_...
+                                              ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/tests/Unit/Models/QuickActionFavoriteTest.php:31
+
+8) Tests\Unit\Models\QuoteInvoiceConversionTest::test_can_create_quote_invoice_conversion_with_factory
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total_steps" of relation "quote_invoice_conversions" does not exist
+LINE 1: ...", "status", "activation_status", "current_step", "total_ste...
+                                                             ^ (Connection: pgsql, SQL: insert into "quote_invoice_conversions" ("company_id", "status", "activation_status", "current_step", "total_steps", "max_retries", "retry_count", "deferred_revenue", "recognized_revenue", "adjustment_amount", "audit_trail", "updated_at", "created_at") values (527, pending, pending, 1, 1, 3, 0, 0, 0, 0, [{"action":"conversion_created","data":{"conversion_type":null,"original_value":null},"timestamp":"2025-10-03T22:33:48.916621Z","user_id":null}], 2025-10-03 22:33:48, 2025-10-03 22:33:48) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/QuoteInvoiceConversionTest.php:21
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total_steps" of relation "quote_invoice_conversions" does not exist
+LINE 1: ...", "status", "activation_status", "current_step", "total_ste...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/QuoteInvoiceConversionTest.php:21
+
+9) Tests\Unit\Models\QuoteInvoiceConversionTest::test_quote_invoice_conversion_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total_steps" of relation "quote_invoice_conversions" does not exist
+LINE 1: ...", "status", "activation_status", "current_step", "total_ste...
+                                                             ^ (Connection: pgsql, SQL: insert into "quote_invoice_conversions" ("company_id", "status", "activation_status", "current_step", "total_steps", "max_retries", "retry_count", "deferred_revenue", "recognized_revenue", "adjustment_amount", "audit_trail", "updated_at", "created_at") values (528, pending, pending, 1, 1, 3, 0, 0, 0, 0, [{"action":"conversion_created","data":{"conversion_type":null,"original_value":null},"timestamp":"2025-10-03T22:33:49.073558Z","user_id":null}], 2025-10-03 22:33:49, 2025-10-03 22:33:49) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/QuoteInvoiceConversionTest.php:33
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total_steps" of relation "quote_invoice_conversions" does not exist
+LINE 1: ...", "status", "activation_status", "current_step", "total_ste...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/QuoteInvoiceConversionTest.php:33
+
+10) Tests\Unit\Models\RefundTransactionTest::test_can_create_refund_transaction_with_factory
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "net_amount" of relation "refund_transactions" does not exist
+LINE 1: ...", "initiated_at", "max_retries", "processed_by", "net_amoun...
+                                                             ^ (Connection: pgsql, SQL: insert into "refund_transactions" ("company_id", "amount", "transaction_id", "initiated_at", "max_retries", "processed_by", "net_amount", "sla_deadline", "updated_at", "created_at") values (569, 67.16, OIX7E46YSSFG6KZDX21J, 2025-09-08 12:33:32, 3, ?, 67.16, 2025-10-04 22:33:52, 2025-10-03 22:33:52, 2025-10-03 22:33:52) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/RefundTransactionTest.php:21
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "net_amount" of relation "refund_transactions" does not exist
+LINE 1: ...", "initiated_at", "max_retries", "processed_by", "net_amoun...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/RefundTransactionTest.php:21
+
+11) Tests\Unit\Models\RefundTransactionTest::test_refund_transaction_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "net_amount" of relation "refund_transactions" does not exist
+LINE 1: ...", "initiated_at", "max_retries", "processed_by", "net_amoun...
+                                                             ^ (Connection: pgsql, SQL: insert into "refund_transactions" ("company_id", "amount", "transaction_id", "initiated_at", "max_retries", "processed_by", "net_amount", "sla_deadline", "updated_at", "created_at") values (570, 576.17, 7YYFAHD9AHHFJX88DP73, 2025-09-13 13:02:01, 3, ?, 576.17, 2025-10-04 22:33:52, 2025-10-03 22:33:52, 2025-10-03 22:33:52) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/RefundTransactionTest.php:33
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "net_amount" of relation "refund_transactions" does not exist
+LINE 1: ...", "initiated_at", "max_retries", "processed_by", "net_amoun...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/RefundTransactionTest.php:33
+
+12) Tests\Unit\Models\ServiceTaxRateTest::test_can_create_service_tax_rate_with_factory
+Illuminate\Database\QueryException: SQLSTATE[22003]: Numeric value out of range: 7 ERROR:  numeric field overflow
+DETAIL:  A field with precision 10, scale 4 must round to an absolute value less than 10^6. (Connection: pgsql, SQL: insert into "service_tax_rates" ("company_id", "tax_jurisdiction_id", "service_type", "tax_type", "tax_name", "authority_name", "tax_code", "description", "regulatory_code", "rate_type", "percentage_rate", "fixed_amount", "minimum_threshold", "maximum_amount", "calculation_method", "service_types", "conditions", "is_active", "is_recoverable", "is_compound", "priority", "effective_date", "expiry_date", "source", "last_updated_from_source", "metadata", "updated_at", "created_at") values (575, 1, 4, 3, adipisci cupiditate accusantium, ipsum itaque modi, 424.85, ?, et, 2, 419.97, 4765.05, 46343964, 6065.83, compound, 1, 34, 1, 0, 1, ?, 2025-05-23 17:54:00, ?, 3436, 2024-10-10 18:15:07, "[]", 2025-10-03 22:33:54, 2025-10-03 22:33:54) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTaxRateTest.php:21
+
+Caused by
+PDOException: SQLSTATE[22003]: Numeric value out of range: 7 ERROR:  numeric field overflow
+DETAIL:  A field with precision 10, scale 4 must round to an absolute value less than 10^6.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTaxRateTest.php:21
+
+13) Tests\Unit\Models\ServiceTaxRateTest::test_service_tax_rate_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[23514]: Check violation: 7 ERROR:  new row for relation "service_tax_rates" violates check constraint "service_tax_rates_rate_type_check"
+DETAIL:  Failing row contains (1, 576, 1, null, 2, 4, ipsam perspiciatis labore, quia et repellendus, 69.81, Numquam possimus quibusdam distinctio eum laudantium dolorem ut., maiores, 4, 530.2600, 6370.6900, null, 7315.4800, standard, 3, 402919001, t, t, f, 25, 2025-02-03 14:45:15, 2024-10-25 01:10:13, null, 8818, 2025-08-20 21:42:21, "[]", 2025-10-03 22:33:54, 2025-10-03 22:33:54, null). (Connection: pgsql, SQL: insert into "service_tax_rates" ("company_id", "tax_jurisdiction_id", "service_type", "tax_type", "tax_name", "authority_name", "tax_code", "description", "regulatory_code", "rate_type", "percentage_rate", "fixed_amount", "minimum_threshold", "maximum_amount", "calculation_method", "service_types", "conditions", "is_active", "is_recoverable", "is_compound", "priority", "effective_date", "expiry_date", "source", "last_updated_from_source", "metadata", "updated_at", "created_at") values (576, 1, 2, 4, ipsam perspiciatis labore, quia et repellendus, 69.81, Numquam possimus quibusdam distinctio eum laudantium dolorem ut., maiores, 4, 530.26, 6370.69, ?, 7315.48, standard, 3, 402919001, 1, 1, 0, 25, 2025-02-03 14:45:15, 2024-10-25 01:10:13, 8818, 2025-08-20 21:42:21, "[]", 2025-10-03 22:33:54, 2025-10-03 22:33:54) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTaxRateTest.php:33
+
+Caused by
+PDOException: SQLSTATE[23514]: Check violation: 7 ERROR:  new row for relation "service_tax_rates" violates check constraint "service_tax_rates_rate_type_check"
+DETAIL:  Failing row contains (1, 576, 1, null, 2, 4, ipsam perspiciatis labore, quia et repellendus, 69.81, Numquam possimus quibusdam distinctio eum laudantium dolorem ut., maiores, 4, 530.2600, 6370.6900, null, 7315.4800, standard, 3, 402919001, t, t, f, 25, 2025-02-03 14:45:15, 2024-10-25 01:10:13, null, 8818, 2025-08-20 21:42:21, "[]", 2025-10-03 22:33:54, 2025-10-03 22:33:54, null).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTaxRateTest.php:33
+
+14) Tests\Unit\Models\ServiceTest::test_can_create_service_with_factory
+Illuminate\Database\QueryException: SQLSTATE[23514]: Check violation: 7 ERROR:  new row for relation "services" violates check constraint "services_service_type_check"
+DETAIL:  Failing row contains (1, 31, 5, 79.00, null, null, null, 8616, null, null, f, 26, 8420, 9176669, null, "[]", "[]", t, null, t, 530.27, 163, null, null, f, 5889987, 2025-10-03 22:33:54, 2025-10-03 22:33:54, 577). (Connection: pgsql, SQL: insert into "services" ("company_id", "product_id", "service_type", "estimated_hours", "sla_days", "response_time_hours", "resolution_time_hours", "deliverables", "dependencies", "requirements", "requires_scheduling", "min_notice_hours", "duration_minutes", "availability_schedule", "required_skills", "required_resources", "has_setup_fee", "setup_fee", "has_cancellation_fee", "cancellation_fee", "cancellation_notice_hours", "minimum_commitment_months", "maximum_duration_months", "auto_renew", "renewal_notice_days", "updated_at", "created_at") values (577, 31, 5, 79, ?, ?, ?, 8616, ?, ?, 0, 26, 8420, 9176669, "[]", "[]", 1, ?, 1, 530.27, 163, ?, ?, 0, 5889987, 2025-10-03 22:33:54, 2025-10-03 22:33:54) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTest.php:21
+
+Caused by
+PDOException: SQLSTATE[23514]: Check violation: 7 ERROR:  new row for relation "services" violates check constraint "services_service_type_check"
+DETAIL:  Failing row contains (1, 31, 5, 79.00, null, null, null, 8616, null, null, f, 26, 8420, 9176669, null, "[]", "[]", t, null, t, 530.27, 163, null, null, f, 5889987, 2025-10-03 22:33:54, 2025-10-03 22:33:54, 577).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTest.php:21
+
+15) Tests\Unit\Models\ServiceTest::test_service_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[22003]: Numeric value out of range: 7 ERROR:  numeric field overflow
+DETAIL:  A field with precision 8, scale 2 must round to an absolute value less than 10^6. (Connection: pgsql, SQL: insert into "services" ("company_id", "product_id", "service_type", "estimated_hours", "sla_days", "response_time_hours", "resolution_time_hours", "deliverables", "dependencies", "requirements", "requires_scheduling", "min_notice_hours", "duration_minutes", "availability_schedule", "required_skills", "required_resources", "has_setup_fee", "setup_fee", "has_cancellation_fee", "cancellation_fee", "cancellation_notice_hours", "minimum_commitment_months", "maximum_duration_months", "auto_renew", "renewal_notice_days", "updated_at", "created_at") values (580, 32, 5, 1241633, ?, 9309276, 3, 60782, 695952244, "Aut iste consequatur labore ipsum sunt illum.", 1, 12, ?, ?, "[]", "[]", 1, ?, 1, 95.13, 158, ?, 2, 0, 6032, 2025-10-03 22:33:54, 2025-10-03 22:33:54) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTest.php:33
+
+Caused by
+PDOException: SQLSTATE[22003]: Numeric value out of range: 7 ERROR:  numeric field overflow
+DETAIL:  A field with precision 8, scale 2 must round to an absolute value less than 10^6.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTest.php:33
+
+16) Tests\Unit\Models\SettingTest::test_can_create_setting_with_factory
+Illuminate\Database\QueryException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "70"
+CONTEXT:  unnamed portal parameter $21 = '...' (Connection: pgsql, SQL: insert into "settings" ("company_id", "current_database_version", "start_page", "company_logo", "company_colors", "company_address", "company_city", "company_state", "company_zip", "company_country", "company_phone", "company_website", "business_hours", "company_holidays", "company_language", "company_currency", "custom_fields", "localization_settings", "password_min_length", "password_require_special", "password_require_numbers", "password_require_uppercase", "password_expiry_days", "password_history_count", "two_factor_enabled", "two_factor_methods", "remember_me_enabled", "email_verification_required", "api_authentication_enabled", "session_timeout_minutes", "force_single_session", "max_login_attempts", "login_lockout_duration", "lockout_duration_minutes", "password_require_lowercase", "password_require_number", "session_lifetime", "idle_timeout", "single_session_per_user", "logout_on_browser_close", "ip_whitelist_enabled", "whitelisted_ips", "oauth_google_enabled", "oauth_google_client_secret", "oauth_microsoft_enabled", "oauth_microsoft_client_secret", "saml_enabled", "saml_sso_url", "saml_certificate", "audit_login_attempts", "audit_password_changes", "audit_permission_changes", "audit_data_access", "audit_log_retention_days", "alert_suspicious_activity", "alert_multiple_failed_logins", "security_alert_email", "allowed_ip_ranges", "blocked_ip_ranges", "geo_blocking_enabled", "allowed_countries", "sso_settings", "audit_logging_enabled", "audit_retention_days", "login_message", "login_key_required", "login_key_secret", "smtp_host", "smtp_port", "smtp_encryption", "smtp_username", "smtp_password", "smtp_auth_required", "smtp_use_tls", "smtp_timeout", "mail_from_email", "mail_from_name", "email_retry_attempts", "email_templates", "email_signatures", "email_tracking_enabled", "imap_host", "imap_port", "imap_encryption", "imap_auth_method", "imap_username", "imap_password", "sms_settings", "voice_settings", "slack_settings", "teams_settings", "discord_settings", "video_conferencing_settings", "communication_preferences", "quiet_hours_start", "quiet_hours_end", "default_transfer_from_account", "default_transfer_to_account", "default_payment_account", "default_expense_account", "default_payment_method", "default_expense_payment_method", "default_calendar", "default_net_terms", "default_hourly_rate", "multi_currency_enabled", "supported_currencies", "exchange_rate_provider", "auto_update_exchange_rates", "tax_calculation_settings", "tax_engine_provider", "payment_gateway_settings", "stripe_settings", "square_settings", "paypal_settings", "authorize_net_settings", "ach_settings", "wire_settings", "check_settings", "recurring_billing_enabled", "recurring_billing_settings", "late_fee_settings", "collection_settings", "accounting_integration_settings", "quickbooks_settings", "xero_settings", "sage_settings", "revenue_recognition_enabled", "revenue_recognition_settings", "purchase_order_settings", "expense_approval_settings", "invoice_prefix", "invoice_next_number", "invoice_footer", "invoice_from_name", "invoice_from_email", "invoice_late_fee_enable", "invoice_late_fee_percent", "quote_prefix", "quote_next_number", "quote_footer", "quote_from_name", "quote_from_email", "recurring_auto_send_invoice", "send_invoice_reminders", "invoice_overdue_reminders", "connectwise_automate_settings", "datto_rmm_settings", "ninja_rmm_settings", "kaseya_vsa_settings", "auvik_settings", "prtg_settings", "solarwinds_settings", "monitoring_alert_thresholds", "escalation_rules", "asset_discovery_settings", "patch_management_settings", "remote_access_settings", "auto_create_tickets_from_alerts", "alert_to_ticket_mapping", "ticket_prefix", "ticket_next_number", "ticket_from_name", "ticket_from_email", "ticket_email_parse", "ticket_client_general_notifications", "ticket_autoclose", "ticket_autoclose_hours", "ticket_new_ticket_notification_email", "ticket_categorization_rules", "ticket_priority_rules", "sla_definitions", "sla_escalation_policies", "auto_assignment_rules", "routing_logic", "approval_workflows", "time_tracking_enabled", "time_tracking_settings", "customer_satisfaction_enabled", "csat_settings", "ticket_templates", "ticket_automation_rules", "multichannel_settings", "queue_management_settings", "project_templates", "project_standardization_settings", "resource_allocation_settings", "capacity_planning_settings", "project_time_tracking_enabled", "project_billing_settings", "milestone_settings", "deliverable_settings", "gantt_chart_settings", "budget_management_settings", "profitability_tracking_settings", "change_request_workflows", "project_collaboration_settings", "document_management_settings", "asset_discovery_rules", "asset_lifecycle_settings", "software_license_settings", "hardware_warranty_settings", "procurement_settings", "vendor_management_settings", "asset_depreciation_settings", "asset_tracking_settings", "barcode_scanning_enabled", "barcode_settings", "mobile_asset_management_enabled", "asset_relationship_settings", "asset_compliance_settings", "client_portal_enable", "portal_branding_settings", "portal_customization_settings", "portal_access_controls", "portal_feature_toggles", "portal_self_service_tickets", "portal_knowledge_base_access", "portal_invoice_access", "portal_payment_processing", "portal_asset_visibility", "portal_sso_settings", "portal_mobile_settings", "portal_dashboard_settings", "business_rule_engine_settings", "workflow_automation_templates", "rpa_bot_settings", "event_driven_automation", "custom_script_policies", "integration_middleware_settings", "data_synchronization_rules", "notification_automation_settings", "approval_process_automation", "document_generation_automation", "soc2_compliance_enabled", "soc2_settings", "hipaa_compliance_enabled", "hipaa_settings", "pci_compliance_enabled", "pci_settings", "gdpr_compliance_enabled", "gdpr_settings", "industry_compliance_settings", "data_retention_policies", "data_destruction_policies", "risk_assessment_settings", "vendor_compliance_settings", "incident_response_settings", "backup_policies", "backup_schedules", "recovery_time_objective", "recovery_point_objective", "disaster_recovery_procedures", "data_replication_settings", "business_continuity_settings", "testing_validation_schedules", "cloud_backup_settings", "ransomware_protection_settings", "recovery_documentation_settings", "system_resource_monitoring", "performance_tuning_settings", "caching_strategies", "database_optimization_settings", "cdn_load_balancing_settings", "api_performance_settings", "search_optimization_settings", "mobile_performance_settings", "system_health_monitoring", "custom_dashboard_settings", "report_templates", "report_scheduling_settings", "kpi_metric_definitions", "data_visualization_settings", "executive_summary_settings", "benchmarking_settings", "predictive_analytics_settings", "export_delivery_settings", "data_warehouse_settings", "business_intelligence_settings", "multichannel_notification_settings", "alert_escalation_policies", "notification_quiet_hours", "notification_templates", "notification_frequency_rules", "notification_batching_rules", "emergency_notification_settings", "mobile_push_settings", "webhook_notification_settings", "custom_notification_rules", "notification_localization_settings", "api_key_management_settings", "api_rate_limiting_settings", "api_throttling_settings", "webhook_configuration_settings", "third_party_integration_settings", "data_mapping_settings", "sync_scheduling_settings", "integration_monitoring_settings", "custom_connector_settings", "marketplace_integration_settings", "legacy_system_bridge_settings", "mobile_app_settings", "offline_mode_settings", "mobile_push_notification_settings", "remote_access_policies", "gps_tracking_settings", "mobile_device_management_settings", "byod_policies", "mobile_feature_settings", "mobile_sync_settings", "mobile_battery_optimization", "knowledge_base_settings", "training_module_settings", "documentation_standards", "video_library_settings", "certification_tracking_settings", "skills_assessment_settings", "learning_path_settings", "external_training_integration_settings", "documentation_versioning_settings", "search_discovery_settings", "enable_cron", "cron_key", "enable_alert_domain_expire", "theme", "telemetry", "timezone", "date_format", "destructive_deletes_enable", "module_enable_itdoc", "module_enable_accounting", "module_enable_ticketing", "updated_at", "created_at") values (583, 1835, ?, ?, 3, ?, 205, 64847894, 1, US, 1-678-968-8473, 816, 8505, ?, 39757942, USD, 5575824, ?, 8, 0, 70, 1, ?, 99, 0, 7237120, 1, elinor29@example.com, 0, 41, ?, ?, 3880096, ?, 0, 52, ?, 99, ?, ?, 1, 2028, 0, ?, 0, ?, 1, ?, ?, ?, 29577, ?, ?, ?, ?, ?, xeichmann@example.net, false, 78987421, 0, 96, 3, 1, 365, 17, 1, ?, ?, ?, ?, impedit ea possimus, eyJpdiI6IkthMnJvYTArY3VrUUpabVdaNzJFVVE9PSIsInZhbHVlIjoicU9RbVlFdUFzNEVOankrbFJ4cjVZZz09IiwibWFjIjoiZDk1MGMyOTNiZTU4YzQyYmZjM2M0NWRkZDU0NjhmNjA3YmI1ZGYyMzk2YTE3OGJkYmFmYzUwODQ4YzEyNWJkMSIsInRhZyI6IiJ9, 1, 633, 59641, caitlyn.kerluke@example.org, quis et iusto, vandervort.darryl@example.net, "toy03@example.net", "qstrosin@example.org", bayer.esta@example.net, 52396, 23, ?, 23, qui debitis facere, eyJpdiI6IlJKa2pOV3JxOUpCNjdJQmh6TXkveVE9PSIsInZhbHVlIjoiTTZvdEw4Y1BqcnB4Z1lQS3hSbFQ5UT09IiwibWFjIjoiNjliODJlMWZiNzBiMTY4M2YwZjdjOTRiMDliNDMxZjdjZmRlMTRjNTA3MjU1ZGRiMWE3YWU5ZWViZjIzZGZmZiIsInRhZyI6IiJ9, ?, ?, 688788, ?, ?, 72, 45, ?, 1, 52, 21, ?, ?, 59946, ?, ?, ?, http://www.predovic.com/similique-est-id-qui-temporibus-distinctio-delectus-dicta, 1, ?, 55, 401.98, 496.75, ?, ?, 4, ?, 7522, ?, ?, 24458550, 47256, 1, ?, 461.98, ?, ?, ?, ?, 5, 1, 155, 95, ?, 17712406, ?, 7581177, qui laudantium et, predovic.vergie@example.com, 789.97, ?, ?, 42, ?, cumque natus quam, dblick@example.net, ?, ?, ?, 91138198, ?, ?, ?, ?, 21, 9528, 69254032, ?, ?, ?, 358062359, 695, 57, ?, 51, est cum eveniet, mertz.stella@example.com, dicki.mikayla@example.net, 8788, 741601, 507427, uglover@example.org, ?, ?, ?, 698581, ?, 468, 7, 1, ?, 1, 95, 594352, ?, 6643, ?, ?, 7907487, ?, 324719, 1, ?, ?, ?, ?, ?, ?, 8346, ?, ?, 7, ?, 47033830, 45, ?, 36494691, 13917354, 3303196, 0, "quia", 1, ?, ?, 3, ?, ?, ?, 82, ?, ?, 40, 25, ?, ?, 53, ?, 7, ?, ?, ?, 2891, 10, ?, 369142530, ?, ?, 1, 69357871, 1, ?, 1, ?, 1, 96510094, 85340541, ?, 10495, ?, 141, ?, 18236, ?, ?, 2194985, ?, ?, ?, 35, ?, ?, ?, 9, 67481, 353.89, ?, 1, ?, ?, ?, ?, 16, 26, 93, 3, ?, 793287967, ?, 376, 33, ?, ?, ?, ?, 65, ?, ?, ?, ?, ?, ?, ?, 98457, 1, ?, ?, ?, 320317241, 14, ?, ?, 74, ?, ?, 8, 2, 3258570, ?, ?, 499180575, 927433, ?, 7717455, 981695189, 1514, ?, 1189, ?, 8010068, ?, ?, ?, 571, ?, 0, ?, 0, ?, 41391714, ?, ?, 1, 1, 11, 1, 2025-10-03 22:33:55, 2025-10-03 22:33:55) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SettingTest.php:21
+
+Caused by
+PDOException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "70"
+CONTEXT:  unnamed portal parameter $21 = '...'
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SettingTest.php:21
+
+17) Tests\Unit\Models\SettingTest::test_setting_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "16"
+CONTEXT:  unnamed portal parameter $21 = '...' (Connection: pgsql, SQL: insert into "settings" ("company_id", "current_database_version", "start_page", "company_logo", "company_colors", "company_address", "company_city", "company_state", "company_zip", "company_country", "company_phone", "company_website", "business_hours", "company_holidays", "company_language", "company_currency", "custom_fields", "localization_settings", "password_min_length", "password_require_special", "password_require_numbers", "password_require_uppercase", "password_expiry_days", "password_history_count", "two_factor_enabled", "two_factor_methods", "remember_me_enabled", "email_verification_required", "api_authentication_enabled", "session_timeout_minutes", "force_single_session", "max_login_attempts", "login_lockout_duration", "lockout_duration_minutes", "password_require_lowercase", "password_require_number", "session_lifetime", "idle_timeout", "single_session_per_user", "logout_on_browser_close", "ip_whitelist_enabled", "whitelisted_ips", "oauth_google_enabled", "oauth_google_client_secret", "oauth_microsoft_enabled", "oauth_microsoft_client_secret", "saml_enabled", "saml_sso_url", "saml_certificate", "audit_login_attempts", "audit_password_changes", "audit_permission_changes", "audit_data_access", "audit_log_retention_days", "alert_suspicious_activity", "alert_multiple_failed_logins", "security_alert_email", "allowed_ip_ranges", "blocked_ip_ranges", "geo_blocking_enabled", "allowed_countries", "sso_settings", "audit_logging_enabled", "audit_retention_days", "login_message", "login_key_required", "login_key_secret", "smtp_host", "smtp_port", "smtp_encryption", "smtp_username", "smtp_password", "smtp_auth_required", "smtp_use_tls", "smtp_timeout", "mail_from_email", "mail_from_name", "email_retry_attempts", "email_templates", "email_signatures", "email_tracking_enabled", "imap_host", "imap_port", "imap_encryption", "imap_auth_method", "imap_username", "imap_password", "sms_settings", "voice_settings", "slack_settings", "teams_settings", "discord_settings", "video_conferencing_settings", "communication_preferences", "quiet_hours_start", "quiet_hours_end", "default_transfer_from_account", "default_transfer_to_account", "default_payment_account", "default_expense_account", "default_payment_method", "default_expense_payment_method", "default_calendar", "default_net_terms", "default_hourly_rate", "multi_currency_enabled", "supported_currencies", "exchange_rate_provider", "auto_update_exchange_rates", "tax_calculation_settings", "tax_engine_provider", "payment_gateway_settings", "stripe_settings", "square_settings", "paypal_settings", "authorize_net_settings", "ach_settings", "wire_settings", "check_settings", "recurring_billing_enabled", "recurring_billing_settings", "late_fee_settings", "collection_settings", "accounting_integration_settings", "quickbooks_settings", "xero_settings", "sage_settings", "revenue_recognition_enabled", "revenue_recognition_settings", "purchase_order_settings", "expense_approval_settings", "invoice_prefix", "invoice_next_number", "invoice_footer", "invoice_from_name", "invoice_from_email", "invoice_late_fee_enable", "invoice_late_fee_percent", "quote_prefix", "quote_next_number", "quote_footer", "quote_from_name", "quote_from_email", "recurring_auto_send_invoice", "send_invoice_reminders", "invoice_overdue_reminders", "connectwise_automate_settings", "datto_rmm_settings", "ninja_rmm_settings", "kaseya_vsa_settings", "auvik_settings", "prtg_settings", "solarwinds_settings", "monitoring_alert_thresholds", "escalation_rules", "asset_discovery_settings", "patch_management_settings", "remote_access_settings", "auto_create_tickets_from_alerts", "alert_to_ticket_mapping", "ticket_prefix", "ticket_next_number", "ticket_from_name", "ticket_from_email", "ticket_email_parse", "ticket_client_general_notifications", "ticket_autoclose", "ticket_autoclose_hours", "ticket_new_ticket_notification_email", "ticket_categorization_rules", "ticket_priority_rules", "sla_definitions", "sla_escalation_policies", "auto_assignment_rules", "routing_logic", "approval_workflows", "time_tracking_enabled", "time_tracking_settings", "customer_satisfaction_enabled", "csat_settings", "ticket_templates", "ticket_automation_rules", "multichannel_settings", "queue_management_settings", "project_templates", "project_standardization_settings", "resource_allocation_settings", "capacity_planning_settings", "project_time_tracking_enabled", "project_billing_settings", "milestone_settings", "deliverable_settings", "gantt_chart_settings", "budget_management_settings", "profitability_tracking_settings", "change_request_workflows", "project_collaboration_settings", "document_management_settings", "asset_discovery_rules", "asset_lifecycle_settings", "software_license_settings", "hardware_warranty_settings", "procurement_settings", "vendor_management_settings", "asset_depreciation_settings", "asset_tracking_settings", "barcode_scanning_enabled", "barcode_settings", "mobile_asset_management_enabled", "asset_relationship_settings", "asset_compliance_settings", "client_portal_enable", "portal_branding_settings", "portal_customization_settings", "portal_access_controls", "portal_feature_toggles", "portal_self_service_tickets", "portal_knowledge_base_access", "portal_invoice_access", "portal_payment_processing", "portal_asset_visibility", "portal_sso_settings", "portal_mobile_settings", "portal_dashboard_settings", "business_rule_engine_settings", "workflow_automation_templates", "rpa_bot_settings", "event_driven_automation", "custom_script_policies", "integration_middleware_settings", "data_synchronization_rules", "notification_automation_settings", "approval_process_automation", "document_generation_automation", "soc2_compliance_enabled", "soc2_settings", "hipaa_compliance_enabled", "hipaa_settings", "pci_compliance_enabled", "pci_settings", "gdpr_compliance_enabled", "gdpr_settings", "industry_compliance_settings", "data_retention_policies", "data_destruction_policies", "risk_assessment_settings", "vendor_compliance_settings", "incident_response_settings", "backup_policies", "backup_schedules", "recovery_time_objective", "recovery_point_objective", "disaster_recovery_procedures", "data_replication_settings", "business_continuity_settings", "testing_validation_schedules", "cloud_backup_settings", "ransomware_protection_settings", "recovery_documentation_settings", "system_resource_monitoring", "performance_tuning_settings", "caching_strategies", "database_optimization_settings", "cdn_load_balancing_settings", "api_performance_settings", "search_optimization_settings", "mobile_performance_settings", "system_health_monitoring", "custom_dashboard_settings", "report_templates", "report_scheduling_settings", "kpi_metric_definitions", "data_visualization_settings", "executive_summary_settings", "benchmarking_settings", "predictive_analytics_settings", "export_delivery_settings", "data_warehouse_settings", "business_intelligence_settings", "multichannel_notification_settings", "alert_escalation_policies", "notification_quiet_hours", "notification_templates", "notification_frequency_rules", "notification_batching_rules", "emergency_notification_settings", "mobile_push_settings", "webhook_notification_settings", "custom_notification_rules", "notification_localization_settings", "api_key_management_settings", "api_rate_limiting_settings", "api_throttling_settings", "webhook_configuration_settings", "third_party_integration_settings", "data_mapping_settings", "sync_scheduling_settings", "integration_monitoring_settings", "custom_connector_settings", "marketplace_integration_settings", "legacy_system_bridge_settings", "mobile_app_settings", "offline_mode_settings", "mobile_push_notification_settings", "remote_access_policies", "gps_tracking_settings", "mobile_device_management_settings", "byod_policies", "mobile_feature_settings", "mobile_sync_settings", "mobile_battery_optimization", "knowledge_base_settings", "training_module_settings", "documentation_standards", "video_library_settings", "certification_tracking_settings", "skills_assessment_settings", "learning_path_settings", "external_training_integration_settings", "documentation_versioning_settings", "search_discovery_settings", "enable_cron", "cron_key", "enable_alert_domain_expire", "theme", "telemetry", "timezone", "date_format", "destructive_deletes_enable", "module_enable_itdoc", "module_enable_accounting", "module_enable_ticketing", "updated_at", "created_at") values (584, ?, 759803, 88, 243434408, ?, 57, ?, ?, 66, (351) 281-0647, ?, 466077, ?, en, USD, 736288113, 6, 8, 1, 16, 1, 1, 4, 1, 5952, 1, eshanahan@example.net, 1, 258, 691223, ?, 18047575, ?, 1, 77, ?, 82, ?, 505930886, 1, ?, 1, ?, 1, 50, 0, ?, ?, ?, 510629, 183, ?, ?, ?, 751906280, austyn37@example.com, false, ?, 1, 29, 62836, 1, 365, 854, 0, 83050938, 23, ?, 53069760, voluptatem aspernatur et, ?, 0, ?, 2126024, mschuppe@example.com, eos assumenda hic, amanda.rippin@example.net, "dangelo.waters@example.net", "german.hoeger@example.org", hrowe@example.org, 6, ?, ?, ?, perspiciatis accusantium aut, eyJpdiI6InJURnl3OHkrY1BKRWhRN1RoNHJ4Tmc9PSIsInZhbHVlIjoiY2Y5b1JnS0FObnJzdUJXQlpZSjcwZz09IiwibWFjIjoiODdlNjdmY2JhMjdjN2Y1OTU2YzFkYjVhMDEyNDIwYTM1MTBjODA4M2ExNjdjODZmYjdmZTZjNGYzMjU3YzY2MiIsInRhZyI6IiJ9, ?, 10255, ?, 16779, ?, ?, ?, 197863, ?, ?, 69, 47, ?, 98016, 4, ?, ?, http://kassulke.com/voluptatem-praesentium-placeat-doloribus-nobis-sapiente-facere.html, 0, ?, 27, 129.72, 408.08, 31, ?, 8178, 698, 23306, ?, ?, 91120, 19748, 1, ?, ?, ?, ?, 934459, 133, 5, 0, ?, 29, 44017, ?, ?, 18363029, et accusantium quidem, rodriguez.meaghan@example.com, ?, 729.14, 3401, 67, ?, quam ut est, friesen.josefina@example.org, ?, ?, 37, ?, ?, ?, 6619, ?, 44370709, 58, ?, ?, ?, ?, ?, 5322, 59, 6, 73, ullam beatae quis, oreilly.rey@example.net, concepcion73@example.org, ?, 26206820, 352015, brendan24@example.com, ?, ?, ?, 131982249, 5, 484180, 873499988, 1, 81309, 0, ?, 1, 122429038, 7972008, 49352, 54722126, 4, 255902999, ?, 1, ?, ?, 2, 2746, ?, 390, 710639, ?, 6528418, ?, 86, 47222, ?, 6213563, 27313, ?, ?, 0, "aspernatur", 1, 4243, ?, ?, 87, 5, ?, ?, 74, 8, ?, 30, 5, 95, ?, ?, ?, 32289, ?, 35120759, 930684, 40, ?, ?, ?, 175876, 1, 4363, 1, 39290913, 1, 487459802, 1, 4, 4054, 6572, 7280475, ?, 4322, ?, 19, 3063, 6, ?, 767, ?, ?, ?, 29433, 353021, ?, ?, 784306, ?, ?, ?, 886064, 409534752, ?, ?, 8, 61, 38, 88, 427518209, 644668931, 366, ?, 57, 2837193, 55903, 5, 33, ?, 19533679, 6, ?, ?, 913187398, 244, ?, ?, 8586920, 536.11, ?, ?, ?, ?, 467806764, 7, ?, ?, ?, 5061498, 52457, ?, 364, ?, 675722218, 32810, ?, 643720373, 879343531, 918412, ?, 34307, ?, 54884288, 103259, ?, ?, 533907, ?, 0, 32602236, 0, 65672919, ?, ?, ?, 0, 1, 43, 1, 2025-10-03 22:33:55, 2025-10-03 22:33:55) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SettingTest.php:33
+
+Caused by
+PDOException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "16"
+CONTEXT:  unnamed portal parameter $21 = '...'
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SettingTest.php:33
+
+18) Tests\Unit\Models\SubsidiaryPermissionTest::test_can_create_subsidiary_permission_with_factory
+Illuminate\Database\QueryException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "resource_type" of relation "subsidiary_permissions" violates not-null constraint
+DETAIL:  Failing row contains (1, 590, 591, null, null, null, null, all, null, null, f, null, f, 0, t, null, null, null, null, 2025-10-03 22:33:56, 2025-10-03 22:33:56, 589, sed ipsum mollitia). (Connection: pgsql, SQL: insert into "subsidiary_permissions" ("company_id", "granter_company_id", "grantee_company_id", "name", "updated_at", "created_at") values (589, 590, 591, sed ipsum mollitia, 2025-10-03 22:33:56, 2025-10-03 22:33:56) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SubsidiaryPermissionTest.php:21
+
+Caused by
+PDOException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "resource_type" of relation "subsidiary_permissions" violates not-null constraint
+DETAIL:  Failing row contains (1, 590, 591, null, null, null, null, all, null, null, f, null, f, 0, t, null, null, null, null, 2025-10-03 22:33:56, 2025-10-03 22:33:56, 589, sed ipsum mollitia).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SubsidiaryPermissionTest.php:21
+
+19) Tests\Unit\Models\SubsidiaryPermissionTest::test_subsidiary_permission_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "resource_type" of relation "subsidiary_permissions" violates not-null constraint
+DETAIL:  Failing row contains (2, 593, 594, null, null, null, null, all, null, null, f, null, f, 0, t, null, null, null, null, 2025-10-03 22:33:56, 2025-10-03 22:33:56, 592, odit rerum ipsa). (Connection: pgsql, SQL: insert into "subsidiary_permissions" ("company_id", "granter_company_id", "grantee_company_id", "name", "updated_at", "created_at") values (592, 593, 594, odit rerum ipsa, 2025-10-03 22:33:56, 2025-10-03 22:33:56) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SubsidiaryPermissionTest.php:33
+
+Caused by
+PDOException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "resource_type" of relation "subsidiary_permissions" violates not-null constraint
+DETAIL:  Failing row contains (2, 593, 594, null, null, null, null, all, null, null, f, null, f, 0, t, null, null, null, null, 2025-10-03 22:33:56, 2025-10-03 22:33:56, 592, odit rerum ipsa).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SubsidiaryPermissionTest.php:33
+
+20) Tests\Unit\Models\TaxApiQueryCacheTest::test_can_create_tax_api_query_cache_with_factory
+Illuminate\Database\QueryException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "expires_at" of relation "tax_api_query_cache" violates not-null constraint
+DETAIL:  Failing row contains (1, 597, taxjar, 3, 160526311, 16859, "{\"tax_amount\":0}", 2024-10-04 05:08:48, null, inactive, 9370, null, 2025-10-03 22:33:57, 2025-10-03 22:33:57). (Connection: pgsql, SQL: insert into "tax_api_query_cache" ("company_id", "api_provider", "query_type", "query_hash", "query_parameters", "api_response", "api_called_at", "expires_at", "status", "error_message", "response_time_ms", "updated_at", "created_at") values (597, taxjar, 3, 160526311, 16859, "{\"tax_amount\":0}", 2024-10-04 05:08:48, ?, inactive, 9370, ?, 2025-10-03 22:33:57, 2025-10-03 22:33:57) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxApiQueryCacheTest.php:21
+
+Caused by
+PDOException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "expires_at" of relation "tax_api_query_cache" violates not-null constraint
+DETAIL:  Failing row contains (1, 597, taxjar, 3, 160526311, 16859, "{\"tax_amount\":0}", 2024-10-04 05:08:48, null, inactive, 9370, null, 2025-10-03 22:33:57, 2025-10-03 22:33:57).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxApiQueryCacheTest.php:21
+
+21) Tests\Unit\Models\TaxApiQueryCacheTest::test_tax_api_query_cache_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "query_parameters" of relation "tax_api_query_cache" violates not-null constraint
+DETAIL:  Failing row contains (2, 598, vertex, 1, 0, null, "{\"tax_amount\":0}", 2025-02-15 12:53:12, 2025-02-09 21:04:01, inactive, null, null, 2025-10-03 22:33:57, 2025-10-03 22:33:57). (Connection: pgsql, SQL: insert into "tax_api_query_cache" ("company_id", "api_provider", "query_type", "query_hash", "query_parameters", "api_response", "api_called_at", "expires_at", "status", "error_message", "response_time_ms", "updated_at", "created_at") values (598, vertex, 1, 0, ?, "{\"tax_amount\":0}", 2025-02-15 12:53:12, 2025-02-09 21:04:01, inactive, ?, ?, 2025-10-03 22:33:57, 2025-10-03 22:33:57) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxApiQueryCacheTest.php:33
+
+Caused by
+PDOException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "query_parameters" of relation "tax_api_query_cache" violates not-null constraint
+DETAIL:  Failing row contains (2, 598, vertex, 1, 0, null, "{\"tax_amount\":0}", 2025-02-15 12:53:12, 2025-02-09 21:04:01, inactive, null, null, 2025-10-03 22:33:57, 2025-10-03 22:33:57).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxApiQueryCacheTest.php:33
+
+22) Tests\Unit\Models\TaxApiSettingsTest::test_can_create_tax_api_settings_with_factory
+Illuminate\Database\QueryException: SQLSTATE[23514]: Check violation: 7 ERROR:  new row for relation "tax_api_settings" violates check constraint "tax_api_settings_status_check"
+DETAIL:  Failing row contains (1, 599, avalara, t, null, 8104326, 492533553, 7268, 1970-01-02 02:01:54, 233.08, pending, 941089, null, null, 294, 2025-10-03 22:33:57, 2025-10-03 22:33:57). (Connection: pgsql, SQL: insert into "tax_api_settings" ("company_id", "provider", "enabled", "credentials", "configuration", "monthly_api_calls", "monthly_limit", "last_api_call", "monthly_cost", "status", "last_error", "last_health_check", "health_data", "audit_log", "updated_at", "created_at") values (599, avalara, 1, ?, 8104326, 492533553, 7268, 1970-01-02 02:01:54, 233.08, pending, 941089, ?, ?, 294, 2025-10-03 22:33:57, 2025-10-03 22:33:57) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxApiSettingsTest.php:21
+
+Caused by
+PDOException: SQLSTATE[23514]: Check violation: 7 ERROR:  new row for relation "tax_api_settings" violates check constraint "tax_api_settings_status_check"
+DETAIL:  Failing row contains (1, 599, avalara, t, null, 8104326, 492533553, 7268, 1970-01-02 02:01:54, 233.08, pending, 941089, null, null, 294, 2025-10-03 22:33:57, 2025-10-03 22:33:57).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxApiSettingsTest.php:21
+
+23) Tests\Unit\Models\TaxCalculationTest::test_can_create_tax_calculation_with_factory
+Illuminate\Database\QueryException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "69"
+CONTEXT:  unnamed portal parameter $20 = '...' (Connection: pgsql, SQL: insert into "tax_calculations" ("company_id", "calculable_type", "engine_type", "category_type", "calculation_type", "base_amount", "quantity", "input_parameters", "customer_data", "service_address", "total_tax_amount", "final_amount", "effective_tax_rate", "tax_breakdown", "api_enhancements", "jurisdictions", "exemptions_applied", "engine_metadata", "api_calls_made", "validated", "validated_at", "validated_by", "validation_notes", "status", "status_history", "created_by", "updated_by", "change_log", "calculation_time_ms", "api_calls_count", "api_cost", "updated_at", "created_at") values (601, 3, 3, 5, 2, 9232.91, 35, 2555, 939181872, 20984, 2554.98, 8242.91, 671.09, 639.23, 8623, 68410168, ?, ?, 102, 69, 1970-01-01 00:01:14, 72, ?, active, "active", 81, ?, ?, 29, 85, 277.47, 2025-10-03 22:33:58, 2025-10-03 22:33:58) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxCalculationTest.php:21
+
+Caused by
+PDOException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "69"
+CONTEXT:  unnamed portal parameter $20 = '...'
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxCalculationTest.php:21
+
+24) Tests\Unit\Models\TaxCalculationTest::test_tax_calculation_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "11"
+CONTEXT:  unnamed portal parameter $20 = '...' (Connection: pgsql, SQL: insert into "tax_calculations" ("company_id", "calculable_type", "engine_type", "category_type", "calculation_type", "base_amount", "quantity", "input_parameters", "customer_data", "service_address", "total_tax_amount", "final_amount", "effective_tax_rate", "tax_breakdown", "api_enhancements", "jurisdictions", "exemptions_applied", "engine_metadata", "api_calls_made", "validated", "validated_at", "validated_by", "validation_notes", "status", "status_history", "created_by", "updated_by", "change_log", "calculation_time_ms", "api_calls_count", "api_cost", "updated_at", "created_at") values (603, 3, 3, 2, 3, 8953.56, ?, ?, 94315, 6193, 2889.71, 948.66, 231.43, ?, 767616813, 37132, 26439406, ?, ?, 11, 1970-01-01 00:00:49, 30, Voluptatem facere vitae architecto illum assumenda quia dolor incidunt., pending, "active", 82, ?, 13, 800, 23, ?, 2025-10-03 22:33:58, 2025-10-03 22:33:58) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxCalculationTest.php:33
+
+Caused by
+PDOException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "11"
+CONTEXT:  unnamed portal parameter $20 = '...'
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxCalculationTest.php:33
+
+25) Tests\Unit\Models\TicketRatingTest::test_can_create_ticket_rating_with_factory
+Illuminate\Database\QueryException: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "ticket_ratings" violates foreign key constraint "ticket_ratings_ticket_id_foreign"
+DETAIL:  Key (ticket_id)=(473) is not present in table "tickets". (Connection: pgsql, SQL: insert into "ticket_ratings" ("company_id", "ticket_id", "client_id", "rating", "feedback", "rating_type", "updated_at", "created_at") values (615, 473, 289, 3, 776.31, 5, 2025-10-03 22:34:01, 2025-10-03 22:34:01) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TicketRatingTest.php:21
+
+Caused by
+PDOException: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "ticket_ratings" violates foreign key constraint "ticket_ratings_ticket_id_foreign"
+DETAIL:  Key (ticket_id)=(473) is not present in table "tickets".
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TicketRatingTest.php:21
+
+26) Tests\Unit\Models\TicketRatingTest::test_ticket_rating_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "ticket_ratings" violates foreign key constraint "ticket_ratings_ticket_id_foreign"
+DETAIL:  Key (ticket_id)=(757) is not present in table "tickets". (Connection: pgsql, SQL: insert into "ticket_ratings" ("company_id", "ticket_id", "client_id", "rating", "feedback", "rating_type", "updated_at", "created_at") values (617, 757, 290, 5, ?, 3, 2025-10-03 22:34:01, 2025-10-03 22:34:01) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TicketRatingTest.php:33
+
+Caused by
+PDOException: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "ticket_ratings" violates foreign key constraint "ticket_ratings_ticket_id_foreign"
+DETAIL:  Key (ticket_id)=(757) is not present in table "tickets".
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TicketRatingTest.php:33
+
+27) Tests\Unit\Models\TimeEntryTest::test_can_create_time_entry_with_factory
+Illuminate\Database\QueryException: SQLSTATE[22007]: Invalid datetime format: 7 ERROR:  invalid input syntax for type time: "88189817"
+CONTEXT:  unnamed portal parameter $9 = '...' (Connection: pgsql, SQL: insert into "time_entries" ("company_id", "user_id", "hours", "billable", "rate", "description", "date", "start_time", "end_time", "updated_at", "created_at") values (619, 83, 2.06, 0, 132.14, ?, ?, ?, 88189817, 2025-10-03 22:34:01, 2025-10-03 22:34:01) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TimeEntryTest.php:21
+
+Caused by
+PDOException: SQLSTATE[22007]: Invalid datetime format: 7 ERROR:  invalid input syntax for type time: "88189817"
+CONTEXT:  unnamed portal parameter $9 = '...'
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TimeEntryTest.php:21
+
+28) Tests\Unit\Models\TimeEntryTest::test_time_entry_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[22007]: Invalid datetime format: 7 ERROR:  invalid input syntax for type time: "97088"
+CONTEXT:  unnamed portal parameter $8 = '...' (Connection: pgsql, SQL: insert into "time_entries" ("company_id", "user_id", "hours", "billable", "rate", "description", "date", "start_time", "end_time", "updated_at", "created_at") values (621, 84, 6.14, 1, ?, ?, ?, 97088, 6007, 2025-10-03 22:34:01, 2025-10-03 22:34:01) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TimeEntryTest.php:33
+
+Caused by
+PDOException: SQLSTATE[22007]: Invalid datetime format: 7 ERROR:  invalid input syntax for type time: "97088"
+CONTEXT:  unnamed portal parameter $8 = '...'
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TimeEntryTest.php:33
+
+29) Tests\Unit\Models\UsageRecordTest::test_can_create_usage_record_with_factory
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "transaction_id" of relation "usage_records" does not exist
+LINE 1: ...ert into "usage_records" ("company_id", "amount", "transacti...
+                                                             ^ (Connection: pgsql, SQL: insert into "usage_records" ("company_id", "amount", "transaction_id", "billing_period", "updated_at", "created_at") values (629, 644.8, TXN-68e04f5b9e4c2-1759530843, 2025-10, 2025-10-03 22:34:03, 2025-10-03 22:34:03) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/UsageRecordTest.php:21
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "transaction_id" of relation "usage_records" does not exist
+LINE 1: ...ert into "usage_records" ("company_id", "amount", "transacti...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/UsageRecordTest.php:21
+
+30) Tests\Unit\Models\UsageRecordTest::test_usage_record_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "transaction_id" of relation "usage_records" does not exist
+LINE 1: ...ert into "usage_records" ("company_id", "amount", "transacti...
+                                                             ^ (Connection: pgsql, SQL: insert into "usage_records" ("company_id", "amount", "transaction_id", "billing_period", "updated_at", "created_at") values (630, 148.69, TXN-68e04f5bc1eb5-1759530843, 2025-10, 2025-10-03 22:34:03, 2025-10-03 22:34:03) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/UsageRecordTest.php:33
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "transaction_id" of relation "usage_records" does not exist
+LINE 1: ...ert into "usage_records" ("company_id", "amount", "transacti...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/UsageRecordTest.php:33
+
+31) Tests\Unit\Models\UsageTierTest::test_can_create_usage_tier_with_factory
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "tier_order" does not exist
+LINE 1: ...where "usage_tiers"."deleted_at" is null order by "tier_orde...
+                                                             ^ (Connection: pgsql, SQL: select * from "usage_tiers" where "usage_tiers"."deleted_at" is null order by "tier_order" desc limit 1)
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3188
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3173
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3763
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3172
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+/opt/nestogy/app/Models/UsageTier.php:564
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:488
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:315
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:295
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:255
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/HasEvents.php:224
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/UsageTierTest.php:21
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "tier_order" does not exist
+LINE 1: ...where "usage_tiers"."deleted_at" is null order by "tier_orde...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3188
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3173
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3763
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3172
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+/opt/nestogy/app/Models/UsageTier.php:564
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:488
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:315
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:295
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:255
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/HasEvents.php:224
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/UsageTierTest.php:21
+
+32) Tests\Unit\Models\UsageTierTest::test_usage_tier_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "tier_order" does not exist
+LINE 1: ...where "usage_tiers"."deleted_at" is null order by "tier_orde...
+                                                             ^ (Connection: pgsql, SQL: select * from "usage_tiers" where "usage_tiers"."deleted_at" is null order by "tier_order" desc limit 1)
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3188
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3173
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3763
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3172
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+/opt/nestogy/app/Models/UsageTier.php:564
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:488
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:315
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:295
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:255
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/HasEvents.php:224
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/UsageTierTest.php:33
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "tier_order" does not exist
+LINE 1: ...where "usage_tiers"."deleted_at" is null order by "tier_orde...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3188
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3173
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3763
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3172
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+/opt/nestogy/app/Models/UsageTier.php:564
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:488
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:315
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:295
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:255
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/HasEvents.php:224
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/UsageTierTest.php:33
+
+ERRORS!
+Tests: 476, Assertions: 658, Errors: 32.

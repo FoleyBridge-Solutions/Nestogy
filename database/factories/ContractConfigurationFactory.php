@@ -11,16 +11,15 @@ class ContractConfigurationFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
-            'configuration' => $this->faker->optional()->word,
-            'metadata' => $this->faker->optional()->word,
+        return ['company_id' => \App\Models\Company::factory(),
+            'configuration' => $this->faker->optional()->randomNumber(),
+            'metadata' => json_encode([]),
             'is_active' => $this->faker->boolean(70),
-            'version' => $this->faker->optional()->word,
+            'version' => $this->faker->numberBetween(1, 10),
             'description' => $this->faker->optional()->sentence,
             'activated_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
-            'created_by' => $this->faker->optional()->word,
-            'updated_by' => $this->faker->optional()->dateTimeBetween('-1 year', 'now')
+            'created_by' => \App\Models\User::factory(),
+            'updated_by' => null
         ];
     }
 }

@@ -63,6 +63,14 @@ class Service extends Model
     }
 
     /**
+     * Get the company this service belongs to
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
      * Get the default assignee for this service
      */
     public function defaultAssignee(): BelongsTo

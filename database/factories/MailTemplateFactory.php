@@ -12,18 +12,18 @@ class MailTemplateFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
+            'company_id' => \App\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
             'display_name' => $this->faker->words(3, true),
-            'category' => $this->faker->optional()->word,
-            'subject' => $this->faker->optional()->word,
-            'html_template' => $this->faker->optional()->word,
-            'text_template' => $this->faker->optional()->word,
-            'available_variables' => $this->faker->optional()->word,
-            'default_data' => $this->faker->optional()->word,
-            'is_active' => $this->faker->boolean(70),
-            'is_system' => $this->faker->boolean(70),
-            'settings' => $this->faker->optional()->word
+            'category' => $this->faker->randomElement(['invoice', 'notification', 'reminder', 'welcome', 'other']),
+            'subject' => $this->faker->sentence,
+            'html_template' => $this->faker->randomHtml(),
+            'text_template' => $this->faker->optional()->text,
+            'available_variables' => $this->faker->optional()->passthrough(json_encode(['name', 'email', 'amount'])),
+            'default_data' => $this->faker->optional()->passthrough(json_encode([])),
+            'is_active' => $this->faker->boolean(80),
+            'is_system' => $this->faker->boolean(30),
+            'settings' => json_encode([]),
         ];
     }
 }

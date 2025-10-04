@@ -34,8 +34,7 @@ class PaymentFactory extends Factory
         $gateways = ['stripe', 'paypal', 'square', 'manual'];
         $gateway = $this->faker->randomElement($gateways);
 
-        return [
-            'company_id' => 1,
+        return ['company_id' => \App\Models\Company::factory(),
             'client_id' => Client::inRandomOrder()->first()?->id ?? Client::factory(),
             'invoice_id' => Invoice::inRandomOrder()->first()?->id ?? Invoice::factory(),
             'processed_by' => User::inRandomOrder()->first()?->id ?? User::factory(),
@@ -161,7 +160,7 @@ class PaymentFactory extends Factory
             $amount = $refundAmount ?? $attributes['amount'];
 
             return [
-                'refund_amount' => min($amount, $attributes['amount']),
+            'refund_amount' => min($amount, $attributes['amount']),
                 'refund_reason' => $reason ?? $this->faker->sentence(),
                 'refunded_at' => $this->faker->dateTimeBetween($attributes['payment_date'], 'now'),
             ];
@@ -177,7 +176,7 @@ class PaymentFactory extends Factory
             $amount = $chargebackAmount ?? $attributes['amount'];
 
             return [
-                'chargeback_amount' => min($amount, $attributes['amount']),
+            'chargeback_amount' => min($amount, $attributes['amount']),
                 'chargeback_reason' => $reason ?? 'Disputed transaction',
                 'chargeback_date' => $this->faker->dateTimeBetween($attributes['payment_date'], 'now'),
             ];

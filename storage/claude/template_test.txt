@@ -1,0 +1,147 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12
+Configuration: /opt/nestogy/phpunit.xml
+
+E                                                                   1 / 1 (100%)Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+
+Time: 00:16.916, Memory: 76.50 MB
+
+There was 1 error:
+
+1) Tests\Feature\Services\ContractServiceIntegrationTest::test_handles_template_content_generation
+Illuminate\Database\QueryException: SQLSTATE[40P01]: Deadlock detected: 7 ERROR:  deadlock detected
+DETAIL:  Process 120841 waits for AccessExclusiveLock on relation 5059242 of database 4603820; blocked by process 120981.
+Process 120981 waits for RowExclusiveLock on relation 5058845 of database 4603820; blocked by process 120841.
+HINT:  See server log for query details. (Connection: pgsql, SQL: alter table "settings" add column "sla_escalation_policies" json null)
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:559
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Schema/Blueprint.php:121
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php:618
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php:460
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+/opt/nestogy/database/migrations/2025_10_03_173300_add_more_missing_columns_batch2.php:62
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:514
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:439
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:447
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:250
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/View/Components/Task.php:41
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:809
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:250
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:210
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:137
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php:116
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:666
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php:109
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php:88
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:36
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/Util.php:43
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:96
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/Container.php:836
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Command.php:211
+/opt/nestogy/vendor/symfony/console/Command/Command.php:318
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Command.php:180
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Concerns/CallsCommands.php:68
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Concerns/CallsCommands.php:29
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/FreshCommand.php:81
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:36
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/Util.php:43
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:96
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/Container.php:836
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Command.php:211
+/opt/nestogy/vendor/symfony/console/Command/Command.php:318
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Command.php:180
+/opt/nestogy/vendor/symfony/console/Application.php:1092
+/opt/nestogy/vendor/symfony/console/Application.php:359
+/opt/nestogy/vendor/symfony/console/Application.php:194
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Application.php:165
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:426
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:451
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:675
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/InteractsWithConsole.php:87
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/RefreshDatabase.php:101
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/RefreshDatabase.php:84
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/RefreshDatabase.php:25
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/InteractsWithTestCaseLifecycle.php:209
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/InteractsWithTestCaseLifecycle.php:97
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/TestCase.php:44
+/opt/nestogy/tests/Feature/Services/ContractServiceIntegrationTest.php:31
+
+Caused by
+PDOException: SQLSTATE[40P01]: Deadlock detected: 7 ERROR:  deadlock detected
+DETAIL:  Process 120841 waits for AccessExclusiveLock on relation 5059242 of database 4603820; blocked by process 120981.
+Process 120981 waits for RowExclusiveLock on relation 5058845 of database 4603820; blocked by process 120841.
+HINT:  See server log for query details.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:570
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:559
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Schema/Blueprint.php:121
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php:618
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php:460
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+/opt/nestogy/database/migrations/2025_10_03_173300_add_more_missing_columns_batch2.php:62
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:514
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:439
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:447
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:250
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/View/Components/Task.php:41
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:809
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:250
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:210
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:137
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php:116
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php:666
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php:109
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/MigrateCommand.php:88
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:36
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/Util.php:43
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:96
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/Container.php:836
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Command.php:211
+/opt/nestogy/vendor/symfony/console/Command/Command.php:318
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Command.php:180
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Concerns/CallsCommands.php:68
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Concerns/CallsCommands.php:29
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/FreshCommand.php:81
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:36
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/Util.php:43
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:96
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Container/Container.php:836
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Command.php:211
+/opt/nestogy/vendor/symfony/console/Command/Command.php:318
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Command.php:180
+/opt/nestogy/vendor/symfony/console/Application.php:1092
+/opt/nestogy/vendor/symfony/console/Application.php:359
+/opt/nestogy/vendor/symfony/console/Application.php:194
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Console/Application.php:165
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:426
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:451
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:675
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/InteractsWithConsole.php:87
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/RefreshDatabase.php:101
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/RefreshDatabase.php:84
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/RefreshDatabase.php:25
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/InteractsWithTestCaseLifecycle.php:209
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/InteractsWithTestCaseLifecycle.php:97
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/TestCase.php:44
+/opt/nestogy/tests/Feature/Services/ContractServiceIntegrationTest.php:31
+
+ERRORS!
+Tests: 1, Assertions: 0, Errors: 1.

@@ -27,8 +27,7 @@ class ProjectFactory extends Factory
         $startDate = $this->faker->dateTimeBetween('-3 months', '+1 month');
         $endDate = $this->faker->dateTimeBetween($startDate, '+6 months');
 
-        return [
-            'client_id' => Client::factory(),
+        return ['client_id' => Client::factory(),
             'prefix' => 'PRJ',
             'number' => $this->faker->unique()->numberBetween(1, 9999),
             'name' => $this->faker->catchPhrase().' Project',
@@ -46,7 +45,7 @@ class ProjectFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'completed_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
+            'completed_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
             ];
         });
     }

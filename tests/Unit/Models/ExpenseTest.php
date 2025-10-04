@@ -18,6 +18,7 @@ class ExpenseTest extends TestCase
         $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
             'name' => 'Expense',
             'company_id' => $company->id,
+            'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
             'created_at' => now(),
@@ -39,6 +40,7 @@ class ExpenseTest extends TestCase
         $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
             'name' => 'Expense',
             'company_id' => $company->id,
+            'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
             'created_at' => now(),
@@ -60,6 +62,7 @@ class ExpenseTest extends TestCase
         $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
             'name' => 'Expense',
             'company_id' => $company->id,
+            'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
             'created_at' => now(),
@@ -81,6 +84,7 @@ class ExpenseTest extends TestCase
         $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
             'name' => 'Expense',
             'company_id' => $company->id,
+            'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
             'created_at' => now(),
@@ -102,6 +106,7 @@ class ExpenseTest extends TestCase
         $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
             'name' => 'Expense',
             'company_id' => $company->id,
+            'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
             'created_at' => now(),
@@ -133,6 +138,7 @@ class ExpenseTest extends TestCase
         $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
             'name' => 'Expense',
             'company_id' => $company->id,
+            'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
             'created_at' => now(),

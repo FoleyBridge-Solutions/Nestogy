@@ -12,7 +12,10 @@ class RefundRequestFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
+            'company_id' => \App\Models\Company::factory(),
+            'name' => $this->faker->words(3, true),
+            'requested_by' => \App\Models\User::factory(),
+            'requested_at' => $this->faker->dateTimeBetween('-30 days', 'now'),
         ];
     }
 }

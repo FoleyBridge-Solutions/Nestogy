@@ -11,13 +11,12 @@ class PermissionFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
+        return ['company_id' => \App\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
             'title' => $this->faker->words(3, true),
             'entity_type' => $this->faker->numberBetween(1, 5),
-            'only_owned' => $this->faker->optional()->word,
-            'options' => $this->faker->optional()->word
+            'only_owned' => $this->faker->boolean(),
+            'options' => json_encode([])
         ];
     }
 }

@@ -586,14 +586,14 @@ class RefundTransaction extends Model
             }
 
             // Calculate net amount
-            if (! $transaction->net_amount) {
+            if (\Schema::hasColumn('refund_transactions', 'net_amount') && ! $transaction->net_amount) {
                 $transaction->net_amount = $transaction->amount -
                     ($transaction->processing_fee ?? 0) -
                     ($transaction->gateway_fee ?? 0);
             }
 
             // Set default SLA deadline (24 hours for most transactions)
-            if (! $transaction->sla_deadline) {
+            if (\Schema::hasColumn('refund_transactions', 'sla_deadline') && ! $transaction->sla_deadline) {
                 $transaction->sla_deadline = now()->addHours(24);
             }
         });

@@ -1,0 +1,23 @@
+Remaining Factory Fixes:
+
+1. DunningActionFactory - check action_type enum values
+2. DunningSequenceFactory - check action_type enum values
+3. NetworkFactory - add gateway NOT NULL
+4. PhysicalMailSettingsFactory - add default_mailing_class NOT NULL
+5. PricingRuleFactory - add priority NOT NULL, fix discount_type enum
+6. QuickActionFavoriteTest - remove company_id from test
+7. QuoteApprovalFactory - add user_id NOT NULL
+8. QuoteInvoiceConversionTest - remove quote_id from test
+9. QuoteVersionFactory - add quote_data and version_number NOT NULL
+10. RecurringTest - remove proration_enabled from test
+11. RefundRequestTest - remove sla_deadline from test
+12. ServiceTaxRateFactory - add calculation_method NOT NULL
+13. ServiceFactory - add min_notice_hours NOT NULL  
+14. SubsidiaryPermissionFactory - add granter_company_id NOT NULL
+15. TaxApiQueryCacheFactory - add api_provider and api_response NOT NULL
+16. TaxApiSettingsFactory - add provider NOT NULL
+17. TicketRatingFactory - add client_id NOT NULL
+18. UsageBucketTest - remove code from test
+19. UsagePoolTest - remove code from test
+20. UsageRecordTest - remove usage_category from test
+21. UsageTierTest - remove description from test

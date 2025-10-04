@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
+use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -69,7 +70,7 @@ class CustomerSatisfaction extends Component
     {
         // Get recent tickets with satisfaction feedback
         // For now, we'll use ticket resolution data as a proxy
-        $recentTickets = \App\Models\Ticket::where('company_id', $companyId)
+        $recentTickets = Ticket::where('company_id', $companyId)
             ->whereIn('status', ['Resolved', 'Closed'])
             ->with('client')
             ->orderByDesc('updated_at')
@@ -94,7 +95,7 @@ class CustomerSatisfaction extends Component
 
     protected function getSatisfactionStats($companyId)
     {
-        $totalTickets = \App\Models\Ticket::where('company_id', $companyId)
+        $totalTickets = Ticket::where('company_id', $companyId)
             ->whereIn('status', ['Resolved', 'Closed'])
             ->count();
 
@@ -108,7 +109,7 @@ class CustomerSatisfaction extends Component
         }
 
         // Calculate average satisfaction from recent tickets
-        $recentTickets = \App\Models\Ticket::where('company_id', $companyId)
+        $recentTickets = Ticket::where('company_id', $companyId)
             ->whereIn('status', ['Resolved', 'Closed'])
             ->where('updated_at', '>=', now()->subDays(30))
             ->get();

@@ -295,8 +295,8 @@ class ClientLocationService
         }
 
         // Check for tickets at this location
-        if (class_exists(\App\Models\Ticket::class)) {
-            if (\App\Models\Ticket::where('location_id', $location->id)->exists()) {
+        if (class_exists(\App\Domains\Ticket\Models\Ticket::class)) {
+            if (\App\Domains\Ticket\Models\Ticket::where('location_id', $location->id)->exists()) {
                 return true;
             }
         }
@@ -322,9 +322,9 @@ class ClientLocationService
         }
 
         // Count tickets at location
-        if (class_exists(\App\Models\Ticket::class)) {
-            $stats['ticket_count'] = \App\Models\Ticket::where('location_id', $location->id)->count();
-            $stats['open_tickets'] = \App\Models\Ticket::where('location_id', $location->id)
+        if (class_exists(\App\Domains\Ticket\Models\Ticket::class)) {
+            $stats['ticket_count'] = \App\Domains\Ticket\Models\Ticket::where('location_id', $location->id)->count();
+            $stats['open_tickets'] = \App\Domains\Ticket\Models\Ticket::where('location_id', $location->id)
                 ->whereIn('status', ['open', 'in_progress'])
                 ->count();
         }

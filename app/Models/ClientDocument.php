@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

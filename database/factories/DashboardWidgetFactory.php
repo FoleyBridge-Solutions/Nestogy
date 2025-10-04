@@ -11,28 +11,20 @@ class DashboardWidgetFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
-            'widget_type' => $this->faker->numberBetween(1, 5),
-            'widget_name' => $this->faker->words(3, true),
+        return ['company_id' => \App\Models\Company::factory(),
+            'widget_id' => 'widget-' . $this->faker->unique()->uuid,
+            'name' => $this->faker->words(3, true),
+            'category' => $this->faker->randomElement(['statistics', 'charts', 'tables', 'alerts']),
+            'type' => $this->faker->randomElement(['line_chart', 'bar_chart', 'pie_chart', 'table', 'stat']),
             'description' => $this->faker->optional()->sentence,
-            'dashboard_type' => $this->faker->numberBetween(1, 5),
-            'configuration' => $this->faker->optional()->word,
-            'display_settings' => $this->faker->optional()->word,
-            'data_source' => $this->faker->optional()->word,
-            'refresh_settings' => $this->faker->optional()->word,
-            'permissions' => $this->faker->optional()->word,
-            'sort_order' => $this->faker->optional()->word,
-            'grid_row' => $this->faker->optional()->word,
-            'grid_column' => $this->faker->optional()->word,
-            'grid_width' => $this->faker->optional()->word,
-            'grid_height' => $this->faker->optional()->word,
-            'is_visible' => $this->faker->boolean(70),
+            'default_config' => json_encode(['size' => 'medium']),
+            'available_sizes' => json_encode(['small', 'medium', 'large']),
+            'data_source' => $this->faker->randomElement(['database', 'api', 'calculated']),
+            'min_refresh_interval' => $this->faker->numberBetween(30, 300),
+            'required_permissions' => json_encode([]),
             'is_active' => $this->faker->boolean(70),
-            'is_default' => $this->faker->boolean(70),
-            'last_updated_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
-            'metadata' => $this->faker->optional()->word,
-            'created_by' => $this->faker->optional()->word
+            'widget_type' => $this->faker->randomElement(['chart', 'stat', 'table']),
+            'widget_name' => $this->faker->words(3, true),
         ];
     }
 }

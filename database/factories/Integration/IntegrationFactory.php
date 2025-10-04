@@ -16,7 +16,7 @@ class IntegrationFactory extends Factory
 
         return [
             'uuid' => Str::uuid(),
-            'company_id' => 1, // Will be overridden in tests
+            'company_id' => \App\Models\Company::factory(), // Will be overridden in tests
             'provider' => $provider,
             'name' => $this->faker->company.' '.ucfirst($provider).' Integration',
             'api_endpoint' => $this->faker->url,

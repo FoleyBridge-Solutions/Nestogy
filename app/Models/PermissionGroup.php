@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Represents groups of permissions for better organization in UI.
  *
  * @property int $id
+ * @property int $company_id
  * @property string $name
  * @property string $slug
  * @property string|null $description
@@ -19,9 +21,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class PermissionGroup extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
+        'company_id',
         'name',
         'slug',
         'description',

@@ -27,8 +27,7 @@ class ContactFactory extends Factory
         $firstName = $this->faker->firstName();
         $lastName = $this->faker->lastName();
 
-        return [
-            'company_id' => Company::factory(),
+        return ['company_id' => Company::factory(),
             'client_id' => Client::factory(),
             'name' => $firstName.' '.$lastName,
             'title' => $this->faker->jobTitle(),

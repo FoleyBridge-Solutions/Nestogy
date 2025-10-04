@@ -382,7 +382,7 @@ class Network extends Model
         // Validate network configuration before saving
         static::saving(function ($network) {
             // Validate that gateway is within the network range
-            if (! $network->containsIp($network->gateway)) {
+            if ($network->gateway && ! $network->containsIp($network->gateway)) {
                 throw new \InvalidArgumentException('Gateway IP must be within the network range');
             }
         });

@@ -327,7 +327,16 @@ return new class extends Migration
         Schema::create('account_holds', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->foreignId('client_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('hold_reference')->unique()->nullable();
             $table->string('name');
+            $table->string('hold_type')->nullable();
+            $table->string('status')->default('pending');
+            $table->integer('created_by')->nullable();
+            $table->integer('grace_period_hours')->default(0);
+            $table->timestamp('grace_period_expires_at')->nullable();
+            $table->boolean('resulted_in_payment')->default(false);
+            $table->decimal('payment_amount_received', 10, 2)->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -344,6 +353,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
+            $table->string('status')->default('active');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -359,6 +369,32 @@ return new class extends Migration
         Schema::create('client_portal_sessions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->foreignId('client_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('session_token')->unique();
+            $table->string('refresh_token')->unique();
+            $table->string('device_id')->nullable();
+            $table->string('device_name')->nullable();
+            $table->string('device_type')->nullable();
+            $table->string('browser_name')->nullable();
+            $table->string('browser_version')->nullable();
+            $table->string('os_name')->nullable();
+            $table->string('os_version')->nullable();
+            $table->string('ip_address')->nullable();
+            $table->text('user_agent')->nullable();
+            $table->json('location_data')->nullable();
+            $table->boolean('is_mobile')->default(false);
+            $table->boolean('is_trusted_device')->default(false);
+            $table->boolean('two_factor_verified')->default(false);
+            $table->string('two_factor_method')->nullable();
+            $table->timestamp('two_factor_verified_at')->nullable();
+            $table->timestamp('last_activity_at')->nullable();
+            $table->timestamp('expires_at');
+            $table->timestamp('refresh_expires_at');
+            $table->json('session_data')->nullable();
+            $table->json('security_flags')->nullable();
+            $table->string('status')->default('active');
+            $table->string('revocation_reason')->nullable();
+            $table->timestamp('revoked_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -366,7 +402,13 @@ return new class extends Migration
         Schema::create('client_portal_users', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->foreignId('client_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name');
+            $table->string('email')->nullable();
+            $table->string('password')->nullable();
+            $table->string('role')->default('viewer');
+            $table->integer('session_timeout_minutes')->default(30);
+            $table->json('notification_preferences')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

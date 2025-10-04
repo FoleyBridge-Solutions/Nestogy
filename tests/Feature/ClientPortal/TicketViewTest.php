@@ -9,6 +9,7 @@ use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class TicketViewTest extends TestCase
 {
@@ -37,7 +38,7 @@ class TicketViewTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function guest_cannot_view_ticket()
     {
         $response = $this->get(route('client.tickets.show', $this->ticket->id));
@@ -45,7 +46,7 @@ class TicketViewTest extends TestCase
         $response->assertRedirect(route('client.login'));
     }
 
-    /** @test */
+    #[Test]
     public function contact_can_view_own_ticket()
     {
         $response = $this->actingAs($this->contact, 'client')
@@ -56,7 +57,7 @@ class TicketViewTest extends TestCase
         $response->assertSee('This is a test ticket');
     }
 
-    /** @test */
+    #[Test]
     public function contact_cannot_view_other_clients_ticket()
     {
         $otherClient = Client::factory()->create();
@@ -71,7 +72,7 @@ class TicketViewTest extends TestCase
         $response->assertNotFound();
     }
 
-    /** @test */
+    #[Test]
     public function ticket_displays_public_comments()
     {
         // Create a public comment from customer
@@ -103,7 +104,7 @@ class TicketViewTest extends TestCase
         $response->assertSee('Staff response here');
     }
 
-    /** @test */
+    #[Test]
     public function ticket_does_not_display_internal_comments()
     {
         // Create an internal comment (staff only)
@@ -124,7 +125,7 @@ class TicketViewTest extends TestCase
         $response->assertDontSee('Internal staff note');
     }
 
-    /** @test */
+    #[Test]
     public function ticket_displays_no_replies_message_when_empty()
     {
         $response = $this->actingAs($this->contact, 'client')
@@ -134,7 +135,7 @@ class TicketViewTest extends TestCase
         $response->assertSee('No replies yet');
     }
 
-    /** @test */
+    #[Test]
     public function ticket_comments_are_ordered_chronologically()
     {
         // Create comments with specific timestamps
@@ -173,7 +174,7 @@ class TicketViewTest extends TestCase
         $this->assertLessThan($secondPos, $firstPos, 'Comments are not in chronological order');
     }
 
-    /** @test */
+    #[Test]
     public function ticket_displays_staff_badge_for_staff_comments()
     {
         $user = User::factory()->create(['company_id' => $this->ticket->company_id]);
@@ -194,7 +195,7 @@ class TicketViewTest extends TestCase
         $response->assertSee('Staff response');
     }
 
-    /** @test */
+    #[Test]
     public function ticket_shows_correct_author_name_for_customer_comments()
     {
         TicketComment::factory()->create([
@@ -214,7 +215,7 @@ class TicketViewTest extends TestCase
         $response->assertSee('My comment');
     }
 
-    /** @test */
+    #[Test]
     public function ticket_shows_correct_author_name_for_staff_comments()
     {
         $user = User::factory()->create([
@@ -239,7 +240,7 @@ class TicketViewTest extends TestCase
         $response->assertSee('Staff response');
     }
 
-    /** @test */
+    #[Test]
     public function closed_ticket_does_not_show_reply_form()
     {
         $this->ticket->update(['status' => 'Closed']);
@@ -252,7 +253,7 @@ class TicketViewTest extends TestCase
         $response->assertDontSee('Add Reply');
     }
 
-    /** @test */
+    #[Test]
     public function resolved_ticket_does_not_show_reply_form()
     {
         $this->ticket->update(['status' => 'Resolved']);
@@ -265,7 +266,7 @@ class TicketViewTest extends TestCase
         $response->assertDontSee('Add Reply');
     }
 
-    /** @test */
+    #[Test]
     public function open_ticket_shows_reply_form()
     {
         $response = $this->actingAs($this->contact, 'client')
@@ -277,7 +278,7 @@ class TicketViewTest extends TestCase
         $response->assertSee('Send Reply');
     }
 
-    /** @test */
+    #[Test]
     public function ticket_shows_assigned_technician_when_assigned()
     {
         $user = User::factory()->create([
@@ -294,7 +295,7 @@ class TicketViewTest extends TestCase
         $response->assertSee('Tech Support');
     }
 
-    /** @test */
+    #[Test]
     public function ticket_shows_unassigned_when_not_assigned()
     {
         $this->ticket->update(['assigned_to' => null]);
@@ -306,7 +307,7 @@ class TicketViewTest extends TestCase
         $response->assertSee('Unassigned');
     }
 
-    /** @test */
+    #[Test]
     public function newly_added_comment_appears_in_conversation()
     {
         // First, view the ticket - should have no comments

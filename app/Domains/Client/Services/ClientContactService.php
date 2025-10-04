@@ -253,8 +253,8 @@ class ClientContactService
         $history = [];
 
         // Get tickets created by or assigned to this contact
-        if (class_exists(\App\Models\Ticket::class)) {
-            $tickets = \App\Models\Ticket::where('contact_id', $contact->id)
+        if (class_exists(\App\Domains\Ticket\Models\Ticket::class)) {
+            $tickets = \App\Domains\Ticket\Models\Ticket::where('contact_id', $contact->id)
                 ->orWhere('contact_email', $contact->email)
                 ->orderBy('created_at', 'desc')
                 ->limit(10)

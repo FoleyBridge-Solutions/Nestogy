@@ -135,6 +135,7 @@ class Contract extends Model
         'signed_by',
         'content',
         'variables',
+        'is_programmable',
     ];
 
     /**

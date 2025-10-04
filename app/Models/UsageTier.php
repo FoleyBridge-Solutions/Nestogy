@@ -552,16 +552,19 @@ class UsageTier extends Model
         parent::boot();
 
         static::creating(function ($tier) {
-            if (! $tier->tier_code) {
+            if (\Schema::hasColumn('usage_tiers', 'tier_code') && ! $tier->tier_code) {
                 $tier->tier_code = 'TIER-'.strtoupper(uniqid());
             }
 
             if (! isset($tier->tier_order)) {
-                $lastTier = static::where('pricing_rule_id', $tier->pricing_rule_id)
-                    ->orderBy('tier_order', 'desc')
-                    ->first();
-
-                $tier->tier_order = $lastTier ? $lastTier->tier_order + 1 : 1;
+                $query = static::query();
+                if (\Schema::hasColumn('usage_tiers', 'pricing_rule_id') && isset($tier->pricing_rule_id)) {
+                    $query->where('pricing_rule_id', $tier->pricing_rule_id);
+                }
+                if (\Schema::hasColumn('usage_tiers', 'tier_order')) {
+                    $lastTier = $query->orderBy('tier_order', 'desc')->first();
+                    $tier->tier_order = $lastTier ? $lastTier->tier_order + 1 : 1;
+                }
             }
         });
 

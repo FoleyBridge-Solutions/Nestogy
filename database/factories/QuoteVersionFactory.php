@@ -11,13 +11,13 @@ class QuoteVersionFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
-            'version_number' => $this->faker->optional()->word,
-            'quote_data' => $this->faker->optional()->word,
-            'changes' => $this->faker->optional()->word,
-            'change_reason' => $this->faker->optional()->word,
-            'created_by' => $this->faker->optional()->word
+        return ['company_id' => \App\Models\Company::factory(),
+            'quote_id' => \App\Models\Quote::factory(),
+            'version_number' => $this->faker->numberBetween(1, 100),
+            'quote_data' => json_encode(['items' => [], 'total' => 0]),
+            'changes' => $this->faker->optional()->randomNumber(),
+            'change_reason' => $this->faker->optional()->randomNumber(),
+            'created_by' => \App\Models\User::factory()
         ];
     }
 }

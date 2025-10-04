@@ -12,7 +12,11 @@ class AutoPaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
+            'company_id' => \App\Models\Company::factory(),
+            'client_id' => \App\Models\Client::factory(),
+            'payment_method_id' => \App\Models\PaymentMethod::factory(),
+            'name' => $this->faker->words(3, true),
+            'is_active' => true,
         ];
     }
 }

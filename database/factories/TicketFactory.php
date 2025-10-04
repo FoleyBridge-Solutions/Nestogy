@@ -27,8 +27,7 @@ class TicketFactory extends Factory
     {
         $createdAt = $this->faker->dateTimeBetween('-6 months', 'now');
 
-        return [
-            'company_id' => Company::factory(),
+        return ['company_id' => Company::factory(),
             'client_id' => Client::factory(),
             'created_by' => User::factory(),
             'assigned_to' => null,
@@ -96,7 +95,7 @@ class TicketFactory extends Factory
             $resolvedAt = $this->faker->dateTimeBetween($attributes['created_at'], 'now');
 
             return [
-                'status' => 'resolved',
+            'status' => 'resolved',
                 'assigned_to' => User::factory(),
                 'resolved_at' => $resolvedAt,
                 'closed_at' => null,
@@ -115,7 +114,7 @@ class TicketFactory extends Factory
             $closedAt = $this->faker->dateTimeBetween($resolvedAt, 'now');
 
             return [
-                'status' => 'closed',
+            'status' => 'closed',
                 'assigned_to' => User::factory(),
                 'resolved_at' => $resolvedAt,
                 'closed_at' => $closedAt,
@@ -227,7 +226,7 @@ class TicketFactory extends Factory
             $dueDate = $this->faker->dateTimeBetween('-30 days', '-1 day');
 
             return [
-                'due_date' => $dueDate,
+            'due_date' => $dueDate,
                 'status' => $this->faker->randomElement(['open', 'in_progress', 'pending']),
                 'resolved_at' => null,
                 'closed_at' => null,
@@ -264,7 +263,7 @@ class TicketFactory extends Factory
             $createdAt = $this->faker->dateTimeBetween('-7 days', 'now');
 
             return [
-                'created_at' => $createdAt,
+            'created_at' => $createdAt,
                 'updated_at' => $createdAt,
             ];
         });

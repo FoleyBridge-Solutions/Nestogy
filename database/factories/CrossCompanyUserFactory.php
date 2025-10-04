@@ -12,26 +12,28 @@ class CrossCompanyUserFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
-            'role_in_company' => $this->faker->optional()->word,
-            'access_type' => $this->faker->numberBetween(1, 5),
-            'access_permissions' => $this->faker->optional()->word,
-            'access_restrictions' => $this->faker->optional()->word,
-            'authorized_by' => $this->faker->optional()->word,
-            'delegated_from' => $this->faker->optional()->word,
-            'authorization_reason' => $this->faker->optional()->word,
+            'user_id' => \App\Models\User::factory(),
+            'primary_company_id' => \App\Models\Company::factory(),
+            'company_id' => \App\Models\Company::factory(),
+            'role_in_company' => $this->faker->numberBetween(1, 10),
+            'access_type' => $this->faker->randomElement(['full', 'limited', 'view_only']),
+            'access_permissions' => json_encode([]),
+            'access_restrictions' => json_encode([]),
+            'authorized_by' => null,
+            'delegated_from' => null,
+            'authorization_reason' => $this->faker->optional()->sentence,
             'is_active' => $this->faker->boolean(70),
             'access_granted_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
             'access_expires_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
             'last_accessed_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
-            'require_re_auth' => $this->faker->optional()->word,
-            'max_concurrent_sessions' => $this->faker->optional()->word,
-            'allowed_features' => $this->faker->optional()->word,
-            'audit_actions' => $this->faker->optional()->word,
-            'compliance_settings' => $this->faker->optional()->word,
+            'require_re_auth' => $this->faker->boolean(),
+            'max_concurrent_sessions' => $this->faker->numberBetween(1, 10),
+            'allowed_features' => json_encode([]),
+            'audit_actions' => $this->faker->boolean(),
+            'compliance_settings' => json_encode([]),
             'notes' => $this->faker->optional()->sentence,
-            'created_by' => $this->faker->optional()->word,
-            'updated_by' => $this->faker->optional()->dateTimeBetween('-1 year', 'now')
+            'created_by' => \App\Models\User::factory(),
+            'updated_by' => null
         ];
     }
 }

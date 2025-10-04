@@ -1,0 +1,38 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+...............................................................  63 / 726 (  8%)
+............................................................... 126 / 726 ( 17%)
+............................................................... 189 / 726 ( 26%)
+............................................................... 252 / 726 ( 34%)
+............................................................... 315 / 726 ( 43%)
+............................................................... 378 / 726 ( 52%)
+............................................................... 441 / 726 ( 60%)
+............................................................... 504 / 726 ( 69%)
+............................................................... 567 / 726 ( 78%)
+............................................................... 630 / 726 ( 86%)
+............................................................... 693 / 726 ( 95%)
+.................E...............                               726 / 726 (100%)
+
+Time: 02:24.462, Memory: 323.00 MB
+
+There was 1 error:
+
+1) Tests\Feature\Services\ContractServiceIntegrationTest::test_handles_template_content_generation
+Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+/opt/nestogy/tests/Feature/Services/ContractServiceIntegrationTest.php:345
+
+ERRORS!
+Tests: 726, Assertions: 1208, Errors: 1.

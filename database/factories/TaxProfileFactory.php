@@ -11,20 +11,19 @@ class TaxProfileFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
+        return ['company_id' => \App\Models\Company::factory(),
             'profile_type' => $this->faker->numberBetween(1, 5),
             'name' => $this->faker->words(3, true),
             'description' => $this->faker->optional()->sentence,
-            'required_fields' => $this->faker->optional()->word,
+            'required_fields' => $this->faker->boolean(),
             'tax_types' => $this->faker->numberBetween(1, 5),
-            'calculation_engine' => $this->faker->optional()->word,
-            'field_definitions' => $this->faker->optional()->word,
-            'validation_rules' => $this->faker->optional()->word,
-            'default_values' => $this->faker->optional()->word,
+            'calculation_engine' => 'simple',
+            'field_definitions' => $this->faker->optional()->randomNumber(),
+            'validation_rules' => $this->faker->optional()->numberBetween(1, 100),
+            'default_values' => $this->faker->optional()->randomNumber(),
             'is_active' => $this->faker->boolean(70),
-            'priority' => $this->faker->optional()->word,
-            'metadata' => $this->faker->optional()->word
+            'priority' => $this->faker->numberBetween(1, 100),
+            'metadata' => json_encode([])
         ];
     }
 }

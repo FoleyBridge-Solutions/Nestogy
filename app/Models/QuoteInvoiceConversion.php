@@ -612,40 +612,42 @@ class QuoteInvoiceConversion extends Model
                 $conversion->current_step = 1;
             }
 
-            if (! $conversion->total_steps) {
+            if (\Schema::hasColumn('quote_invoice_conversions', 'total_steps') && ! $conversion->total_steps) {
                 $conversion->total_steps = $conversion->calculateTotalSteps();
             }
 
-            if (! $conversion->max_retries) {
+            if (\Schema::hasColumn('quote_invoice_conversions', 'max_retries') && ! $conversion->max_retries) {
                 $conversion->max_retries = 3;
             }
 
-            if (! $conversion->retry_count) {
+            if (\Schema::hasColumn('quote_invoice_conversions', 'retry_count') && ! $conversion->retry_count) {
                 $conversion->retry_count = 0;
             }
 
-            if (! $conversion->deferred_revenue) {
+            if (\Schema::hasColumn('quote_invoice_conversions', 'deferred_revenue') && ! $conversion->deferred_revenue) {
                 $conversion->deferred_revenue = 0;
             }
 
-            if (! $conversion->recognized_revenue) {
+            if (\Schema::hasColumn('quote_invoice_conversions', 'recognized_revenue') && ! $conversion->recognized_revenue) {
                 $conversion->recognized_revenue = 0;
             }
 
-            if (! $conversion->adjustment_amount) {
+            if (\Schema::hasColumn('quote_invoice_conversions', 'adjustment_amount') && ! $conversion->adjustment_amount) {
                 $conversion->adjustment_amount = 0;
             }
 
             // Initialize audit trail
-            $conversion->audit_trail = [[
-                'action' => 'conversion_created',
-                'data' => [
-                    'conversion_type' => $conversion->conversion_type,
-                    'original_value' => $conversion->original_quote_value,
-                ],
-                'timestamp' => now(),
-                'user_id' => $conversion->initiated_by,
-            ]];
+            if (\Schema::hasColumn('quote_invoice_conversions', 'audit_trail')) {
+                $conversion->audit_trail = [[
+                    'action' => 'conversion_created',
+                    'data' => [
+                        'conversion_type' => $conversion->conversion_type,
+                        'original_value' => $conversion->original_quote_value,
+                    ],
+                    'timestamp' => now(),
+                    'user_id' => $conversion->initiated_by,
+                ]];
+            }
         });
 
         // Update processing duration when completed

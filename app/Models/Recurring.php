@@ -82,24 +82,17 @@ class Recurring extends Model
         'company_id',
         'client_id',
         'category_id',
-        'quote_id',
         'prefix',
         'number',
         'scope',
         'frequency',
         'last_sent',
         'next_date',
-        'end_date',
         'status',
-        'billing_type',
         'discount_amount',
-        'discount_type',
         'amount',
         'currency_code',
         'note',
-        'internal_notes',
-        'voip_config',
-        'pricing_model',
         'service_tiers',
         'usage_allowances',
         'overage_rates',
@@ -107,16 +100,6 @@ class Recurring extends Model
         'invoice_terms_days',
         'email_invoice',
         'email_template',
-        'proration_enabled',
-        'proration_method',
-        'contract_escalation',
-        'escalation_percentage',
-        'escalation_months',
-        'last_escalation',
-        'tax_settings',
-        'max_invoices',
-        'invoices_generated',
-        'metadata',
     ];
 
     /**
@@ -485,7 +468,8 @@ class Recurring extends Model
      */
     public function calculateUsageCharges(?Carbon $billingPeriodStart = null, ?Carbon $billingPeriodEnd = null): array
     {
-        if ($this->billing_type !== self::BILLING_TYPE_USAGE_BASED && $this->billing_type !== self::BILLING_TYPE_HYBRID) {
+        if (! \Schema::hasColumn('recurring', 'billing_type') || 
+            ($this->billing_type !== self::BILLING_TYPE_USAGE_BASED && $this->billing_type !== self::BILLING_TYPE_HYBRID)) {
             return ['total' => 0, 'breakdown' => []];
         }
 
@@ -594,7 +578,8 @@ class Recurring extends Model
         }
 
         // Calculate usage charges if applicable
-        if (in_array($this->billing_type, [self::BILLING_TYPE_USAGE_BASED, self::BILLING_TYPE_HYBRID])) {
+        if (\Schema::hasColumn('recurring', 'billing_type') && 
+            in_array($this->billing_type, [self::BILLING_TYPE_USAGE_BASED, self::BILLING_TYPE_HYBRID])) {
             $usageCharges = $this->calculateUsageCharges();
 
             if ($usageCharges['total'] > 0) {
@@ -944,15 +929,15 @@ class Recurring extends Model
             }
 
             // Set default values
-            if (! $recurring->billing_type) {
+            if (\Schema::hasColumn('recurring', 'billing_type') && ! $recurring->billing_type) {
                 $recurring->billing_type = self::BILLING_TYPE_FIXED;
             }
 
-            if (! $recurring->discount_type) {
+            if (\Schema::hasColumn('recurring', 'discount_type') && ! $recurring->discount_type) {
                 $recurring->discount_type = self::DISCOUNT_TYPE_FIXED;
             }
 
-            if (! $recurring->proration_method) {
+            if (\Schema::hasColumn('recurring', 'proration_method') && ! $recurring->proration_method) {
                 $recurring->proration_method = self::PRORATION_DAILY;
             }
 

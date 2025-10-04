@@ -1,0 +1,289 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+...............................................................  63 / 476 ( 13%)
+............................................................... 126 / 476 ( 26%)
+............................................................... 189 / 476 ( 39%)
+............................................................... 252 / 476 ( 52%)
+............................................................... 315 / 476 ( 66%)
+..................................................EE........... 378 / 476 ( 79%)
+.....................E.EE.................E.................... 441 / 476 ( 92%)
+...................................                             476 / 476 (100%)
+
+Time: 01:24.272, Memory: 231.00 MB
+
+There were 6 errors:
+
+1) Tests\Unit\Models\QuoteInvoiceConversionTest::test_can_create_quote_invoice_conversion_with_factory
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "recognized_revenue" of relation "quote_invoice_conversions" does not exist
+LINE 1: ...", "status", "activation_status", "current_step", "recognize...
+                                                             ^ (Connection: pgsql, SQL: insert into "quote_invoice_conversions" ("company_id", "status", "activation_status", "current_step", "recognized_revenue", "adjustment_amount", "audit_trail", "updated_at", "created_at") values (527, pending, pending, 1, 0, 0, [{"action":"conversion_created","data":{"conversion_type":null,"original_value":null},"timestamp":"2025-10-03T23:04:53.055999Z","user_id":null}], 2025-10-03 23:04:53, 2025-10-03 23:04:53) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/QuoteInvoiceConversionTest.php:21
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "recognized_revenue" of relation "quote_invoice_conversions" does not exist
+LINE 1: ...", "status", "activation_status", "current_step", "recognize...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/QuoteInvoiceConversionTest.php:21
+
+2) Tests\Unit\Models\QuoteInvoiceConversionTest::test_quote_invoice_conversion_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "recognized_revenue" of relation "quote_invoice_conversions" does not exist
+LINE 1: ...", "status", "activation_status", "current_step", "recognize...
+                                                             ^ (Connection: pgsql, SQL: insert into "quote_invoice_conversions" ("company_id", "status", "activation_status", "current_step", "recognized_revenue", "adjustment_amount", "audit_trail", "updated_at", "created_at") values (528, pending, pending, 1, 0, 0, [{"action":"conversion_created","data":{"conversion_type":null,"original_value":null},"timestamp":"2025-10-03T23:04:53.198060Z","user_id":null}], 2025-10-03 23:04:53, 2025-10-03 23:04:53) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/QuoteInvoiceConversionTest.php:33
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "recognized_revenue" of relation "quote_invoice_conversions" does not exist
+LINE 1: ...", "status", "activation_status", "current_step", "recognize...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/QuoteInvoiceConversionTest.php:33
+
+3) Tests\Unit\Models\ServiceTest::test_service_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[22003]: Numeric value out of range: 7 ERROR:  numeric field overflow
+DETAIL:  A field with precision 8, scale 2 must round to an absolute value less than 10^6. (Connection: pgsql, SQL: insert into "services" ("company_id", "product_id", "service_type", "estimated_hours", "sla_days", "response_time_hours", "resolution_time_hours", "deliverables", "dependencies", "requirements", "requires_scheduling", "min_notice_hours", "duration_minutes", "availability_schedule", "required_skills", "required_resources", "has_setup_fee", "setup_fee", "has_cancellation_fee", "cancellation_fee", "cancellation_notice_hours", "minimum_commitment_months", "maximum_duration_months", "auto_renew", "renewal_notice_days", "updated_at", "created_at") values (582, 32, maintenance, 25797013, 87, 8, 1161, 44, 86, ?, 0, 42, 31, 4130, "[]", "[]", 0, ?, 1, 906.75, 112, ?, ?, 0, 46, 2025-10-03 23:04:58, 2025-10-03 23:04:58) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTest.php:33
+
+Caused by
+PDOException: SQLSTATE[22003]: Numeric value out of range: 7 ERROR:  numeric field overflow
+DETAIL:  A field with precision 8, scale 2 must round to an absolute value less than 10^6.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/ServiceTest.php:33
+
+4) Tests\Unit\Models\SettingTest::test_can_create_setting_with_factory
+Illuminate\Database\QueryException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "2024-12-05 08:12:26"
+CONTEXT:  unnamed portal parameter $50 = '...' (Connection: pgsql, SQL: insert into "settings" ("company_id", "current_database_version", "start_page", "company_logo", "company_colors", "company_address", "company_city", "company_state", "company_zip", "company_country", "company_phone", "company_website", "business_hours", "company_holidays", "company_language", "company_currency", "custom_fields", "localization_settings", "password_min_length", "password_require_special", "password_require_numbers", "password_require_uppercase", "password_expiry_days", "password_history_count", "two_factor_enabled", "two_factor_methods", "remember_me_enabled", "email_verification_required", "api_authentication_enabled", "session_timeout_minutes", "force_single_session", "max_login_attempts", "login_lockout_duration", "lockout_duration_minutes", "password_require_lowercase", "password_require_number", "session_lifetime", "idle_timeout", "single_session_per_user", "logout_on_browser_close", "ip_whitelist_enabled", "whitelisted_ips", "oauth_google_enabled", "oauth_google_client_secret", "oauth_microsoft_enabled", "oauth_microsoft_client_secret", "saml_enabled", "saml_sso_url", "saml_certificate", "audit_login_attempts", "audit_password_changes", "audit_permission_changes", "audit_data_access", "audit_log_retention_days", "alert_suspicious_activity", "alert_multiple_failed_logins", "security_alert_email", "allowed_ip_ranges", "blocked_ip_ranges", "geo_blocking_enabled", "allowed_countries", "sso_settings", "audit_logging_enabled", "audit_retention_days", "login_message", "login_key_required", "login_key_secret", "smtp_host", "smtp_port", "smtp_encryption", "smtp_username", "smtp_password", "smtp_auth_required", "smtp_use_tls", "smtp_timeout", "mail_from_email", "mail_from_name", "email_retry_attempts", "email_templates", "email_signatures", "email_tracking_enabled", "imap_host", "imap_port", "imap_encryption", "imap_auth_method", "imap_username", "imap_password", "sms_settings", "voice_settings", "slack_settings", "teams_settings", "discord_settings", "video_conferencing_settings", "communication_preferences", "quiet_hours_start", "quiet_hours_end", "default_transfer_from_account", "default_transfer_to_account", "default_payment_account", "default_expense_account", "default_payment_method", "default_expense_payment_method", "default_calendar", "default_net_terms", "default_hourly_rate", "multi_currency_enabled", "supported_currencies", "exchange_rate_provider", "auto_update_exchange_rates", "tax_calculation_settings", "tax_engine_provider", "payment_gateway_settings", "stripe_settings", "square_settings", "paypal_settings", "authorize_net_settings", "ach_settings", "wire_settings", "check_settings", "recurring_billing_enabled", "recurring_billing_settings", "late_fee_settings", "collection_settings", "accounting_integration_settings", "quickbooks_settings", "xero_settings", "sage_settings", "revenue_recognition_enabled", "revenue_recognition_settings", "purchase_order_settings", "expense_approval_settings", "invoice_prefix", "invoice_next_number", "invoice_footer", "invoice_from_name", "invoice_from_email", "invoice_late_fee_enable", "invoice_late_fee_percent", "quote_prefix", "quote_next_number", "quote_footer", "quote_from_name", "quote_from_email", "recurring_auto_send_invoice", "send_invoice_reminders", "invoice_overdue_reminders", "connectwise_automate_settings", "datto_rmm_settings", "ninja_rmm_settings", "kaseya_vsa_settings", "auvik_settings", "prtg_settings", "solarwinds_settings", "monitoring_alert_thresholds", "escalation_rules", "asset_discovery_settings", "patch_management_settings", "remote_access_settings", "auto_create_tickets_from_alerts", "alert_to_ticket_mapping", "ticket_prefix", "ticket_next_number", "ticket_from_name", "ticket_from_email", "ticket_email_parse", "ticket_client_general_notifications", "ticket_autoclose", "ticket_autoclose_hours", "ticket_new_ticket_notification_email", "ticket_categorization_rules", "ticket_priority_rules", "sla_definitions", "sla_escalation_policies", "auto_assignment_rules", "routing_logic", "approval_workflows", "time_tracking_enabled", "time_tracking_settings", "customer_satisfaction_enabled", "csat_settings", "ticket_templates", "ticket_automation_rules", "multichannel_settings", "queue_management_settings", "project_templates", "project_standardization_settings", "resource_allocation_settings", "capacity_planning_settings", "project_time_tracking_enabled", "project_billing_settings", "milestone_settings", "deliverable_settings", "gantt_chart_settings", "budget_management_settings", "profitability_tracking_settings", "change_request_workflows", "project_collaboration_settings", "document_management_settings", "asset_discovery_rules", "asset_lifecycle_settings", "software_license_settings", "hardware_warranty_settings", "procurement_settings", "vendor_management_settings", "asset_depreciation_settings", "asset_tracking_settings", "barcode_scanning_enabled", "barcode_settings", "mobile_asset_management_enabled", "asset_relationship_settings", "asset_compliance_settings", "client_portal_enable", "portal_branding_settings", "portal_customization_settings", "portal_access_controls", "portal_feature_toggles", "portal_self_service_tickets", "portal_knowledge_base_access", "portal_invoice_access", "portal_payment_processing", "portal_asset_visibility", "portal_sso_settings", "portal_mobile_settings", "portal_dashboard_settings", "business_rule_engine_settings", "workflow_automation_templates", "rpa_bot_settings", "event_driven_automation", "custom_script_policies", "integration_middleware_settings", "data_synchronization_rules", "notification_automation_settings", "approval_process_automation", "document_generation_automation", "soc2_compliance_enabled", "soc2_settings", "hipaa_compliance_enabled", "hipaa_settings", "pci_compliance_enabled", "pci_settings", "gdpr_compliance_enabled", "gdpr_settings", "industry_compliance_settings", "data_retention_policies", "data_destruction_policies", "risk_assessment_settings", "vendor_compliance_settings", "incident_response_settings", "backup_policies", "backup_schedules", "recovery_time_objective", "recovery_point_objective", "disaster_recovery_procedures", "data_replication_settings", "business_continuity_settings", "testing_validation_schedules", "cloud_backup_settings", "ransomware_protection_settings", "recovery_documentation_settings", "system_resource_monitoring", "performance_tuning_settings", "caching_strategies", "database_optimization_settings", "cdn_load_balancing_settings", "api_performance_settings", "search_optimization_settings", "mobile_performance_settings", "system_health_monitoring", "custom_dashboard_settings", "report_templates", "report_scheduling_settings", "kpi_metric_definitions", "data_visualization_settings", "executive_summary_settings", "benchmarking_settings", "predictive_analytics_settings", "export_delivery_settings", "data_warehouse_settings", "business_intelligence_settings", "multichannel_notification_settings", "alert_escalation_policies", "notification_quiet_hours", "notification_templates", "notification_frequency_rules", "notification_batching_rules", "emergency_notification_settings", "mobile_push_settings", "webhook_notification_settings", "custom_notification_rules", "notification_localization_settings", "api_key_management_settings", "api_rate_limiting_settings", "api_throttling_settings", "webhook_configuration_settings", "third_party_integration_settings", "data_mapping_settings", "sync_scheduling_settings", "integration_monitoring_settings", "custom_connector_settings", "marketplace_integration_settings", "legacy_system_bridge_settings", "mobile_app_settings", "offline_mode_settings", "mobile_push_notification_settings", "remote_access_policies", "gps_tracking_settings", "mobile_device_management_settings", "byod_policies", "mobile_feature_settings", "mobile_sync_settings", "mobile_battery_optimization", "knowledge_base_settings", "training_module_settings", "documentation_standards", "video_library_settings", "certification_tracking_settings", "skills_assessment_settings", "learning_path_settings", "external_training_integration_settings", "documentation_versioning_settings", "search_discovery_settings", "enable_cron", "cron_key", "enable_alert_domain_expire", "theme", "telemetry", "timezone", "date_format", "destructive_deletes_enable", "module_enable_itdoc", "module_enable_accounting", "module_enable_ticketing", "updated_at", "created_at") values (585, 1.8, 44, 57202, ?, 912135297, 58, ?, ?, US, ?, 103, 7289938, 23, en, 970581, 3566, 28298, 8, 0, 1, 0, 1038576, ?, 1, ?, 1, 1, 1, 3, 0, ?, ?, 129812423, 1, 1, ?, ?, 0, 0, 1, 19354, 1, ?, 1, ?, 1, http://altenwerth.com/beatae-magni-at-enim-laborum-rerum-assumenda.html, ?, 2024-12-05 08:12:26, ?, ?, 49008, ?, ?, 8680315, creola.braun@example.com, true, ?, 1, 13, ?, 0, 604716019, ?, 0, 97363411, 1, 77, ?, expedita sit rerum, ?, 0, 7426, 62540, jaquelin68@example.net, aut cum quod, yfisher@example.net, "otho.fritsch@example.com", "larkin.stefanie@example.org", rosemarie38@example.net, ?, 58, ?, ?, hic in aut, ?, ?, 25389380, ?, ?, ?, ?, ?, ?, ?, ?, ?, 74, 73, ?, ?, ?, ?, http://www.stoltenberg.com/quia-qui-totam-et-accusamus-non.html, 0, 37, 44, 585.26, ?, ?, 870844, 973, 94, 9056, 71300, ?, 13899755, 91393425, 1, ?, ?, ?, ?, ?, ?, 25567, 1, 8424587, 71, ?, ?, ?, ?, voluptas temporibus adipisci, dlubowitz@example.net, ?, ?, 28836426, 22, ?, nisi eveniet voluptas, olin.koch@example.org, 6089138, 6644, ?, 28, 38, 2888397, 989, ?, 2585, ?, 5062057, ?, 30, 555812901, ?, 431, 12221823, ?, ?, quidem quos id, dschinner@example.org, keeling.audra@example.net, ?, ?, ?, vita03@example.org, ?, 73, ?, 558, ?, 8, 925191656, 1, ?, 1, ?, 9228, ?, 856, 5768897, ?, 225, 56933033, ?, 0, ?, 32162, ?, ?, ?, 41608851, ?, 5646235, ?, ?, 2, ?, 704020638, 5, 67140544, 188770, ?, 1, "porro", 1, ?, ?, ?, 44, 80, 33, ?, 89, ?, ?, 96, 60, ?, ?, ?, ?, ?, 3934788, 318475, 507, 43, ?, 489, ?, 11868659, 0, ?, 0, ?, 1, ?, 1, ?, ?, 1824, ?, ?, 798937, ?, ?, 931594736, ?, ?, ?, 6, ?, ?, 2, ?, ?, ?, ?, ?, 85604441, ?, 33, ?, ?, ?, 430988844, ?, 94, ?, 7630, ?, ?, 1383540, 66, 9624, 559, 967683, ?, ?, ?, 917, ?, ?, ?, 9595325, 115942834, 26, ?, 301.23, ?, 9080316, ?, 145914, 787081, 31436, ?, 9297, ?, 5849784, ?, 647, 8, ?, 2095232, ?, ?, ?, ?, ?, ?, ?, 55, 719, 22721, 803, ?, ?, ?, 0, ?, 0, ?, ?, ?, 2025-07-22 11:45:10, 1, 0, ?, 1, 2025-10-03 23:04:58, 2025-10-03 23:04:58) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SettingTest.php:21
+
+Caused by
+PDOException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "2024-12-05 08:12:26"
+CONTEXT:  unnamed portal parameter $50 = '...'
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SettingTest.php:21
+
+5) Tests\Unit\Models\SettingTest::test_setting_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "8007"
+CONTEXT:  unnamed portal parameter $53 = '...' (Connection: pgsql, SQL: insert into "settings" ("company_id", "current_database_version", "start_page", "company_logo", "company_colors", "company_address", "company_city", "company_state", "company_zip", "company_country", "company_phone", "company_website", "business_hours", "company_holidays", "company_language", "company_currency", "custom_fields", "localization_settings", "password_min_length", "password_require_special", "password_require_numbers", "password_require_uppercase", "password_expiry_days", "password_history_count", "two_factor_enabled", "two_factor_methods", "remember_me_enabled", "email_verification_required", "api_authentication_enabled", "session_timeout_minutes", "force_single_session", "max_login_attempts", "login_lockout_duration", "lockout_duration_minutes", "password_require_lowercase", "password_require_number", "session_lifetime", "idle_timeout", "single_session_per_user", "logout_on_browser_close", "ip_whitelist_enabled", "whitelisted_ips", "oauth_google_enabled", "oauth_google_client_secret", "oauth_microsoft_enabled", "oauth_microsoft_client_secret", "saml_enabled", "saml_sso_url", "saml_certificate", "audit_login_attempts", "audit_password_changes", "audit_permission_changes", "audit_data_access", "audit_log_retention_days", "alert_suspicious_activity", "alert_multiple_failed_logins", "security_alert_email", "allowed_ip_ranges", "blocked_ip_ranges", "geo_blocking_enabled", "allowed_countries", "sso_settings", "audit_logging_enabled", "audit_retention_days", "login_message", "login_key_required", "login_key_secret", "smtp_host", "smtp_port", "smtp_encryption", "smtp_username", "smtp_password", "smtp_auth_required", "smtp_use_tls", "smtp_timeout", "mail_from_email", "mail_from_name", "email_retry_attempts", "email_templates", "email_signatures", "email_tracking_enabled", "imap_host", "imap_port", "imap_encryption", "imap_auth_method", "imap_username", "imap_password", "sms_settings", "voice_settings", "slack_settings", "teams_settings", "discord_settings", "video_conferencing_settings", "communication_preferences", "quiet_hours_start", "quiet_hours_end", "default_transfer_from_account", "default_transfer_to_account", "default_payment_account", "default_expense_account", "default_payment_method", "default_expense_payment_method", "default_calendar", "default_net_terms", "default_hourly_rate", "multi_currency_enabled", "supported_currencies", "exchange_rate_provider", "auto_update_exchange_rates", "tax_calculation_settings", "tax_engine_provider", "payment_gateway_settings", "stripe_settings", "square_settings", "paypal_settings", "authorize_net_settings", "ach_settings", "wire_settings", "check_settings", "recurring_billing_enabled", "recurring_billing_settings", "late_fee_settings", "collection_settings", "accounting_integration_settings", "quickbooks_settings", "xero_settings", "sage_settings", "revenue_recognition_enabled", "revenue_recognition_settings", "purchase_order_settings", "expense_approval_settings", "invoice_prefix", "invoice_next_number", "invoice_footer", "invoice_from_name", "invoice_from_email", "invoice_late_fee_enable", "invoice_late_fee_percent", "quote_prefix", "quote_next_number", "quote_footer", "quote_from_name", "quote_from_email", "recurring_auto_send_invoice", "send_invoice_reminders", "invoice_overdue_reminders", "connectwise_automate_settings", "datto_rmm_settings", "ninja_rmm_settings", "kaseya_vsa_settings", "auvik_settings", "prtg_settings", "solarwinds_settings", "monitoring_alert_thresholds", "escalation_rules", "asset_discovery_settings", "patch_management_settings", "remote_access_settings", "auto_create_tickets_from_alerts", "alert_to_ticket_mapping", "ticket_prefix", "ticket_next_number", "ticket_from_name", "ticket_from_email", "ticket_email_parse", "ticket_client_general_notifications", "ticket_autoclose", "ticket_autoclose_hours", "ticket_new_ticket_notification_email", "ticket_categorization_rules", "ticket_priority_rules", "sla_definitions", "sla_escalation_policies", "auto_assignment_rules", "routing_logic", "approval_workflows", "time_tracking_enabled", "time_tracking_settings", "customer_satisfaction_enabled", "csat_settings", "ticket_templates", "ticket_automation_rules", "multichannel_settings", "queue_management_settings", "project_templates", "project_standardization_settings", "resource_allocation_settings", "capacity_planning_settings", "project_time_tracking_enabled", "project_billing_settings", "milestone_settings", "deliverable_settings", "gantt_chart_settings", "budget_management_settings", "profitability_tracking_settings", "change_request_workflows", "project_collaboration_settings", "document_management_settings", "asset_discovery_rules", "asset_lifecycle_settings", "software_license_settings", "hardware_warranty_settings", "procurement_settings", "vendor_management_settings", "asset_depreciation_settings", "asset_tracking_settings", "barcode_scanning_enabled", "barcode_settings", "mobile_asset_management_enabled", "asset_relationship_settings", "asset_compliance_settings", "client_portal_enable", "portal_branding_settings", "portal_customization_settings", "portal_access_controls", "portal_feature_toggles", "portal_self_service_tickets", "portal_knowledge_base_access", "portal_invoice_access", "portal_payment_processing", "portal_asset_visibility", "portal_sso_settings", "portal_mobile_settings", "portal_dashboard_settings", "business_rule_engine_settings", "workflow_automation_templates", "rpa_bot_settings", "event_driven_automation", "custom_script_policies", "integration_middleware_settings", "data_synchronization_rules", "notification_automation_settings", "approval_process_automation", "document_generation_automation", "soc2_compliance_enabled", "soc2_settings", "hipaa_compliance_enabled", "hipaa_settings", "pci_compliance_enabled", "pci_settings", "gdpr_compliance_enabled", "gdpr_settings", "industry_compliance_settings", "data_retention_policies", "data_destruction_policies", "risk_assessment_settings", "vendor_compliance_settings", "incident_response_settings", "backup_policies", "backup_schedules", "recovery_time_objective", "recovery_point_objective", "disaster_recovery_procedures", "data_replication_settings", "business_continuity_settings", "testing_validation_schedules", "cloud_backup_settings", "ransomware_protection_settings", "recovery_documentation_settings", "system_resource_monitoring", "performance_tuning_settings", "caching_strategies", "database_optimization_settings", "cdn_load_balancing_settings", "api_performance_settings", "search_optimization_settings", "mobile_performance_settings", "system_health_monitoring", "custom_dashboard_settings", "report_templates", "report_scheduling_settings", "kpi_metric_definitions", "data_visualization_settings", "executive_summary_settings", "benchmarking_settings", "predictive_analytics_settings", "export_delivery_settings", "data_warehouse_settings", "business_intelligence_settings", "multichannel_notification_settings", "alert_escalation_policies", "notification_quiet_hours", "notification_templates", "notification_frequency_rules", "notification_batching_rules", "emergency_notification_settings", "mobile_push_settings", "webhook_notification_settings", "custom_notification_rules", "notification_localization_settings", "api_key_management_settings", "api_rate_limiting_settings", "api_throttling_settings", "webhook_configuration_settings", "third_party_integration_settings", "data_mapping_settings", "sync_scheduling_settings", "integration_monitoring_settings", "custom_connector_settings", "marketplace_integration_settings", "legacy_system_bridge_settings", "mobile_app_settings", "offline_mode_settings", "mobile_push_notification_settings", "remote_access_policies", "gps_tracking_settings", "mobile_device_management_settings", "byod_policies", "mobile_feature_settings", "mobile_sync_settings", "mobile_battery_optimization", "knowledge_base_settings", "training_module_settings", "documentation_standards", "video_library_settings", "certification_tracking_settings", "skills_assessment_settings", "learning_path_settings", "external_training_integration_settings", "documentation_versioning_settings", "search_discovery_settings", "enable_cron", "cron_key", "enable_alert_domain_expire", "theme", "telemetry", "timezone", "date_format", "destructive_deletes_enable", "module_enable_itdoc", "module_enable_accounting", "module_enable_ticketing", "updated_at", "created_at") values (586, 4.4, 295, 90, ?, 42397627, ?, ?, 8701059, 79, ?, 76348, 1519589, ?, en, USD, ?, 7515907, 74887, 1, 0, 0, 25572, ?, 0, ?, 0, 1, 1, 480, 1, ?, ?, ?, 1, 0, ?, 63, 0, 1, 1, ?, 1, ?, 1, 4940835, 0, ?, ?, ?, ?, ?, 8007, 2012, 284644459, ?, weissnat.wellington@example.net, false, ?, 0, 84, 848059449, 0, 365, 681227, 1, ?, 53732, ?, ?, consequatur sunt voluptates, ?, 1, 349, ?, ystrosin@example.org, harum sunt debitis, hailey.bradtke@example.org, "satterfield.dylan@example.com", "colleen55@example.com", beverly.gislason@example.net, ?, ?, ?, ?, quis modi rerum, eyJpdiI6IldNd0FlRjNyR0tyS1NrSlk1TTdIZUE9PSIsInZhbHVlIjoiVG5lYTRvM0VmZXRCTytSa0J1Qzhhdz09IiwibWFjIjoiNDkxMDZiMzAxNmE0YTViOWI4MWE0YTVhMTY4Mjk5ODlhY2UzNzc4YWE3ZWI1Nzk0OWJkNWExYTYxMzAzNGU4OSIsInRhZyI6IiJ9, ?, ?, 633, 931463103, ?, ?, ?, 44, ?, ?, 39, ?, 32, ?, ?, ?, 773, http://www.hand.com/quod-debitis-laboriosam-qui-voluptatum-consequatur-dignissimos, 1, ?, ?, 329.11, 183.6, ?, ?, ?, 82856, ?, ?, ?, ?, 32, 1, ?, 150.78, 61, ?, ?, 8, 366426, 1, 47, 26, ?, ?, ?, 5, minus cumque numquam, owill@example.org, ?, 686.66, ?, ?, ?, quae cum nulla, mschoen@example.org, ?, ?, 468109, ?, ?, ?, 638415239, ?, 65, ?, 49685569, ?, ?, 768614, ?, 590530, 43046453, 6, ?, ex consequatur dolores, elmo76@example.org, cleve.dubuque@example.com, 57801647, 7574, ?, stroman.tobin@example.com, ?, ?, 48510, ?, ?, ?, 59700651, 0, ?, 1, ?, 18029, ?, 72251, 925914624, 387, ?, ?, 91260862, 1, ?, 263, ?, ?, 0, ?, 9164301, 2, 2, ?, 13388785, 3, ?, 973567018, 8945144, ?, ?, 0, "at", 1, ?, 7, ?, 45, 66, ?, 64, ?, 93, ?, ?, 65, ?, 73, ?, ?, ?, 1141515, ?, ?, 93, ?, 3989, ?, 51, 1, 8051, 0, 755, 1, ?, 1, 6, ?, 50128699, ?, ?, 23607323, ?, 94832020, 32489, ?, 5472, ?, ?, 68081239, 68, 911, ?, ?, 2, ?, ?, 657558, ?, 6, 7, 108506720, ?, 3210651, 33, 1, 99925, ?, ?, 29, ?, 6, ?, 814771329, ?, ?, ?, 105324024, 9, ?, ?, 0, 11480, ?, 3545, 747319902, 565.39, ?, ?, ?, 2109, ?, ?, 786628, 3992622, ?, 346346022, 7263, 82, 802, ?, 68464, ?, ?, ?, ?, 1, ?, 55, 93, 436, 860, ?, ?, 68097881, 44706692, 0, ?, 0, ?, 52, 5374, 2025-06-12 14:11:15, 0, 1, ?, 1, 2025-10-03 23:04:58, 2025-10-03 23:04:58) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SettingTest.php:33
+
+Caused by
+PDOException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type boolean: "8007"
+CONTEXT:  unnamed portal parameter $53 = '...'
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/SettingTest.php:33
+
+6) Tests\Unit\Models\TaxCalculationTest::test_tax_calculation_belongs_to_company
+Illuminate\Database\QueryException: SQLSTATE[23514]: Check violation: 7 ERROR:  new row for relation "tax_calculations" violates check constraint "tax_calculations_status_check"
+DETAIL:  Failing row contains (2, 605, App\Models\Invoice, 1, 619bc396-7f41-3823-b23e-d3d6624a79b6, avalara, null, invoice, 4479.36, 27, "[]", null, 5319594, 2995.66, 6121.53, 0.768974, "[]", null, null, 6969213, "[]", null, f, null, null, null, validated, "active", 84, null, 3, null, 70, 2.1500, 2025-10-03 23:05:01, 2025-10-03 23:05:01). (Connection: pgsql, SQL: insert into "tax_calculations" ("company_id", "calculable_type", "calculable_id", "calculation_id", "engine_type", "category_type", "calculation_type", "base_amount", "quantity", "input_parameters", "customer_data", "service_address", "total_tax_amount", "final_amount", "effective_tax_rate", "tax_breakdown", "api_enhancements", "jurisdictions", "exemptions_applied", "engine_metadata", "api_calls_made", "validated", "validated_at", "validated_by", "validation_notes", "status", "status_history", "created_by", "updated_by", "change_log", "calculation_time_ms", "api_calls_count", "api_cost", "updated_at", "created_at") values (605, App\Models\Invoice, 1, 619bc396-7f41-3823-b23e-d3d6624a79b6, avalara, ?, invoice, 4479.36, 27, "[]", ?, 5319594, 2995.66, 6121.53, 0.768974, "[]", ?, ?, 6969213, "[]", ?, 0, ?, ?, ?, validated, "active", 84, ?, 3, ?, 70, 2.15, 2025-10-03 23:05:01, 2025-10-03 23:05:01) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxCalculationTest.php:33
+
+Caused by
+PDOException: SQLSTATE[23514]: Check violation: 7 ERROR:  new row for relation "tax_calculations" violates check constraint "tax_calculations_status_check"
+DETAIL:  Failing row contains (2, 605, App\Models\Invoice, 1, 619bc396-7f41-3823-b23e-d3d6624a79b6, avalara, null, invoice, 4479.36, 27, "[]", null, 5319594, 2995.66, 6121.53, 0.768974, "[]", null, null, 6969213, "[]", null, f, null, null, null, validated, "active", 84, null, 3, null, 70, 2.1500, 2025-10-03 23:05:01, 2025-10-03 23:05:01).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Models/TaxCalculationTest.php:33
+
+ERRORS!
+Tests: 476, Assertions: 694, Errors: 6.

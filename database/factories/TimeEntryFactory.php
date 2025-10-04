@@ -11,15 +11,15 @@ class TimeEntryFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
-            'hours' => $this->faker->optional()->word,
-            'billable' => $this->faker->optional()->word,
-            'rate' => $this->faker->optional()->word,
+        return ['company_id' => \App\Models\Company::factory(),
+            'user_id' => \App\Models\User::factory(),
+            'hours' => $this->faker->randomFloat(2, 0.25, 8),
+            'billable' => $this->faker->boolean(),
+            'rate' => $this->faker->optional()->randomFloat(2, 0, 1000),
             'description' => $this->faker->optional()->sentence,
-            'date' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
-            'start_time' => $this->faker->optional()->word,
-            'end_time' => $this->faker->optional()->word
+            'date' => $this->faker->date(),
+            'start_time' => $this->faker->optional()->time('H:i:s'),
+            'end_time' => $this->faker->optional()->time('H:i:s')
         ];
     }
 }

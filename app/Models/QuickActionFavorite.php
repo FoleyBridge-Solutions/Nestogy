@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class QuickActionFavorite extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'user_id',
         'custom_quick_action_id',

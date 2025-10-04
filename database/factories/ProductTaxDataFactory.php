@@ -11,11 +11,11 @@ class ProductTaxDataFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
-            'tax_data' => $this->faker->optional()->word,
-            'calculated_taxes' => $this->faker->optional()->word,
-            'effective_tax_rate' => $this->faker->optional()->word,
+        return ['company_id' => \App\Models\Company::factory(),
+            'product_id' => \App\Models\Product::factory(),
+            'tax_data' => json_encode([]),
+            'calculated_taxes' => $this->faker->optional()->randomFloat(2, 0, 1000),
+            'effective_tax_rate' => $this->faker->optional()->randomFloat(2, 0, 1000),
             'total_tax_amount' => $this->faker->randomFloat(2, 0, 10000),
             'last_calculated_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now')
         ];

@@ -27,8 +27,7 @@ class AssetFactory extends Factory
         $types = ['desktop', 'laptop', 'server', 'printer', 'network', 'mobile', 'software'];
         $type = $this->faker->randomElement($types);
 
-        return [
-            'company_id' => Company::factory(),
+        return ['company_id' => Company::factory(),
             'client_id' => Client::factory(),
             'name' => $this->generateAssetName($type),
             'type' => $type,
@@ -103,7 +102,7 @@ class AssetFactory extends Factory
     public function active(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'active',
+            'status' => $this->faker->randomElement(['active', 'inactive', 'pending']),
         ]);
     }
 

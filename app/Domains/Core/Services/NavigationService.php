@@ -1693,7 +1693,7 @@ class NavigationService
     protected static function getTicketBadgeCounts(int $companyId, int $userId): array
     {
         try {
-            $baseQuery = \App\Models\Ticket::where('company_id', $companyId);
+            $baseQuery = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId);
 
             $counts = [
                 'open' => (clone $baseQuery)->where('status', 'open')->count(),
@@ -2305,7 +2305,7 @@ class NavigationService
     protected static function getCriticalTicketsForClient($clientId)
     {
         try {
-            return \App\Models\Ticket::where('client_id', $clientId)
+            return \App\Domains\Ticket\Models\Ticket::where('client_id', $clientId)
                 ->where('priority', 'critical')
                 ->whereIn('status', ['open', 'in-progress'])
                 ->get();
@@ -2331,7 +2331,7 @@ class NavigationService
             $today = now()->startOfDay();
             $tomorrow = now()->addDay()->startOfDay();
 
-            return \App\Models\Ticket::where('client_id', $clientId)
+            return \App\Domains\Ticket\Models\Ticket::where('client_id', $clientId)
                 ->whereBetween('scheduled_at', [$today, $tomorrow])
                 ->exists();
         } catch (\Exception $e) {
@@ -2345,7 +2345,7 @@ class NavigationService
             $tomorrow = now()->addDay()->startOfDay();
             $nextWeek = now()->addWeek()->startOfDay();
 
-            return \App\Models\Ticket::where('client_id', $clientId)
+            return \App\Domains\Ticket\Models\Ticket::where('client_id', $clientId)
                 ->whereBetween('scheduled_at', [$tomorrow, $nextWeek])
                 ->exists();
         } catch (\Exception $e) {
@@ -2356,7 +2356,7 @@ class NavigationService
     protected static function getCriticalTickets($companyId)
     {
         try {
-            return \App\Models\Ticket::where('company_id', $companyId)
+            return \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
                 ->where('priority', 'critical')
                 ->whereIn('status', ['open', 'in-progress'])
                 ->with('client')
@@ -2382,7 +2382,7 @@ class NavigationService
     {
         try {
             // Get tickets that have been open for more than 24 hours (simplified SLA check)
-            return \App\Models\Ticket::where('company_id', $companyId)
+            return \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
                 ->where('created_at', '<', now()->subHours(24))
                 ->whereIn('status', ['open', 'in-progress'])
                 ->with('client')
@@ -2395,7 +2395,7 @@ class NavigationService
     protected static function getScheduledTicketsForPeriod($companyId, $start, $end)
     {
         try {
-            return \App\Models\Ticket::where('company_id', $companyId)
+            return \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
                 ->whereBetween('scheduled_at', [$start, $end])
                 ->whereIn('status', ['open', 'in-progress', 'scheduled'])
                 ->with('client')
@@ -2728,7 +2728,7 @@ class NavigationService
             }
 
             // Get urgent items count
-            $criticalTickets = \App\Models\Ticket::where($baseQuery)
+            $criticalTickets = \App\Domains\Ticket\Models\Ticket::where($baseQuery)
                 ->whereIn('priority', ['Critical', 'High'])
                 ->whereIn('status', ['Open', 'In Progress'])
                 ->count();
@@ -2744,14 +2744,14 @@ class NavigationService
             $todayStart = now()->startOfDay();
             $todayEnd = now()->endOfDay();
 
-            $todaysTickets = \App\Models\Ticket::where($baseQuery)
+            $todaysTickets = \App\Domains\Ticket\Models\Ticket::where($baseQuery)
                 ->whereBetween('scheduled_at', [$todayStart, $todayEnd])
                 ->count();
 
             $highlights['today_count'] = $todaysTickets;
 
             // Get scheduled work count
-            $scheduledTickets = \App\Models\Ticket::where($baseQuery)
+            $scheduledTickets = \App\Domains\Ticket\Models\Ticket::where($baseQuery)
                 ->whereNotNull('scheduled_at')
                 ->where('scheduled_at', '>', now())
                 ->count();

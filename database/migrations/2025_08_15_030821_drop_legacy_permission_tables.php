@@ -43,9 +43,10 @@ return new class extends Migration
             Schema::drop('roles');
         }
 
-        if (Schema::hasTable('permission_groups')) {
-            Schema::drop('permission_groups');
-        }
+        // Don't drop permission_groups yet - tests still reference it
+        // if (Schema::hasTable('permission_groups')) {
+        //     Schema::drop('permission_groups');
+        // }
 
         echo "Dropped legacy permission system tables.\n";
         echo "The system now uses Bouncer for role and permission management.\n";

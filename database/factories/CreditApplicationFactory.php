@@ -12,7 +12,10 @@ class CreditApplicationFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
+            'company_id' => \App\Models\Company::factory(),
+            'name' => $this->faker->words(3, true),
+            'application_number' => $this->faker->unique()->numerify('APP-######'),
+            'applied_by' => \App\Models\User::factory(),
         ];
     }
 }

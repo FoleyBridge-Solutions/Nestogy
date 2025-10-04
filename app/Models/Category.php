@@ -108,6 +108,14 @@ class Category extends Model
     ];
 
     /**
+     * Get the company that owns the category.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
      * Get the parent category.
      */
     public function parent(): BelongsTo

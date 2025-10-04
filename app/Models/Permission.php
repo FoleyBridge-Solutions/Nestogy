@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Silber\Bouncer\Database\Ability;
@@ -15,6 +16,7 @@ use Silber\Bouncer\Database\Ability;
  * @deprecated Use Silber\Bouncer\Database\Ability instead
  *
  * @property int $id
+ * @property int $company_id
  * @property string $name
  * @property string $slug
  * @property string $domain
@@ -25,11 +27,12 @@ use Silber\Bouncer\Database\Ability;
  */
 class Permission extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'bouncer_abilities'; // Point to Bouncer abilities table
 
     protected $fillable = [
+        'company_id',
         'name',
         'title',
         'entity_id',

@@ -175,7 +175,7 @@ class ContractService
 
                         // Add post-assignment verification in contract creation
                         $actualAssetsCount = $contract->supportedAssets()->count();
-                        $assetsByType = $contract->supportedAssets()->groupBy('type')->map->count();
+                        $assetsByType = $contract->supportedAssets()->get()->groupBy('type')->map(fn($group) => $group->count());
 
                         Log::info('Post-assignment verification in contract creation', [
                             'contract_id' => $contract->id,
@@ -1689,6 +1689,11 @@ class ContractService
         ]);
 
         try {
+            // Prepare data for content generation with sla_terms in the correct format
+            $contentData = array_merge($data, [
+                'sla_terms' => $scheduleData['sla'] ?? [],
+            ]);
+            
             return ContractSchedule::create([
                 'company_id' => $contract->company_id,
                 'contract_id' => $contract->id,
@@ -1696,7 +1701,7 @@ class ContractService
                 'schedule_letter' => 'A',
                 'title' => $title,
                 'description' => $description,
-                'content' => $this->generateScheduleAContent($data, $scheduleType),
+                'content' => $this->generateScheduleAContent($contentData, $scheduleType),
                 'variables' => $this->extractScheduleVariables($scheduleData),
                 'variable_values' => $scheduleData,
                 'supported_asset_types' => $scheduleData['supportedAssetTypes'] ?? [],
@@ -1855,6 +1860,13 @@ class ContractService
         }
 
         try {
+            // Prepare data for content generation with custom_clauses in the correct format
+            $contentData = array_merge($data, [
+                'custom_clauses' => $scheduleData,
+                'dispute_resolution' => $scheduleData['disputeResolution']['method'] ?? null,
+                'governing_law' => $scheduleData['disputeResolution']['governingLaw'] ?? null,
+            ]);
+            
             return ContractSchedule::create([
                 'company_id' => $contract->company_id,
                 'contract_id' => $contract->id,
@@ -1862,7 +1874,7 @@ class ContractService
                 'schedule_letter' => 'C',
                 'title' => 'Schedule C - Additional Terms & Conditions',
                 'description' => 'Termination clauses, liability terms, and dispute resolution',
-                'content' => $this->generateScheduleCContent($data),
+                'content' => $this->generateScheduleCContent($contentData),
                 'variables' => $this->extractTermsVariables($scheduleData),
                 'variable_values' => $scheduleData,
                 'status' => 'active',
@@ -3826,7 +3838,7 @@ Events beyond reasonable control including but not limited to:
         return ContractSchedule::create([
             'contract_id' => $contract->id,
             'company_id' => $contract->company_id,
-            'schedule_type' => 'telecom',
+            'schedule_type' => ContractSchedule::TYPE_COMPLIANCE,
             'schedule_letter' => 'D',
             'title' => 'Schedule D - Telecommunications Services',
             'description' => 'VoIP services, quality of service metrics, and telecommunications compliance',
@@ -3883,7 +3895,7 @@ Events beyond reasonable control including but not limited to:
         return ContractSchedule::create([
             'contract_id' => $contract->id,
             'company_id' => $contract->company_id,
-            'schedule_type' => 'hardware',
+            'schedule_type' => ContractSchedule::TYPE_CUSTOM,
             'schedule_letter' => 'E',
             'title' => 'Schedule E - Hardware Products & Services',
             'description' => 'Hardware procurement, installation services, warranty terms, and pricing',
@@ -3950,9 +3962,9 @@ Events beyond reasonable control including but not limited to:
         return ContractSchedule::create([
             'contract_id' => $contract->id,
             'company_id' => $contract->company_id,
-            'schedule_type' => 'compliance',
-            'schedule_letter' => 'F',
-            'title' => 'Schedule F - Compliance Framework & Requirements',
+            'schedule_type' => ContractSchedule::TYPE_COMPLIANCE,
+            'schedule_letter' => 'D',
+            'title' => 'Schedule D - Compliance Framework & Requirements',
             'description' => 'Regulatory compliance requirements, audit schedules, and training programs',
             'content' => $this->generateComplianceScheduleContent($scheduleData),
             'variables' => $this->extractScheduleVariables($scheduleData),

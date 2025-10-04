@@ -599,7 +599,7 @@ class UsageRecord extends Model
 
         // Auto-calculate duration and set usage date
         static::creating(function ($record) {
-            if (! $record->transaction_id) {
+            if (\Schema::hasColumn('usage_records', 'transaction_id') && ! $record->transaction_id) {
                 $record->transaction_id = 'TXN-'.uniqid().'-'.time();
             }
 
@@ -618,7 +618,9 @@ class UsageRecord extends Model
 
             // Set billing period if not provided
             if (! $record->billing_period) {
-                $record->billing_period = now()->format('Y-m');
+                if (\Schema::hasColumn('usage_records', 'billing_period')) {
+                    $record->billing_period = now()->format('Y-m');
+                }
             }
         });
 

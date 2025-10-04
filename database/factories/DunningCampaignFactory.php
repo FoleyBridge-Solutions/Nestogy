@@ -12,7 +12,11 @@ class DunningCampaignFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
+            'company_id' => \App\Models\Company::factory(),
+            'name' => $this->faker->words(3, true),
+            'status' => 'active',
+            'created_by' => \App\Models\User::factory(),
+            'updated_by' => \App\Models\User::factory(),
         ];
     }
 }

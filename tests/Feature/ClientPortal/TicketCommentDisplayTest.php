@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\Contact;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Test that ticket comments display correctly in the client portal
@@ -18,7 +19,7 @@ class TicketCommentDisplayTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function customer_comment_displays_after_being_added()
     {
         // Setup
@@ -63,7 +64,7 @@ class TicketCommentDisplayTest extends TestCase
         $viewResponse->assertDontSee('No replies yet');
     }
 
-    /** @test */
+    #[Test]
     public function multiple_comments_display_in_chronological_order()
     {
         // Setup
@@ -109,7 +110,7 @@ class TicketCommentDisplayTest extends TestCase
         $this->assertLessThan($secondPos, $firstPos);
     }
 
-    /** @test */
+    #[Test]
     public function customer_name_displays_correctly_with_comment()
     {
         // Setup
@@ -143,7 +144,7 @@ class TicketCommentDisplayTest extends TestCase
         $response->assertSee('My question here');
     }
 
-    /** @test */
+    #[Test]
     public function internal_comments_do_not_display_to_customer()
     {
         // Setup
@@ -190,7 +191,7 @@ class TicketCommentDisplayTest extends TestCase
         $response->assertDontSee('Internal note - customer should not see this');
     }
 
-    /** @test */
+    #[Test]
     public function ticket_with_no_comments_shows_appropriate_message()
     {
         // Setup

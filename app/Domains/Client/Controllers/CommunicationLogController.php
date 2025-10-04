@@ -366,9 +366,9 @@ class CommunicationLogController extends Controller
         $communications = $communications->concat($manualLogs);
 
         // 2. Ticket Communications
-        if (class_exists('App\Models\Ticket')) {
+        if (class_exists('App\Domains\Ticket\Models\Ticket')) {
             try {
-                $ticketComms = \App\Models\Ticket::where('client_id', $client->id)
+                $ticketComms = \App\Domains\Ticket\Models\Ticket::where('client_id', $client->id)
                     ->with(['creator', 'assignee', 'contact'])
                     ->get()
                     ->map(function ($ticket) {

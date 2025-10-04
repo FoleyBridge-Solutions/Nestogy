@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -48,6 +49,7 @@ class Vendor extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'company_id',
         'name',
         'description',
         'contact_name',
@@ -83,6 +85,14 @@ class Vendor extends Model
      * The name of the "deleted at" column for soft deletes.
      */
     const DELETED_AT = 'archived_at';
+
+    /**
+     * Get the company that owns the vendor.
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     /**
      * Get the client that owns the vendor.

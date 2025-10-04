@@ -12,22 +12,23 @@ class CustomQuickActionFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
+            'company_id' => \App\Models\Company::factory(),
+            'user_id' => \App\Models\User::factory(),
             'title' => $this->faker->words(3, true),
-            'description' => $this->faker->optional()->sentence,
-            'icon' => $this->faker->optional()->word,
-            'color' => $this->faker->optional()->word,
-            'type' => $this->faker->numberBetween(1, 5),
-            'target' => $this->faker->optional()->word,
-            'parameters' => $this->faker->optional()->word,
-            'open_in' => $this->faker->optional()->word,
-            'visibility' => $this->faker->optional()->word,
-            'allowed_roles' => $this->faker->optional()->word,
+            'description' => $this->faker->sentence,
+            'icon' => $this->faker->randomElement(['bolt', 'plus', 'pencil', 'trash', 'eye']),
+            'color' => $this->faker->randomElement(['blue', 'green', 'red', 'yellow', 'purple', 'gray']),
+            'type' => $this->faker->randomElement(['route', 'url']),
+            'target' => 'model',
+            'parameters' => json_encode([]),
+            'open_in' => 'same_tab',
+            'visibility' => $this->faker->randomElement(['private', 'role', 'company']),
+            'allowed_roles' => json_encode([]),
             'permission' => $this->faker->optional()->word,
-            'position' => $this->faker->optional()->word,
-            'is_active' => $this->faker->boolean(70),
-            'usage_count' => $this->faker->optional()->word,
-            'last_used_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now')
+            'position' => $this->faker->numberBetween(1, 100),
+            'is_active' => $this->faker->boolean(80),
+            'usage_count' => $this->faker->numberBetween(0, 100),
+            'last_used_at' => $this->faker->optional()->dateTimeBetween('-1 year', 'now'),
         ];
     }
 }

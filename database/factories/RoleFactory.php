@@ -11,11 +11,10 @@ class RoleFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
+        return ['company_id' => \App\Models\Company::factory(),
             'name' => $this->faker->words(3, true),
             'title' => $this->faker->words(3, true),
-            'scope' => $this->faker->optional()->word
+            'scope' => $this->faker->optional()->randomNumber()
         ];
     }
 }

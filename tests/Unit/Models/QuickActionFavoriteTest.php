@@ -17,8 +17,7 @@ class QuickActionFavoriteTest extends TestCase
             $this->markTestSkipped('QuickActionFavoriteFactory does not exist');
         }
 
-        $company = Company::factory()->create();
-        $model = QuickActionFavorite::factory()->create(['company_id' => $company->id]);
+        $model = QuickActionFavorite::factory()->create();
 
         $this->assertInstanceOf(QuickActionFavorite::class, $model);
     }
@@ -29,11 +28,9 @@ class QuickActionFavoriteTest extends TestCase
             $this->markTestSkipped('QuickActionFavoriteFactory does not exist');
         }
 
-        $company = Company::factory()->create();
-        $model = QuickActionFavorite::factory()->create(['company_id' => $company->id]);
+        $model = QuickActionFavorite::factory()->create();
 
-        $this->assertInstanceOf(Company::class, $model->company);
-        $this->assertEquals($company->id, $model->company->id);
+        $this->assertInstanceOf(\App\Models\User::class, $model->user);
     }
 
     public function test_quick_action_favorite_has_fillable_attributes(): void

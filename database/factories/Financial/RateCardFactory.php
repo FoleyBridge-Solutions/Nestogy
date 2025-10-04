@@ -13,7 +13,7 @@ class RateCardFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
+            'company_id' => \App\Models\Company::factory(),
             'client_id' => Client::factory(),
             'name' => $this->faker->words(3, true).' Rate',
             'description' => $this->faker->optional()->sentence(),

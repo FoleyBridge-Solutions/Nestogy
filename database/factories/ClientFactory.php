@@ -25,8 +25,7 @@ class ClientFactory extends Factory
     {
         $isCompany = $this->faker->boolean(70); // 70% chance of being a company
 
-        return [
-            'company_id' => Company::factory(),
+        return ['company_id' => Company::factory(),
             'name' => $isCompany ? $this->faker->company() : $this->faker->name(),
             'company_name' => $isCompany ? $this->faker->company().' Inc.' : null,
             'type' => $isCompany ? 'company' : 'individual',
@@ -54,7 +53,7 @@ class ClientFactory extends Factory
     public function active(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'active',
+            'status' => $this->faker->randomElement(['active', 'inactive', 'pending']),
         ]);
     }
 

@@ -11,20 +11,22 @@ class FileFactory extends Factory
 
     public function definition(): array
     {
+        $extension = $this->faker->fileExtension;
         return [
-            'company_id' => 1,
-            'fileable_type' => $this->faker->numberBetween(1, 5),
+            'company_id' => \App\Models\Company::factory(),
+            'fileable_id' => 1,
+            'fileable_type' => $this->faker->randomElement([\App\Models\Client::class, \App\Models\Ticket::class, \App\Models\Project::class]),
             'name' => $this->faker->words(3, true),
             'description' => $this->faker->optional()->sentence,
-            'file_path' => $this->faker->optional()->word,
-            'file_name' => $this->faker->words(3, true),
-            'original_name' => $this->faker->words(3, true),
-            'file_size' => $this->faker->optional()->word,
-            'mime_type' => $this->faker->numberBetween(1, 5),
-            'file_type' => $this->faker->numberBetween(1, 5),
-            'is_public' => $this->faker->boolean(70),
-            'uploaded_by' => $this->faker->optional()->word,
-            'metadata' => $this->faker->optional()->word
+            'file_path' => 'files/'.$this->faker->uuid.'.'.$extension,
+            'file_name' => $this->faker->word.'.'.$extension,
+            'original_name' => $this->faker->words(2, true).'.'.$extension,
+            'file_size' => $this->faker->numberBetween(1024, 5242880),
+            'mime_type' => $this->faker->randomElement(['application/pdf', 'image/jpeg', 'image/png', 'text/plain']),
+            'file_type' => $this->faker->randomElement(['document', 'image', 'spreadsheet', 'other']),
+            'is_public' => $this->faker->boolean(30),
+            'uploaded_by' => \App\Models\User::factory(),
+            'metadata' => json_encode([]),
         ];
     }
 }

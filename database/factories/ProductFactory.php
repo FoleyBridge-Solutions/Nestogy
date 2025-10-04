@@ -16,17 +16,9 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
-        $company = \App\Models\Company::factory()->create();
-        $category = \App\Models\Category::create([
-            'name' => 'Products',
-            'type' => 'product',
-            'company_id' => $company->id,
-            'color' => '#007bff',
-        ]);
-
         return [
-            'company_id' => $company->id,
-            'category_id' => $category->id,
+            'company_id' => \App\Models\Company::factory(),
+            'category_id' => \App\Models\Category::factory(),
             'name' => fake()->words(3, true),
             'description' => fake()->optional()->sentence(),
             'sku' => fake()->unique()->bothify('SKU-####'),

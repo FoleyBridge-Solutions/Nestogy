@@ -12,9 +12,9 @@ class QuickActionFavoriteFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
+            'user_id' => \App\Models\User::factory(),
             'system_action' => $this->faker->optional()->word,
-            'position' => $this->faker->optional()->word
+            'position' => $this->faker->numberBetween(1, 100)
         ];
     }
 }

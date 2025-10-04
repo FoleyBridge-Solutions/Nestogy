@@ -12,10 +12,12 @@ class TicketRatingFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
-            'rating' => $this->faker->optional()->word,
-            'feedback' => $this->faker->optional()->word,
-            'rating_type' => $this->faker->numberBetween(1, 5)
+            'company_id' => \App\Models\Company::factory(),
+            'ticket_id' => \App\Domains\Ticket\Models\Ticket::factory(),
+            'client_id' => \App\Models\Client::factory(),
+            'rating' => $this->faker->numberBetween(1, 5),
+            'feedback' => $this->faker->optional()->sentence,
+            'rating_type' => $this->faker->randomElement(['satisfaction', 'quality', 'responsiveness'])
         ];
     }
 }

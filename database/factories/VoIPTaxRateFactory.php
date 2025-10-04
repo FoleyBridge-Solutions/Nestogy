@@ -13,8 +13,7 @@ class VoIPTaxRateFactory extends Factory
 
     public function definition(): array
     {
-        return [
-            'company_id' => 1,
+        return ['company_id' => \App\Models\Company::factory(),
             'tax_jurisdiction_id' => TaxJurisdiction::factory(),
             'tax_category_id' => null, // TaxCategoryFactory does not exist
             'tax_name' => $this->faker->words(3, true),
@@ -23,7 +22,7 @@ class VoIPTaxRateFactory extends Factory
             'fixed_amount' => $this->faker->randomFloat(2, 0.50, 5.00),
             'effective_date' => now(),
             'service_types' => $this->faker->randomElements(['local', 'long_distance', 'international', 'voip_fixed', 'voip_nomadic'], 3),
-            'status' => 'active',
+            'status' => $this->faker->randomElement(['active', 'inactive', 'pending']),
             'last_updated' => now(),
         ];
     }

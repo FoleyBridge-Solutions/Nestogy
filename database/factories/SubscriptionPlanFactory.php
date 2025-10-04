@@ -24,6 +24,7 @@ class SubscriptionPlanFactory extends Factory
     {
         return [
             'name' => $this->faker->randomElement(['starter', 'professional', 'enterprise', 'custom']),
+            'slug' => $this->faker->unique()->regexify('[a-z]{3,10}-[a-z]{3,10}'),
             'stripe_price_id' => 'price_'.$this->faker->unique()->uuid(),
             'price_monthly' => $this->faker->randomFloat(2, 29, 299),
             'user_limit' => $this->faker->optional(0.7)->numberBetween(1, 50),

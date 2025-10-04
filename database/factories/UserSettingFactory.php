@@ -12,15 +12,16 @@ class UserSettingFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => 1,
-            'role' => $this->faker->optional()->word,
-            'remember_me_token' => $this->faker->optional()->word,
-            'force_mfa' => $this->faker->optional()->word,
-            'records_per_page' => $this->faker->optional()->word,
-            'dashboard_financial_enable' => $this->faker->optional()->word,
-            'dashboard_technical_enable' => $this->faker->optional()->word,
-            'theme' => $this->faker->optional()->word,
-            'preferences' => $this->faker->optional()->word
+            'company_id' => \App\Models\Company::factory(),
+            'user_id' => \App\Models\User::factory(),
+            'role' => 1,
+            'remember_me_token' => $this->faker->optional()->randomNumber(),
+            'force_mfa' => $this->faker->boolean(),
+            'records_per_page' => $this->faker->numberBetween(10, 100),
+            'dashboard_financial_enable' => $this->faker->boolean(),
+            'dashboard_technical_enable' => $this->faker->boolean(),
+            'theme' => $this->faker->randomElement(['light', 'dark', 'auto']),
+            'preferences' => json_encode([])
         ];
     }
 }

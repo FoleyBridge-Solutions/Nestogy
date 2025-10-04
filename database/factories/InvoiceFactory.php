@@ -30,26 +30,9 @@ class InvoiceFactory extends Factory
         $amount = $this->faker->randomFloat(2, 100, 10000);
         $discountAmount = $this->faker->optional(0.3)->randomFloat(2, 0, $amount * 0.2);
 
-        $company = Company::first() ?? Company::factory()->create();
-        $client = Client::where('company_id', $company->id)->inRandomOrder()->first() 
-            ?? Client::factory()->create(['company_id' => $company->id]);
-        
-        $category = \App\Models\Category::where('type', 'income')
-            ->where('company_id', $company->id)
-            ->first();
-        
-        if (!$category) {
-            $category = \App\Models\Category::create([
-                'name' => 'Income',
-                'type' => 'income',
-                'company_id' => $company->id,
-                'color' => '#28a745',
-            ]);
-        }
-
         return [
-            'company_id' => $company->id,
-            'client_id' => $client->id,
+            'company_id' => Company::factory(),
+            'client_id' => Client::factory(),
             'prefix' => 'INV',
             'number' => $this->faker->unique()->numberBetween(1000, 9999),
             'scope' => $this->faker->optional()->word(),
@@ -61,7 +44,7 @@ class InvoiceFactory extends Factory
             'currency_code' => 'USD',
             'note' => $this->faker->optional()->paragraph(),
             'url_key' => $this->faker->uuid(),
-            'category_id' => $category->id,
+            'category_id' => \App\Models\Category::factory(),
             'created_at' => $date,
             'updated_at' => $date,
         ];
@@ -100,7 +83,7 @@ class InvoiceFactory extends Factory
             $sentAt = $attributes['sent_at'] ?? $attributes['date'];
 
             return [
-                'status' => 'viewed',
+            'status' => 'viewed',
                 'sent_at' => $sentAt,
                 'viewed_at' => $this->faker->dateTimeBetween($sentAt, 'now'),
             ];
@@ -117,7 +100,7 @@ class InvoiceFactory extends Factory
             $paidAt = $this->faker->dateTimeBetween($viewedAt, 'now');
 
             return [
-                'status' => 'paid',
+            'status' => 'paid',
                 'paid_at' => $paidAt,
                 'sent_at' => $attributes['sent_at'] ?? $attributes['date'],
                 'viewed_at' => $attributes['viewed_at'] ?? $this->faker->dateTimeBetween($attributes['date'], $paidAt),
@@ -135,7 +118,7 @@ class InvoiceFactory extends Factory
             $invoiceDate = (clone $dueDate)->modify('-30 days');
 
             return [
-                'status' => 'overdue',
+            'status' => 'overdue',
                 'date' => $invoiceDate,
                 'due_date' => $dueDate,
                 'sent_at' => $this->faker->dateTimeBetween($invoiceDate, $dueDate),
@@ -167,7 +150,7 @@ class InvoiceFactory extends Factory
             $taxAmount = $subtotal * $taxRate;
 
             return [
-                'subtotal' => round($subtotal, 2),
+            'subtotal' => round($subtotal, 2),
                 'tax_amount' => round($taxAmount, 2),
                 'total' => $total,
             ];
@@ -214,7 +197,7 @@ class InvoiceFactory extends Factory
             $newTotal = $attributes['total'] - $discountAmount;
 
             return [
-                'discount_amount' => $discountAmount,
+            'discount_amount' => $discountAmount,
                 'total' => max(0, $newTotal),
             ];
         });
@@ -230,7 +213,7 @@ class InvoiceFactory extends Factory
             $dueDate = (clone $date)->modify('+30 days');
 
             return [
-                'date' => $date,
+            'date' => $date,
                 'due_date' => $dueDate,
                 'created_at' => $date,
                 'updated_at' => $date,

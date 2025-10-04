@@ -22,8 +22,7 @@ class CompanyFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'name' => $this->faker->company(),
+        return ['name' => $this->faker->company(),
             'address' => $this->faker->streetAddress(),
             'city' => $this->faker->city(),
             'state' => $this->faker->stateAbbr(),
