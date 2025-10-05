@@ -91,7 +91,9 @@ jobs:
         run: php artisan migrate --force --seed
 
       - name: Run tests with coverage
-        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+        env:
+          XDEBUG_MODE: coverage
+        run: php -d memory_limit=-1 vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: Verify coverage file
         run: |
