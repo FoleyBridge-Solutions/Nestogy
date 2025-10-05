@@ -50,8 +50,9 @@ jobs:
           extensions: pgsql, pdo_pgsql, redis
           ini-values: memory_limit=2G, pcov.enabled=1
 
-      - name: Verify PHP Configuration
+      - name: Configure PHP for Coverage
         run: |
+          echo "memory_limit = 2G" >> ~/.phpenv/versions/$(php -r "echo PHP_VERSION;")/etc/conf.d/99-custom.ini
           php -v
           php -i | grep memory_limit
           php -m | grep pcov
@@ -98,7 +99,7 @@ jobs:
         run: php artisan migrate --force --seed
 
       - name: Run tests with coverage
-        run: php -d memory_limit=2G vendor/bin/phpunit --coverage-clover=coverage.xml
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: Verify coverage file
         run: |
