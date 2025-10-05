@@ -50,6 +50,12 @@ jobs:
           extensions: pgsql, pdo_pgsql, redis
           ini-values: memory_limit=2G, pcov.enabled=1
 
+      - name: Verify PHP Configuration
+        run: |
+          php -v
+          php -i | grep memory_limit
+          php -m | grep pcov
+
       - name: Configure Flux Pro credentials
         env:
           FLUX_USERNAME: ${{ secrets.FLUX_USERNAME }}
@@ -92,7 +98,7 @@ jobs:
         run: php artisan migrate --force --seed
 
       - name: Run tests with coverage
-        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+        run: php -d memory_limit=2G vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: Verify coverage file
         run: |
