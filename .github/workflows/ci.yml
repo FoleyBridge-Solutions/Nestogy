@@ -42,11 +42,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup PHP
+      - name: Setup PHP with Xdebug
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          coverage: none
+          coverage: xdebug
           extensions: pgsql, pdo_pgsql, redis
 
       - name: Configure Flux Pro credentials
@@ -90,8 +90,27 @@ jobs:
       - name: Run database migrations
         run: php artisan migrate --force --seed
 
-      - name: Run tests
-        run: vendor/bin/phpunit --no-coverage
+      - name: Run tests with coverage
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+
+      - name: Verify coverage file
+        run: |
+          if [ -f coverage.xml ]; then
+            echo "✅ Coverage file generated successfully"
+            echo "📊 Coverage file size: $(du -h coverage.xml | cut -f1)"
+            echo "📝 First few lines:"
+            head -n 5 coverage.xml
+          else
+            echo "❌ Coverage file not found!"
+            exit 1
+          fi
+
+      - name: Upload to SonarCloud
+        if: github.ref == 'refs/heads/main'
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Deploy to Laravel Cloud
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
