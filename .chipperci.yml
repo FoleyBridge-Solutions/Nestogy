@@ -1,0 +1,42 @@
+version: 1
+
+environment:
+  php: 8.4
+  node: 20
+
+services:
+  - postgres: 15
+  - redis: latest
+
+on:
+  push:
+    branches: .*
+
+pipeline:
+  - name: Setup Application
+    cmd: |
+      cp -v .env.example .env
+      php artisan key:generate
+      echo "STRIPE_SECRET=sk_test_dummy" >> .env
+      echo "STRIPE_PUBLISHABLE=pk_test_dummy" >> .env
+
+  - name: Install Composer Dependencies
+    cmd: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+  - name: Install NPM Dependencies
+    cmd: npm ci --no-audit
+
+  - name: Build Assets
+    cmd: npm run build
+
+  - name: Run Database Migrations
+    cmd: php artisan migrate --force --seed
+
+  - name: Run Tests
+    cmd: vendor/bin/phpunit --coverage-clover=coverage.xml
+
+  - name: Upload Coverage to SonarQube
+    cmd: |
+      if [ "$CHIPPER_CI_BRANCH" = "main" ]; then
+        echo "Coverage report generated at coverage.xml"
+      fi
