@@ -37,6 +37,7 @@ pipeline:
     cmd: |
       sudo apt-get update -qq
       sudo apt-get install -y -qq php8.4-pcov
+      sudo phpenmod -v 8.4 -s cli pcov
       php -m | grep pcov
 
   - name: Configure Flux Pro Credentials
