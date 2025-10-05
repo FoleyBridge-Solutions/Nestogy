@@ -36,3 +36,4 @@ server.log
 /flux-ui-mcpcoverage.xml
 coverage.xml
 /storage/claude/
+/flux-repo/
