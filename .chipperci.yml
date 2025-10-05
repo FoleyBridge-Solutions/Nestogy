@@ -38,7 +38,9 @@ pipeline:
       sudo apt-get update -qq
       sudo apt-get install -y -qq php8.4-pcov
       sudo phpenmod -v 8.4 -s cli pcov
+      echo "memory_limit = 2G" | sudo tee -a /etc/php/8.4/cli/php.ini
       php -m | grep pcov
+      php -r "echo 'Memory Limit: ' . ini_get('memory_limit') . PHP_EOL;"
 
   - name: Configure Flux Pro Credentials
     cmd: |
@@ -57,7 +59,7 @@ pipeline:
     cmd: php artisan migrate --force --seed
 
   - name: Run Tests with Coverage
-    cmd: php -d memory_limit=1G vendor/bin/phpunit --coverage-clover=coverage.xml
+    cmd: vendor/bin/phpunit --coverage-clover=coverage.xml
 
   - name: SonarQube Scan
     cmd: |
