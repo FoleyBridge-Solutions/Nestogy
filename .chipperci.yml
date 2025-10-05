@@ -33,6 +33,12 @@ pipeline:
       echo "REDIS_HOST=127.0.0.1" >> .env
       echo "REDIS_PORT=6379" >> .env
 
+  - name: Install PCOV Extension
+    cmd: |
+      sudo apt-get update -qq
+      sudo apt-get install -y -qq php8.4-pcov
+      php -m | grep pcov
+
   - name: Configure Flux Pro Credentials
     cmd: |
       echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_PRO_TOKEN}\"}}}" > auth.json
