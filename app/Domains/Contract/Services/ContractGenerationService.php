@@ -231,6 +231,11 @@ class ContractGenerationService
      */
     public function regenerateContract(Contract $contract, array $changes = []): Contract
     {
+        // Validate contract can be regenerated
+        if ($contract->status === Contract::STATUS_SIGNED || $contract->status === Contract::STATUS_ACTIVE) {
+            throw new \Exception('Cannot regenerate a signed or active contract');
+        }
+
         return DB::transaction(function () use ($contract, $changes) {
             Log::info('Regenerating contract', [
                 'contract_id' => $contract->id,
@@ -376,6 +381,7 @@ class ContractGenerationService
         $defaultData = [
             'company_id' => Auth::user()->company_id,
             'contract_number' => $this->generateContractNumber(),
+            'contract_type' => 'custom',
             'currency_code' => 'USD',
             'status' => Contract::STATUS_DRAFT,
             'signature_status' => Contract::SIGNATURE_PENDING,
@@ -486,18 +492,18 @@ class ContractGenerationService
         // Default signatures: client and company
         $defaultSignatories = [
             [
-                'signatory_type' => 'client',
-                'signatory_name' => $contract->client->name,
-                'signatory_email' => $contract->client->email,
-                'signatory_title' => $contract->client->title ?? 'Authorized Representative',
+                'signer_type' => 'client',
+                'signer_name' => $contract->client->name,
+                'signer_email' => $contract->client->email,
+                'signer_title' => $contract->client->title ?? 'Authorized Representative',
                 'signing_order' => 1,
                 'is_required' => true,
             ],
             [
-                'signatory_type' => 'company',
-                'signatory_name' => Auth::user()->name,
-                'signatory_email' => Auth::user()->email,
-                'signatory_title' => 'Authorized Representative',
+                'signer_type' => 'company',
+                'signer_name' => Auth::user()->name,
+                'signer_email' => Auth::user()->email,
+                'signer_title' => 'Authorized Representative',
                 'signing_order' => 2,
                 'is_required' => true,
             ],
@@ -513,16 +519,14 @@ class ContractGenerationService
             ContractSignature::create([
                 'contract_id' => $contract->id,
                 'company_id' => $contract->company_id,
-                'signatory_type' => $signatory['signatory_type'],
-                'signatory_name' => $signatory['signatory_name'],
-                'signatory_email' => $signatory['signatory_email'],
-                'signatory_title' => $signatory['signatory_title'] ?? null,
-                'signature_type' => $signatureSettings['signature_type'] ?? 'electronic',
+                'signer_type' => $signatory['signer_type'] ?? $signatory['signatory_type'] ?? null,
+                'signer_name' => $signatory['signer_name'] ?? $signatory['signatory_name'] ?? null,
+                'signer_email' => $signatory['signer_email'] ?? $signatory['signatory_email'] ?? null,
+                'signer_title' => $signatory['signer_title'] ?? $signatory['signatory_title'] ?? null,
+                'signature_method' => $signatureSettings['signature_type'] ?? 'electronic',
                 'status' => 'pending',
                 'signing_order' => $signatory['signing_order'],
-                'is_required' => $signatory['is_required'] ?? true,
                 'expires_at' => now()->addDays($signatureSettings['expiration_days'] ?? 30),
-                'created_by' => Auth::id(),
             ]);
         }
     }
@@ -536,30 +540,26 @@ class ContractGenerationService
         ContractSignature::create([
             'contract_id' => $contract->id,
             'company_id' => $contract->company_id,
-            'signatory_type' => 'client',
-            'signatory_name' => $contract->client->name,
-            'signatory_email' => $contract->client->email,
-            'signature_type' => 'electronic',
+            'signer_type' => 'client',
+            'signer_name' => $contract->client->name,
+            'signer_email' => $contract->client->email,
+            'signature_method' => 'electronic',
             'status' => 'pending',
             'signing_order' => 1,
-            'is_required' => true,
             'expires_at' => now()->addDays(30),
-            'created_by' => Auth::id(),
         ]);
 
         // Company signature
         ContractSignature::create([
             'contract_id' => $contract->id,
             'company_id' => $contract->company_id,
-            'signatory_type' => 'company',
-            'signatory_name' => Auth::user()->name,
-            'signatory_email' => Auth::user()->email,
-            'signature_type' => 'electronic',
+            'signer_type' => 'company',
+            'signer_name' => Auth::user()->name,
+            'signer_email' => Auth::user()->email,
+            'signature_method' => 'electronic',
             'status' => 'pending',
             'signing_order' => 2,
-            'is_required' => true,
             'expires_at' => now()->addDays(30),
-            'created_by' => Auth::id(),
         ]);
     }
 
@@ -635,14 +635,15 @@ class ContractGenerationService
                 'unit_price' => $item->price,
                 'total_price' => $item->subtotal,
                 'service_type' => $item->service_type,
-                'is_recurring' => $item->is_recurring ?? false,
+                'is_recurring' => !empty($item->recurring_id),
                 'recurring_period' => $item->recurring_period ?? 'monthly',
             ];
         }
 
         // Add recurring/one-time breakdown
-        $recurringTotal = $quote->items()->where('is_recurring', true)->sum('subtotal');
-        $oneTimeTotal = $quote->items()->where('is_recurring', '!=', true)->sum('subtotal');
+        // Note: is_recurring column doesn't exist, using recurring_id instead
+        $recurringTotal = $quote->items()->whereNotNull('recurring_id')->sum('subtotal');
+        $oneTimeTotal = $quote->items()->whereNull('recurring_id')->sum('subtotal');
 
         $pricing['breakdown'] = [
             'one_time' => $oneTimeTotal,
@@ -665,8 +666,41 @@ class ContractGenerationService
             return $this->clauseService->generateContractFromClauses($contract->template, $variables);
         }
 
-        // Fallback to default template if no clauses exist
-        throw new \Exception('Contract template has no clauses configured. All templates must use the modern clause-based system.');
+        // Fallback to simple default template if no clauses exist
+        return $this->generateDefaultTemplate($contract);
+    }
+
+    /**
+     * Generate a simple default template when no clauses are configured
+     */
+    protected function generateDefaultTemplate(Contract $contract): string
+    {
+        $client = $contract->client;
+        $company = $contract->company;
+        
+        $content = "<h1>{$contract->title}</h1>\n\n";
+        $content .= "<p><strong>Contract Number:</strong> {$contract->contract_number}</p>\n";
+        $content .= "<p><strong>Date:</strong> " . now()->format('F d, Y') . "</p>\n\n";
+        
+        $content .= "<h2>Parties</h2>\n";
+        $content .= "<p><strong>Service Provider:</strong> {$company->name}</p>\n";
+        $content .= "<p><strong>Client:</strong> {$client->name}</p>\n\n";
+        
+        $content .= "<h2>Contract Terms</h2>\n";
+        $content .= "<p><strong>Start Date:</strong> " . $contract->start_date->format('F d, Y') . "</p>\n";
+        if ($contract->end_date) {
+            $content .= "<p><strong>End Date:</strong> " . $contract->end_date->format('F d, Y') . "</p>\n";
+        }
+        $content .= "<p><strong>Contract Value:</strong> $" . number_format($contract->contract_value, 2) . "</p>\n\n";
+        
+        if ($contract->description) {
+            $content .= "<h2>Description</h2>\n";
+            $content .= "<p>{$contract->description}</p>\n\n";
+        }
+        
+        $content .= "<p><em>This is a system-generated contract. Please configure contract template clauses for customized contracts.</em></p>\n";
+        
+        return $content;
     }
 
     /**

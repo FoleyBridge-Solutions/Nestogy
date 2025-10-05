@@ -77,6 +77,11 @@ class ContractSignature extends Model
     protected $fillable = [
         'contract_id',
         'company_id',
+        'signer_type',
+        'signer_name',
+        'signer_email',
+        'signer_title',
+        'signer_company',
         'signatory_type',
         'signatory_name',
         'signatory_email',
@@ -108,7 +113,6 @@ class ContractSignature extends Model
         'last_reminder_sent',
         'reminder_count',
         'notification_settings',
-        'legally_binding',
         'compliance_standard',
         'audit_trail',
         'certificate_id',
@@ -138,7 +142,6 @@ class ContractSignature extends Model
         'last_reminder_sent' => 'datetime',
         'reminder_count' => 'integer',
         'notification_settings' => 'array',
-        'legally_binding' => 'boolean',
         'audit_trail' => 'array',
         'signing_order' => 'integer',
         'is_required' => 'boolean',
@@ -572,9 +575,10 @@ class ContractSignature extends Model
                 $signature->signing_order = 1;
             }
 
-            if (! $signature->legally_binding) {
-                $signature->legally_binding = true;
-            }
+            // Note: legally_binding field not in database
+            // if (! $signature->legally_binding) {
+            //     $signature->legally_binding = true;
+            // }
 
             if (! $signature->expires_at) {
                 $signature->expires_at = now()->addDays(30);

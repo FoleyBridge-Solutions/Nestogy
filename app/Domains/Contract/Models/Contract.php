@@ -114,7 +114,6 @@ class Contract extends Model
         'liability_clause',
         'confidentiality_clause',
         'dispute_resolution',
-        'milestones',
         'deliverables',
         'penalties',
         'governing_law',
@@ -154,7 +153,6 @@ class Contract extends Model
         'voip_specifications' => 'array',
         'compliance_requirements' => 'array',
         'custom_clauses' => 'array',
-        'milestones' => 'array',
         'deliverables' => 'array',
         'penalties' => 'array',
         'metadata' => 'array',
@@ -213,6 +211,15 @@ class Contract extends Model
     const SIGNATURE_SIGNED = 'signed';
 
     const SIGNATURE_DECLINED = 'declined';
+
+    /**
+     * Renewal Type constants
+     */
+    const RENEWAL_MANUAL = 'manual';
+
+    const RENEWAL_AUTOMATIC = 'automatic';
+
+    const RENEWAL_NONE = 'none';
 
     // Configuration cache is now handled by HasCompanyConfiguration trait
 

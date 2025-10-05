@@ -42,14 +42,14 @@ class ContractGenerationServiceTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'accepted',
-            'total' => 10000,
+            'status' => 'Accepted',
+            'approval_status' => 'executive_approved',
+            'amount' => 10000,
         ]);
 
         $template = ContractTemplate::factory()->create([
             'company_id' => $this->company->id,
             'name' => 'Standard Service Agreement',
-            'contract_type' => 'managed_services',
         ]);
 
         $contract = $this->service->generateFromQuote($quote, $template);
@@ -64,12 +64,13 @@ class ContractGenerationServiceTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'accepted',
+            'status' => 'Accepted',
+            'approval_status' => 'executive_approved',
         ]);
 
         $template = ContractTemplate::factory()->create([
             'company_id' => $this->company->id,
-            'contract_type' => 'managed_services',
+            
         ]);
 
         $customizations = [
@@ -89,7 +90,7 @@ class ContractGenerationServiceTest extends TestCase
         $template = ContractTemplate::factory()->create([
             'company_id' => $this->company->id,
             'name' => 'VoIP Service Agreement',
-            'contract_type' => 'telecommunications',
+            
         ]);
 
         $data = [
@@ -111,7 +112,7 @@ class ContractGenerationServiceTest extends TestCase
     {
         $template = ContractTemplate::factory()->create([
             'company_id' => $this->company->id,
-            'contract_type' => 'telecommunications',
+            
         ]);
 
         $data = [
@@ -136,7 +137,7 @@ class ContractGenerationServiceTest extends TestCase
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
             'title' => 'Custom Contract',
-            'contract_type' => 'custom',
+            
             'start_date' => now()->format('Y-m-d'),
             'end_date' => now()->addMonths(6)->format('Y-m-d'),
             'contract_value' => 15000,
@@ -157,7 +158,7 @@ class ContractGenerationServiceTest extends TestCase
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
             'title' => 'Project Contract',
-            'contract_type' => 'project',
+            
             'start_date' => now()->format('Y-m-d'),
             'milestones' => [
                 [
@@ -184,7 +185,7 @@ class ContractGenerationServiceTest extends TestCase
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
             'title' => 'Test Contract',
-            'contract_type' => 'managed_services',
+            
         ]);
 
         $documentPath = $this->service->generateContractDocument($contract);
@@ -258,13 +259,14 @@ class ContractGenerationServiceTest extends TestCase
         $quote = Quote::factory()->create([
             'company_id' => $this->company->id,
             'client_id' => $this->client->id,
-            'status' => 'accepted',
-            'total' => 25000,
+            'status' => 'Accepted',
+            'approval_status' => 'executive_approved',
+            'amount' => 25000,
         ]);
 
         $template = ContractTemplate::factory()->create([
             'company_id' => $this->company->id,
-            'contract_type' => 'managed_services',
+            
         ]);
 
         $contract = $this->service->generateFromQuote($quote, $template);
@@ -285,15 +287,15 @@ class ContractGenerationServiceTest extends TestCase
         $templates = [
             'managed_services' => ContractTemplate::factory()->create([
                 'company_id' => $this->company->id,
-                'contract_type' => 'managed_services',
+                
             ]),
             'telecommunications' => ContractTemplate::factory()->create([
                 'company_id' => $this->company->id,
-                'contract_type' => 'telecommunications',
+                
             ]),
             'hardware' => ContractTemplate::factory()->create([
                 'company_id' => $this->company->id,
-                'contract_type' => 'hardware',
+                
             ]),
         ];
 
@@ -302,6 +304,7 @@ class ContractGenerationServiceTest extends TestCase
                 'client_id' => $this->client->id,
                 'title' => ucfirst($type) . ' Contract',
                 'start_date' => now()->format('Y-m-d'),
+                'contract_type' => $type,
             ];
 
             $contract = $this->service->generateFromTemplate($this->client, $template, $data);
