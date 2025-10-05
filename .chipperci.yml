@@ -38,6 +38,10 @@ pipeline:
   - name: Install Composer Dependencies
     cmd: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
 
+  - name: Fix Flux File Input Component
+    cmd: |
+      sed -i '1{/@pure/d;}' vendor/livewire/flux/stubs/resources/views/flux/input/file.blade.php || true
+
   - name: Install NPM Dependencies
     cmd: npm ci
 
