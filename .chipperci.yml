@@ -61,18 +61,53 @@ pipeline:
   - name: Run Tests with Coverage
     cmd: vendor/bin/phpunit --coverage-clover=coverage.xml
 
-  - name: SonarQube Scan
+  - name: Verify Coverage Generated
     cmd: |
-      if [ "$CHIPPER_CI_BRANCH" = "main" ]; then
-        echo "Uploading coverage to SonarQube..."
-        curl --version
-        # Note: Install sonar-scanner if needed, or use docker
-        # docker run --rm -e SONAR_HOST_URL="https://sonarcloud.io" -e SONAR_TOKEN="${SONAR_TOKEN}" -v "$(pwd):/usr/src" sonarsource/sonar-scanner-cli
+      if [ -f coverage.xml ]; then
+        echo "✅ Coverage file generated successfully"
+        echo "📊 Coverage file size: $(du -h coverage.xml | cut -f1)"
+        echo "📝 First few lines of coverage:"
+        head -n 10 coverage.xml
+      else
+        echo "❌ Coverage file not found!"
+        exit 1
+      fi
+
+  - name: Upload to SonarCloud
+    cmd: |
+      if [ "$CHIPPER_CI_BRANCH" = "main" ] && [ -n "$SONAR_TOKEN" ]; then
+        echo "📊 Uploading coverage to SonarCloud..."
+        docker run --rm \
+          -e SONAR_HOST_URL="https://sonarcloud.io" \
+          -e SONAR_TOKEN="${SONAR_TOKEN}" \
+          -v "$(pwd):/usr/src" \
+          sonarsource/sonar-scanner-cli \
+          -Dsonar.projectKey=FoleyBridge-Solutions_Nestogy \
+          -Dsonar.organization=foleybridge-solutions \
+          -Dsonar.sources=app,routes,resources/views \
+          -Dsonar.tests=tests \
+          -Dsonar.php.coverage.reportPaths=coverage.xml \
+          -Dsonar.sourceEncoding=UTF-8
+        echo "✅ SonarCloud scan complete!"
+      else
+        echo "⏭️  Skipping SonarCloud (not main branch or SONAR_TOKEN not set)"
       fi
 
   - name: Deploy to Laravel Cloud
     cmd: |
       if [ "$CHIPPER_CI_BRANCH" = "main" ] && [ "$CHIPPER_CI_EVENT" = "push" ]; then
-        echo "Deploying to Laravel Cloud..."
-        curl -X POST "https://cloud.laravel.com/deploy/9fbf5ee1-0a95-4c7a-80cd-33ef5cce3957/Wi1QZa0TPiaou4YJ"
+        echo "🚀 Deploying to Laravel Cloud..."
+        RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://cloud.laravel.com/deploy/9fbf5ee1-0a95-4c7a-80cd-33ef5cce3957/Wi1QZa0TPiaou4YJ")
+        HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+        BODY=$(echo "$RESPONSE" | head -n-1)
+        
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+          echo "✅ Deployment triggered successfully!"
+          echo "Response: $BODY"
+        else
+          echo "⚠️  Deployment returned status $HTTP_CODE"
+          echo "Response: $BODY"
+        fi
+      else
+        echo "⏭️  Skipping deployment (not main branch push)"
       fi
