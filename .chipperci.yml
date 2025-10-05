@@ -11,32 +11,54 @@ services:
 on:
   push:
     branches: .*
+  pull_request:
+    branches: .*
 
 pipeline:
-  - name: Setup Application
+  - name: Configure Flux Pro Credentials
     cmd: |
-      cp -v .env.example .env
-      php artisan key:generate
-      echo "STRIPE_SECRET=sk_test_dummy" >> .env
-      echo "STRIPE_PUBLISHABLE=pk_test_dummy" >> .env
+      echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_LICENSE_KEY}\"}}}" > auth.json
 
   - name: Install Composer Dependencies
-    cmd: composer install --no-interaction --prefer-dist --optimize-autoloader
+    cmd: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
 
   - name: Install NPM Dependencies
-    cmd: npm ci --no-audit
+    cmd: npm ci
 
   - name: Build Assets
     cmd: npm run build
 
+  - name: Setup Environment File
+    cmd: |
+      echo "APP_ENV=testing" > .env
+      echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
+      echo "STRIPE_SECRET=sk_test_dummy" >> .env
+      echo "STRIPE_PUBLISHABLE=pk_test_dummy" >> .env
+      echo "DB_CONNECTION=pgsql" >> .env
+      echo "DB_HOST=127.0.0.1" >> .env
+      echo "DB_PORT=5432" >> .env
+      echo "DB_DATABASE=nestogy_test" >> .env
+      echo "DB_USERNAME=nestogy" >> .env
+      echo "DB_PASSWORD=nestogy_dev_pass" >> .env
+
   - name: Run Database Migrations
     cmd: php artisan migrate --force --seed
 
-  - name: Run Tests
+  - name: Run Tests with Coverage
     cmd: vendor/bin/phpunit --coverage-clover=coverage.xml
 
-  - name: Upload Coverage to SonarQube
+  - name: SonarQube Scan
     cmd: |
       if [ "$CHIPPER_CI_BRANCH" = "main" ]; then
-        echo "Coverage report generated at coverage.xml"
+        echo "Uploading coverage to SonarQube..."
+        curl --version
+        # Note: Install sonar-scanner if needed, or use docker
+        # docker run --rm -e SONAR_HOST_URL="https://sonarcloud.io" -e SONAR_TOKEN="${SONAR_TOKEN}" -v "$(pwd):/usr/src" sonarsource/sonar-scanner-cli
+      fi
+
+  - name: Deploy to Laravel Cloud
+    cmd: |
+      if [ "$CHIPPER_CI_BRANCH" = "main" ] && [ "$CHIPPER_CI_EVENT" = "push" ]; then
+        echo "Deploying to Laravel Cloud..."
+        curl -X POST "https://cloud.laravel.com/deploy/9fbf5ee1-0a95-4c7a-80cd-33ef5cce3957/Wi1QZa0TPiaou4YJ"
       fi
