@@ -35,9 +35,14 @@ pipeline:
     cmd: |
       echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_PRO_TOKEN}\"}}}" > auth.json
 
+  - name: Install PCOV for Code Coverage
+    cmd: |
+      pecl install pcov
+      echo "extension=pcov.so" > /usr/local/etc/php/conf.d/pcov.ini
+      echo "pcov.enabled=1" >> /usr/local/etc/php/conf.d/pcov.ini
+
   - name: Install Composer Dependencies
     cmd: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
-
 
   - name: Install NPM Dependencies
     cmd: npm ci
