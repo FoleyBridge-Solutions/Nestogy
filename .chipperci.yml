@@ -57,7 +57,7 @@ pipeline:
     cmd: php artisan migrate --force --seed
 
   - name: Run Tests with Coverage
-    cmd: vendor/bin/phpunit --coverage-clover=coverage.xml
+    cmd: php -d memory_limit=1G vendor/bin/phpunit --coverage-clover=coverage.xml
 
   - name: SonarQube Scan
     cmd: |
