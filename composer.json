@@ -24,7 +24,6 @@
         "laravel/tinker": "^2.10.1",
         "league/csv": "^9.24",
         "league/flysystem-aws-s3-v3": "^3.29",
-        "livewire/blaze": "dev-main",
         "livewire/flux": "dev-main",
         "livewire/flux-pro": "^2.4",
         "livewire/livewire": "^3.0",
@@ -42,16 +41,7 @@
         "symfony/mailer": "^7.0",
         "webklex/laravel-imap": "^6.2"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/livewire/blaze"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/FoleyBridge-Solutions/flux.git"
-        }
-    ],
+
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.0",
         "brianium/paratest": "^7.8",
@@ -127,8 +117,8 @@
     "prefer-stable": true,
     "repositories": {
         "flux": {
-            "type": "composer",
-            "url": "https://composer.fluxui.dev"
+            "type": "vcs",
+            "url": "https://github.com/FoleyBridge-Solutions/flux.git"
         },
         "blaze": {
             "type": "vcs",

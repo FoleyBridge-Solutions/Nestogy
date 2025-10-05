@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "60c31ca5ca77c8bf273e0bfd2f6d41ae",
+    "content-hash": "609698cf6d3905c51611b5d9a492c564",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3552,80 +3552,17 @@
             "time": "2024-12-08T08:18:47+00:00"
         },
         {
-            "name": "livewire/blaze",
+            "name": "livewire/flux",
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "https://github.com/livewire/blaze.git",
-                "reference": "ca9e952caf03d90d5fc34a91a83773b17dc2983f"
+                "url": "https://github.com/FoleyBridge-Solutions/flux.git",
+                "reference": "fa5b860ff7cf29c5d28ea7c236dde31ad7761074"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/livewire/blaze/zipball/ca9e952caf03d90d5fc34a91a83773b17dc2983f",
-                "reference": "ca9e952caf03d90d5fc34a91a83773b17dc2983f",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/support": "^10.0|^11.0|^12.0",
-                "illuminate/view": "^10.0|^11.0|^12.0",
-                "php": "^8.1"
-            },
-            "require-dev": {
-                "orchestra/testbench": "^8.0|^9.0|^10.0",
-                "pestphp/pest": "^2.0|^3.0",
-                "pestphp/pest-plugin-laravel": "^2.0|^3.0"
-            },
-            "default-branch": true,
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Livewire\\Blaze\\BlazeServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Livewire\\Blaze\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Livewire\\Blaze\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "vendor/bin/pest"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Caleb Porzio"
-                }
-            ],
-            "description": "A tool for optimizing Blade component performance by folding them into parent templates",
-            "support": {
-                "source": "https://github.com/livewire/blaze/tree/v0.1.0",
-                "issues": "https://github.com/livewire/blaze/issues"
-            },
-            "time": "2025-08-23T14:54:24+00:00"
-        },
-        {
-            "name": "livewire/flux",
-            "version": "v2.5.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/livewire/flux.git",
-                "reference": "7d236c6caa6a8fa8604caa08abf2ae630be12c24"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/livewire/flux/zipball/7d236c6caa6a8fa8604caa08abf2ae630be12c24",
-                "reference": "7d236c6caa6a8fa8604caa08abf2ae630be12c24",
+                "url": "https://api.github.com/repos/FoleyBridge-Solutions/flux/zipball/fa5b860ff7cf29c5d28ea7c236dde31ad7761074",
+                "reference": "fa5b860ff7cf29c5d28ea7c236dde31ad7761074",
                 "shasum": ""
             },
             "require": {
@@ -3640,15 +3577,16 @@
             "conflict": {
                 "livewire/blaze": "<0.1.0"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
-                    "aliases": {
-                        "Flux": "Flux\\Flux"
-                    },
                     "providers": [
                         "Flux\\FluxServiceProvider"
-                    ]
+                    ],
+                    "aliases": {
+                        "Flux": "Flux\\Flux"
+                    }
                 }
             },
             "autoload": {
@@ -3656,7 +3594,6 @@
                     "Flux\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "proprietary"
             ],
@@ -3675,10 +3612,9 @@
                 "ui"
             ],
             "support": {
-                "issues": "https://github.com/livewire/flux/issues",
-                "source": "https://github.com/livewire/flux/tree/v2.5.0"
+                "source": "https://github.com/FoleyBridge-Solutions/flux/tree/main"
             },
-            "time": "2025-09-29T21:36:00+00:00"
+            "time": "2025-10-05T08:40:29+00:00"
         },
         {
             "name": "livewire/flux-pro",
@@ -14038,7 +13974,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "livewire/blaze": 20
+        "livewire/flux": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
