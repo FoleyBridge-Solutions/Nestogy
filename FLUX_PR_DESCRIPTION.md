@@ -9,11 +9,21 @@ InvalidArgumentException: Cannot end a section without first starting one.
 ```
 
 ## Root Cause
-The file input component contains elements that cannot be safely optimized at compile-time by Blaze's `@pure` directive:
+The file input component contains a **nested Flux component** that may not be pure:
 
-1. **Translation helpers** - `{!! __('Choose files') !!}` and `{!! __('No file chosen') !!}` need runtime evaluation
-2. **PHP conditionals** - `<?php if ($multiple) : ?>` requires runtime context
-3. **Dynamic attributes** - `wire:model` binding needs runtime evaluation
+```blade
+<flux:button as="div" class="cursor-pointer" :$size aria-hidden="true">
+```
+
+Per Blaze's documentation:
+> Components hardcoded in the template must be pure for the parent to be @pure
+
+The component also contains elements that cannot be safely optimized at compile-time:
+
+1. **Nested component** - `<flux:button>` must also be @pure (unclear if it is)
+2. **Translation helpers** - `{!! __('Choose files') !!}` need runtime evaluation  
+3. **PHP conditionals** - `<?php if ($multiple) : ?>` requires runtime context
+4. **Dynamic attributes** - `wire:model` binding needs runtime evaluation
 
 Blaze attempts to pre-render components marked with `@pure` at compile-time, but these dynamic elements cause the Blade compiler to produce invalid output.
 

@@ -1,0 +1,223 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12 with PCOV 1.0.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+.................................EF.E..........................  63 / 151 ( 41%)
+............................................................... 126 / 151 ( 83%)
+.........................                                       151 / 151 (100%)
+
+Time: 00:34.446, Memory: 169.00 MB
+
+There were 2 errors:
+
+1) Tests\Unit\Services\NavigationServiceBadgeCountsTest::test_get_badge_counts_for_assets_domain
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "category" of relation "assets" does not exist
+LINE 1: ...us", "purchase_date", "warranty_expire", "notes", "category"...
+                                                             ^ (Connection: pgsql, SQL: insert into "assets" ("company_id", "client_id", "name", "type", "description", "serial", "make", "model", "status", "purchase_date", "warranty_expire", "notes", "category", "updated_at", "created_at") values (41, 36, Backup Software - beahan.garrick, software, Veniam quod velit labore quia quis dolorem., RE868TP037, Autodesk, AutoCAD 2023, inactive, 2022-07-23 07:30:29, 2025-10-21 22:15:59, ?, hardware, 2025-10-05 05:16:33, 2025-10-05 05:16:33) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:325
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Services/NavigationServiceBadgeCountsTest.php:90
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "category" of relation "assets" does not exist
+LINE 1: ...us", "purchase_date", "warranty_expire", "notes", "category"...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:325
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Services/NavigationServiceBadgeCountsTest.php:90
+
+2) Tests\Unit\Services\NavigationServiceBadgeCountsTest::test_get_badge_counts_returns_empty_without_company
+Illuminate\Database\QueryException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "company_id" of relation "users" violates not-null constraint
+DETAIL:  Failing row contains (50, null, Miss Euna Stoltenberg DDS, naomie.schimmel@example.org, 2025-10-05 05:16:34, $2y$04$O4MJ4nv6DQ8MoriyAY8Ul.pNWcR/ilcvYdps9DO5dmyAYX9/Nd/zG, t, null, null, null, null, null, Sl2FuC7NQY, 2025-10-05 05:16:34, 2025-10-05 05:16:34, null, null, null, null). (Connection: pgsql, SQL: insert into "users" ("company_id", "name", "email", "email_verified_at", "password", "remember_token", "updated_at", "created_at") values (?, Miss Euna Stoltenberg DDS, naomie.schimmel@example.org, 2025-10-05 05:16:34, $2y$04$O4MJ4nv6DQ8MoriyAY8Ul.pNWcR/ilcvYdps9DO5dmyAYX9/Nd/zG, Sl2FuC7NQY, 2025-10-05 05:16:34, 2025-10-05 05:16:34) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Services/NavigationServiceBadgeCountsTest.php:160
+
+Caused by
+PDOException: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "company_id" of relation "users" violates not-null constraint
+DETAIL:  Failing row contains (50, null, Miss Euna Stoltenberg DDS, naomie.schimmel@example.org, 2025-10-05 05:16:34, $2y$04$O4MJ4nv6DQ8MoriyAY8Ul.pNWcR/ilcvYdps9DO5dmyAYX9/Nd/zG, t, null, null, null, null, null, Sl2FuC7NQY, 2025-10-05 05:16:34, 2025-10-05 05:16:34, null, null, null, null).
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Services/NavigationServiceBadgeCountsTest.php:160
+
+--
+
+There was 1 failure:
+
+1) Tests\Unit\Services\NavigationServiceBadgeCountsTest::test_get_badge_counts_for_financial_domain
+Failed asserting that an array has the key 'invoices'.
+
+/opt/nestogy/tests/Unit/Services/NavigationServiceBadgeCountsTest.php:141
+
+ERRORS!
+Tests: 151, Assertions: 215, Errors: 2, Failures: 1.
+
+Generating code coverage report in Clover XML format ... done [00:10.475]
+
+
+Code Coverage Report:
+  2025-10-05 05:17:01
+
+ Summary:
+  Classes:  0.00% (0/943)
+  Methods:  0.71% (94/13234)
+  Lines:    1.52% (2125/139755)
+
+App\Domains\Client\Services\ClientFavoriteService
+  Methods:  55.56% ( 5/ 9)   Lines:  63.33% ( 57/ 90)
+App\Domains\Contract\Models\Contract
+  Methods:   1.47% ( 1/68)   Lines:   6.51% ( 17/261)
+App\Domains\Contract\Services\ContractClauseService
+  Methods:   2.86% ( 1/35)   Lines:   0.15% (  1/679)
+App\Domains\Contract\Services\ContractConfigurationRegistry
+  Methods:  48.65% (18/37)   Lines:  65.30% (318/487)
+App\Domains\Contract\Services\ContractPluginManager
+  Methods:   8.70% ( 2/23)   Lines:  27.84% ( 54/194)
+App\Domains\Contract\Services\DynamicContractRouteService
+  Methods:   7.14% ( 1/14)   Lines:   0.46% (  1/217)
+App\Domains\Core\Services\DomainRouteManager
+  Methods:  21.43% ( 3/14)   Lines:  12.87% ( 22/171)
+App\Domains\Core\Services\NavigationService
+  Methods:  52.11% (37/71)   Lines:  76.79% (933/1215)
+App\Domains\Core\Services\NotificationService
+  Methods:   3.33% ( 1/30)   Lines:   0.28% (  1/358)
+App\Domains\Core\Services\PdfService
+  Methods:   4.17% ( 1/24)   Lines:   0.72% (  1/138)
+App\Domains\Core\Services\SidebarConfigProvider
+  Methods:   5.26% ( 1/19)   Lines:   0.34% (  4/1178)
+App\Domains\Core\Services\StripeSubscriptionService
+  Methods:   0.00% ( 0/16)   Lines:   0.81% (  3/372)
+App\Domains\Core\Services\TemplateContentGenerator
+  Methods:   8.33% ( 1/12)   Lines:   0.46% (  1/218)
+App\Domains\Email\Services\EmailService
+  Methods:   5.56% ( 1/18)   Lines:   0.81% (  2/247)
+App\Domains\Email\Services\ImapService
+  Methods:   5.88% ( 1/17)   Lines:   1.53% (  2/131)
+App\Domains\Email\Services\UnifiedMailService
+  Methods:   5.00% ( 1/20)   Lines:   2.84% (  8/282)
+App\Domains\Financial\Services\RecurringBillingPerformanceService
+  Methods:   5.00% ( 1/20)   Lines:   3.35% (  7/209)
+App\Domains\Financial\Services\RecurringBillingService
+  Methods:   2.86% ( 1/35)   Lines:   0.71% (  4/561)
+App\Domains\Financial\Services\RecurringInvoiceService
+  Methods:   4.76% ( 1/21)   Lines:   0.31% (  1/318)
+App\Domains\Financial\Services\TaxEngine\BaseTaxDataService
+  Methods:  20.00% ( 3/15)   Lines:  16.55% ( 23/139)
+App\Domains\Financial\Services\TaxEngine\OfficialTaxDataService
+  Methods:   6.45% ( 2/31)   Lines:   0.49% (  4/820)
+App\Domains\Financial\Services\VoIPTaxService
+  Methods:   4.55% ( 1/22)   Lines:   1.69% (  6/355)
+App\Domains\Integration\Services\AssetSyncService
+  Methods:   6.25% ( 1/16)   Lines:   0.29% (  1/345)
+App\Domains\Security\Services\PermissionService
+  Methods:   0.00% ( 0/10)   Lines:   6.29% ( 10/159)
+App\Domains\Ticket\Models\Ticket
+  Methods:   4.76% ( 4/84)   Lines:  12.86% ( 45/350)
+App\Domains\Ticket\Models\TicketCalendarEvent
+  Methods:   0.00% ( 0/35)   Lines:   4.00% (  5/125)
+App\Domains\Ticket\Models\TicketPriorityQueue
+  Methods:   0.00% ( 0/24)   Lines:   2.92% (  4/137)
+App\Domains\Ticket\Models\TicketTemplate
+  Methods:   0.00% ( 0/16)   Lines:   3.49% (  3/ 86)
+App\Domains\Ticket\Models\TicketTimeEntry
+  Methods:   0.00% ( 0/36)   Lines:   2.42% (  3/124)
+App\Domains\Ticket\Models\TicketWatcher
+  Methods:   0.00% ( 0/19)   Lines:   6.10% (  5/ 82)
+App\Domains\Ticket\Models\TicketWorkflow
+  Methods:   0.00% ( 0/19)   Lines:   2.08% (  3/144)
+App\Domains\Ticket\Services\TicketService
+  Methods:   4.17% ( 1/24)   Lines:   0.41% (  2/491)
+App\Models\Category
+  Methods:   0.00% ( 0/32)   Lines:   7.22% (  7/ 97)
+App\Models\Client
+  Methods:   0.00% ( 0/52)   Lines:   5.00% (  8/160)
+App\Models\Company
+  Methods:   0.00% ( 0/48)   Lines:  11.92% ( 18/151)
+App\Models\Invoice
+  Methods:   0.00% ( 0/52)   Lines:   2.26% (  7/310)
+App\Models\Location
+  Methods:   0.00% ( 0/26)   Lines:   5.80% (  4/ 69)
+App\Models\Payment
+  Methods:   0.00% ( 0/ 8)   Lines:  12.50% (  3/ 24)
+App\Models\Project
+  Methods:   0.00% ( 0/31)   Lines:   2.91% (  3/103)
+App\Models\Quote
+  Methods:   0.00% ( 0/57)   Lines:   2.43% (  8/329)
+App\Models\Recurring
+  Methods:   0.00% ( 0/37)   Lines:   3.04% ( 10/329)
+App\Models\Setting
+  Methods:   0.00% ( 0/47)   Lines:   6.16% ( 18/292)
+App\Models\User
+  Methods:   6.98% ( 3/43)   Lines:   3.68% (  5/136)
+App\Observers\CompanyObserver
+  Methods:   0.00% ( 0/ 5)   Lines:  28.57% (  2/  7)
+App\Traits\BelongsToCompany
+  Methods:   0.00% ( 0/10)   Lines:   5.93% (  7/118)
+App\Traits\HasArchive
+  Methods:  14.29% ( 1/ 7)   Lines:  23.08% (  3/ 13)

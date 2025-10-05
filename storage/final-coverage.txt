@@ -1,0 +1,80 @@
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
+
+In Project.php line 47:
+                                                                               
+  Cannot redeclare class App\Domains\Project\Models\Project (previously decla  
+  red in /opt/nestogy/app/Domains/Project/Models/Project.php:47)               
+                                                                               
+
