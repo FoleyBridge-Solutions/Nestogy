@@ -19,6 +19,7 @@ class NotificationService
             if ($prefs->shouldSendInApp('ticket_created')) {
                 InAppNotification::create([
                     'user_id' => $user->id,
+                    'name' => 'Ticket Created',
                     'type' => 'ticket_created',
                     'title' => 'New Ticket Created',
                     'message' => "Ticket #{$ticket->number}: {$ticket->subject}",
@@ -38,6 +39,7 @@ class NotificationService
         if ($prefs->shouldSendInApp('ticket_assigned')) {
             InAppNotification::create([
                 'user_id' => $assignedTo->id,
+                'name' => 'Ticket Assigned',
                 'type' => 'ticket_assigned',
                 'title' => 'Ticket Assigned to You',
                 'message' => "Ticket #{$ticket->number}: {$ticket->subject}",
@@ -59,6 +61,7 @@ class NotificationService
             if ($prefs->shouldSendInApp('ticket_status_changed')) {
                 InAppNotification::create([
                     'user_id' => $user->id,
+                    'name' => 'Ticket Status Changed',
                     'type' => 'ticket_status_changed',
                     'title' => 'Ticket Status Updated',
                     'message' => "Ticket #{$ticket->number} changed from {$oldStatus} to {$newStatus}",
@@ -81,6 +84,7 @@ class NotificationService
             if ($prefs->shouldSendInApp('ticket_resolved')) {
                 InAppNotification::create([
                     'user_id' => $user->id,
+                    'name' => 'Ticket Resolved',
                     'type' => 'ticket_resolved',
                     'title' => 'Ticket Resolved',
                     'message' => "Ticket #{$ticket->number}: {$ticket->subject}",
@@ -107,6 +111,7 @@ class NotificationService
             if ($prefs->shouldSendInApp('ticket_comment_added')) {
                 InAppNotification::create([
                     'user_id' => $user->id,
+                    'name' => 'Ticket Comment Added',
                     'type' => 'ticket_comment_added',
                     'title' => 'New Comment Added',
                     'message' => "New comment on Ticket #{$ticket->number}",
@@ -129,6 +134,7 @@ class NotificationService
             if ($prefs->shouldSendInApp('sla_breach_warning')) {
                 InAppNotification::create([
                     'user_id' => $user->id,
+                    'name' => 'SLA Breach Warning',
                     'type' => 'sla_breach_warning',
                     'title' => 'SLA Breach Warning',
                     'message' => "Ticket #{$ticket->number} - {$hoursRemaining}h remaining",
@@ -151,6 +157,7 @@ class NotificationService
             if ($prefs->shouldSendInApp('sla_breached')) {
                 InAppNotification::create([
                     'user_id' => $user->id,
+                    'name' => 'SLA Breached',
                     'type' => 'sla_breached',
                     'title' => 'SLA BREACHED - Critical',
                     'message' => "Ticket #{$ticket->number} - {$hoursOverdue}h overdue",

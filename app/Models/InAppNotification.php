@@ -14,6 +14,7 @@ class InAppNotification extends Model
     protected $fillable = [
         'company_id',
         'user_id',
+        'name',
         'type',
         'title',
         'message',

@@ -14,6 +14,7 @@ class NotificationPreference extends Model
     protected $fillable = [
         'company_id',
         'user_id',
+        'name',
         'ticket_created',
         'ticket_assigned',
         'ticket_status_changed',
@@ -48,6 +49,7 @@ class NotificationPreference extends Model
     public static function defaultPreferences(): array
     {
         return [
+            'name' => 'Default',
             'ticket_created' => true,
             'ticket_assigned' => true,
             'ticket_status_changed' => true,
