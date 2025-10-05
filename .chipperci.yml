@@ -30,7 +30,7 @@ pipeline:
 
   - name: Configure Flux Pro Credentials
     cmd: |
-      echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_LICENSE_KEY}\"}}}" > auth.json
+      echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_PRO_TOKEN}\"}}}" > auth.json
 
   - name: Install Composer Dependencies
     cmd: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
