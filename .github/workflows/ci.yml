@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  tests:
+    name: Tests & Coverage
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: nestogy_test
+          POSTGRES_USER: nestogy
+          POSTGRES_PASSWORD: nestogy_dev_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:latest
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP with PCOV
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: pcov
+          extensions: pgsql, pdo_pgsql, redis
+          ini-values: memory_limit=2G, pcov.enabled=1
+
+      - name: Configure Flux Pro credentials
+        env:
+          FLUX_USERNAME: ${{ secrets.FLUX_USERNAME }}
+          FLUX_PRO_TOKEN: ${{ secrets.FLUX_PRO_TOKEN }}
+        run: |
+          echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_PRO_TOKEN}\"}}}" > auth.json
+
+      - name: Install Composer dependencies
+        run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Setup environment file
+        run: |
+          echo "APP_ENV=testing" > .env
+          echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env
+          echo "STRIPE_SECRET=sk_test_dummy" >> .env
+          echo "STRIPE_PUBLISHABLE=pk_test_dummy" >> .env
+          echo "DB_CONNECTION=pgsql" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_DATABASE=nestogy_test" >> .env
+          echo "DB_USERNAME=nestogy" >> .env
+          echo "DB_PASSWORD=nestogy_dev_pass" >> .env
+          echo "CACHE_STORE=redis" >> .env
+          echo "REDIS_HOST=127.0.0.1" >> .env
+          echo "REDIS_PORT=6379" >> .env
+
+      - name: Run database migrations
+        run: php artisan migrate --force --seed
+
+      - name: Run tests with coverage
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+
+      - name: Verify coverage file
+        run: |
+          if [ -f coverage.xml ]; then
+            echo "✅ Coverage file generated successfully"
+            echo "📊 Coverage file size: $(du -h coverage.xml | cut -f1)"
+          else
+            echo "❌ Coverage file not found!"
+            exit 1
+          fi
+
+      - name: Upload to SonarCloud
+        if: github.ref == 'refs/heads/main'
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Deploy to Laravel Cloud
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo "🚀 Deploying to Laravel Cloud..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://cloud.laravel.com/deploy/9fbf5ee1-0a95-4c7a-80cd-33ef5cce3957/Wi1QZa0TPiaou4YJ")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+            echo "✅ Deployment triggered successfully!"
+            echo "Response: $BODY"
+          else
+            echo "⚠️  Deployment returned status $HTTP_CODE"
+            echo "Response: $BODY"
+          fi
