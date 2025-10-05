@@ -44,6 +44,9 @@ pipeline:
       if grep -q "@pure" vendor/livewire/flux/stubs/resources/views/flux/input/file.blade.php 2>/dev/null; then
         sed -i '/@pure/d' vendor/livewire/flux/stubs/resources/views/flux/input/file.blade.php
         echo "Removed @pure directive from Flux file input component"
+        # Clear view cache to remove compiled views with @pure
+        php artisan view:clear
+        echo "Cleared view cache"
       else
         echo "No @pure directive found or file doesn't exist"
       fi
