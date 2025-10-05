@@ -38,18 +38,6 @@ pipeline:
   - name: Install Composer Dependencies
     cmd: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
 
-  - name: Fix Flux File Input Component
-    cmd: |
-      # Remove @pure directive from any line in the file
-      if grep -q "@pure" vendor/livewire/flux/stubs/resources/views/flux/input/file.blade.php 2>/dev/null; then
-        sed -i '/@pure/d' vendor/livewire/flux/stubs/resources/views/flux/input/file.blade.php
-        echo "Removed @pure directive from Flux file input component"
-        # Clear view cache to remove compiled views with @pure
-        php artisan view:clear
-        echo "Cleared view cache"
-      else
-        echo "No @pure directive found or file doesn't exist"
-      fi
 
   - name: Install NPM Dependencies
     cmd: npm ci
