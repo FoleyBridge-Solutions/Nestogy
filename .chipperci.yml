@@ -40,7 +40,7 @@ pipeline:
 
   - name: Fix Flux File Input Component
     cmd: |
-      sed -i '1{/@pure/d;}' vendor/livewire/flux/stubs/resources/views/flux/input/file.blade.php || true
+      sed -i '/@pure/d' vendor/livewire/flux/stubs/resources/views/flux/input/file.blade.php || true
 
   - name: Install NPM Dependencies
     cmd: npm ci
