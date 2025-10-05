@@ -15,19 +15,6 @@ on:
     branches: .*
 
 pipeline:
-  - name: Configure Flux Pro Credentials
-    cmd: |
-      echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_LICENSE_KEY}\"}}}" > auth.json
-
-  - name: Install Composer Dependencies
-    cmd: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
-
-  - name: Install NPM Dependencies
-    cmd: npm ci
-
-  - name: Build Assets
-    cmd: npm run build
-
   - name: Setup Environment File
     cmd: |
       echo "APP_ENV=testing" > .env
@@ -40,6 +27,19 @@ pipeline:
       echo "DB_DATABASE=nestogy_test" >> .env
       echo "DB_USERNAME=nestogy" >> .env
       echo "DB_PASSWORD=nestogy_dev_pass" >> .env
+
+  - name: Configure Flux Pro Credentials
+    cmd: |
+      echo "{\"http-basic\":{\"composer.fluxui.dev\":{\"username\":\"${FLUX_USERNAME}\",\"password\":\"${FLUX_LICENSE_KEY}\"}}}" > auth.json
+
+  - name: Install Composer Dependencies
+    cmd: composer install --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
+
+  - name: Install NPM Dependencies
+    cmd: npm ci
+
+  - name: Build Assets
+    cmd: npm run build
 
   - name: Run Database Migrations
     cmd: php artisan migrate --force --seed
