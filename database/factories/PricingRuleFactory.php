@@ -23,19 +23,19 @@ class PricingRuleFactory extends Factory
             'max_quantity' => $this->faker->optional()->numberBetween(1, 100),
             'quantity_increment' => $this->faker->numberBetween(1, 100),
             'valid_from' => $this->faker->optional()->dateTimeBetween('-1 month', 'now'),
-            'applicable_days' => $this->faker->optional()->randomNumber(),
-            'applicable_hours' => $this->faker->optional()->randomNumber(),
+            'applicable_days' => $this->faker->optional()->passthrough(json_encode($this->faker->randomElements([0, 1, 2, 3, 4, 5, 6], $this->faker->numberBetween(1, 7)))),
+            'applicable_hours' => $this->faker->optional()->passthrough(json_encode($this->faker->randomElements(range(0, 23), $this->faker->numberBetween(1, 24)))),
             'is_promotional' => $this->faker->boolean(70),
             'promo_code' => $this->faker->word,
-            'conditions' => $this->faker->optional()->randomNumber(),
+            'conditions' => $this->faker->optional()->passthrough(json_encode(['min_total' => $this->faker->randomFloat(2, 0, 1000)])),
             'priority' => $this->faker->numberBetween(0, 100),
             'is_active' => $this->faker->boolean(70),
             'is_combinable' => $this->faker->boolean(70),
-            'max_uses' => $this->faker->optional()->randomNumber(),
+            'max_uses' => $this->faker->optional()->numberBetween(1, 10000),
             'uses_count' => $this->faker->numberBetween(0, 100),
-            'max_uses_per_client' => $this->faker->optional()->randomNumber(),
+            'max_uses_per_client' => $this->faker->optional()->numberBetween(1, 1000),
             'requires_approval' => $this->faker->boolean(),
-            'approval_threshold' => $this->faker->optional()->randomNumber()
+            'approval_threshold' => $this->faker->optional()->randomFloat(2, 0, 99999)
         ];
     }
 }
