@@ -17,6 +17,11 @@ class TicketWatcher extends Model
 {
     use BelongsToCompany, HasFactory;
 
+    protected static function newFactory()
+    {
+        return \Database\Factories\TicketWatcherFactory::new();
+    }
+
     protected $fillable = [
         'ticket_id',
         'company_id',

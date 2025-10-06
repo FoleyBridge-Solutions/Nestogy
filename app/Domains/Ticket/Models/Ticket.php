@@ -1049,9 +1049,8 @@ class Ticket extends Model
 
         // Auto-increment ticket number for new tickets
         static::creating(function ($ticket) {
-            if (! $ticket->number) {
+            if (empty($ticket->number)) {
                 $lastTicket = static::where('company_id', $ticket->company_id)
-                    ->where('prefix', $ticket->prefix)
                     ->orderBy('number', 'desc')
                     ->first();
 

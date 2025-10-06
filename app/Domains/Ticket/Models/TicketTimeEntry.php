@@ -20,6 +20,11 @@ class TicketTimeEntry extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
+    protected static function newFactory()
+    {
+        return \Database\Factories\TicketTimeEntryFactory::new();
+    }
+
     protected $fillable = [
         'ticket_id',
         'user_id',

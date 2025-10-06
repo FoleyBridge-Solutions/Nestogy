@@ -5,6 +5,7 @@ namespace App\Domains\Ticket\Controllers;
 use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketComment;
+use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Domains\Ticket\Models\TicketWatcher;
 use App\Domains\Ticket\Services\CommentService;
 use App\Domains\Ticket\Services\ResolutionService;
@@ -271,7 +272,6 @@ class TicketController extends Controller
                     'ticket_id' => $ticket->id,
                     'user_id' => auth()->id(),
                     'email' => auth()->user()->email,
-                    'added_by' => auth()->id(),
                     'notification_preferences' => [
                         'status_changes' => true,
                         'new_comments' => true,
@@ -716,7 +716,7 @@ class TicketController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Reply added successfully',
-                'reply' => $reply->load('user'),
+                'content' => $reply->load('user'),
             ], 201);
 
         } catch (\Exception $e) {
@@ -839,12 +839,19 @@ class TicketController extends Controller
 
             $ticket->update(['priority' => $request->priority]);
 
-            // Add priority change note
+            // Add priority change comment
+            $noteContent = "Priority changed from {$oldPriority} to {$request->priority}";
             if ($request->filled('notes')) {
-                $ticket->addNote($request->notes, 'priority_change');
+                $noteContent .= "\n\nNotes: " . $request->notes;
             }
 
-            $ticket->addNote("Priority changed from {$oldPriority} to {$request->priority}", 'priority_change');
+            TicketComment::create([
+                'ticket_id' => $ticket->id,
+                'company_id' => auth()->user()->company_id,
+                'content' => $noteContent,
+                'visibility' => 'internal',
+                'author_id' => auth()->id(),
+            ]);
 
             Log::info('Ticket priority updated', [
                 'ticket_id' => $ticket->id,
@@ -941,13 +948,13 @@ class TicketController extends Controller
                 $message .= "\n\nNotes: ".$request->notes;
             }
 
-            // Create assignment reply
-            \App\Models\TicketReply::create([
+            // Create assignment comment
+            TicketComment::create([
                 'ticket_id' => $ticket->id,
                 'company_id' => auth()->user()->company_id,
-                'reply' => $message,
-                'type' => 'internal',
-                'replied_by' => auth()->id(),
+                'content' => $message,
+                'visibility' => 'internal',
+                'author_id' => auth()->id(),
             ]);
 
             // Create assignment record
@@ -1057,12 +1064,12 @@ class TicketController extends Controller
                 $scheduleMessage .= "\n\nScheduling Notes: ".$request->notes;
             }
 
-            \App\Models\TicketReply::create([
+            TicketComment::create([
                 'ticket_id' => $ticket->id,
                 'company_id' => auth()->user()->company_id,
-                'reply' => $scheduleMessage,
-                'type' => 'internal',
-                'replied_by' => auth()->id(),
+                'content' => $scheduleMessage,
+                'visibility' => 'internal',
+                'author_id' => auth()->id(),
             ]);
 
             Log::info('Ticket scheduled', [
@@ -1110,7 +1117,7 @@ class TicketController extends Controller
         $this->authorize('update', $ticket);
 
         $validator = Validator::make($request->all(), [
-            'merge_into_number' => 'required|string',
+            'merge_into_number' => 'required|integer',
             'merge_comment' => 'nullable|string|max:1000',
         ]);
 
@@ -1163,7 +1170,7 @@ class TicketController extends Controller
 
             DB::transaction(function () use ($ticket, $targetTicket, $request) {
                 // Move all replies to target ticket
-                $ticket->replies()->update(['ticket_id' => $targetTicket->id]);
+                $ticket->comments()->update(['ticket_id' => $targetTicket->id]);
 
                 // Move all time entries to target ticket
                 $ticket->timeEntries()->update(['ticket_id' => $targetTicket->id]);
@@ -1181,12 +1188,12 @@ class TicketController extends Controller
                     $mergeMessage .= "\n\nMerge Comment: ".$request->merge_comment;
                 }
 
-                \App\Models\TicketReply::create([
+                TicketComment::create([
                     'ticket_id' => $targetTicket->id,
                     'company_id' => auth()->user()->company_id,
-                    'reply' => $mergeMessage,
-                    'type' => 'internal',
-                    'replied_by' => auth()->id(),
+                    'content' => $mergeMessage,
+                    'visibility' => 'internal',
+                    'author_id' => auth()->id(),
                 ]);
 
                 // Add original ticket details to target ticket
@@ -1196,12 +1203,12 @@ class TicketController extends Controller
                 $originalTicketDetails .= "Status: {$ticket->status}\n";
                 $originalTicketDetails .= "Description: {$ticket->details}\n";
 
-                \App\Models\TicketReply::create([
+                TicketComment::create([
                     'ticket_id' => $targetTicket->id,
                     'company_id' => auth()->user()->company_id,
-                    'reply' => $originalTicketDetails,
-                    'type' => 'internal',
-                    'replied_by' => auth()->id(),
+                    'content' => $originalTicketDetails,
+                    'visibility' => 'internal',
+                    'author_id' => auth()->id(),
                 ]);
 
                 // Mark the original ticket as merged/closed
@@ -1213,12 +1220,12 @@ class TicketController extends Controller
 
                 // Add note to original ticket about merge
                 $targetTicketNumber = $targetTicket->number ?? $targetTicket->id;
-                \App\Models\TicketReply::create([
+                TicketComment::create([
                     'ticket_id' => $ticket->id,
                     'company_id' => auth()->user()->company_id,
-                    'reply' => "This ticket was merged into Ticket #{$targetTicketNumber}",
-                    'type' => 'internal',
-                    'replied_by' => auth()->id(),
+                    'content' => "This ticket was merged into Ticket #{$targetTicketNumber}",
+                    'visibility' => 'internal',
+                    'author_id' => auth()->id(),
                 ]);
             });
 
@@ -1354,26 +1361,14 @@ class TicketController extends Controller
     /**
      * Generate unique ticket number
      */
-    private function generateTicketNumber(): string
+    private function generateTicketNumber(): int
     {
-        $prefix = 'TKT';
-        $year = date('Y');
-
-        // Get the last ticket number for this year
+        // Get the last ticket number for this company
         $lastTicket = Ticket::where('company_id', auth()->user()->company_id)
-            ->where('number', 'like', "{$prefix}-{$year}-%")
             ->orderBy('number', 'desc')
             ->first();
 
-        if ($lastTicket) {
-            // Extract sequence number and increment
-            $parts = explode('-', $lastTicket->number);
-            $sequence = intval(end($parts)) + 1;
-        } else {
-            $sequence = 1;
-        }
-
-        return sprintf('%s-%s-%06d', $prefix, $year, $sequence);
+        return $lastTicket ? $lastTicket->number + 1 : 1001;
     }
 
     /**
@@ -1539,7 +1534,7 @@ class TicketController extends Controller
      */
     public function startSmartTimer(Request $request, Ticket $ticket)
     {
-        $timeTrackingService = new TimeTrackingService;
+        $timeTrackingService = app(TimeTrackingService::class);
 
         try {
             $timeEntry = $timeTrackingService->startTracking($ticket, auth()->user(), [

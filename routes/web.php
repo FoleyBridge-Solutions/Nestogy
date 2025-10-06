@@ -257,6 +257,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/export/csv', [\App\Domains\Email\Controllers\MailQueueController::class, 'export'])->name('export');
     });
 
+    // Ticket Management Routes
+    Route::prefix('tickets')->name('tickets.')->group(function () {
+        Route::get('/', [\App\Domains\Ticket\Controllers\TicketController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Domains\Ticket\Controllers\TicketController::class, 'create'])->name('create');
+        Route::post('/', [\App\Domains\Ticket\Controllers\TicketController::class, 'store'])->name('store');
+        Route::get('/export', [\App\Domains\Ticket\Controllers\TicketController::class, 'export'])->name('export');
+        Route::get('/search', [\App\Domains\Ticket\Controllers\TicketController::class, 'search'])->name('search');
+        Route::get('/{ticket}', [\App\Domains\Ticket\Controllers\TicketController::class, 'show'])->name('show');
+        Route::get('/{ticket}/edit', [\App\Domains\Ticket\Controllers\TicketController::class, 'edit'])->name('edit');
+        Route::put('/{ticket}', [\App\Domains\Ticket\Controllers\TicketController::class, 'update'])->name('update');
+        Route::delete('/{ticket}', [\App\Domains\Ticket\Controllers\TicketController::class, 'destroy'])->name('destroy');
+        
+        // Ticket Actions
+        Route::post('/{ticket}/assign', [\App\Domains\Ticket\Controllers\TicketController::class, 'assign'])->name('assign');
+        Route::post('/{ticket}/update-status', [\App\Domains\Ticket\Controllers\TicketController::class, 'updateStatus'])->name('update-status');
+        Route::post('/{ticket}/update-priority', [\App\Domains\Ticket\Controllers\TicketController::class, 'updatePriority'])->name('update-priority');
+        Route::post('/{ticket}/schedule', [\App\Domains\Ticket\Controllers\TicketController::class, 'schedule'])->name('schedule');
+        Route::post('/{ticket}/merge', [\App\Domains\Ticket\Controllers\TicketController::class, 'merge'])->name('merge');
+        Route::post('/{ticket}/resolve', [\App\Domains\Ticket\Controllers\TicketController::class, 'resolve'])->name('resolve');
+        Route::post('/{ticket}/reopen', [\App\Domains\Ticket\Controllers\TicketController::class, 'reopen'])->name('reopen');
+        Route::post('/{ticket}/reply', [\App\Domains\Ticket\Controllers\TicketController::class, 'storeReply'])->name('reply');
+        Route::get('/{ticket}/viewers', [\App\Domains\Ticket\Controllers\TicketController::class, 'getViewers'])->name('viewers');
+        Route::get('/{ticket}/pdf', [\App\Domains\Ticket\Controllers\TicketController::class, 'generatePdf'])->name('pdf');
+        
+        // Time Tracking
+        Route::post('/{ticket}/start-timer', [\App\Domains\Ticket\Controllers\TicketController::class, 'startSmartTimer'])->name('start-timer');
+        Route::post('/{ticket}/stop-timer', [\App\Domains\Ticket\Controllers\TicketController::class, 'stopTimer'])->name('stop-timer');
+        Route::post('/{ticket}/pause-timer', [\App\Domains\Ticket\Controllers\TicketController::class, 'pauseTimer'])->name('pause-timer');
+    });
+
     // Include unified settings routes
     require __DIR__.'/settings.php';
     // Main settings page
