@@ -22,6 +22,15 @@
             <directory>./app/Console</directory>
             <directory>./app/Exceptions</directory>
             <directory>./app/Providers</directory>
+            <directory>./app/Livewire</directory>
+            <directory>./app/Jobs</directory>
+            <directory>./app/Mail</directory>
+            <directory>./app/Events</directory>
+            <directory>./app/Listeners</directory>
+            <directory>./app/Notifications</directory>
+            <directory>./app/Http/Middleware</directory>
+            <directory>./app/Exports</directory>
+            <directory>./app/Imports</directory>
             <file>./app/Helpers/ConfigHelper.php</file>
         </exclude>
     </source>
