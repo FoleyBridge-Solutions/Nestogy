@@ -23,6 +23,11 @@ class ClientControllerTest extends TestCase
 
         $this->company = Company::factory()->create();
         $this->user = User::factory()->create(['company_id' => $this->company->id]);
+        
+        \Silber\Bouncer\BouncerFacade::scope()->to($this->company->id);
+        \Silber\Bouncer\BouncerFacade::allow($this->user)->everything();
+        \Silber\Bouncer\BouncerFacade::refreshFor($this->user);
+        
         $this->actingAs($this->user);
     }
 
@@ -431,7 +436,7 @@ class ClientControllerTest extends TestCase
         $response = $this->get(route('clients.leads.import.template'));
 
         $response->assertStatus(200);
-        $response->assertHeader('content-type', 'text/csv');
+        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $this->assertStringContainsString('Last', $response->getContent());
     }
 

@@ -312,12 +312,42 @@ class ClientController extends BaseController
     {
         $this->authorize('view', $client);
 
-        // Set the client in session and redirect to clients index
-        // This will let dynamicIndex handle displaying the client
+        // Set the client in session
         \App\Domains\Core\Services\NavigationService::setSelectedClient($client->id);
 
-        // Only redirect if we're accessing via /clients/{id} directly
-        // Check if we're being called from dynamicIndex to avoid loop
+        // For API/JSON requests, return client data immediately
+        if ($request->wantsJson()) {
+            // Update client access timestamp
+            $this->clientService->updateClientAccess($client);
+            
+            $client->load([
+                'contacts' => function ($query) {
+                    $query->whereNull('archived_at')->orderBy('primary', 'desc')->orderBy('name');
+                },
+                'locations' => function ($query) {
+                    $query->whereNull('archived_at')->orderBy('primary', 'desc')->orderBy('name');
+                },
+            ]);
+            
+            // Get stats and metrics for API response
+            $stats = $this->clientService->getClientStats($client);
+            $metrics = $this->metricsService->getMetrics($client);
+            
+            return response()->json([
+                'id' => $client->id,
+                'name' => $client->name,
+                'email' => $client->email,
+                'phone' => $client->phone,
+                'status' => $client->status,
+                'stats' => $stats,
+                'metrics' => $metrics,
+                'contacts' => $client->contacts,
+                'locations' => $client->locations,
+            ]);
+        }
+
+        // For web requests accessing via /clients/{id} directly, redirect to index
+        // This will let dynamicIndex handle displaying the client
         if ($request->route()->getName() === 'clients.show') {
             return redirect()->route('clients.index');
         }
@@ -450,8 +480,19 @@ class ClientController extends BaseController
     /**
      * Archive the specified client
      */
-    public function archive(Request $request, Client $client)
+    public function archive(Request $request, Client $client = null)
     {
+        // If no client provided via route, get from session
+        if (!$client) {
+            $client = \App\Domains\Core\Services\NavigationService::getSelectedClient();
+            if (!$client) {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => 'No client selected'], 400);
+                }
+                return redirect()->back()->withErrors(['error' => 'No client selected']);
+            }
+        }
+        
         $this->authorize('delete', $client);
 
         try {
@@ -495,13 +536,28 @@ class ClientController extends BaseController
     /**
      * Restore archived client
      */
-    public function restore(Request $request, $id)
+    public function restore(Request $request, $id = null)
     {
-        $client = Client::withTrashed()->findOrFail($id);
+        // If no id provided via route, get from session
+        if (!$id) {
+            $clientId = session('selected_client_id');
+            if (!$clientId) {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => 'No client selected'], 400);
+                }
+                return redirect()->back()->withErrors(['error' => 'No client selected']);
+            }
+            // Get with trashed since we're restoring - withoutGlobalScope to avoid company filter
+            $client = Client::withoutGlobalScope('company')->withTrashed()->findOrFail($clientId);
+        } else {
+            $client = Client::withoutGlobalScope('company')->withTrashed()->findOrFail($id);
+        }
+        
         $this->authorize('restore', $client);
 
         try {
             $this->clientService->restoreClient($client);
+            $client->refresh();
 
             Log::info('Client restored', [
                 'client_id' => $client->id,
@@ -527,6 +583,13 @@ class ClientController extends BaseController
                 'user_id' => Auth::id(),
             ]);
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to restore client',
+                ], 500);
+            }
+
             return back()->with('error', 'Failed to restore client');
         }
     }
@@ -534,9 +597,8 @@ class ClientController extends BaseController
     /**
      * Permanently delete the specified client
      */
-    public function destroy(Request $request, $id)
+    public function destroy(Request $request, Client $client)
     {
-        $client = Client::withTrashed()->findOrFail($id);
         $this->authorize('forceDelete', $client);
 
         try {

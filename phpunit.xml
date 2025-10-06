@@ -58,4 +58,8 @@
         <env name="LARAVEL_PARALLEL_TESTING" value="false"/>
     </php>
     
+    <extensions>
+        <bootstrap class="Illuminate\Testing\ParallelTesting\ParallelTestingExtension"/>
+    </extensions>
+    
 </phpunit>

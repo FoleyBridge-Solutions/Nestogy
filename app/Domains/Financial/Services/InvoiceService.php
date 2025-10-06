@@ -172,9 +172,9 @@ class InvoiceService
             'paid_count' => $invoices->where('status', 'paid')->count(),
             'overdue_count' => $invoices->where('status', 'sent')
                 ->where('due_date', '<', now()->toDateString())->count(),
-            'total_amount' => $invoices->sum('total'),
-            'paid_amount' => $invoices->where('status', 'paid')->sum('total'),
-            'outstanding_amount' => $invoices->whereIn('status', ['sent', 'overdue'])->sum('total'),
+            'total_amount' => $invoices->sum('amount'),
+            'paid_amount' => $invoices->where('status', 'paid')->sum('amount'),
+            'outstanding_amount' => $invoices->whereIn('status', ['sent', 'overdue'])->sum('amount'),
         ];
     }
 

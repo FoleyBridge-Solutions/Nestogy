@@ -1,0 +1,577 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Unit\Controllers\TicketControllerTest
+  ✓ generate ticket number creates unique number                        13.44s  
+  ⨯ generate ticket number increments sequence                           0.23s  
+  ✓ get filter options returns correct structure                         0.20s  
+  ✓ get filter options includes valid statuses                           0.14s  
+  ✓ get filter options includes valid priorities                         0.18s  
+  ✓ track ticket view stores in cache                                    0.23s  
+  ✓ track ticket view stores user information                            0.23s  
+  ✓ get ticket viewers excludes current user                             0.21s  
+  ✓ get ticket viewers excludes old views                                0.20s  
+  ✓ track ticket changes logs status changes                             0.21s  
+  ✓ track ticket changes logs priority changes                           0.23s  
+  ✓ track ticket changes logs assignment changes                         0.23s  
+  ✓ get today time statistics returns correct structure                  0.22s  
+  ⨯ get today time statistics calculates total hours                     0.23s  
+  ✓ index request includes pagination                                    1.35s  
+  ✓ index request applies sorting                                        0.23s  
+  ✓ create request provides form data                                    0.20s  
+  ✓ create request includes priority options                             0.15s  
+  ✓ create request includes status options                               0.17s  
+  ✓ export request generates csv headers                                 0.25s  
+  ✓ search request requires minimum query length                         0.16s  
+  ✓ search request limits results                                        0.67s  
+  ✓ search request excludes closed tickets                               0.27s  
+
+   FAIL  Tests\Feature\Controllers\TicketControllerTest
+  ✓ index displays tickets list                                          0.74s  
+  ✓ index filters by search term                                         0.30s  
+  ✓ index filters by status                                              0.29s  
+  ✓ index filters by priority                                            0.29s  
+  ✓ index filters by assignee                                            0.29s  
+  ✓ index filters overdue tickets                                        0.28s  
+  ✓ index filters unassigned tickets                                     0.28s  
+  ✓ index filters watched tickets                                        0.31s  
+  ✓ create displays form                                                 0.35s  
+  ✓ store creates ticket                                                 0.22s  
+  ✓ store creates watcher for creator                                    0.22s  
+  ⨯ store generates unique ticket number                                 0.22s  
+  ✓ store validates required fields                                      0.21s  
+  ✓ store validates client belongs to company                            0.21s  
+  ✓ store validates priority values                                      0.20s  
+  ✓ store returns json when requested                                    0.22s  
+  ✓ show displays ticket                                                 0.58s  
+  ✓ show tracks viewer                                                   0.43s  
+  ✓ show returns json when requested                                     0.24s  
+  ✓ edit displays form                                                   0.42s  
+  ✓ update modifies ticket                                               0.23s  
+  ✓ update validates input                                               0.24s  
+  ⨯ destroy soft deletes ticket                                          0.25s  
+  ✓ destroy returns json when requested                                  0.25s  
+  ⨯ assign updates ticket assignee                                       0.25s  
+  ✓ assign creates watcher for assignee                                  0.23s  
+  ✓ assign validates assignee belongs to company                         0.26s  
+  ✓ update status changes ticket status                                  0.25s  
+  ✓ update status sets closed timestamps                                 0.25s  
+  ⨯ update priority changes ticket priority                              0.25s  
+  ⨯ schedule creates calendar event                                      0.25s  
+  ✓ schedule validates future date                                       0.24s  
+  ⨯ merge moves data to target ticket                                    0.28s  
+  ⨯ merge validates target ticket exists                                 0.25s  
+  ✓ merge prevents self merge                                            0.24s  
+  ✓ export generates csv                                                 0.32s  
+  ⨯ search finds tickets by number                                       0.26s  
+  ✓ search finds tickets by subject                                      0.24s  
+  ⨯ search excludes specified ticket                                     0.27s  
+  ✓ get viewers returns other viewers                                    0.25s  
+  ⨯ start smart timer creates time entry                                 0.30s  
+  ✓ stop timer ends active timer                                         0.21s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > generate ticket num…   
+  Failed asserting that two strings are equal.
+  -'TKT-2025-000006'
+  +'TKT-2025-000001'
+  
+
+  at tests/Unit/Controllers/TicketControllerTest.php:83
+     79▕         $method->setAccessible(true);
+     80▕ 
+     81▕         $number = $method->invoke($this->controller);
+     82▕ 
+  ➜  83▕         $this->assertEquals("TKT-{$currentYear}-000006", $number);
+     84▕     }
+     85▕ 
+     86▕     public function test_get_filter_options_returns_correct_structure(): void
+     87▕     {
+
+  1   tests/Unit/Controllers/TicketControllerTest.php:83
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > get today time stat…   
+  Failed asserting that 1 matches expected 2.
+
+  at tests/Unit/Controllers/TicketControllerTest.php:343
+    339▕         $stats = $method->invoke($this->controller, $this->user);
+    340▕ 
+    341▕         $this->assertEquals(4.0, $stats['total_hours']);
+    342▕         $this->assertEquals(2.5, $stats['billable_hours']);
+  ➜ 343▕         $this->assertEquals(2, $stats['entries_count']);
+    344▕     }
+    345▕ 
+    346▕     public function test_index_request_includes_pagination(): void
+    347▕     {
+
+  1   tests/Unit/Controllers/TicketControllerTest.php:343
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store generates…    
+  Expected: 1001
+
+  To contain: TKT
+
+  at tests/Feature/Controllers/TicketControllerTest.php:303
+    299▕             ->where('company_id', $this->user->company_id)
+    300▕             ->first();
+    301▕         $this->assertNotNull($ticket);
+    302▕         $this->assertNotNull($ticket->number);
+  ➜ 303▕         $this->assertStringContainsString('TKT', $ticket->number);
+    304▕         $this->assertStringContainsString(date('Y'), $ticket->number);
+    305▕     }
+    306▕ 
+    307▕     public function test_store_validates_required_fields(): void
+
+  1   tests/Feature/Controllers/TicketControllerTest.php:303
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest >…   QueryException   
+  SQLSTATE[42703]: Undefined column: 7 ERROR:  column "deleted_at" does not exist
+LINE 1: ...sts(select * from "tickets" where ("id" = $1) and "deleted_a...
+                                                             ^ (Connection: pgsql, SQL: select exists(select * from "tickets" where ("id" = 87) and "deleted_at" is not null) as "exists")
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+      [2m+7 vendor frames [22m
+  8   tests/Feature/Controllers/TicketControllerTest.php:479
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > assign updates t…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+Error: Class "App\Models\TicketReply" not found in /opt/nestogy/app/Domains/Ticket/Controllers/TicketController.php:946
+Stack trace:
+#0 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Controller.php(54): App\Domains\Ticket\Controllers\TicketController->assign()
+#1 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(43): Illuminate\Routing\Controller->callAction()
+#2 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Route.php(265): Illuminate\Routing\ControllerDispatcher->dispatch()
+#3 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Route.php(211): Illuminate\Routing\Route->runController()
+#4 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(822): Illuminate\Routing\Route->run()
+#5 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::runRouteWithinStack():821}()
+#6 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/EnsureEmailIsVerified.php(41): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#7 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\EnsureEmailIsVerified->handle()
+#8 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#9 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#10 /opt/nestogy/app/Http/Middleware/SetupWizardMiddleware.php(37): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#11 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\SetupWizardMiddleware->handle()
+#12 /opt/nestogy/app/Http/Middleware/AutoVerifyEmailWithoutSMTP.php(31): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#13 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\AutoVerifyEmailWithoutSMTP->handle()
+#14 /opt/nestogy/app/Http/Middleware/ConfigureCompanyMail.php(34): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#15 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\ConfigureCompanyMail->handle()
+#16 /opt/nestogy/app/Http/Middleware/SetBouncerScope.php(34): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#17 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\SetBouncerScope->handle()
+#18 /opt/nestogy/app/Http/Middleware/RememberTokenMiddleware.php(37): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#19 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\RememberTokenMiddleware->handle()
+#20 /opt/nestogy/app/Http/Middleware/LogSignupRequests.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#21 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\LogSignupRequests->handle()
+#22 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#23 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+#24 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#25 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+#26 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#27 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle()
+#28 /opt/nestogy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#29 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession->handle()
+#30 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#31 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession->handleStatefulRequest()
+#32 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession->handle()
+#33 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#34 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle()
+#35 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#36 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies->handle()
+#37 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#38 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline->then()
+#39 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+#40 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router->runRoute()
+#41 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+#42 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router->dispatch()
+#43 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+#44 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportDisablingBackButtonCache/DisableBackButtonCacheMiddleware.php(19): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#45 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware->handle()
+#46 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#47 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#48 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#49 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#50 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+#51 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#52 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#53 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+#54 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#55 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+#56 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#57 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+#58 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#59 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+#60 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#61 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+#62 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#63 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+#64 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#65 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+#66 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#67 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+#68 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+#69 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+#70 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+#71 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(411): Illuminate\Foundation\Testing\TestCase->json()
+#72 /opt/nestogy/tests/Feature/Controllers/TicketControllerTest.php(507): Illuminate\Foundation\Testing\TestCase->postJson()
+#73 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(1657): Tests\Feature\Controllers\TicketControllerTest->test_assign_updates_ticket_assignee()
+#74 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+#75 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+#76 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+#77 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+#78 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+#79 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+#80 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#81 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner->run()
+#82 /opt/nestogy/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#83 {main}
+
+----------------------------------------------------------------------------------
+
+Class "App\Models\TicketReply" not found
+
+  at tests/Feature/Controllers/TicketControllerTest.php:511
+    507▕             ->postJson(route('tickets.assign', $ticket), [
+    508▕                 'assigned_to' => $assignee->id,
+    509▕             ]);
+    510▕ 
+  ➜ 511▕         $response->assertStatus(200);
+    512▕         $this->assertDatabaseHas('tickets', [
+    513▕             'id' => $ticket->id,
+    514▕             'assigned_to' => $assignee->id,
+    515▕         ]);
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > update priority…    
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:605
+    601▕             ->postJson(route('tickets.update-priority', $ticket), [
+    602▕                 'priority' => 'Critical',
+    603▕             ]);
+    604▕ 
+  ➜ 605▕         $response->assertStatus(200);
+    606▕         $this->assertDatabaseHas('tickets', [
+    607▕             'id' => $ticket->id,
+    608▕             'priority' => 'Critical',
+    609▕         ]);
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > schedule creates…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+Error: Class "App\Models\TicketReply" not found in /opt/nestogy/app/Domains/Ticket/Controllers/TicketController.php:1061
+Stack trace:
+#0 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Controller.php(54): App\Domains\Ticket\Controllers\TicketController->schedule()
+#1 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(43): Illuminate\Routing\Controller->callAction()
+#2 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Route.php(265): Illuminate\Routing\ControllerDispatcher->dispatch()
+#3 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Route.php(211): Illuminate\Routing\Route->runController()
+#4 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(822): Illuminate\Routing\Route->run()
+#5 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::runRouteWithinStack():821}()
+#6 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/EnsureEmailIsVerified.php(41): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#7 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\EnsureEmailIsVerified->handle()
+#8 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#9 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#10 /opt/nestogy/app/Http/Middleware/SetupWizardMiddleware.php(37): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#11 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\SetupWizardMiddleware->handle()
+#12 /opt/nestogy/app/Http/Middleware/AutoVerifyEmailWithoutSMTP.php(31): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#13 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\AutoVerifyEmailWithoutSMTP->handle()
+#14 /opt/nestogy/app/Http/Middleware/ConfigureCompanyMail.php(34): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#15 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\ConfigureCompanyMail->handle()
+#16 /opt/nestogy/app/Http/Middleware/SetBouncerScope.php(34): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#17 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\SetBouncerScope->handle()
+#18 /opt/nestogy/app/Http/Middleware/RememberTokenMiddleware.php(37): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#19 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\RememberTokenMiddleware->handle()
+#20 /opt/nestogy/app/Http/Middleware/LogSignupRequests.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#21 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\LogSignupRequests->handle()
+#22 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#23 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+#24 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#25 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+#26 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#27 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle()
+#28 /opt/nestogy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#29 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession->handle()
+#30 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#31 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession->handleStatefulRequest()
+#32 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession->handle()
+#33 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#34 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle()
+#35 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#36 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies->handle()
+#37 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#38 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline->then()
+#39 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+#40 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router->runRoute()
+#41 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+#42 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router->dispatch()
+#43 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+#44 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportDisablingBackButtonCache/DisableBackButtonCacheMiddleware.php(19): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#45 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware->handle()
+#46 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#47 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#48 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#49 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#50 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+#51 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#52 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#53 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+#54 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#55 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+#56 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#57 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+#58 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#59 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+#60 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#61 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+#62 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#63 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+#64 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#65 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+#66 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#67 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+#68 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+#69 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+#70 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+#71 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(411): Illuminate\Foundation\Testing\TestCase->json()
+#72 /opt/nestogy/tests/Feature/Controllers/TicketControllerTest.php(622): Illuminate\Foundation\Testing\TestCase->postJson()
+#73 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(1657): Tests\Feature\Controllers\TicketControllerTest->test_schedule_creates_calendar_event()
+#74 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+#75 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+#76 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+#77 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+#78 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+#79 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+#80 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#81 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner->run()
+#82 /opt/nestogy/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#83 {main}
+
+----------------------------------------------------------------------------------
+
+Class "App\Models\TicketReply" not found
+
+  at tests/Feature/Controllers/TicketControllerTest.php:628
+    624▕                 'duration' => 120,
+    625▕                 'location' => 'Client Office',
+    626▕             ]);
+    627▕ 
+  ➜ 628▕         $response->assertStatus(200);
+    629▕         $this->assertDatabaseHas('tickets', [
+    630▕             'id' => $ticket->id,
+    631▕             'scheduled_at' => $scheduledTime,
+    632▕         ]);
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > merge moves data…   
+  Expected response status code [200] but received 422.
+Failed asserting that 422 is identical to 200.
+
+The following errors occurred during the last request:
+
+{
+    "success": false,
+    "errors": {
+        "merge_into_number": [
+            "The merge into number field must be a string."
+        ]
+    }
+}
+
+  at tests/Feature/Controllers/TicketControllerTest.php:669
+    665▕             ->postJson(route('tickets.merge', $sourceTicket), [
+    666▕                 'merge_into_number' => $targetTicket->number,
+    667▕             ]);
+    668▕ 
+  ➜ 669▕         $response->assertStatus(200);
+    670▕         $sourceTicket->refresh();
+    671▕         $this->assertEquals('closed', $sourceTicket->status);
+    672▕     }
+    673▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > merge validates…    
+  Expected response status code [404] but received 500.
+Failed asserting that 500 is identical to 404.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:686
+    682▕             ->postJson(route('tickets.merge', $ticket), [
+    683▕                 'merge_into_number' => 'INVALID-999999',
+    684▕             ]);
+    685▕ 
+  ➜ 686▕         $response->assertStatus(404);
+    687▕     }
+    688▕ 
+    689▕     public function test_merge_prevents_self_merge(): void
+    690▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > search finds tic…   
+  Failed to assert that the response count matched the expected 1
+Failed asserting that actual size 0 matches expected size 1.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:729
+    725▕         $response = $this->actingAs($this->user)
+    726▕             ->getJson(route('tickets.search', ['q' => '000001']));
+    727▕ 
+    728▕         $response->assertStatus(200);
+  ➜ 729▕         $response->assertJsonCount(1, 'tickets');
+    730▕     }
+    731▕ 
+    732▕     public function test_search_finds_tickets_by_subject(): void
+    733▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > search excludes…    
+  Failed asserting that actual size 0 matches expected size 1.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:765
+    761▕         $response = $this->actingAs($this->user)
+    762▕             ->getJson(route('tickets.search', ['q' => 'Server', 'exclude' => $ticket1->id]));
+    763▕ 
+    764▕         $response->assertStatus(200);
+  ➜ 765▕         $this->assertCount(1, $response->json('tickets'));
+    766▕         $this->assertEquals($ticket2->id, $response->json('tickets.0.id'));
+    767▕     }
+    768▕ 
+    769▕     public function test_get_viewers_returns_other_viewers(): void
+
+  1   tests/Feature/Controllers/TicketControllerTest.php:765
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > start smart time…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+Error: Call to undefined method App\Domains\Product\Services\RateConfigurationService::isTimeBillable() in /opt/nestogy/app/Domains/Ticket/Services/TimeTrackingService.php:550
+Stack trace:
+#0 /opt/nestogy/app/Domains/Ticket/Services/TimeTrackingService.php(82): App\Domains\Ticket\Services\TimeTrackingService->determineBillability()
+#1 /opt/nestogy/app/Domains/Ticket/Controllers/TicketController.php(1546): App\Domains\Ticket\Services\TimeTrackingService->startTracking()
+#2 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Controller.php(54): App\Domains\Ticket\Controllers\TicketController->startSmartTimer()
+#3 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(43): Illuminate\Routing\Controller->callAction()
+#4 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Route.php(265): Illuminate\Routing\ControllerDispatcher->dispatch()
+#5 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Route.php(211): Illuminate\Routing\Route->runController()
+#6 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(822): Illuminate\Routing\Route->run()
+#7 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::runRouteWithinStack():821}()
+#8 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/EnsureEmailIsVerified.php(41): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#9 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\EnsureEmailIsVerified->handle()
+#10 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#11 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#12 /opt/nestogy/app/Http/Middleware/SetupWizardMiddleware.php(37): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#13 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\SetupWizardMiddleware->handle()
+#14 /opt/nestogy/app/Http/Middleware/AutoVerifyEmailWithoutSMTP.php(31): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#15 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\AutoVerifyEmailWithoutSMTP->handle()
+#16 /opt/nestogy/app/Http/Middleware/ConfigureCompanyMail.php(34): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#17 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\ConfigureCompanyMail->handle()
+#18 /opt/nestogy/app/Http/Middleware/SetBouncerScope.php(34): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#19 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\SetBouncerScope->handle()
+#20 /opt/nestogy/app/Http/Middleware/RememberTokenMiddleware.php(37): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#21 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\RememberTokenMiddleware->handle()
+#22 /opt/nestogy/app/Http/Middleware/LogSignupRequests.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#23 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\LogSignupRequests->handle()
+#24 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#25 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+#26 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#27 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+#28 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#29 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle()
+#30 /opt/nestogy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#31 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession->handle()
+#32 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#33 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession->handleStatefulRequest()
+#34 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession->handle()
+#35 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#36 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle()
+#37 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#38 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies->handle()
+#39 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#40 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline->then()
+#41 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+#42 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router->runRoute()
+#43 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+#44 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router->dispatch()
+#45 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+#46 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportDisablingBackButtonCache/DisableBackButtonCacheMiddleware.php(19): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#47 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware->handle()
+#48 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#49 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#50 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#51 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#52 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+#53 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#54 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#55 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+#56 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#57 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+#58 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#59 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+#60 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#61 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+#62 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#63 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+#64 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#65 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+#66 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#67 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+#68 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#69 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+#70 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+#71 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+#72 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+#73 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(411): Illuminate\Foundation\Testing\TestCase->json()
+#74 /opt/nestogy/tests/Feature/Controllers/TicketControllerTest.php(800): Illuminate\Foundation\Testing\TestCase->postJson()
+#75 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(1657): Tests\Feature\Controllers\TicketControllerTest->test_start_smart_timer_creates_time_entry()
+#76 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+#77 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+#78 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+#79 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+#80 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+#81 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+#82 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#83 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner->run()
+#84 /opt/nestogy/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#85 {main}
+
+----------------------------------------------------------------------------------
+
+Call to undefined method App\Domains\Product\Services\RateConfigurationService::isTimeBillable()
+
+  at tests/Feature/Controllers/TicketControllerTest.php:805
+    801▕                 'work_type' => 'general_support',
+    802▕                 'description' => 'Working on ticket',
+    803▕             ]);
+    804▕ 
+  ➜ 805▕         $response->assertStatus(200);
+    806▕         $response->assertJson(['success' => true]);
+    807▕     }
+    808▕ 
+    809▕     public function test_stop_timer_ends_active_timer(): void
+
+
+  Tests:    12 failed, 53 passed (161 assertions)
+  Duration: 31.64s
+

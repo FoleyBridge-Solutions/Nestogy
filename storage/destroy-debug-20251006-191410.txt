@@ -1,0 +1,1 @@
+Class test_destroy_debug cannot be found in /tmp/test_destroy_debug.php

@@ -38,19 +38,23 @@ class ClientControllerTest extends TestCase
     public function test_controller_initializes_correctly(): void
     {
         $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('initializeController');
+        $method->setAccessible(true);
+        $method->invoke($this->controller);
+
         $property = $reflection->getProperty('modelClass');
         $property->setAccessible(true);
-
-        $this->controller->initializeController();
 
         $this->assertEquals(Client::class, $property->getValue($this->controller));
     }
 
     public function test_controller_has_correct_service_class(): void
     {
-        $this->controller->initializeController();
-
         $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('initializeController');
+        $method->setAccessible(true);
+        $method->invoke($this->controller);
+
         $property = $reflection->getProperty('serviceClass');
         $property->setAccessible(true);
 
@@ -59,9 +63,11 @@ class ClientControllerTest extends TestCase
 
     public function test_controller_has_correct_resource_name(): void
     {
-        $this->controller->initializeController();
-
         $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('initializeController');
+        $method->setAccessible(true);
+        $method->invoke($this->controller);
+
         $property = $reflection->getProperty('resourceName');
         $property->setAccessible(true);
 
@@ -70,9 +76,11 @@ class ClientControllerTest extends TestCase
 
     public function test_controller_has_correct_view_prefix(): void
     {
-        $this->controller->initializeController();
-
         $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('initializeController');
+        $method->setAccessible(true);
+        $method->invoke($this->controller);
+
         $property = $reflection->getProperty('viewPrefix');
         $property->setAccessible(true);
 
@@ -81,9 +89,11 @@ class ClientControllerTest extends TestCase
 
     public function test_controller_has_correct_eager_load_relations(): void
     {
-        $this->controller->initializeController();
-
         $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('initializeController');
+        $method->setAccessible(true);
+        $method->invoke($this->controller);
+
         $property = $reflection->getProperty('eagerLoadRelations');
         $property->setAccessible(true);
 

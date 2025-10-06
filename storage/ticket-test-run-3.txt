@@ -1,0 +1,545 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Unit\Controllers\TicketControllerTest
+  ✓ generate ticket number creates unique number                        13.36s  
+  ⨯ generate ticket number increments sequence                           0.24s  
+  ✓ get filter options returns correct structure                         0.20s  
+  ✓ get filter options includes valid statuses                           0.19s  
+  ✓ get filter options includes valid priorities                         0.17s  
+  ✓ track ticket view stores in cache                                    0.21s  
+  ✓ track ticket view stores user information                            0.22s  
+  ✓ get ticket viewers excludes current user                             0.22s  
+  ✓ get ticket viewers excludes old views                                0.22s  
+  ✓ track ticket changes logs status changes                             0.22s  
+  ✓ track ticket changes logs priority changes                           0.23s  
+  ✓ track ticket changes logs assignment changes                         0.22s  
+  ✓ get today time statistics returns correct structure                  0.19s  
+  ⨯ get today time statistics calculates total hours                     0.21s  
+  ✓ index request includes pagination                                    1.37s  
+  ✓ index request applies sorting                                        0.24s  
+  ✓ create request provides form data                                    0.15s  
+  ✓ create request includes priority options                             0.17s  
+  ✓ create request includes status options                               0.19s  
+  ✓ export request generates csv headers                                 0.26s  
+  ✓ search request requires minimum query length                         0.16s  
+  ✓ search request limits results                                        0.67s  
+  ✓ search request excludes closed tickets                               0.27s  
+
+   FAIL  Tests\Feature\Controllers\TicketControllerTest
+  ✓ index displays tickets list                                          0.77s  
+  ✓ index filters by search term                                         0.28s  
+  ✓ index filters by status                                              0.26s  
+  ✓ index filters by priority                                            0.27s  
+  ✓ index filters by assignee                                            0.30s  
+  ✓ index filters overdue tickets                                        0.29s  
+  ✓ index filters unassigned tickets                                     0.30s  
+  ✓ index filters watched tickets                                        0.35s  
+  ✓ create displays form                                                 0.38s  
+  ✓ store creates ticket                                                 0.22s  
+  ✓ store creates watcher for creator                                    0.22s  
+  ⨯ store generates unique ticket number                                 0.25s  
+  ✓ store validates required fields                                      0.23s  
+  ⨯ store validates client belongs to company                            0.21s  
+  ✓ store validates priority values                                      0.21s  
+  ✓ store returns json when requested                                    0.22s  
+  ✓ show displays ticket                                                 0.63s  
+  ✓ show tracks viewer                                                   0.46s  
+  ✓ show returns json when requested                                     0.27s  
+  ⨯ edit displays form                                                   0.38s  
+  ⨯ update modifies ticket                                               0.38s  
+  ⨯ update validates input                                               0.38s  
+  ⨯ destroy soft deletes ticket                                          0.39s  
+  ⨯ destroy returns json when requested                                  0.26s  
+  ⨯ assign updates ticket assignee                                       0.24s  
+  ⨯ assign creates watcher for assignee                                  0.25s  
+  ⨯ assign validates assignee belongs to company                         0.23s  
+  ⨯ update status changes ticket status                                  0.24s  
+  ⨯ update status sets closed timestamps                                 0.25s  
+  ⨯ update priority changes ticket priority                              0.25s  
+  ⨯ schedule creates calendar event                                      0.24s  
+  ⨯ schedule validates future date                                       0.25s  
+  ⨯ merge moves data to target ticket                                    0.28s  
+  ⨯ merge validates target ticket exists                                 0.26s  
+  ⨯ merge prevents self merge                                            0.25s  
+  ✓ export generates csv                                                 0.31s  
+  ⨯ search finds tickets by number                                       0.25s  
+  ✓ search finds tickets by subject                                      0.24s  
+  ✓ search excludes specified ticket                                     0.29s  
+  ✓ get viewers returns other viewers                                    0.27s  
+  ⨯ start smart timer creates time entry                                 0.32s  
+  ✓ stop timer ends active timer                                         0.27s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > generate ticket num…   
+  Failed asserting that two strings are equal.
+  -'TKT-2025-000002'
+  +'TKT-2025-000001'
+  
+
+  at tests/Unit/Controllers/TicketControllerTest.php:79
+     75▕         $method->setAccessible(true);
+     76▕ 
+     77▕         $number = $method->invoke($this->controller);
+     78▕ 
+  ➜  79▕         $this->assertEquals("TKT-{$currentYear}-000002", $number);
+     80▕     }
+     81▕ 
+     82▕     public function test_get_filter_options_returns_correct_structure(): void
+     83▕     {
+
+  1   tests/Unit/Controllers/TicketControllerTest.php:79
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > get today time stat…   
+  Failed asserting that 1 matches expected 2.
+
+  at tests/Unit/Controllers/TicketControllerTest.php:335
+    331▕         $stats = $method->invoke($this->controller, $this->user);
+    332▕ 
+    333▕         $this->assertEquals(4.0, $stats['total_hours']);
+    334▕         $this->assertEquals(2.5, $stats['billable_hours']);
+  ➜ 335▕         $this->assertEquals(2, $stats['entries_count']);
+    336▕     }
+    337▕ 
+    338▕     public function test_index_request_includes_pagination(): void
+    339▕     {
+
+  1   tests/Unit/Controllers/TicketControllerTest.php:335
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store generates…    
+  Expected: 1001
+
+  To contain: TKT
+
+  at tests/Feature/Controllers/TicketControllerTest.php:291
+    287▕         $this->actingAs($this->user)->post(route('tickets.store'), $data);
+    288▕ 
+    289▕         $ticket = Ticket::where('subject', 'Test Ticket')->first();
+    290▕         $this->assertNotNull($ticket->number);
+  ➜ 291▕         $this->assertStringContainsString('TKT', $ticket->number);
+    292▕     }
+    293▕ 
+    294▕     public function test_store_validates_required_fields(): void
+    295▕     {
+
+  1   tests/Feature/Controllers/TicketControllerTest.php:291
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest >…   QueryException   
+  SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "clients" violates foreign key constraint "clients_company_id_foreign"
+DETAIL:  Key (company_id)=(999) is not present in table "companies". (Connection: pgsql, SQL: insert into "clients" ("company_id", "name", "company_name", "type", "email", "phone", "website", "address", "city", "state", "zip_code", "country", "status", "notes", "hourly_rate", "billing_contact", "technical_contact", "created_at", "updated_at") values (999, Prosacco, Yundt and Davis, Wuckert LLC Inc., company, aurelia.abshire@gerlach.com, (563) 475-6035, ?, 513 Bernhard Views Suite 919, Corkeryberg, KY, 75298, United States, suspended, ?, 225, Prof. Cordia Dooley, Constantin Stamm Sr., 2025-10-06 16:42:15, 2025-10-06 16:42:15) returning "id")
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+      [2m+18 vendor frames [22m
+  19  tests/Feature/Controllers/TicketControllerTest.php:303
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > edit displays fo…   
+  Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:409
+    405▕         ]);
+    406▕ 
+    407▕         $response = $this->actingAs($this->user)->get(route('tickets.edit', $ticket));
+    408▕ 
+  ➜ 409▕         $response->assertStatus(200);
+    410▕         $response->assertViewIs('tickets.edit');
+    411▕         $response->assertViewHas(['ticket', 'clients', 'assignees']);
+    412▕     }
+    413▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > update modifies…    
+  Expected response status code [201, 301, 302, 303, 307, 308] but received 403.
+Failed asserting that false is true.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:433
+    429▕ 
+    430▕         $response = $this->actingAs($this->user)
+    431▕             ->put(route('tickets.update', $ticket), $data);
+    432▕ 
+  ➜ 433▕         $response->assertRedirect();
+    434▕         $this->assertDatabaseHas('tickets', [
+    435▕             'id' => $ticket->id,
+    436▕             'priority' => 'Critical',
+    437▕             'status' => 'in_progress',
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > update validates…   
+  Session is missing expected key [errors].
+Failed asserting that false is true.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:451
+    447▕ 
+    448▕         $response = $this->actingAs($this->user)
+    449▕             ->put(route('tickets.update', $ticket), []);
+    450▕ 
+  ➜ 451▕         $response->assertSessionHasErrors(['client_id', 'subject', 'details', 'priority', 'status']);
+    452▕     }
+    453▕ 
+    454▕     public function test_destroy_soft_deletes_ticket(): void
+    455▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > destroy soft del…   
+  Expected response status code [201, 301, 302, 303, 307, 308] but received 403.
+Failed asserting that false is true.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:464
+    460▕ 
+    461▕         $response = $this->actingAs($this->user)
+    462▕             ->delete(route('tickets.destroy', $ticket));
+    463▕ 
+  ➜ 464▕         $response->assertRedirect(route('tickets.index'));
+    465▕         $this->assertSoftDeleted('tickets', ['id' => $ticket->id]);
+    466▕     }
+    467▕ 
+    468▕     public function test_destroy_returns_json_when_requested(): void
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > destroy returns…    
+  Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:478
+    474▕ 
+    475▕         $response = $this->actingAs($this->user)
+    476▕             ->deleteJson(route('tickets.destroy', $ticket));
+    477▕ 
+  ➜ 478▕         $response->assertStatus(200);
+    479▕         $response->assertJson(['success' => true]);
+    480▕     }
+    481▕ 
+    482▕     public function test_assign_updates_ticket_assignee(): void
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > assign updates t…   
+  Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:497
+    493▕             ->postJson(route('tickets.assign', $ticket), [
+    494▕                 'assigned_to' => $assignee->id,
+    495▕             ]);
+    496▕ 
+  ➜ 497▕         $response->assertStatus(200);
+    498▕         $this->assertDatabaseHas('tickets', [
+    499▕             'id' => $ticket->id,
+    500▕             'assigned_to' => $assignee->id,
+    501▕         ]);
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > assign creates w…   
+  Failed asserting that a row in the table [ticket_watchers] matches the attributes {
+    "ticket_id": 90,
+    "user_id": 167
+}.
+
+The table is empty.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:517
+    513▕         $this->actingAs($this->user)->postJson(route('tickets.assign', $ticket), [
+    514▕             'assigned_to' => $assignee->id,
+    515▕         ]);
+    516▕ 
+  ➜ 517▕         $this->assertDatabaseHas('ticket_watchers', [
+    518▕             'ticket_id' => $ticket->id,
+    519▕             'user_id' => $assignee->id,
+    520▕         ]);
+    521▕     }
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest >…   QueryException   
+  SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "users" violates foreign key constraint "users_company_id_foreign"
+DETAIL:  Key (company_id)=(999) is not present in table "companies". (Connection: pgsql, SQL: insert into "users" ("company_id", "name", "email", "email_verified_at", "password", "remember_token", "updated_at", "created_at") values (999, Jadyn Fisher II, kale53@example.net, 2025-10-06 16:42:19, $2y$04$Gk86BscLvl70KNLyCkqRauFeTSj8/YCIN1geACiJpEpWRCGJMHG2m, CFZpKEe35G, 2025-10-06 16:42:19, 2025-10-06 16:42:19) returning "id")
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+      [2m+18 vendor frames [22m
+  19  tests/Feature/Controllers/TicketControllerTest.php:530
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > update status ch…   
+  Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:553
+    549▕             ->postJson(route('tickets.update-status', $ticket), [
+    550▕                 'status' => 'in_progress',
+    551▕             ]);
+    552▕ 
+  ➜ 553▕         $response->assertStatus(200);
+    554▕         $this->assertDatabaseHas('tickets', [
+    555▕             'id' => $ticket->id,
+    556▕             'status' => 'in_progress',
+    557▕         ]);
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > update status se…   
+  Failed asserting that null is not null.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:573
+    569▕             'status' => 'closed',
+    570▕         ]);
+    571▕ 
+    572▕         $ticket->refresh();
+  ➜ 573▕         $this->assertNotNull($ticket->closed_at);
+    574▕         $this->assertEquals($this->user->id, $ticket->closed_by);
+    575▕     }
+    576▕ 
+    577▕     public function test_update_priority_changes_ticket_priority(): void
+
+  1   tests/Feature/Controllers/TicketControllerTest.php:573
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > update priority…    
+  Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:590
+    586▕             ->postJson(route('tickets.update-priority', $ticket), [
+    587▕                 'priority' => 'Critical',
+    588▕             ]);
+    589▕ 
+  ➜ 590▕         $response->assertStatus(200);
+    591▕         $this->assertDatabaseHas('tickets', [
+    592▕             'id' => $ticket->id,
+    593▕             'priority' => 'Critical',
+    594▕         ]);
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > schedule creates…   
+  Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:613
+    609▕                 'duration' => 120,
+    610▕                 'location' => 'Client Office',
+    611▕             ]);
+    612▕ 
+  ➜ 613▕         $response->assertStatus(200);
+    614▕         $this->assertDatabaseHas('tickets', [
+    615▕             'id' => $ticket->id,
+    616▕             'scheduled_at' => $scheduledTime,
+    617▕         ]);
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > schedule validat…   
+  Expected response status code [422] but received 403.
+Failed asserting that 403 is identical to 422.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:632
+    628▕             ->postJson(route('tickets.schedule', $ticket), [
+    629▕                 'scheduled_at' => now()->subDay()->toDateTimeString(),
+    630▕             ]);
+    631▕ 
+  ➜ 632▕         $response->assertStatus(422);
+    633▕     }
+    634▕ 
+    635▕     public function test_merge_moves_data_to_target_ticket(): void
+    636▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > merge moves data…   
+  Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:654
+    650▕             ->postJson(route('tickets.merge', $sourceTicket), [
+    651▕                 'merge_into_number' => $targetTicket->number,
+    652▕             ]);
+    653▕ 
+  ➜ 654▕         $response->assertStatus(200);
+    655▕         $sourceTicket->refresh();
+    656▕         $this->assertEquals('closed', $sourceTicket->status);
+    657▕     }
+    658▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > merge validates…    
+  Expected response status code [404] but received 403.
+Failed asserting that 403 is identical to 404.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:671
+    667▕             ->postJson(route('tickets.merge', $ticket), [
+    668▕                 'merge_into_number' => 'INVALID-999999',
+    669▕             ]);
+    670▕ 
+  ➜ 671▕         $response->assertStatus(404);
+    672▕     }
+    673▕ 
+    674▕     public function test_merge_prevents_self_merge(): void
+    675▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > merge prevents s…   
+  Expected response status code [422] but received 403.
+Failed asserting that 403 is identical to 422.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:686
+    682▕             ->postJson(route('tickets.merge', $ticket), [
+    683▕                 'merge_into_number' => $ticket->number,
+    684▕             ]);
+    685▕ 
+  ➜ 686▕         $response->assertStatus(422);
+    687▕     }
+    688▕ 
+    689▕     public function test_export_generates_csv(): void
+    690▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > search finds tic…   
+  Failed to assert that the response count matched the expected 1
+Failed asserting that actual size 0 matches expected size 1.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:714
+    710▕         $response = $this->actingAs($this->user)
+    711▕             ->getJson(route('tickets.search', ['q' => '000001']));
+    712▕ 
+    713▕         $response->assertStatus(200);
+  ➜ 714▕         $response->assertJsonCount(1, 'tickets');
+    715▕     }
+    716▕ 
+    717▕     public function test_search_finds_tickets_by_subject(): void
+    718▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > start smart time…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+Error: Class "App\Domains\Product\Services\RateConfigurationService" not found in /opt/nestogy/app/Domains/Ticket/Services/TimeTrackingService.php:28
+Stack trace:
+#0 /opt/nestogy/app/Domains/Ticket/Controllers/TicketController.php(1543): [constant expression]()
+#1 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Controller.php(54): App\Domains\Ticket\Controllers\TicketController->startSmartTimer()
+#2 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(43): Illuminate\Routing\Controller->callAction()
+#3 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Route.php(265): Illuminate\Routing\ControllerDispatcher->dispatch()
+#4 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Route.php(211): Illuminate\Routing\Route->runController()
+#5 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(822): Illuminate\Routing\Route->run()
+#6 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::runRouteWithinStack():821}()
+#7 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/EnsureEmailIsVerified.php(41): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#8 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\EnsureEmailIsVerified->handle()
+#9 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#10 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#11 /opt/nestogy/app/Http/Middleware/SetupWizardMiddleware.php(37): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#12 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\SetupWizardMiddleware->handle()
+#13 /opt/nestogy/app/Http/Middleware/AutoVerifyEmailWithoutSMTP.php(31): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#14 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\AutoVerifyEmailWithoutSMTP->handle()
+#15 /opt/nestogy/app/Http/Middleware/ConfigureCompanyMail.php(34): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#16 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\ConfigureCompanyMail->handle()
+#17 /opt/nestogy/app/Http/Middleware/SetBouncerScope.php(34): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#18 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\SetBouncerScope->handle()
+#19 /opt/nestogy/app/Http/Middleware/RememberTokenMiddleware.php(37): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#20 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\RememberTokenMiddleware->handle()
+#21 /opt/nestogy/app/Http/Middleware/LogSignupRequests.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#22 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): App\Http\Middleware\LogSignupRequests->handle()
+#23 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#24 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+#25 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#26 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+#27 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#28 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle()
+#29 /opt/nestogy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#30 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession->handle()
+#31 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#32 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession->handleStatefulRequest()
+#33 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession->handle()
+#34 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#35 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle()
+#36 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#37 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies->handle()
+#38 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#39 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline->then()
+#40 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+#41 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router->runRoute()
+#42 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+#43 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router->dispatch()
+#44 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+#45 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportDisablingBackButtonCache/DisableBackButtonCacheMiddleware.php(19): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#46 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware->handle()
+#47 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#48 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#49 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#50 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#51 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+#52 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#53 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#54 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+#55 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#56 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+#57 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#58 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+#59 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#60 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+#61 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#62 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+#63 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#64 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+#65 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#66 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+#67 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#68 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+#69 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+#70 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+#71 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+#72 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(411): Illuminate\Foundation\Testing\TestCase->json()
+#73 /opt/nestogy/tests/Feature/Controllers/TicketControllerTest.php(785): Illuminate\Foundation\Testing\TestCase->postJson()
+#74 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(1657): Tests\Feature\Controllers\TicketControllerTest->test_start_smart_timer_creates_time_entry()
+#75 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+#76 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+#77 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+#78 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+#79 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+#80 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+#81 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#82 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner->run()
+#83 /opt/nestogy/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#84 {main}
+
+----------------------------------------------------------------------------------
+
+Class "App\Domains\Product\Services\RateConfigurationService" not found
+
+  at tests/Feature/Controllers/TicketControllerTest.php:790
+    786▕                 'work_type' => 'general_support',
+    787▕                 'description' => 'Working on ticket',
+    788▕             ]);
+    789▕ 
+  ➜ 790▕         $response->assertStatus(200);
+    791▕         $response->assertJson(['success' => true]);
+    792▕     }
+    793▕ 
+    794▕     public function test_stop_timer_ends_active_timer(): void
+
+
+  Tests:    22 failed, 43 passed (143 assertions)
+  Duration: 32.39s
+

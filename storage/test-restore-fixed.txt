@@ -1,0 +1,14 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   PASS  Tests\Feature\Controllers\ClientControllerTest
+  ✓ restore undeletes archived client                                   14.04s  
+
+  Tests:    1 passed (3 assertions)
+  Duration: 14.25s
+

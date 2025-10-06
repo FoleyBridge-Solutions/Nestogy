@@ -1,0 +1,63 @@
+# Test Suite Status - $(date)
+
+## Overall Results
+- **Total Tests**: 891
+- **Passing**: 876 (98.3%)
+- **Errors**: 14
+- **Failures**: 1
+- **Total Failing**: 15
+
+## All Failures - ContractService Tests
+
+All 15 failing tests are in the ContractService test suite:
+
+1. ✘ Generate from quote creates contract
+2. ✘ Generate from quote with customizations
+3. ✘ Generate from template creates contract
+4. ✘ Generate from template with voip config
+5. ✘ Create custom contract
+6. ✘ Create custom contract with milestones
+7. ✘ Generate contract document
+8. ✘ Generate contract document with options
+9. ✘ Regenerate contract
+10. ✘ Regenerate contract maintains original data
+11. ✘ Full contract lifecycle from quote
+12. ✘ Contract generation with multiple templates
+13. ✘ Contract generation handles company isolation
+14. ✘ Generate from quote validates quote status
+15. ✘ Create custom contract requires minimum fields
+
+## Error Categories
+
+### 1. Missing ContractTemplateFactory (7 tests)
+- Generate from quote with customizations
+- Generate from template creates contract
+- Generate from template with voip config
+- Contract generation with multiple templates
+- Contract generation handles company isolation
+- Generate from quote validates quote status
+- (possibly more)
+
+### 2. Missing Quote.total column (2 tests)
+- Generate from quote creates contract
+- Full contract lifecycle from quote
+
+### 3. Missing Contract::RENEWAL_MANUAL constant (2 tests)
+- Create custom contract
+- Create custom contract with milestones
+
+### 4. Contract template clause configuration (4 tests)
+- Generate contract document
+- Generate contract document with options
+- Regenerate contract
+- Regenerate contract maintains original data
+
+### 5. Unknown (1 test)
+- Create custom contract requires minimum fields
+
+## Status
+These are pre-existing failures. Current focus is on:
+1. ✅ ChipperCI Flux fix (waiting for build)
+2. ✅ Service testing (NotificationService, ResolutionEstimateService done)
+3. 🔄 Next: Submit Flux PR or continue service testing
+Sun Oct  5 07:30:31 UTC 2025

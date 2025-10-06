@@ -177,27 +177,53 @@ class RMMIntegrationTest extends IntegrationTestCase
 ### Quick Start
 
 ```bash
-# Run all tests
-composer test
+# Run all tests (using custom runner - memory efficient)
+php run-tests.php
 
-# Run specific test suites
+# Run all tests with coverage
+php run-tests.php --coverage
+
+# Traditional commands (may run out of memory on full suite)
+composer test                # Run all tests
 composer test:unit          # Unit tests only
 composer test:feature       # Feature tests only
 composer test:integration   # Integration tests only
 composer test:financial     # Financial accuracy tests
 composer test:quick         # Fast unit tests (models + services)
 
-# Run tests in parallel (faster)
-composer test:parallel
-
 # Generate coverage report
 composer test:coverage      # Opens coverage/html/index.html
 ```
 
+### Custom Test Runner (Recommended)
+
+**Why?** PHPUnit doesn't free memory between test files. With 1200+ tests, this causes memory exhaustion.
+
+**Solution:** Our custom runner (`run-tests.php`) runs each test file in isolation.
+
+```bash
+# Run without coverage (faster)
+php run-tests.php
+
+# Run with coverage (generates coverage.xml)
+php run-tests.php --coverage
+
+# With custom memory limit
+php -d memory_limit=1G run-tests.php
+```
+
+**Features:**
+- ✅ Runs each test file in isolation
+- ✅ Frees memory between test files  
+- ✅ Generates merged coverage reports
+- ✅ Works in CI/CD (GitHub Actions, CircleCI)
+- ✅ Provides detailed progress tracking
+- ✅ Uses PCOV (faster than Xdebug)
+
 ### PHPUnit Commands
 
 ```bash
-# Run all tests
+# Run all tests (WARNING: may run out of memory)
 ./vendor/bin/phpunit
 
 # Run specific test suite
@@ -211,8 +237,8 @@ composer test:coverage      # Opens coverage/html/index.html
 # Run specific test method
 ./vendor/bin/phpunit --filter testClientBelongsToCompany
 
-# Run with coverage
-./vendor/bin/phpunit --coverage-html coverage/html
+# Run with coverage (single file only recommended)
+./vendor/bin/phpunit --coverage-html coverage/html tests/Unit/Models/AccountTest.php
 ```
 
 ### Financial Accuracy Test Runner
@@ -568,15 +594,25 @@ Opens `coverage/html/index.html` in your browser.
 ### Coverage in CI/CD
 
 ```yaml
-# .github/workflows/tests.yml
-- name: Run Tests with Coverage
-  run: composer test:coverage
-
-- name: Upload Coverage
-  uses: codecov/codecov-action@v2
+# .github/workflows/ci.yml
+- name: Setup PHP with PCOV
+  uses: shivammathur/setup-php@v2
   with:
-    files: ./coverage/clover.xml
+    php-version: '8.4'
+    coverage: pcov
+    extensions: pgsql, pdo_pgsql, redis
+    ini-values: memory_limit=1G, pcov.enabled=1
+
+- name: Run tests with coverage
+  run: php run-tests.php --coverage
+
+- name: Upload to SonarCloud
+  uses: SonarSource/sonarcloud-github-action@master
+  env:
+    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 ```
+
+**Note:** The custom test runner (`run-tests.php`) is used in CI/CD to prevent memory issues. It generates the same `coverage.xml` format compatible with SonarCloud, Codecov, and other tools.
 
 ---
 

@@ -1,0 +1,30 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Feature\Controllers\ClientControllerTest
+  ⨯ show denies access to other company client                          14.17s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > show denies acce…   
+  Expected response status code [403] but received 302.
+Failed asserting that 302 is identical to 403.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:329
+    325▕         $client = Client::factory()->create(['company_id' => $otherCompany->id]);
+    326▕ 
+    327▕         $response = $this->get(route('clients.show', $client));
+    328▕ 
+  ➜ 329▕         $response->assertStatus(403);
+    330▕     }
+    331▕ 
+    332▕     public function test_show_updates_client_accessed_at_timestamp(): void
+    333▕     {
+
+
+  Tests:    1 failed (1 assertions)
+  Duration: 14.22s
+

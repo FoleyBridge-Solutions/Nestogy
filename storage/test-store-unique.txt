@@ -1,0 +1,33 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Feature\Controllers\TicketControllerTest
+  ⨯ store generates unique ticket number                                13.71s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store generates…    
+  Expected: 1001
+
+  To contain: TKT
+
+  at tests/Feature/Controllers/TicketControllerTest.php:303
+    299▕             ->where('company_id', $this->user->company_id)
+    300▕             ->first();
+    301▕         $this->assertNotNull($ticket);
+    302▕         $this->assertNotNull($ticket->number);
+  ➜ 303▕         $this->assertStringContainsString('TKT', $ticket->number);
+    304▕         $this->assertStringContainsString(date('Y'), $ticket->number);
+    305▕     }
+    306▕ 
+    307▕     public function test_store_validates_required_fields(): void
+
+  1   tests/Feature/Controllers/TicketControllerTest.php:303
+
+
+  Tests:    1 failed (3 assertions)
+  Duration: 13.89s
+

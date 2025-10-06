@@ -147,10 +147,9 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         Route::get('{client}/assets', [App\Domains\Asset\Controllers\AssetController::class, 'index'])->name('assets.index');
 
         // Quick Access
-        Route::get('active', [App\Domains\Client\Controllers\ClientController::class, 'getActiveClients'])->name('active');
-        Route::get('search', [App\Domains\Core\Controllers\SearchController::class, 'clients'])->name('search');
-        Route::post('{client}/mark-accessed', [App\Domains\Client\Controllers\ClientController::class, 'markAsAccessed'])->name('mark-accessed');
-        Route::post('validate-batch', [App\Domains\Client\Controllers\ClientController::class, 'validateBatch'])->name('validate-batch');
+        Route::get('active', [App\Domains\Client\Controllers\ClientController::class, 'getActiveClients'])->name('api.active');
+        Route::get('search', [App\Domains\Core\Controllers\SearchController::class, 'clients'])->name('api.search');
+        Route::post('{client}/mark-accessed', [App\Domains\Client\Controllers\ClientController::class, 'markAsAccessed'])->name('api.mark-accessed');
 
         // Client Billing Settings
         Route::get('{client}/billing-settings', [App\Domains\Client\Controllers\ClientController::class, 'getBillingSettings'])->name('billing-settings');

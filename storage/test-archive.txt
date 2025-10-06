@@ -1,0 +1,94 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Feature\Controllers\ClientControllerTest
+  ⨯ archive soft deletes client                                         14.39s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > archive soft del…   
+  Failed asserting that any soft deleted row in the table [clients] matches the attributes {"id":1}.
+
+Found: [
+    {
+        "id": 1,
+        "company_id": 1,
+        "lead": false,
+        "name": "Gerlach Group",
+        "company_name": "Stark Inc Inc.",
+        "type": "company",
+        "email": "gzemlak@funk.biz",
+        "phone": "302-535-1167",
+        "address": "49033 Audie Pine",
+        "city": "Bruenburgh",
+        "state": "DE",
+        "zip_code": "65502",
+        "country": "United States",
+        "website": "http:\/\/ledner.com\/molestiae-laboriosam-quas-quas",
+        "referral": null,
+        "rate": null,
+        "currency_code": "USD",
+        "net_terms": 30,
+        "tax_id_number": null,
+        "rmm_id": null,
+        "notes": "Numquam in cumque laboriosam consequatur. Quasi enim molestiae quibusdam natus. Expedita dolor impedit id quaerat sunt et dolorem.",
+        "status": "suspended",
+        "hourly_rate": "175.00",
+        "billing_contact": "Gennaro Hickle",
+        "technical_contact": "Prof. Hilda Hilpert Jr.",
+        "custom_fields": null,
+        "contract_start_date": null,
+        "contract_end_date": null,
+        "created_at": "2025-10-06 18:36:01",
+        "updated_at": "2025-10-06 18:36:01",
+        "deleted_at": null,
+        "archived_at": null,
+        "accessed_at": null,
+        "created_by": null,
+        "sla_id": null,
+        "custom_standard_rate": null,
+        "custom_after_hours_rate": null,
+        "custom_emergency_rate": null,
+        "custom_weekend_rate": null,
+        "custom_holiday_rate": null,
+        "custom_after_hours_multiplier": null,
+        "custom_emergency_multiplier": null,
+        "custom_weekend_multiplier": null,
+        "custom_holiday_multiplier": null,
+        "custom_rate_calculation_method": null,
+        "custom_minimum_billing_increment": null,
+        "custom_time_rounding_method": null,
+        "use_custom_rates": false,
+        "company_link_id": null,
+        "stripe_customer_id": null,
+        "stripe_subscription_id": null,
+        "subscription_status": "trialing",
+        "subscription_plan_id": null,
+        "trial_ends_at": null,
+        "next_billing_date": null,
+        "subscription_started_at": null,
+        "subscription_canceled_at": null,
+        "current_user_count": 0,
+        "industry": null,
+        "employee_count": null
+    }
+].
+
+  at tests/Feature/Controllers/ClientControllerTest.php:480
+    476▕ 
+    477▕         $response->assertRedirect();
+    478▕         $response->assertSessionHas('success');
+    479▕ 
+  ➜ 480▕         $this->assertSoftDeleted('clients', ['id' => $client->id]);
+    481▕     }
+    482▕ 
+    483▕     public function test_archive_requires_authenticated_client_in_session(): void
+    484▕     {
+
+
+  Tests:    1 failed (3 assertions)
+  Duration: 14.46s
+

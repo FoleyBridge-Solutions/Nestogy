@@ -1,0 +1,38 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12 with PCOV 1.0.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+.................                                                 17 / 17 (100%)
+
+Time: 00:17.879, Memory: 119.00 MB
+
+Contract Generation Service (Tests\Unit\Services\ContractGenerationService)
+ ✔ Generate from quote creates contract
+ ✔ Generate from quote with customizations
+ ✔ Generate from template creates contract
+ ✔ Generate from template with voip config
+ ✔ Create custom contract
+ ✔ Create custom contract with milestones
+ ✔ Generate contract document
+ ✔ Generate contract document with options
+ ✔ Regenerate contract
+ ✔ Regenerate contract maintains original data
+ ✔ Full contract lifecycle from quote
+ ✔ Contract generation with multiple templates
+ ✔ Contract generation handles company isolation
+ ✔ Generate from quote validates quote status
+ ✔ Create custom contract requires minimum fields
+ ✔ Regenerate contract handles signed contracts
+ ✔ Generate contract document handles missing contract
+
+OK (17 tests, 35 assertions)
+
+Generating code coverage report in Clover XML format ... done [00:12.675]

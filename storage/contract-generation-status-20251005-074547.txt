@@ -1,0 +1,6 @@
+ContractGenerationServiceTest failures after initial fixes:
+
+Issues found:
+1. contract_templates table missing 'contract_type' column (used by tests)
+2. contract_signatures table missing 'signatory_type' column
+3. contracts table missing 'milestones' column

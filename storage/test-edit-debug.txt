@@ -1,0 +1,14 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   PASS  Tests\Feature\Controllers\TicketControllerTest
+  ✓ edit displays form                                                  15.12s  
+
+  Tests:    1 passed (5 assertions)
+  Duration: 15.32s
+

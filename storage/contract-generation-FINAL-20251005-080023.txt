@@ -1,0 +1,50 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12 with PCOV 1.0.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+E................                                                 17 / 17 (100%)
+
+Time: 00:17.865, Memory: 121.00 MB
+
+Contract Generation Service (Tests\Unit\Services\ContractGenerationService)
+ ✘ Generate from quote creates contract
+   │
+   │ Exception: Quote must be fully approved before generating contract
+   │
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:288
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:66
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:58
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:54
+   │
+ ✔ Generate from quote with customizations
+ ✔ Generate from template creates contract
+ ✔ Generate from template with voip config
+ ✔ Create custom contract
+ ✔ Create custom contract with milestones
+ ✔ Generate contract document
+ ✔ Generate contract document with options
+ ✔ Regenerate contract
+ ✔ Regenerate contract maintains original data
+ ✔ Full contract lifecycle from quote
+ ✔ Contract generation with multiple templates
+ ✔ Contract generation handles company isolation
+ ✔ Generate from quote validates quote status
+ ✔ Create custom contract requires minimum fields
+ ✔ Regenerate contract handles signed contracts
+ ✔ Generate contract document handles missing contract
+
+ERRORS!
+Tests: 17, Assertions: 32, Errors: 1.
+
+Generating code coverage report in Clover XML format ... done [00:12.409]

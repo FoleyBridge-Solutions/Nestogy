@@ -1,0 +1,30 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Feature\Controllers\TicketControllerTest
+  ⨯ merge validates target ticket exists                                14.01s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > merge validates…    
+  Expected response status code [404] but received 500.
+Failed asserting that 500 is identical to 404.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:686
+    682▕             ->postJson(route('tickets.merge', $ticket), [
+    683▕                 'merge_into_number' => 'INVALID-999999',
+    684▕             ]);
+    685▕ 
+  ➜ 686▕         $response->assertStatus(404);
+    687▕     }
+    688▕ 
+    689▕     public function test_merge_prevents_self_merge(): void
+    690▕     {
+
+
+  Tests:    1 failed (1 assertions)
+  Duration: 14.21s
+

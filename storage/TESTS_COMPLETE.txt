@@ -1,0 +1,129 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Unit\Controllers\TicketControllerTest
+  ✓ generate ticket number creates unique number                        14.89s  
+  ✓ generate ticket number increments sequence                           0.25s  
+  ✓ get filter options returns correct structure                         0.21s  
+  ✓ get filter options includes valid statuses                           0.17s  
+  ✓ get filter options includes valid priorities                         0.20s  
+  ✓ track ticket view stores in cache                                    0.21s  
+  ✓ track ticket view stores user information                            0.23s  
+  ✓ get ticket viewers excludes current user                             0.26s  
+  ✓ get ticket viewers excludes old views                                0.20s  
+  ✓ track ticket changes logs status changes                             0.23s  
+  ✓ track ticket changes logs priority changes                           0.23s  
+  ✓ track ticket changes logs assignment changes                         0.20s  
+  ✓ get today time statistics returns correct structure                  0.25s  
+  ⨯ get today time statistics calculates total hours                     0.26s  
+  ✓ index request includes pagination                                    1.42s  
+  ✓ index request applies sorting                                        0.27s  
+  ✓ create request provides form data                                    0.19s  
+  ✓ create request includes priority options                             0.18s  
+  ✓ create request includes status options                               0.18s  
+  ✓ export request generates csv headers                                 0.24s  
+  ✓ search request requires minimum query length                         0.19s  
+  ✓ search request limits results                                        0.70s  
+  ✓ search request excludes closed tickets                               0.27s  
+
+   FAIL  Tests\Feature\Controllers\TicketControllerTest
+  ✓ index displays tickets list                                          0.82s  
+  ✓ index filters by search term                                         0.30s  
+  ✓ index filters by status                                              0.29s  
+  ✓ index filters by priority                                            0.28s  
+  ✓ index filters by assignee                                            0.30s  
+  ✓ index filters overdue tickets                                        0.30s  
+  ✓ index filters unassigned tickets                                     0.33s  
+  ✓ index filters watched tickets                                        0.34s  
+  ✓ create displays form                                                 0.38s  
+  ✓ store creates ticket                                                 0.25s  
+  ✓ store creates watcher for creator                                    0.25s  
+  ✓ store generates unique ticket number                                 0.22s  
+  ✓ store validates required fields                                      0.23s  
+  ✓ store validates client belongs to company                            0.25s  
+  ✓ store validates priority values                                      0.18s  
+  ✓ store returns json when requested                                    0.24s  
+  ✓ show displays ticket                                                 0.63s  
+  ✓ show tracks viewer                                                   0.45s  
+  ✓ show returns json when requested                                     0.26s  
+  ✓ edit displays form                                                   0.47s  
+  ✓ update modifies ticket                                               0.24s  
+  ✓ update validates input                                               0.26s  
+  ✓ destroy soft deletes ticket                                          0.29s  
+  ✓ destroy returns json when requested                                  0.27s  
+  ✓ assign updates ticket assignee                                       0.27s  
+  ✓ assign creates watcher for assignee                                  0.26s  
+  ✓ assign validates assignee belongs to company                         0.28s  
+  ✓ update status changes ticket status                                  0.28s  
+  ✓ update status sets closed timestamps                                 0.29s  
+  ✓ update priority changes ticket priority                              0.26s  
+  ✓ schedule creates calendar event                                      0.25s  
+  ✓ schedule validates future date                                       0.25s  
+  ✓ merge moves data to target ticket                                    0.31s  
+  ⨯ merge validates target ticket exists                                 0.26s  
+  ✓ merge prevents self merge                                            0.27s  
+  ✓ export generates csv                                                 0.34s  
+  ⨯ search finds tickets by number                                       0.27s  
+  ✓ search finds tickets by subject                                      0.24s  
+  ✓ search excludes specified ticket                                     0.28s  
+  ✓ get viewers returns other viewers                                    0.28s  
+  ✓ start smart timer creates time entry                                 0.35s  
+  ✓ stop timer ends active timer                                         0.26s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > get today time stat…   
+  Failed asserting that 1 is equal to 2 or is greater than 2.
+
+  at tests/Unit/Controllers/TicketControllerTest.php:338
+    334▕         $stats = $method->invoke($this->controller, $this->user);
+    335▕ 
+    336▕         $this->assertGreaterThanOrEqual(4.0, $stats['total_hours']);
+    337▕         $this->assertGreaterThanOrEqual(2.5, $stats['billable_hours']);
+  ➜ 338▕         $this->assertGreaterThanOrEqual(2, $stats['entries_count']);
+    339▕     }
+    340▕ 
+    341▕     public function test_index_request_includes_pagination(): void
+    342▕     {
+
+  1   tests/Unit/Controllers/TicketControllerTest.php:338
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > merge validates…    
+  Expected response status code [404] but received 500.
+Failed asserting that 500 is identical to 404.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:690
+    686▕             ->postJson(route('tickets.merge', $ticket), [
+    687▕                 'merge_into_number' => 'INVALID-999999',
+    688▕             ]);
+    689▕ 
+  ➜ 690▕         $response->assertStatus(404);
+    691▕     }
+    692▕ 
+    693▕     public function test_merge_prevents_self_merge(): void
+    694▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > search finds tic…   
+  Failed to assert that the response count matched the expected 1
+Failed asserting that actual size 0 matches expected size 1.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:733
+    729▕         $response = $this->actingAs($this->user)
+    730▕             ->getJson(route('tickets.search', ['q' => '12345']));
+    731▕ 
+    732▕         $response->assertStatus(200);
+  ➜ 733▕         $response->assertJsonCount(1, 'tickets');
+    734▕     }
+    735▕ 
+    736▕     public function test_search_finds_tickets_by_subject(): void
+    737▕     {
+
+
+  Tests:    3 failed, 62 passed (173 assertions)
+  Duration: 34.47s
+

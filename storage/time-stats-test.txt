@@ -1,0 +1,31 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Unit\Controllers\TicketControllerTest
+  ⨯ get today time statistics calculates total hours                    13.63s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > get today time stat…   
+  Failed asserting that 1 matches expected 2.
+
+  at tests/Unit/Controllers/TicketControllerTest.php:344
+    340▕         $stats = $method->invoke($this->controller, $this->user);
+    341▕ 
+    342▕         $this->assertEquals(4.0, $stats['total_hours']);
+    343▕         $this->assertEquals(2.5, $stats['billable_hours']);
+  ➜ 344▕         $this->assertEquals(2, $stats['entries_count']);
+    345▕     }
+    346▕ 
+    347▕     public function test_index_request_includes_pagination(): void
+    348▕     {
+
+  1   tests/Unit/Controllers/TicketControllerTest.php:344
+
+
+  Tests:    1 failed (3 assertions)
+  Duration: 13.80s
+

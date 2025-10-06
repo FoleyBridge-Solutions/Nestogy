@@ -29,13 +29,17 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
     // Use Livewire component for client edit
     Route::get('clients/{client}/edit', \App\Livewire\Clients\EditClient::class)->name('clients.edit');
 
+    // Routes that work with soft-deleted clients - MUST be OUTSIDE require-client middleware
+    Route::prefix('clients')->name('clients.')->group(function () {
+        Route::post('restore', [\App\Domains\Client\Controllers\ClientController::class, 'restore'])->name('restore');
+    });
+
     // Client-specific routes (using session-based client context) - MUST come BEFORE the {client} route
     Route::prefix('clients')->name('clients.')->middleware('require-client')->group(function () {
         Route::get('switch', [\App\Domains\Client\Controllers\ClientController::class, 'switch'])->name('switch');
         Route::match(['get', 'post'], 'tags', [\App\Domains\Client\Controllers\ClientController::class, 'tags'])->name('tags');
         Route::patch('notes', [\App\Domains\Client\Controllers\ClientController::class, 'updateNotes'])->name('update-notes');
         Route::post('archive', [\App\Domains\Client\Controllers\ClientController::class, 'archive'])->name('archive');
-        Route::post('restore', [\App\Domains\Client\Controllers\ClientController::class, 'restore'])->name('restore');
 
         // Contacts routes (using session-based client context)
         Route::get('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'index'])->name('contacts.index');

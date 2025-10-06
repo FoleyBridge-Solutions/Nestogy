@@ -1,0 +1,37 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Feature\Controllers\TicketControllerTest
+  ⨯ store creates ticket                                                12.85s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store creates ti…   
+  Failed asserting that a row in the table [tickets] matches the attributes {
+    "subject": "Test Ticket",
+    "client_id": 1,
+    "company_id": 1,
+    "priority": "High",
+    "status": "open"
+}.
+
+The table is empty.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:262
+    258▕         
+    259▕         if ($response->exception) {
+    260▕             throw $response->exception;
+    261▕         }
+  ➜ 262▕         $this->assertDatabaseHas('tickets', [
+    263▕             'subject' => 'Test Ticket',
+    264▕             'client_id' => $this->client->id,
+    265▕             'company_id' => $this->user->company_id,
+    266▕             'priority' => 'High',
+
+
+  Tests:    1 failed (2 assertions)
+  Duration: 13.08s
+

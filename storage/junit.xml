@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="/opt/nestogy/phpunit.xml" tests="2" assertions="3" errors="0" failures="2" skipped="0" time="14.696955">
+    <testsuite name="Feature" tests="2" assertions="3" errors="0" failures="2" skipped="0" time="14.696955">
+      <testsuite name="Tests\Feature\ClientControllerTest" file="/opt/nestogy/tests/Feature/ClientControllerTest.php" tests="1" assertions="1" errors="0" failures="1" skipped="0" time="14.469812">
+        <testcase name="test_destroy_permanently_deletes_client" file="/opt/nestogy/tests/Feature/ClientControllerTest.php" line="230" class="Tests\Feature\ClientControllerTest" classname="Tests.Feature.ClientControllerTest" assertions="1" time="14.469812">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ClientControllerTest::test_destroy_permanently_deletes_client
+Expected response status code [201, 301, 302, 303, 307, 308] but received 403.
+Failed asserting that false is true.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:199
+/opt/nestogy/tests/Feature/ClientControllerTest.php:238</failure>
+          <system-out>Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+</system-out>
+        </testcase>
+      </testsuite>
+      <testsuite name="Tests\Feature\Controllers\ClientControllerTest" file="/opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php" tests="1" assertions="2" errors="0" failures="1" skipped="0" time="0.227143">
+        <testcase name="test_destroy_permanently_deletes_client" file="/opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php" line="518" class="Tests\Feature\Controllers\ClientControllerTest" classname="Tests.Feature.Controllers.ClientControllerTest" assertions="2" time="0.227143">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\Controllers\ClientControllerTest::test_destroy_permanently_deletes_client
+Session is missing expected key [success].
+Failed asserting that false is true.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1517
+/opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php:527</failure>
+        </testcase>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

@@ -200,7 +200,7 @@ class PortalDashboardController extends Controller
                 ->sum('balance'),
             'total_this_year' => Invoice::where('client_id', $client->id)
                 ->whereYear('invoice_date', Carbon::now()->year)
-                ->sum('total'),
+                ->sum('amount'),
             'payment_history' => $this->getPaymentHistory($client),
             'aging_summary' => $this->getAgingSummary($client),
         ];
@@ -524,7 +524,7 @@ class PortalDashboardController extends Controller
                 'amount' => Invoice::where('client_id', $client->id)
                     ->whereMonth('paid_at', $month->month)
                     ->whereYear('paid_at', $month->year)
-                    ->sum('total'),
+                    ->sum('amount'),
             ];
         }
 

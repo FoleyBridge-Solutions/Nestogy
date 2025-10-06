@@ -1,0 +1,300 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+EEEEE........................................................   61 / 1216 (  5%)
+.............................................................  122 / 1216 ( 10%)
+.............................................................  183 / 1216 ( 15%)
+.............................................................  244 / 1216 ( 20%)
+.............................................................  305 / 1216 ( 25%)
+.............................................................  366 / 1216 ( 30%)
+.............................................................  427 / 1216 ( 35%)
+.............................................................  488 / 1216 ( 40%)
+.............................................................  549 / 1216 ( 45%)
+.............................................................  610 / 1216 ( 50%)
+.............................................................  671 / 1216 ( 55%)
+.............................................................  732 / 1216 ( 60%)
+.............................................................  793 / 1216 ( 65%)
+...................FFFEF.FFFF...FFFFF...FFFFFFFFFF...........  854 / 1216 ( 70%)
+............................................................F  915 / 1216 ( 75%)
+..FFFFFF................FFFFF...........EEEE..F..F...F.......  976 / 1216 ( 80%)
+...EEEEEE..F....FF.......FEEEEEEEEEEEEEE...E................. 1037 / 1216 ( 85%)
+............................................................. 1098 / 1216 ( 90%)
+............................................................. 1159 / 1216 ( 95%)
+.........................................................     1216 / 1216 (100%)
+
+Time: 03:55.033, Memory: 493.00 MB
+
+There was 1 PHPUnit test runner warning:
+
+1) Cannot bootstrap extension because class Illuminate\Testing\ParallelTesting\ParallelTestingExtension does not exist
+
+--
+
+There were 31 errors:
+
+1) Tests\Unit\Controllers\ClientControllerTest::test_controller_initializes_correctly
+BadMethodCallException: Method App\Domains\Client\Controllers\ClientController::initializeController does not exist.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Controller.php:68
+/opt/nestogy/tests/Unit/Controllers/ClientControllerTest.php:44
+
+2) Tests\Unit\Controllers\ClientControllerTest::test_controller_has_correct_service_class
+BadMethodCallException: Method App\Domains\Client\Controllers\ClientController::initializeController does not exist.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Controller.php:68
+/opt/nestogy/tests/Unit/Controllers/ClientControllerTest.php:51
+
+3) Tests\Unit\Controllers\ClientControllerTest::test_controller_has_correct_resource_name
+BadMethodCallException: Method App\Domains\Client\Controllers\ClientController::initializeController does not exist.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Controller.php:68
+/opt/nestogy/tests/Unit/Controllers/ClientControllerTest.php:62
+
+4) Tests\Unit\Controllers\ClientControllerTest::test_controller_has_correct_view_prefix
+BadMethodCallException: Method App\Domains\Client\Controllers\ClientController::initializeController does not exist.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Controller.php:68
+/opt/nestogy/tests/Unit/Controllers/ClientControllerTest.php:73
+
+5) Tests\Unit\Controllers\ClientControllerTest::test_controller_has_correct_eager_load_relations
+BadMethodCallException: Method App\Domains\Client\Controllers\ClientController::initializeController does not exist.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Controller.php:68
+/opt/nestogy/tests/Unit/Controllers/ClientControllerTest.php:84
+
+6) Tests\Feature\ClientControllerTest::test_store_sets_selected_client
+ErrorException: Attempt to read property "id" on null
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
+/opt/nestogy/tests/Feature/ClientControllerTest.php:168
+
+7) Tests\Feature\Controllers\ClientControllerTest::test_validate_batch_returns_valid_client_ids
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [clients.validate-batch] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php:1098
+
+8) Tests\Feature\Controllers\ClientControllerTest::test_validate_batch_validates_ids_are_required
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [clients.validate-batch] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php:1109
+
+9) Tests\Feature\Controllers\ClientControllerTest::test_validate_batch_validates_ids_are_integers
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [clients.validate-batch] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php:1117
+
+10) Tests\Feature\Controllers\ClientControllerTest::test_validate_batch_excludes_archived_clients
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [clients.validate-batch] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php:1133
+
+11) Tests\Feature\Controllers\DashboardControllerTest::test_get_data_returns_stats
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:35
+
+12) Tests\Feature\Controllers\DashboardControllerTest::test_get_data_returns_recent_tickets
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:50
+
+13) Tests\Feature\Controllers\DashboardControllerTest::test_get_data_returns_recent_invoices
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:60
+
+14) Tests\Feature\Controllers\DashboardControllerTest::test_get_data_returns_ticket_chart_data
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:73
+
+15) Tests\Feature\Controllers\DashboardControllerTest::test_get_data_returns_revenue_chart_data
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:89
+
+16) Tests\Feature\Controllers\DashboardControllerTest::test_get_data_returns_error_for_invalid_type
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:100
+
+17) Tests\Feature\Controllers\DashboardControllerTest::test_dashboard_stats_counts_clients_correctly
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:339
+
+18) Tests\Feature\Controllers\DashboardControllerTest::test_dashboard_stats_counts_open_tickets_correctly
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:357
+
+19) Tests\Feature\Controllers\DashboardControllerTest::test_dashboard_stats_counts_overdue_invoices
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:377
+
+20) Tests\Feature\Controllers\DashboardControllerTest::test_dashboard_stats_counts_total_assets
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:387
+
+21) Tests\Feature\Controllers\DashboardControllerTest::test_dashboard_stats_calculates_monthly_revenue
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:409
+
+22) Tests\Feature\Controllers\DashboardControllerTest::test_dashboard_stats_excludes_archived_clients
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:423
+
+23) Tests\Feature\Controllers\DashboardControllerTest::test_dashboard_stats_excludes_archived_assets
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:437
+
+24) Tests\Feature\Controllers\DashboardControllerTest::test_dashboard_only_shows_company_data
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:450
+
+25) Tests\Feature\Controllers\DashboardControllerTest::test_recent_tickets_limits_results
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:460
+
+26) Tests\Feature\Controllers\DashboardControllerTest::test_recent_tickets_orders_by_created_at_desc
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:478
+
+27) Tests\Feature\Controllers\DashboardControllerTest::test_recent_invoices_limits_results
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:489
+
+28) Tests\Feature\Controllers\DashboardControllerTest::test_recent_invoices_orders_by_created_at_desc
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:507
+
+29) Tests\Feature\Controllers\DashboardControllerTest::test_ticket_chart_groups_by_status
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:526
+
+30) Tests\Feature\Controllers\DashboardControllerTest::test_revenue_chart_groups_by_month
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:550
+
+31) Tests\Feature\Controllers\DashboardControllerTest::test_unauthenticated_user_cannot_access_dashboard_data
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [dashboard.stats] not defined.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:871
+/opt/nestogy/tests/Feature/Controllers/DashboardControllerTest.php:601
+
+--
+
+There were 42 failures:
+
+1) Tests\Feature\ClientControllerTest::test_store_creates_client_successfully
+Expected response status code [201, 301, 302, 303, 307, 308] but received 403.
+Failed asserting that false is true.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:199
+/opt/nestogy/tests/Feature/ClientControllerTest.php:123
+
+2) Tests\Feature\ClientControllerTest::test_store_returns_json_for_json_request
+Expected response status code [201] but received 403.
+Failed asserting that 403 is identical to 201.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:174
+/opt/nestogy/tests/Feature/ClientControllerTest.php:143
+
+3) Tests\Feature\ClientControllerTest::test_store_validates_required_fields
+Session is missing expected key [errors].
+Failed asserting that false is true.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1517
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1594
+/opt/nestogy/tests/Feature/ClientControllerTest.php:154
+
+4) Tests\Feature\ClientControllerTest::test_show_redirects_to_index_with_client_set
+Expected response status code [201, 301, 302, 303, 307, 308] but received 403.
+Failed asserting that false is true.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:199
+/opt/nestogy/tests/Feature/ClientControllerTest.php:177
+
+5) Tests\Feature\ClientControllerTest::test_update_modifies_client_successfully
+Expected response status code [201, 301, 302, 303, 307, 308] but received 403.
+Failed asserting that false is true.
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:199
+/opt/nestogy/tests/Feature/ClientControllerTest.php:203
+
+6) Tests\Feature\ClientControllerTest::test_update_returns_json_for_json_request

@@ -8,7 +8,7 @@ $domains = [
     'clients' => [
         'name' => $selectedClient ? $selectedClient->name : 'Clients',
         'route' => $selectedClient ? 'clients.show' : 'clients.index',
-        'params' => $selectedClient ? [$selectedClient] : [],
+        'params' => $selectedClient ? [$selectedClient->id] : [],
         'icon' => 'users',
         'subtitle' => $selectedClient ? 'Selected Client' : null
     ],

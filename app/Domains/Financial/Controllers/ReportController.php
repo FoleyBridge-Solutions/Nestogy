@@ -59,7 +59,7 @@ class ReportController extends Controller
 
         $revenue = Invoice::where('status', 'paid')
             ->where('paid_date', '>=', $startDate)
-            ->sum('total');
+            ->sum('amount');
 
         $expenses = Expense::where('date', '>=', $startDate)
             ->where('status', 'approved')

@@ -1,0 +1,250 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Unit\Controllers\TicketControllerTest
+  ✓ generate ticket number creates unique number                        13.86s  
+  ⨯ generate ticket number increments sequence                           0.26s  
+  ✓ get filter options returns correct structure                         0.19s  
+  ✓ get filter options includes valid statuses                           0.16s  
+  ✓ get filter options includes valid priorities                         0.18s  
+  ✓ track ticket view stores in cache                                    0.21s  
+  ✓ track ticket view stores user information                            0.22s  
+  ✓ get ticket viewers excludes current user                             0.24s  
+  ✓ get ticket viewers excludes old views                                0.25s  
+  ✓ track ticket changes logs status changes                             0.21s  
+  ✓ track ticket changes logs priority changes                           0.23s  
+  ✓ track ticket changes logs assignment changes                         0.23s  
+  ✓ get today time statistics returns correct structure                  0.26s  
+  ⨯ get today time statistics calculates total hours                     0.22s  
+  ✓ index request includes pagination                                    1.42s  
+  ✓ index request applies sorting                                        0.27s  
+  ✓ create request provides form data                                    0.16s  
+  ✓ create request includes priority options                             0.18s  
+  ✓ create request includes status options                               0.20s  
+  ✓ export request generates csv headers                                 0.25s  
+  ✓ search request requires minimum query length                         0.19s  
+  ✓ search request limits results                                        0.69s  
+  ✓ search request excludes closed tickets                               0.26s  
+
+   FAIL  Tests\Feature\Controllers\TicketControllerTest
+  ✓ index displays tickets list                                          0.79s  
+  ✓ index filters by search term                                         0.31s  
+  ✓ index filters by status                                              0.31s  
+  ✓ index filters by priority                                            0.29s  
+  ✓ index filters by assignee                                            0.29s  
+  ✓ index filters overdue tickets                                        0.30s  
+  ✓ index filters unassigned tickets                                     0.30s  
+  ✓ index filters watched tickets                                        0.34s  
+  ✓ create displays form                                                 0.38s  
+  ⨯ store creates ticket                                                 0.24s  
+  ⨯ store creates watcher for creator                                    0.24s  
+  ⨯ store generates unique ticket number                                 0.22s  
+  ✓ store validates required fields                                      0.20s  
+  ✓ store validates client belongs to company                            0.26s  
+  ✓ store validates priority values                                      0.23s  
+  ⨯ store returns json when requested                                    0.22s  
+  ✓ show displays ticket                                                 0.62s  
+  ✓ show tracks viewer                                                   0.48s  
+  ✓ show returns json when requested                                     0.27s  
+  ✓ edit displays form                                                   0.46s  
+  ✓ update modifies ticket                                               0.25s  
+  ✓ update validates input                                               0.26s  
+  ✓ destroy soft deletes ticket                                          0.28s  
+  ✓ destroy returns json when requested                                  0.27s  
+  ✓ assign updates ticket assignee                                       0.30s  
+  ✓ assign creates watcher for assignee                                  0.28s  
+  ✓ assign validates assignee belongs to company                         0.31s  
+  ✓ update status changes ticket status                                  0.27s  
+  ✓ update status sets closed timestamps                                 0.25s  
+  ✓ update priority changes ticket priority                              0.26s  
+  ✓ schedule creates calendar event                                      0.28s  
+  ✓ schedule validates future date                                       0.27s  
+  ✓ merge moves data to target ticket                                    0.33s  
+  ⨯ merge validates target ticket exists                                 0.24s  
+  ✓ merge prevents self merge                                            0.25s  
+  ✓ export generates csv                                                 0.31s  
+  ⨯ search finds tickets by number                                       0.27s  
+  ⨯ search finds tickets by subject                                      0.27s  
+  ⨯ search excludes specified ticket                                     0.30s  
+  ✓ get viewers returns other viewers                                    0.27s  
+  ✓ start smart timer creates time entry                                 0.32s  
+  ✓ stop timer ends active timer                                         0.23s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > generate ticket num…   
+  Failed asserting that 1 is greater than 1.
+
+  at tests/Unit/Controllers/TicketControllerTest.php:84
+     80▕ 
+     81▕         $number = $method->invoke($this->controller);
+     82▕ 
+     83▕         $this->assertStringStartsWith("TKT-{$currentYear}-", $number);
+  ➜  84▕         $this->assertGreaterThan(1, intval(substr($number, -6)));
+     85▕     }
+     86▕ 
+     87▕     public function test_get_filter_options_returns_correct_structure(): void
+     88▕     {
+
+  1   tests/Unit/Controllers/TicketControllerTest.php:84
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > get today time stat…   
+  Failed asserting that 1 is equal to 2 or is greater than 2.
+
+  at tests/Unit/Controllers/TicketControllerTest.php:340
+    336▕         $stats = $method->invoke($this->controller, $this->user);
+    337▕ 
+    338▕         $this->assertGreaterThanOrEqual(4.0, $stats['total_hours']);
+    339▕         $this->assertGreaterThanOrEqual(2.5, $stats['billable_hours']);
+  ➜ 340▕         $this->assertGreaterThanOrEqual(2, $stats['entries_count']);
+    341▕     }
+    342▕ 
+    343▕     public function test_index_request_includes_pagination(): void
+    344▕     {
+
+  1   tests/Unit/Controllers/TicketControllerTest.php:340
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store creates ti…   
+  Failed asserting that a row in the table [tickets] matches the attributes {
+    "subject": "Test Ticket",
+    "client_id": 33,
+    "company_id": 110,
+    "priority": "High",
+    "status": "open"
+}.
+
+The table is empty.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:258
+    254▕ 
+    255▕         $response = $this->actingAs($this->user)->post(route('tickets.store'), $data);
+    256▕ 
+    257▕         $response->assertRedirect();
+  ➜ 258▕         $this->assertDatabaseHas('tickets', [
+    259▕             'subject' => 'Test Ticket',
+    260▕             'client_id' => $this->client->id,
+    261▕             'company_id' => $this->user->company_id,
+    262▕             'priority' => 'High',
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest >…   ErrorException   
+  Attempt to read property "id" on null
+
+  at tests/Feature/Controllers/TicketControllerTest.php:281
+    277▕         $response = $this->actingAs($this->user)->post(route('tickets.store'), $data);
+    278▕ 
+    279▕         $ticket = Ticket::where('subject', 'Test Ticket')->first();
+    280▕         $this->assertDatabaseHas('ticket_watchers', [
+  ➜ 281▕             'ticket_id' => $ticket->id,
+    282▕             'user_id' => $this->user->id,
+    283▕         ]);
+    284▕     }
+    285▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store generates…    
+  Failed asserting that null is not null.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:301
+    297▕ 
+    298▕         $ticket = Ticket::where('subject', 'Test Ticket Unique')
+    299▕             ->where('company_id', $this->user->company_id)
+    300▕             ->first();
+  ➜ 301▕         $this->assertNotNull($ticket);
+    302▕         $this->assertNotNull($ticket->number);
+    303▕         $this->assertStringContainsString('TKT', $ticket->number);
+    304▕         $this->assertStringContainsString(date('Y'), $ticket->number);
+    305▕     }
+
+  1   tests/Feature/Controllers/TicketControllerTest.php:301
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store returns js…   
+  Expected response status code [201] but received 500.
+Failed asserting that 500 is identical to 201.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:360
+    356▕ 
+    357▕         $response = $this->actingAs($this->user)
+    358▕             ->postJson(route('tickets.store'), $data);
+    359▕ 
+  ➜ 360▕         $response->assertStatus(201);
+    361▕         $response->assertJsonStructure([
+    362▕             'success',
+    363▕             'message',
+    364▕             'ticket' => ['id', 'subject', 'client', 'assignee'],
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > merge validates…    
+  Expected response status code [404] but received 500.
+Failed asserting that 500 is identical to 404.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:686
+    682▕             ->postJson(route('tickets.merge', $ticket), [
+    683▕                 'merge_into_number' => 'INVALID-999999',
+    684▕             ]);
+    685▕ 
+  ➜ 686▕         $response->assertStatus(404);
+    687▕     }
+    688▕ 
+    689▕     public function test_merge_prevents_self_merge(): void
+    690▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > search finds tic…   
+  Failed to assert that the response count matched the expected 1
+Failed asserting that actual size 0 matches expected size 1.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:729
+    725▕         $response = $this->actingAs($this->user)
+    726▕             ->getJson(route('tickets.search', ['q' => '000001']));
+    727▕ 
+    728▕         $response->assertStatus(200);
+  ➜ 729▕         $response->assertJsonCount(1, 'tickets');
+    730▕     }
+    731▕ 
+    732▕     public function test_search_finds_tickets_by_subject(): void
+    733▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > search finds tic…   
+  Failed to assert that the response count matched the expected 1
+Failed asserting that actual size 0 matches expected size 1.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:744
+    740▕         $response = $this->actingAs($this->user)
+    741▕             ->getJson(route('tickets.search', ['q' => 'Email']));
+    742▕ 
+    743▕         $response->assertStatus(200);
+  ➜ 744▕         $response->assertJsonCount(1, 'tickets');
+    745▕     }
+    746▕ 
+    747▕     public function test_search_excludes_specified_ticket(): void
+    748▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > search excludes…    
+  Failed asserting that actual size 0 matches expected size 1.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:765
+    761▕         $response = $this->actingAs($this->user)
+    762▕             ->getJson(route('tickets.search', ['q' => 'Server', 'exclude' => $ticket1->id]));
+    763▕ 
+    764▕         $response->assertStatus(200);
+  ➜ 765▕         $this->assertCount(1, $response->json('tickets'));
+    766▕         $this->assertEquals($ticket2->id, $response->json('tickets.0.id'));
+    767▕     }
+    768▕ 
+    769▕     public function test_get_viewers_returns_other_viewers(): void
+
+  1   tests/Feature/Controllers/TicketControllerTest.php:765
+
+
+  Tests:    10 failed, 55 passed (160 assertions)
+  Duration: 33.31s
+

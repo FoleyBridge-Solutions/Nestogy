@@ -1,0 +1,57 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12 with PCOV 1.0.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+....................................                              36 / 36 (100%)
+
+Time: 00:22.629, Memory: 133.00 MB
+
+Contract Service (Tests\Unit\Services\ContractService)
+ ✔ Gets paginated contracts with basic filters
+ ✔ Filters contracts by status
+ ✔ Filters contracts by client
+ ✔ Searches contracts by keyword
+ ✔ Gets contracts by status
+ ✔ Creates contract with minimum required data
+ ✔ Creates contract with complete data
+ ✔ Generates unique contract number
+ ✔ Creates contract with custom prefix
+ ✔ Creates contract schedules from wizard data
+ ✔ Processes asset assignments when auto assign enabled
+ ✔ Skips asset assignments when auto assign disabled
+ ✔ Updates contract in draft status
+ ✔ Cannot update active contract
+ ✔ Activates signed contract
+ ✔ Cannot activate unsigned contract
+ ✔ Suspends active contract
+ ✔ Cannot suspend non active contract
+ ✔ Terminates active contract
+ ✔ Reactivates suspended contract
+ ✔ Cannot reactivate non suspended contract
+ ✔ Deletes draft contract
+ ✔ Cannot delete active contract
+ ✔ Gets dashboard statistics
+ ✔ Gets expiring contracts
+ ✔ Searches contracts
+ ✔ Processes template with variables
+ ✔ Processes conditional templates
+ ✔ Evaluates and conditions
+ ✔ Evaluates or conditions
+ ✔ Formats asset types
+ ✔ Creates contract with error recovery
+ ✔ Transaction rollback on critical failure
+ ✔ Calculates monthly recurring revenue
+ ✔ Maps schedule data to contract
+ ✔ Determines schedule type from template
+
+OK (36 tests, 73 assertions)
+
+Generating code coverage report in Clover XML format ... done [00:12.230]

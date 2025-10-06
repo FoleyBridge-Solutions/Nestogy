@@ -9,31 +9,16 @@ class ClientPolicy
 {
     /**
      * Perform pre-authorization checks.
-     * Admins and Super Admins get automatic access to all clients in their company.
+     * Super admins have unrestricted access.
+     * Admins and technicians must pass through individual policy methods for company checks.
      */
-    public function before(User $user, string $ability, ?Client $client = null): ?bool
+    public function before(User $user, string $ability): ?bool
     {
-        // Super admins have all permissions
+        // Only super admins get automatic bypass
+        // Everyone else (including admins) must pass through policy methods
+        // so company checks are enforced
         if ($user->isA('super-admin')) {
             return true;
-        }
-
-        // Admins have full access to all clients in their company
-        if ($user->isA('admin')) {
-            return true;
-        }
-
-        // For technicians - check if they have any client restrictions
-        if ($user->isA('technician') && $client) {
-            // If technician has NO client assignments, they can access all clients
-            if ($user->assignedClients()->count() === 0) {
-                return null; // Fall through to permission checks
-            }
-
-            // If technician has client assignments, only allow access to assigned clients
-            if (! $user->isAssignedToClient($client->id)) {
-                return false; // Explicitly deny access to non-assigned clients
-            }
         }
 
         return null; // Fall through to specific permission checks
@@ -44,6 +29,11 @@ class ClientPolicy
      */
     public function viewAny(User $user): bool
     {
+        // Admins can view all clients in their company
+        if ($user->isA('admin')) {
+            return true;
+        }
+        
         return $user->can('clients.view') && $this->sameCompany($user);
     }
 
@@ -52,9 +42,32 @@ class ClientPolicy
      */
     public function view(User $user, Client $client): bool
     {
-        // Check for wildcard permission first
+        // Check same company first - deny if different company
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+
+        // Admins have full access to all clients in their company
+        if ($user->isA('admin')) {
+            return true;
+        }
+
+        // For technicians - check if they have client restrictions
+        if ($user->isA('technician')) {
+            // If technician has NO client assignments, they can access all clients
+            if ($user->assignedClients()->count() === 0) {
+                return $user->can('clients.*') || $user->can('clients.view');
+            }
+
+            // If technician has client assignments, only allow access to assigned clients
+            if (!$user->isAssignedToClient($client->id)) {
+                return false;
+            }
+        }
+
+        // Check for wildcard permission or specific view permission
         if ($user->can('clients.*') || $user->can('clients.view')) {
-            return $this->sameCompany($user, $client);
+            return true;
         }
 
         return false;
@@ -65,6 +78,11 @@ class ClientPolicy
      */
     public function create(User $user): bool
     {
+        // Admins can create clients
+        if ($user->isA('admin')) {
+            return true;
+        }
+        
         return $user->can('clients.create');
     }
 
@@ -73,7 +91,30 @@ class ClientPolicy
      */
     public function update(User $user, Client $client): bool
     {
-        return $user->can('clients.edit') && $this->sameCompany($user, $client);
+        // Check same company first - deny if different company
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+
+        // Admins have full access to all clients in their company
+        if ($user->isA('admin')) {
+            return true;
+        }
+
+        // For technicians - check if they have client restrictions
+        if ($user->isA('technician')) {
+            // If technician has NO client assignments, they can access all clients
+            if ($user->assignedClients()->count() === 0) {
+                return $user->can('clients.edit');
+            }
+
+            // If technician has client assignments, only allow access to assigned clients
+            if (!$user->isAssignedToClient($client->id)) {
+                return false;
+            }
+        }
+
+        return $user->can('clients.edit');
     }
 
     /**
@@ -81,7 +122,11 @@ class ClientPolicy
      */
     public function delete(User $user, Client $client): bool
     {
-        return $user->can('clients.delete') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.delete');
     }
 
     /**
@@ -89,7 +134,11 @@ class ClientPolicy
      */
     public function restore(User $user, Client $client): bool
     {
-        return $user->can('clients.manage') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.manage');
     }
 
     /**
@@ -97,7 +146,11 @@ class ClientPolicy
      */
     public function forceDelete(User $user, Client $client): bool
     {
-        return $user->can('clients.manage') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.manage');
     }
 
     /**
@@ -105,7 +158,11 @@ class ClientPolicy
      */
     public function archive(User $user, Client $client): bool
     {
-        return $user->can('clients.edit') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.edit');
     }
 
     /**
@@ -113,6 +170,10 @@ class ClientPolicy
      */
     public function export(User $user): bool
     {
+        if ($user->isA('admin')) {
+            return true;
+        }
+        
         return $user->can('clients.export');
     }
 
@@ -121,6 +182,10 @@ class ClientPolicy
      */
     public function import(User $user): bool
     {
+        if ($user->isA('admin')) {
+            return true;
+        }
+        
         return $user->can('clients.import');
     }
 
@@ -129,7 +194,11 @@ class ClientPolicy
      */
     public function manageTags(User $user, Client $client): bool
     {
-        return $user->can('clients.edit') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.edit');
     }
 
     /**
@@ -137,7 +206,15 @@ class ClientPolicy
      */
     public function convertLead(User $user, Client $client): bool
     {
-        return $user->can('clients.edit') && $this->sameCompany($user, $client) && $client->lead === true;
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        if (!$client->lead) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.edit');
     }
 
     /**
@@ -145,7 +222,11 @@ class ClientPolicy
      */
     public function viewFinancial(User $user, Client $client): bool
     {
-        return ($user->can('clients.manage') || $user->can('financial.view')) && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.manage') || $user->can('financial.view');
     }
 
     /**
@@ -153,7 +234,11 @@ class ClientPolicy
      */
     public function manageContacts(User $user, Client $client): bool
     {
-        return $user->can('clients.contacts.manage') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.contacts.manage');
     }
 
     /**
@@ -161,7 +246,11 @@ class ClientPolicy
      */
     public function viewContacts(User $user, Client $client): bool
     {
-        return $user->can('clients.contacts.view') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.contacts.view');
     }
 
     /**
@@ -177,7 +266,11 @@ class ClientPolicy
      */
     public function manageLocations(User $user, Client $client): bool
     {
-        return $user->can('clients.locations.manage') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.locations.manage');
     }
 
     /**
@@ -185,7 +278,11 @@ class ClientPolicy
      */
     public function viewLocations(User $user, Client $client): bool
     {
-        return $user->can('clients.locations.view') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.locations.view');
     }
 
     /**
@@ -201,7 +298,11 @@ class ClientPolicy
      */
     public function manageDocuments(User $user, Client $client): bool
     {
-        return $user->can('clients.documents.manage') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.documents.manage');
     }
 
     /**
@@ -209,7 +310,11 @@ class ClientPolicy
      */
     public function viewDocuments(User $user, Client $client): bool
     {
-        return $user->can('clients.documents.view') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.documents.view');
     }
 
     /**
@@ -225,7 +330,11 @@ class ClientPolicy
      */
     public function manageFiles(User $user, Client $client): bool
     {
-        return $user->can('clients.files.manage') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.files.manage');
     }
 
     /**
@@ -233,7 +342,11 @@ class ClientPolicy
      */
     public function viewFiles(User $user, Client $client): bool
     {
-        return $user->can('clients.files.view') && $this->sameCompany($user, $client);
+        if (!$this->sameCompany($user, $client)) {
+            return false;
+        }
+        
+        return $user->isA('admin') || $user->can('clients.files.view');
     }
 
     /**

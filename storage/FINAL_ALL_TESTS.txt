@@ -1,0 +1,80 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   PASS  Tests\Unit\Controllers\TicketControllerTest
+  ✓ generate ticket number creates unique number                        13.89s  
+  ✓ generate ticket number increments sequence                           0.21s  
+  ✓ get filter options returns correct structure                         0.21s  
+  ✓ get filter options includes valid statuses                           0.18s  
+  ✓ get filter options includes valid priorities                         0.19s  
+  ✓ track ticket view stores in cache                                    0.26s  
+  ✓ track ticket view stores user information                            0.21s  
+  ✓ get ticket viewers excludes current user                             0.24s  
+  ✓ get ticket viewers excludes old views                                0.25s  
+  ✓ track ticket changes logs status changes                             0.23s  
+  ✓ track ticket changes logs priority changes                           0.22s  
+  ✓ track ticket changes logs assignment changes                         0.24s  
+  ✓ get today time statistics returns correct structure                  0.25s  
+  ✓ get today time statistics calculates total hours                     0.22s  
+  ✓ index request includes pagination                                    1.45s  
+  ✓ index request applies sorting                                        0.25s  
+  ✓ create request provides form data                                    0.18s  
+  ✓ create request includes priority options                             0.20s  
+  ✓ create request includes status options                               0.16s  
+  ✓ export request generates csv headers                                 0.27s  
+  ✓ search request requires minimum query length                         0.18s  
+  ✓ search request limits results                                        0.70s  
+  ✓ search request excludes closed tickets                               0.25s  
+
+   PASS  Tests\Feature\Controllers\TicketControllerTest
+  ✓ index displays tickets list                                          0.78s  
+  ✓ index filters by search term                                         0.29s  
+  ✓ index filters by status                                              0.29s  
+  ✓ index filters by priority                                            0.31s  
+  ✓ index filters by assignee                                            0.31s  
+  ✓ index filters overdue tickets                                        0.31s  
+  ✓ index filters unassigned tickets                                     0.30s  
+  ✓ index filters watched tickets                                        0.34s  
+  ✓ create displays form                                                 0.39s  
+  ✓ store creates ticket                                                 0.25s  
+  ✓ store creates watcher for creator                                    0.23s  
+  ✓ store generates unique ticket number                                 0.22s  
+  ✓ store validates required fields                                      0.22s  
+  ✓ store validates client belongs to company                            0.26s  
+  ✓ store validates priority values                                      0.20s  
+  ✓ store returns json when requested                                    0.23s  
+  ✓ show displays ticket                                                 0.63s  
+  ✓ show tracks viewer                                                   0.50s  
+  ✓ show returns json when requested                                     0.27s  
+  ✓ edit displays form                                                   0.47s  
+  ✓ update modifies ticket                                               0.28s  
+  ✓ update validates input                                               0.28s  
+  ✓ destroy soft deletes ticket                                          0.29s  
+  ✓ destroy returns json when requested                                  0.24s  
+  ✓ assign updates ticket assignee                                       0.27s  
+  ✓ assign creates watcher for assignee                                  0.28s  
+  ✓ assign validates assignee belongs to company                         0.29s  
+  ✓ update status changes ticket status                                  0.29s  
+  ✓ update status sets closed timestamps                                 0.28s  
+  ✓ update priority changes ticket priority                              0.28s  
+  ✓ schedule creates calendar event                                      0.26s  
+  ✓ schedule validates future date                                       0.26s  
+  ✓ merge moves data to target ticket                                    0.36s  
+  ✓ merge validates target ticket exists                                 0.27s  
+  ✓ merge prevents self merge                                            0.28s  
+  ✓ export generates csv                                                 0.34s  
+  ✓ search finds tickets by number                                       0.24s  
+  ✓ search finds tickets by subject                                      0.26s  
+  ✓ search excludes specified ticket                                     0.29s  
+  ✓ get viewers returns other viewers                                    0.28s  
+  ✓ start smart timer creates time entry                                 0.33s  
+  ✓ stop timer ends active timer                                         0.25s  
+
+  Tests:    65 passed (171 assertions)
+  Duration: 33.68s
+

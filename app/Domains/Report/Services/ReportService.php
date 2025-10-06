@@ -394,7 +394,7 @@ class ReportService
                     'total' => $client->invoices->count(),
                     'paid' => $client->invoices->where('status', 'paid')->count(),
                     'outstanding' => $client->invoices->whereIn('status', ['sent', 'partial', 'overdue'])->count(),
-                    'total_revenue' => $client->invoices->where('status', 'paid')->sum('total'),
+                    'total_revenue' => $client->invoices->where('status', 'paid')->sum('amount'),
                 ],
                 'projects' => [
                     'total' => $client->projects->count(),

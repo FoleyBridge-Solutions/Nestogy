@@ -48,17 +48,17 @@ class FinancialDashboardController extends Controller
 
         // Revenue metrics
         $totalRevenue = clone $invoiceQuery;
-        $totalRevenue = $totalRevenue->where('status', 'paid')->sum('total');
+        $totalRevenue = $totalRevenue->where('status', 'paid')->sum('amount');
 
         $monthlyRevenue = clone $invoiceQuery;
         $monthlyRevenue = $monthlyRevenue->where('status', 'paid')
             ->where('paid_at', '>=', $currentMonth)
-            ->sum('total');
+            ->sum('amount');
 
         $lastMonthRevenue = clone $invoiceQuery;
         $lastMonthRevenue = $lastMonthRevenue->where('status', 'paid')
             ->whereBetween('paid_at', [$lastMonth, $currentMonth])
-            ->sum('total');
+            ->sum('amount');
 
         // Outstanding invoices
         $outstandingInvoices = clone $invoiceQuery;
@@ -119,7 +119,7 @@ class FinancialDashboardController extends Controller
             $monthQuery = clone $invoiceQuery;
             $revenue = $monthQuery->where('status', 'paid')
                 ->whereBetween('paid_at', [$startDate, $endDate])
-                ->sum('total');
+                ->sum('amount');
 
             $revenueTrend[] = [
                 'month' => $startDate->format('M'),

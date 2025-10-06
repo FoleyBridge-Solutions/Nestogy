@@ -142,6 +142,25 @@ class Client extends Model
     }
 
     /**
+     * Archive this client using soft deletes
+     */
+    public function archive(): bool
+    {
+        return $this->delete();
+    }
+
+    /**
+     * Restore the client (override to handle global scopes properly)
+     */
+    public function restore(): bool
+    {
+        // Use DB::table to bypass global scopes
+        return \DB::table($this->getTable())
+            ->where($this->getKeyName(), $this->getKey())
+            ->update([$this->getDeletedAtColumn() => null]) > 0;
+    }
+
+    /**
      * Get the client's contacts.
      */
     public function contacts()
@@ -443,8 +462,8 @@ class Client extends Model
      */
     public function getBalance()
     {
-        $totalInvoiced = $this->invoices()->sum('total');
-        $totalPaid = $this->invoices()->sum('paid');
+        $totalInvoiced = $this->invoices()->sum('amount');
+        $totalPaid = $this->payments()->sum('amount');
 
         return $totalInvoiced - $totalPaid;
     }
@@ -612,6 +631,14 @@ class Client extends Model
             $serviceType,
             $date
         );
+    }
+
+    /**
+     * Resolve route binding without global scope to allow authorization to handle access control
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->withoutGlobalScope('company')->withTrashed()->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
     }
 
     /**

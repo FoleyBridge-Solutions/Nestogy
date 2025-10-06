@@ -155,6 +155,11 @@ class FluxSidebar extends Component
             }
         }
 
+        // Check if item requires a selected client
+        if (isset($item['params']) && isset($item['params']['client']) && $item['params']['client'] === 'current' && ! $selectedClient) {
+            return false;
+        }
+
         // Check conditional visibility
         if (! isset($item['show_if'])) {
             return true;

@@ -103,6 +103,7 @@ Route::get('/dashboard-enhanced', function () {
 
 // Dashboard API endpoints
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/api/dashboard/stats', [\App\Domains\Core\Controllers\DashboardController::class, 'getData'])->name('dashboard.stats');
     Route::get('/api/dashboard/realtime', [\App\Domains\Core\Controllers\DashboardController::class, 'getRealtimeData'])->name('dashboard.realtime');
     Route::get('/api/dashboard/export', [\App\Domains\Core\Controllers\DashboardController::class, 'exportData'])->name('dashboard.export');
     Route::get('/api/dashboard/notifications', [\App\Domains\Core\Controllers\DashboardController::class, 'getNotifications'])->name('dashboard.notifications');
@@ -155,6 +156,9 @@ Route::middleware(['auth', 'verified', 'subsidiary.access'])->group(function () 
 
 // Core application routes
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    // Client Management Routes - Defined in app/Domains/Client/routes.php
+    // (Duplicate routes removed to avoid conflicts)
 
     // IT Documentation routes (global)
     Route::prefix('it-documentation')->name('clients.it-documentation.')->group(function () {
@@ -255,6 +259,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{mailQueue}/cancel', [\App\Domains\Email\Controllers\MailQueueController::class, 'cancel'])->name('cancel');
         Route::post('/process', [\App\Domains\Email\Controllers\MailQueueController::class, 'process'])->name('process');
         Route::get('/export/csv', [\App\Domains\Email\Controllers\MailQueueController::class, 'export'])->name('export');
+    });
+
+    // Client Management Routes
+    Route::prefix('clients')->name('clients.')->group(function () {
+        Route::get('/', [\App\Domains\Client\Controllers\ClientController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Domains\Client\Controllers\ClientController::class, 'create'])->name('create');
+        Route::post('/', [\App\Domains\Client\Controllers\ClientController::class, 'store'])->name('store');
+        Route::get('/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'show'])->name('show');
+        Route::get('/{client}/edit', [\App\Domains\Client\Controllers\ClientController::class, 'edit'])->name('edit');
+        Route::put('/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'update'])->name('update');
+        Route::delete('/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'destroy'])->name('destroy');
+        
+        // Client Actions
+        Route::post('/validate-batch', [\App\Domains\Client\Controllers\ClientController::class, 'validateBatch'])->name('validate-batch');
+        Route::post('/{client}/convert-lead', [\App\Domains\Client\Controllers\ClientController::class, 'convertLead'])->name('convert-lead');
+        Route::get('/export/csv', [\App\Domains\Client\Controllers\ClientController::class, 'exportCsv'])->name('export.csv');
+        Route::get('/import-template', [\App\Domains\Client\Controllers\ClientController::class, 'downloadTemplate'])->name('import.template');
+        Route::get('/download-template', [\App\Domains\Client\Controllers\ClientController::class, 'downloadTemplate'])->name('download-template');
+        Route::get('/leads/import', [\App\Domains\Client\Controllers\ClientController::class, 'leadsImportForm'])->name('leads.import');
+        Route::post('/leads/import', [\App\Domains\Client\Controllers\ClientController::class, 'leadsImport'])->name('leads.import.process');
+        Route::get('/leads/import-template', [\App\Domains\Client\Controllers\ClientController::class, 'leadsImportTemplate'])->name('leads.import.template');
+        Route::post('/{client}/select', [\App\Domains\Client\Controllers\ClientController::class, 'selectClient'])->name('select');
+        Route::get('/clear-selection', [\App\Domains\Client\Controllers\ClientController::class, 'clearSelection'])->name('clear-selection');
+        Route::post('/{client}/update-notes', [\App\Domains\Client\Controllers\ClientController::class, 'updateNotes'])->name('update-notes');
     });
 
     // Ticket Management Routes
@@ -432,8 +460,8 @@ Route::middleware(['auth', 'verified'])->prefix('services')->name('services.')->
     Route::get('/export/csv', [\App\Domains\Product\Controllers\ServiceController::class, 'export'])->name('export');
 
     // Tax calculation routes (legacy - kept for backwards compatibility)
-    Route::post('/calculate-tax', [\App\Http\Controllers\Api\ServiceTaxController::class, 'calculateTax'])->name('calculate-tax');
-    Route::get('/customer/{customer}/address', [\App\Http\Controllers\Api\ServiceTaxController::class, 'getCustomerAddress'])->name('customer-address');
+    Route::post('/calculate-tax', [\App\Domains\Financial\Controllers\Api\ServiceTaxController::class, 'calculateTax'])->name('calculate-tax');
+    Route::get('/customer/{customer}/address', [\App\Domains\Financial\Controllers\Api\ServiceTaxController::class, 'getCustomerAddress'])->name('customer-address');
 });
 
 // Comprehensive Tax Engine API routes

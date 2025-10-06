@@ -1,0 +1,229 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12 with PCOV 1.0.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+EEEEEEEEEEEEEEF..                                                 17 / 17 (100%)
+
+Time: 00:16.666, Memory: 115.00 MB
+
+There were 14 errors:
+
+1) Tests\Unit\Services\ContractGenerationServiceTest::test_generate_from_quote_creates_contract
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total" of relation "quotes" does not exist
+LINE 1: ..., "note", "url_key", "created_by", "approved_by", "total", "...
+                                                             ^ (Connection: pgsql, SQL: insert into "quotes" ("company_id", "category_id", "client_id", "prefix", "number", "scope", "status", "approval_status", "date", "expire", "discount_amount", "amount", "currency_code", "note", "url_key", "created_by", "approved_by", "total", "updated_at", "created_at") values (1, 1, 1, 35888, 26, ?, accepted, executive_approved, 2024-10-24 22:26:50, 1970-01-03 17:53:41, 9600.57, 2331.39, USD, ?, http://www.kris.com/in-sint-est-aliquam.html, 2, 3, 10000, 2025-10-05 07:41:57, 2025-10-05 07:41:57) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:42
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total" of relation "quotes" does not exist
+LINE 1: ..., "note", "url_key", "created_by", "approved_by", "total", "...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:42
+
+2) Tests\Unit\Services\ContractGenerationServiceTest::test_generate_from_quote_with_customizations
+Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:70
+
+3) Tests\Unit\Services\ContractGenerationServiceTest::test_generate_from_template_creates_contract
+Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:89
+
+4) Tests\Unit\Services\ContractGenerationServiceTest::test_generate_from_template_with_voip_config
+Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:112
+
+5) Tests\Unit\Services\ContractGenerationServiceTest::test_create_custom_contract
+Error: Undefined constant App\Domains\Contract\Models\Contract::RENEWAL_MANUAL
+
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:382
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:149
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:146
+
+6) Tests\Unit\Services\ContractGenerationServiceTest::test_create_custom_contract_with_milestones
+Error: Undefined constant App\Domains\Contract\Models\Contract::RENEWAL_MANUAL
+
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:382
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:149
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:176
+
+7) Tests\Unit\Services\ContractGenerationServiceTest::test_generate_contract_document
+Exception: Contract template has no clauses configured. All templates must use the modern clause-based system.
+
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:669
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:191
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:190
+
+8) Tests\Unit\Services\ContractGenerationServiceTest::test_generate_contract_document_with_options
+Exception: Contract template has no clauses configured. All templates must use the modern clause-based system.
+
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:669
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:191
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:208
+
+9) Tests\Unit\Services\ContractGenerationServiceTest::test_regenerate_contract
+Exception: Contract template has no clauses configured. All templates must use the modern clause-based system.
+
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:669
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:191
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:251
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:234
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:227
+
+10) Tests\Unit\Services\ContractGenerationServiceTest::test_regenerate_contract_maintains_original_data
+Exception: Contract template has no clauses configured. All templates must use the modern clause-based system.
+
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:669
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:191
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:251
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:234
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:246
+
+11) Tests\Unit\Services\ContractGenerationServiceTest::test_full_contract_lifecycle_from_quote
+Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total" of relation "quotes" does not exist
+LINE 1: ..., "note", "url_key", "created_by", "approved_by", "total", "...
+                                                             ^ (Connection: pgsql, SQL: insert into "quotes" ("company_id", "category_id", "client_id", "prefix", "number", "scope", "status", "approval_status", "date", "expire", "discount_amount", "amount", "currency_code", "note", "url_key", "created_by", "approved_by", "total", "updated_at", "created_at") values (21, 3, 11, ?, 45, ?, accepted, pending, 2024-11-07 23:17:00, ?, 8723.37, 8414.13, USD, ?, de37e806a1c72cb0b56ec24f9cf04b4c, 20, 21, 25000, 2025-10-05 07:42:00, 2025-10-05 07:42:00) returning "id")
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:258
+
+Caused by
+PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total" of relation "quotes" does not exist
+LINE 1: ..., "note", "url_key", "created_by", "approved_by", "total", "...
+                                                             ^
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:258
+
+12) Tests\Unit\Services\ContractGenerationServiceTest::test_contract_generation_with_multiple_templates
+Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:286
+
+13) Tests\Unit\Services\ContractGenerationServiceTest::test_contract_generation_handles_company_isolation
+Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:318
+
+14) Tests\Unit\Services\ContractGenerationServiceTest::test_generate_from_quote_validates_quote_status
+Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:348
+
+--
+
+There was 1 failure:
+
+1) Tests\Unit\Services\ContractGenerationServiceTest::test_create_custom_contract_requires_minimum_fields
+Failed asserting that exception of type "Error" matches expected exception "Exception". Message was: "Undefined constant App\Domains\Contract\Models\Contract::RENEWAL_MANUAL" at
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:382
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:149
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:364
+.
+
+ERRORS!
+Tests: 17, Assertions: 3, Errors: 14, Failures: 1.
+
+Generating code coverage report in Clover XML format ... done [00:12.552]

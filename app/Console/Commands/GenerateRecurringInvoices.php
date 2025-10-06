@@ -250,7 +250,7 @@ class GenerateRecurringInvoices extends Command
             $tableData
         );
 
-        $totalAmount = collect($invoices)->sum('total');
+        $totalAmount = collect($invoices)->sum('amount');
         $this->info('Total Amount: $'.number_format($totalAmount, 2));
     }
 }

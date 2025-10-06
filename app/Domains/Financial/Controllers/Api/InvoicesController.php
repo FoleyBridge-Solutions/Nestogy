@@ -91,11 +91,11 @@ class InvoicesController extends Controller
             'success' => true,
             'data' => $invoices,
             'summary' => [
-                'total_amount' => $query->sum('total'),
+                'total_amount' => $query->sum('amount'),
                 'total_paid' => $query->whereHas('payments')->get()->sum(function ($invoice) {
                     return $invoice->payments->sum('amount');
                 }),
-                'total_outstanding' => $query->where('status', '!=', 'paid')->sum('total'),
+                'total_outstanding' => $query->where('status', '!=', 'paid')->sum('amount'),
             ],
             'message' => 'Invoices retrieved successfully',
         ]);

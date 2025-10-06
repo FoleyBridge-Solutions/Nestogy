@@ -1,0 +1,30 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Feature\Controllers\TicketControllerTest
+  ⨯ update priority changes ticket priority                             13.64s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > update priority…    
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:605
+    601▕             ->postJson(route('tickets.update-priority', $ticket), [
+    602▕                 'priority' => 'Critical',
+    603▕             ]);
+    604▕ 
+  ➜ 605▕         $response->assertStatus(200);
+    606▕         $this->assertDatabaseHas('tickets', [
+    607▕             'id' => $ticket->id,
+    608▕             'priority' => 'Critical',
+    609▕         ]);
+
+
+  Tests:    1 failed (1 assertions)
+  Duration: 13.81s
+

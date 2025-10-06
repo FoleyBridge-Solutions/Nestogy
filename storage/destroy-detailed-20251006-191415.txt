@@ -1,0 +1,49 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Feature\ClientControllerTest
+  ⨯ destroy permanently deletes client                                  14.47s  
+
+   FAIL  Tests\Feature\Controllers\ClientControllerTest
+  ⨯ destroy permanently deletes client                                   0.23s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\ClientControllerTest > destroy permanently deletes…    
+  Expected response status code [201, 301, 302, 303, 307, 308] but received 403.
+Failed asserting that false is true.
+
+  at tests/Feature/ClientControllerTest.php:238
+    234▕         $client->delete();
+    235▕ 
+    236▕         $response = $this->delete(route('clients.destroy', $client->id));
+    237▕ 
+  ➜ 238▕         $response->assertRedirect();
+    239▕         $response->assertSessionHas('success');
+    240▕ 
+    241▕         $this->assertDatabaseMissing('clients', ['id' => $clientId]);
+    242▕     }
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > destroy permanen…   
+  Session is missing expected key [success].
+Failed asserting that false is true.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:527
+    523▕ 
+    524▕         $response = $this->delete(route('clients.destroy', $client->id));
+    525▕ 
+    526▕         $response->assertRedirect();
+  ➜ 527▕         $response->assertSessionHas('success');
+    528▕ 
+    529▕         $this->assertDatabaseMissing('clients', ['id' => $clientId]);
+    530▕     }
+    531▕
+
+
+  Tests:    2 failed (3 assertions)
+  Duration: 14.87s
+

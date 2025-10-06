@@ -1,0 +1,30 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Feature\Controllers\ClientControllerTest
+  ⨯ restore undeletes archived client                                   14.22s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > restore undelete…   
+  Session is missing expected key [success].
+Failed asserting that false is true.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:510
+    506▕ 
+    507▕         $response = $this->post(route('clients.restore'));
+    508▕ 
+    509▕         $response->assertRedirect();
+  ➜ 510▕         $response->assertSessionHas('success');
+    511▕ 
+    512▕         $this->assertDatabaseHas('clients', [
+    513▕             'id' => $client->id,
+    514▕             'archived_at' => null,
+
+
+  Tests:    1 failed (2 assertions)
+  Duration: 14.40s
+

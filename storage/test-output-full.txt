@@ -1,0 +1,1351 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12 with PCOV 1.0.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+...............................................................  63 / 891 (  7%)
+............................................................... 126 / 891 ( 14%)
+............................................................... 189 / 891 ( 21%)
+............................................................... 252 / 891 ( 28%)
+............................................................... 315 / 891 ( 35%)
+............................................................... 378 / 891 ( 42%)
+............................................................... 441 / 891 ( 49%)
+...................................EEEEEEEEEEEEEEF............. 504 / 891 ( 56%)
+............................................................... 567 / 891 ( 63%)
+............................................................... 630 / 891 ( 70%)
+............................................................... 693 / 891 ( 77%)
+............................................................... 756 / 891 ( 84%)
+............................................................... 819 / 891 ( 91%)
+............................................................... 882 / 891 ( 98%)
+.........                                                       891 / 891 (100%)
+
+Time: 03:25.631, Memory: 419.00 MB
+
+Account (Tests\Unit\Models\Account)
+ ✔ Can create account with factory
+ ✔ Account belongs to company
+ ✔ Account has fillable attributes
+
+Account Hold (Tests\Unit\Models\AccountHold)
+ ✔ Can create account hold with factory
+ ✔ Account hold belongs to company
+ ✔ Account hold has fillable attributes
+
+Address (Tests\Unit\Models\Address)
+ ✔ Can create address with factory
+ ✔ Address belongs to company
+ ✔ Address has fillable attributes
+
+Analytics Snapshot (Tests\Unit\Models\AnalyticsSnapshot)
+ ✔ Can create analytics snapshot with factory
+ ✔ Analytics snapshot belongs to company
+ ✔ Analytics snapshot has fillable attributes
+
+Asset (Tests\Unit\Models\Asset)
+ ✔ Can create asset with factory
+ ✔ Asset belongs to company
+ ✔ Asset has fillable attributes
+
+Audit Log (Tests\Unit\Models\AuditLog)
+ ✔ Can create audit log with factory
+ ✔ Audit log belongs to company
+ ✔ Audit log has fillable attributes
+
+Auto Payment (Tests\Unit\Models\AutoPayment)
+ ✔ Can create auto payment with factory
+ ✔ Auto payment belongs to company
+ ✔ Auto payment has fillable attributes
+
+Cash Flow Projection (Tests\Unit\Models\CashFlowProjection)
+ ✔ Can create cash flow projection with factory
+ ✔ Cash flow projection belongs to company
+ ✔ Cash flow projection has fillable attributes
+
+Category (Tests\Unit\Models\Category)
+ ✔ Can create category with factory
+ ✔ Category belongs to company
+ ✔ Category has fillable attributes
+
+Client (Tests\Unit\Models\Client)
+ ✔ Can create client with factory
+ ✔ Client belongs to company
+ ✔ Client has required attributes
+ ✔ Client has fillable attributes
+ ✔ Client can be soft deleted
+ ✔ Client has status field
+ ✔ Client has invoices relationship
+ ✔ Client has custom rate fields
+ ✔ Client has billing contact field
+ ✔ Client has net terms
+ ✔ Client has timestamps
+ ✔ Scope active returns only active clients
+ ✔ Scope leads returns only leads
+ ✔ Scope clients excludes leads
+ ✔ Mark as accessed updates accessed at timestamp
+ ✔ Scope recently accessed returns recent clients
+ ✔ Get full address attribute combines address parts
+ ✔ Get display name returns company name if set
+ ✔ Get display name falls back to name
+ ✔ Is lead returns true for leads
+ ✔ Is lead returns false for clients
+ ✔ Convert to customer changes lead to false
+ ✔ Get balance method exists
+ ✔ Round time with custom increment rounds up
+ ✔ Round time with custom increment rounds down
+ ✔ Round time with custom increment rounds nearest
+ ✔ Contacts relationship exists
+ ✔ Tickets relationship exists
+ ✔ Payments relationship exists
+ ✔ Projects relationship exists
+ ✔ Contracts relationship exists
+ ✔ Assets relationship exists
+ ✔ Tags relationship exists
+ ✔ Assigned technicians relationship exists
+ ✔ Assign technician adds user to client
+ ✔ Remove technician removes user from client
+ ✔ Has assigned technician returns false when not assigned
+ ✔ Primary contact relationship exists
+ ✔ Billing contact relationship exists
+ ✔ Technical contact relationship exists
+ ✔ Locations relationship exists
+ ✔ Primary location relationship exists
+ ✔ Addresses relationship exists
+ ✔ Communication logs relationship exists
+ ✔ Rmm client mappings relationship exists
+ ✔ Ticket ratings relationship exists
+ ✔ Recurring invoices relationship exists
+ ✔ Subscription plan relationship exists
+ ✔ Linked company relationship exists
+ ✔ Payment methods relationship exists
+ ✔ Default payment method relationship exists
+ ✔ Active contract relationship exists
+ ✔ Favorited by users relationship exists
+ ✔ Sla relationship exists
+ ✔ Get monthly recurring returns numeric value
+ ✔ Custom fields cast to array
+ ✔ Lead cast to boolean
+ ✔ Use custom rates cast to boolean
+ ✔ Contract dates cast to datetime
+ ✔ Get hourly rate with custom fixed rates
+ ✔ Get hourly rate with custom multipliers
+ ✔ Get hourly rate falls back to company rates
+ ✔ Round time with no custom settings falls back to company
+ ✔ Round time with null rounding method defaults to nearest
+ ✔ Round time without custom settings uses company
+ ✔ Sync tags syncs tag relationships
+ ✔ Sync tags removes old tags
+ ✔ Primary technician returns primary user
+ ✔ Primary technician returns null when none set
+ ✔ Accessed at is datetime
+ ✔ Subscription fields cast correctly
+ ✔ Net terms field stores payment terms
+ ✔ Tax id number field exists
+ ✔ Rmm id field exists
+ ✔ Status field accepts different values
+ ✔ Website field stores url
+ ✔ Notes field stores text
+ ✔ Type field exists
+ ✔ Referral field exists
+ ✔ Currency code field exists
+ ✔ Company link id for multi tenant
+ ✔ Stripe fields exist
+ ✔ Subscription status field exists
+
+Client Document (Tests\Unit\Models\ClientDocument)
+ ✔ Can create client document with factory
+ ✔ Client document belongs to company
+ ✔ Client document has fillable attributes
+
+Client Portal Session (Tests\Unit\Models\ClientPortalSession)
+ ✔ Can create client portal session with factory
+ ✔ Client portal session belongs to company
+ ✔ Client portal session has fillable attributes
+
+Client Portal User (Tests\Unit\Models\ClientPortalUser)
+ ✔ Can create client portal user with factory
+ ✔ Client portal user belongs to company
+ ✔ Client portal user has fillable attributes
+
+Client Switcher (Tests\Feature\Livewire\ClientSwitcher)
+ ✔ Component renders successfully
+ ✔ Mount initializes selected client from session
+ ✔ Mount with no selected client
+ ✔ Search query updates
+ ✔ Updated search query resets selected index
+ ✔ Search results filters by name
+ ✔ Search results filters by email
+ ✔ Search results returns empty for short query
+ ✔ Favorite clients returns collection
+ ✔ Recent clients shows accessed clients
+ ✔ Recent clients shows active clients as fallback
+ ✔ Select client sets selected client
+ ✔ Select client clears search query
+ ✔ Select client marks as accessed
+ ✔ Select client validates company access
+ ✔ Select client with invalid id shows error
+ ✔ Toggle favorite adds to favorites
+ ✔ Toggle favorite removes from favorites
+ ✔ Toggle favorite validates company access
+ ✔ Clear selection removes selected client
+ ✔ Navigate down increments index
+ ✔ Navigate up decrements index
+ ✔ Navigate up stops at negative one
+ ✔ Updating hook keeps selected index in bounds
+ ✔ Select highlighted selects client at index
+ ✔ Select highlighted does nothing when index negative
+ ✔ Select favorite by number
+ ✔ Handle client change event updates state
+ ✔ Handle client selected event updates state
+ ✔ Handle client cleared event clears state
+ ✔ Hydrate validates selected client still accessible
+ ✔ Hydrate clears invalid client
+ ✔ Current client computed property returns client
+ ✔ Current client returns null when none selected
+ ✔ Is client favorite returns true for favorited client
+ ✔ Is client favorite returns false for non favorited client
+ ✔ Get client initials returns correct initials
+ ✔ Get client initials handles single word name
+ ✔ Get client initials handles null client
+ ✔ Search excludes favorites and recent from results
+ ✔ Search results limited to active clients
+ ✔ Exception handling for model not found
+ ✔ Component respects company isolation
+ ✔ Select client with return url redirects
+ ✔ Dehydrate cleans up services
+ ✔ Recent clients filters out favorites
+
+Client Switcher Simple (Tests\Feature\Livewire\ClientSwitcherSimple)
+ ✔ Component loads
+ ✔ Search query property exists
+ ✔ Can set search query
+ ✔ Search query change resets index
+ ✔ Navigate down increments index
+ ✔ Navigate up decrements index
+ ✔ Toggle favorite updates favorites
+ ✔ Toggle favorite twice removes favorite
+ ✔ Select client updates property
+ ✔ Select client marks as accessed
+ ✔ Select client clears search
+ ✔ Select client validates company access
+ ✔ Select invalid client shows error
+ ✔ Clear selection clears state
+ ✔ Handle client changed event
+ ✔ Handle client cleared event
+ ✔ Get client initials
+ ✔ Get client initials single word
+ ✔ Get client initials null returns question mark
+ ✔ Is client favorite returns correct status
+ ✔ Select highlighted with no selection does nothing
+ ✔ Company isolation enforced
+ ✔ Toggle favorite validates company access
+ ✔ Search results computed property accessible
+ ✔ Favorite clients computed property accessible
+ ✔ Recent clients computed property accessible
+ ✔ Current client computed property with selection
+ ✔ Current client null without selection
+
+Collection Note (Tests\Unit\Models\CollectionNote)
+ ✔ Can create collection note with factory
+ ✔ Collection note belongs to company
+ ✔ Collection note has fillable attributes
+
+Command Palette (Tests\Feature\Livewire\CommandPalette)
+ ✔ Component renders successfully
+ ✔ Mount initializes with closed state
+ ✔ Mount captures current route
+ ✔ Open method opens palette
+ ✔ Open initializes with popular commands
+ ✔ Open with current route parameter
+ ✔ Close method closes palette
+ ✔ Handle open event opens palette
+ ✔ Updated search resets selected index
+ ✔ Search results finds clients
+ ✔ Search results finds clients by email
+ ✔ Search results finds invoices
+ ✔ Search results finds assets
+ ✔ Search respects company isolation
+ ✔ Search results includes quick actions
+ ✔ Select next increments index
+ ✔ Select next stops at end
+ ✔ Select previous decrements index
+ ✔ Select previous stops at zero
+ ✔ Set selected index updates index
+ ✔ Get popular commands returns favorites
+ ✔ Popular commands excludes current route
+ ✔ Select result with route name
+ ✔ Select result closes palette
+ ✔ Select result with invalid index does nothing
+ ✔ Select result with client navigates to client
+ ✔ Navigate to redirects to url
+ ✔ Navigate to route redirects to route
+ ✔ Get debug state returns current state
+ ✔ Set current route updates route
+ ✔ Search results caching
+ ✔ Search results cache clears on search change
+ ✔ Empty search shows popular commands
+ ✔ Search with one character shows popular commands
+ ✔ Search error handling returns empty results
+ ✔ Search limits total results
+ ✔ Quick actions include create commands
+ ✔ Navigation commands included in search
+ ✔ Select result with quick action route
+ ✔ Search results structure is valid
+ ✔ Component handles missing route gracefully
+ ✔ Opening palette filters livewire routes
+ ✔ Search includes navigation from sidebar
+ ✔ Cache clears on close
+ ✔ Results array stays in sync with computed property
+
+Communication Log (Tests\Unit\Models\CommunicationLog)
+ ✔ Can create communication log with factory
+ ✔ Communication log belongs to company
+ ✔ Communication log has fillable attributes
+
+Company (Tests\Unit\Models\Company)
+ ✔ Can create company with factory
+ ✔ Company has required attributes
+ ✔ Company has many users
+ ✔ Company has many clients
+ ✔ Company has fillable attributes
+ ✔ Company factory inactive state
+ ✔ Company factory suspended state
+ ✔ Company factory currency state
+ ✔ Company can be in different countries
+ ✔ Company has timestamps
+ ✔ Company email can be unique
+ ✔ Company has default currency
+ ✔ Company has locale setting
+ ✔ Get currency symbol returns correct symbol
+ ✔ Get currency name returns correct name
+ ✔ Format currency formats amount with symbol
+ ✔ Has logo returns true when logo set
+ ✔ Get full address combines address parts
+ ✔ Has complete address returns true when all fields set
+ ✔ Get locale returns company locale
+ ✔ Get locale falls back to en us
+ ✔ Scope search finds companies by name
+ ✔ Scope by currency filters by currency
+ ✔ Setting relationship exists
+ ✔ Subscription relationship exists
+ ✔ Customization relationship exists
+ ✔ Mail settings relationship exists
+ ✔ Contract configurations relationship exists
+ ✔ Round time with no increment returns original
+ ✔ Round time with increment rounds up
+ ✔ Round time with increment rounds down
+ ✔ Round time with increment rounds nearest
+ ✔ Supported currencies constant exists
+ ✔ Default currency constant exists
+
+Company Customization (Tests\Unit\Models\CompanyCustomization)
+ ✔ Can create company customization with factory
+ ✔ Company customization belongs to company
+ ✔ Company customization has fillable attributes
+
+Company Hierarchy (Tests\Unit\Models\CompanyHierarchy)
+ ✔ Can create company hierarchy with factory
+ ✔ Company hierarchy belongs to company
+ ✔ Company hierarchy has fillable attributes
+
+Company Mail Settings (Tests\Unit\Models\CompanyMailSettings)
+ ✔ Can create company mail settings with factory
+ ✔ Company mail settings belongs to company
+ ✔ Company mail settings has fillable attributes
+
+Company Subscription (Tests\Unit\Models\CompanySubscription)
+ ✔ Can create company subscription with factory
+ ✔ Company subscription belongs to company
+ ✔ Company subscription has fillable attributes
+
+Compliance Check (Tests\Unit\Models\ComplianceCheck)
+ ✔ Can create compliance check with factory
+ ✔ Compliance check belongs to company
+ ✔ Compliance check has fillable attributes
+
+Compliance Requirement (Tests\Unit\Models\ComplianceRequirement)
+ ✔ Can create compliance requirement with factory
+ ✔ Compliance requirement belongs to company
+ ✔ Compliance requirement has fillable attributes
+
+Contact (Tests\Unit\Models\Contact)
+ ✔ Can create contact with factory
+ ✔ Contact belongs to client
+ ✔ Contact has name and email
+ ✔ Contact has phone field
+ ✔ Contact has fillable attributes
+ ✔ Contact has timestamps
+ ✔ Contact can be primary
+
+Contract Configuration (Tests\Unit\Models\ContractConfiguration)
+ ✔ Can create contract configuration with factory
+ ✔ Contract configuration belongs to company
+ ✔ Contract configuration has fillable attributes
+
+Contract Generation Service (Tests\Unit\Services\ContractGenerationService)
+ ✘ Generate from quote creates contract
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total" of relation "quotes" does not exist
+   │ LINE 1: ..., "note", "url_key", "created_by", "approved_by", "total", "...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "quotes" ("company_id", "category_id", "client_id", "prefix", "number", "scope", "status", "approval_status", "date", "expire", "discount_amount", "amount", "currency_code", "note", "url_key", "created_by", "approved_by", "total", "updated_at", "created_at") values (657, 199, 293, ?, 69, 2106025, accepted, rejected, 2025-07-29 01:52:10, ?, 1541.07, 5967.11, USD, ?, http://sanford.com/et-impedit-sit-est-provident-omnis-hic-eos, 102, 103, 10000, 2025-10-05 07:28:08, 2025-10-05 07:28:08) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:42
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total" of relation "quotes" does not exist
+   │ LINE 1: ..., "note", "url_key", "created_by", "approved_by", "total", "...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:42
+   │
+ ✘ Generate from quote with customizations
+   │
+   │ Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:70
+   │
+ ✘ Generate from template creates contract
+   │
+   │ Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:89
+   │
+ ✘ Generate from template with voip config
+   │
+   │ Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:112
+   │
+ ✘ Create custom contract
+   │
+   │ Error: Undefined constant App\Domains\Contract\Models\Contract::RENEWAL_MANUAL
+   │
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:382
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:149
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:146
+   │
+ ✘ Create custom contract with milestones
+   │
+   │ Error: Undefined constant App\Domains\Contract\Models\Contract::RENEWAL_MANUAL
+   │
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:382
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:149
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:176
+   │
+ ✘ Generate contract document
+   │
+   │ Exception: Contract template has no clauses configured. All templates must use the modern clause-based system.
+   │
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:669
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:191
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:190
+   │
+ ✘ Generate contract document with options
+   │
+   │ Exception: Contract template has no clauses configured. All templates must use the modern clause-based system.
+   │
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:669
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:191
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:208
+   │
+ ✘ Regenerate contract
+   │
+   │ Exception: Contract template has no clauses configured. All templates must use the modern clause-based system.
+   │
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:669
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:191
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:251
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:234
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:227
+   │
+ ✘ Regenerate contract maintains original data
+   │
+   │ Exception: Contract template has no clauses configured. All templates must use the modern clause-based system.
+   │
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:669
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:191
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:251
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:234
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:246
+   │
+ ✘ Full contract lifecycle from quote
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total" of relation "quotes" does not exist
+   │ LINE 1: ..., "note", "url_key", "created_by", "approved_by", "total", "...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "quotes" ("company_id", "category_id", "client_id", "prefix", "number", "scope", "status", "approval_status", "date", "expire", "discount_amount", "amount", "currency_code", "note", "url_key", "created_by", "approved_by", "total", "updated_at", "created_at") values (677, 201, 303, 87, 71, 25462006, accepted, manager_approved, 2025-04-29 21:05:15, ?, 5604.06, 8230.84, USD, ?, 9446001ecf08708b17139b59f5cd7e0d, 120, 121, 25000, 2025-10-05 07:28:10, 2025-10-05 07:28:10) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:258
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "total" of relation "quotes" does not exist
+   │ LINE 1: ..., "note", "url_key", "created_by", "approved_by", "total", "...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:258
+   │
+ ✘ Contract generation with multiple templates
+   │
+   │ Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:286
+   │
+ ✘ Contract generation handles company isolation
+   │
+   │ Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:318
+   │
+ ✘ Generate from quote validates quote status
+   │
+   │ Error: Class "Database\Factories\Domains\Contract\Models\ContractTemplateFactory" not found
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:919
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/HasFactory.php:21
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:348
+   │
+ ✘ Create custom contract requires minimum fields
+   │
+   │ Failed asserting that exception of type "Error" matches expected exception "Exception". Message was: "Undefined constant App\Domains\Contract\Models\Contract::RENEWAL_MANUAL" at
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:382
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:149
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:364
+   │ .
+
+   │
+ ✔ Regenerate contract handles signed contracts
+ ✔ Generate contract document handles missing contract
+
+Contract Language Editor (Tests\Feature\Livewire\Contracts\ContractLanguageEditor)
+ ✔ Renders successfully
+
+Contract Service (Tests\Unit\Services\ContractService)
+ ✔ Gets paginated contracts with basic filters
+ ✔ Filters contracts by status
+ ✔ Filters contracts by client
+ ✔ Searches contracts by keyword
+ ✔ Gets contracts by status
+ ✔ Creates contract with minimum required data
+ ✔ Creates contract with complete data
+ ✔ Generates unique contract number
+ ✔ Creates contract with custom prefix
+ ✔ Creates contract schedules from wizard data
+ ✔ Processes asset assignments when auto assign enabled
+ ✔ Skips asset assignments when auto assign disabled
+ ✔ Updates contract in draft status
+ ✔ Cannot update active contract
+ ✔ Activates signed contract
+ ✔ Cannot activate unsigned contract
+ ✔ Suspends active contract
+ ✔ Cannot suspend non active contract
+ ✔ Terminates active contract
+ ✔ Reactivates suspended contract
+ ✔ Cannot reactivate non suspended contract
+ ✔ Deletes draft contract
+ ✔ Cannot delete active contract
+ ✔ Gets dashboard statistics
+ ✔ Gets expiring contracts
+ ✔ Searches contracts
+ ✔ Processes template with variables
+ ✔ Processes conditional templates
+ ✔ Evaluates and conditions
+ ✔ Evaluates or conditions
+ ✔ Formats asset types
+ ✔ Creates contract with error recovery
+ ✔ Transaction rollback on critical failure
+ ✔ Calculates monthly recurring revenue
+ ✔ Maps schedule data to contract
+ ✔ Determines schedule type from template
+
+Contract Service Asset (Tests\Unit\Services\ContractServiceAsset)
+ ✔ Assigns assets by type
+ ✔ Only assigns specified asset types
+ ✔ Skips already assigned assets
+ ✔ Sets asset support metadata
+ ✔ Determines support level from service tier
+ ✔ Updates contract value with asset pricing
+ ✔ Updates schedule asset assignments
+ ✔ Stores assignment results in metadata
+ ✔ Handles no available assets
+ ✔ Logs asset assignment activities
+ ✔ Validates asset pricing table generation
+ ✔ Calculates contract value with base and asset pricing
+ ✔ Handles pricing without asset fees
+ ✔ Processes asset evaluation rules
+ ✔ Handles mixed pricing models
+ ✔ Assignment respects company boundaries
+
+Contract Service Integration (Tests\Feature\Services\ContractServiceIntegration)
+ ✔ Integrates with template variable mapper
+ ✔ Handles database transactions correctly
+ ✔ Rollback on schedule creation failure
+ ✔ Logs comprehensive audit trail
+ ✔ Concurrent contract creation handles race conditions
+ ✔ Handles partial failures gracefully
+ ✔ Retries failed component
+ ✔ Multi company isolation
+ ✔ Complex pricing calculation integration
+ ✔ Schedule synchronization validation
+ ✔ Handles empty asset pricing
+ ✔ Handles template content generation
+ ✔ Validates business rules across services
+ ✔ Dashboard statistics accuracy
+ ✔ Metadata storage and retrieval
+ ✔ Contract number generation handles gaps
+
+Contract Service Schedule (Tests\Unit\Services\ContractServiceSchedule)
+ ✔ Creates schedule a infrastructure
+ ✔ Creates schedule b pricing
+ ✔ Creates schedule c additional terms
+ ✔ Creates telecom schedule
+ ✔ Creates hardware schedule
+ ✔ Creates compliance schedule
+ ✔ Creates multiple schedules in single contract
+ ✔ Schedule a contains sla metrics
+ ✔ Schedule b contains pricing table
+ ✔ Schedule c contains termination terms
+ ✔ Validates schedule configuration
+ ✔ Updates contract pricing from schedules
+ ✔ Schedule creation logs activities
+
+Contract Service Workflow (Tests\Feature\Services\ContractServiceWorkflow)
+ ✔ Complete contract creation workflow
+ ✔ Contract lifecycle workflow
+ ✔ Multi client contract isolation
+ ✔ Contract renewal workflow
+ ✔ Contract amendment workflow
+ ✔ Telecom contract complete workflow
+ ✔ Hardware procurement workflow
+ ✔ Compliance audit workflow
+ ✔ Dynamic builder workflow
+ ✔ Expiring contracts notification workflow
+ ✔ Contract search and filter workflow
+
+Credit Application (Tests\Unit\Models\CreditApplication)
+ ✔ Can create credit application with factory
+ ✔ Credit application belongs to company
+ ✔ Credit application has fillable attributes
+
+Credit Note (Tests\Unit\Models\CreditNote)
+ ✔ Can create credit note with factory
+ ✔ Credit note belongs to company
+ ✔ Credit note has fillable attributes
+
+Credit Note Approval (Tests\Unit\Models\CreditNoteApproval)
+ ✔ Can create credit note approval with factory
+ ✔ Credit note approval belongs to company
+ ✔ Credit note approval has fillable attributes
+
+Credit Note Item (Tests\Unit\Models\CreditNoteItem)
+ ✔ Can create credit note item with factory
+ ✔ Credit note item belongs to company
+ ✔ Credit note item has fillable attributes
+
+Cross Company User (Tests\Unit\Models\CrossCompanyUser)
+ ✔ Can create cross company user with factory
+ ✔ Cross company user belongs to company
+ ✔ Cross company user has fillable attributes
+
+Custom Quick Action (Tests\Unit\Models\CustomQuickAction)
+ ✔ Can create custom quick action with factory
+ ✔ Custom quick action belongs to company
+ ✔ Custom quick action has fillable attributes
+
+Dashboard Widget (Tests\Unit\Models\DashboardWidget)
+ ✔ Can create dashboard widget with factory
+ ✔ Dashboard widget belongs to company
+ ✔ Dashboard widget has fillable attributes
+
+Document (Tests\Unit\Models\Document)
+ ✔ Can create document with factory
+ ✔ Document belongs to company
+ ✔ Document has fillable attributes
+
+Dunning Action (Tests\Unit\Models\DunningAction)
+ ✔ Can create dunning action with factory
+ ✔ Dunning action belongs to company
+ ✔ Dunning action has fillable attributes
+
+Dunning Campaign (Tests\Unit\Models\DunningCampaign)
+ ✔ Can create dunning campaign with factory
+ ✔ Dunning campaign belongs to company
+ ✔ Dunning campaign has fillable attributes
+
+Dunning Sequence (Tests\Unit\Models\DunningSequence)
+ ✔ Can create dunning sequence with factory
+ ✔ Dunning sequence belongs to company
+ ✔ Dunning sequence has fillable attributes
+
+Expense (Tests\Unit\Models\Expense)
+ ✔ Can create expense with factory
+ ✔ Expense belongs to company
+ ✔ Expense belongs to category
+ ✔ Expense has amount field
+ ✔ Expense has date field
+ ✔ Expense has fillable attributes
+ ✔ Expense has timestamps
+
+Expense Category (Tests\Unit\Models\ExpenseCategory)
+ ✔ Can create expense category with factory
+ ✔ Expense category belongs to company
+ ✔ Expense category has fillable attributes
+
+File (Tests\Unit\Models\File)
+ ✔ Can create file with factory
+ ✔ File belongs to company
+ ✔ File has fillable attributes
+
+Financial Report (Tests\Unit\Models\FinancialReport)
+ ✔ Can create financial report with factory
+ ✔ Financial report belongs to company
+ ✔ Financial report has fillable attributes
+
+In App Notification (Tests\Unit\Models\InAppNotification)
+ ✔ Can create in app notification with factory
+ ✔ In app notification belongs to company
+ ✔ In app notification has fillable attributes
+
+Invoice (Tests\Unit\Models\Invoice)
+ ✔ Can create invoice with factory
+ ✔ Invoice belongs to company
+ ✔ Invoice belongs to client
+ ✔ Invoice has status field
+ ✔ Invoice can have different statuses
+ ✔ Invoice has amount field
+ ✔ Invoice has currency code
+ ✔ Invoice has date and due date
+ ✔ Invoice has fillable attributes
+ ✔ Is draft returns true for draft invoices
+ ✔ Is paid returns true for paid invoices
+ ✔ Is overdue returns true for overdue invoices
+ ✔ Is overdue returns false for future invoices
+ ✔ Mark as sent updates status
+ ✔ Mark as paid updates status
+ ✔ Get formatted amount returns currency formatted string
+ ✔ Get currency symbol returns correct symbol
+ ✔ Get total paid returns sum of payments
+ ✔ Get balance returns remaining amount
+ ✔ Is fully paid returns false for unpaid invoice
+ ✔ Scope overdue filters overdue invoices
+ ✔ Scope paid filters paid invoices
+ ✔ Scope unpaid filters unpaid invoices
+ ✔ Scope by status filters by given status
+ ✔ Items relationship exists
+ ✔ Payments relationship exists
+ ✔ Tickets relationship exists
+ ✔ Category relationship exists
+ ✔ Recurring invoice relationship exists
+ ✔ Format currency formats amount correctly
+
+Invoice Item (Tests\Unit\Models\InvoiceItem)
+ ✔ Can create invoice item with factory
+ ✔ Belongs to invoice
+ ✔ Belongs to product
+ ✔ Has fillable attributes
+ ✔ Calculates subtotal automatically
+ ✔ Calculates total with discount
+ ✔ Has discount method
+ ✔ Calculates discount percentage
+ ✔ Formatted quantity
+ ✔ Formatted price
+ ✔ Formatted total
+ ✔ Create from product static method
+ ✔ Scope for invoice
+ ✔ Scope ordered
+ ✔ Soft deletes with archived at
+ ✔ Casts attributes correctly
+ ✔ Is voip service method
+ ✔ Scope voip services
+ ✔ Validation rules exist
+
+Kpi Calculation (Tests\Unit\Models\KpiCalculation)
+ ✔ Can create kpi calculation with factory
+ ✔ Kpi calculation belongs to company
+ ✔ Kpi calculation has fillable attributes
+
+Location (Tests\Unit\Models\Location)
+ ✔ Can create location with factory
+ ✔ Location belongs to company
+ ✔ Location has fillable attributes
+
+Mail Queue (Tests\Unit\Models\MailQueue)
+ ✔ Can create mail queue with factory
+ ✔ Mail queue belongs to company
+ ✔ Mail queue has fillable attributes
+
+Mail Template (Tests\Unit\Models\MailTemplate)
+ ✔ Can create mail template with factory
+ ✔ Mail template belongs to company
+ ✔ Mail template has fillable attributes
+
+Navigation Service (Tests\Unit\Services\NavigationService)
+ ✔ Gets active domain from clients route
+ ✔ Gets active domain from tickets route
+ ✔ Gets active domain from assets route
+ ✔ Gets active domain from financial route
+ ✔ Gets active domain from billing route
+ ✔ Gets active domain from projects route
+ ✔ Gets active domain from reports route
+ ✔ Returns null for unknown route
+ ✔ Returns null when no route name
+ ✔ Gets sidebar context matches active domain
+ ✔ Sidebar context hidden on clients index without selection
+ ✔ Sidebar context shown on clients index with selection
+ ✔ Sidebar context hidden on client create route
+ ✔ Gets active navigation item for tickets index
+ ✔ Gets active navigation item for tickets create
+ ✔ Gets active navigation item for financial invoices
+ ✔ Gets active navigation item for financial contracts
+ ✔ Returns null navigation item for unknown route
+ ✔ Is route active returns true for matching route
+ ✔ Is route active returns false for different route
+ ✔ Is route active checks parameters
+ ✔ Is route active returns false for mismatched parameters
+ ✔ Selected client can be set and retrieved
+ ✔ Selected client can be cleared
+ ✔ Has selected client returns true when client selected
+ ✔ Has selected client returns false when no client
+ ✔ Set selected client with null clears selection
+ ✔ Get selected client validates company isolation
+ ✔ Get selected client returns null for invalid id
+ ✔ Workflow context can be set and retrieved
+ ✔ Workflow context defaults to default
+ ✔ Workflow context can be cleared
+ ✔ Is workflow active returns true for matching workflow
+ ✔ Is workflow active returns false for different workflow
+ ✔ Recent client ids can be retrieved
+ ✔ Recent client ids defaults to empty array
+ ✔ Add to recent clients prepends client id
+ ✔ Add to recent clients removes duplicates
+ ✔ Add to recent clients limits to 10 items
+ ✔ Get workflow navigation state includes client info
+ ✔ Get workflow navigation state handles no client
+ ✔ Get workflow route params includes client when selected
+ ✔ Get workflow route params for urgent workflow
+ ✔ Get workflow route params for today workflow
+ ✔ Get workflow route params for scheduled workflow
+ ✔ Get workflow route params for financial workflow
+ ✔ Can access domain checks permission
+ ✔ Can access navigation item for clients
+ ✔ Cannot access navigation item without permission
+ ✔ Get filtered navigation items returns empty without permission
+ ✔ Get filtered navigation items for clients
+ ✔ Get badge counts returns array
+ ✔ Get badge counts returns empty without permission
+ ✔ Get client specific badge counts without client id
+ ✔ Get client specific badge counts with client id
+ ✔ Get urgent items returns structure
+ ✔ Get urgent items without authenticated user
+ ✔ Get todays work returns structure
+ ✔ Get todays work without authenticated user
+ ✔ Get client workflow context returns null without client
+ ✔ Get client workflow context without authenticated user
+ ✔ Get client workflow context returns structure
+ ✔ Get workflow navigation highlights returns structure
+ ✔ Get workflow navigation highlights without user
+ ✔ Get workflow quick actions for urgent workflow
+ ✔ Get favorite clients returns collection
+ ✔ Get favorite clients without user
+ ✔ Get recent clients returns collection
+ ✔ Get recent clients without user
+ ✔ Get smart client suggestions returns structure
+ ✔ Get smart client suggestions without user
+ ✔ Toggle client favorite returns false without user
+ ✔ Toggle client favorite returns false for invalid client
+ ✔ Is client favorite returns false without user
+ ✔ Is client favorite returns false for invalid client
+ ✔ Register sidebar section
+ ✔ Register sidebar sections
+ ✔ Get domain stats returns array
+ ✔ Breadcrumbs empty for clients index without selection
+ ✔ Breadcrumbs show client name on clients index with selection
+ ✔ Breadcrumbs show client and domain for tickets
+ ✔ Workflow breadcrumbs for urgent workflow
+ ✔ Get client navigation items without selection
+ ✔ Get client navigation items with selection
+ ✔ Get client specific badge counts with recurring and quotes
+ ✔ Get domain stats for all domains
+ ✔ Get badge counts for all domains
+ ✔ Can access domain for all domains
+ ✔ Get filtered navigation items for all domains
+ ✔ Can access navigation item for multiple domains
+ ✔ Get workflow breadcrumbs for all workflows
+ ✔ Get workflow quick actions for all workflows
+ ✔ Get workflow navigation highlights for all workflows
+ ✔ Toggle client favorite with valid client
+ ✔ Is client favorite with valid client
+ ✔ Breadcrumbs for multiple routes
+ ✔ Get client navigation items with various permissions
+ ✔ Get favorite clients with limit
+ ✔ Get recent clients with limit
+ ✔ Get client specific badge counts handles exception
+ ✔ All workflow methods work together
+ ✔ Sidebar registration methods
+
+Network (Tests\Unit\Models\Network)
+ ✔ Can create network with factory
+ ✔ Network belongs to company
+ ✔ Network has fillable attributes
+
+Notification Preference (Tests\Unit\Models\NotificationPreference)
+ ✔ Can create notification preference with factory
+ ✔ Notification preference belongs to company
+ ✔ Notification preference has fillable attributes
+
+Notification Service (Tests\Unit\Services\NotificationService)
+ ✔ Notify ticket created sends in app notification
+ ✔ Notify ticket created respects preferences
+ ✔ Notify ticket created includes ticket number and subject in message
+ ✔ Notify ticket assigned sends notification to assignee
+ ✔ Notify ticket assigned respects preferences
+ ✔ Notify ticket status changed sends notification
+ ✔ Notify ticket status changed includes old and new status
+ ✔ Notify ticket resolved sends notification
+ ✔ Notify ticket comment added sends notification to watchers
+ ✔ Notify ticket comment added does not notify comment author
+ ✔ Notify sla breach warning sends notification
+ ✔ Notify sla breach warning includes hours remaining
+ ✔ Notify sla breached sends critical notification
+ ✔ Notify sla breached includes hours overdue
+ ✔ Get recipients includes ticket creator
+ ✔ Get recipients includes assigned user
+ ✔ Notification link points to ticket show route
+ ✔ Notifications have appropriate icons
+ ✔ Notifications have appropriate colors
+ ✔ Multiple users can receive same notification
+ ✔ Ticket id is stored in notifications
+
+Payment (Tests\Unit\Models\Payment)
+ ✔ Can create payment with factory
+ ✔ Payment belongs to invoice
+ ✔ Payment has amount field
+ ✔ Payment belongs to company
+ ✔ Payment has timestamps
+ ✔ Payment has fillable attributes
+
+Payment Method (Tests\Unit\Models\PaymentMethod)
+ ✔ Can create payment method with factory
+ ✔ Payment method belongs to company
+ ✔ Payment method has fillable attributes
+
+Payment Plan (Tests\Unit\Models\PaymentPlan)
+ ✔ Can create payment plan with factory
+ ✔ Payment plan belongs to company
+ ✔ Payment plan has fillable attributes
+
+Permission (Tests\Unit\Models\Permission)
+ ✔ Can create permission with factory
+ ✔ Permission belongs to company
+ ✔ Permission has fillable attributes
+
+Permission Group (Tests\Unit\Models\PermissionGroup)
+ ✔ Can create permission group with factory
+ ✔ Permission group belongs to company
+ ✔ Permission group has fillable attributes
+
+Physical Mail Settings (Tests\Unit\Models\PhysicalMailSettings)
+ ✔ Can create physical mail settings with factory
+ ✔ Physical mail settings belongs to company
+ ✔ Physical mail settings has fillable attributes
+
+Portal Notification (Tests\Unit\Models\PortalNotification)
+ ✔ Can create portal notification with factory
+ ✔ Portal notification belongs to company
+ ✔ Portal notification has fillable attributes
+
+Pricing Rule (Tests\Unit\Models\PricingRule)
+ ✔ Can create pricing rule with factory
+ ✔ Pricing rule belongs to company
+ ✔ Pricing rule has fillable attributes
+
+Product (Tests\Unit\Models\Product)
+ ✔ Can create product with factory
+ ✔ Product belongs to company
+ ✔ Product has name and price
+ ✔ Product has fillable attributes
+ ✔ Product has sku field
+ ✔ Product has active status
+ ✔ Product can be inactive
+ ✔ Product has timestamps
+ ✔ Belongs to category
+ ✔ Price accessor returns base price
+ ✔ Formatted price
+ ✔ Currency symbol
+ ✔ Profit margin calculation
+ ✔ Markup percentage calculation
+ ✔ Has cost method
+ ✔ Is service method
+ ✔ Scope search
+ ✔ Scope by price range
+ ✔ Scope active
+ ✔ Soft deletes
+
+Product Bundle (Tests\Unit\Models\ProductBundle)
+ ✔ Can create product bundle with factory
+ ✔ Product bundle belongs to company
+ ✔ Product bundle has fillable attributes
+
+Product Tax Data (Tests\Unit\Models\ProductTaxData)
+ ✔ Can create product tax data with factory
+ ✔ Product tax data belongs to company
+ ✔ Product tax data has fillable attributes
+
+Quick Action Favorite (Tests\Unit\Models\QuickActionFavorite)
+ ✔ Can create quick action favorite with factory
+ ✔ Quick action favorite belongs to company
+ ✔ Quick action favorite has fillable attributes
+
+Quote (Tests\Unit\Models\Quote)
+ ✔ Can create quote with factory
+ ✔ Quote belongs to company
+ ✔ Quote has fillable attributes
+
+Quote Approval (Tests\Unit\Models\QuoteApproval)
+ ✔ Can create quote approval with factory
+ ✔ Quote approval belongs to company
+ ✔ Quote approval has fillable attributes
+
+Quote Invoice Conversion (Tests\Unit\Models\QuoteInvoiceConversion)
+ ✔ Can create quote invoice conversion with factory
+ ✔ Quote invoice conversion belongs to company
+ ✔ Quote invoice conversion has fillable attributes
+
+Quote Template (Tests\Unit\Models\QuoteTemplate)
+ ✔ Can create quote template with factory
+ ✔ Quote template belongs to company
+ ✔ Quote template has fillable attributes
+
+Quote Version (Tests\Unit\Models\QuoteVersion)
+ ✔ Can create quote version with factory
+ ✔ Quote version belongs to company
+ ✔ Quote version has fillable attributes
+
+Recurring (Tests\Unit\Models\Recurring)
+ ✔ Can create recurring with factory
+ ✔ Recurring belongs to company
+ ✔ Recurring has fillable attributes
+
+Recurring Invoice (Tests\Unit\Models\RecurringInvoice)
+ ✔ Can create recurring invoice with factory
+ ✔ Recurring invoice belongs to company
+ ✔ Recurring invoice has fillable attributes
+
+Refund Request (Tests\Unit\Models\RefundRequest)
+ ✔ Can create refund request with factory
+ ✔ Refund request belongs to company
+ ✔ Refund request has fillable attributes
+
+Refund Transaction (Tests\Unit\Models\RefundTransaction)
+ ✔ Can create refund transaction with factory
+ ✔ Refund transaction belongs to company
+ ✔ Refund transaction has fillable attributes
+
+Resolution Estimate Service (Tests\Unit\Services\ResolutionEstimateService)
+ ✔ Calculate estimated resolution returns carbon instance
+ ✔ Critical priority uses 4 hour base
+ ✔ High priority uses 8 hour base
+ ✔ Medium priority uses 24 hour base
+ ✔ Low priority uses 48 hour base
+ ✔ Workload factor increases with more active tickets
+ ✔ No assigned user uses higher workload factor
+ ✔ Complex category increases estimate
+ ✔ Queue factor increases with client pending tickets
+ ✔ Adjust for business hours skips weekends
+ ✔ Adjust for business hours sets start time if before 9am
+ ✔ Adjust for business hours moves to next day if after 5pm
+ ✔ Update estimate for ticket updates estimated resolution at
+ ✔ Update estimate for ticket does not update resolved tickets
+ ✔ Update estimate for ticket does not update closed tickets
+ ✔ Recalculate for technician updates all assigned tickets
+ ✔ Recalculate for technician skips resolved tickets
+ ✔ Get average resolution time returns hours
+ ✔ Get average resolution time filters by priority
+ ✔ Get average resolution time filters by category
+ ✔ Get average resolution time filters by assigned to
+ ✔ Get average resolution time returns zero for no tickets
+ ✔ Server category increases factor
+ ✔ Security category increases factor
+ ✔ Database category increases factor
+
+Revenue Metric (Tests\Unit\Models\RevenueMetric)
+ ✔ Can create revenue metric with factory
+ ✔ Revenue metric belongs to company
+ ✔ Revenue metric has fillable attributes
+
+Role (Tests\Unit\Models\Role)
+ ✔ Can create role with factory
+ ✔ Role belongs to company
+ ✔ Role has fillable attributes
+
+Service (Tests\Unit\Models\Service)
+ ✔ Can create service with factory
+ ✔ Service belongs to company
+ ✔ Service has fillable attributes
+
+Service Tax Rate (Tests\Unit\Models\ServiceTaxRate)
+ ✔ Can create service tax rate with factory
+ ✔ Service tax rate belongs to company
+ ✔ Service tax rate has fillable attributes
+
+Setting (Tests\Unit\Models\Setting)
+ ✔ Can create setting with factory
+ ✔ Setting belongs to company
+ ✔ Setting has fillable attributes
+
+Settings Configuration (Tests\Unit\Models\SettingsConfiguration)
+ ✔ Can create settings configuration with factory
+ ✔ Settings configuration belongs to company
+ ✔ Settings configuration has fillable attributes
+
+Subsidiary Permission (Tests\Unit\Models\SubsidiaryPermission)
+ ✔ Can create subsidiary permission with factory
+ ✔ Subsidiary permission belongs to company
+ ✔ Subsidiary permission has fillable attributes
+
+Tag (Tests\Unit\Models\Tag)
+ ✔ Can create tag with factory
+ ✔ Tag belongs to company
+ ✔ Tag has fillable attributes
+
+Tax (Tests\Unit\Models\Tax)
+ ✔ Can create tax with factory
+ ✔ Tax belongs to company
+ ✔ Tax has fillable attributes
+
+Tax Api Query Cache (Tests\Unit\Models\TaxApiQueryCache)
+ ✔ Can create tax api query cache with factory
+ ✔ Tax api query cache belongs to company
+ ✔ Tax api query cache has fillable attributes
+
+Tax Api Settings (Tests\Unit\Models\TaxApiSettings)
+ ✔ Can create tax api settings with factory
+ ✔ Tax api settings belongs to company
+ ✔ Tax api settings has fillable attributes
+
+Tax Calculation (Tests\Unit\Models\TaxCalculation)
+ ✔ Can create tax calculation with factory
+ ✔ Tax calculation belongs to company
+ ✔ Tax calculation has fillable attributes
+
+Tax Category (Tests\Unit\Models\TaxCategory)
+ ✔ Can create tax category with factory
+ ✔ Tax category belongs to company
+ ✔ Tax category has fillable attributes
+
+Tax Exemption (Tests\Unit\Models\TaxExemption)
+ ✔ Can create tax exemption with factory
+ ✔ Tax exemption belongs to company
+ ✔ Tax exemption has fillable attributes
+
+Tax Jurisdiction (Tests\Unit\Models\TaxJurisdiction)
+ ✔ Can create tax jurisdiction with factory
+ ✔ Tax jurisdiction belongs to company
+ ✔ Tax jurisdiction has fillable attributes
+
+Tax Profile (Tests\Unit\Models\TaxProfile)
+ ✔ Can create tax profile with factory
+ ✔ Tax profile belongs to company
+ ✔ Tax profile has fillable attributes
+
+Ticket Comment Display (Tests\Feature\ClientPortal\TicketCommentDisplay)
+ ✔ Customer comment displays after being added
+ ✔ Multiple comments display in chronological order
+ ✔ Customer name displays correctly with comment
+ ✔ Internal comments do not display to customer
+ ✔ Ticket with no comments shows appropriate message
+
+Ticket Rating (Tests\Unit\Models\TicketRating)
+ ✔ Can create ticket rating with factory
+ ✔ Ticket rating belongs to company
+ ✔ Ticket rating has fillable attributes
+
+Ticket Reply (Tests\Feature\ClientPortal\TicketReply)
+ ✔ Client cannot reply to other company ticket
+ ✔ Client can reply to own company ticket
+ ✔ Message has minimum length
+ ✔ Message has maximum length
+ ✔ Attachment file size limit
+ ✔ Attachment file type validation
+ ✔ Comment belongs to correct ticket
+ ✔ Ticket updated timestamp changes
+ ✔ Multiple attachments are saved
+ ✔ Attachment metadata is correct
+ ✔ Other statuses remain unchanged
+ ✔ Cannot reply to closed ticket
+ ✔ Cannot reply to resolved ticket
+ ✔ No email if ticket unassigned
+ ✔ Unicode characters in comment
+ ✔ Concurrent comments dont conflict
+ ✔ Large comment content
+
+Ticket View (Tests\Feature\ClientPortal\TicketView)
+ ✔ Guest cannot view ticket
+ ✔ Contact can view own ticket
+ ✔ Contact cannot view other clients ticket
+ ✔ Ticket displays public comments
+ ✔ Ticket does not display internal comments
+ ✔ Ticket displays no replies message when empty
+ ✔ Ticket comments are ordered chronologically
+ ✔ Ticket displays staff badge for staff comments
+ ✔ Ticket shows correct author name for customer comments
+ ✔ Ticket shows correct author name for staff comments
+ ✔ Closed ticket does not show reply form
+ ✔ Resolved ticket does not show reply form
+ ✔ Open ticket shows reply form
+ ✔ Ticket shows assigned technician when assigned
+ ✔ Ticket shows unassigned when not assigned
+ ✔ Newly added comment appears in conversation
+
+Time Entry (Tests\Unit\Models\TimeEntry)
+ ✔ Can create time entry with factory
+ ✔ Time entry belongs to company
+ ✔ Time entry has fillable attributes
+
+Usage Alert (Tests\Unit\Models\UsageAlert)
+ ✔ Can create usage alert with factory
+ ✔ Usage alert belongs to company
+ ✔ Usage alert has fillable attributes
+
+Usage Bucket (Tests\Unit\Models\UsageBucket)
+ ✔ Can create usage bucket with factory
+ ✔ Usage bucket belongs to company
+ ✔ Usage bucket has fillable attributes
+
+Usage Pool (Tests\Unit\Models\UsagePool)
+ ✔ Can create usage pool with factory
+ ✔ Usage pool belongs to company
+ ✔ Usage pool has fillable attributes
+
+Usage Record (Tests\Unit\Models\UsageRecord)
+ ✔ Can create usage record with factory
+ ✔ Usage record belongs to company
+ ✔ Usage record has fillable attributes
+
+Usage Tier (Tests\Unit\Models\UsageTier)
+ ✔ Can create usage tier with factory
+ ✔ Usage tier belongs to company
+ ✔ Usage tier has fillable attributes
+
+User (Tests\Unit\Models\User)
+ ✔ Can create user with factory
+ ✔ User belongs to company
+ ✔ User has user settings relationship
+ ✔ User role constants exist
+ ✔ User password is hashed
+ ✔ User has fillable attributes
+ ✔ User hides sensitive attributes
+ ✔ User casts attributes correctly
+ ✔ User can be soft deleted
+ ✔ User has unique email
+ ✔ User has company id attribute
+ ✔ Unverified factory state
+
+User Setting (Tests\Unit\Models\UserSetting)
+ ✔ Can create user setting with factory
+ ✔ User setting belongs to company
+ ✔ User setting has fillable attributes
+
+Vendor (Tests\Unit\Models\Vendor)
+ ✔ Can create vendor with factory
+ ✔ Vendor belongs to company
+ ✔ Vendor has fillable attributes
+
+ERRORS!
+Tests: 891, Assertions: 1496, Errors: 14, Failures: 1.
+
+Generating code coverage report in Clover XML format ... done [00:11.363]

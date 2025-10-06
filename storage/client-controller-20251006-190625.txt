@@ -1,0 +1,799 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Feature\Controllers\ClientControllerTest
+  ✓ index returns view for authenticated user                           14.42s  
+  ✓ index redirects unauthenticated user                                 0.16s  
+  ✓ index returns json when requested                                    0.29s  
+  ✓ index filters by search term                                         0.30s  
+  ✓ index filters by type                                                0.32s  
+  ✓ index filters by status                                              0.36s  
+  ✓ index excludes leads                                                 0.32s  
+  ✓ index excludes archived clients                                      0.31s  
+  ✓ index only shows company clients                                     0.26s  
+  ✓ create returns view                                                  0.31s  
+  ✓ store creates client successfully                                    0.27s  
+  ✓ store returns json for api request                                   0.21s  
+  ✓ store validates required name                                        0.20s  
+  ✓ store validates required email                                       0.18s  
+  ✓ store validates email format                                         0.23s  
+  ✓ store sets selected client in session                                0.19s  
+  ✓ store logs client creation                                           0.21s  
+  ✓ store handles errors gracefully                                      0.18s  
+  ✓ show redirects to index with client set in session                   0.24s  
+  ✓ show denies access to other company client                           0.34s  
+  ✓ show updates client accessed at timestamp                            0.65s  
+  ✓ show loads related data                                              0.45s  
+  ✓ show returns json for api request                                    0.25s  
+  ✓ update modifies client successfully                                  0.20s  
+  ✓ update returns json for api request                                  0.22s  
+  ✓ update validates required fields                                     0.19s  
+  ✓ update denies access to other company client                         0.35s  
+  ✓ update logs modification                                             0.21s  
+  ✓ update handles errors gracefully                                     0.21s  
+  ✓ archive soft deletes client                                          0.20s  
+  ✓ archive requires authenticated client in session                     0.22s  
+  ✓ archive denies access to other company client                        0.25s  
+  ✓ restore undeletes archived client                                    0.22s  
+  ⨯ destroy permanently deletes client                                   0.20s  
+  ✓ destroy requires client to be soft deleted first                     0.19s  
+  ⨯ destroy denies access to other company client                        0.35s  
+  ⨯ export csv generates csv file                                        0.20s  
+  ⨯ export csv includes only company clients                             0.27s  
+  ⨯ export csv excludes archived clients                                 0.18s  
+  ⨯ export csv includes contact and location data                        0.24s  
+  ⨯ update notes updates client notes                                    0.19s  
+  ⨯ update notes allows null notes                                       0.20s  
+  ✓ get active clients returns active clients only                       0.19s  
+  ✓ get active clients excludes leads                                    0.23s  
+  ✓ get active clients filters by search query                           0.20s  
+  ✓ get active clients limits results to 50                              0.34s  
+  ✓ get active clients orders by accessed at desc                        0.22s  
+  ✓ leads returns leads view                                             0.35s  
+  ✓ convert lead changes lead to customer                                0.24s  
+  ✓ convert lead sets selected client                                    0.19s  
+  ✓ convert lead rejects non lead client                                 0.22s  
+  ✓ convert lead returns json for api request                            0.21s  
+  ✓ convert lead denies access to other company client                   0.33s  
+  ✓ import form returns view                                             0.34s  
+  ✓ import processes csv file                                            0.19s  
+  ✓ import validates file required                                       0.21s  
+  ✓ import validates file type                                           0.18s  
+  ✓ import validates file size                                           0.23s  
+  ⨯ download template returns csv                                        0.19s  
+  ⨯ download template includes sample row                                0.21s  
+  ⨯ tags get returns view                                                0.39s  
+  ⨯ tags post updates client tags                                        0.35s  
+  ⨯ tags validates tag ids exist                                         0.34s  
+  ✓ select client sets session                                           0.22s  
+  ✓ select client returns json for api request                           0.19s  
+  ✓ select client validates return to url                                0.23s  
+  ✓ select client rejects external redirect                              0.19s  
+  ✓ select client rejects protocol relative urls                         0.22s  
+  ✓ select client updates client id in return url                        0.20s  
+  ✓ select client denies access to other company client                  0.35s  
+  ✓ select screen returns view                                           0.34s  
+  ✓ select screen filters by search                                      0.34s  
+  ✓ clear selection removes client from session                          0.19s  
+  ✓ clear selection returns json for api request                         0.23s  
+  ⨯ validate batch returns valid client ids                              0.20s  
+  ⨯ validate batch validates ids are required                            0.21s  
+  ⨯ validate batch validates ids are integers                            0.16s  
+  ⨯ validate batch excludes archived clients                             0.22s  
+  ✓ dynamic index shows client list when no selection                    0.31s  
+  ✓ dynamic index shows selected client                                  0.43s  
+  ⨯ dynamic index clears invalid client selection                        0.36s  
+  ✓ dynamic index redirects unauthenticated user                         0.24s  
+  ✓ leads import form returns view                                       0.30s  
+  ⨯ leads import template returns csv                                    0.21s  
+  ✓ leads import creates leads from csv                                  0.19s  
+  ✓ leads import skips duplicates when requested                         0.22s  
+  ✓ leads import validates required fields                               0.19s  
+  ⨯ leads import validates file type                                     0.24s  
+  ✓ leads import validates default status values                         0.20s  
+  ✓ leads import adds import notes when provided                         0.22s  
+  ✓ leads import validates email format                                  0.20s  
+  ✓ leads import handles empty rows                                      0.22s  
+  ✓ leads import supports various column names                           0.19s  
+  ✓ switch redirects with info message                                   0.22s  
+  ✓ data endpoint returns datatables response                            0.25s  
+  ✓ data endpoint supports search                                        0.23s  
+  ✓ data endpoint supports sorting                                       0.27s  
+  ✓ data endpoint supports pagination                                    0.25s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > destroy permanen…   
+  Session is missing expected key [success].
+Failed asserting that false is true.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:527
+    523▕ 
+    524▕         $response = $this->delete(route('clients.destroy', $client->id));
+    525▕ 
+    526▕         $response->assertRedirect();
+  ➜ 527▕         $response->assertSessionHas('success');
+    528▕ 
+    529▕         $this->assertDatabaseMissing('clients', ['id' => $clientId]);
+    530▕     }
+    531▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > destroy denies a…   
+  Expected response status code [403] but received 404.
+Failed asserting that 404 is identical to 403.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:550
+    546▕         $client->delete();
+    547▕ 
+    548▕         $response = $this->delete(route('clients.destroy', $client->id));
+    549▕ 
+  ➜ 550▕         $response->assertStatus(403);
+    551▕     }
+    552▕ 
+    553▕     public function test_export_csv_generates_csv_file(): void
+    554▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > export csv gener…   
+  Expected: 
+
+  To contain: Client Name
+
+  at tests/Feature/Controllers/ClientControllerTest.php:564
+    560▕         $response = $this->get(route('clients.export.csv'));
+    561▕ 
+    562▕         $response->assertStatus(200);
+    563▕         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+  ➜ 564▕         $this->assertStringContainsString('Client Name', $response->getContent());
+    565▕     }
+    566▕ 
+    567▕     public function test_export_csv_includes_only_company_clients(): void
+    568▕     {
+
+  1   tests/Feature/Controllers/ClientControllerTest.php:564
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > export csv inclu…   
+  Expected: 
+
+  To contain: My Company Client
+
+  at tests/Feature/Controllers/ClientControllerTest.php:585
+    581▕ 
+    582▕         $response = $this->get(route('clients.export.csv'));
+    583▕ 
+    584▕         $content = $response->getContent();
+  ➜ 585▕         $this->assertStringContainsString('My Company Client', $content);
+    586▕         $this->assertStringNotContainsString('Other Company Client', $content);
+    587▕     }
+    588▕ 
+    589▕     public function test_export_csv_excludes_archived_clients(): void
+
+  1   tests/Feature/Controllers/ClientControllerTest.php:585
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > export csv exclu…   
+  Expected: 
+
+  To contain: Active Client
+
+  at tests/Feature/Controllers/ClientControllerTest.php:608
+    604▕ 
+    605▕         $response = $this->get(route('clients.export.csv'));
+    606▕ 
+    607▕         $content = $response->getContent();
+  ➜ 608▕         $this->assertStringContainsString('Active Client', $content);
+    609▕         $this->assertStringNotContainsString('Archived Client', $content);
+    610▕     }
+    611▕ 
+    612▕     public function test_export_csv_includes_contact_and_location_data(): void
+
+  1   tests/Feature/Controllers/ClientControllerTest.php:608
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > export csv inclu…   
+  Expected: 
+
+  To contain: Jean Ritchie
+
+  at tests/Feature/Controllers/ClientControllerTest.php:634
+    630▕ 
+    631▕         $response = $this->get(route('clients.export.csv'));
+    632▕ 
+    633▕         $content = $response->getContent();
+  ➜ 634▕         $this->assertStringContainsString($contact->name, $content);
+    635▕     }
+    636▕ 
+    637▕     public function test_update_notes_updates_client_notes(): void
+    638▕     {
+
+  1   tests/Feature/Controllers/ClientControllerTest.php:634
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > update notes upd…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+PDOException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type bigint: "notes"
+CONTEXT:  unnamed portal parameter $1 = '...' in /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+Stack trace:
+#0 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(411): PDOStatement->execute()
+#1 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(811): Illuminate\Database\Connection->{closure:Illuminate\Database\Connection::select():397}()
+#2 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(778): Illuminate\Database\Connection->runQueryCallback()
+#3 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(397): Illuminate\Database\Connection->run()
+#4 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3188): Illuminate\Database\Connection->select()
+#5 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3173): Illuminate\Database\Query\Builder->runSelect()
+#6 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3763): Illuminate\Database\Query\Builder->{closure:Illuminate\Database\Query\Builder::get():3172}()
+#7 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3172): Illuminate\Database\Query\Builder->onceWithColumns()
+#8 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(902): Illuminate\Database\Query\Builder->get()
+#9 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(884): Illuminate\Database\Eloquent\Builder->getModels()
+#10 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(366): Illuminate\Database\Eloquent\Builder->get()
+#11 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(776): Illuminate\Database\Eloquent\Builder->first()
+#12 /opt/nestogy/app/Models/Client.php(641): Illuminate\Database\Eloquent\Builder->firstOrFail()
+#13 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/ImplicitRouteBinding.php(60): App\Models\Client->resolveRouteBinding()
+#14 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(980): Illuminate\Routing\ImplicitRouteBinding::resolveForRoute()
+#15 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportPageComponents/SupportPageComponents.php(214): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::substituteImplicitBindings():980}()
+#16 [internal function]: Livewire\Features\SupportPageComponents\SupportPageComponents::{closure:Livewire\Features\SupportPageComponents\SupportPageComponents::resolvePageComponentRouteBindings():206}()
+#17 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(982): call_user_func()
+#18 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(41): Illuminate\Routing\Router->substituteImplicitBindings()
+#19 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+#20 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#21 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+#22 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#23 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle()
+#24 /opt/nestogy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#25 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession->handle()
+#26 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#27 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession->handleStatefulRequest()
+#28 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession->handle()
+#29 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#30 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle()
+#31 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#32 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies->handle()
+#33 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#34 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline->then()
+#35 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+#36 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router->runRoute()
+#37 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+#38 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router->dispatch()
+#39 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+#40 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportDisablingBackButtonCache/DisableBackButtonCacheMiddleware.php(19): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#41 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware->handle()
+#42 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#43 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#44 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#45 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#46 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+#47 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#48 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#49 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+#50 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#51 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+#52 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#53 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+#54 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#55 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+#56 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#57 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+#58 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#59 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+#60 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#61 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+#62 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#63 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+#64 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+#65 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+#66 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+#67 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(471): Illuminate\Foundation\Testing\TestCase->json()
+#68 /opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php(642): Illuminate\Foundation\Testing\TestCase->patchJson()
+#69 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(1657): Tests\Feature\Controllers\ClientControllerTest->test_update_notes_updates_client_notes()
+#70 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+#71 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+#72 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+#73 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+#74 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#75 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner->run()
+#76 /opt/nestogy/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#77 {main}
+
+Next Illuminate\Database\QueryException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type bigint: "notes"
+CONTEXT:  unnamed portal parameter $1 = '...' (Connection: pgsql, SQL: select * from "clients" where "id" = notes and "clients"."deleted_at" is null limit 1) in /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+Stack trace:
+#0 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(778): Illuminate\Database\Connection->runQueryCallback()
+#1 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(397): Illuminate\Database\Connection->run()
+#2 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3188): Illuminate\Database\Connection->select()
+#3 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3173): Illuminate\Database\Query\Builder->runSelect()
+#4 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3763): Illuminate\Database\Query\Builder->{closure:Illuminate\Database\Query\Builder::get():3172}()
+#5 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3172): Illuminate\Database\Query\Builder->onceWithColumns()
+#6 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(902): Illuminate\Database\Query\Builder->get()
+#7 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(884): Illuminate\Database\Eloquent\Builder->getModels()
+#8 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(366): Illuminate\Database\Eloquent\Builder->get()
+#9 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(776): Illuminate\Database\Eloquent\Builder->first()
+#10 /opt/nestogy/app/Models/Client.php(641): Illuminate\Database\Eloquent\Builder->firstOrFail()
+#11 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/ImplicitRouteBinding.php(60): App\Models\Client->resolveRouteBinding()
+#12 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(980): Illuminate\Routing\ImplicitRouteBinding::resolveForRoute()
+#13 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportPageComponents/SupportPageComponents.php(214): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::substituteImplicitBindings():980}()
+#14 [internal function]: Livewire\Features\SupportPageComponents\SupportPageComponents::{closure:Livewire\Features\SupportPageComponents\SupportPageComponents::resolvePageComponentRouteBindings():206}()
+#15 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(982): call_user_func()
+#16 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(41): Illuminate\Routing\Router->substituteImplicitBindings()
+#17 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+#18 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#19 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+#20 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#21 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle()
+#22 /opt/nestogy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#23 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession->handle()
+#24 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#25 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession->handleStatefulRequest()
+#26 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession->handle()
+#27 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#28 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle()
+#29 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#30 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies->handle()
+#31 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#32 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline->then()
+#33 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+#34 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router->runRoute()
+#35 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+#36 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router->dispatch()
+#37 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+#38 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportDisablingBackButtonCache/DisableBackButtonCacheMiddleware.php(19): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#39 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware->handle()
+#40 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#41 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#42 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#43 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#44 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+#45 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#46 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#47 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+#48 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#49 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+#50 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#51 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+#52 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#53 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+#54 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#55 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+#56 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#57 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+#58 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#59 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+#60 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#61 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+#62 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+#63 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+#64 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+#65 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(471): Illuminate\Foundation\Testing\TestCase->json()
+#66 /opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php(642): Illuminate\Foundation\Testing\TestCase->patchJson()
+#67 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(1657): Tests\Feature\Controllers\ClientControllerTest->test_update_notes_updates_client_notes()
+#68 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+#69 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+#70 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+#71 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+#72 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#73 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner->run()
+#74 /opt/nestogy/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#75 {main}
+
+----------------------------------------------------------------------------------
+
+SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type bigint: "notes"
+CONTEXT:  unnamed portal parameter $1 = '...' (Connection: pgsql, SQL: select * from "clients" where "id" = notes and "clients"."deleted_at" is null limit 1)
+
+  at tests/Feature/Controllers/ClientControllerTest.php:646
+    642▕         $response = $this->patchJson(route('clients.update-notes'), [
+    643▕             'notes' => 'Updated notes content',
+    644▕         ]);
+    645▕ 
+  ➜ 646▕         $response->assertStatus(200);
+    647▕         $response->assertJson(['success' => true]);
+    648▕ 
+    649▕         $this->assertDatabaseHas('clients', [
+    650▕             'id' => $client->id,
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > update notes all…   
+  Expected response status code [200] but received 500.
+Failed asserting that 500 is identical to 200.
+
+The following exception occurred during the last request:
+
+PDOException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type bigint: "notes"
+CONTEXT:  unnamed portal parameter $1 = '...' in /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+Stack trace:
+#0 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(411): PDOStatement->execute()
+#1 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(811): Illuminate\Database\Connection->{closure:Illuminate\Database\Connection::select():397}()
+#2 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(778): Illuminate\Database\Connection->runQueryCallback()
+#3 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(397): Illuminate\Database\Connection->run()
+#4 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3188): Illuminate\Database\Connection->select()
+#5 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3173): Illuminate\Database\Query\Builder->runSelect()
+#6 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3763): Illuminate\Database\Query\Builder->{closure:Illuminate\Database\Query\Builder::get():3172}()
+#7 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3172): Illuminate\Database\Query\Builder->onceWithColumns()
+#8 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(902): Illuminate\Database\Query\Builder->get()
+#9 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(884): Illuminate\Database\Eloquent\Builder->getModels()
+#10 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(366): Illuminate\Database\Eloquent\Builder->get()
+#11 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(776): Illuminate\Database\Eloquent\Builder->first()
+#12 /opt/nestogy/app/Models/Client.php(641): Illuminate\Database\Eloquent\Builder->firstOrFail()
+#13 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/ImplicitRouteBinding.php(60): App\Models\Client->resolveRouteBinding()
+#14 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(980): Illuminate\Routing\ImplicitRouteBinding::resolveForRoute()
+#15 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportPageComponents/SupportPageComponents.php(214): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::substituteImplicitBindings():980}()
+#16 [internal function]: Livewire\Features\SupportPageComponents\SupportPageComponents::{closure:Livewire\Features\SupportPageComponents\SupportPageComponents::resolvePageComponentRouteBindings():206}()
+#17 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(982): call_user_func()
+#18 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(41): Illuminate\Routing\Router->substituteImplicitBindings()
+#19 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+#20 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#21 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+#22 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#23 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle()
+#24 /opt/nestogy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#25 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession->handle()
+#26 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#27 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession->handleStatefulRequest()
+#28 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession->handle()
+#29 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#30 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle()
+#31 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#32 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies->handle()
+#33 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#34 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline->then()
+#35 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+#36 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router->runRoute()
+#37 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+#38 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router->dispatch()
+#39 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+#40 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportDisablingBackButtonCache/DisableBackButtonCacheMiddleware.php(19): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#41 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware->handle()
+#42 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#43 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#44 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#45 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#46 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+#47 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#48 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#49 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+#50 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#51 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+#52 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#53 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+#54 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#55 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+#56 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#57 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+#58 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#59 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+#60 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#61 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+#62 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#63 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+#64 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+#65 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+#66 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+#67 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(471): Illuminate\Foundation\Testing\TestCase->json()
+#68 /opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php(663): Illuminate\Foundation\Testing\TestCase->patchJson()
+#69 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(1657): Tests\Feature\Controllers\ClientControllerTest->test_update_notes_allows_null_notes()
+#70 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+#71 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+#72 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+#73 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+#74 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#75 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner->run()
+#76 /opt/nestogy/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#77 {main}
+
+Next Illuminate\Database\QueryException: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type bigint: "notes"
+CONTEXT:  unnamed portal parameter $1 = '...' (Connection: pgsql, SQL: select * from "clients" where "id" = notes and "clients"."deleted_at" is null limit 1) in /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+Stack trace:
+#0 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(778): Illuminate\Database\Connection->runQueryCallback()
+#1 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php(397): Illuminate\Database\Connection->run()
+#2 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3188): Illuminate\Database\Connection->select()
+#3 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3173): Illuminate\Database\Query\Builder->runSelect()
+#4 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3763): Illuminate\Database\Query\Builder->{closure:Illuminate\Database\Query\Builder::get():3172}()
+#5 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3172): Illuminate\Database\Query\Builder->onceWithColumns()
+#6 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(902): Illuminate\Database\Query\Builder->get()
+#7 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(884): Illuminate\Database\Eloquent\Builder->getModels()
+#8 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php(366): Illuminate\Database\Eloquent\Builder->get()
+#9 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(776): Illuminate\Database\Eloquent\Builder->first()
+#10 /opt/nestogy/app/Models/Client.php(641): Illuminate\Database\Eloquent\Builder->firstOrFail()
+#11 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/ImplicitRouteBinding.php(60): App\Models\Client->resolveRouteBinding()
+#12 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(980): Illuminate\Routing\ImplicitRouteBinding::resolveForRoute()
+#13 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportPageComponents/SupportPageComponents.php(214): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::substituteImplicitBindings():980}()
+#14 [internal function]: Livewire\Features\SupportPageComponents\SupportPageComponents::{closure:Livewire\Features\SupportPageComponents\SupportPageComponents::resolvePageComponentRouteBindings():206}()
+#15 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(982): call_user_func()
+#16 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(41): Illuminate\Routing\Router->substituteImplicitBindings()
+#17 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+#18 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#19 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+#20 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(87): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#21 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\VerifyCsrfToken->handle()
+#22 /opt/nestogy/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#23 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\View\Middleware\ShareErrorsFromSession->handle()
+#24 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(120): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#25 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(63): Illuminate\Session\Middleware\StartSession->handleStatefulRequest()
+#26 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Session\Middleware\StartSession->handle()
+#27 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(36): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#28 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse->handle()
+#29 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(74): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#30 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Cookie\Middleware\EncryptCookies->handle()
+#31 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#32 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(821): Illuminate\Pipeline\Pipeline->then()
+#33 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+#34 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(764): Illuminate\Routing\Router->runRoute()
+#35 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Routing/Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+#36 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(200): Illuminate\Routing\Router->dispatch()
+#37 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+#38 /opt/nestogy/vendor/livewire/livewire/src/Features/SupportDisablingBackButtonCache/DisableBackButtonCacheMiddleware.php(19): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+#39 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware->handle()
+#40 /opt/nestogy/vendor/barryvdh/laravel-debugbar/src/Middleware/InjectDebugbar.php(59): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#41 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Barryvdh\Debugbar\Middleware\InjectDebugbar->handle()
+#42 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#43 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#44 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+#45 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#46 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+#47 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+#48 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#49 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+#50 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#51 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+#52 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(48): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#53 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+#54 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#55 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+#56 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#57 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+#58 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#59 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+#60 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+#61 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+#62 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+#63 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+#64 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+#65 /opt/nestogy/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/MakesHttpRequests.php(471): Illuminate\Foundation\Testing\TestCase->json()
+#66 /opt/nestogy/tests/Feature/Controllers/ClientControllerTest.php(663): Illuminate\Foundation\Testing\TestCase->patchJson()
+#67 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(1657): Tests\Feature\Controllers\ClientControllerTest->test_update_notes_allows_null_notes()
+#68 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+#69 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestRunner/TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+#70 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+#71 /opt/nestogy/vendor/phpunit/phpunit/src/Framework/TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+#72 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+#73 /opt/nestogy/vendor/phpunit/phpunit/src/TextUI/Application.php(211): PHPUnit\TextUI\TestRunner->run()
+#74 /opt/nestogy/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+#75 {main}
+
+----------------------------------------------------------------------------------
+
+SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type bigint: "notes"
+CONTEXT:  unnamed portal parameter $1 = '...' (Connection: pgsql, SQL: select * from "clients" where "id" = notes and "clients"."deleted_at" is null limit 1)
+
+  at tests/Feature/Controllers/ClientControllerTest.php:667
+    663▕         $response = $this->patchJson(route('clients.update-notes'), [
+    664▕             'notes' => null,
+    665▕         ]);
+    666▕ 
+  ➜ 667▕         $response->assertStatus(200);
+    668▕         $this->assertDatabaseHas('clients', [
+    669▕             'id' => $client->id,
+    670▕             'notes' => null,
+    671▕         ]);
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > download templat…   
+  Expected: 
+
+  To contain: name
+
+  at tests/Feature/Controllers/ClientControllerTest.php:916
+    912▕         $response = $this->get(route('clients.import.template'));
+    913▕ 
+    914▕         $response->assertStatus(200);
+    915▕         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+  ➜ 916▕         $this->assertStringContainsString('name', $response->getContent());
+    917▕         $this->assertStringContainsString('email', $response->getContent());
+    918▕     }
+    919▕ 
+    920▕     public function test_download_template_includes_sample_row(): void
+
+  1   tests/Feature/Controllers/ClientControllerTest.php:916
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > download templat…   
+  Expected: 
+
+  To contain: Acme Corporation
+
+  at tests/Feature/Controllers/ClientControllerTest.php:925
+    921▕     {
+    922▕         $response = $this->get(route('clients.import.template'));
+    923▕ 
+    924▕         $content = $response->getContent();
+  ➜ 925▕         $this->assertStringContainsString('Acme Corporation', $content);
+    926▕     }
+    927▕ 
+    928▕     public function test_tags_get_returns_view(): void
+    929▕     {
+
+  1   tests/Feature/Controllers/ClientControllerTest.php:925
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > tags get returns…   
+  Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:935
+    931▕         session(['selected_client_id' => $client->id]);
+    932▕ 
+    933▕         $response = $this->get(route('clients.tags'));
+    934▕ 
+  ➜ 935▕         $response->assertStatus(200);
+    936▕         $response->assertViewIs('clients.tags');
+    937▕         $response->assertViewHas('client');
+    938▕     }
+    939▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > tags post update…   
+  Expected response status code [201, 301, 302, 303, 307, 308] but received 403.
+Failed asserting that false is true.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:952
+    948▕         $response = $this->post(route('clients.tags'), [
+    949▕             'tags' => [$tag1->id, $tag2->id],
+    950▕         ]);
+    951▕ 
+  ➜ 952▕         $response->assertRedirect();
+    953▕         $response->assertSessionHas('success');
+    954▕     }
+    955▕ 
+    956▕     public function test_tags_validates_tag_ids_exist(): void
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > tags validates t…   
+  Session is missing expected key [errors].
+Failed asserting that false is true.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:965
+    961▕         $response = $this->post(route('clients.tags'), [
+    962▕             'tags' => [99999],
+    963▕         ]);
+    964▕ 
+  ➜ 965▕         $response->assertSessionHasErrors('tags.0');
+    966▕     }
+    967▕ 
+    968▕     public function test_select_client_sets_session(): void
+    969▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControlle…  RouteNotFoundException   
+  Route [clients.validate-batch] not defined.
+
+  at vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+    522▕             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    523▕             return $url;
+    524▕         }
+    525▕ 
+  ➜ 526▕         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    527▕     }
+    528▕ 
+    529▕     /**
+    530▕      * Get the URL for a given route instance.
+
+      [2m+2 vendor frames [22m
+  3   tests/Feature/Controllers/ClientControllerTest.php:1098
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControlle…  RouteNotFoundException   
+  Route [clients.validate-batch] not defined.
+
+  at vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+    522▕             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    523▕             return $url;
+    524▕         }
+    525▕ 
+  ➜ 526▕         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    527▕     }
+    528▕ 
+    529▕     /**
+    530▕      * Get the URL for a given route instance.
+
+      [2m+2 vendor frames [22m
+  3   tests/Feature/Controllers/ClientControllerTest.php:1109
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControlle…  RouteNotFoundException   
+  Route [clients.validate-batch] not defined.
+
+  at vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+    522▕             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    523▕             return $url;
+    524▕         }
+    525▕ 
+  ➜ 526▕         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    527▕     }
+    528▕ 
+    529▕     /**
+    530▕      * Get the URL for a given route instance.
+
+      [2m+2 vendor frames [22m
+  3   tests/Feature/Controllers/ClientControllerTest.php:1117
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControlle…  RouteNotFoundException   
+  Route [clients.validate-batch] not defined.
+
+  at vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:526
+    522▕             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    523▕             return $url;
+    524▕         }
+    525▕ 
+  ➜ 526▕         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    527▕     }
+    528▕ 
+    529▕     /**
+    530▕      * Get the URL for a given route instance.
+
+      [2m+2 vendor frames [22m
+  3   tests/Feature/Controllers/ClientControllerTest.php:1133
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > dynamic index cl…   
+  Failed asserting that 137 is null.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:1170
+    1166▕ 
+    1167▕         $response = $this->get(route('clients.index'));
+    1168▕ 
+    1169▕         $response->assertStatus(200);
+  ➜ 1170▕         $this->assertNull(session('selected_client_id'));
+    1171▕     }
+    1172▕ 
+    1173▕     public function test_dynamic_index_redirects_unauthenticated_user(): void
+    1174▕     {
+
+  1   tests/Feature/Controllers/ClientControllerTest.php:1170
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > leads import tem…   
+  Expected: 
+
+  To contain: Last
+
+  at tests/Feature/Controllers/ClientControllerTest.php:1199
+    1195▕         $this->assertTrue(
+    1196▕             str_contains($response->headers->get('content-type'), 'text/csv'),
+    1197▕             'Content-Type header should contain text/csv'
+    1198▕         );
+  ➜ 1199▕         $this->assertStringContainsString('Last', $response->getContent());
+    1200▕         $this->assertStringContainsString('First', $response->getContent());
+    1201▕     }
+    1202▕ 
+    1203▕     public function test_leads_import_creates_leads_from_csv(): void
+
+  1   tests/Feature/Controllers/ClientControllerTest.php:1199
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\ClientControllerTest > leads import val…   
+  Session is missing expected key [errors].
+Failed asserting that false is true.
+
+  at tests/Feature/Controllers/ClientControllerTest.php:1277
+    1273▕             'csv_file' => $file,
+    1274▕             'default_status' => 'active',
+    1275▕         ]);
+    1276▕ 
+  ➜ 1277▕         $response->assertSessionHasErrors('csv_file');
+    1278▕     }
+    1279▕ 
+    1280▕     public function test_leads_import_validates_default_status_values(): void
+    1281▕     {
+
+
+  Tests:    20 failed, 78 passed (217 assertions)
+  Duration: 38.81s
+

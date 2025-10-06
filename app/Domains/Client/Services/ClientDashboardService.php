@@ -79,13 +79,13 @@ class ClientDashboardService
         $currentYear = Carbon::now()->year;
 
         return [
-            'total_revenue' => $invoices->sum('total'),
+            'total_revenue' => $invoices->sum('amount'),
             'outstanding_balance' => $invoices->where('status', 'unpaid')->sum('balance'),
-            'revenue_this_year' => $invoices->whereYear('created_at', $currentYear)->sum('total'),
+            'revenue_this_year' => $invoices->whereYear('created_at', $currentYear)->sum('amount'),
             'revenue_this_month' => $invoices->whereBetween('created_at', [
                 Carbon::now()->startOfMonth(),
                 Carbon::now()->endOfMonth(),
-            ])->sum('total'),
+            ])->sum('amount'),
             'total_invoices' => $invoices->count(),
             'unpaid_invoices' => $invoices->where('status', 'unpaid')->count(),
             'overdue_invoices' => $invoices->where('status', 'overdue')->count(),

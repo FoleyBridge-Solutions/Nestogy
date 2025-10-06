@@ -1,0 +1,230 @@
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+
+   FAIL  Tests\Unit\Controllers\TicketControllerTest
+  ✓ generate ticket number creates unique number                        14.16s  
+  ⨯ generate ticket number increments sequence                           0.24s  
+  ✓ get filter options returns correct structure                         0.18s  
+  ✓ get filter options includes valid statuses                           0.19s  
+  ✓ get filter options includes valid priorities                         0.16s  
+  ✓ track ticket view stores in cache                                    0.25s  
+  ✓ track ticket view stores user information                            0.22s  
+  ✓ get ticket viewers excludes current user                             0.26s  
+  ✓ get ticket viewers excludes old views                                0.23s  
+  ✓ track ticket changes logs status changes                             0.22s  
+  ✓ track ticket changes logs priority changes                           0.23s  
+  ✓ track ticket changes logs assignment changes                         0.23s  
+  ✓ get today time statistics returns correct structure                  0.24s  
+  ⨯ get today time statistics calculates total hours                     0.26s  
+  ✓ index request includes pagination                                    1.45s  
+  ✓ index request applies sorting                                        0.25s  
+  ✓ create request provides form data                                    0.18s  
+  ✓ create request includes priority options                             0.18s  
+  ✓ create request includes status options                               0.17s  
+  ✓ export request generates csv headers                                 0.27s  
+  ✓ search request requires minimum query length                         0.16s  
+  ✓ search request limits results                                        0.70s  
+  ✓ search request excludes closed tickets                               0.26s  
+
+   FAIL  Tests\Feature\Controllers\TicketControllerTest
+  ✓ index displays tickets list                                          0.81s  
+  ✓ index filters by search term                                         0.34s  
+  ✓ index filters by status                                              0.30s  
+  ✓ index filters by priority                                            0.28s  
+  ✓ index filters by assignee                                            0.29s  
+  ✓ index filters overdue tickets                                        0.30s  
+  ✓ index filters unassigned tickets                                     0.31s  
+  ✓ index filters watched tickets                                        0.33s  
+  ✓ create displays form                                                 0.40s  
+  ⨯ store creates ticket                                                 0.23s  
+  ⨯ store creates watcher for creator                                    0.23s  
+  ⨯ store generates unique ticket number                                 0.24s  
+  ✓ store validates required fields                                      0.20s  
+  ✓ store validates client belongs to company                            0.24s  
+  ✓ store validates priority values                                      0.21s  
+  ⨯ store returns json when requested                                    0.21s  
+  ✓ show displays ticket                                                 0.64s  
+  ✓ show tracks viewer                                                   0.47s  
+  ✓ show returns json when requested                                     0.28s  
+  ✓ edit displays form                                                   0.49s  
+  ✓ update modifies ticket                                               0.27s  
+  ✓ update validates input                                               0.25s  
+  ✓ destroy soft deletes ticket                                          0.28s  
+  ✓ destroy returns json when requested                                  0.26s  
+  ✓ assign updates ticket assignee                                       0.28s  
+  ✓ assign creates watcher for assignee                                  0.27s  
+  ✓ assign validates assignee belongs to company                         0.28s  
+  ✓ update status changes ticket status                                  0.28s  
+  ✓ update status sets closed timestamps                                 0.30s  
+  ✓ update priority changes ticket priority                              0.28s  
+  ✓ schedule creates calendar event                                      0.25s  
+  ✓ schedule validates future date                                       0.25s  
+  ✓ merge moves data to target ticket                                    0.33s  
+  ⨯ merge validates target ticket exists                                 0.28s  
+  ✓ merge prevents self merge                                            0.26s  
+  ✓ export generates csv                                                 0.35s  
+  ⨯ search finds tickets by number                                       0.21s  
+  ✓ search finds tickets by subject                                      0.24s  
+  ✓ search excludes specified ticket                                     0.30s  
+  ✓ get viewers returns other viewers                                    0.29s  
+  ✓ start smart timer creates time entry                                 0.35s  
+  ✓ stop timer ends active timer                                         0.28s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > gen…  QueryException   
+  SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: "TKT-2025-000001"
+CONTEXT:  unnamed portal parameter $6 = '...' (Connection: pgsql, SQL: insert into "tickets" ("company_id", "client_id", "created_by", "assigned_to", "prefix", "number", "subject", "details", "priority", "status", "category", "source", "billable", "onsite", "scheduled_at", "closed_at", "created_at", "updated_at") values (2, 2, 3, ?, TKT, TKT-2025-000001, Magni aperiam voluptatem ipsa praesentium., Expedita animi omnis quod enim quos. Adipisci rem quia asperiores. Velit rerum autem quam laboriosam ratione.
+
+Doloribus eaque labore dolor sunt mollitia aut odio. Soluta et autem sed aspernatur sed.
+
+Placeat fuga aut animi beatae officia ullam. Fugit ea sit architecto fugit et voluptas., high, closed, Hardware, walk-in, 1, 0, ?, ?, 2025-04-27 19:06:10, 2025-04-27 19:06:10) returning "id")
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+      [2m+18 vendor frames [22m
+  19  tests/Unit/Controllers/TicketControllerTest.php:71
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Unit\Controllers\TicketControllerTest > get today time stat…   
+  Failed asserting that 1 is equal to 2 or is greater than 2.
+
+  at tests/Unit/Controllers/TicketControllerTest.php:340
+    336▕         $stats = $method->invoke($this->controller, $this->user);
+    337▕ 
+    338▕         $this->assertGreaterThanOrEqual(4.0, $stats['total_hours']);
+    339▕         $this->assertGreaterThanOrEqual(2.5, $stats['billable_hours']);
+  ➜ 340▕         $this->assertGreaterThanOrEqual(2, $stats['entries_count']);
+    341▕     }
+    342▕ 
+    343▕     public function test_index_request_includes_pagination(): void
+    344▕     {
+
+  1   tests/Unit/Controllers/TicketControllerTest.php:340
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store creates ti…   
+  Failed asserting that a row in the table [tickets] matches the attributes {
+    "subject": "Test Ticket",
+    "client_id": 33,
+    "company_id": 110,
+    "priority": "High",
+    "status": "open"
+}.
+
+The table is empty.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:262
+    258▕         
+    259▕         if ($response->exception) {
+    260▕             throw $response->exception;
+    261▕         }
+  ➜ 262▕         $this->assertDatabaseHas('tickets', [
+    263▕             'subject' => 'Test Ticket',
+    264▕             'client_id' => $this->client->id,
+    265▕             'company_id' => $this->user->company_id,
+    266▕             'priority' => 'High',
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest >…   ErrorException   
+  Attempt to read property "id" on null
+
+  at tests/Feature/Controllers/TicketControllerTest.php:285
+    281▕         $response = $this->actingAs($this->user)->post(route('tickets.store'), $data);
+    282▕ 
+    283▕         $ticket = Ticket::where('subject', 'Test Ticket')->first();
+    284▕         $this->assertDatabaseHas('ticket_watchers', [
+  ➜ 285▕             'ticket_id' => $ticket->id,
+    286▕             'user_id' => $this->user->id,
+    287▕         ]);
+    288▕     }
+    289▕
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store generates…    
+  Failed asserting that null is not null.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:305
+    301▕ 
+    302▕         $ticket = Ticket::where('subject', 'Test Ticket Unique')
+    303▕             ->where('company_id', $this->user->company_id)
+    304▕             ->first();
+  ➜ 305▕         $this->assertNotNull($ticket);
+    306▕         $this->assertNotNull($ticket->number);
+    307▕         $this->assertStringContainsString('TKT', $ticket->number);
+    308▕         $this->assertStringContainsString(date('Y'), $ticket->number);
+    309▕     }
+
+  1   tests/Feature/Controllers/TicketControllerTest.php:305
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > store returns js…   
+  Expected response status code [201] but received 500.
+Failed asserting that 500 is identical to 201.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:364
+    360▕ 
+    361▕         $response = $this->actingAs($this->user)
+    362▕             ->postJson(route('tickets.store'), $data);
+    363▕ 
+  ➜ 364▕         $response->assertStatus(201);
+    365▕         $response->assertJsonStructure([
+    366▕             'success',
+    367▕             'message',
+    368▕             'ticket' => ['id', 'subject', 'client', 'assignee'],
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest > merge validates…    
+  Expected response status code [404] but received 500.
+Failed asserting that 500 is identical to 404.
+
+  at tests/Feature/Controllers/TicketControllerTest.php:690
+    686▕             ->postJson(route('tickets.merge', $ticket), [
+    687▕                 'merge_into_number' => 'INVALID-999999',
+    688▕             ]);
+    689▕ 
+  ➜ 690▕         $response->assertStatus(404);
+    691▕     }
+    692▕ 
+    693▕     public function test_merge_prevents_self_merge(): void
+    694▕     {
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Controllers\TicketControllerTest >…   QueryException   
+  SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: "TKT-2025-000001"
+CONTEXT:  unnamed portal parameter $6 = '...' (Connection: pgsql, SQL: insert into "tickets" ("company_id", "client_id", "created_by", "assigned_to", "prefix", "number", "subject", "details", "priority", "status", "category", "source", "billable", "onsite", "scheduled_at", "closed_at", "created_at", "updated_at") values (162, 61, 204, ?, TKT, TKT-2025-000001, Quia iusto perspiciatis odit mollitia., Rem quisquam optio veritatis aut qui. Blanditiis consectetur aut minima ex rem aut eos odit. Odio necessitatibus aut culpa harum fugiat aliquid tempora.
+
+Nihil ad possimus delectus quo necessitatibus expedita. Et molestias rem exercitationem. Neque ducimus ducimus quia similique hic.
+
+Culpa temporibus cum sit ad omnis vitae ex. Cumque accusantium natus maxime illum. Rerum sit reiciendis totam est ut., high, pending, Other, monitoring, 0, 0, ?, ?, 2025-06-28 18:49:30, 2025-06-28 18:49:30) returning "id")
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+      [2m+18 vendor frames [22m
+  19  tests/Feature/Controllers/TicketControllerTest.php:723
+
+
+  Tests:    8 failed, 57 passed (157 assertions)
+  Duration: 33.91s
+

@@ -1,0 +1,431 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12 with PCOV 1.0.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+EEEEEE....EE...F.                                                 17 / 17 (100%)
+
+Time: 00:16.866, Memory: 117.00 MB
+
+Contract Generation Service (Tests\Unit\Services\ContractGenerationService)
+ ✘ Generate from quote creates contract
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "contract_templates" ("company_id", "name", "slug", "description", "template_type", "category", "tags", "status", "version", "parent_template_id", "is_default", "variable_fields", "default_values", "required_fields", "voip_service_types", "default_sla_terms", "default_pricing_structure", "compliance_templates", "jurisdictions", "regulatory_requirements", "legal_disclaimers", "customization_options", "conditional_clauses", "pricing_models", "billing_model", "asset_billing_rules", "supported_asset_types", "asset_service_matrix", "default_per_asset_rate", "contact_billing_rules", "contact_access_tiers", "default_per_contact_rate", "calculation_formulas", "auto_assignment_rules", "billing_triggers", "workflow_automation", "notification_triggers", "integration_hooks", "usage_count", "last_used_at", "success_rate", "requires_approval", "approval_workflow", "last_reviewed_at", "next_review_date", "metadata", "rendering_options", "signature_settings", "created_by", "updated_by", "approved_by", "contract_type", "updated_at", "created_at") values (1, Standard Service Agreement, omnis-qui-eius-et-ad, Recusandae delectus fugit inventore delectus voluptate non., custom, quaerat, ?, draft, 1.0, ?, 0, ?, ?, ["client_id","start_date","end_date"], ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, per_asset, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 0, ?, ?, ?, ?, ?, ?, 1, ?, ?, managed_services, 2025-10-05 07:48:50, 2025-10-05 07:48:50) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:49
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:49
+   │
+ ✘ Generate from quote with customizations
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "contract_templates" ("company_id", "name", "slug", "description", "template_type", "category", "tags", "status", "version", "parent_template_id", "is_default", "variable_fields", "default_values", "required_fields", "voip_service_types", "default_sla_terms", "default_pricing_structure", "compliance_templates", "jurisdictions", "regulatory_requirements", "legal_disclaimers", "customization_options", "conditional_clauses", "pricing_models", "billing_model", "asset_billing_rules", "supported_asset_types", "asset_service_matrix", "default_per_asset_rate", "contact_billing_rules", "contact_access_tiers", "default_per_contact_rate", "calculation_formulas", "auto_assignment_rules", "billing_triggers", "workflow_automation", "notification_triggers", "integration_hooks", "usage_count", "last_used_at", "success_rate", "requires_approval", "approval_workflow", "last_reviewed_at", "next_review_date", "metadata", "rendering_options", "signature_settings", "created_by", "updated_by", "approved_by", "contract_type", "updated_at", "created_at") values (5, qui vel et, omnis-sit-tenetur-consequatur-rerum-consectetur, ?, custom, ut, ["non","ut","modi"], active, 1.0, ?, 0, ?, ?, ["client_id","start_date","end_date"], ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, fixed, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 0, ?, ?, ?, ?, ?, ?, 4, ?, ?, managed_services, 2025-10-05 07:48:52, 2025-10-05 07:48:52) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:70
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:70
+   │
+ ✘ Generate from template creates contract
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "contract_templates" ("company_id", "name", "slug", "description", "template_type", "category", "tags", "status", "version", "parent_template_id", "is_default", "variable_fields", "default_values", "required_fields", "voip_service_types", "default_sla_terms", "default_pricing_structure", "compliance_templates", "jurisdictions", "regulatory_requirements", "legal_disclaimers", "customization_options", "conditional_clauses", "pricing_models", "billing_model", "asset_billing_rules", "supported_asset_types", "asset_service_matrix", "default_per_asset_rate", "contact_billing_rules", "contact_access_tiers", "default_per_contact_rate", "calculation_formulas", "auto_assignment_rules", "billing_triggers", "workflow_automation", "notification_triggers", "integration_hooks", "usage_count", "last_used_at", "success_rate", "requires_approval", "approval_workflow", "last_reviewed_at", "next_review_date", "metadata", "rendering_options", "signature_settings", "created_by", "updated_by", "approved_by", "contract_type", "updated_at", "created_at") values (9, VoIP Service Agreement, ex-est-sit-rerum-quia-autem-labore, Vero ducimus ipsum voluptas nobis., compliance, ut, ?, active, 1.0, ?, 0, ?, ?, ["client_id","start_date","end_date"], ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, per_contact, ?, ?, ?, 254.29, ?, ?, 49.06, ?, ?, ?, ?, ?, ?, 0, ?, ?, 0, ?, ?, ?, ?, ?, ?, 7, ?, ?, telecommunications, 2025-10-05 07:48:52, 2025-10-05 07:48:52) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:89
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:89
+   │
+ ✘ Generate from template with voip config
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "contract_templates" ("company_id", "name", "slug", "description", "template_type", "category", "tags", "status", "version", "parent_template_id", "is_default", "variable_fields", "default_values", "required_fields", "voip_service_types", "default_sla_terms", "default_pricing_structure", "compliance_templates", "jurisdictions", "regulatory_requirements", "legal_disclaimers", "customization_options", "conditional_clauses", "pricing_models", "billing_model", "asset_billing_rules", "supported_asset_types", "asset_service_matrix", "default_per_asset_rate", "contact_billing_rules", "contact_access_tiers", "default_per_contact_rate", "calculation_formulas", "auto_assignment_rules", "billing_triggers", "workflow_automation", "notification_triggers", "integration_hooks", "usage_count", "last_used_at", "success_rate", "requires_approval", "approval_workflow", "last_reviewed_at", "next_review_date", "metadata", "rendering_options", "signature_settings", "created_by", "updated_by", "approved_by", "contract_type", "updated_at", "created_at") values (10, quam tempora non, praesentium-consequatur-qui-soluta-in-non-ut-tempore-eum, Odit quae esse deserunt quis culpa reprehenderit qui ad., standard, rerum, ?, active, 1.0, ?, 0, ?, ?, ["client_id","start_date","end_date"], ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, hybrid, ?, ?, ?, 314.33, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 0, ?, ?, ?, ?, ?, ?, 8, ?, ?, telecommunications, 2025-10-05 07:48:52, 2025-10-05 07:48:52) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:112
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:112
+   │
+ ✘ Create custom contract
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "legally_binding" of relation "contract_signatures" does not exist
+   │ LINE 1: ..._email", "status", "signing_order", "expires_at", "legally_b...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "contract_signatures" ("contract_id", "company_id", "signer_type", "signer_name", "signer_email", "status", "signing_order", "expires_at", "legally_binding", "audit_trail", "updated_at", "created_at") values (1, 11, client, Cole, Zieme and Fisher, bettie85@adams.com, pending, 1, 2025-11-04 07:48:52, 1, [{"action":"signature_created","timestamp":"2025-10-05T07:48:52.620895Z","user_id":9,"data":{"signatory_type":null,"signatory_name":null,"signatory_email":null}}], 2025-10-05 07:48:52, 2025-10-05 07:48:52) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1219
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/helpers.php:390
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1218
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2540
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2556
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:534
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:156
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:146
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "legally_binding" of relation "contract_signatures" does not exist
+   │ LINE 1: ..._email", "status", "signing_order", "expires_at", "legally_b...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1219
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/helpers.php:390
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1218
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2540
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2556
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:534
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:156
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:146
+   │
+ ✘ Create custom contract with milestones
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "legally_binding" of relation "contract_signatures" does not exist
+   │ LINE 1: ..._email", "status", "signing_order", "expires_at", "legally_b...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "contract_signatures" ("contract_id", "company_id", "signer_type", "signer_name", "signer_email", "status", "signing_order", "expires_at", "legally_binding", "audit_trail", "updated_at", "created_at") values (2, 12, client, Stroman, Barton and Aufderhar, crooks.rupert@donnelly.net, pending, 1, 2025-11-04 07:48:52, 1, [{"action":"signature_created","timestamp":"2025-10-05T07:48:52.858107Z","user_id":10,"data":{"signatory_type":null,"signatory_name":null,"signatory_email":null}}], 2025-10-05 07:48:52, 2025-10-05 07:48:52) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1219
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/helpers.php:390
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1218
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2540
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2556
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:534
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:156
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:176
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "legally_binding" of relation "contract_signatures" does not exist
+   │ LINE 1: ..._email", "status", "signing_order", "expires_at", "legally_b...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1219
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/helpers.php:390
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1218
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2540
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2556
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:534
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:156
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+   │ /opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:143
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:176
+   │
+ ✔ Generate contract document
+ ✔ Generate contract document with options
+ ✔ Regenerate contract
+ ✔ Regenerate contract maintains original data
+ ✘ Full contract lifecycle from quote
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "contract_templates" ("company_id", "name", "slug", "description", "template_type", "category", "tags", "status", "version", "parent_template_id", "is_default", "variable_fields", "default_values", "required_fields", "voip_service_types", "default_sla_terms", "default_pricing_structure", "compliance_templates", "jurisdictions", "regulatory_requirements", "legal_disclaimers", "customization_options", "conditional_clauses", "pricing_models", "billing_model", "asset_billing_rules", "supported_asset_types", "asset_service_matrix", "default_per_asset_rate", "contact_billing_rules", "contact_access_tiers", "default_per_contact_rate", "calculation_formulas", "auto_assignment_rules", "billing_triggers", "workflow_automation", "notification_triggers", "integration_hooks", "usage_count", "last_used_at", "success_rate", "requires_approval", "approval_workflow", "last_reviewed_at", "next_review_date", "metadata", "rendering_options", "signature_settings", "created_by", "updated_by", "approved_by", "contract_type", "updated_at", "created_at") values (21, hic totam eveniet, unde-qui-autem-aut-quia, Magni laboriosam fuga quam., standard, ?, ?, draft, 1.0, ?, 0, ?, ?, ["client_id","start_date","end_date"], ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, per_contact, ?, ?, ?, 105.77, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 0, ?, ?, ?, ?, ?, ?, 19, ?, ?, managed_services, 2025-10-05 07:48:54, 2025-10-05 07:48:54) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:265
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:265
+   │
+ ✘ Contract generation with multiple templates
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^ (Connection: pgsql, SQL: insert into "contract_templates" ("company_id", "name", "slug", "description", "template_type", "category", "tags", "status", "version", "parent_template_id", "is_default", "variable_fields", "default_values", "required_fields", "voip_service_types", "default_sla_terms", "default_pricing_structure", "compliance_templates", "jurisdictions", "regulatory_requirements", "legal_disclaimers", "customization_options", "conditional_clauses", "pricing_models", "billing_model", "asset_billing_rules", "supported_asset_types", "asset_service_matrix", "default_per_asset_rate", "contact_billing_rules", "contact_access_tiers", "default_per_contact_rate", "calculation_formulas", "auto_assignment_rules", "billing_triggers", "workflow_automation", "notification_triggers", "integration_hooks", "usage_count", "last_used_at", "success_rate", "requires_approval", "approval_workflow", "last_reviewed_at", "next_review_date", "metadata", "rendering_options", "signature_settings", "created_by", "updated_by", "approved_by", "contract_type", "updated_at", "created_at") values (25, aut delectus porro, assumenda-perferendis-et-quas-aut-qui-commodi-accusantium, Incidunt consequatur rerum praesentium ut sed., standard, sunt, ["voluptas","tenetur","aut"], active, 1.0, ?, 0, ?, ?, ["client_id","start_date","end_date"], ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, per_asset, ?, ?, ?, ?, ?, ?, 12.14, ?, ?, ?, ?, ?, ?, 0, ?, ?, 0, ?, ?, ?, ?, ?, ?, 22, ?, ?, managed_services, 2025-10-05 07:48:54, 2025-10-05 07:48:54) returning "id")
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:286
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[42703]: Undefined column: 7 ERROR:  column "contract_type" of relation "contract_templates" does not exist
+   │ LINE 1: ...ings", "created_by", "updated_by", "approved_by", "contract_...
+   │                                                              ^
+   │
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:811
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:778
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:397
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Connection.php:384
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Processors/PostgresProcessor.php:24
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3853
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2235
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1436
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1401
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1240
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:370
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php:271
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:365
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:321
+   │ /opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Factories/Factory.php:315
+   │ /opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:286
+   │
+ ✔ Contract generation handles company isolation
+ ✔ Generate from quote validates quote status
+ ✔ Create custom contract requires minimum fields
+ ✘ Regenerate contract handles signed contracts
+   │
+   │ Failed asserting that exception of type "Exception" is thrown.
+
+   │
+ ✔ Generate contract document handles missing contract
+
+ERRORS!
+Tests: 17, Assertions: 11, Errors: 8, Failures: 1.
+
+Generating code coverage report in Clover XML format ... done [00:12.684]

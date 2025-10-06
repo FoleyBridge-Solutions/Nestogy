@@ -1,0 +1,47 @@
+PHPUnit 11.5.42 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12 with PCOV 1.0.12
+Configuration: /opt/nestogy/phpunit.xml
+
+Migrated 19 permissions to Bouncer abilities.
+Migrated 0 roles to Bouncer.
+Migrated 0 role-permission relationships across 0 companies.
+Migrated 0 user role assignments.
+Migrated 0 direct user permissions.
+Dropped legacy permission system tables.
+The system now uses Bouncer for role and permission management.
+...............................................................  63 / 891 (  7%)
+............................................................... 126 / 891 ( 14%)
+............................................................... 189 / 891 ( 21%)
+............................................................... 252 / 891 ( 28%)
+............................................................... 315 / 891 ( 35%)
+............................................................... 378 / 891 ( 42%)
+............................................................... 441 / 891 ( 49%)
+....................................E.......................... 504 / 891 ( 56%)
+............................................................... 567 / 891 ( 63%)
+............................................................... 630 / 891 ( 70%)
+............................................................... 693 / 891 ( 77%)
+............................................................... 756 / 891 ( 84%)
+............................................................... 819 / 891 ( 91%)
+............................................................... 882 / 891 ( 98%)
+.........                                                       891 / 891 (100%)
+
+Time: 03:31.026, Memory: 423.00 MB
+
+There was 1 error:
+
+1) Tests\Unit\Services\ContractGenerationServiceTest::test_generate_from_quote_with_customizations
+Exception: Quote must be fully approved before generating contract
+
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:288
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:66
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:489
+/opt/nestogy/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+/opt/nestogy/app/Domains/Contract/Services/ContractGenerationService.php:58
+/opt/nestogy/tests/Unit/Services/ContractGenerationServiceTest.php:81
+
+ERRORS!
+Tests: 891, Assertions: 1526, Errors: 1.
+
+Generating code coverage report in Clover XML format ... PHP Fatal error:  Allowed memory size of 536870912 bytes exhausted (tried to allocate 4198400 bytes) in /opt/nestogy/vendor/phpunit/php-code-coverage/src/Report/Clover.php on line 217
