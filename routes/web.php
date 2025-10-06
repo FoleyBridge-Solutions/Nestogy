@@ -467,26 +467,26 @@ Route::middleware(['auth', 'verified'])->prefix('services')->name('services.')->
 // Comprehensive Tax Engine API routes
 Route::middleware(['auth', 'verified'])->prefix('api/tax-engine')->name('tax-engine.')->group(function () {
     // Basic calculation endpoints
-    Route::post('/calculate', [\App\Http\Controllers\Api\TaxEngineController::class, 'calculateTax'])->name('calculate');
-    Route::post('/calculate-line', [\App\Http\Controllers\Api\TaxEngineController::class, 'calculateLineItemTax'])->name('calculate-line');
+    Route::post('/calculate', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'calculateTax'])->name('calculate');
+    Route::post('/calculate-line', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'calculateLineItemTax'])->name('calculate-line');
 
     // Enhanced bulk calculation endpoints
-    Route::post('/calculate-bulk', [\App\Http\Controllers\Api\TaxEngineController::class, 'calculateBulkTax'])->name('calculate-bulk');
-    Route::post('/preview-quote', [\App\Http\Controllers\Api\TaxEngineController::class, 'previewQuoteTax'])->name('preview-quote');
-    Route::post('/preview-invoice', [\App\Http\Controllers\Api\TaxEngineController::class, 'previewQuoteTax'])->name('preview-invoice'); // Same as quote for now
+    Route::post('/calculate-bulk', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'calculateBulkTax'])->name('calculate-bulk');
+    Route::post('/preview-quote', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'previewQuoteTax'])->name('preview-quote');
+    Route::post('/preview-invoice', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'previewQuoteTax'])->name('preview-invoice'); // Same as quote for now
 
     // Profile and configuration endpoints
-    Route::get('/profile', [\App\Http\Controllers\Api\TaxEngineController::class, 'getTaxProfile'])->name('profile');
-    Route::get('/required-fields', [\App\Http\Controllers\Api\TaxEngineController::class, 'getRequiredFields'])->name('required-fields');
-    Route::post('/validate', [\App\Http\Controllers\Api\TaxEngineController::class, 'validateTaxData'])->name('validate');
-    Route::get('/customer/{customer}/address', [\App\Http\Controllers\Api\TaxEngineController::class, 'getCustomerAddress'])->name('customer-address');
-    Route::get('/profiles', [\App\Http\Controllers\Api\TaxEngineController::class, 'getAvailableProfiles'])->name('profiles');
-    Route::get('/tax-types', [\App\Http\Controllers\Api\TaxEngineController::class, 'getApplicableTaxTypes'])->name('tax-types');
+    Route::get('/profile', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'getTaxProfile'])->name('profile');
+    Route::get('/required-fields', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'getRequiredFields'])->name('required-fields');
+    Route::post('/validate', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'validateTaxData'])->name('validate');
+    Route::get('/customer/{customer}/address', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'getCustomerAddress'])->name('customer-address');
+    Route::get('/profiles', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'getAvailableProfiles'])->name('profiles');
+    Route::get('/tax-types', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'getApplicableTaxTypes'])->name('tax-types');
 
     // Performance and cache management endpoints
-    Route::post('/cache/clear', [\App\Http\Controllers\Api\TaxEngineController::class, 'clearCaches'])->name('cache.clear');
-    Route::post('/cache/warm', [\App\Http\Controllers\Api\TaxEngineController::class, 'warmCaches'])->name('cache.warm');
-    Route::get('/statistics', [\App\Http\Controllers\Api\TaxEngineController::class, 'getStatistics'])->name('statistics');
+    Route::post('/cache/clear', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'clearCaches'])->name('cache.clear');
+    Route::post('/cache/warm', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'warmCaches'])->name('cache.warm');
+    Route::get('/statistics', [\App\Domains\Financial\Controllers\Api\TaxEngineController::class, 'getStatistics'])->name('statistics');
 });
 
 // Tax Administration Routes (Admin only)

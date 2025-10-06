@@ -325,8 +325,21 @@ class DashboardControllerTest extends TestCase
 
     public function test_apply_preset_applies_system_preset(): void
     {
+        // Create a system preset
+        $presetId = \DB::table('dashboard_presets')->insertGetId([
+            'name' => 'Test Preset',
+            'slug' => 'test-preset',
+            'is_system' => true,
+            'company_id' => null,
+            'layout' => json_encode(['columns' => 3]),
+            'widgets' => json_encode([]),
+            'default_preferences' => json_encode([]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         $response = $this->postJson(route('dashboard.preset.apply'), [
-            'preset_id' => 1,
+            'preset_id' => $presetId,
         ]);
 
         $response->assertStatus(200);

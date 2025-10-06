@@ -532,7 +532,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
+            $table->string('status')->default('active');
             $table->decimal('amount', 15, 2)->default(0);
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

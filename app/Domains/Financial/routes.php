@@ -39,8 +39,8 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::post('invoices/auto-save', [InvoiceController::class, 'autoSave'])->name('invoices.auto-save');
         Route::post('invoices/preview-pdf', [InvoiceController::class, 'previewPdf'])->name('invoices.preview-pdf');
         Route::post('invoices/email-pdf', [InvoiceController::class, 'emailPdf'])->name('invoices.email-pdf');
-        Route::resource('document-templates', \App\Http\Controllers\Api\DocumentTemplateController::class)->only(['store', 'index']);
-        Route::post('document-templates/{template}/favorite', [\App\Http\Controllers\Api\DocumentTemplateController::class, 'toggleFavorite'])->name('document-templates.favorite');
+        Route::resource('document-templates', \App\Domains\Knowledge\Http\Controllers\Api\DocumentTemplateController::class)->only(['store', 'index']);
+        Route::post('document-templates/{template}/favorite', [\App\Domains\Knowledge\Http\Controllers\Api\DocumentTemplateController::class, 'toggleFavorite'])->name('document-templates.favorite');
     });
 
     // Invoice routes

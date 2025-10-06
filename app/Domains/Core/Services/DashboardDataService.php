@@ -846,7 +846,7 @@ class DashboardDataService
     {
         // If expenses table exists, calculate from there, otherwise return 0
         try {
-            if (DB::getSchemaBuilder()->hasTable('expenses')) {
+            if (DB::getSchemaBuilder()->hasTable('expenses') && DB::getSchemaBuilder()->hasColumn('expenses', 'date')) {
                 return DB::table('expenses')
                     ->where('company_id', $this->companyId)
                     ->whereBetween('date', [$startDate, $endDate])

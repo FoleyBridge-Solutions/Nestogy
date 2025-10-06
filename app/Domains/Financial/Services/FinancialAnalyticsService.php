@@ -27,6 +27,8 @@ class FinancialAnalyticsService
     protected VoIPTaxService $voipTaxService;
 
     protected static array $tableExistsCache = [];
+    
+    protected static array $columnExistsCache = [];
 
     public function __construct(int $companyId)
     {
@@ -45,6 +47,23 @@ class FinancialAnalyticsService
         }
 
         return self::$tableExistsCache[$tableName];
+    }
+    
+    /**
+     * Check if column exists with caching to avoid repeated DB queries
+     */
+    protected function columnExists(string $tableName, string $columnName): bool
+    {
+        $cacheKey = "{$tableName}.{$columnName}";
+        if (! isset(self::$columnExistsCache[$cacheKey])) {
+            try {
+                self::$columnExistsCache[$cacheKey] = DB::getSchemaBuilder()->hasColumn($tableName, $columnName);
+            } catch (\Exception $e) {
+                self::$columnExistsCache[$cacheKey] = false;
+            }
+        }
+
+        return self::$columnExistsCache[$cacheKey];
     }
 
     /**
@@ -658,20 +677,26 @@ class FinancialAnalyticsService
     private function getMRRByServiceType(string $serviceType, Carbon $startDate, Carbon $endDate): float
     {
         try {
-            if ($this->tableExists('contracts')) {
-                return Contract::where('company_id', $this->companyId)
-                    ->where('status', Contract::STATUS_ACTIVE)
-                    ->where('start_date', '<=', $endDate)
-                    ->where(function ($query) use ($startDate) {
-                        $query->whereNull('end_date')
-                            ->orWhere('end_date', '>=', $startDate);
-                    })
-                    ->whereJsonContains('voip_specifications->services', $serviceType)
-                    ->get()
-                    ->sum(function ($contract) {
-                        return method_exists($contract, 'getMonthlyRecurringRevenue') ? $contract->getMonthlyRecurringRevenue() : 0;
-                    });
+            if (!$this->tableExists('contracts')) {
+                return 0;
             }
+            
+            if (!$this->columnExists('contracts', 'voip_specifications')) {
+                return 0;
+            }
+            
+            return Contract::where('company_id', $this->companyId)
+                ->where('status', Contract::STATUS_ACTIVE)
+                ->where('start_date', '<=', $endDate)
+                ->where(function ($query) use ($startDate) {
+                    $query->whereNull('end_date')
+                        ->orWhere('end_date', '>=', $startDate);
+                })
+                ->whereJsonContains('voip_specifications->services', $serviceType)
+                ->get()
+                ->sum(function ($contract) {
+                    return method_exists($contract, 'getMonthlyRecurringRevenue') ? $contract->getMonthlyRecurringRevenue() : 0;
+                });
         } catch (\Exception $e) {
             Log::warning("Contract table not accessible for service type {$serviceType}: ".$e->getMessage());
         }

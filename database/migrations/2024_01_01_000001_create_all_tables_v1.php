@@ -83,6 +83,25 @@ return new class extends Migration
             $table->index(['company_id', 'role']);
         });
 
+        // User roles pivot table (moved from 000002 to ensure users table exists)
+        // Foreign key to roles table will be added in 000002 after roles table is created
+        Schema::create('user_roles', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('role_id');
+            $table->unsignedBigInteger('company_id');
+            $table->timestamps();
+
+            $table->unique(['user_id', 'role_id', 'company_id']);
+            $table->index(['user_id', 'company_id']);
+            $table->index('role_id');
+            
+            // Add foreign key constraints for tables that exist now
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            // role_id foreign key will be added in 000002 migration
+        });
+
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
@@ -966,6 +985,7 @@ return new class extends Migration
         Schema::dropIfExists('vendors');
         Schema::dropIfExists('categories');
         Schema::dropIfExists('clients');
+        Schema::dropIfExists('user_roles');
         Schema::dropIfExists('user_settings');
         Schema::dropIfExists('users');
         Schema::dropIfExists('companies');

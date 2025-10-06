@@ -46,16 +46,10 @@ return new class extends Migration
             $table->unique(['role_id', 'permission_id']);
         });
 
-        // User roles pivot table (many-to-many for flexibility)
-        Schema::create('user_roles', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('role_id')->constrained()->onDelete('cascade');
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
-
-            $table->unique(['user_id', 'role_id', 'company_id']);
-            $table->index(['user_id', 'company_id']);
+        // NOTE: user_roles table created in 000001 migration
+        // Now add the foreign key constraint to roles table
+        Schema::table('user_roles', function (Blueprint $table) {
+            $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
         });
 
         // Direct user permissions (for specific overrides)
@@ -99,7 +93,7 @@ return new class extends Migration
 
         Schema::dropIfExists('permission_groups');
         Schema::dropIfExists('user_permissions');
-        Schema::dropIfExists('user_roles');
+        // NOTE: user_roles table is dropped in 000001 migration
         Schema::dropIfExists('role_permissions');
         Schema::dropIfExists('roles');
         Schema::dropIfExists('permissions');
