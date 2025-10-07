@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Crypt;
 
 class FinancialSettingsService extends BaseSettingsService
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     protected string $domain = SettingsConfiguration::DOMAIN_FINANCIAL;
 
     /**
@@ -18,7 +20,7 @@ class FinancialSettingsService extends BaseSettingsService
             case 'billing':
                 return [
                     'billing_cycle' => 'required|in:monthly,quarterly,semi-annually,annually',
-                    'invoice_prefix' => 'nullable|string|max:10',
+                    'invoice_prefix' => self::VALIDATION_NULLABLE_STRING . '|max:10',
                     'invoice_starting_number' => 'nullable|integer|min:1',
                     'payment_terms' => 'required|integer|between:0,365',
                     'late_fee_enabled' => 'boolean',
@@ -33,38 +35,38 @@ class FinancialSettingsService extends BaseSettingsService
 
             case 'invoicing':
                 return [
-                    'invoice_footer' => 'nullable|string|max:1000',
-                    'invoice_notes' => 'nullable|string|max:1000',
+                    'invoice_footer' => self::VALIDATION_NULLABLE_STRING . '|max:1000',
+                    'invoice_notes' => self::VALIDATION_NULLABLE_STRING . '|max:1000',
                     'show_tax_id' => 'boolean',
                     'show_payment_instructions' => 'boolean',
-                    'payment_instructions' => 'nullable|string|max:1000',
+                    'payment_instructions' => self::VALIDATION_NULLABLE_STRING . '|max:1000',
                     'attach_pdf' => 'boolean',
                     'allow_partial_payments' => 'boolean',
                     'minimum_payment_amount' => 'nullable|numeric|min:0',
-                    'invoice_template' => 'nullable|string',
+                    'invoice_template' => self::VALIDATION_NULLABLE_STRING,
                 ];
 
             case 'taxes':
                 return [
                     'tax_enabled' => 'boolean',
-                    'tax_name' => 'nullable|string|max:50',
+                    'tax_name' => self::VALIDATION_NULLABLE_STRING . '|max:50',
                     'tax_rate' => 'nullable|numeric|between:0,100',
-                    'tax_number' => 'nullable|string|max:50',
+                    'tax_number' => self::VALIDATION_NULLABLE_STRING . '|max:50',
                     'tax_compound' => 'boolean',
                     'tax_on_shipping' => 'boolean',
                     'tax_inclusive' => 'boolean',
                     'voip_tax_enabled' => 'boolean',
-                    'voip_tax_api_key' => 'nullable|string',
+                    'voip_tax_api_key' => self::VALIDATION_NULLABLE_STRING,
                 ];
 
             case 'payment_gateways':
                 return [
                     'stripe_enabled' => 'boolean',
-                    'stripe_publishable_key' => 'nullable|string',
-                    'stripe_secret_key' => 'nullable|string',
+                    'stripe_publishable_key' => self::VALIDATION_NULLABLE_STRING,
+                    'stripe_secret_key' => self::VALIDATION_NULLABLE_STRING,
                     'paypal_enabled' => 'boolean',
-                    'paypal_client_id' => 'nullable|string',
-                    'paypal_secret' => 'nullable|string',
+                    'paypal_client_id' => self::VALIDATION_NULLABLE_STRING,
+                    'paypal_secret' => self::VALIDATION_NULLABLE_STRING,
                     'paypal_mode' => 'nullable|in:sandbox,live',
                     'ach_enabled' => 'boolean',
                     'check_enabled' => 'boolean',
