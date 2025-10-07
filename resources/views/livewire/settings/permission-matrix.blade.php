@@ -71,7 +71,7 @@
                                                 @if(in_array($role->name, ['super-admin']))
                                                     <flux:icon name="check-circle" class="text-green-600" />
                                                 @else
-                                                    <flux:checkbox 
+                                                    <flux:checkbox
                                                         wire:click="togglePermission('{{ $role->name }}', '{{ $abilityName }}')"
                                                         :checked="$abilityData['roles'][$role->name] ?? false"
                                                     />
