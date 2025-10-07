@@ -20,25 +20,42 @@ class ProductPricingService
         $appliedRules = collect();
         $breakdown = [];
 
-        // Get applicable pricing rules
         $rules = $this->getApplicablePricingRules($product, $client, $quantity);
 
-        // Apply rules in priority order
+        $result = $this->applyPricingRules($rules, $basePrice, $finalPrice, $appliedRules, $breakdown, $quantity);
+        $finalPrice = $result['finalPrice'];
+
+        if ($appliedRules->isEmpty() && $product->discount_percentage) {
+            $finalPrice = $this->applyProductDiscount($product, $basePrice, $breakdown);
+        }
+
+        $subtotal = $finalPrice * $quantity;
+        $tax = $this->calculateTax($product, $subtotal, $client);
+        $total = $subtotal + ($product->tax_inclusive ? 0 : $tax);
+
+        return [
+            'base_price' => $basePrice,
+            'unit_price' => $finalPrice,
+            'quantity' => $quantity,
+            'subtotal' => $subtotal,
+            'tax' => $tax,
+            'total' => $total,
+            'currency' => $product->currency ?? 'USD',
+            'applied_rules' => $appliedRules->pluck('id')->toArray(),
+            'breakdown' => $breakdown,
+            'savings' => ($basePrice - $finalPrice) * $quantity,
+            'savings_percentage' => $basePrice > 0 ? (($basePrice - $finalPrice) / $basePrice) * 100 : 0,
+        ];
+    }
+
+    protected function applyPricingRules(Collection $rules, float $basePrice, float $finalPrice, Collection $appliedRules, array &$breakdown, int $quantity): array
+    {
         foreach ($rules as $rule) {
             if (! $rule->isValid()) {
                 continue;
             }
 
-            // Check if rule can be combined with already applied rules
-            $canApply = true;
-            foreach ($appliedRules as $appliedRule) {
-                if (! $rule->canCombineWith($appliedRule)) {
-                    $canApply = false;
-                    break;
-                }
-            }
-
-            if (! $canApply) {
+            if (! $this->canApplyRule($rule, $appliedRules)) {
                 continue;
             }
 
@@ -57,35 +74,31 @@ class ProductPricingService
             }
         }
 
-        // Apply product-specific discounts if no rules override
-        if ($appliedRules->isEmpty() && $product->discount_percentage) {
-            $finalPrice = $basePrice * (1 - $product->discount_percentage / 100);
-            $breakdown[] = [
-                'rule' => 'Product Discount',
-                'type' => 'percentage',
-                'value' => $product->discount_percentage,
-                'savings' => $basePrice - $finalPrice,
-            ];
+        return ['finalPrice' => $finalPrice];
+    }
+
+    protected function canApplyRule($rule, Collection $appliedRules): bool
+    {
+        foreach ($appliedRules as $appliedRule) {
+            if (! $rule->canCombineWith($appliedRule)) {
+                return false;
+            }
         }
 
-        // Calculate totals
-        $subtotal = $finalPrice * $quantity;
-        $tax = $this->calculateTax($product, $subtotal, $client);
-        $total = $subtotal + ($product->tax_inclusive ? 0 : $tax);
+        return true;
+    }
 
-        return [
-            'base_price' => $basePrice,
-            'unit_price' => $finalPrice,
-            'quantity' => $quantity,
-            'subtotal' => $subtotal,
-            'tax' => $tax,
-            'total' => $total,
-            'currency' => $product->currency ?? 'USD',
-            'applied_rules' => $appliedRules->pluck('id')->toArray(),
-            'breakdown' => $breakdown,
-            'savings' => ($basePrice - $finalPrice) * $quantity,
-            'savings_percentage' => $basePrice > 0 ? (($basePrice - $finalPrice) / $basePrice) * 100 : 0,
+    protected function applyProductDiscount(Product $product, float $basePrice, array &$breakdown): float
+    {
+        $finalPrice = $basePrice * (1 - $product->discount_percentage / 100);
+        $breakdown[] = [
+            'rule' => 'Product Discount',
+            'type' => 'percentage',
+            'value' => $product->discount_percentage,
+            'savings' => $basePrice - $finalPrice,
         ];
+
+        return $finalPrice;
     }
 
     /**
