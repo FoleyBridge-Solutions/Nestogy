@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 
 class ContractBuilderController extends Controller
 {
+    private const VALIDATION_REQUIRED_ARRAY = 'required|array';
+
     protected ContractService $contractService;
 
     public function __construct(ContractService $contractService)
@@ -195,8 +197,8 @@ class ContractBuilderController extends Controller
     public function preview(Request $request): JsonResponse
     {
         $request->validate([
-            'contract' => 'required|array',
-            'components' => 'required|array',
+            'contract' => self::VALIDATION_REQUIRED_ARRAY,
+            'components' => self::VALIDATION_REQUIRED_ARRAY,
         ]);
 
         $contractData = $request->input('contract');
@@ -239,8 +241,8 @@ class ContractBuilderController extends Controller
     public function saveDraft(Request $request): JsonResponse
     {
         $request->validate([
-            'contract' => 'required|array',
-            'components' => 'required|array',
+            'contract' => self::VALIDATION_REQUIRED_ARRAY,
+            'components' => self::VALIDATION_REQUIRED_ARRAY,
         ]);
 
         session(['contract_draft' => [
