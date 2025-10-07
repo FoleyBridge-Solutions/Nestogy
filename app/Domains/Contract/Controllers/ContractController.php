@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class ContractController extends Controller
 {
+    private const TEMPLATE_TYPE_SUPPORT_CONTRACT = 'Support Contract';
+
     protected $contractService;
 
     protected $contractGenerationService;
@@ -150,7 +152,7 @@ class ContractController extends Controller
         $templateTypes = [
             'service_agreement' => 'Service Agreement',
             'maintenance_contract' => 'Maintenance Contract',
-            'support_contract' => 'Support Contract',
+            'support_contract' => self::TEMPLATE_TYPE_SUPPORT_CONTRACT,
             'managed_services' => 'Managed Services',
             'consulting' => 'Consulting Agreement',
             'custom' => 'Custom Contract',
@@ -985,7 +987,7 @@ class ContractController extends Controller
             $templateTypes = [
                 'service_agreement' => 'Service Agreement',
                 'maintenance' => 'Maintenance Contract',
-                'support' => 'Support Contract',
+                'support' => self::TEMPLATE_TYPE_SUPPORT_CONTRACT,
                 'msp_contract' => 'MSP Contract',
                 'voip_service' => 'VoIP Service',
                 'security' => 'Security Services',
@@ -1105,7 +1107,7 @@ class ContractController extends Controller
             $templateTypes = [
                 'service_agreement' => 'Service Agreement',
                 'maintenance' => 'Maintenance Contract',
-                'support' => 'Support Contract',
+                'support' => self::TEMPLATE_TYPE_SUPPORT_CONTRACT,
                 'msp_contract' => 'MSP Contract',
                 'voip_service' => 'VoIP Service',
                 'security' => 'Security Services',
