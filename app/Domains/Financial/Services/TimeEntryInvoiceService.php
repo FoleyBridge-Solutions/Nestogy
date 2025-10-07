@@ -165,34 +165,37 @@ class TimeEntryInvoiceService
 
     protected function generateItemDescription(array $group): string
     {
+        $description = '';
+        $entries = $group['entries'];
+
         switch ($group['type']) {
             case 'ticket':
                 $ticket = $group['ticket'];
-                $entries = $group['entries'];
                 $description = "Ticket #{$ticket->number}: {$ticket->subject}";
                 
                 if ($entries->count() > 1) {
                     $description .= "\n" . $entries->count() . ' time entries';
                 }
-                
-                return $description;
+                break;
 
             case 'date':
                 $date = Carbon::parse($group['date'])->format('M d, Y');
-                $entries = $group['entries'];
-                return "Services provided on {$date} ({$entries->count()} entries)";
+                $description = "Services provided on {$date} ({$entries->count()} entries)";
+                break;
 
             case 'user':
                 $user = $group['user'];
-                $entries = $group['entries'];
-                return "Services by {$user->name} ({$entries->count()} entries)";
+                $description = "Services by {$user->name} ({$entries->count()} entries)";
+                break;
 
             case 'combined':
             default:
-                $entries = $group['entries'];
                 $ticketCount = $entries->pluck('ticket_id')->unique()->count();
-                return "Professional Services ({$entries->count()} time entries across {$ticketCount} tickets)";
+                $description = "Professional Services ({$entries->count()} time entries across {$ticketCount} tickets)";
+                break;
         }
+
+        return $description;
     }
 
     protected function linkTimeEntriesToInvoice(Collection $timeEntries, Invoice $invoice): void
