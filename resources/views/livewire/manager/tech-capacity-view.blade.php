@@ -105,7 +105,7 @@
                             </span>
                         </div>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                            <div class="bg-{{ $tech['status']['color'] }}-600 h-3 rounded-full" 
+                            <div class="bg-{{ $tech['status']['color'] }}-600 h-3 rounded-full"
                                  style="width: {{ $tech['capacity_percentage'] }}%"></div>
                         </div>
                         <div class="mt-2 flex items-center gap-2">
