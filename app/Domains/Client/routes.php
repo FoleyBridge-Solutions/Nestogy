@@ -78,10 +78,12 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::get('assets', [\App\Domains\Asset\Controllers\AssetController::class, 'clientIndex'])->name('assets.index');
         Route::get('assets/create', [\App\Domains\Asset\Controllers\AssetController::class, 'clientCreate'])->name('assets.create');
         Route::post('assets', [\App\Domains\Asset\Controllers\AssetController::class, 'clientStore'])->name('assets.store');
-        Route::get('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientShow'])->name('assets.show');
-        Route::get('assets/{asset}/edit', [\App\Domains\Asset\Controllers\AssetController::class, 'clientEdit'])->name('assets.edit');
-        Route::put('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientUpdate'])->name('assets.update');
-        Route::delete('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientDestroy'])->name('assets.destroy');
+        Route::prefix('assets/{asset}')->name('assets.')->group(function () {
+            Route::get('/', [\App\Domains\Asset\Controllers\AssetController::class, 'clientShow'])->name('show');
+            Route::get('/edit', [\App\Domains\Asset\Controllers\AssetController::class, 'clientEdit'])->name('edit');
+            Route::put('/', [\App\Domains\Asset\Controllers\AssetController::class, 'clientUpdate'])->name('update');
+            Route::delete('/', [\App\Domains\Asset\Controllers\AssetController::class, 'clientDestroy'])->name('destroy');
+        });
 
         // IT Documentation routes (using session-based client context)
         Route::get('it-documentation', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'clientIndex'])->name('it-documentation.client-index');
