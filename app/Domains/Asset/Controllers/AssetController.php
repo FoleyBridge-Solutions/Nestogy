@@ -323,93 +323,14 @@ class AssetController extends Controller
 
         $filters = $request->only(['search', 'type', 'status', 'location_id']);
         $filters = $this->addClientToFilters($filters);
-        $assets = $this->assetService->getPaginatedAssets($filters, 10000); // Get all for export
+        $assets = $this->assetService->getPaginatedAssets($filters, 10000);
 
-        // Log export activity
-        \Log::info('Assets export initiated', [
-            'user_id' => auth()->id(),
-            'company_id' => auth()->user()->company_id,
-            'filters' => $filters,
-            'asset_count' => $assets->count(),
-        ]);
+        $this->logExportActivity($filters, $assets->count());
 
-        // Define CSV headers
-        $headers = [
-            'ID',
-            'Name',
-            'Type',
-            'Make',
-            'Model',
-            'Serial Number',
-            'Asset Tag',
-            'Status',
-            'Client',
-            'Location',
-            'IP Address',
-            'MAC Address',
-            'Operating System',
-            'Purchase Date',
-            'Warranty Expiry',
-            'Install Date',
-            'Next Maintenance',
-            'Description',
-            'Notes',
-            'Created At',
-            'Updated At',
-        ];
+        $csvData = $this->buildCsvData($assets);
+        $filename = $this->generateExportFilename();
 
-        // Generate CSV content
-        $csvData = [];
-        $csvData[] = $headers;
-
-        foreach ($assets as $asset) {
-            $csvData[] = [
-                $asset->id,
-                $asset->name ?: '',
-                $asset->type ?: '',
-                $asset->make ?: '',
-                $asset->model ?: '',
-                $asset->serial ?: '',
-                $asset->asset_tag ?: '',
-                $asset->status ?: '',
-                $asset->client ? $asset->client->name : '',
-                $asset->location ? $asset->location->name : '',
-                $asset->ip ?: '',
-                $asset->mac ?: '',
-                $asset->os ?: '',
-                $asset->purchase_date ? $asset->purchase_date->format('Y-m-d') : '',
-                $asset->warranty_expire ? $asset->warranty_expire->format('Y-m-d') : '',
-                $asset->install_date ? $asset->install_date->format('Y-m-d') : '',
-                $asset->next_maintenance_date ? $asset->next_maintenance_date->format('Y-m-d') : '',
-                $asset->description ?: '',
-                $asset->notes ? strip_tags($asset->notes) : '', // Strip HTML tags from notes
-                $asset->created_at->format('Y-m-d H:i:s'),
-                $asset->updated_at->format('Y-m-d H:i:s'),
-            ];
-        }
-
-        // Create CSV content
-        $filename = 'assets_export_'.now()->format('Y-m-d_H-i-s').'.csv';
-
-        $callback = function () use ($csvData) {
-            $file = fopen('php://output', 'w');
-
-            foreach ($csvData as $row) {
-                fputcsv($file, $row);
-            }
-
-            fclose($file);
-        };
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        return response()->stream($callback, 200, $headers);
+        return $this->streamCsvResponse($csvData, $filename);
     }
 
     public function importForm()
@@ -602,6 +523,110 @@ class AssetController extends Controller
                 'data' => [],
             ], 500);
         }
+    }
+
+    protected function logExportActivity(array $filters, int $assetCount): void
+    {
+        \Log::info('Assets export initiated', [
+            'user_id' => auth()->id(),
+            'company_id' => auth()->user()->company_id,
+            'filters' => $filters,
+            'asset_count' => $assetCount,
+        ]);
+    }
+
+    protected function buildCsvData($assets): array
+    {
+        $csvData = [$this->getCsvHeaders()];
+
+        foreach ($assets as $asset) {
+            $csvData[] = $this->formatAssetForCsv($asset);
+        }
+
+        return $csvData;
+    }
+
+    protected function getCsvHeaders(): array
+    {
+        return [
+            'ID',
+            'Name',
+            'Type',
+            'Make',
+            'Model',
+            'Serial Number',
+            'Asset Tag',
+            'Status',
+            'Client',
+            'Location',
+            'IP Address',
+            'MAC Address',
+            'Operating System',
+            'Purchase Date',
+            'Warranty Expiry',
+            'Install Date',
+            'Next Maintenance',
+            'Description',
+            'Notes',
+            'Created At',
+            'Updated At',
+        ];
+    }
+
+    protected function formatAssetForCsv($asset): array
+    {
+        return [
+            $asset->id,
+            $asset->name ?: '',
+            $asset->type ?: '',
+            $asset->make ?: '',
+            $asset->model ?: '',
+            $asset->serial ?: '',
+            $asset->asset_tag ?: '',
+            $asset->status ?: '',
+            $asset->client?->name ?? '',
+            $asset->location?->name ?? '',
+            $asset->ip ?: '',
+            $asset->mac ?: '',
+            $asset->os ?: '',
+            $this->formatDate($asset->purchase_date),
+            $this->formatDate($asset->warranty_expire),
+            $this->formatDate($asset->install_date),
+            $this->formatDate($asset->next_maintenance_date),
+            $asset->description ?: '',
+            $asset->notes ? strip_tags($asset->notes) : '',
+            $asset->created_at->format('Y-m-d H:i:s'),
+            $asset->updated_at->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    protected function formatDate($date): string
+    {
+        return $date ? $date->format('Y-m-d') : '';
+    }
+
+    protected function generateExportFilename(): string
+    {
+        return 'assets_export_'.now()->format('Y-m-d_H-i-s').'.csv';
+    }
+
+    protected function streamCsvResponse(array $csvData, string $filename)
+    {
+        $callback = function () use ($csvData) {
+            $file = fopen('php://output', 'w');
+            foreach ($csvData as $row) {
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ]);
     }
 
     /**
