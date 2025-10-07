@@ -7,6 +7,8 @@ use Illuminate\Validation\Rules\Password;
 
 trait ValidatesSteps
 {
+    private const RATE_VALIDATION_RULE = 'nullable|numeric|min:0|max:9999.99';
+
     protected function validateCurrentStep(): bool
     {
         return match ($this->currentStep) {
@@ -87,7 +89,7 @@ trait ValidatesSteps
                 'theme' => 'nullable|string|in:'.implode(',', array_keys(Setting::getAvailableThemes())),
                 'company_language' => 'nullable|string|size:2',
                 'default_net_terms' => 'nullable|integer|min:0|max:365',
-                'default_hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
+                'default_hourly_rate' => self::RATE_VALIDATION_RULE,
             ], [
                 'timezone.required' => 'Please select your timezone.',
                 'default_net_terms.max' => 'Payment terms cannot exceed 365 days.',
@@ -106,11 +108,11 @@ trait ValidatesSteps
             $this->validate([
                 'business_hours_start' => 'nullable|date_format:H:i',
                 'business_hours_end' => 'nullable|date_format:H:i',
-                'rate_standard' => 'nullable|numeric|min:0|max:9999.99',
-                'rate_after_hours' => 'nullable|numeric|min:0|max:9999.99',
-                'rate_emergency' => 'nullable|numeric|min:0|max:9999.99',
-                'rate_weekend' => 'nullable|numeric|min:0|max:9999.99',
-                'rate_holiday' => 'nullable|numeric|min:0|max:9999.99',
+                'rate_standard' => self::RATE_VALIDATION_RULE,
+                'rate_after_hours' => self::RATE_VALIDATION_RULE,
+                'rate_emergency' => self::RATE_VALIDATION_RULE,
+                'rate_weekend' => self::RATE_VALIDATION_RULE,
+                'rate_holiday' => self::RATE_VALIDATION_RULE,
                 'minimum_billing_increment' => 'nullable|numeric|in:0.25,0.5,1',
                 'time_rounding_method' => 'nullable|string|in:nearest,up,down',
                 'ticket_prefix' => 'nullable|string|max:10',
