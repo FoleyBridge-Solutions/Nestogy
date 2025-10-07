@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Services;
 
+use App\Domains\Financial\Exceptions\TimeEntryInvoiceException;
 use App\Domains\Financial\Models\RateCard;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTimeEntry;
@@ -26,11 +27,11 @@ class TimeEntryInvoiceService
                 ->get();
 
             if ($timeEntries->isEmpty()) {
-                throw new \Exception('No uninvoiced time entries found for the specified IDs.');
+                throw TimeEntryInvoiceException::noUninvoicedEntries();
             }
 
             if ($timeEntries->pluck('ticket.client_id')->unique()->count() > 1) {
-                throw new \Exception('All time entries must belong to the same client.');
+                throw TimeEntryInvoiceException::multipleClients();
             }
 
             $invoice = $this->createInvoice($client, $options);
@@ -226,7 +227,7 @@ class TimeEntryInvoiceService
             ->get();
 
         if ($timeEntries->isEmpty()) {
-            throw new \Exception('No uninvoiced time entries found for the specified IDs.');
+            throw TimeEntryInvoiceException::noUninvoicedEntries();
         }
 
         $groupedEntries = $this->groupTimeEntries($timeEntries, $options['groupBy'] ?? 'ticket');
