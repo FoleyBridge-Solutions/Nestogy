@@ -17,7 +17,7 @@
                 <flux:subheading>Choose how you want to receive notifications</flux:subheading>
                 
                 <div class="mt-4 space-y-3">
-                    <flux:checkbox wire:model="email_enabled" label="Email Notifications" />
+                    <flux:checkbox wire:model="emailEnabled" label="Email Notifications" />
                     <flux:checkbox wire:model="in_app_enabled" label="In-App Notifications" />
                 </div>
             </div>
