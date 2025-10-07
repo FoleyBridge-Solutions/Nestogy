@@ -5,12 +5,14 @@
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'company'])->prefix('api/rmm')->name('api.rmm.')->group(function () {
+    const INTEGRATION_RESOURCE_PATH = 'integrations/{integration}';
+
     // RMM Integration CRUD
     Route::get('integrations', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'index'])->name('integrations.index');
     Route::post('integrations', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'store'])->name('integrations.store');
-    Route::get('integrations/{integration}', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'show'])->name('integrations.show');
-    Route::put('integrations/{integration}', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'update'])->name('integrations.update');
-    Route::delete('integrations/{integration}', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'destroy'])->name('integrations.destroy');
+    Route::get(INTEGRATION_RESOURCE_PATH, [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'show'])->name('integrations.show');
+    Route::put(INTEGRATION_RESOURCE_PATH, [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'update'])->name('integrations.update');
+    Route::delete(INTEGRATION_RESOURCE_PATH, [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'destroy'])->name('integrations.destroy');
 
     // RMM Integration Actions
     Route::post('test-connection', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'testConnection'])->name('test-connection');
