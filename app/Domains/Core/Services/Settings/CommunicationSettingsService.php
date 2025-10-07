@@ -12,6 +12,8 @@ class CommunicationSettingsService extends BaseSettingsService
 {
     protected string $domain = SettingsConfiguration::DOMAIN_COMMUNICATION;
 
+    private const REQUIRED_IF_ENABLED = 'required_if:enabled,true|nullable|string';
+
     /**
      * Get validation rules for each category
      */
@@ -50,13 +52,13 @@ class CommunicationSettingsService extends BaseSettingsService
                 return [
                     'enabled' => 'boolean',
                     'provider' => 'required_if:enabled,true|in:postgrid,lob',
-                    'api_key' => 'required_if:enabled,true|nullable|string',
-                    'from_name' => 'required_if:enabled,true|nullable|string',
-                    'from_address_line1' => 'required_if:enabled,true|nullable|string',
-                    'from_city' => 'required_if:enabled,true|nullable|string',
-                    'from_state' => 'required_if:enabled,true|nullable|string',
-                    'from_postal_code' => 'required_if:enabled,true|nullable|string',
-                    'from_country' => 'required_if:enabled,true|nullable|string',
+                    'api_key' => self::REQUIRED_IF_ENABLED,
+                    'from_name' => self::REQUIRED_IF_ENABLED,
+                    'from_address_line1' => self::REQUIRED_IF_ENABLED,
+                    'from_city' => self::REQUIRED_IF_ENABLED,
+                    'from_state' => self::REQUIRED_IF_ENABLED,
+                    'from_postal_code' => self::REQUIRED_IF_ENABLED,
+                    'from_country' => self::REQUIRED_IF_ENABLED,
                 ];
 
             case 'notifications':
