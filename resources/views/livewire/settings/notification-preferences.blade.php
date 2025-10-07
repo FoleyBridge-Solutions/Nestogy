@@ -69,7 +69,7 @@
                         description="Receive notifications when tickets are approaching SLA deadlines" />
                     
                     <flux:checkbox 
-                        wire:model="sla_breached" 
+                        wire:model="slaBreached" 
                         label="SLA Breached"
                         description="Receive critical notifications when SLA deadlines are exceeded" />
                 </div>
