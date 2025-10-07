@@ -17,7 +17,7 @@
                             Images will be automatically compressed
                         </p>
                     </div>
-                    <input 
+                    <input
                         type="file" 
                         id="camera-input" 
                         wire:model="photo" 
