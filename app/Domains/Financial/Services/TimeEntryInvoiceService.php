@@ -62,7 +62,7 @@ class TimeEntryInvoiceService
             ->orderBy('number', 'desc')
             ->first();
 
-        $invoice = Invoice::create([
+        return Invoice::create([
             'company_id' => $client->company_id,
             'client_id' => $client->id,
             'prefix' => $options['prefix'] ?? 'INV',
@@ -75,8 +75,6 @@ class TimeEntryInvoiceService
             'note' => $options['note'] ?? null,
             'url_key' => \Illuminate\Support\Str::random(32),
         ]);
-
-        return $invoice;
     }
 
     protected function groupTimeEntries(Collection $timeEntries, string $groupBy): Collection
