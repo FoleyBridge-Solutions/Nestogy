@@ -83,11 +83,11 @@
                 
                 <div class="mt-4 space-y-4">
                     <flux:checkbox 
-                        wire:model="daily_digest" 
+                        wire:model="dailyDigest" 
                         label="Enable Daily Digest Email"
                         description="Receive a daily summary email instead of individual notifications" />
                     
-                    @if($daily_digest)
+                    @if($dailyDigest)
                         <flux:field>
                             <flux:label>Digest Delivery Time</flux:label>
                             <flux:input 
