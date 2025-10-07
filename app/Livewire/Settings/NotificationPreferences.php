@@ -11,7 +11,7 @@ class NotificationPreferences extends Component
     use HasFluxToasts;
     public $preferences;
 
-    public $ticket_created = true;
+    public $ticketCreated = true;
 
     public $ticket_assigned = true;
 
@@ -37,7 +37,7 @@ class NotificationPreferences extends Component
     {
         $this->preferences = NotificationPreference::getOrCreateForUser(auth()->user());
 
-        $this->ticket_created = $this->preferences->ticket_created;
+        $this->ticketCreated = $this->preferences->ticket_created;
         $this->ticket_assigned = $this->preferences->ticket_assigned;
         $this->ticket_status_changed = $this->preferences->ticket_status_changed;
         $this->ticket_resolved = $this->preferences->ticket_resolved;
@@ -53,7 +53,7 @@ class NotificationPreferences extends Component
     public function save()
     {
         $this->preferences->update([
-            'ticket_created' => $this->ticket_created,
+            'ticket_created' => $this->ticketCreated,
             'ticket_assigned' => $this->ticket_assigned,
             'ticket_status_changed' => $this->ticket_status_changed,
             'ticket_resolved' => $this->ticket_resolved,

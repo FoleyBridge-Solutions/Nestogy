@@ -30,7 +30,7 @@
                 
                 <div class="mt-4 space-y-3">
                     <flux:checkbox 
-                        wire:model="ticket_created" 
+                        wire:model="ticketCreated" 
                         label="New Ticket Created"
                         description="Receive notifications when a new ticket is created" />
                     
