@@ -12,7 +12,7 @@
                     class="px-3 py-2 rounded {{ $viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow' : '' }}">
                     <i class="fas fa-th"></i>
                 </button>
-                <button 
+                <button
                     wire:click="setViewMode('list')" 
                     class="px-3 py-2 rounded {{ $viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow' : '' }}">
                     <i class="fas fa-list"></i>
