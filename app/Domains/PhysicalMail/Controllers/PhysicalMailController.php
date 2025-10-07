@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 
 class PhysicalMailController extends Controller
 {
+    private const VALIDATION_RULE_SOMETIMES_DATE = 'sometimes|date';
+
     public function __construct(
         private PhysicalMailService $mailService
     ) {}
@@ -25,8 +27,8 @@ class PhysicalMailController extends Controller
             'client_id' => 'sometimes|uuid|exists:clients,id',
             'status' => 'sometimes|in:pending,ready,printing,processed_for_delivery,completed,cancelled,failed',
             'mailable_type' => 'sometimes|in:letter,postcard,cheque,self_mailer',
-            'date_from' => 'sometimes|date',
-            'date_to' => 'sometimes|date',
+            'date_from' => self::VALIDATION_RULE_SOMETIMES_DATE,
+            'date_to' => self::VALIDATION_RULE_SOMETIMES_DATE,
             'per_page' => 'sometimes|integer|min:1|max:100',
             'include_locations' => 'sometimes|boolean',
         ]);
@@ -142,7 +144,7 @@ class PhysicalMailController extends Controller
             'mailing_class' => 'sometimes|string',
             'extra_service' => 'sometimes|in:certified,certified_return_receipt,registered',
             'metadata' => 'sometimes|array',
-            'send_date' => 'sometimes|date',
+            'send_date' => self::VALIDATION_RULE_SOMETIMES_DATE,
         ]);
 
         // Ensure either template or content is provided
