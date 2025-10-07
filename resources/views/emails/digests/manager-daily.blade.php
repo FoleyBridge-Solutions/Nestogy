@@ -103,7 +103,7 @@
                 <a href="{{ route('dashboard.team') }}" style="color: #667eea; text-decoration: none;">View Team Dashboard</a>
             </p>
             <p style="color: #999; font-size: 12px;">
-                This is an automated digest. To manage your notification preferences, 
+                This is an automated digest. To manage your notification preferences,
                 <a href="{{ route('settings.notifications') }}" style="color: #667eea;">click here</a>.
             </p>
         </div>
