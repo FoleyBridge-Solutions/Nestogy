@@ -80,6 +80,8 @@ class ContractContactAssignment extends Model
 {
     use BelongsToCompany, HasFactory;
 
+    const DECIMAL_CAST = 'decimal:2';
+
     /**
      * The table associated with the model.
      */
@@ -167,16 +169,16 @@ class ContractContactAssignment extends Model
         'max_support_hours_per_month' => 'integer',
         'allowed_ticket_types' => 'array',
         'restricted_features' => 'array',
-        'billing_rate' => 'decimal:2',
-        'per_ticket_rate' => 'decimal:2',
+        'billing_rate' => self::DECIMAL_CAST,
+        'per_ticket_rate' => self::DECIMAL_CAST,
         'pricing_modifiers' => 'array',
         'start_date' => 'date',
         'end_date' => 'date',
         'last_billed_at' => 'datetime',
         'next_billing_date' => 'date',
         'current_month_tickets' => 'integer',
-        'current_month_support_hours' => 'decimal:2',
-        'current_month_charges' => 'decimal:2',
+        'current_month_support_hours' => self::DECIMAL_CAST,
+        'current_month_charges' => self::DECIMAL_CAST,
         'last_access_date' => 'date',
         'last_login_at' => 'datetime',
         'total_tickets_created' => 'integer',
@@ -197,8 +199,8 @@ class ContractContactAssignment extends Model
         'requires_mfa' => 'boolean',
         'usage_history' => 'array',
         'billing_history' => 'array',
-        'lifetime_value' => 'decimal:2',
-        'average_monthly_usage' => 'decimal:2',
+        'lifetime_value' => self::DECIMAL_CAST,
+        'average_monthly_usage' => self::DECIMAL_CAST,
         'metadata' => 'array',
         'custom_fields' => 'array',
         'assigned_by' => 'integer',
