@@ -111,13 +111,13 @@ class ContractAssetAssignment extends Model
         'asset_id' => 'integer',
         'assigned_services' => 'array',
         'service_pricing' => 'array',
-        'billing_rate' => 'decimal:2',
+        'billing_rate' => self::CAST_DECIMAL_2,
         'service_configuration' => 'array',
         'monitoring_settings' => 'array',
         'maintenance_schedule' => 'array',
         'backup_configuration' => 'array',
-        'base_monthly_rate' => 'decimal:2',
-        'additional_service_charges' => 'decimal:2',
+        'base_monthly_rate' => self::CAST_DECIMAL_2,
+        'additional_service_charges' => self::CAST_DECIMAL_2,
         'pricing_modifiers' => 'array',
         'billing_rules' => 'array',
         'start_date' => 'date',
@@ -129,7 +129,7 @@ class ContractAssetAssignment extends Model
         'automation_triggers' => 'array',
         'last_service_update' => 'datetime',
         'usage_metrics' => 'array',
-        'current_month_charges' => 'decimal:2',
+        'current_month_charges' => self::CAST_DECIMAL_2,
         'billing_history' => 'array',
         'sla_requirements' => 'array',
         'compliance_settings' => 'array',
@@ -140,6 +140,11 @@ class ContractAssetAssignment extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Cast type constants
+     */
+    const CAST_DECIMAL_2 = 'decimal:2';
 
     /**
      * Status constants
