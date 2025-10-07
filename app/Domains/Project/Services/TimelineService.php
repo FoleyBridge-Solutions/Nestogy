@@ -32,6 +32,11 @@ class TimelineService
     const ZOOM_QUARTER = 'quarter';
 
     /**
+     * Color constants
+     */
+    const COLOR_RED = '#ef4444';
+
+    /**
      * Get comprehensive timeline data for a project
      */
     public function getTimelineData(Project $project, array $options = []): array
@@ -90,7 +95,7 @@ class TimelineService
                 'date' => $milestone->due_date?->format('Y-m-d'),
                 'completed' => $milestone->status === 'completed',
                 'critical' => $milestone->is_critical,
-                'color' => $milestone->is_critical ? '#ef4444' : '#6366f1',
+                'color' => $milestone->is_critical ? self::COLOR_RED : '#6366f1',
                 'progress' => $milestone->completion_percentage ?? 0,
             ];
         }
@@ -467,7 +472,7 @@ class TimelineService
             'active', 'in_progress' => '#3b82f6',
             'on_hold' => '#f59e0b',
             'completed' => '#10b981',
-            'cancelled' => '#ef4444',
+            'cancelled' => self::COLOR_RED,
             default => '#6b7280',
         };
     }
@@ -478,7 +483,7 @@ class TimelineService
             'low' => '#10b981',
             'medium' => '#f59e0b',
             'high' => '#f97316',
-            'critical' => '#ef4444',
+            'critical' => self::COLOR_RED,
             default => '#6b7280',
         };
     }
