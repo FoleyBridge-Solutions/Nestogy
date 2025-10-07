@@ -10,6 +10,8 @@ use Livewire\Component;
 
 class TechWorkload extends Component
 {
+    private const STATUS_IN_PROGRESS = 'In Progress';
+
     public $technicians = [];
 
     public function mount()
@@ -26,18 +28,18 @@ class TechWorkload extends Component
             return User::where('company_id', $companyId)
                 ->with(['roles', 'assignedTickets' => function ($q) {
                     $q->select('id', 'assigned_to', 'status', 'priority')
-                      ->whereIn('status', ['Open', 'In Progress', 'Awaiting Customer']);
+                      ->whereIn('status', ['Open', self::STATUS_IN_PROGRESS, 'Awaiting Customer']);
                 }])
                 ->whereHas('roles', function ($q) {
                     $q->whereIn('name', ['technician', 'admin']);
                 })
                 ->withCount([
                     'assignedTickets as active_tickets' => function ($q) {
-                        $q->whereIn('status', ['Open', 'In Progress', 'Awaiting Customer']);
+                        $q->whereIn('status', ['Open', self::STATUS_IN_PROGRESS, 'Awaiting Customer']);
                     },
                     'assignedTickets as critical_tickets' => function ($q) {
                         $q->where('priority', 'Critical')
-                          ->whereIn('status', ['Open', 'In Progress']);
+                          ->whereIn('status', ['Open', self::STATUS_IN_PROGRESS]);
                     }
                 ])
                 ->get()
