@@ -468,7 +468,7 @@ class Recurring extends Model
      */
     public function calculateUsageCharges(?Carbon $billingPeriodStart = null, ?Carbon $billingPeriodEnd = null): array
     {
-        if (! \Schema::hasColumn('recurring', 'billing_type') || 
+        if (! \Schema::hasColumn('recurring', 'billing_type') ||
             ($this->billing_type !== self::BILLING_TYPE_USAGE_BASED && $this->billing_type !== self::BILLING_TYPE_HYBRID)) {
             return ['total' => 0, 'breakdown' => []];
         }
