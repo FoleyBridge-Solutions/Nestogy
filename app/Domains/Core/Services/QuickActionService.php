@@ -168,71 +168,86 @@ class QuickActionService
      */
     public static function toggleFavorite($actionIdentifier, User $user): bool
     {
-        // Determine if this is a custom action (numeric ID) or system action
         if (is_numeric($actionIdentifier)) {
-            // Custom action
-            $favorite = QuickActionFavorite::where('user_id', $user->id)
-                ->where('custom_quick_action_id', $actionIdentifier)
-                ->first();
-
-            if ($favorite) {
-                $favorite->delete();
-
-                return false; // Removed from favorites
-            } else {
-                QuickActionFavorite::create([
-                    'user_id' => $user->id,
-                    'custom_quick_action_id' => $actionIdentifier,
-                    'position' => QuickActionFavorite::where('user_id', $user->id)->count(),
-                ]);
-
-                return true; // Added to favorites
-            }
-        } else {
-            // System action or action with string ID
-            $systemAction = null;
-
-            // Try to find the action to get its identifier
-            $action = static::getActionsForUser($user)
-                ->first(function ($a) use ($actionIdentifier) {
-                    if (isset($a['id']) && $a['id'] === $actionIdentifier) {
-                        return true;
-                    }
-                    if (isset($a['route']) && $a['route'] === $actionIdentifier) {
-                        return true;
-                    }
-                    if (isset($a['action']) && $a['action'] === $actionIdentifier) {
-                        return true;
-                    }
-
-                    return false;
-                });
-
-            if ($action) {
-                // Use route or action as the system identifier
-                $systemAction = $action['route'] ?? $action['action'] ?? $actionIdentifier;
-            } else {
-                $systemAction = $actionIdentifier;
-            }
-
-            $favorite = QuickActionFavorite::where('user_id', $user->id)
-                ->where('system_action', $systemAction)
-                ->first();
-
-            if ($favorite) {
-                $favorite->delete();
-
-                return false;
-            } else {
-                QuickActionFavorite::create([
-                    'user_id' => $user->id,
-                    'system_action' => $systemAction,
-                    'position' => QuickActionFavorite::where('user_id', $user->id)->count(),
-                ]);
-
-                return true;
-            }
+            return static::toggleCustomActionFavorite($actionIdentifier, $user);
         }
+
+        return static::toggleSystemActionFavorite($actionIdentifier, $user);
+    }
+
+    /**
+     * Toggle favorite status for a custom action
+     */
+    protected static function toggleCustomActionFavorite($actionId, User $user): bool
+    {
+        $favorite = QuickActionFavorite::where('user_id', $user->id)
+            ->where('custom_quick_action_id', $actionId)
+            ->first();
+
+        if ($favorite) {
+            $favorite->delete();
+
+            return false;
+        }
+
+        QuickActionFavorite::create([
+            'user_id' => $user->id,
+            'custom_quick_action_id' => $actionId,
+            'position' => QuickActionFavorite::where('user_id', $user->id)->count(),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Toggle favorite status for a system action
+     */
+    protected static function toggleSystemActionFavorite($actionIdentifier, User $user): bool
+    {
+        $systemAction = static::resolveSystemActionIdentifier($actionIdentifier, $user);
+
+        $favorite = QuickActionFavorite::where('user_id', $user->id)
+            ->where('system_action', $systemAction)
+            ->first();
+
+        if ($favorite) {
+            $favorite->delete();
+
+            return false;
+        }
+
+        QuickActionFavorite::create([
+            'user_id' => $user->id,
+            'system_action' => $systemAction,
+            'position' => QuickActionFavorite::where('user_id', $user->id)->count(),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Resolve the system action identifier
+     */
+    protected static function resolveSystemActionIdentifier($actionIdentifier, User $user): string
+    {
+        $action = static::getActionsForUser($user)
+            ->first(fn($a) => static::matchesActionIdentifier($a, $actionIdentifier));
+
+        if ($action) {
+            return $action['route'] ?? $action['action'] ?? $actionIdentifier;
+        }
+
+        return $actionIdentifier;
+    }
+
+    /**
+     * Check if an action matches the given identifier
+     */
+    protected static function matchesActionIdentifier(array $action, $identifier): bool
+    {
+        return (isset($action['id']) && $action['id'] === $identifier) ||
+               (isset($action['route']) && $action['route'] === $identifier) ||
+               (isset($action['action']) && $action['action'] === $identifier);
     }
 
     /**
