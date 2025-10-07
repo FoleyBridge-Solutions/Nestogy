@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class ContractController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING = 'required|string';
+
     protected $contractService;
 
     protected $contractGenerationService;
@@ -1021,8 +1023,8 @@ class ContractController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'template_type' => 'required|string',
-            'billing_model' => 'required|string',
+            'template_type' => self::VALIDATION_REQUIRED_STRING,
+            'billing_model' => self::VALIDATION_REQUIRED_STRING,
             'variable_fields' => 'nullable|array',
             'default_values' => 'nullable|array',
             'required_fields' => 'nullable|array',
@@ -1142,8 +1144,8 @@ class ContractController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'template_type' => 'required|string',
-            'billing_model' => 'required|string',
+            'template_type' => self::VALIDATION_REQUIRED_STRING,
+            'billing_model' => self::VALIDATION_REQUIRED_STRING,
             'variable_fields' => 'nullable|array',
             'default_values' => 'nullable|array',
             'required_fields' => 'nullable|array',
