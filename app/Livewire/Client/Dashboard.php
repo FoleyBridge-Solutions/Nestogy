@@ -25,7 +25,12 @@ class Dashboard extends Component
 
     public function render()
     {
-        $data = [
+        return view('livewire.client.dashboard', $this->getDashboardData());
+    }
+
+    protected function getDashboardData(): array
+    {
+        return [
             'contractStats' => $this->canViewContracts() ? $this->getContractStats() : null,
             'contracts' => $this->canViewContracts() ? $this->getContracts() : null,
             'invoiceStats' => $this->canViewInvoices() ? $this->getInvoiceStats() : null,
@@ -50,8 +55,6 @@ class Dashboard extends Component
             'knowledgeBaseArticles' => $this->getKnowledgeBaseArticles(),
             'assetHealth' => $this->canViewAssets() ? $this->getAssetHealth() : null,
         ];
-
-        return view('livewire.client.dashboard', $data);
     }
 
     protected function canViewContracts(): bool
