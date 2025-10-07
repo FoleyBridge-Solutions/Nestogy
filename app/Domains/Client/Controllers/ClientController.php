@@ -1420,87 +1420,14 @@ class ClientController extends BaseController
         ]);
 
         try {
-            $file = $request->file('csv_file');
-            $handle = fopen($file->getPathname(), 'r');
+            $result = $this->processLeadsCsvFile($request);
 
-            if (! $handle) {
-                throw new \Exception('Could not open CSV file');
-            }
-
-            // Read header row
-            $headers = fgetcsv($handle);
-            if (! $headers) {
-                throw new \Exception('Invalid CSV file - no headers found');
-            }
-
-            // Create column mapping
-            $columnMap = $this->createLeadColumnMapping($headers);
-
-            $imported = 0;
-            $skipped = 0;
-            $errors = [];
-            $details = [];
-
-            while (($row = fgetcsv($handle)) !== false) {
-                try {
-                    // Skip empty rows
-                    if (empty(array_filter($row))) {
-                        continue;
-                    }
-
-                    // Map CSV data to lead data
-                    $leadData = $this->mapCsvRowToLeadData($row, $headers, $columnMap);
-
-                    // Add default values
-                    $leadData['lead'] = true;
-                    $leadData['status'] = $request->input('default_status', 'active');
-                    $leadData['type'] = $request->input('default_type', 'prospect');
-                    $leadData['company_id'] = auth()->user()->company_id;
-
-                    if ($request->filled('import_notes')) {
-                        $leadData['notes'] = $request->input('import_notes');
-                    }
-
-                    // Check for duplicates if requested
-                    if ($request->boolean('skip_duplicates') && ! empty($leadData['email'])) {
-                        $existing = Client::where('company_id', auth()->user()->company_id)
-                            ->where('email', $leadData['email'])
-                            ->first();
-
-                        if ($existing) {
-                            $skipped++;
-                            $details[] = "Skipped: {$leadData['email']} (already exists)";
-
-                            continue;
-                        }
-                    }
-
-                    // Create the lead as a client
-                    $client = Client::create($leadData);
-                    $imported++;
-                    $details[] = "Imported: {$client->name} ({$client->email})";
-
-                } catch (\Exception $e) {
-                    $errors[] = 'Row error: '.$e->getMessage();
-                    $details[] = 'Error processing row: '.implode(', ', array_slice($row, 0, 3));
-                }
-            }
-
-            fclose($handle);
-
-            // Prepare summary message
-            $message = "Import completed: {$imported} leads imported";
-            if ($skipped > 0) {
-                $message .= ", {$skipped} duplicates skipped";
-            }
-            if (count($errors) > 0) {
-                $message .= ', '.count($errors).' errors';
-            }
+            $message = $this->buildImportSummaryMessage($result);
 
             return redirect()
                 ->route('clients.leads')
                 ->with('success', $message)
-                ->with('import_details', $details);
+                ->with('import_details', $result['details']);
 
         } catch (\Exception $e) {
             Log::error('Lead CSV import failed', [
@@ -1512,6 +1439,125 @@ class ClientController extends BaseController
                 ->withInput()
                 ->with('error', 'Import failed: '.$e->getMessage());
         }
+    }
+
+    private function processLeadsCsvFile(Request $request): array
+    {
+        $file = $request->file('csv_file');
+        $handle = fopen($file->getPathname(), 'r');
+
+        if (! $handle) {
+            throw new \Exception('Could not open CSV file');
+        }
+
+        $headers = fgetcsv($handle);
+        if (! $headers) {
+            fclose($handle);
+            throw new \Exception('Invalid CSV file - no headers found');
+        }
+
+        $columnMap = $this->createLeadColumnMapping($headers);
+        $result = $this->importLeadsFromCsvRows($handle, $columnMap, $request);
+
+        fclose($handle);
+
+        return $result;
+    }
+
+    private function importLeadsFromCsvRows($handle, array $columnMap, Request $request): array
+    {
+        $imported = 0;
+        $skipped = 0;
+        $errors = [];
+        $details = [];
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowResult = $this->processLeadCsvRow($row, $columnMap, $request);
+
+            $imported += $rowResult['imported'];
+            $skipped += $rowResult['skipped'];
+            $errors = array_merge($errors, $rowResult['errors']);
+            $details = array_merge($details, $rowResult['details']);
+        }
+
+        return compact('imported', 'skipped', 'errors', 'details');
+    }
+
+    private function processLeadCsvRow(array $row, array $columnMap, Request $request): array
+    {
+        $result = ['imported' => 0, 'skipped' => 0, 'errors' => [], 'details' => []];
+
+        try {
+            if (empty(array_filter($row))) {
+                return $result;
+            }
+
+            $leadData = $this->prepareLeadDataFromRow($row, $columnMap, $request);
+
+            if ($this->shouldSkipDuplicateLead($request, $leadData)) {
+                $result['skipped'] = 1;
+                $result['details'][] = "Skipped: {$leadData['email']} (already exists)";
+                return $result;
+            }
+
+            $client = Client::create($leadData);
+            $result['imported'] = 1;
+            $result['details'][] = "Imported: {$client->name} ({$client->email})";
+
+        } catch (\Exception $e) {
+            $result['errors'][] = 'Row error: '.$e->getMessage();
+            $result['details'][] = 'Error processing row: '.implode(', ', array_slice($row, 0, 3));
+        }
+
+        return $result;
+    }
+
+    private function prepareLeadDataFromRow(array $row, array $columnMap, Request $request): array
+    {
+        $leadData = $this->mapCsvRowToLeadData($row, [], $columnMap);
+
+        $leadData['lead'] = true;
+        $leadData['status'] = $request->input('default_status', 'active');
+        $leadData['type'] = $request->input('default_type', 'prospect');
+        $leadData['company_id'] = auth()->user()->company_id;
+
+        if ($request->filled('import_notes')) {
+            $leadData['notes'] = $request->input('import_notes');
+        }
+
+        return $leadData;
+    }
+
+    private function shouldSkipDuplicateLead(Request $request, array $leadData): bool
+    {
+        if (! $request->boolean('skip_duplicates')) {
+            return false;
+        }
+
+        if (empty($leadData['email'])) {
+            return false;
+        }
+
+        $existing = Client::where('company_id', auth()->user()->company_id)
+            ->where('email', $leadData['email'])
+            ->first();
+
+        return $existing !== null;
+    }
+
+    private function buildImportSummaryMessage(array $result): string
+    {
+        $message = "Import completed: {$result['imported']} leads imported";
+
+        if ($result['skipped'] > 0) {
+            $message .= ", {$result['skipped']} duplicates skipped";
+        }
+
+        if (count($result['errors']) > 0) {
+            $message .= ', '.count($result['errors']).' errors';
+        }
+
+        return $message;
     }
 
     /**
@@ -1549,40 +1595,42 @@ class ClientController extends BaseController
      */
     private function createLeadColumnMapping(array $headers): array
     {
+        $fieldMappings = $this->getLeadFieldMappings();
         $mapping = [];
 
         foreach ($headers as $index => $header) {
             $normalizedHeader = strtolower(trim($header));
-
-            // Map various column name variations to our expected fields
-            if (in_array($normalizedHeader, ['last', 'last name', 'lastname', 'surname'])) {
-                $mapping['last_name'] = $index;
-            } elseif (in_array($normalizedHeader, ['first', 'first name', 'firstname', 'given name'])) {
-                $mapping['first_name'] = $index;
-            } elseif (in_array($normalizedHeader, ['middle', 'middle name', 'middlename', 'middle initial'])) {
-                $mapping['middle_name'] = $index;
-            } elseif (in_array($normalizedHeader, ['company', 'company name', 'organization', 'business name'])) {
-                $mapping['company_name'] = $index;
-            } elseif (in_array($normalizedHeader, ['address', 'address line 1', 'address1', 'company address line 1'])) {
-                $mapping['address_line_1'] = $index;
-            } elseif (in_array($normalizedHeader, ['address line 2', 'address2', 'company address line 2'])) {
-                $mapping['address_line_2'] = $index;
-            } elseif (in_array($normalizedHeader, ['city', 'town'])) {
-                $mapping['city'] = $index;
-            } elseif (in_array($normalizedHeader, ['state', 'province', 'region'])) {
-                $mapping['state'] = $index;
-            } elseif (in_array($normalizedHeader, ['zip', 'postal code', 'zipcode', 'postcode'])) {
-                $mapping['postal_code'] = $index;
-            } elseif (in_array($normalizedHeader, ['email', 'email address', 'e-mail'])) {
-                $mapping['email'] = $index;
-            } elseif (in_array($normalizedHeader, ['website', 'url', 'web site', 'homepage'])) {
-                $mapping['website'] = $index;
-            } elseif (in_array($normalizedHeader, ['phone', 'phone number', 'telephone', 'mobile', 'cell'])) {
-                $mapping['phone'] = $index;
+            
+            foreach ($fieldMappings as $field => $variations) {
+                if (in_array($normalizedHeader, $variations)) {
+                    $mapping[$field] = $index;
+                    break;
+                }
             }
         }
 
         return $mapping;
+    }
+
+    /**
+     * Get field name variations for CSV import mapping
+     */
+    private function getLeadFieldMappings(): array
+    {
+        return [
+            'last_name' => ['last', 'last name', 'lastname', 'surname'],
+            'first_name' => ['first', 'first name', 'firstname', 'given name'],
+            'middle_name' => ['middle', 'middle name', 'middlename', 'middle initial'],
+            'company_name' => ['company', 'company name', 'organization', 'business name'],
+            'address_line_1' => ['address', 'address line 1', 'address1', 'company address line 1'],
+            'address_line_2' => ['address line 2', 'address2', 'company address line 2'],
+            'city' => ['city', 'town'],
+            'state' => ['state', 'province', 'region'],
+            'postal_code' => ['zip', 'postal code', 'zipcode', 'postcode'],
+            'email' => ['email', 'email address', 'e-mail'],
+            'website' => ['website', 'url', 'web site', 'homepage'],
+            'phone' => ['phone', 'phone number', 'telephone', 'mobile', 'cell'],
+        ];
     }
 
     /**
