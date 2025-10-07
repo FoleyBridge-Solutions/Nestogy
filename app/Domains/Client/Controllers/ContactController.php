@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ContactController extends Controller
 {
+    private const VALIDATION_RULE_NULLABLE_ARRAY = 'nullable|array';
+
     /**
      * ContactController constructor.
      */
@@ -302,12 +304,12 @@ class ContactController extends Controller
             'email_verified_at' => 'nullable|boolean',
 
             // Portal Permissions
-            'portal_permissions' => 'nullable|array',
+            'portal_permissions' => self::VALIDATION_RULE_NULLABLE_ARRAY,
             'portal_permissions.*' => 'string',
 
             // Security Settings
             'session_timeout_minutes' => 'nullable|integer|min:5|max:480',
-            'allowed_ip_addresses' => 'nullable|array',
+            'allowed_ip_addresses' => self::VALIDATION_RULE_NULLABLE_ARRAY,
             'allowed_ip_addresses.*' => 'nullable|string',
         ]);
 
@@ -572,7 +574,7 @@ class ContactController extends Controller
 
         $validator = Validator::make($request->all(), [
             'session_timeout_minutes' => 'nullable|integer|min:5|max:480',
-            'allowed_ips' => 'nullable|array',
+            'allowed_ips' => self::VALIDATION_RULE_NULLABLE_ARRAY,
             'allowed_ips.*' => 'nullable|string',
         ]);
 
@@ -605,7 +607,7 @@ class ContactController extends Controller
         $this->authorize('update', $contact);
 
         $validator = Validator::make($request->all(), [
-            'permissions' => 'nullable|array',
+            'permissions' => self::VALIDATION_RULE_NULLABLE_ARRAY,
             'permissions.*' => 'string',
         ]);
 
