@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Log;
 
 class MicrosoftGraphProvider implements EmailProviderInterface
 {
+    private const OAUTH_SCOPES = 'https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access';
+
     protected Company $company;
 
     protected array $config;
@@ -24,7 +26,7 @@ class MicrosoftGraphProvider implements EmailProviderInterface
             'client_id' => $this->config['client_id'] ?? '',
             'response_type' => 'code',
             'redirect_uri' => route('email.oauth.callback'),
-            'scope' => 'https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access',
+            'scope' => self::OAUTH_SCOPES,
             'state' => $state,
             'response_mode' => 'query',
         ];
@@ -42,7 +44,7 @@ class MicrosoftGraphProvider implements EmailProviderInterface
             'code' => $code,
             'grant_type' => 'authorization_code',
             'redirect_uri' => route('email.oauth.callback'),
-            'scope' => 'https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access',
+            'scope' => self::OAUTH_SCOPES,
         ]);
 
         if ($response->failed()) {
@@ -63,7 +65,7 @@ class MicrosoftGraphProvider implements EmailProviderInterface
             'client_secret' => $this->config['client_secret'],
             'refresh_token' => $refreshToken,
             'grant_type' => 'refresh_token',
-            'scope' => 'https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access',
+            'scope' => self::OAUTH_SCOPES,
         ]);
 
         if ($response->failed()) {
