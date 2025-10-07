@@ -49,7 +49,7 @@
                             <div class="relative group">
                                 <img 
                                     src="{{ $photo['url'] }}" 
-                                    alt="Uploaded photo" 
+                                    alt="Uploaded photo"
                                     class="w-full h-40 object-cover rounded-lg">
                                 
                                 <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded-lg">
