@@ -268,7 +268,7 @@ class AccountingExportService
             ->whereBetween('work_date', [$startDate, $endDate])
             ->get();
 
-        $summary = $timeEntries->groupBy('ticket.client_id')->map(function ($entries, $clientId) {
+        $summary = $timeEntries->groupBy('ticket.client_id')->map(function ($entries) {
             $client = $entries->first()->ticket->client;
             
             return [
