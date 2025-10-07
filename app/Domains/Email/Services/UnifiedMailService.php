@@ -29,6 +29,8 @@ use Throwable;
  */
 class UnifiedMailService
 {
+    private const HREF_ATTRIBUTE = 'href="';
+
     protected array $config;
 
     public function __construct()
@@ -329,8 +331,8 @@ class UnifiedMailService
             ]);
 
             // Replace in HTML
-            $html = str_replace('href="'.$url.'"', 'href="'.$trackedUrl.'"', $html);
-            $html = str_replace("href='".$url."'", 'href="'.$trackedUrl.'"', $html);
+            $html = str_replace(self::HREF_ATTRIBUTE.$url.'"', self::HREF_ATTRIBUTE.$trackedUrl.'"', $html);
+            $html = str_replace("href='".$url."'", self::HREF_ATTRIBUTE.$trackedUrl.'"', $html);
         }
 
         return $html;
