@@ -256,79 +256,11 @@ class CommunicationLogController extends Controller
                 ->with('error', 'Please select a client to export communications.');
         }
 
-        $query = CommunicationLog::where('client_id', $client->id)
-            ->with(['user', 'contact'])
-            ->orderBy('created_at', 'desc');
+        $communications = $this->getFilteredCommunications($client, $request);
+        $csvData = $this->buildCsvData($communications);
+        $filename = $this->generateExportFilename($client);
 
-        // Apply same filters as index
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('subject', 'like', "%{$search}%")
-                    ->orWhere('notes', 'like', "%{$search}%")
-                    ->orWhere('contact_name', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->get('type'));
-        }
-
-        if ($request->filled('channel')) {
-            $query->where('channel', $request->get('channel'));
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->get('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->get('date_to'));
-        }
-
-        $communications = $query->get();
-
-        $csvData = [];
-        $csvData[] = [
-            'Date',
-            'Type',
-            'Channel',
-            'Contact',
-            'Subject',
-            'Notes',
-            'User',
-            'Follow Up Required',
-            'Follow Up Date',
-        ];
-
-        foreach ($communications as $communication) {
-            $csvData[] = [
-                $communication->created_at->format('Y-m-d H:i:s'),
-                CommunicationLog::TYPES[$communication->type] ?? $communication->type,
-                CommunicationLog::CHANNELS[$communication->channel] ?? $communication->channel,
-                $communication->contact_name ?: ($communication->contact ? $communication->contact->name : 'N/A'),
-                $communication->subject,
-                strip_tags($communication->notes),
-                $communication->user ? $communication->user->name : 'N/A',
-                $communication->follow_up_required ? 'Yes' : 'No',
-                $communication->follow_up_date ? $communication->follow_up_date->format('Y-m-d') : '',
-            ];
-        }
-
-        $filename = "communications_{$client->name}_".date('Y-m-d').'.csv';
-
-        $callback = function () use ($csvData) {
-            $file = fopen('php://output', 'w');
-            foreach ($csvData as $row) {
-                fputcsv($file, $row);
-            }
-            fclose($file);
-        };
-
-        return Response::stream($callback, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-        ]);
+        return $this->streamCsvResponse($csvData, $filename);
     }
 
     /**
@@ -533,5 +465,76 @@ class CommunicationLogController extends Controller
         }
 
         return $communications;
+    }
+
+    protected function getFilteredCommunications($client, $request)
+    {
+        $query = CommunicationLog::where('client_id', $client->id)
+            ->with(['user', 'contact'])
+            ->orderBy('created_at', 'desc');
+
+        return $this->applyFilters($query, $request)->get();
+    }
+
+    protected function buildCsvData($communications)
+    {
+        $csvData = [$this->getCsvHeaders()];
+
+        foreach ($communications as $communication) {
+            $csvData[] = $this->buildCsvRow($communication);
+        }
+
+        return $csvData;
+    }
+
+    protected function getCsvHeaders()
+    {
+        return [
+            'Date',
+            'Type',
+            'Channel',
+            'Contact',
+            'Subject',
+            'Notes',
+            'User',
+            'Follow Up Required',
+            'Follow Up Date',
+        ];
+    }
+
+    protected function buildCsvRow($communication)
+    {
+        return [
+            $communication->created_at->format('Y-m-d H:i:s'),
+            CommunicationLog::TYPES[$communication->type] ?? $communication->type,
+            CommunicationLog::CHANNELS[$communication->channel] ?? $communication->channel,
+            $communication->contact_name ?: ($communication->contact ? $communication->contact->name : 'N/A'),
+            $communication->subject,
+            strip_tags($communication->notes),
+            $communication->user ? $communication->user->name : 'N/A',
+            $communication->follow_up_required ? 'Yes' : 'No',
+            $communication->follow_up_date ? $communication->follow_up_date->format('Y-m-d') : '',
+        ];
+    }
+
+    protected function generateExportFilename($client)
+    {
+        return "communications_{$client->name}_".date('Y-m-d').'.csv';
+    }
+
+    protected function streamCsvResponse($csvData, $filename)
+    {
+        $callback = function () use ($csvData) {
+            $file = fopen('php://output', 'w');
+            foreach ($csvData as $row) {
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return Response::stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 }
