@@ -49,8 +49,8 @@
                                 >
                                     <div class="flex items-center gap-2">
                                         <flux:icon 
-                                            name="{{ in_array($category, $expandedCategories) ? 'chevron-down' : 'chevron-right' }}" 
-                                            variant="micro" 
+                                            name="{{ in_array($category, $expandedCategories) ? 'chevron-down' : 'chevron-right' }}"
+                                            variant="micro"
                                         />
                                         <flux:text class="font-semibold">{{ $category }}</flux:text>
                                         <flux:badge color="zinc" size="sm">{{ count($abilities) }}</flux:badge>
