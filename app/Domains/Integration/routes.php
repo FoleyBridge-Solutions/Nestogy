@@ -4,6 +4,8 @@
 
 use Illuminate\Support\Facades\Route;
 
+const RMM_INTEGRATION_NOT_FOUND = 'No RMM integration found';
+
 Route::middleware(['auth', 'verified', 'company'])->prefix('api/rmm')->name('api.rmm.')->group(function () {
     // RMM Integration CRUD
     Route::get('integrations', [App\Domains\Integration\Controllers\RmmIntegrationsController::class, 'index'])->name('integrations.index');
@@ -23,7 +25,7 @@ Route::middleware(['auth', 'verified', 'company'])->prefix('api/rmm')->name('api
     Route::post('sync-agents', function (\Illuminate\Http\Request $request) {
         $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', auth()->user()->company_id)->first();
         if (! $integration) {
-            return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+            return response()->json(['success' => false, 'message' => RMM_INTEGRATION_NOT_FOUND], 404);
         }
 
         // Check if at least one client has mapping (optional requirement)
@@ -53,7 +55,7 @@ Route::middleware(['auth', 'verified', 'company'])->prefix('api/rmm')->name('api
     Route::post('sync-alerts', function (\Illuminate\Http\Request $request) {
         $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', auth()->user()->company_id)->first();
         if (! $integration) {
-            return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+            return response()->json(['success' => false, 'message' => RMM_INTEGRATION_NOT_FOUND], 404);
         }
 
         // Check if at least one client has mapping (optional requirement)
@@ -107,7 +109,7 @@ Route::middleware(['auth', 'verified', 'company'])->prefix('api/rmm')->name('api
     Route::get('clients/rmm', function (\Illuminate\Http\Request $request) {
         $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', auth()->user()->company_id)->first();
         if (! $integration) {
-            return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+            return response()->json(['success' => false, 'message' => RMM_INTEGRATION_NOT_FOUND], 404);
         }
 
         try {
@@ -126,7 +128,7 @@ Route::middleware(['auth', 'verified', 'company'])->prefix('api/rmm')->name('api
     Route::post('client-mappings', function (\Illuminate\Http\Request $request) {
         $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', auth()->user()->company_id)->first();
         if (! $integration) {
-            return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+            return response()->json(['success' => false, 'message' => RMM_INTEGRATION_NOT_FOUND], 404);
         }
 
         // Log the request data for debugging
