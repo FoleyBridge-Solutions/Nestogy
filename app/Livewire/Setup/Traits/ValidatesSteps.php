@@ -7,6 +7,8 @@ use Illuminate\Validation\Rules\Password;
 
 trait ValidatesSteps
 {
+    private const VALIDATION_NULLABLE_STRING_MAX_100 = 'nullable|string|max:100';
+
     protected function validateCurrentStep(): bool
     {
         return match ($this->currentStep) {
@@ -28,10 +30,10 @@ trait ValidatesSteps
                 'currency' => 'required|string|size:3|in:USD,EUR,GBP,CAD,AUD,JPY',
                 'company_phone' => 'nullable|string|max:20',
                 'company_address' => 'nullable|string|max:255',
-                'company_city' => 'nullable|string|max:100',
-                'company_state' => 'nullable|string|max:100',
+                'company_city' => self::VALIDATION_NULLABLE_STRING_MAX_100,
+                'company_state' => self::VALIDATION_NULLABLE_STRING_MAX_100,
                 'company_zip' => 'nullable|string|max:20',
-                'company_country' => 'nullable|string|max:100',
+                'company_country' => self::VALIDATION_NULLABLE_STRING_MAX_100,
                 'company_website' => 'nullable|url|max:255',
             ], [
                 'company_name.required' => 'Company name is required to set up your ERP system.',
