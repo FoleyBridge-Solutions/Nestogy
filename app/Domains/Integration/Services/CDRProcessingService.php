@@ -54,6 +54,11 @@ class CDRProcessingService
 
     const FRAUD_CONFIRMED = 'confirmed';
 
+    /**
+     * Error messages
+     */
+    const ERROR_DUPLICATE_CDR = 'Duplicate CDR detected';
+
     public function __construct(
         UsageBillingService $usageBillingService,
         PricingEngineService $pricingEngineService
@@ -81,9 +86,9 @@ class CDRProcessingService
 
             // Step 3: Check for duplicates
             if ($this->isDuplicate($normalizedCDR)) {
-                Log::warning('Duplicate CDR detected', ['cdr_id' => $normalizedCDR['cdr_id']]);
+                Log::warning(self::ERROR_DUPLICATE_CDR, ['cdr_id' => $normalizedCDR['cdr_id']]);
 
-                return $this->createProcessingResult(false, ['Duplicate CDR detected'], [], $startTime);
+                return $this->createProcessingResult(false, [self::ERROR_DUPLICATE_CDR], [], $startTime);
             }
 
             // Step 4: Fraud detection
@@ -198,7 +203,7 @@ class CDRProcessingService
                         $results['failed']++;
                         $results['errors'] = array_merge($results['errors'], $result['errors']);
 
-                        if (in_array('Duplicate CDR detected', $result['errors'])) {
+                        if (in_array(self::ERROR_DUPLICATE_CDR, $result['errors'])) {
                             $results['duplicates']++;
                         }
                     }
