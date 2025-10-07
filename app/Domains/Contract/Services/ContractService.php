@@ -1451,9 +1451,128 @@ class ContractService
      */
     protected function createContractSchedules(Contract $contract, array $data): array
     {
-        $createdScheduleIds = [];
         $scheduleType = $this->determineScheduleType($data);
+        $this->logScheduleCreationStart($contract, $scheduleType, $data);
 
+        try {
+            $createdScheduleIds = $this->createStandardSchedules($contract, $data, $scheduleType);
+            $createdScheduleIds = array_merge($createdScheduleIds, $this->createSpecializedSchedules($contract, $data));
+
+            $this->logScheduleCreationComplete($contract, $createdScheduleIds);
+
+            return $createdScheduleIds;
+        } catch (\Exception $e) {
+            $this->handleScheduleCreationFailure($contract, $e, $createdScheduleIds ?? []);
+            throw $e;
+        }
+    }
+
+    protected function createStandardSchedules(Contract $contract, array $data, string $scheduleType): array
+    {
+        $createdIds = [];
+
+        $schedules = [
+            ['key' => 'infrastructure_schedule', 'letter' => 'A', 'method' => 'createScheduleA', 'args' => [$scheduleType]],
+            ['key' => 'pricing_schedule', 'letter' => 'B', 'method' => 'createScheduleB', 'args' => [$scheduleType]],
+            ['key' => 'additional_terms', 'letter' => 'C', 'method' => 'createScheduleC', 'args' => []],
+        ];
+
+        foreach ($schedules as $config) {
+            $scheduleId = $this->attemptScheduleCreation($contract, $data, $config);
+            if ($scheduleId) {
+                $createdIds[] = $scheduleId;
+            }
+        }
+
+        return $createdIds;
+    }
+
+    protected function createSpecializedSchedules(Contract $contract, array $data): array
+    {
+        $createdIds = [];
+
+        $specializedSchedules = [
+            ['key' => 'telecom_schedule', 'method' => 'createTelecomSchedule'],
+            ['key' => 'hardware_schedule', 'method' => 'createHardwareSchedule'],
+            ['key' => 'compliance_schedule', 'method' => 'createComplianceSchedule'],
+        ];
+
+        foreach ($specializedSchedules as $config) {
+            $scheduleId = $this->attemptSpecializedScheduleCreation($contract, $data, $config);
+            if ($scheduleId) {
+                $createdIds[] = $scheduleId;
+            }
+        }
+
+        return $createdIds;
+    }
+
+    protected function attemptScheduleCreation(Contract $contract, array $data, array $config): ?int
+    {
+        if (empty($data[$config['key']])) {
+            Log::info("Skipping Schedule {$config['letter']} - no {$config['key']} data");
+            return null;
+        }
+
+        Log::info("Creating Schedule {$config['letter']} for contract", [
+            'contract_id' => $contract->id,
+            'data_keys' => array_keys($data[$config['key']]),
+        ]);
+
+        try {
+            $method = $config['method'];
+            $args = array_merge([$contract, $data], $config['args']);
+            $schedule = $this->$method(...$args);
+
+            return $this->handleScheduleCreationSuccess($schedule, $config['letter']);
+        } catch (\Exception $e) {
+            $this->logScheduleCreationError($contract, $config['letter'], $e);
+            return null;
+        }
+    }
+
+    protected function attemptSpecializedScheduleCreation(Contract $contract, array $data, array $config): ?int
+    {
+        if (empty($data[$config['key']])) {
+            return null;
+        }
+
+        Log::info("Creating {$config['key']}", [
+            'contract_id' => $contract->id,
+            'data_keys' => array_keys($data[$config['key']]),
+        ]);
+
+        $method = $config['method'];
+        $schedule = $this->$method($contract, $data);
+
+        if ($schedule) {
+            Log::info("{$config['key']} created successfully", [
+                'schedule_id' => $schedule->id,
+                'title' => $schedule->title,
+            ]);
+            return $schedule->id;
+        }
+
+        return null;
+    }
+
+    protected function handleScheduleCreationSuccess(?ContractSchedule $schedule, string $letter): ?int
+    {
+        if (! $schedule) {
+            Log::warning("Schedule {$letter} creation returned null");
+            return null;
+        }
+
+        Log::info("Schedule {$letter} created successfully", [
+            'schedule_id' => $schedule->id,
+            'title' => $schedule->title,
+        ]);
+
+        return $schedule->id;
+    }
+
+    protected function logScheduleCreationStart(Contract $contract, string $scheduleType, array $data): void
+    {
         Log::info('Starting contract schedule creation', [
             'contract_id' => $contract->id,
             'schedule_type' => $scheduleType,
@@ -1461,166 +1580,40 @@ class ContractService
             'has_pricing' => ! empty($data['pricing_schedule']),
             'has_additional_terms' => ! empty($data['additional_terms']),
         ]);
+    }
 
-        try {
-            // Create Schedule A (Infrastructure/Service Configuration)
-            if (! empty($data['infrastructure_schedule'])) {
-                Log::info('Creating Schedule A for contract', [
-                    'contract_id' => $contract->id,
-                    'infrastructure_keys' => array_keys($data['infrastructure_schedule']),
-                ]);
+    protected function logScheduleCreationComplete(Contract $contract, array $createdScheduleIds): void
+    {
+        Log::info('Contract schedules created successfully', [
+            'contract_id' => $contract->id,
+            'schedule_ids' => $createdScheduleIds,
+            'schedule_count' => count($createdScheduleIds),
+        ]);
+    }
 
-                try {
-                    $scheduleA = $this->createScheduleA($contract, $data, $scheduleType);
-                    if ($scheduleA) {
-                        $createdScheduleIds[] = $scheduleA->id;
-                        Log::info('Schedule A created successfully', [
-                            'schedule_id' => $scheduleA->id,
-                            'title' => $scheduleA->title,
-                        ]);
-                    } else {
-                        Log::warning('Schedule A creation returned null');
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Failed to create Schedule A', [
-                        'contract_id' => $contract->id,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                }
-            } else {
-                Log::info('Skipping Schedule A - no infrastructure_schedule data');
-            }
+    protected function logScheduleCreationError(Contract $contract, string $letter, \Exception $e): void
+    {
+        Log::error("Failed to create Schedule {$letter}", [
+            'contract_id' => $contract->id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+    }
 
-            // Create Schedule B (Pricing & Fees)
-            if (! empty($data['pricing_schedule'])) {
-                Log::info('Creating Schedule B for contract', [
-                    'contract_id' => $contract->id,
-                    'pricing_keys' => array_keys($data['pricing_schedule']),
-                ]);
+    protected function handleScheduleCreationFailure(Contract $contract, \Exception $e, array $createdScheduleIds): void
+    {
+        Log::error('Error creating contract schedules', [
+            'contract_id' => $contract->id,
+            'error' => $e->getMessage(),
+            'partial_schedule_ids' => $createdScheduleIds,
+        ]);
 
-                try {
-                    $scheduleB = $this->createScheduleB($contract, $data, $scheduleType);
-                    if ($scheduleB) {
-                        $createdScheduleIds[] = $scheduleB->id;
-                        Log::info('Schedule B created successfully', [
-                            'schedule_id' => $scheduleB->id,
-                            'title' => $scheduleB->title,
-                        ]);
-                    } else {
-                        Log::warning('Schedule B creation returned null');
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Failed to create Schedule B', [
-                        'contract_id' => $contract->id,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                }
-            } else {
-                Log::info('Skipping Schedule B - no pricing_schedule data');
-            }
-
-            // Create Schedule C (Additional Terms)
-            if (! empty($data['additional_terms'])) {
-                Log::info('Creating Schedule C for contract', [
-                    'contract_id' => $contract->id,
-                    'additional_terms_keys' => array_keys($data['additional_terms']),
-                ]);
-
-                try {
-                    $scheduleC = $this->createScheduleC($contract, $data);
-                    if ($scheduleC) {
-                        $createdScheduleIds[] = $scheduleC->id;
-                        Log::info('Schedule C created successfully', [
-                            'schedule_id' => $scheduleC->id,
-                            'title' => $scheduleC->title,
-                        ]);
-                    } else {
-                        Log::warning('Schedule C creation returned null');
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Failed to create Schedule C', [
-                        'contract_id' => $contract->id,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                }
-            } else {
-                Log::info('Skipping Schedule C - no additional_terms data');
-            }
-
-            // Create specialized schedules based on template type
-            if (! empty($data['telecom_schedule'])) {
-                Log::info('Creating telecom schedule', [
-                    'contract_id' => $contract->id,
-                    'telecom_data_keys' => array_keys($data['telecom_schedule']),
-                ]);
-                $telecomSchedule = $this->createTelecomSchedule($contract, $data);
-                if ($telecomSchedule) {
-                    $createdScheduleIds[] = $telecomSchedule->id;
-                    Log::info('Telecom schedule created successfully', [
-                        'schedule_id' => $telecomSchedule->id,
-                        'title' => $telecomSchedule->title,
-                    ]);
-                }
-            }
-
-            if (! empty($data['hardware_schedule'])) {
-                Log::info('Creating hardware schedule', [
-                    'contract_id' => $contract->id,
-                    'hardware_data_keys' => array_keys($data['hardware_schedule']),
-                ]);
-                $hardwareSchedule = $this->createHardwareSchedule($contract, $data);
-                if ($hardwareSchedule) {
-                    $createdScheduleIds[] = $hardwareSchedule->id;
-                    Log::info('Hardware schedule created successfully', [
-                        'schedule_id' => $hardwareSchedule->id,
-                        'title' => $hardwareSchedule->title,
-                    ]);
-                }
-            }
-
-            if (! empty($data['compliance_schedule'])) {
-                Log::info('Creating compliance schedule', [
-                    'contract_id' => $contract->id,
-                    'compliance_data_keys' => array_keys($data['compliance_schedule']),
-                ]);
-                $complianceSchedule = $this->createComplianceSchedule($contract, $data);
-                if ($complianceSchedule) {
-                    $createdScheduleIds[] = $complianceSchedule->id;
-                    Log::info('Compliance schedule created successfully', [
-                        'schedule_id' => $complianceSchedule->id,
-                        'title' => $complianceSchedule->title,
-                    ]);
-                }
-            }
-
-            Log::info('Contract schedules created successfully', [
-                'contract_id' => $contract->id,
-                'schedule_ids' => $createdScheduleIds,
-                'schedule_count' => count($createdScheduleIds),
+        if (! empty($createdScheduleIds)) {
+            ContractSchedule::whereIn('id', $createdScheduleIds)->delete();
+            Log::info('Cleaned up partially created schedules', [
+                'deleted_schedule_ids' => $createdScheduleIds,
             ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error creating contract schedules', [
-                'contract_id' => $contract->id,
-                'error' => $e->getMessage(),
-                'partial_schedule_ids' => $createdScheduleIds,
-            ]);
-
-            // Clean up any partially created schedules
-            if (! empty($createdScheduleIds)) {
-                ContractSchedule::whereIn('id', $createdScheduleIds)->delete();
-                Log::info('Cleaned up partially created schedules', [
-                    'deleted_schedule_ids' => $createdScheduleIds,
-                ]);
-            }
-
-            throw $e;
         }
-
-        return $createdScheduleIds;
     }
 
     /**
