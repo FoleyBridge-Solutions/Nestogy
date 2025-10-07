@@ -136,6 +136,9 @@ class ContractBuilderController extends Controller
                     $percentage = (float) $pricingOverride['amount'];
                     $finalPrice = $basePrice * ($percentage / 100);
                     break;
+                default:
+                    $finalPrice = $basePrice;
+                    break;
             }
         }
 
@@ -335,6 +338,8 @@ class ContractBuilderController extends Controller
                     $percentage = (float) $pricingOverride['amount'];
 
                     return $basePrice * ($percentage / 100);
+                default:
+                    return $basePrice;
             }
         }
 
