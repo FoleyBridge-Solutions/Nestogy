@@ -1549,40 +1549,39 @@ class ClientController extends BaseController
      */
     private function createLeadColumnMapping(array $headers): array
     {
+        $fieldVariations = $this->getLeadFieldVariations();
         $mapping = [];
 
         foreach ($headers as $index => $header) {
             $normalizedHeader = strtolower(trim($header));
-
-            // Map various column name variations to our expected fields
-            if (in_array($normalizedHeader, ['last', 'last name', 'lastname', 'surname'])) {
-                $mapping['last_name'] = $index;
-            } elseif (in_array($normalizedHeader, ['first', 'first name', 'firstname', 'given name'])) {
-                $mapping['first_name'] = $index;
-            } elseif (in_array($normalizedHeader, ['middle', 'middle name', 'middlename', 'middle initial'])) {
-                $mapping['middle_name'] = $index;
-            } elseif (in_array($normalizedHeader, ['company', 'company name', 'organization', 'business name'])) {
-                $mapping['company_name'] = $index;
-            } elseif (in_array($normalizedHeader, ['address', 'address line 1', 'address1', 'company address line 1'])) {
-                $mapping['address_line_1'] = $index;
-            } elseif (in_array($normalizedHeader, ['address line 2', 'address2', 'company address line 2'])) {
-                $mapping['address_line_2'] = $index;
-            } elseif (in_array($normalizedHeader, ['city', 'town'])) {
-                $mapping['city'] = $index;
-            } elseif (in_array($normalizedHeader, ['state', 'province', 'region'])) {
-                $mapping['state'] = $index;
-            } elseif (in_array($normalizedHeader, ['zip', 'postal code', 'zipcode', 'postcode'])) {
-                $mapping['postal_code'] = $index;
-            } elseif (in_array($normalizedHeader, ['email', 'email address', 'e-mail'])) {
-                $mapping['email'] = $index;
-            } elseif (in_array($normalizedHeader, ['website', 'url', 'web site', 'homepage'])) {
-                $mapping['website'] = $index;
-            } elseif (in_array($normalizedHeader, ['phone', 'phone number', 'telephone', 'mobile', 'cell'])) {
-                $mapping['phone'] = $index;
+            
+            foreach ($fieldVariations as $field => $variations) {
+                if (in_array($normalizedHeader, $variations)) {
+                    $mapping[$field] = $index;
+                    break;
+                }
             }
         }
 
         return $mapping;
+    }
+
+    private function getLeadFieldVariations(): array
+    {
+        return [
+            'last_name' => ['last', 'last name', 'lastname', 'surname'],
+            'first_name' => ['first', 'first name', 'firstname', 'given name'],
+            'middle_name' => ['middle', 'middle name', 'middlename', 'middle initial'],
+            'company_name' => ['company', 'company name', 'organization', 'business name'],
+            'address_line_1' => ['address', 'address line 1', 'address1', 'company address line 1'],
+            'address_line_2' => ['address line 2', 'address2', 'company address line 2'],
+            'city' => ['city', 'town'],
+            'state' => ['state', 'province', 'region'],
+            'postal_code' => ['zip', 'postal code', 'zipcode', 'postcode'],
+            'email' => ['email', 'email address', 'e-mail'],
+            'website' => ['website', 'url', 'web site', 'homepage'],
+            'phone' => ['phone', 'phone number', 'telephone', 'mobile', 'cell'],
+        ];
     }
 
     /**
