@@ -7,6 +7,8 @@ use Illuminate\Validation\Rules\Password;
 
 trait ValidatesSteps
 {
+    private const REQUIRED_STRING_255 = 'required|string|max:255';
+
     protected function validateCurrentStep(): bool
     {
         return match ($this->currentStep) {
@@ -23,7 +25,7 @@ trait ValidatesSteps
     {
         try {
             $this->validate([
-                'company_name' => 'required|string|max:255',
+                'company_name' => self::REQUIRED_STRING_255,
                 'company_email' => 'required|email|max:255',
                 'currency' => 'required|string|size:3|in:USD,EUR,GBP,CAD,AUD,JPY',
                 'company_phone' => 'nullable|string|max:20',
@@ -56,7 +58,7 @@ trait ValidatesSteps
 
         try {
             $this->validate([
-                'smtp_host' => 'required|string|max:255',
+                'smtp_host' => self::REQUIRED_STRING_255,
                 'smtp_port' => 'required|integer|min:1|max:65535',
                 'smtp_encryption' => 'nullable|in:tls,ssl',
                 'smtp_username' => 'nullable|string|max:255',
@@ -82,7 +84,7 @@ trait ValidatesSteps
     {
         try {
             $this->validate([
-                'timezone' => 'required|string|max:255',
+                'timezone' => self::REQUIRED_STRING_255,
                 'date_format' => 'nullable|string|max:20',
                 'theme' => 'nullable|string|in:'.implode(',', array_keys(Setting::getAvailableThemes())),
                 'company_language' => 'nullable|string|size:2',
@@ -130,7 +132,7 @@ trait ValidatesSteps
     {
         try {
             $this->validate([
-                'admin_name' => 'required|string|max:255',
+                'admin_name' => self::REQUIRED_STRING_255,
                 'admin_email' => 'required|email|max:255|unique:users,email',
                 'admin_password' => ['required', 'confirmed', Password::defaults()],
                 'admin_password_confirmation' => 'required',
