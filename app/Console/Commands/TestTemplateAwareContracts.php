@@ -392,30 +392,53 @@ class TestTemplateAwareContracts extends Command
 
     protected function showDetailedResults(array $result)
     {
+        $this->displayBasicResults($result);
+
+        if ($this->option('details')) {
+            $this->displayVerboseResults($result);
+        }
+    }
+
+    protected function displayBasicResults(array $result)
+    {
         $this->line('📊 Detailed Results:');
         $this->line("  Template Type: {$result['template_type']}");
         $this->line("  Category: {$result['category']}");
         $this->line("  Variables Generated: {$result['variables_count']}");
         $this->line("  Definitions Available: {$result['definitions_count']}");
         $this->line("  Content Length: {$result['content_length']} characters");
+    }
 
-        if ($this->option('details')) {
-            $this->newLine();
-            $this->line('🔧 Generated Variables:');
-            foreach ($result['variables'] as $key => $value) {
-                $displayValue = is_array($value) ? '[array]' : (is_bool($value) ? ($value ? 'true' : 'false') : substr($value, 0, self::DEFAULT_PAGE_SIZE));
-                $this->line("  {$key}: {$displayValue}");
-            }
+    protected function displayVerboseResults(array $result)
+    {
+        $this->displayGeneratedVariables($result['variables']);
+        $this->displayAvailableDefinitions($result['definitions']);
+        $this->displayContentPreview($result['content']);
+    }
 
-            $this->newLine();
-            $this->line('📖 Available Definitions:');
-            foreach ($result['definitions'] as $definition) {
-                $this->line("  - {$definition}");
-            }
-
-            $this->newLine();
-            $this->line('📄 Generated Content Preview:');
-            $this->line(substr($result['content'], 0, 300).'...');
+    protected function displayGeneratedVariables(array $variables)
+    {
+        $this->newLine();
+        $this->line('🔧 Generated Variables:');
+        foreach ($variables as $key => $value) {
+            $displayValue = is_array($value) ? '[array]' : (is_bool($value) ? ($value ? 'true' : 'false') : substr($value, 0, self::DEFAULT_PAGE_SIZE));
+            $this->line("  {$key}: {$displayValue}");
         }
+    }
+
+    protected function displayAvailableDefinitions(array $definitions)
+    {
+        $this->newLine();
+        $this->line('📖 Available Definitions:');
+        foreach ($definitions as $definition) {
+            $this->line("  - {$definition}");
+        }
+    }
+
+    protected function displayContentPreview(string $content)
+    {
+        $this->newLine();
+        $this->line('📄 Generated Content Preview:');
+        $this->line(substr($content, 0, 300).'...');
     }
 }
