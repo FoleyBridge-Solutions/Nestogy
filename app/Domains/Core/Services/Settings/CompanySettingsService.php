@@ -10,6 +10,8 @@ class CompanySettingsService extends BaseSettingsService
 {
     protected string $domain = SettingsConfiguration::DOMAIN_COMPANY;
 
+    private const HEX_COLOR_VALIDATION_RULE = 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/';
+
     /**
      * Get validation rules for each category
      */
@@ -162,9 +164,9 @@ class CompanySettingsService extends BaseSettingsService
                     'logo_url' => 'nullable|url',
                     'logo_dark_url' => 'nullable|url',
                     'favicon_url' => 'nullable|url',
-                    'accent_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
-                    'accent_content_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
-                    'accent_foreground_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+                    'accent_color' => self::HEX_COLOR_VALIDATION_RULE,
+                    'accent_content_color' => self::HEX_COLOR_VALIDATION_RULE,
+                    'accent_foreground_color' => self::HEX_COLOR_VALIDATION_RULE,
                     'base_color_scheme' => 'nullable|in:zinc,slate,gray,neutral,stone',
                     'default_theme' => 'nullable|in:light,dark,auto',
                     'allow_theme_switching' => 'boolean',
