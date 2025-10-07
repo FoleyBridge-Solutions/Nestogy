@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Response;
 
 class CommunicationLogController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING_IN = 'required|string|in:';
+
     protected NavigationService $navigationService;
 
     public function __construct(NavigationService $navigationService)
@@ -107,8 +109,8 @@ class CommunicationLogController extends Controller
         }
 
         $validated = $request->validate([
-            'type' => 'required|string|in:'.implode(',', array_keys(CommunicationLog::TYPES)),
-            'channel' => 'required|string|in:'.implode(',', array_keys(CommunicationLog::CHANNELS)),
+            'type' => self::VALIDATION_REQUIRED_STRING_IN.implode(',', array_keys(CommunicationLog::TYPES)),
+            'channel' => self::VALIDATION_REQUIRED_STRING_IN.implode(',', array_keys(CommunicationLog::CHANNELS)),
             'contact_id' => 'nullable|exists:contacts,id',
             'contact_name' => 'nullable|string|max:255',
             'contact_email' => 'nullable|email|max:255',
@@ -208,8 +210,8 @@ class CommunicationLogController extends Controller
         }
 
         $validated = $request->validate([
-            'type' => 'required|string|in:'.implode(',', array_keys(CommunicationLog::TYPES)),
-            'channel' => 'required|string|in:'.implode(',', array_keys(CommunicationLog::CHANNELS)),
+            'type' => self::VALIDATION_REQUIRED_STRING_IN.implode(',', array_keys(CommunicationLog::TYPES)),
+            'channel' => self::VALIDATION_REQUIRED_STRING_IN.implode(',', array_keys(CommunicationLog::CHANNELS)),
             'contact_id' => 'nullable|exists:contacts,id',
             'contact_name' => 'nullable|string|max:255',
             'contact_email' => 'nullable|email|max:255',
