@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Response;
 
 class CommunicationLogController extends Controller
 {
+    private const ERROR_COMMUNICATION_NOT_FOUND = 'Communication not found or access denied.';
+
     protected NavigationService $navigationService;
 
     public function __construct(NavigationService $navigationService)
@@ -147,7 +149,7 @@ class CommunicationLogController extends Controller
 
         if (! $client || $communication->client_id !== $client->id) {
             return redirect()->route('clients.select-screen')
-                ->with('error', 'Communication not found or access denied.');
+                ->with('error', self::ERROR_COMMUNICATION_NOT_FOUND);
         }
 
         $communication->load(['user', 'contact']);
@@ -173,7 +175,7 @@ class CommunicationLogController extends Controller
 
         if (! $client || $communication->client_id !== $client->id) {
             return redirect()->route('clients.select-screen')
-                ->with('error', 'Communication not found or access denied.');
+                ->with('error', self::ERROR_COMMUNICATION_NOT_FOUND);
         }
 
         $contacts = $client->contacts()->orderBy('name')->get();
@@ -204,7 +206,7 @@ class CommunicationLogController extends Controller
 
         if (! $client || $communication->client_id !== $client->id) {
             return redirect()->route('clients.select-screen')
-                ->with('error', 'Communication not found or access denied.');
+                ->with('error', self::ERROR_COMMUNICATION_NOT_FOUND);
         }
 
         $validated = $request->validate([
@@ -235,7 +237,7 @@ class CommunicationLogController extends Controller
 
         if (! $client || $communication->client_id !== $client->id) {
             return redirect()->route('clients.select-screen')
-                ->with('error', 'Communication not found or access denied.');
+                ->with('error', self::ERROR_COMMUNICATION_NOT_FOUND);
         }
 
         $communication->delete();
