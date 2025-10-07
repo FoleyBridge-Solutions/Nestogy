@@ -133,9 +133,9 @@
                 $logoDark = $companyBranding['logo_dark_url'] ?? $logoLight;
                 $companyName = $company?->name ?? config('app.name', 'Nestogy');
             @endphp
-            <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ $logoLight }}" 
-                        name="{{ $companyName }}" 
+            <flux:brand href="{{ route('dashboard') }}"
+                        logo="{{ $logoLight }}"
+                        name="{{ $companyName }}"
                         class="dark:hidden" />
             <flux:brand href="{{ route('dashboard') }}" 
                         logo="{{ $logoDark }}" 
