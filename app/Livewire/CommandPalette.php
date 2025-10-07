@@ -385,66 +385,106 @@ class CommandPalette extends Component
             return $actions;
         }
 
-        // Use the stored current route
-        $currentRouteName = $this->currentRoute;
-
-        // Use QuickActionService to search for quick actions
-        $quickActions = QuickActionService::searchActions($query, $user);
-
-        foreach ($quickActions as $action) {
-            // Skip if this action leads to the current page
-            if ($currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName) {
-                continue;
-            }
-
-            $formattedAction = [
-                'type' => 'quick_action',
-                'id' => $action['id'] ?? null,
-                'title' => $action['title'],
-                'subtitle' => 'Quick Action • '.($action['description'] ?? ''),
-                'icon' => $action['icon'] ?? 'bolt',
-                'action_data' => $action, // This includes all settings including open_in
-            ];
-
-            // Add route information if available
-            if (isset($action['route'])) {
-                $formattedAction['route_name'] = $action['route'];
-                $formattedAction['route_params'] = $action['parameters'] ?? [];
-            }
-
-            // Add custom action ID if it's a custom action
-            if (isset($action['custom_id'])) {
-                $formattedAction['custom_id'] = $action['custom_id'];
-            }
-
-            // Add action key for system actions
-            if (isset($action['action'])) {
-                $formattedAction['action_key'] = $action['action'];
-            }
-
-            $actions[] = $formattedAction;
-        }
-
-        // Get all navigation items from sidebar configurations
-        $navigationActions = $this->getAllNavigationCommands();
         $queryLower = strtolower($query);
 
-        // Filter navigation items based on query
-        foreach ($navigationActions as $action) {
-            // Skip if this navigation leads to the current page
-            if ($currentRouteName && isset($action['route_name']) && $action['route_name'] === $currentRouteName) {
+        $actions = array_merge(
+            $actions,
+            $this->getFormattedQuickActions($user, $queryLower),
+            $this->getFilteredNavigationActions($queryLower),
+            $this->getHardcodedQuickActions($queryLower, $actions)
+        );
+
+        return $actions;
+    }
+
+    private function getFormattedQuickActions($user, $queryLower)
+    {
+        $quickActions = QuickActionService::searchActions($queryLower, $user);
+        $formattedActions = [];
+
+        foreach ($quickActions as $action) {
+            if ($this->shouldSkipCurrentRoute($action['route'] ?? null)) {
                 continue;
             }
 
-            // Check if title or keywords match the query
-            if (str_contains(strtolower($action['title']), $queryLower) ||
-                (isset($action['keywords']) && $this->matchesKeywords($action['keywords'], $queryLower))) {
-                $actions[] = $action;
+            $formattedActions[] = $this->formatQuickAction($action);
+        }
+
+        return $formattedActions;
+    }
+
+    private function formatQuickAction($action)
+    {
+        $formattedAction = [
+            'type' => 'quick_action',
+            'id' => $action['id'] ?? null,
+            'title' => $action['title'],
+            'subtitle' => 'Quick Action • '.($action['description'] ?? ''),
+            'icon' => $action['icon'] ?? 'bolt',
+            'action_data' => $action,
+        ];
+
+        if (isset($action['route'])) {
+            $formattedAction['route_name'] = $action['route'];
+            $formattedAction['route_params'] = $action['parameters'] ?? [];
+        }
+
+        if (isset($action['custom_id'])) {
+            $formattedAction['custom_id'] = $action['custom_id'];
+        }
+
+        if (isset($action['action'])) {
+            $formattedAction['action_key'] = $action['action'];
+        }
+
+        return $formattedAction;
+    }
+
+    private function getFilteredNavigationActions($queryLower)
+    {
+        $navigationActions = $this->getAllNavigationCommands();
+        $filteredActions = [];
+
+        foreach ($navigationActions as $action) {
+            if ($this->shouldSkipCurrentRoute($action['route_name'] ?? null)) {
+                continue;
+            }
+
+            if ($this->matchesNavigationQuery($action, $queryLower)) {
+                $filteredActions[] = $action;
             }
         }
 
-        // Quick action mappings for create/new actions (these are hardcoded for common actions)
-        $quickActionMappings = [
+        return $filteredActions;
+    }
+
+    private function matchesNavigationQuery($action, $queryLower)
+    {
+        $titleMatch = str_contains(strtolower($action['title']), $queryLower);
+        $keywordMatch = isset($action['keywords']) && $this->matchesKeywords($action['keywords'], $queryLower);
+
+        return $titleMatch || $keywordMatch;
+    }
+
+    private function getHardcodedQuickActions($queryLower, $existingActions)
+    {
+        $quickActionMappings = $this->getQuickActionMappings();
+        $newActions = [];
+
+        foreach ($quickActionMappings as $mapping) {
+            if ($this->queryMatchesKeywords($queryLower, $mapping['keywords'])) {
+                if (! $this->actionExistsInList($mapping['action'], $existingActions)) {
+                    $newActions[] = $mapping['action'];
+                }
+            }
+        }
+
+        return $newActions;
+    }
+
+    private function getQuickActionMappings()
+    {
+        return [
             ['keywords' => ['new ticket', 'create ticket'], 'action' => ['title' => 'Create New Ticket', 'subtitle' => 'Quick Action', 'route_name' => 'tickets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
             ['keywords' => ['new client', 'add client'], 'action' => ['title' => 'Add New Client', 'subtitle' => 'Quick Action', 'route_name' => 'clients.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
             ['keywords' => ['new invoice', 'create invoice'], 'action' => ['title' => 'Create Invoice', 'subtitle' => 'Quick Action', 'route_name' => 'financial.invoices.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
@@ -452,29 +492,35 @@ class CommandPalette extends Component
             ['keywords' => ['new asset', 'add asset'], 'action' => ['title' => 'Add New Asset', 'subtitle' => 'Quick Action', 'route_name' => 'assets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
             ['keywords' => ['compose email', 'send email', 'write email'], 'action' => ['title' => 'Compose Email', 'subtitle' => 'Quick Action', 'route_name' => 'email.compose.index', 'route_params' => [], 'icon' => 'pencil-square', 'type' => 'quick_action']],
         ];
+    }
 
-        foreach ($quickActionMappings as $mapping) {
-            foreach ($mapping['keywords'] as $keyword) {
-                if (str_contains($queryLower, $keyword)) {
-                    // Check if not already added
-                    $exists = false;
-                    foreach ($actions as $existingAction) {
-                        if (isset($existingAction['route_name']) &&
-                            isset($mapping['action']['route_name']) &&
-                            $existingAction['route_name'] === $mapping['action']['route_name']) {
-                            $exists = true;
-                            break;
-                        }
-                    }
-                    if (! $exists) {
-                        $actions[] = $mapping['action'];
-                    }
-                    break;
-                }
+    private function shouldSkipCurrentRoute($routeName)
+    {
+        return $this->currentRoute && $routeName && $routeName === $this->currentRoute;
+    }
+
+    private function queryMatchesKeywords($query, $keywords)
+    {
+        foreach ($keywords as $keyword) {
+            if (str_contains($query, $keyword)) {
+                return true;
             }
         }
 
-        return $actions;
+        return false;
+    }
+
+    private function actionExistsInList($action, $existingActions)
+    {
+        foreach ($existingActions as $existingAction) {
+            if (isset($existingAction['route_name']) &&
+                isset($action['route_name']) &&
+                $existingAction['route_name'] === $action['route_name']) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
