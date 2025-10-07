@@ -12,6 +12,8 @@ class CommunicationSettingsService extends BaseSettingsService
 {
     protected string $domain = SettingsConfiguration::DOMAIN_COMMUNICATION;
 
+    private const BOOLEAN_VALIDATION = 'nullable|in:0,1';
+
     /**
      * Get validation rules for each category
      */
@@ -37,9 +39,9 @@ class CommunicationSettingsService extends BaseSettingsService
                     'api_domain' => 'nullable|string',
 
                     // Features
-                    'track_opens' => 'nullable|in:0,1',
-                    'track_clicks' => 'nullable|in:0,1',
-                    'auto_retry_failed' => 'nullable|in:0,1',
+                    'track_opens' => self::BOOLEAN_VALIDATION,
+                    'track_clicks' => self::BOOLEAN_VALIDATION,
+                    'auto_retry_failed' => self::BOOLEAN_VALIDATION,
                     'max_retry_attempts' => 'nullable|integer|between:1,10',
                     
                     // Test email (not saved, just for testing)
