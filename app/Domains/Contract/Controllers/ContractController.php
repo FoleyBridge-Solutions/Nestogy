@@ -136,15 +136,7 @@ class ContractController extends Controller
         $contractConfigRegistry = $this->getContractConfigRegistry();
         $contractTypes = $contractConfigRegistry->getContractTypes();
         $availableStatuses = $contractConfigRegistry->getContractStatuses();
-
-        // Billing models for programmable contracts
-        $billingModels = [
-            'fixed' => 'Fixed Price',
-            'per_asset' => 'Per Asset/Device',
-            'per_contact' => 'Per Contact/Seat',
-            'tiered' => 'Tiered Pricing',
-            'hybrid' => 'Hybrid Model',
-        ];
+        $billingModels = $contractConfigRegistry->getBillingModels();
 
         // Template types
         $templateTypes = [
@@ -993,13 +985,8 @@ class ContractController extends Controller
                 'monitoring' => 'Monitoring Services',
             ];
 
-            $billingModels = [
-                'fixed' => 'Fixed Price',
-                'per_asset' => 'Per Asset/Device',
-                'per_contact' => 'Per Contact/Seat',
-                'tiered' => 'Tiered Pricing',
-                'hybrid' => 'Hybrid Model',
-            ];
+            $contractConfigRegistry = $this->getContractConfigRegistry();
+            $billingModels = $contractConfigRegistry->getBillingModels();
 
             return view('financial.contracts.templates.create', compact('templateTypes', 'billingModels'));
 
@@ -1113,13 +1100,8 @@ class ContractController extends Controller
                 'monitoring' => 'Monitoring Services',
             ];
 
-            $billingModels = [
-                'fixed' => 'Fixed Price',
-                'per_asset' => 'Per Asset/Device',
-                'per_contact' => 'Per Contact/Seat',
-                'tiered' => 'Tiered Pricing',
-                'hybrid' => 'Hybrid Model',
-            ];
+            $contractConfigRegistry = $this->getContractConfigRegistry();
+            $billingModels = $contractConfigRegistry->getBillingModels();
 
             return view('financial.contracts.templates.edit', compact('template', 'templateTypes', 'billingModels'));
 
