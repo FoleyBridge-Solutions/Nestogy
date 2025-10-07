@@ -109,7 +109,7 @@
                         <flux:button wire:click="close" variant="ghost">
                             Cancel
                         </flux:button>
-                        <flux:button 
+                        <flux:button
                             wire:click="reassign" 
                             variant="primary"
                             :disabled="count($selectedTickets) === 0 || !$newAssigneeId">
