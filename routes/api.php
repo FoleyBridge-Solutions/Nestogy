@@ -223,27 +223,29 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 
         // Invoice API
         Route::prefix('invoices')->name('invoices.')->group(function () {
+            $invoiceParam = '{invoice}';
+            
             // Standard CRUD
             Route::get('/', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'index'])->name('index');
             Route::post('/', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'store'])->name('store');
-            Route::get('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'show'])->name('show');
-            Route::put('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'update'])->name('update');
-            Route::delete('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'destroy'])->name('destroy');
+            Route::get($invoiceParam, [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'show'])->name('show');
+            Route::put($invoiceParam, [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'update'])->name('update');
+            Route::delete($invoiceParam, [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'destroy'])->name('destroy');
 
             // Invoice Items
-            Route::post('{invoice}/items', [App\Domains\Financial\Controllers\InvoiceController::class, 'addItem'])->name('items.store');
-            Route::put('{invoice}/items/{item}', [App\Domains\Financial\Controllers\InvoiceController::class, 'updateItem'])->name('items.update');
-            Route::delete('{invoice}/items/{item}', [App\Domains\Financial\Controllers\InvoiceController::class, 'deleteItem'])->name('items.destroy');
+            Route::post("$invoiceParam/items", [App\Domains\Financial\Controllers\InvoiceController::class, 'addItem'])->name('items.store');
+            Route::put("$invoiceParam/items/{item}", [App\Domains\Financial\Controllers\InvoiceController::class, 'updateItem'])->name('items.update');
+            Route::delete("$invoiceParam/items/{item}", [App\Domains\Financial\Controllers\InvoiceController::class, 'deleteItem'])->name('items.destroy');
 
             // Invoice Actions
-            Route::patch('{invoice}/status', [App\Domains\Financial\Controllers\InvoiceController::class, 'updateStatus'])->name('status.update');
-            Route::post('{invoice}/send', [App\Domains\Financial\Controllers\InvoiceController::class, 'sendEmail'])->name('send');
-            Route::post('{invoice}/copy', [App\Domains\Financial\Controllers\InvoiceController::class, 'copy'])->name('copy');
-            Route::patch('{invoice}/notes', [App\Domains\Financial\Controllers\InvoiceController::class, 'updateNotes'])->name('notes.update');
+            Route::patch("$invoiceParam/status", [App\Domains\Financial\Controllers\InvoiceController::class, 'updateStatus'])->name('status.update');
+            Route::post("$invoiceParam/send", [App\Domains\Financial\Controllers\InvoiceController::class, 'sendEmail'])->name('send');
+            Route::post("$invoiceParam/copy", [App\Domains\Financial\Controllers\InvoiceController::class, 'copy'])->name('copy');
+            Route::patch("$invoiceParam/notes", [App\Domains\Financial\Controllers\InvoiceController::class, 'updateNotes'])->name('notes.update');
 
             // Invoice Payments
-            Route::get('{invoice}/payments', [App\Domains\Financial\Controllers\InvoiceController::class, 'getPayments'])->name('payments.index');
-            Route::post('{invoice}/payments', [App\Domains\Financial\Controllers\InvoiceController::class, 'addPayment'])->name('payments.store');
+            Route::get("$invoiceParam/payments", [App\Domains\Financial\Controllers\InvoiceController::class, 'getPayments'])->name('payments.index');
+            Route::post("$invoiceParam/payments", [App\Domains\Financial\Controllers\InvoiceController::class, 'addPayment'])->name('payments.store');
 
             // Quick Access
             Route::get('overdue', [App\Domains\Financial\Controllers\InvoiceController::class, 'index'])->name('overdue');
@@ -252,9 +254,9 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 
             // New Recurring and Automation
             Route::post('generate-recurring', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'generateRecurring'])->name('generate-recurring');
-            Route::post('{invoice}/retry-payment', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'retryPayment'])->name('retry-payment');
+            Route::post("$invoiceParam/retry-payment", [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'retryPayment'])->name('retry-payment');
             Route::get('forecast', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'forecast'])->name('forecast');
-            Route::post('{invoice}/send-email', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'sendEmail'])->name('send-email');
+            Route::post("$invoiceParam/send-email", [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'sendEmail'])->name('send-email');
         });
 
         // Payment API - Commented out until PaymentController is implemented
