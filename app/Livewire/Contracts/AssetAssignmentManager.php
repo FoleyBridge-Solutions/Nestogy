@@ -13,6 +13,8 @@ class AssetAssignmentManager extends Component
 {
     use AuthorizesRequests, WithPagination;
 
+    private const REQUIRED_ARRAY_MIN_ONE = 'required|array|min:1';
+
     public Contract $contract;
     public $assignments = [];
     
@@ -113,8 +115,8 @@ class AssetAssignmentManager extends Component
     public function assignAssets()
     {
         $this->validate([
-            'selectedAssetIds' => 'required|array|min:1',
-            'assigned_services' => 'required|array|min:1',
+            'selectedAssetIds' => self::REQUIRED_ARRAY_MIN_ONE,
+            'assigned_services' => self::REQUIRED_ARRAY_MIN_ONE,
             'base_monthly_rate' => 'required|numeric|min:0',
             'billing_frequency' => 'required|string',
             'start_date' => 'required|date',
@@ -162,7 +164,7 @@ class AssetAssignmentManager extends Component
         }
         
         $this->validate([
-            'assigned_services' => 'required|array|min:1',
+            'assigned_services' => self::REQUIRED_ARRAY_MIN_ONE,
             'base_monthly_rate' => 'required|numeric|min:0',
             'billing_frequency' => 'required|string',
             'start_date' => 'required|date',
