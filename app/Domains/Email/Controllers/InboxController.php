@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 
 class InboxController extends Controller
 {
+    private const ERROR_NO_MESSAGES_SELECTED = 'No messages selected';
+
     public function __construct(
         private EmailService $emailService,
         private ImapService $imapService
@@ -153,7 +155,7 @@ class InboxController extends Controller
         $messageIds = $request->input('message_ids', []);
 
         if (empty($messageIds)) {
-            return response()->json(['success' => false, 'message' => 'No messages selected']);
+            return response()->json(['success' => false, 'message' => self::ERROR_NO_MESSAGES_SELECTED]);
         }
 
         $user = Auth::user();
@@ -177,7 +179,7 @@ class InboxController extends Controller
         $messageIds = $request->input('message_ids', []);
 
         if (empty($messageIds)) {
-            return response()->json(['success' => false, 'message' => 'No messages selected']);
+            return response()->json(['success' => false, 'message' => self::ERROR_NO_MESSAGES_SELECTED]);
         }
 
         $user = Auth::user();
@@ -201,7 +203,7 @@ class InboxController extends Controller
         $messageIds = $request->input('message_ids', []);
 
         if (empty($messageIds)) {
-            return response()->json(['success' => false, 'message' => 'No messages selected']);
+            return response()->json(['success' => false, 'message' => self::ERROR_NO_MESSAGES_SELECTED]);
         }
 
         $user = Auth::user();
@@ -225,7 +227,7 @@ class InboxController extends Controller
         $messageIds = $request->input('message_ids', []);
 
         if (empty($messageIds)) {
-            return response()->json(['success' => false, 'message' => 'No messages selected']);
+            return response()->json(['success' => false, 'message' => self::ERROR_NO_MESSAGES_SELECTED]);
         }
 
         $user = Auth::user();
@@ -249,7 +251,7 @@ class InboxController extends Controller
         $messageIds = $request->input('message_ids', []);
 
         if (empty($messageIds)) {
-            return response()->json(['success' => false, 'message' => 'No messages selected']);
+            return response()->json(['success' => false, 'message' => self::ERROR_NO_MESSAGES_SELECTED]);
         }
 
         $user = Auth::user();
