@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class ContractGenerationService
 {
+    private const DATE_FORMAT = 'F d, Y';
+
     protected $pdfService;
 
     protected $signatureService;
@@ -680,16 +682,16 @@ class ContractGenerationService
         
         $content = "<h1>{$contract->title}</h1>\n\n";
         $content .= "<p><strong>Contract Number:</strong> {$contract->contract_number}</p>\n";
-        $content .= "<p><strong>Date:</strong> " . now()->format('F d, Y') . "</p>\n\n";
+        $content .= "<p><strong>Date:</strong> " . now()->format(self::DATE_FORMAT) . "</p>\n\n";
         
         $content .= "<h2>Parties</h2>\n";
         $content .= "<p><strong>Service Provider:</strong> {$company->name}</p>\n";
         $content .= "<p><strong>Client:</strong> {$client->name}</p>\n\n";
         
         $content .= "<h2>Contract Terms</h2>\n";
-        $content .= "<p><strong>Start Date:</strong> " . $contract->start_date->format('F d, Y') . "</p>\n";
+        $content .= "<p><strong>Start Date:</strong> " . $contract->start_date->format(self::DATE_FORMAT) . "</p>\n";
         if ($contract->end_date) {
-            $content .= "<p><strong>End Date:</strong> " . $contract->end_date->format('F d, Y') . "</p>\n";
+            $content .= "<p><strong>End Date:</strong> " . $contract->end_date->format(self::DATE_FORMAT) . "</p>\n";
         }
         $content .= "<p><strong>Contract Value:</strong> $" . number_format($contract->contract_value, 2) . "</p>\n\n";
         
