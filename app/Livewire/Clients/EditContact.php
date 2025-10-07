@@ -7,6 +7,8 @@ use Livewire\Component;
 
 class EditContact extends Component
 {
+    private const MAX_STRING_LENGTH = 255;
+
     public Contact $contact;
 
     // Tab management
@@ -178,14 +180,14 @@ class EditContact extends Component
     {
         $rules = [
             // Essential tab - Basic Information
-            'name' => ['required', 'string', 'max:255'],
-            'title' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'string', 'email', 'max:255'],
+            'name' => ['required', 'string', 'max:' . self::MAX_STRING_LENGTH],
+            'title' => ['nullable', 'string', 'max:' . self::MAX_STRING_LENGTH],
+            'email' => ['nullable', 'string', 'email', 'max:' . self::MAX_STRING_LENGTH],
             'phone' => ['nullable', 'string', 'max:50'],
             'extension' => ['nullable', 'string', 'max:20'],
             'mobile' => ['nullable', 'string', 'max:50'],
-            'department' => ['nullable', 'string', 'max:255'],
-            'role' => ['nullable', 'string', 'max:255'],
+            'department' => ['nullable', 'string', 'max:' . self::MAX_STRING_LENGTH],
+            'role' => ['nullable', 'string', 'max:' . self::MAX_STRING_LENGTH],
             // Contact Type
             'primary' => ['boolean'],
             'billing' => ['boolean'],
@@ -203,9 +205,9 @@ class EditContact extends Component
                 'language' => ['nullable', 'string', 'max:50'],
                 'do_not_disturb' => ['boolean'],
                 'marketing_opt_in' => ['boolean'],
-                'linkedin_url' => ['nullable', 'url', 'max:255'],
-                'assistant_name' => ['nullable', 'string', 'max:255'],
-                'assistant_email' => ['nullable', 'email', 'max:255'],
+                'linkedin_url' => ['nullable', 'url', 'max:' . self::MAX_STRING_LENGTH],
+                'assistant_name' => ['nullable', 'string', 'max:' . self::MAX_STRING_LENGTH],
+                'assistant_email' => ['nullable', 'email', 'max:' . self::MAX_STRING_LENGTH],
                 'assistant_phone' => ['nullable', 'string', 'max:50'],
                 'reports_to_id' => ['nullable', 'integer', 'exists:contacts,id'],
                 'work_schedule' => ['nullable', 'string'],
@@ -231,11 +233,11 @@ class EditContact extends Component
                 'is_after_hours_contact' => ['boolean'],
                 'out_of_office_start' => ['nullable', 'date'],
                 'out_of_office_end' => ['nullable', 'date', 'after_or_equal:out_of_office_start'],
-                'website' => ['nullable', 'url', 'max:255'],
+                'website' => ['nullable', 'url', 'max:' . self::MAX_STRING_LENGTH],
                 'twitter_handle' => ['nullable', 'string', 'max:100'],
-                'facebook_url' => ['nullable', 'url', 'max:255'],
+                'facebook_url' => ['nullable', 'url', 'max:' . self::MAX_STRING_LENGTH],
                 'instagram_handle' => ['nullable', 'string', 'max:100'],
-                'company_blog' => ['nullable', 'url', 'max:255'],
+                'company_blog' => ['nullable', 'url', 'max:' . self::MAX_STRING_LENGTH],
             ];
         }
 
