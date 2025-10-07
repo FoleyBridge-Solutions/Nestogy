@@ -103,7 +103,7 @@ class CompanySettingsService extends BaseSettingsService
                 'company_info' => $companyInfo,
                 'social_links' => $socialLinks,
             ]);
-        } 
+        }
         
         // For branding settings, save to branding JSON column
         elseif ($category === 'branding') {
