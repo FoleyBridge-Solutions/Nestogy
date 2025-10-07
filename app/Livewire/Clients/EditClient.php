@@ -11,6 +11,8 @@ class EditClient extends Component
 {
     use AuthorizesRequests, WithFileUploads;
 
+    private const VALIDATION_NULLABLE_STRING_MAX_100 = 'nullable|string|max:100';
+
     public Client $client;
 
     // Tab management
@@ -191,10 +193,10 @@ class EditClient extends Component
             'lead' => 'boolean',
 
             'address' => 'nullable|string|max:500',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
+            'city' => self::VALIDATION_NULLABLE_STRING_MAX_100,
+            'state' => self::VALIDATION_NULLABLE_STRING_MAX_100,
             'zip_code' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:100',
+            'country' => self::VALIDATION_NULLABLE_STRING_MAX_100,
 
             'billing_contact' => 'nullable|string|max:255',
             'technical_contact' => 'nullable|string|max:255',
