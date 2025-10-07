@@ -236,32 +236,37 @@ class AssetController extends Controller
         $count = 0;
         foreach ($assets as $asset) {
             if (auth()->user()->can('update', $asset)) {
-                switch ($request->action) {
-                    case 'update_location':
-                        if ($request->location_id) {
-                            $asset->update(['location_id' => $request->location_id]);
-                        }
-                        break;
-                    case 'update_contact':
-                        if ($request->contact_id) {
-                            $asset->update(['contact_id' => $request->contact_id]);
-                        }
-                        break;
-                    case 'update_status':
-                        if ($request->status) {
-                            $this->assetService->updateStatus($asset, $request->status);
-                        }
-                        break;
-                    case 'archive':
-                        $this->assetService->archive($asset);
-                        break;
-                }
+                $this->processBulkAction($asset, $request);
                 $count++;
             }
         }
 
         return redirect()->route('assets.index')
             ->with('success', "Successfully processed {$count} assets.");
+    }
+
+    private function processBulkAction(Asset $asset, Request $request): void
+    {
+        switch ($request->action) {
+            case 'update_location':
+                if ($request->location_id) {
+                    $asset->update(['location_id' => $request->location_id]);
+                }
+                break;
+            case 'update_contact':
+                if ($request->contact_id) {
+                    $asset->update(['contact_id' => $request->contact_id]);
+                }
+                break;
+            case 'update_status':
+                if ($request->status) {
+                    $this->assetService->updateStatus($asset, $request->status);
+                }
+                break;
+            case 'archive':
+                $this->assetService->archive($asset);
+                break;
+        }
     }
 
     public function qrCode(Asset $asset)
