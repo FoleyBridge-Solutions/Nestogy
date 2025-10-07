@@ -552,36 +552,62 @@ class UsageTier extends Model
         parent::boot();
 
         static::creating(function ($tier) {
-            if (\Schema::hasColumn('usage_tiers', 'tier_code') && ! $tier->tier_code) {
-                $tier->tier_code = 'TIER-'.strtoupper(uniqid());
-            }
-
-            if (! isset($tier->tier_order)) {
-                $query = static::query();
-                if (\Schema::hasColumn('usage_tiers', 'pricing_rule_id') && isset($tier->pricing_rule_id)) {
-                    $query->where('pricing_rule_id', $tier->pricing_rule_id);
-                }
-                if (\Schema::hasColumn('usage_tiers', 'tier_order')) {
-                    $lastTier = $query->orderBy('tier_order', 'desc')->first();
-                    $tier->tier_order = $lastTier ? $lastTier->tier_order + 1 : 1;
-                }
-            }
+            static::setDefaultTierCode($tier);
+            static::setDefaultTierOrder($tier);
         });
 
         static::updating(function ($tier) {
-            $tier->updated_by = auth()->id() ?? 1;
-
-            // Store change history
-            if ($tier->isDirty()) {
-                $history = $tier->tier_history ?? [];
-                $history[] = [
-                    'changed_at' => now(),
-                    'changed_by' => auth()->id() ?? 1,
-                    'changes' => $tier->getDirty(),
-                    'reason' => $tier->change_reason,
-                ];
-                $tier->tier_history = $history;
-            }
+            static::updateTierHistory($tier);
         });
+    }
+
+    /**
+     * Set default tier code if not provided.
+     */
+    protected static function setDefaultTierCode($tier): void
+    {
+        if (\Schema::hasColumn('usage_tiers', 'tier_code') && ! $tier->tier_code) {
+            $tier->tier_code = 'TIER-'.strtoupper(uniqid());
+        }
+    }
+
+    /**
+     * Set default tier order based on existing tiers.
+     */
+    protected static function setDefaultTierOrder($tier): void
+    {
+        if (isset($tier->tier_order)) {
+            return;
+        }
+
+        $query = static::query();
+        
+        if (\Schema::hasColumn('usage_tiers', 'pricing_rule_id') && isset($tier->pricing_rule_id)) {
+            $query->where('pricing_rule_id', $tier->pricing_rule_id);
+        }
+        
+        if (\Schema::hasColumn('usage_tiers', 'tier_order')) {
+            $lastTier = $query->orderBy('tier_order', 'desc')->first();
+            $tier->tier_order = $lastTier ? $lastTier->tier_order + 1 : 1;
+        }
+    }
+
+    /**
+     * Update tier history on changes.
+     */
+    protected static function updateTierHistory($tier): void
+    {
+        $tier->updated_by = auth()->id() ?? 1;
+
+        if ($tier->isDirty()) {
+            $history = $tier->tier_history ?? [];
+            $history[] = [
+                'changed_at' => now(),
+                'changed_by' => auth()->id() ?? 1,
+                'changes' => $tier->getDirty(),
+                'reason' => $tier->change_reason,
+            ];
+            $tier->tier_history = $history;
+        }
     }
 }
