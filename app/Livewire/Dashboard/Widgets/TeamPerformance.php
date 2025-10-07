@@ -409,7 +409,27 @@ class TeamPerformance extends Component
 
     protected function getDetailedScoreBreakdown($memberData)
     {
-        $breakdown = [
+        $breakdown = $this->buildBaseBreakdown($memberData);
+        
+        $hasActiveWork = $memberData['open_tickets'] > 0 || $memberData['total_tickets'] > 0;
+        $hasResolvedWork = $memberData['resolved_tickets'] > 0;
+
+        if ($hasActiveWork && !$hasResolvedWork) {
+            $breakdown['scoring_mode'] = 'in_progress';
+            $breakdown['components'] = $this->buildInProgressComponents($memberData);
+        } else {
+            $breakdown['scoring_mode'] = 'standard';
+            $breakdown['components'] = $this->buildStandardComponents($memberData);
+        }
+
+        $breakdown['total_calculated'] = $memberData['performance_score'];
+
+        return $breakdown;
+    }
+
+    protected function buildBaseBreakdown($memberData)
+    {
+        return [
             'member_name' => $memberData['name'],
             'role' => $memberData['role'],
             'total_score' => $memberData['performance_score'],
@@ -429,118 +449,60 @@ class TeamPerformance extends Component
                 'customer_satisfaction' => $memberData['customer_satisfaction'],
             ],
         ];
+    }
 
-        $hasActiveWork = $memberData['open_tickets'] > 0 || $memberData['total_tickets'] > 0;
-        $hasResolvedWork = $memberData['resolved_tickets'] > 0;
+    protected function buildInProgressComponents($memberData)
+    {
+        $engagementScore = min(100, ($memberData['total_tickets'] / max(1, $this->getPeriodDays())) * 100);
+        $workloadScore = $memberData['open_tickets'] <= 5 ? 100 : max(0, 100 - (($memberData['open_tickets'] - 5) * 10));
+        $satScore = ($memberData['customer_satisfaction'] > 0 ? $memberData['customer_satisfaction'] : 3.0) / 5 * 100;
 
-        if ($hasActiveWork && ! $hasResolvedWork) {
-            $breakdown['scoring_mode'] = 'in_progress';
+        return [
+            $this->buildComponent('Activity & Engagement', 'Based on ticket activity in the period', '40%', $engagementScore, 0.4, 'lightning-bolt'),
+            $this->buildComponent('Workload Management', 'Ability to manage open tickets effectively', '30%', $workloadScore, 0.3, 'briefcase'),
+            $this->buildComponent('Time Utilization', 'Billable hours vs total hours', '20%', $memberData['utilization_rate'], 0.2, 'clock'),
+            $this->buildComponent('Customer Satisfaction', 'Average customer satisfaction rating', '10%', $satScore, 0.1, 'star'),
+        ];
+    }
 
-            $engagementScore = min(100, ($memberData['total_tickets'] / max(1, $this->getPeriodDays())) * 100);
-            $breakdown['components'][] = [
-                'name' => 'Activity & Engagement',
-                'description' => 'Based on ticket activity in the period',
-                'weight' => '40%',
-                'raw_score' => round($engagementScore, 1),
-                'weighted_score' => round($engagementScore * 0.4, 1),
-                'icon' => 'lightning-bolt',
-                'color' => $engagementScore >= 70 ? 'green' : ($engagementScore >= 40 ? 'yellow' : 'red'),
-            ];
+    protected function buildStandardComponents($memberData)
+    {
+        $cappedResolutionRate = min(100, $memberData['resolution_rate']);
+        $responseScore = $memberData['avg_resolution_time'] > 0 ?
+            max(0, 100 - ($memberData['avg_resolution_time'] / 24 * 50)) : 100;
+        $satScore = ($memberData['customer_satisfaction'] / 5) * 100;
+        $expectedHours = $this->getPeriodDays() * 6;
+        $activityScore = min(100, ($memberData['total_hours'] / max(1, $expectedHours)) * 100);
 
-            $workloadScore = $memberData['open_tickets'] <= 5 ? 100 : max(0, 100 - (($memberData['open_tickets'] - 5) * 10));
-            $breakdown['components'][] = [
-                'name' => 'Workload Management',
-                'description' => 'Ability to manage open tickets effectively',
-                'weight' => '30%',
-                'raw_score' => round($workloadScore, 1),
-                'weighted_score' => round($workloadScore * 0.3, 1),
-                'icon' => 'briefcase',
-                'color' => $workloadScore >= 70 ? 'green' : ($workloadScore >= 40 ? 'yellow' : 'red'),
-            ];
+        return [
+            $this->buildComponent('Resolution Rate', 'Percentage of tickets resolved', '30%', $cappedResolutionRate, 0.3, 'check-circle'),
+            $this->buildComponent('Utilization Rate', 'Billable hours efficiency', '25%', $memberData['utilization_rate'], 0.25, 'trending-up'),
+            $this->buildComponent('Response Time', 'Average ticket resolution speed', '20%', $responseScore, 0.2, 'clock'),
+            $this->buildComponent('Customer Satisfaction', 'Average customer ratings', '15%', $satScore, 0.15, 'star'),
+            $this->buildComponent('Activity Level', 'Overall work activity', '10%', $activityScore, 0.1, 'activity'),
+        ];
+    }
 
-            $breakdown['components'][] = [
-                'name' => 'Time Utilization',
-                'description' => 'Billable hours vs total hours',
-                'weight' => '20%',
-                'raw_score' => $memberData['utilization_rate'],
-                'weighted_score' => round($memberData['utilization_rate'] * 0.2, 1),
-                'icon' => 'clock',
-                'color' => $memberData['utilization_rate'] >= 70 ? 'green' : ($memberData['utilization_rate'] >= 50 ? 'yellow' : 'red'),
-            ];
+    protected function buildComponent($name, $description, $weight, $rawScore, $weightMultiplier, $icon)
+    {
+        return [
+            'name' => $name,
+            'description' => $description,
+            'weight' => $weight,
+            'raw_score' => round($rawScore, 1),
+            'weighted_score' => round($rawScore * $weightMultiplier, 1),
+            'icon' => $icon,
+            'color' => $this->getScoreColor($rawScore),
+        ];
+    }
 
-            $satScore = ($memberData['customer_satisfaction'] > 0 ? $memberData['customer_satisfaction'] : 3.0) / 5 * 100;
-            $breakdown['components'][] = [
-                'name' => 'Customer Satisfaction',
-                'description' => 'Average customer satisfaction rating',
-                'weight' => '10%',
-                'raw_score' => round($satScore, 1),
-                'weighted_score' => round($satScore * 0.1, 1),
-                'icon' => 'star',
-                'color' => $satScore >= 80 ? 'green' : ($satScore >= 60 ? 'yellow' : 'red'),
-            ];
-        } else {
-            $breakdown['scoring_mode'] = 'standard';
-
-            $cappedResolutionRate = min(100, $memberData['resolution_rate']);
-            $breakdown['components'][] = [
-                'name' => 'Resolution Rate',
-                'description' => 'Percentage of tickets resolved',
-                'weight' => '30%',
-                'raw_score' => $cappedResolutionRate,
-                'weighted_score' => round($cappedResolutionRate * 0.3, 1),
-                'icon' => 'check-circle',
-                'color' => $cappedResolutionRate >= 80 ? 'green' : ($cappedResolutionRate >= 60 ? 'yellow' : 'red'),
-            ];
-
-            $breakdown['components'][] = [
-                'name' => 'Utilization Rate',
-                'description' => 'Billable hours efficiency',
-                'weight' => '25%',
-                'raw_score' => $memberData['utilization_rate'],
-                'weighted_score' => round($memberData['utilization_rate'] * 0.25, 1),
-                'icon' => 'trending-up',
-                'color' => $memberData['utilization_rate'] >= 70 ? 'green' : ($memberData['utilization_rate'] >= 50 ? 'yellow' : 'red'),
-            ];
-
-            $responseScore = $memberData['avg_resolution_time'] > 0 ?
-                max(0, 100 - ($memberData['avg_resolution_time'] / 24 * 50)) : 100;
-            $breakdown['components'][] = [
-                'name' => 'Response Time',
-                'description' => 'Average ticket resolution speed',
-                'weight' => '20%',
-                'raw_score' => round($responseScore, 1),
-                'weighted_score' => round($responseScore * 0.2, 1),
-                'icon' => 'clock',
-                'color' => $responseScore >= 70 ? 'green' : ($responseScore >= 40 ? 'yellow' : 'red'),
-            ];
-
-            $satScore = ($memberData['customer_satisfaction'] / 5) * 100;
-            $breakdown['components'][] = [
-                'name' => 'Customer Satisfaction',
-                'description' => 'Average customer ratings',
-                'weight' => '15%',
-                'raw_score' => round($satScore, 1),
-                'weighted_score' => round($satScore * 0.15, 1),
-                'icon' => 'star',
-                'color' => $satScore >= 80 ? 'green' : ($satScore >= 60 ? 'yellow' : 'red'),
-            ];
-
-            $expectedHours = $this->getPeriodDays() * 6;
-            $activityScore = min(100, ($memberData['total_hours'] / max(1, $expectedHours)) * 100);
-            $breakdown['components'][] = [
-                'name' => 'Activity Level',
-                'description' => 'Overall work activity',
-                'weight' => '10%',
-                'raw_score' => round($activityScore, 1),
-                'weighted_score' => round($activityScore * 0.1, 1),
-                'icon' => 'activity',
-                'color' => $activityScore >= 70 ? 'green' : ($activityScore >= 40 ? 'yellow' : 'red'),
-            ];
+    protected function getScoreColor($score)
+    {
+        if ($score >= 70) {
+            return 'green';
         }
-
-        $breakdown['total_calculated'] = $memberData['performance_score'];
-
-        return $breakdown;
+        
+        return $score >= 40 ? 'yellow' : 'red';
     }
 
     public function render()
