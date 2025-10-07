@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ClientPortalController extends Controller
 {
+    private const ERROR_NO_INVOICE_PERMISSION = 'You do not have permission to view invoices.';
+
     protected DigitalSignatureService $signatureService;
 
     public function __construct(DigitalSignatureService $signatureService)
@@ -858,7 +860,7 @@ class ClientPortalController extends Controller
         $contact = auth('client')->user();
 
         if (! $this->canViewInvoices($contact)) {
-            abort(403, 'You do not have permission to view invoices.');
+            abort(403, self::ERROR_NO_INVOICE_PERMISSION);
         }
 
         $invoices = $this->getInvoicesForContact($contact);
@@ -873,7 +875,7 @@ class ClientPortalController extends Controller
         $contact = auth('client')->user();
 
         if (! $this->canViewInvoices($contact)) {
-            abort(403, 'You do not have permission to view invoices.');
+            abort(403, self::ERROR_NO_INVOICE_PERMISSION);
         }
 
         if ($invoice->client_id !== $contact->client_id) {
@@ -890,7 +892,7 @@ class ClientPortalController extends Controller
         $contact = auth('client')->user();
 
         if (! $this->canViewInvoices($contact)) {
-            abort(403, 'You do not have permission to view invoices.');
+            abort(403, self::ERROR_NO_INVOICE_PERMISSION);
         }
 
         if ($invoice->client_id !== $contact->client_id) {
