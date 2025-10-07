@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ClientPortalController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING = 'required|string';
+
     protected DigitalSignatureService $signatureService;
 
     public function __construct(DigitalSignatureService $signatureService)
@@ -46,7 +48,7 @@ class ClientPortalController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string',
+            'password' => self::VALIDATION_REQUIRED_STRING,
             'remember' => 'nullable|boolean',
         ]);
 
@@ -194,7 +196,7 @@ class ClientPortalController extends Controller
         $request->validate([
             'signature_type' => 'required|in:electronic,digital',
             'signature_method' => 'required|in:draw,type,upload',
-            'signature_data' => 'required|string',
+            'signature_data' => self::VALIDATION_REQUIRED_STRING,
             'terms_accepted' => 'required|accepted',
         ]);
 
@@ -437,7 +439,7 @@ class ClientPortalController extends Controller
         $contact = auth('client')->user();
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING.'|max:255',
             'phone' => 'nullable|string|max:20',
             'mobile' => 'nullable|string|max:20',
             'title' => 'nullable|string|max:255',
@@ -945,8 +947,8 @@ class ClientPortalController extends Controller
         }
 
         $request->validate([
-            'subject' => 'required|string|max:255',
-            'details' => 'required|string',
+            'subject' => self::VALIDATION_REQUIRED_STRING.'|max:255',
+            'details' => self::VALIDATION_REQUIRED_STRING,
             'priority' => 'required|in:Low,Medium,High,Critical',
             'category' => 'nullable|string',
             'attachments.*' => 'nullable|file|max:10240',
@@ -1049,7 +1051,7 @@ class ClientPortalController extends Controller
         }
 
         $request->validate([
-            'comment' => 'required|string|min:3|max:5000',
+            'comment' => self::VALIDATION_REQUIRED_STRING.'|min:3|max:5000',
             'attachments' => 'nullable|array|max:5',
             'attachments.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif|max:10240',
         ]);
