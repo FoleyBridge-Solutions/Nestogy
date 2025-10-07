@@ -41,7 +41,7 @@
                             <div class="space-y-2 mb-6">
                                 @foreach($tickets as $ticket)
                                     <label class="flex items-center gap-3 p-3 rounded-lg border {{ in_array($ticket['id'], $selectedTickets) ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700' }} cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        <input 
+                                        <input
                                             type="checkbox"
                                             wire:click="toggleTicket({{ $ticket['id'] }})"
                                             {{ in_array($ticket['id'], $selectedTickets) ? 'checked' : '' }}
