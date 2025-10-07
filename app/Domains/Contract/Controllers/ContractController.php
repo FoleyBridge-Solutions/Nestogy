@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class ContractController extends Controller
 {
+    private const BILLING_MODEL_PER_ASSET = 'Per Asset/Device';
+
     protected $contractService;
 
     protected $contractGenerationService;
@@ -138,13 +140,13 @@ class ContractController extends Controller
         $availableStatuses = $contractConfigRegistry->getContractStatuses();
 
         // Billing models for programmable contracts
-        $billingModels = [
-            'fixed' => 'Fixed Price',
-            'per_asset' => 'Per Asset/Device',
-            'per_contact' => 'Per Contact/Seat',
-            'tiered' => 'Tiered Pricing',
-            'hybrid' => 'Hybrid Model',
-        ];
+            $billingModels = [
+                'fixed' => 'Fixed Price',
+                'per_asset' => self::BILLING_MODEL_PER_ASSET,
+                'per_contact' => 'Per Contact/Seat',
+                'tiered' => 'Tiered Pricing',
+                'hybrid' => 'Hybrid Model',
+            ];
 
         // Template types
         $templateTypes = [
@@ -995,7 +997,7 @@ class ContractController extends Controller
 
             $billingModels = [
                 'fixed' => 'Fixed Price',
-                'per_asset' => 'Per Asset/Device',
+                'per_asset' => self::BILLING_MODEL_PER_ASSET,
                 'per_contact' => 'Per Contact/Seat',
                 'tiered' => 'Tiered Pricing',
                 'hybrid' => 'Hybrid Model',
@@ -1115,7 +1117,7 @@ class ContractController extends Controller
 
             $billingModels = [
                 'fixed' => 'Fixed Price',
-                'per_asset' => 'Per Asset/Device',
+                'per_asset' => self::BILLING_MODEL_PER_ASSET,
                 'per_contact' => 'Per Contact/Seat',
                 'tiered' => 'Tiered Pricing',
                 'hybrid' => 'Hybrid Model',
