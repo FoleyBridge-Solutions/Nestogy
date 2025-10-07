@@ -11,6 +11,8 @@ use Livewire\Component;
 
 class SendMailModal extends Component
 {
+    private const VALIDATION_REQUIRED_STRING_MAX_255 = 'required|string|max:255';
+
     public bool $show = false;
 
     public ?Invoice $invoice = null;
@@ -62,11 +64,11 @@ class SendMailModal extends Component
     ];
 
     protected $rules = [
-        'recipientName' => 'required|string|max:255',
+        'recipientName' => self::VALIDATION_REQUIRED_STRING_MAX_255,
         'recipientCompany' => 'nullable|string|max:255',
-        'recipientAddressLine1' => 'required|string|max:255',
+        'recipientAddressLine1' => self::VALIDATION_REQUIRED_STRING_MAX_255,
         'recipientAddressLine2' => 'nullable|string|max:255',
-        'recipientCity' => 'required|string|max:255',
+        'recipientCity' => self::VALIDATION_REQUIRED_STRING_MAX_255,
         'recipientState' => 'required|string|size:2',
         'recipientPostalCode' => 'required|string|regex:/^\d{5}(-\d{4})?$/',
         'templateId' => 'nullable|exists:physical_mail_templates,id',
