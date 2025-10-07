@@ -302,27 +302,31 @@ class PermissionService
             // Full system access
             $expanded = [];
             foreach ($hierarchy as $module => $config) {
-                foreach ($config['permissions'] as $perm => $desc) {
-                    if (! str_contains($perm, '*')) {
-                        $expanded[] = $perm;
-                    }
-                }
+                $expanded = array_merge($expanded, $this->filterNonWildcardPermissions($config['permissions']));
             }
 
             return $expanded;
         }
 
         if (isset($hierarchy[$base])) {
-            $expanded = [];
-            foreach ($hierarchy[$base]['permissions'] as $perm => $desc) {
-                if (! str_contains($perm, '*')) {
-                    $expanded[] = $perm;
-                }
-            }
-
-            return $expanded;
+            return $this->filterNonWildcardPermissions($hierarchy[$base]['permissions']);
         }
 
         return [];
+    }
+
+    /**
+     * Filter out wildcard permissions from a permissions array
+     */
+    private function filterNonWildcardPermissions(array $permissions): array
+    {
+        $filtered = [];
+        foreach ($permissions as $perm => $desc) {
+            if (! str_contains($perm, '*')) {
+                $filtered[] = $perm;
+            }
+        }
+
+        return $filtered;
     }
 }
