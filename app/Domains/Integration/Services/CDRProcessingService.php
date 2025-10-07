@@ -412,7 +412,23 @@ class CDRProcessingService
         $errors = [];
         $warnings = [];
 
-        // Required fields validation
+        $errors = array_merge($errors, $this->validateRequiredFields($cdrData, $options));
+        $errors = array_merge($errors, $this->validateDataTypes($cdrData));
+        
+        $businessValidation = $this->validateBusinessLogic($cdrData);
+        $errors = array_merge($errors, $businessValidation['errors']);
+        $warnings = array_merge($warnings, $businessValidation['warnings']);
+
+        return [
+            'status' => empty($errors) ? (empty($warnings) ? self::VALIDATION_PASSED : self::VALIDATION_WARNING) : self::VALIDATION_FAILED,
+            'errors' => $errors,
+            'warnings' => $warnings,
+        ];
+    }
+
+    protected function validateRequiredFields(array $cdrData, array $options): array
+    {
+        $errors = [];
         $requiredFields = $options['required_fields'] ?? [
             'origination_number',
             'destination_number',
@@ -426,7 +442,13 @@ class CDRProcessingService
             }
         }
 
-        // Data type validation
+        return $errors;
+    }
+
+    protected function validateDataTypes(array $cdrData): array
+    {
+        $errors = [];
+
         if (isset($cdrData['duration_seconds']) && ! is_numeric($cdrData['duration_seconds'])) {
             $errors[] = 'Duration seconds must be numeric';
         }
@@ -439,7 +461,14 @@ class CDRProcessingService
             }
         }
 
-        // Business logic validation
+        return $errors;
+    }
+
+    protected function validateBusinessLogic(array $cdrData): array
+    {
+        $errors = [];
+        $warnings = [];
+
         if (isset($cdrData['duration_seconds']) && $cdrData['duration_seconds'] < 0) {
             $errors[] = 'Duration cannot be negative';
         }
@@ -448,11 +477,7 @@ class CDRProcessingService
             $warnings[] = 'Unusually long call duration (>24 hours)';
         }
 
-        return [
-            'status' => empty($errors) ? (empty($warnings) ? self::VALIDATION_PASSED : self::VALIDATION_WARNING) : self::VALIDATION_FAILED,
-            'errors' => $errors,
-            'warnings' => $warnings,
-        ];
+        return ['errors' => $errors, 'warnings' => $warnings];
     }
 
     /**
