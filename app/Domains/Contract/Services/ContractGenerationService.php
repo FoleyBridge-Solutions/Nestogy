@@ -7,6 +7,8 @@ use App\Domains\Contract\Models\ContractMilestone;
 use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Core\Services\TemplateVariableMapper;
+use App\Exceptions\ContractGenerationException;
+use App\Exceptions\ContractStatusException;
 use App\Models\Client;
 use App\Models\Quote;
 use Carbon\Carbon;
@@ -202,7 +204,10 @@ class ContractGenerationService
         ]);
 
         if (empty(trim($processedContent))) {
-            throw new \Exception('Processed content is empty - cannot generate PDF');
+            throw new ContractGenerationException('Processed content is empty - cannot generate PDF', [
+                'contract_id' => $contract->id,
+                'contract_number' => $contract->contract_number,
+            ]);
         }
 
         // Generate PDF
@@ -231,9 +236,11 @@ class ContractGenerationService
      */
     public function regenerateContract(Contract $contract, array $changes = []): Contract
     {
-        // Validate contract can be regenerated
         if ($contract->status === Contract::STATUS_SIGNED || $contract->status === Contract::STATUS_ACTIVE) {
-            throw new \Exception('Cannot regenerate a signed or active contract');
+            throw new ContractStatusException('regenerate', $contract->status, [
+                'contract_id' => $contract->id,
+                'contract_number' => $contract->contract_number,
+            ]);
         }
 
         return DB::transaction(function () use ($contract, $changes) {
@@ -274,7 +281,10 @@ class ContractGenerationService
     protected function validateQuoteEligibility(Quote $quote): void
     {
         if (! $quote->isAccepted()) {
-            throw new \Exception('Quote must be accepted before generating contract');
+            throw new ContractGenerationException('Quote must be accepted before generating contract', [
+                'quote_id' => $quote->id,
+                'quote_status' => $quote->status ?? 'unknown',
+            ]);
         }
 
         if ($quote->isConverted() && $quote->convertedInvoice) {
@@ -285,7 +295,10 @@ class ContractGenerationService
         }
 
         if (! $quote->isFullyApproved()) {
-            throw new \Exception('Quote must be fully approved before generating contract');
+            throw new ContractGenerationException('Quote must be fully approved before generating contract', [
+                'quote_id' => $quote->id,
+                'quote_status' => $quote->status ?? 'unknown',
+            ]);
         }
     }
 
@@ -1521,7 +1534,10 @@ class ContractGenerationService
 
         // Debug: Check if PDF content was generated
         if (empty($pdfContent)) {
-            throw new \Exception('PDF content is empty - generation failed');
+            throw new ContractGenerationException('PDF content is empty - generation failed', [
+                'contract_id' => $contract->id,
+                'contract_number' => $contract->contract_number,
+            ]);
         }
 
         Log::info('PDF content generated', [
