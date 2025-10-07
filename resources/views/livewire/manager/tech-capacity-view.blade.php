@@ -51,7 +51,7 @@
         </flux:button>
         
         <flux:button 
-            wire:click="setSortBy('active')" 
+            wire:click="setSortBy('active')"
             variant="{{ $sortBy === 'active' ? 'primary' : 'ghost' }}" 
             size="sm">
             Active Tickets
