@@ -8,6 +8,8 @@ use Livewire\Component;
 
 class CreateContact extends Component
 {
+    private const MAX_HANDLE_LENGTH = 100;
+
     // Tab management
     public string $activeTab = 'essential';
 
@@ -133,7 +135,7 @@ class CreateContact extends Component
             $rules += [
                 'preferred_contact_method' => ['nullable', 'string', 'in:email,phone,mobile,sms'],
                 'best_time_to_contact' => ['nullable', 'string', 'in:morning,afternoon,evening,anytime'],
-                'timezone' => ['nullable', 'string', 'max:100'],
+                'timezone' => ['nullable', 'string', 'max:' . self::MAX_HANDLE_LENGTH],
                 'language' => ['nullable', 'string', 'max:50'],
                 'do_not_disturb' => ['boolean'],
                 'marketing_opt_in' => ['boolean'],
@@ -166,9 +168,9 @@ class CreateContact extends Component
                 'out_of_office_start' => ['nullable', 'date'],
                 'out_of_office_end' => ['nullable', 'date', 'after_or_equal:out_of_office_start'],
                 'website' => ['nullable', 'url', 'max:255'],
-                'twitter_handle' => ['nullable', 'string', 'max:100'],
+                'twitter_handle' => ['nullable', 'string', 'max:' . self::MAX_HANDLE_LENGTH],
                 'facebook_url' => ['nullable', 'url', 'max:255'],
-                'instagram_handle' => ['nullable', 'string', 'max:100'],
+                'instagram_handle' => ['nullable', 'string', 'max:' . self::MAX_HANDLE_LENGTH],
                 'company_blog' => ['nullable', 'url', 'max:255'],
             ];
         }
