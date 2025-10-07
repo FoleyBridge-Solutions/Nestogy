@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Crypt;
 
 class FinancialSettingsService extends BaseSettingsService
 {
+    private const VALIDATION_RULE_TEXT_LONG = 'nullable|string|max:1000';
+
     protected string $domain = SettingsConfiguration::DOMAIN_FINANCIAL;
 
     /**
@@ -33,11 +35,11 @@ class FinancialSettingsService extends BaseSettingsService
 
             case 'invoicing':
                 return [
-                    'invoice_footer' => 'nullable|string|max:1000',
-                    'invoice_notes' => 'nullable|string|max:1000',
+                    'invoice_footer' => self::VALIDATION_RULE_TEXT_LONG,
+                    'invoice_notes' => self::VALIDATION_RULE_TEXT_LONG,
                     'show_tax_id' => 'boolean',
                     'show_payment_instructions' => 'boolean',
-                    'payment_instructions' => 'nullable|string|max:1000',
+                    'payment_instructions' => self::VALIDATION_RULE_TEXT_LONG,
                     'attach_pdf' => 'boolean',
                     'allow_partial_payments' => 'boolean',
                     'minimum_payment_amount' => 'nullable|numeric|min:0',
