@@ -47,4 +47,7 @@ $classes = Flux::classes('shrink-0')
 
         <?php break; ?>
 
+    <?php default: ?>
+        <?php break; ?>
+
 <?php endswitch; ?>
