@@ -12,6 +12,8 @@ use Livewire\Component;
 
 class InvoiceShow extends Component
 {
+    private const DEBUG_LOG_PATH = 'logs/debug.log';
+
     public Invoice $invoice;
 
     public $totals = [];
@@ -115,7 +117,7 @@ class InvoiceShow extends Component
     public function sendInvoiceEmail()
     {
         // Force log to file directly to ensure it works
-        file_put_contents(storage_path('logs/debug.log'),
+        file_put_contents(storage_path(self::DEBUG_LOG_PATH),
             '['.now().'] sendInvoiceEmail called - emailTo: '.$this->emailTo.PHP_EOL,
             FILE_APPEND
         );
@@ -128,12 +130,12 @@ class InvoiceShow extends Component
                 'attachPdf' => 'boolean',
             ]);
 
-            file_put_contents(storage_path('logs/debug.log'),
+            file_put_contents(storage_path(self::DEBUG_LOG_PATH),
                 '['.now().'] Validation passed, proceeding with email send'.PHP_EOL,
                 FILE_APPEND
             );
         } catch (\Exception $e) {
-            file_put_contents(storage_path('logs/debug.log'),
+            file_put_contents(storage_path(self::DEBUG_LOG_PATH),
                 '['.now().'] Validation failed: '.$e->getMessage().PHP_EOL,
                 FILE_APPEND
             );
@@ -142,7 +144,7 @@ class InvoiceShow extends Component
         }
 
         try {
-            file_put_contents(storage_path('logs/debug.log'),
+            file_put_contents(storage_path(self::DEBUG_LOG_PATH),
                 '['.now().'] About to authorize and send email'.PHP_EOL,
                 FILE_APPEND
             );
@@ -152,7 +154,7 @@ class InvoiceShow extends Component
             // Use the EmailService to send the invoice
             $emailService = app(\App\Domains\Email\Services\EmailService::class);
 
-            file_put_contents(storage_path('logs/debug.log'),
+            file_put_contents(storage_path(self::DEBUG_LOG_PATH),
                 '['.now().'] Calling EmailService->sendInvoiceEmail'.PHP_EOL,
                 FILE_APPEND
             );
@@ -164,7 +166,7 @@ class InvoiceShow extends Component
                 'attach_pdf' => $this->attachPdf,
             ]);
 
-            file_put_contents(storage_path('logs/debug.log'),
+            file_put_contents(storage_path(self::DEBUG_LOG_PATH),
                 '['.now().'] EmailService returned: '.($result ? 'true' : 'false').PHP_EOL,
                 FILE_APPEND
             );
@@ -178,7 +180,7 @@ class InvoiceShow extends Component
 
                 $this->showEmailModal = false;
 
-                file_put_contents(storage_path('logs/debug.log'),
+                file_put_contents(storage_path(self::DEBUG_LOG_PATH),
                     '['.now().'] About to dispatch success notification'.PHP_EOL,
                     FILE_APPEND
                 );
@@ -198,7 +200,7 @@ class InvoiceShow extends Component
             }
 
         } catch (\Exception $e) {
-            file_put_contents(storage_path('logs/debug.log'),
+            file_put_contents(storage_path(self::DEBUG_LOG_PATH),
                 '['.now().'] Exception caught: '.$e->getMessage().PHP_EOL,
                 FILE_APPEND
             );
