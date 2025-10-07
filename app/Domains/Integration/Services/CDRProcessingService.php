@@ -412,7 +412,19 @@ class CDRProcessingService
         $errors = [];
         $warnings = [];
 
-        // Required fields validation
+        $this->validateRequiredFields($cdrData, $options, $errors);
+        $this->validateDataTypes($cdrData, $errors);
+        $this->validateBusinessLogic($cdrData, $errors, $warnings);
+
+        return [
+            'status' => empty($errors) ? (empty($warnings) ? self::VALIDATION_PASSED : self::VALIDATION_WARNING) : self::VALIDATION_FAILED,
+            'errors' => $errors,
+            'warnings' => $warnings,
+        ];
+    }
+
+    protected function validateRequiredFields(array $cdrData, array $options, array &$errors): void
+    {
         $requiredFields = $options['required_fields'] ?? [
             'origination_number',
             'destination_number',
@@ -425,8 +437,10 @@ class CDRProcessingService
                 $errors[] = "Missing required field: {$field}";
             }
         }
+    }
 
-        // Data type validation
+    protected function validateDataTypes(array $cdrData, array &$errors): void
+    {
         if (isset($cdrData['duration_seconds']) && ! is_numeric($cdrData['duration_seconds'])) {
             $errors[] = 'Duration seconds must be numeric';
         }
@@ -438,8 +452,10 @@ class CDRProcessingService
                 $errors[] = 'Invalid usage start time format';
             }
         }
+    }
 
-        // Business logic validation
+    protected function validateBusinessLogic(array $cdrData, array &$errors, array &$warnings): void
+    {
         if (isset($cdrData['duration_seconds']) && $cdrData['duration_seconds'] < 0) {
             $errors[] = 'Duration cannot be negative';
         }
@@ -447,12 +463,6 @@ class CDRProcessingService
         if (isset($cdrData['duration_seconds']) && $cdrData['duration_seconds'] > 86400) {
             $warnings[] = 'Unusually long call duration (>24 hours)';
         }
-
-        return [
-            'status' => empty($errors) ? (empty($warnings) ? self::VALIDATION_PASSED : self::VALIDATION_WARNING) : self::VALIDATION_FAILED,
-            'errors' => $errors,
-            'warnings' => $warnings,
-        ];
     }
 
     /**
