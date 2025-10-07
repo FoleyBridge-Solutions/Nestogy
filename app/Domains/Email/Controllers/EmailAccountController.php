@@ -13,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class EmailAccountController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING_255 = 'required|string|max:255';
+
     public function __construct(
         private ImapService $imapService,
         private UnifiedEmailSyncService $unifiedSyncService
@@ -70,7 +72,7 @@ class EmailAccountController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255,
             'email_address' => [
                 'required',
                 'email',
@@ -79,15 +81,15 @@ class EmailAccountController extends Controller
                 }),
             ],
             'provider' => 'required|in:gmail,outlook,yahoo,manual',
-            'imap_host' => 'required|string|max:255',
+            'imap_host' => self::VALIDATION_REQUIRED_STRING_255,
             'imap_port' => 'required|integer|min:1|max:65535',
             'imap_encryption' => 'required|in:ssl,tls,none',
-            'imap_username' => 'required|string|max:255',
+            'imap_username' => self::VALIDATION_REQUIRED_STRING_255,
             'imap_password' => 'required|string',
-            'smtp_host' => 'required|string|max:255',
+            'smtp_host' => self::VALIDATION_REQUIRED_STRING_255,
             'smtp_port' => 'required|integer|min:1|max:65535',
             'smtp_encryption' => 'required|in:ssl,tls,none',
-            'smtp_username' => 'required|string|max:255',
+            'smtp_username' => self::VALIDATION_REQUIRED_STRING_255,
             'smtp_password' => 'required|string',
             'is_default' => 'boolean',
             'sync_interval_minutes' => 'integer|min:1|max:1440',
@@ -240,7 +242,7 @@ class EmailAccountController extends Controller
         $this->authorize('update', $emailAccount);
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255,
             'email_address' => [
                 'required',
                 'email',
@@ -249,15 +251,15 @@ class EmailAccountController extends Controller
                         ->where('id', '!=', $emailAccount->id);
                 }),
             ],
-            'imap_host' => 'required|string|max:255',
+            'imap_host' => self::VALIDATION_REQUIRED_STRING_255,
             'imap_port' => 'required|integer|min:1|max:65535',
             'imap_encryption' => 'required|in:ssl,tls,none',
-            'imap_username' => 'required|string|max:255',
+            'imap_username' => self::VALIDATION_REQUIRED_STRING_255,
             'imap_password' => 'nullable|string',
-            'smtp_host' => 'required|string|max:255',
+            'smtp_host' => self::VALIDATION_REQUIRED_STRING_255,
             'smtp_port' => 'required|integer|min:1|max:65535',
             'smtp_encryption' => 'required|in:ssl,tls,none',
-            'smtp_username' => 'required|string|max:255',
+            'smtp_username' => self::VALIDATION_REQUIRED_STRING_255,
             'smtp_password' => 'nullable|string',
             'is_default' => 'boolean',
             'is_active' => 'boolean',
