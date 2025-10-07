@@ -29,7 +29,7 @@ class ProductService
         });
     }
 
-    public function calculatePrice(Product $product, array $options = [])
+    public function calculatePrice(Product $product)
     {
         $basePrice = $product->price;
         
