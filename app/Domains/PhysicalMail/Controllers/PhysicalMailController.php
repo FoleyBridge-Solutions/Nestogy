@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 
 class PhysicalMailController extends Controller
 {
+    private const VALIDATION_SOMETIMES_ARRAY = 'sometimes|array';
+
     public function __construct(
         private PhysicalMailService $mailService
     ) {}
@@ -130,7 +132,7 @@ class PhysicalMailController extends Controller
             'to.provinceOrState' => 'sometimes|string',
             'to.postalOrZip' => 'sometimes|string',
             'to.country' => 'sometimes|string|size:2',
-            'from' => 'sometimes|array',
+            'from' => self::VALIDATION_SOMETIMES_ARRAY,
             'template' => 'sometimes|string',
             'content' => 'sometimes|string',
             'pdf' => 'sometimes|url',
@@ -138,10 +140,10 @@ class PhysicalMailController extends Controller
             'double_sided' => 'sometimes|boolean',
             'address_placement' => 'sometimes|in:top_first_page,insert_blank_page',
             'size' => 'sometimes|string',
-            'merge_variables' => 'sometimes|array',
+            'merge_variables' => self::VALIDATION_SOMETIMES_ARRAY,
             'mailing_class' => 'sometimes|string',
             'extra_service' => 'sometimes|in:certified,certified_return_receipt,registered',
-            'metadata' => 'sometimes|array',
+            'metadata' => self::VALIDATION_SOMETIMES_ARRAY,
             'send_date' => 'sometimes|date',
         ]);
 
