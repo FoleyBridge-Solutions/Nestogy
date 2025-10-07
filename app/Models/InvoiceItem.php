@@ -190,12 +190,10 @@ class InvoiceItem extends Model
             'minutes' => $this->minutes ?? 0,
         ];
 
-        $taxCalculation = $taxService->calculateTaxes($params);
-
         // Store detailed tax data
         // Note: voip_tax_data column doesn't exist in database yet
 
-        return $taxCalculation;
+        return $taxService->calculateTaxes($params);
     }
 
     /**
