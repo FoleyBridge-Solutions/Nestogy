@@ -485,55 +485,95 @@ class CommandPalette extends Component
         $commands = [];
         $sidebarProvider = app(\App\Domains\Core\Services\SidebarConfigProvider::class);
 
-        // Define all contexts to load
         $contexts = ['clients', 'tickets', 'email', 'assets', 'financial', 'projects', 'reports', 'settings'];
 
         foreach ($contexts as $context) {
             $config = $sidebarProvider->getConfiguration($context);
+            $contextCommands = $this->extractCommandsFromConfig($config, $context);
+            $commands = array_merge($commands, $contextCommands);
+        }
 
-            if (empty($config['sections'])) {
-                continue;
-            }
+        $commands[] = $this->getDashboardCommand();
 
-            // Extract navigation items from each section
-            foreach ($config['sections'] as $section) {
-                if (! isset($section['items'])) {
-                    continue;
-                }
+        return $commands;
+    }
 
-                foreach ($section['items'] as $item) {
-                    // Skip if no route defined
-                    if (! isset($item['route'])) {
-                        continue;
-                    }
+    /**
+     * Extract navigation commands from a sidebar configuration
+     */
+    private function extractCommandsFromConfig($config, $context)
+    {
+        if (empty($config['sections'])) {
+            return [];
+        }
 
-                    // Process route parameters to handle special values like 'current'
-                    $routeParams = $item['params'] ?? $item['route_params'] ?? [];
-                    $processedParams = $this->processRouteParameters($routeParams);
+        $commands = [];
 
-                    // Build command from navigation item
-                    $command = [
-                        'type' => 'navigation',
-                        'title' => $item['name'],
-                        'subtitle' => 'Navigation • '.ucfirst($context),
-                        'route_name' => $item['route'],
-                        'route_params' => $processedParams,
-                        'icon' => $item['icon'] ?? 'arrow-right',
-                        'keywords' => $this->generateKeywords($item['name'], $context),
-                    ];
+        foreach ($config['sections'] as $section) {
+            $sectionCommands = $this->extractCommandsFromSection($section, $context);
+            $commands = array_merge($commands, $sectionCommands);
+        }
 
-                    // Add description if available
-                    if (isset($item['description'])) {
-                        $command['subtitle'] .= ' • '.$item['description'];
-                    }
+        return $commands;
+    }
 
-                    $commands[] = $command;
-                }
+    /**
+     * Extract navigation commands from a sidebar section
+     */
+    private function extractCommandsFromSection($section, $context)
+    {
+        if (!isset($section['items'])) {
+            return [];
+        }
+
+        $commands = [];
+
+        foreach ($section['items'] as $item) {
+            $command = $this->buildCommandFromItem($item, $context);
+            
+            if ($command) {
+                $commands[] = $command;
             }
         }
 
-        // Add main dashboard
-        $commands[] = [
+        return $commands;
+    }
+
+    /**
+     * Build a command array from a navigation item
+     */
+    private function buildCommandFromItem($item, $context)
+    {
+        if (!isset($item['route'])) {
+            return null;
+        }
+
+        $routeParams = $item['params'] ?? $item['route_params'] ?? [];
+        $processedParams = $this->processRouteParameters($routeParams);
+
+        $command = [
+            'type' => 'navigation',
+            'title' => $item['name'],
+            'subtitle' => 'Navigation • '.ucfirst($context),
+            'route_name' => $item['route'],
+            'route_params' => $processedParams,
+            'icon' => $item['icon'] ?? 'arrow-right',
+            'keywords' => $this->generateKeywords($item['name'], $context),
+        ];
+
+        if (isset($item['description'])) {
+            $command['subtitle'] .= ' • '.$item['description'];
+        }
+
+        return $command;
+    }
+
+    /**
+     * Get the main dashboard command
+     */
+    private function getDashboardCommand()
+    {
+        return [
             'type' => 'navigation',
             'title' => 'Dashboard',
             'subtitle' => 'Navigation • Main',
@@ -542,8 +582,6 @@ class CommandPalette extends Component
             'icon' => 'home',
             'keywords' => ['dashboard', 'home', 'main', 'overview'],
         ];
-
-        return $commands;
     }
 
     /**
