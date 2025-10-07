@@ -148,7 +148,7 @@
 
             <div class="flex gap-3">
                 @if(!$isRunning)
-                    <flux:button 
+                    <flux:button
                         wire:click="startTimer" 
                         variant="primary" 
                         size="lg"
