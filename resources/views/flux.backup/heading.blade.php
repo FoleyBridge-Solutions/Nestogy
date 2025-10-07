@@ -36,7 +36,7 @@ $classes = Flux::classes()
     <?php case(4): ?>
         <h4 {{ $attributes->class($classes) }} data-flux-heading>{{ $slot }}</h4>
 
-        @break
+        <?php break; ?>
     <?php default: ?>
         <div {{ $attributes->class($classes) }} data-flux-heading>{{ $slot }}</div>
 
