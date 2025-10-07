@@ -211,6 +211,9 @@ class DynamicContractFormBuilder
             case ContractFieldDefinition::TYPE_USER_SELECTOR:
                 $field['ajax_url'] = route('api.users.search');
                 break;
+
+            default:
+                break;
         }
 
         return $field;
