@@ -87,14 +87,15 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::get('it-documentation', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'clientIndex'])->name('it-documentation.client-index');
 
         // Communication Log routes (using session-based client context)
+        const COMMUNICATION_ROUTE = 'communications/{communication}';
         Route::get('communications', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'index'])->name('communications.index');
         Route::get('communications/export', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'export'])->name('communications.export');
         Route::get('communications/create', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'create'])->name('communications.create');
         Route::post('communications', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'store'])->name('communications.store');
-        Route::get('communications/{communication}', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'show'])->name('communications.show');
-        Route::get('communications/{communication}/edit', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'edit'])->name('communications.edit');
-        Route::put('communications/{communication}', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'update'])->name('communications.update');
-        Route::delete('communications/{communication}', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'destroy'])->name('communications.destroy');
+        Route::get(COMMUNICATION_ROUTE, [\App\Domains\Client\Controllers\CommunicationLogController::class, 'show'])->name('communications.show');
+        Route::get(COMMUNICATION_ROUTE . '/edit', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'edit'])->name('communications.edit');
+        Route::put(COMMUNICATION_ROUTE, [\App\Domains\Client\Controllers\CommunicationLogController::class, 'update'])->name('communications.update');
+        Route::delete(COMMUNICATION_ROUTE, [\App\Domains\Client\Controllers\CommunicationLogController::class, 'destroy'])->name('communications.destroy');
     });
 
     // Client show route - display specific client dashboard
