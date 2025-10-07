@@ -13,7 +13,7 @@ class NotificationPreferences extends Component
 
     public $ticket_created = true;
 
-    public $ticket_assigned = true;
+    public $ticketAssigned = true;
 
     public $ticket_status_changed = true;
 
@@ -38,7 +38,7 @@ class NotificationPreferences extends Component
         $this->preferences = NotificationPreference::getOrCreateForUser(auth()->user());
 
         $this->ticket_created = $this->preferences->ticket_created;
-        $this->ticket_assigned = $this->preferences->ticket_assigned;
+        $this->ticketAssigned = $this->preferences->ticket_assigned;
         $this->ticket_status_changed = $this->preferences->ticket_status_changed;
         $this->ticket_resolved = $this->preferences->ticket_resolved;
         $this->ticket_comment_added = $this->preferences->ticket_comment_added;
@@ -54,7 +54,7 @@ class NotificationPreferences extends Component
     {
         $this->preferences->update([
             'ticket_created' => $this->ticket_created,
-            'ticket_assigned' => $this->ticket_assigned,
+            'ticket_assigned' => $this->ticketAssigned,
             'ticket_status_changed' => $this->ticket_status_changed,
             'ticket_resolved' => $this->ticket_resolved,
             'ticket_comment_added' => $this->ticket_comment_added,
