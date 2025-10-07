@@ -333,6 +333,9 @@ class StandardStatusTransition implements StatusTransitionInterface
                 // Handle contract expiration
                 // Check for renewal opportunities
                 break;
+
+            default:
+                break;
         }
     }
 
