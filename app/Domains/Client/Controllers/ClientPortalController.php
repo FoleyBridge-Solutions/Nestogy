@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ClientPortalController extends Controller
 {
+    private const ATTACHMENTS_VALIDATION_KEY = 'attachments.*';
+
     protected DigitalSignatureService $signatureService;
 
     public function __construct(DigitalSignatureService $signatureService)
@@ -307,7 +309,7 @@ class ClientPortalController extends Controller
 
         $request->validate([
             'client_notes' => 'nullable|string|max:1000',
-            'attachments.*' => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,txt',
+            self::ATTACHMENTS_VALIDATION_KEY => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,txt',
         ]);
 
         try {
@@ -949,7 +951,7 @@ class ClientPortalController extends Controller
             'details' => 'required|string',
             'priority' => 'required|in:Low,Medium,High,Critical',
             'category' => 'nullable|string',
-            'attachments.*' => 'nullable|file|max:10240',
+            self::ATTACHMENTS_VALIDATION_KEY => 'nullable|file|max:10240',
         ]);
 
         try {
@@ -1051,7 +1053,7 @@ class ClientPortalController extends Controller
         $request->validate([
             'comment' => 'required|string|min:3|max:5000',
             'attachments' => 'nullable|array|max:5',
-            'attachments.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif|max:10240',
+            self::ATTACHMENTS_VALIDATION_KEY => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif|max:10240',
         ]);
 
         try {
