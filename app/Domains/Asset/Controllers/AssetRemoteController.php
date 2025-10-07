@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class AssetRemoteController extends Controller
 {
+    private const VALIDATION_RULE_OPTIONAL_BOOLEAN = 'sometimes|boolean';
+
     protected AssetSyncService $syncService;
 
     public function __construct(AssetSyncService $syncService)
@@ -75,7 +77,7 @@ class AssetRemoteController extends Controller
                 'command' => 'required|string|max:1000',
                 'shell' => 'sometimes|string|in:cmd,powershell,bash',
                 'timeout' => 'sometimes|integer|min:1|max:300',
-                'run_as_system' => 'sometimes|boolean',
+                'run_as_system' => self::VALIDATION_RULE_OPTIONAL_BOOLEAN,
             ]);
 
             if ($validator->fails()) {
@@ -182,7 +184,7 @@ class AssetRemoteController extends Controller
             $validator = Validator::make($request->all(), [
                 'update_ids' => 'sometimes|array',
                 'update_ids.*' => 'string',
-                'install_all' => 'sometimes|boolean',
+                'install_all' => self::VALIDATION_RULE_OPTIONAL_BOOLEAN,
             ]);
 
             if ($validator->fails()) {
@@ -231,7 +233,7 @@ class AssetRemoteController extends Controller
             $this->authorize('update', $asset);
 
             $validator = Validator::make($request->all(), [
-                'force' => 'sometimes|boolean',
+                'force' => self::VALIDATION_RULE_OPTIONAL_BOOLEAN,
                 'delay' => 'sometimes|integer|min:0|max:300',
                 'message' => 'sometimes|string|max:200',
             ]);
