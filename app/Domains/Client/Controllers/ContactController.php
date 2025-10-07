@@ -33,59 +33,26 @@ class ContactController extends Controller
      */
     public function index(Request $request)
     {
-        // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
-        // Authorize client access
         $this->authorize('view', $client);
 
-        // Additional authorization check
         if (! auth()->user()->hasPermission('clients.contacts.view')) {
             abort(403, 'Insufficient permissions to view contacts');
         }
 
-        // Query contacts for the specific client only
         $query = Contact::where('client_id', $client->id);
-
-        // Apply search filters
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('title', 'like', "%{$search}%")
-                    ->orWhere('department', 'like', "%{$search}%");
-            });
-        }
-
-        // Apply type filters
-        if ($type = $request->get('type')) {
-            switch ($type) {
-                case 'primary':
-                    $query->where('primary', true);
-                    break;
-                case 'billing':
-                    $query->where('billing', true);
-                    break;
-                case 'technical':
-                    $query->where('technical', true);
-                    break;
-                case 'important':
-                    $query->where('important', true);
-                    break;
-            }
-        }
+        $this->applyContactFilters($query, $request);
 
         $contacts = $query->orderBy('primary', 'desc')
             ->orderBy('name')
             ->paginate(20)
             ->appends($request->query());
 
-        // Return JSON for AJAX requests
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json($contacts->items());
         }
@@ -368,56 +335,17 @@ class ContactController extends Controller
      */
     public function export(Request $request)
     {
-        // Get selected client from session
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
             return redirect()->route('clients.index')->with('error', 'Please select a client first.');
         }
 
-        // Authorize client access
         $this->authorize('view', $client);
-
-        // Authorization check for export permission
-        if (! auth()->user()->hasPermission('clients.contacts.export')) {
-            abort(403, 'Insufficient permissions to export contact data');
-        }
-
-        // Additional gate check for sensitive data export
-        if (! auth()->user()->can('export-client-data')) {
-            abort(403, 'Export permissions denied');
-        }
+        $this->validateExportPermissions();
 
         $query = Contact::where('client_id', $client->id);
-
-        // Apply same filters as index
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('title', 'like', "%{$search}%")
-                    ->orWhere('department', 'like', "%{$search}%");
-            });
-        }
-
-        if ($type = $request->get('type')) {
-            switch ($type) {
-                case 'primary':
-                    $query->where('primary', true);
-                    break;
-                case 'billing':
-                    $query->where('billing', true);
-                    break;
-                case 'technical':
-                    $query->where('technical', true);
-                    break;
-                case 'important':
-                    $query->where('important', true);
-                    break;
-            }
-        }
-
+        $this->applyContactFilters($query, $request);
         $contacts = $query->orderBy('primary', 'desc')->orderBy('name')->get();
 
         $filename = 'contacts_'.$client->name.'_'.date('Y-m-d_H-i-s').'.csv';
@@ -430,7 +358,6 @@ class ContactController extends Controller
         $callback = function () use ($contacts, $client) {
             $file = fopen('php://output', 'w');
 
-            // CSV headers
             fputcsv($file, [
                 'Contact Name',
                 'Title',
@@ -447,7 +374,6 @@ class ContactController extends Controller
                 'Notes',
             ]);
 
-            // CSV data
             foreach ($contacts as $contact) {
                 fputcsv($file, [
                     $contact->name,
@@ -774,5 +700,47 @@ class ContactController extends Controller
             'success' => true,
             'message' => 'Invitation revoked successfully',
         ]);
+    }
+
+    private function validateExportPermissions(): void
+    {
+        if (! auth()->user()->hasPermission('clients.contacts.export')) {
+            abort(403, 'Insufficient permissions to export contact data');
+        }
+
+        if (! auth()->user()->can('export-client-data')) {
+            abort(403, 'Export permissions denied');
+        }
+    }
+
+    private function applyContactFilters($query, Request $request): void
+    {
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('department', 'like', "%{$search}%");
+            });
+        }
+
+        if ($type = $request->get('type')) {
+            $this->applyTypeFilter($query, $type);
+        }
+    }
+
+    private function applyTypeFilter($query, string $type): void
+    {
+        $typeFilters = [
+            'primary' => 'primary',
+            'billing' => 'billing',
+            'technical' => 'technical',
+            'important' => 'important',
+        ];
+
+        if (isset($typeFilters[$type])) {
+            $query->where($typeFilters[$type], true);
+        }
     }
 }
