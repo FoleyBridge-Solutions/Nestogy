@@ -597,39 +597,56 @@ class UsageRecord extends Model
     {
         parent::boot();
 
-        // Auto-calculate duration and set usage date
         static::creating(function ($record) {
-            if (\Schema::hasColumn('usage_records', 'transaction_id') && ! $record->transaction_id) {
-                $record->transaction_id = 'TXN-'.uniqid().'-'.time();
-            }
-
-            if ($record->usage_start_time) {
-                $record->usage_date = $record->usage_start_time->toDateString();
-                $record->usage_hour = $record->usage_start_time->hour;
-
-                // Set time-based flags
-                $record->is_peak_time = $record->usage_start_time->hour >= 8 && $record->usage_start_time->hour < 18;
-                $record->is_weekend = $record->usage_start_time->isWeekend();
-            }
-
-            if ($record->usage_start_time && $record->usage_end_time && ! $record->duration_seconds) {
-                $record->duration_seconds = $record->usage_end_time->diffInSeconds($record->usage_start_time);
-            }
-
-            // Set billing period if not provided
-            if (! $record->billing_period) {
-                if (\Schema::hasColumn('usage_records', 'billing_period')) {
-                    $record->billing_period = now()->format('Y-m');
-                }
-            }
+            $record->setTransactionId();
+            $record->setUsageDateTime();
+            $record->setDurationFromTimes();
+            $record->setBillingPeriod();
         });
 
-        // Update processed timestamp when status changes
         static::updated(function ($record) {
-            if ($record->isDirty('processing_status') && $record->processing_status === self::STATUS_PROCESSED) {
-                $record->processed_at = now();
-                $record->save();
-            }
+            $record->updateProcessedTimestamp();
         });
+    }
+
+    protected function setTransactionId(): void
+    {
+        if (\Schema::hasColumn('usage_records', 'transaction_id') && ! $this->transaction_id) {
+            $this->transaction_id = 'TXN-'.uniqid().'-'.time();
+        }
+    }
+
+    protected function setUsageDateTime(): void
+    {
+        if (! $this->usage_start_time) {
+            return;
+        }
+
+        $this->usage_date = $this->usage_start_time->toDateString();
+        $this->usage_hour = $this->usage_start_time->hour;
+        $this->is_peak_time = $this->usage_start_time->hour >= 8 && $this->usage_start_time->hour < 18;
+        $this->is_weekend = $this->usage_start_time->isWeekend();
+    }
+
+    protected function setDurationFromTimes(): void
+    {
+        if ($this->usage_start_time && $this->usage_end_time && ! $this->duration_seconds) {
+            $this->duration_seconds = $this->usage_end_time->diffInSeconds($this->usage_start_time);
+        }
+    }
+
+    protected function setBillingPeriod(): void
+    {
+        if (! $this->billing_period && \Schema::hasColumn('usage_records', 'billing_period')) {
+            $this->billing_period = now()->format('Y-m');
+        }
+    }
+
+    protected function updateProcessedTimestamp(): void
+    {
+        if ($this->isDirty('processing_status') && $this->processing_status === self::STATUS_PROCESSED) {
+            $this->processed_at = now();
+            $this->save();
+        }
     }
 }
