@@ -127,19 +127,14 @@ class RateCard extends Model
         $incrementMinutes = $this->rounding_increment;
         $hoursInIncrement = $incrementMinutes / 60;
         
-        switch ($this->rounding_method) {
-            case self::ROUNDING_UP:
-                return ceil($hours / $hoursInIncrement) * $hoursInIncrement;
-            
-            case self::ROUNDING_DOWN:
-                return floor($hours / $hoursInIncrement) * $hoursInIncrement;
-            
-            case self::ROUNDING_NEAREST:
-                return round($hours / $hoursInIncrement) * $hoursInIncrement;
-            
-            default:
-                return $hours;
-        }
+        $result = match ($this->rounding_method) {
+            self::ROUNDING_UP => ceil($hours / $hoursInIncrement) * $hoursInIncrement,
+            self::ROUNDING_DOWN => floor($hours / $hoursInIncrement) * $hoursInIncrement,
+            self::ROUNDING_NEAREST => round($hours / $hoursInIncrement) * $hoursInIncrement,
+            default => $hours,
+        };
+        
+        return $result;
     }
 
     public function calculateAmount(float $hours): float
