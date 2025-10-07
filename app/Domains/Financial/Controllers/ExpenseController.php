@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 
 class ExpenseController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     public function index(Request $request)
     {
         $companyId = Auth::user()->company_id;
@@ -97,12 +99,12 @@ class ExpenseController extends Controller
             'expense_date' => 'required|date',
             'vendor' => 'required|string|max:255',
             'description' => 'required|string',
-            'reference_number' => 'nullable|string|max:255',
-            'payment_method' => 'nullable|string',
+            'reference_number' => self::VALIDATION_NULLABLE_STRING.'|max:255',
+            'payment_method' => self::VALIDATION_NULLABLE_STRING,
             'is_billable' => 'boolean',
             'client_id' => 'nullable|exists:clients,id',
             'project_id' => 'nullable|exists:projects,id',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         $validated['company_id'] = Auth::user()->company_id;
@@ -159,12 +161,12 @@ class ExpenseController extends Controller
             'expense_date' => 'required|date',
             'vendor' => 'required|string|max:255',
             'description' => 'required|string',
-            'reference_number' => 'nullable|string|max:255',
-            'payment_method' => 'nullable|string',
+            'reference_number' => self::VALIDATION_NULLABLE_STRING.'|max:255',
+            'payment_method' => self::VALIDATION_NULLABLE_STRING,
             'is_billable' => 'boolean',
             'client_id' => 'nullable|exists:clients,id',
             'project_id' => 'nullable|exists:projects,id',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         $expense->update($validated);
