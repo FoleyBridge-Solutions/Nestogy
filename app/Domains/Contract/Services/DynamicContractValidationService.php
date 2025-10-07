@@ -331,56 +331,92 @@ class DynamicContractValidationService
 
         foreach ($businessRules as $rule) {
             $ruleType = $rule['type'] ?? null;
+            $ruleErrors = $this->validateBusinessRule($ruleType, $rule, $data);
+            $errors = array_merge_recursive($errors, $ruleErrors);
+        }
 
-            switch ($ruleType) {
-                case 'max_contract_value':
-                    $maxValue = $rule['value'] ?? null;
-                    if ($maxValue && ! empty($data['contract_value']) && $data['contract_value'] > $maxValue) {
-                        $errors['contract_value'][] = 'Contract value cannot exceed '.number_format($maxValue, 2);
-                    }
-                    break;
+        return $errors;
+    }
 
-                case 'min_contract_value':
-                    $minValue = $rule['value'] ?? null;
-                    if ($minValue && ! empty($data['contract_value']) && $data['contract_value'] < $minValue) {
-                        $errors['contract_value'][] = 'Contract value must be at least '.number_format($minValue, 2);
-                    }
-                    break;
+    protected function validateBusinessRule(?string $ruleType, array $rule, array $data): array
+    {
+        $errors = [];
 
-                case 'max_term_months':
-                    $maxTerm = $rule['value'] ?? null;
-                    if ($maxTerm && ! empty($data['term_months']) && $data['term_months'] > $maxTerm) {
-                        $errors['term_months'][] = "Contract term cannot exceed {$maxTerm} months";
-                    }
-                    break;
+        switch ($ruleType) {
+            case 'max_contract_value':
+                $errors = $this->validateMaxContractValue($rule, $data);
+                break;
 
-                case 'required_approval':
-                    $threshold = $rule['value'] ?? null;
-                    if ($threshold && ! empty($data['contract_value']) && $data['contract_value'] >= $threshold) {
-                        // Mark contract as requiring approval
-                        // This would be handled in the business logic layer
-                    }
-                    break;
+            case 'min_contract_value':
+                $errors = $this->validateMinContractValue($rule, $data);
+                break;
 
-                case 'blocked_clients':
-                    $blockedClients = $rule['value'] ?? [];
-                    if (! empty($data['client_id']) && in_array($data['client_id'], $blockedClients)) {
-                        $errors['client_id'][] = 'Contracts cannot be created for this client';
-                    }
-                    break;
+            case 'max_term_months':
+                $errors = $this->validateMaxTermMonths($rule, $data);
+                break;
 
-                case 'required_fields_conditional':
-                    $condition = $rule['condition'] ?? [];
-                    $requiredFields = $rule['fields'] ?? [];
+            case 'required_approval':
+                break;
 
-                    if ($this->evaluateCondition($condition, $data)) {
-                        foreach ($requiredFields as $field) {
-                            if (empty($data[$field])) {
-                                $errors[$field][] = 'This field is required based on your selections';
-                            }
-                        }
-                    }
-                    break;
+            case 'blocked_clients':
+                $errors = $this->validateBlockedClients($rule, $data);
+                break;
+
+            case 'required_fields_conditional':
+                $errors = $this->validateConditionalRequiredFields($rule, $data);
+                break;
+        }
+
+        return $errors;
+    }
+
+    protected function validateMaxContractValue(array $rule, array $data): array
+    {
+        $maxValue = $rule['value'] ?? null;
+        if ($maxValue && ! empty($data['contract_value']) && $data['contract_value'] > $maxValue) {
+            return ['contract_value' => ['Contract value cannot exceed '.number_format($maxValue, 2)]];
+        }
+        return [];
+    }
+
+    protected function validateMinContractValue(array $rule, array $data): array
+    {
+        $minValue = $rule['value'] ?? null;
+        if ($minValue && ! empty($data['contract_value']) && $data['contract_value'] < $minValue) {
+            return ['contract_value' => ['Contract value must be at least '.number_format($minValue, 2)]];
+        }
+        return [];
+    }
+
+    protected function validateMaxTermMonths(array $rule, array $data): array
+    {
+        $maxTerm = $rule['value'] ?? null;
+        if ($maxTerm && ! empty($data['term_months']) && $data['term_months'] > $maxTerm) {
+            return ['term_months' => ["Contract term cannot exceed {$maxTerm} months"]];
+        }
+        return [];
+    }
+
+    protected function validateBlockedClients(array $rule, array $data): array
+    {
+        $blockedClients = $rule['value'] ?? [];
+        if (! empty($data['client_id']) && in_array($data['client_id'], $blockedClients)) {
+            return ['client_id' => ['Contracts cannot be created for this client']];
+        }
+        return [];
+    }
+
+    protected function validateConditionalRequiredFields(array $rule, array $data): array
+    {
+        $errors = [];
+        $condition = $rule['condition'] ?? [];
+        $requiredFields = $rule['fields'] ?? [];
+
+        if ($this->evaluateCondition($condition, $data)) {
+            foreach ($requiredFields as $field) {
+                if (empty($data[$field])) {
+                    $errors[$field][] = 'This field is required based on your selections';
+                }
             }
         }
 
