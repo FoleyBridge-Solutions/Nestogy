@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class OfficialTaxDataService extends BaseTaxDataService
 {
+    private const ERROR_NOT_CONFIGURED = 'Texas Comptroller service not configured';
+
     protected string $quarter;
 
     protected string $year;
@@ -55,7 +57,7 @@ class OfficialTaxDataService extends BaseTaxDataService
         if (! $this->isConfigured()) {
             return [
                 'success' => false,
-                'error' => 'Texas Comptroller service not configured',
+                'error' => self::ERROR_NOT_CONFIGURED,
                 'files' => [],
             ];
         }
@@ -99,7 +101,7 @@ class OfficialTaxDataService extends BaseTaxDataService
         if (! $this->isConfigured()) {
             return [
                 'success' => false,
-                'error' => 'Texas Comptroller service not configured',
+                'error' => self::ERROR_NOT_CONFIGURED,
                 'content' => null,
             ];
         }
@@ -160,7 +162,7 @@ class OfficialTaxDataService extends BaseTaxDataService
         if (! $this->isConfigured()) {
             return [
                 'success' => false,
-                'error' => 'Texas Comptroller service not configured',
+                'error' => self::ERROR_NOT_CONFIGURED,
             ];
         }
 
@@ -289,7 +291,7 @@ class OfficialTaxDataService extends BaseTaxDataService
         if (! $this->isConfigured()) {
             return [
                 'success' => false,
-                'error' => 'Texas Comptroller service not configured',
+                'error' => self::ERROR_NOT_CONFIGURED,
             ];
         }
 
