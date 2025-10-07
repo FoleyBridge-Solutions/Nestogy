@@ -476,7 +476,6 @@ class UnifiedEmailSyncService
             'label_ids' => $labelIds,
         ]);
 
-        // Priority mapping for Gmail labels to folder types
         $labelPriorities = [
             'DRAFT' => 'drafts',
             'SENT' => 'sent',
@@ -485,71 +484,9 @@ class UnifiedEmailSyncService
             'INBOX' => 'inbox',
         ];
 
-        // Find the highest priority label
-        $targetFolderType = null;
-        foreach ($labelPriorities as $labelId => $folderType) {
-            if (in_array($labelId, $labelIds)) {
-                $targetFolderType = $folderType;
-                break;
-            }
-        }
+        $targetFolderType = $this->findTargetFolderType($labelIds, $labelPriorities, $account);
 
-        // If no standard labels found, look for custom labels
-        if (! $targetFolderType && ! empty($labelIds)) {
-            // Try to find a custom folder that matches a label
-            foreach ($labelIds as $labelId) {
-                if (! in_array($labelId, ['UNREAD', 'IMPORTANT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS', 'CATEGORY_PROMOTIONS'])) {
-                    $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
-                        ->where('remote_id', $labelId)
-                        ->first();
-
-                    if ($folder) {
-                        Log::debug('Found custom folder for Gmail message', [
-                            'account_id' => $account->id,
-                            'folder_id' => $folder->id,
-                            'folder_name' => $folder->name,
-                            'label_id' => $labelId,
-                        ]);
-
-                        return $folder->id;
-                    }
-                }
-            }
-        }
-
-        // Default to inbox if no specific folder determined
-        if (! $targetFolderType) {
-            $targetFolderType = 'inbox';
-        }
-
-        // Find or create the folder
-        $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
-            ->where('type', $targetFolderType)
-            ->first();
-
-        if (! $folder) {
-            Log::info('Creating missing Gmail folder', [
-                'account_id' => $account->id,
-                'folder_type' => $targetFolderType,
-            ]);
-
-            $folderNames = [
-                'inbox' => 'Inbox',
-                'sent' => 'Sent',
-                'drafts' => 'Drafts',
-                'trash' => 'Trash',
-                'spam' => 'Spam',
-            ];
-
-            $folder = \App\Domains\Email\Models\EmailFolder::create([
-                'email_account_id' => $account->id,
-                'name' => $folderNames[$targetFolderType] ?? ucfirst($targetFolderType),
-                'remote_id' => strtoupper($targetFolderType),
-                'type' => $targetFolderType,
-                'is_selectable' => true,
-                'message_count' => 0,
-            ]);
-        }
+        $folder = $this->findOrCreateFolder($account, $targetFolderType);
 
         Log::debug('Determined Gmail message folder', [
             'account_id' => $account->id,
@@ -560,6 +497,98 @@ class UnifiedEmailSyncService
         ]);
 
         return $folder->id;
+    }
+
+    /**
+     * Find the target folder type from label IDs
+     */
+    protected function findTargetFolderType(array $labelIds, array $labelPriorities, \App\Domains\Email\Models\EmailAccount $account): string
+    {
+        foreach ($labelPriorities as $labelId => $folderType) {
+            if (in_array($labelId, $labelIds)) {
+                return $folderType;
+            }
+        }
+
+        if (! empty($labelIds)) {
+            $customFolderId = $this->findCustomFolderIdFromLabels($labelIds, $account);
+            if ($customFolderId) {
+                return $customFolderId;
+            }
+        }
+
+        return 'inbox';
+    }
+
+    /**
+     * Find custom folder ID from label IDs
+     */
+    protected function findCustomFolderIdFromLabels(array $labelIds, \App\Domains\Email\Models\EmailAccount $account): ?int
+    {
+        $systemLabels = ['UNREAD', 'IMPORTANT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS', 'CATEGORY_PROMOTIONS'];
+
+        foreach ($labelIds as $labelId) {
+            if (in_array($labelId, $systemLabels)) {
+                continue;
+            }
+
+            $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
+                ->where('remote_id', $labelId)
+                ->first();
+
+            if ($folder) {
+                Log::debug('Found custom folder for Gmail message', [
+                    'account_id' => $account->id,
+                    'folder_id' => $folder->id,
+                    'folder_name' => $folder->name,
+                    'label_id' => $labelId,
+                ]);
+
+                return $folder->id;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find or create folder by type
+     */
+    protected function findOrCreateFolder(\App\Domains\Email\Models\EmailAccount $account, $targetFolderType)
+    {
+        if (is_int($targetFolderType)) {
+            return \App\Domains\Email\Models\EmailFolder::findOrFail($targetFolderType);
+        }
+
+        $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
+            ->where('type', $targetFolderType)
+            ->first();
+
+        if ($folder) {
+            return $folder;
+        }
+
+        Log::info('Creating missing Gmail folder', [
+            'account_id' => $account->id,
+            'folder_type' => $targetFolderType,
+        ]);
+
+        $folderNames = [
+            'inbox' => 'Inbox',
+            'sent' => 'Sent',
+            'drafts' => 'Drafts',
+            'trash' => 'Trash',
+            'spam' => 'Spam',
+        ];
+
+        return \App\Domains\Email\Models\EmailFolder::create([
+            'email_account_id' => $account->id,
+            'name' => $folderNames[$targetFolderType] ?? ucfirst($targetFolderType),
+            'remote_id' => strtoupper($targetFolderType),
+            'type' => $targetFolderType,
+            'is_selectable' => true,
+            'message_count' => 0,
+        ]);
     }
 
     /**
