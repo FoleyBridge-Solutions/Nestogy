@@ -203,18 +203,7 @@ class UpdateTaxData extends Command
     protected function processAddressData(string $quarter): array
     {
         try {
-            // Determine which jurisdictions to process
-            if ($this->option('all-jurisdictions')) {
-                $jurisdictions = $this->getAllJurisdictionsForState($stateCode);
-                $this->info("🏛️ FULL STATEWIDE IMPORT: Processing ALL jurisdictions for {$stateCode}");
-                $this->info('📊 Estimated records: Varies by state');
-                $this->info('⏱️ Estimated time: Varies by state');
-                $this->newLine();
-            } elseif ($this->option('jurisdictions')) {
-                $jurisdictions = explode(',', $this->option('jurisdictions'));
-            } else {
-                $jurisdictions = $this->getHighPriorityJurisdictionsForState($stateCode);
-            }
+            $jurisdictions = $this->determineJurisdictionsToProcess();
 
             $totalJurisdictions = count($jurisdictions);
             $parallelLimit = (int) $this->option('parallel');
@@ -347,6 +336,28 @@ class UpdateTaxData extends Command
     protected function processJurisdictionAddressData(string $quarter, string $jurisdictionCode): array
     {
         return $this->service->downloadAddressData($jurisdictionCode);
+    }
+
+    /**
+     * Determine which jurisdictions to process based on command options
+     */
+    protected function determineJurisdictionsToProcess(): array
+    {
+        $stateCode = strtoupper($this->option('state'));
+
+        if ($this->option('all-jurisdictions')) {
+            $jurisdictions = $this->getAllJurisdictionsForState($stateCode);
+            $this->info("🏛️ FULL STATEWIDE IMPORT: Processing ALL jurisdictions for {$stateCode}");
+            $this->info('📊 Estimated records: Varies by state');
+            $this->info('⏱️ Estimated time: Varies by state');
+            $this->newLine();
+        } elseif ($this->option('jurisdictions')) {
+            $jurisdictions = explode(',', $this->option('jurisdictions'));
+        } else {
+            $jurisdictions = $this->getHighPriorityJurisdictionsForState($stateCode);
+        }
+
+        return $jurisdictions;
     }
 
     /**
