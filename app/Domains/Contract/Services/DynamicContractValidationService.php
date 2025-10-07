@@ -381,6 +381,9 @@ class DynamicContractValidationService
                         }
                     }
                     break;
+
+                default:
+                    break;
             }
         }
 
