@@ -24,6 +24,8 @@ use Illuminate\Validation\ValidationException;
  */
 class ContractService
 {
+    private const SCHEDULE_REVIEW_DATE_LABEL = "  \n**Review Date:** ";
+
     /**
      * Get contract configuration registry for the current company
      */
@@ -2521,8 +2523,7 @@ class ContractService
         return '# SCHEDULE A - INFRASTRUCTURE SERVICES & SERVICE LEVEL AGREEMENT
 
 **Document Version:** 2.0  
-**Effective Date:** '.now()->format('F d, Y').'  
-**Review Date:** '.now()->addYear()->format('F d, Y').'
+**Effective Date:** '.now()->format('F d, Y').''.self::SCHEDULE_REVIEW_DATE_LABEL.now()->addYear()->format('F d, Y').'
 
 ---
 
@@ -2717,8 +2718,7 @@ If monthly availability falls below the committed {{uptime_target}}%, Client sha
         return '# SCHEDULE B - PRICING & FEES
 
 **Document Version:** 2.0  
-**Effective Date:** '.now()->format('F d, Y').'  
-**Review Date:** '.now()->addYear()->format('F d, Y').'
+**Effective Date:** '.now()->format('F d, Y').''.self::SCHEDULE_REVIEW_DATE_LABEL.now()->addYear()->format('F d, Y').'
 
 ---
 
@@ -2837,8 +2837,7 @@ Automatic credits applied as outlined in Schedule A for SLA violations:
         return '# SCHEDULE C - ADDITIONAL TERMS & CONDITIONS
 
 **Document Version:** 2.0  
-**Effective Date:** '.now()->format('F d, Y').'  
-**Review Date:** '.now()->addYear()->format('F d, Y').'
+**Effective Date:** '.now()->format('F d, Y').''.self::SCHEDULE_REVIEW_DATE_LABEL.now()->addYear()->format('F d, Y').'
 
 ---
 
