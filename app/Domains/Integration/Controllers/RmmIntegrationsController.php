@@ -572,7 +572,7 @@ class RmmIntegrationsController extends Controller
             ],
             'health' => [
                 'is_active' => $integration->is_active,
-                'connection_status' => 'unknown', // Will be populated by connection test
+                'connection_status' => 'unknown',
             ],
         ];
 
@@ -580,5 +580,206 @@ class RmmIntegrationsController extends Controller
             'success' => true,
             'stats' => $stats,
         ]);
+    }
+
+    public function quickSyncAgents(Request $request)
+    {
+        $integration = $this->getCompanyIntegration();
+        if (! $integration) {
+            return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+        }
+
+        $mappedCount = $this->getMappedClientsCount();
+        if ($mappedCount === 0) {
+            return $this->mappingRequiredResponse('agents', $mappedCount);
+        }
+
+        return $this->dispatchSyncJob(SyncRmmAgents::class, $integration);
+    }
+
+    public function quickSyncAlerts(Request $request)
+    {
+        $integration = $this->getCompanyIntegration();
+        if (! $integration) {
+            return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+        }
+
+        $mappedCount = $this->getMappedClientsCount();
+        if ($mappedCount === 0) {
+            return $this->mappingRequiredResponse('alerts', $mappedCount);
+        }
+
+        $filters = $request->only(['from_date', 'to_date', 'severity']);
+
+        return $this->dispatchSyncJob(SyncRmmAlerts::class, $integration, $filters);
+    }
+
+    public function getNestogyClients(Request $request)
+    {
+        $integration = $this->getCompanyIntegration();
+        $clients = \App\Models\Client::where('company_id', auth()->user()->company_id)
+            ->select('id', 'name', 'company_name', 'status')
+            ->with(['rmmClientMappings' => function ($query) use ($integration) {
+                if ($integration) {
+                    $query->where('integration_id', $integration->id);
+                }
+            }])
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['success' => true, 'clients' => $clients]);
+    }
+
+    public function getRmmClients(Request $request)
+    {
+        $integration = $this->getCompanyIntegration();
+        if (! $integration) {
+            return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+        }
+
+        try {
+            $rmmService = $this->rmmFactory->make($integration);
+            $clientsResult = $rmmService->getClients();
+
+            return response()->json(['success' => true, 'clients' => $clientsResult['data'] ?? []]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to fetch RMM clients: '.$e->getMessage()], 500);
+        }
+    }
+
+    public function storeClientMapping(Request $request)
+    {
+        $integration = $this->getCompanyIntegration();
+        if (! $integration) {
+            return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+        }
+
+        Log::info('Client mapping request data:', $request->all());
+
+        try {
+            $validated = $this->validateClientMapping($request);
+            $client = $this->validateClientOwnership($validated['client_id']);
+
+            if (! $client) {
+                return response()->json(['success' => false, 'message' => 'Client not found or access denied'], 422);
+            }
+
+            $mapping = $this->createMapping($integration, $validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Client mapping created successfully',
+                'mapping' => $mapping->load('client'),
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->handleValidationError($e, $request);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to create mapping: '.$e->getMessage()], 500);
+        }
+    }
+
+    public function destroyClientMapping(Request $request, $mappingId)
+    {
+        $mapping = \App\Domains\Integration\Models\RmmClientMapping::where('id', $mappingId)
+            ->where('company_id', auth()->user()->company_id)
+            ->first();
+
+        if (! $mapping) {
+            return response()->json(['success' => false, 'message' => 'Client mapping not found or access denied'], 404);
+        }
+
+        try {
+            $mapping->delete();
+
+            return response()->json(['success' => true, 'message' => 'Client mapping deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to delete mapping: '.$e->getMessage()], 500);
+        }
+    }
+
+    private function getCompanyIntegration(): ?RmmIntegration
+    {
+        return RmmIntegration::where('company_id', auth()->user()->company_id)->first();
+    }
+
+    private function getMappedClientsCount(): int
+    {
+        return \App\Models\Client::where('company_id', auth()->user()->company_id)
+            ->whereHas('rmmClientMappings')
+            ->count();
+    }
+
+    private function mappingRequiredResponse(string $type, int $count)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => "At least one client mapping is required before syncing {$type}. Please map at least one Nestogy client to an RMM client.",
+            'requires_mapping' => true,
+            'mapped_count' => $count,
+        ], 422);
+    }
+
+    private function dispatchSyncJob(string $jobClass, RmmIntegration $integration, array $filters = [])
+    {
+        try {
+            if (empty($filters)) {
+                $jobClass::dispatch($integration);
+            } else {
+                $jobClass::dispatch($integration, $filters);
+            }
+
+            $jobType = class_basename($jobClass) === 'SyncRmmAgents' ? 'Agents' : 'Alerts';
+
+            return response()->json(['success' => true, 'message' => "{$jobType} sync job queued successfully"]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to trigger sync: '.$e->getMessage()], 500);
+        }
+    }
+
+    private function validateClientMapping(Request $request): array
+    {
+        $validated = $request->validate([
+            'client_id' => 'required',
+            'rmm_client_id' => 'required',
+            'rmm_client_name' => 'required|string',
+        ]);
+
+        $validated['rmm_client_id'] = (string) $validated['rmm_client_id'];
+
+        return $validated;
+    }
+
+    private function validateClientOwnership(int $clientId)
+    {
+        return \App\Models\Client::where('id', $clientId)
+            ->where('company_id', auth()->user()->company_id)
+            ->first();
+    }
+
+    private function createMapping(RmmIntegration $integration, array $validated)
+    {
+        return \App\Domains\Integration\Models\RmmClientMapping::createOrUpdateMapping([
+            'company_id' => auth()->user()->company_id,
+            'client_id' => $validated['client_id'],
+            'integration_id' => $integration->id,
+            'rmm_client_id' => $validated['rmm_client_id'],
+            'rmm_client_name' => $validated['rmm_client_name'],
+            'is_active' => true,
+        ]);
+    }
+
+    private function handleValidationError(\Illuminate\Validation\ValidationException $e, Request $request)
+    {
+        Log::error('Client mapping validation failed:', [
+            'errors' => $e->errors(),
+            'request_data' => $request->all(),
+            'company_id' => auth()->user()->company_id,
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $e->errors(),
+        ], 422);
     }
 }
