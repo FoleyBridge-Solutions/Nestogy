@@ -7,6 +7,7 @@ use App\Domains\Contract\Models\ContractMilestone;
 use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Core\Services\TemplateVariableMapper;
+use App\Exceptions\ContractStatusException;
 use App\Models\Client;
 use App\Models\Quote;
 use Carbon\Carbon;
@@ -231,9 +232,8 @@ class ContractGenerationService
      */
     public function regenerateContract(Contract $contract, array $changes = []): Contract
     {
-        // Validate contract can be regenerated
         if ($contract->status === Contract::STATUS_SIGNED || $contract->status === Contract::STATUS_ACTIVE) {
-            throw new \Exception('Cannot regenerate a signed or active contract');
+            throw new ContractStatusException('regenerate', $contract->status, ['contract_id' => $contract->id]);
         }
 
         return DB::transaction(function () use ($contract, $changes) {
