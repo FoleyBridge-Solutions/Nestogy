@@ -5,7 +5,7 @@
         
         {{-- Filters --}}
         <div class="flex gap-3 mb-6">
-            <flux:input 
+            <flux:input
                 icon="magnifying-glass" 
                 placeholder="Search permissions..." 
                 class="flex-1"
