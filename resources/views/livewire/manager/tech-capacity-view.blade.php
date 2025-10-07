@@ -194,7 +194,7 @@
                                             {{ $tech['capacity_percentage'] }}%
                                         </div>
                                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                            <div class="bg-{{ $tech['status']['color'] }}-600 h-2 rounded-full" 
+                                            <div class="bg-{{ $tech['status']['color'] }}-600 h-2 rounded-full"
                                                  style="width: {{ $tech['capacity_percentage'] }}%"></div>
                                         </div>
                                     </div>
