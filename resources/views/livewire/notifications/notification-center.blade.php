@@ -45,7 +45,7 @@
         <!-- Notification List -->
         <div class="max-h-96 overflow-y-auto">
             @forelse($notifications as $notification)
-                <div 
+                <div
                     wire:click="markAsRead('{{ $notification->id }}')"
                     class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 {{ $notification->read_at ? '' : 'bg-blue-50 dark:bg-blue-900/20' }}"
                 >
