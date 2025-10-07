@@ -18,7 +18,7 @@
                         </p>
                     </div>
                     <input 
-                        type="file" 
+                        type="file"
                         id="camera-input" 
                         wire:model="photo" 
                         accept="image/*" 
