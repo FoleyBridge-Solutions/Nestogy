@@ -53,24 +53,24 @@ class SendManagerDigest extends Command
         return [
             // Open tickets summary
             'open_tickets' => Ticket::where('company_id', $companyId)
-                ->whereIn('status', ['Open', 'In Progress', 'Awaiting Customer'])
+                ->whereIn('status', ['Open', Ticket::STATUS_IN_PROGRESS, 'Awaiting Customer'])
                 ->count(),
 
             // Tickets by priority
             'critical_tickets' => Ticket::where('company_id', $companyId)
                 ->where('priority', 'Critical')
-                ->whereIn('status', ['Open', 'In Progress'])
+                ->whereIn('status', ['Open', Ticket::STATUS_IN_PROGRESS])
                 ->count(),
 
             'high_priority_tickets' => Ticket::where('company_id', $companyId)
                 ->where('priority', 'High')
-                ->whereIn('status', ['Open', 'In Progress'])
+                ->whereIn('status', ['Open', Ticket::STATUS_IN_PROGRESS])
                 ->count(),
 
             // Unassigned tickets
             'unassigned_tickets' => Ticket::where('company_id', $companyId)
                 ->whereNull('assigned_to')
-                ->whereIn('status', ['Open', 'In Progress'])
+                ->whereIn('status', ['Open', Ticket::STATUS_IN_PROGRESS])
                 ->count(),
 
             // SLA breaches
@@ -125,7 +125,7 @@ class SendManagerDigest extends Command
         ];
 
         return Ticket::where('company_id', $companyId)
-            ->whereIn('status', ['Open', 'In Progress', 'Awaiting Customer'])
+            ->whereIn('status', ['Open', Ticket::STATUS_IN_PROGRESS, 'Awaiting Customer'])
             ->get()
             ->filter(function ($ticket) use ($slaHours) {
                 $hours = $slaHours[$ticket->priority] ?? 24;
