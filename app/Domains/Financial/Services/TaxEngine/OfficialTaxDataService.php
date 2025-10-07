@@ -894,86 +894,11 @@ class OfficialTaxDataService extends BaseTaxDataService
                 throw new Exception('Texas Comptroller API key not configured');
             }
 
-            // First, get the file list to find the correct file path
-            $listUrl = "{$this->baseUrl}/list-files";
-            $listResponse = Http::withHeaders([
-                'x-api-key' => $this->apiKey,
-                'Accept' => 'application/json',
-            ])->timeout(60)->retry(3, 2000)->get($listUrl, [
-                'filter-by-quarter' => $quarter,
-            ]);
-
-            if (! $listResponse->successful()) {
-                throw new Exception("Failed to list files: HTTP {$listResponse->status()}");
-            }
-
-            $fileList = $listResponse->json();
-            if (! $fileList['success'] || empty($fileList['data'])) {
-                throw new Exception("No files available for quarter {$quarter}");
-            }
-
-            // Find the Bexar County file
-            $targetFile = null;
-            $expectedPattern = "TX-County-FIPS-{$countyFips}-{$quarter}.zip";
-
-            foreach ($fileList['data'] as $file) {
-                if (str_contains($file['filePath'], $expectedPattern)) {
-                    $targetFile = $file;
-                    break;
-                }
-            }
-
-            if (! $targetFile) {
-                throw new Exception("County file not found for FIPS {$countyFips} in quarter {$quarter}");
-            }
-
-            // Use the get-link endpoint to get download URL
+            $fileList = $this->fetchFileList($quarter);
+            $targetFile = $this->findCountyFile($fileList, $countyFips, $quarter);
             $url = $targetFile['getLinkEndpoint'];
 
-            // Download the file using the get-link endpoint (expect 307 redirect)
-            $response = Http::withHeaders([
-                'x-api-key' => $this->apiKey,
-                'Accept' => 'application/zip',
-                'User-Agent' => 'Nestogy-MSP/1.0',
-            ])->timeout(300)->retry(2, 5000)->withoutRedirecting()->get($url);
-
-            if ($response->status() === 307) {
-                // Get the signed URL from the Location header
-                $signedUrl = $response->header('Location');
-
-                if ($signedUrl) {
-                    // Download from the signed URL
-                    $fileResponse = Http::timeout(300)->get($signedUrl);
-
-                    if ($fileResponse->successful()) {
-                        // Save ZIP file temporarily
-                        Storage::makeDirectory('temp');
-                        $tempPath = storage_path("app/temp/texas_address_{$countyFips}_{$quarter}.zip");
-                        Storage::put("temp/texas_address_{$countyFips}_{$quarter}.zip", $fileResponse->body());
-
-                        return [
-                            'success' => true,
-                            'file_path' => $tempPath,
-                            'size' => strlen($fileResponse->body()),
-                        ];
-                    } else {
-                        return [
-                            'success' => false,
-                            'error' => "Failed to download from signed URL: HTTP {$fileResponse->status()}",
-                        ];
-                    }
-                } else {
-                    return [
-                        'success' => false,
-                        'error' => 'No Location header in 307 response',
-                    ];
-                }
-            } else {
-                return [
-                    'success' => false,
-                    'error' => "Expected 307 redirect, got HTTP {$response->status()}: {$response->body()}",
-                ];
-            }
+            return $this->downloadFileViaRedirect($url, $countyFips, $quarter);
 
         } catch (\Exception $e) {
             return [
@@ -981,6 +906,89 @@ class OfficialTaxDataService extends BaseTaxDataService
                 'error' => $e->getMessage(),
             ];
         }
+    }
+
+    protected function fetchFileList(string $quarter): array
+    {
+        $listUrl = "{$this->baseUrl}/list-files";
+        $listResponse = Http::withHeaders([
+            'x-api-key' => $this->apiKey,
+            'Accept' => 'application/json',
+        ])->timeout(60)->retry(3, 2000)->get($listUrl, [
+            'filter-by-quarter' => $quarter,
+        ]);
+
+        if (! $listResponse->successful()) {
+            throw new Exception("Failed to list files: HTTP {$listResponse->status()}");
+        }
+
+        $fileList = $listResponse->json();
+        if (! $fileList['success'] || empty($fileList['data'])) {
+            throw new Exception("No files available for quarter {$quarter}");
+        }
+
+        return $fileList['data'];
+    }
+
+    protected function findCountyFile(array $files, string $countyFips, string $quarter): array
+    {
+        $expectedPattern = "TX-County-FIPS-{$countyFips}-{$quarter}.zip";
+
+        foreach ($files as $file) {
+            if (str_contains($file['filePath'], $expectedPattern)) {
+                return $file;
+            }
+        }
+
+        throw new Exception("County file not found for FIPS {$countyFips} in quarter {$quarter}");
+    }
+
+    protected function downloadFileViaRedirect(string $url, string $countyFips, string $quarter): array
+    {
+        $response = Http::withHeaders([
+            'x-api-key' => $this->apiKey,
+            'Accept' => 'application/zip',
+            'User-Agent' => 'Nestogy-MSP/1.0',
+        ])->timeout(300)->retry(2, 5000)->withoutRedirecting()->get($url);
+
+        if ($response->status() !== 307) {
+            return [
+                'success' => false,
+                'error' => "Expected 307 redirect, got HTTP {$response->status()}: {$response->body()}",
+            ];
+        }
+
+        $signedUrl = $response->header('Location');
+        if (! $signedUrl) {
+            return [
+                'success' => false,
+                'error' => 'No Location header in 307 response',
+            ];
+        }
+
+        return $this->downloadAndSaveFile($signedUrl, $countyFips, $quarter);
+    }
+
+    protected function downloadAndSaveFile(string $signedUrl, string $countyFips, string $quarter): array
+    {
+        $fileResponse = Http::timeout(300)->get($signedUrl);
+
+        if (! $fileResponse->successful()) {
+            return [
+                'success' => false,
+                'error' => "Failed to download from signed URL: HTTP {$fileResponse->status()}",
+            ];
+        }
+
+        Storage::makeDirectory('temp');
+        $tempPath = storage_path("app/temp/texas_address_{$countyFips}_{$quarter}.zip");
+        Storage::put("temp/texas_address_{$countyFips}_{$quarter}.zip", $fileResponse->body());
+
+        return [
+            'success' => true,
+            'file_path' => $tempPath,
+            'size' => strlen($fileResponse->body()),
+        ];
     }
 
     /**
