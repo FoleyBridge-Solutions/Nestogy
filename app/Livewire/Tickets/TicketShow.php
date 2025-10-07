@@ -15,6 +15,8 @@ class TicketShow extends Component
 {
     use WithFileUploads;
 
+    private const DEFAULT_TIME_FORMAT = '00:00:00';
+
     public Ticket $ticket;
 
     public $comment = '';
@@ -40,7 +42,7 @@ class TicketShow extends Component
     // Timer properties
     public $activeTimer = null;
 
-    public $elapsedTime = '00:00:00';
+    public $elapsedTime = self::DEFAULT_TIME_FORMAT;
 
     public $timerDescription = '';
 
@@ -460,13 +462,13 @@ class TicketShow extends Component
         // Clear any local timer state
         $this->activeTimer = null;
         $this->timerDescription = '';
-        $this->elapsedTime = '00:00:00';
+        $this->elapsedTime = self::DEFAULT_TIME_FORMAT;
     }
 
     public function updateElapsedTime()
     {
         if (! $this->activeTimer) {
-            $this->elapsedTime = '00:00:00';
+            $this->elapsedTime = self::DEFAULT_TIME_FORMAT;
 
             return;
         }
