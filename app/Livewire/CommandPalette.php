@@ -160,212 +160,179 @@ class CommandPalette extends Component
         }
     }
 
-    /**
-     * Get search results without side effects
-     */
     private function getSearchResults($query)
     {
-        $results = [];
-        $limit = 5;
-        $user = Auth::user();
-        $currentRouteName = $this->currentRoute;
-
         try {
-            // Search Clients - bypass global scope and filter manually
-            $clients = Client::withoutGlobalScope('company')
-                ->when($user && $user->company_id, function ($q) use ($user) {
-                    return $q->where('company_id', $user->company_id);
-                })
-                ->where(function ($q) use ($query) {
-                    $q->where('name', 'like', "%{$query}%")
-                        ->orWhere('company_name', 'like', "%{$query}%")
-                        ->orWhere('email', 'like', "%{$query}%");
-                })
-                ->limit($limit)
-                ->get();
+            $results = [];
+            $limit = 5;
+            $user = Auth::user();
 
-            foreach ($clients as $client) {
-                $results[] = [
-                    'type' => 'client',
-                    'id' => $client->id,
-                    'title' => $client->name,
-                    'subtitle' => 'Client'.($client->company_name ? " • {$client->company_name}" : ''),
-                    'route_name' => 'clients.show',
-                    'route_params' => ['client' => $client->id],
-                    'icon' => 'building-office',
-                ];
-            }
+            $results = array_merge(
+                $this->searchClients($query, $user, $limit),
+                $this->searchTickets($query, $user, $limit),
+                $this->searchAssets($query, $user, $limit),
+                $this->searchContracts($query, $user, $limit),
+                $this->searchInvoices($query, $user, $limit),
+                $this->searchProjects($query, $user, $limit),
+                $this->getQuickActions($query)
+            );
 
-            // Search Tickets
-            $ticketQuery = method_exists(Ticket::class, 'withoutGlobalScope')
-                ? Ticket::withoutGlobalScope('company')
-                : Ticket::query();
-
-            $tickets = $ticketQuery
-                ->when($user && $user->company_id, function ($q) use ($user) {
-                    return $q->where('company_id', $user->company_id);
-                })
-                ->where(function ($q) use ($query) {
-                    $q->where('subject', 'like', "%{$query}%")
-                        ->orWhere('number', 'like', "%{$query}%");
-                })
-                ->limit($limit)
-                ->get();
-
-            foreach ($tickets as $ticket) {
-                $results[] = [
-                    'type' => 'ticket',
-                    'id' => $ticket->id,
-                    'title' => $ticket->subject,
-                    'subtitle' => "Ticket #{$ticket->number} • {$ticket->status}",
-                    'route_name' => 'tickets.show',
-                    'route_params' => ['ticket' => $ticket->id],
-                    'icon' => 'ticket',
-                ];
-            }
-
-            // Search Assets
-            $assetQuery = method_exists(Asset::class, 'withoutGlobalScope')
-                ? Asset::withoutGlobalScope('company')
-                : Asset::query();
-
-            $assets = $assetQuery
-                ->when($user && $user->company_id, function ($q) use ($user) {
-                    return $q->where('company_id', $user->company_id);
-                })
-                ->where(function ($q) use ($query) {
-                    $q->where('name', 'like', "%{$query}%")
-                        ->orWhere('serial', 'like', "%{$query}%")
-                        ->orWhere('make', 'like', "%{$query}%")
-                        ->orWhere('model', 'like', "%{$query}%");
-                })
-                ->limit($limit)
-                ->get();
-
-            foreach ($assets as $asset) {
-                $results[] = [
-                    'type' => 'asset',
-                    'id' => $asset->id,
-                    'title' => $asset->name,
-                    'subtitle' => "Asset • {$asset->type}",
-                    'route_name' => 'assets.show',
-                    'route_params' => ['asset' => $asset->id],
-                    'icon' => 'computer-desktop',
-                ];
-            }
-
-            // Search Contracts
-            $contractQuery = method_exists(Contract::class, 'withoutGlobalScope')
-                ? Contract::withoutGlobalScope('company')
-                : Contract::query();
-
-            $contracts = $contractQuery
-                ->when($user && $user->company_id, function ($q) use ($user) {
-                    return $q->where('company_id', $user->company_id);
-                })
-                ->where(function ($q) use ($query) {
-                    $q->where('title', 'like', "%{$query}%")
-                        ->orWhere('contract_number', 'like', "%{$query}%");
-                })
-                ->limit($limit)
-                ->get();
-
-            foreach ($contracts as $contract) {
-                $results[] = [
-                    'type' => 'contract',
-                    'id' => $contract->id,
-                    'title' => $contract->title ?: "Contract #{$contract->contract_number}",
-                    'subtitle' => "Contract • {$contract->contract_type}",
-                    'route_name' => 'contracts.show',
-                    'route_params' => ['contract' => $contract->id],
-                    'icon' => 'document-text',
-                ];
-            }
-
-            // Search Invoices
-            $invoiceQuery = method_exists(Invoice::class, 'withoutGlobalScope')
-                ? Invoice::withoutGlobalScope('company')
-                : Invoice::query();
-
-            $invoices = $invoiceQuery
-                ->when($user && $user->company_id, function ($q) use ($user) {
-                    return $q->where('company_id', $user->company_id);
-                })
-                ->where('number', 'like', "%{$query}%")
-                ->limit($limit)
-                ->get();
-
-            foreach ($invoices as $invoice) {
-                $results[] = [
-                    'type' => 'invoice',
-                    'id' => $invoice->id,
-                    'title' => "Invoice #{$invoice->number}",
-                    'subtitle' => "Invoice • \${$invoice->amount}",
-                    'route_name' => 'financial.invoices.show',
-                    'route_params' => ['invoice' => $invoice->id],
-                    'icon' => 'currency-dollar',
-                ];
-            }
-
-            // Search Projects
-            $projectQuery = method_exists(Project::class, 'withoutGlobalScope')
-                ? Project::withoutGlobalScope('company')
-                : Project::query();
-
-            $projects = $projectQuery
-                ->when($user && $user->company_id, function ($q) use ($user) {
-                    return $q->where('company_id', $user->company_id);
-                })
-                ->where('name', 'like', "%{$query}%")
-                ->limit($limit)
-                ->get();
-
-            foreach ($projects as $project) {
-                $results[] = [
-                    'type' => 'project',
-                    'id' => $project->id,
-                    'title' => $project->name,
-                    'subtitle' => "Project • {$project->status}",
-                    'route_name' => 'projects.show',
-                    'route_params' => ['project' => $project->id],
-                    'icon' => 'briefcase',
-                ];
-            }
-
-            // Search Knowledge Articles - Commented out until routes are implemented
-            // $articles = KbArticle::where('title', 'like', "%{$query}%")
-            //     ->orWhere('content', 'like', "%{$query}%")
-            //     ->limit($limit)
-            //     ->get();
-
-            // foreach ($articles as $article) {
-            //     $results[] = [
-            //         'type' => 'article',
-            //         'id' => $article->id,
-            //         'title' => $article->title,
-            //         'subtitle' => "Knowledge Article",
-            //         'url' => route('knowledge.articles.show', $article),
-            //         'icon' => 'book-open'
-            //     ];
-            // }
-
-            // Add quick actions
-            $quickActions = $this->getQuickActions($query);
-
-            // Put actual search results first, then quick actions
-            // This makes the search results more prominent
-            $results = array_merge($results, $quickActions);
-
-            // Limit total results and return them
             return array_slice($results, 0, 15);
         } catch (\Exception $e) {
-            // Log the error but don't crash the search
             \Log::error('Command palette search error: '.$e->getMessage(), [
                 'exception' => $e->getTraceAsString(),
             ]);
 
             return [];
         }
+    }
+
+    private function searchClients($query, $user, $limit)
+    {
+        $clients = $this->applyScopeAndCompanyFilter(Client::class, $user)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('company_name', 'like', "%{$query}%")
+                    ->orWhere('email', 'like', "%{$query}%");
+            })
+            ->limit($limit)
+            ->get();
+
+        return $clients->map(function ($client) {
+            return [
+                'type' => 'client',
+                'id' => $client->id,
+                'title' => $client->name,
+                'subtitle' => 'Client'.($client->company_name ? " • {$client->company_name}" : ''),
+                'route_name' => 'clients.show',
+                'route_params' => ['client' => $client->id],
+                'icon' => 'building-office',
+            ];
+        })->all();
+    }
+
+    private function searchTickets($query, $user, $limit)
+    {
+        $tickets = $this->applyScopeAndCompanyFilter(Ticket::class, $user)
+            ->where(function ($q) use ($query) {
+                $q->where('subject', 'like', "%{$query}%")
+                    ->orWhere('number', 'like', "%{$query}%");
+            })
+            ->limit($limit)
+            ->get();
+
+        return $tickets->map(function ($ticket) {
+            return [
+                'type' => 'ticket',
+                'id' => $ticket->id,
+                'title' => $ticket->subject,
+                'subtitle' => "Ticket #{$ticket->number} • {$ticket->status}",
+                'route_name' => 'tickets.show',
+                'route_params' => ['ticket' => $ticket->id],
+                'icon' => 'ticket',
+            ];
+        })->all();
+    }
+
+    private function searchAssets($query, $user, $limit)
+    {
+        $assets = $this->applyScopeAndCompanyFilter(Asset::class, $user)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('serial', 'like', "%{$query}%")
+                    ->orWhere('make', 'like', "%{$query}%")
+                    ->orWhere('model', 'like', "%{$query}%");
+            })
+            ->limit($limit)
+            ->get();
+
+        return $assets->map(function ($asset) {
+            return [
+                'type' => 'asset',
+                'id' => $asset->id,
+                'title' => $asset->name,
+                'subtitle' => "Asset • {$asset->type}",
+                'route_name' => 'assets.show',
+                'route_params' => ['asset' => $asset->id],
+                'icon' => 'computer-desktop',
+            ];
+        })->all();
+    }
+
+    private function searchContracts($query, $user, $limit)
+    {
+        $contracts = $this->applyScopeAndCompanyFilter(Contract::class, $user)
+            ->where(function ($q) use ($query) {
+                $q->where('title', 'like', "%{$query}%")
+                    ->orWhere('contract_number', 'like', "%{$query}%");
+            })
+            ->limit($limit)
+            ->get();
+
+        return $contracts->map(function ($contract) {
+            return [
+                'type' => 'contract',
+                'id' => $contract->id,
+                'title' => $contract->title ?: "Contract #{$contract->contract_number}",
+                'subtitle' => "Contract • {$contract->contract_type}",
+                'route_name' => 'contracts.show',
+                'route_params' => ['contract' => $contract->id],
+                'icon' => 'document-text',
+            ];
+        })->all();
+    }
+
+    private function searchInvoices($query, $user, $limit)
+    {
+        $invoices = $this->applyScopeAndCompanyFilter(Invoice::class, $user)
+            ->where('number', 'like', "%{$query}%")
+            ->limit($limit)
+            ->get();
+
+        return $invoices->map(function ($invoice) {
+            return [
+                'type' => 'invoice',
+                'id' => $invoice->id,
+                'title' => "Invoice #{$invoice->number}",
+                'subtitle' => "Invoice • \${$invoice->amount}",
+                'route_name' => 'financial.invoices.show',
+                'route_params' => ['invoice' => $invoice->id],
+                'icon' => 'currency-dollar',
+            ];
+        })->all();
+    }
+
+    private function searchProjects($query, $user, $limit)
+    {
+        $projects = $this->applyScopeAndCompanyFilter(Project::class, $user)
+            ->where('name', 'like', "%{$query}%")
+            ->limit($limit)
+            ->get();
+
+        return $projects->map(function ($project) {
+            return [
+                'type' => 'project',
+                'id' => $project->id,
+                'title' => $project->name,
+                'subtitle' => "Project • {$project->status}",
+                'route_name' => 'projects.show',
+                'route_params' => ['project' => $project->id],
+                'icon' => 'briefcase',
+            ];
+        })->all();
+    }
+
+    private function applyScopeAndCompanyFilter($modelClass, $user)
+    {
+        $query = method_exists($modelClass, 'withoutGlobalScope')
+            ? $modelClass::withoutGlobalScope('company')
+            : $modelClass::query();
+
+        if ($user && $user->company_id) {
+            $query->where('company_id', $user->company_id);
+        }
+
+        return $query;
     }
 
     /**
