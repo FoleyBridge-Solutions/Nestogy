@@ -98,6 +98,11 @@ class Invoice extends Model
     const DELETED_AT = 'archived_at';
 
     /**
+     * Date format for display
+     */
+    const DATE_FORMAT = 'F j, Y';
+
+    /**
      * Invoice status enumeration
      */
     const STATUS_DRAFT = 'Draft';
@@ -715,8 +720,8 @@ class Invoice extends Model
     {
         return [
             'invoice_number' => $this->getFormattedNumber(),
-            'invoice_date' => $this->date->format('F j, Y'),
-            'due_date' => $this->due->format('F j, Y'),
+            'invoice_date' => $this->date->format(self::DATE_FORMAT),
+            'due_date' => $this->due->format(self::DATE_FORMAT),
             'amount_due' => number_format($this->getBalance(), 2),
             'total_amount' => number_format($this->amount, 2),
             'client_name' => $this->client->name,
@@ -770,8 +775,8 @@ class Invoice extends Model
         $html .= '<h1 style="color: #333; margin: 0;">INVOICE</h1>';
         $html .= '<div style="float: right; text-align: right;">';
         $html .= '<strong>Invoice #:</strong> '.$this->getFormattedNumber().'<br>';
-        $html .= '<strong>Date:</strong> '.$this->date->format('F j, Y').'<br>';
-        $html .= '<strong>Due Date:</strong> '.$this->due->format('F j, Y');
+        $html .= '<strong>Date:</strong> '.$this->date->format(self::DATE_FORMAT).'<br>';
+        $html .= '<strong>Due Date:</strong> '.$this->due->format(self::DATE_FORMAT);
         $html .= '</div>';
         $html .= '<div style="clear: both;"></div>';
         $html .= '</div>';
