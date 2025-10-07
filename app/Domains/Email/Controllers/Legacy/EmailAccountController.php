@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 
 class EmailAccountController extends Controller
 {
+    private const MANUAL_PROVIDER_STRING_RULE = 'required_if:provider,manual|string';
+
     protected EmailProviderService $providerService;
 
     protected OAuthTokenManager $tokenManager;
@@ -137,16 +139,16 @@ class EmailAccountController extends Controller
             'name' => 'required|string|max:255',
             'email_address' => 'required|email',
             'provider' => 'required|string',
-            'imap_host' => 'required_if:provider,manual|string',
+            'imap_host' => self::MANUAL_PROVIDER_STRING_RULE,
             'imap_port' => 'required_if:provider,manual|integer|min:1|max:65535',
             'imap_encryption' => 'required_if:provider,manual|string|in:ssl,tls,none',
-            'imap_username' => 'required_if:provider,manual|string',
-            'imap_password' => 'required_if:provider,manual|string',
-            'smtp_host' => 'required_if:provider,manual|string',
+            'imap_username' => self::MANUAL_PROVIDER_STRING_RULE,
+            'imap_password' => self::MANUAL_PROVIDER_STRING_RULE,
+            'smtp_host' => self::MANUAL_PROVIDER_STRING_RULE,
             'smtp_port' => 'required_if:provider,manual|integer|min:1|max:65535',
             'smtp_encryption' => 'required_if:provider,manual|string|in:ssl,tls,none',
-            'smtp_username' => 'required_if:provider,manual|string',
-            'smtp_password' => 'required_if:provider,manual|string',
+            'smtp_username' => self::MANUAL_PROVIDER_STRING_RULE,
+            'smtp_password' => self::MANUAL_PROVIDER_STRING_RULE,
             'is_default' => 'boolean',
             'sync_interval_minutes' => 'integer|min:1|max:1440',
             'auto_create_tickets' => 'boolean',
