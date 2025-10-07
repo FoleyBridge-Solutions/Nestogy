@@ -249,7 +249,7 @@
                         class="px-2 py-2 dark:hidden" />
             <flux:brand href="{{ route('dashboard') }}" 
                         logo="{{ $logoDark }}" 
-                        name="{{ $companyName }}" 
+                        name="{{ $companyName }}"
                         class="px-2 py-2 hidden dark:flex" />
             
             <x-flux-sidebar
