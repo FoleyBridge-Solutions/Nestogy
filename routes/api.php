@@ -272,11 +272,13 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 
         // Expense API
         Route::prefix('expenses')->name('expenses.')->group(function () {
+            $expenseParam = '{expense}';
+            
             Route::get('/', [App\Domains\Financial\Controllers\ExpenseController::class, 'index'])->name('index');
             Route::post('/', [App\Domains\Financial\Controllers\ExpenseController::class, 'store'])->name('store');
-            Route::get('{expense}', [App\Domains\Financial\Controllers\ExpenseController::class, 'show'])->name('show');
-            Route::put('{expense}', [App\Domains\Financial\Controllers\ExpenseController::class, 'update'])->name('update');
-            Route::delete('{expense}', [App\Domains\Financial\Controllers\ExpenseController::class, 'destroy'])->name('destroy');
+            Route::get($expenseParam, [App\Domains\Financial\Controllers\ExpenseController::class, 'show'])->name('show');
+            Route::put($expenseParam, [App\Domains\Financial\Controllers\ExpenseController::class, 'update'])->name('update');
+            Route::delete($expenseParam, [App\Domains\Financial\Controllers\ExpenseController::class, 'destroy'])->name('destroy');
 
             // Expense Categories
             Route::get('categories', [App\Domains\Financial\Controllers\ExpenseController::class, 'categories'])->name('categories');
