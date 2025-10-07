@@ -50,7 +50,7 @@
                         description="Receive notifications when a ticket is resolved" />
                     
                     <flux:checkbox 
-                        wire:model="ticket_comment_added" 
+                        wire:model="ticketCommentAdded" 
                         label="New Comment Added"
                         description="Receive notifications when someone comments on a ticket" />
                 </div>
