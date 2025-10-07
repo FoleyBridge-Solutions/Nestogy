@@ -31,11 +31,9 @@ class ProductService
 
     public function calculatePrice(Product $product, array $options = [])
     {
-        $basePrice = $product->price;
-        
         // Apply any pricing rules or modifiers here
         
-        return $basePrice;
+        return $product->price;
     }
 
     public function duplicate(Product $product)
