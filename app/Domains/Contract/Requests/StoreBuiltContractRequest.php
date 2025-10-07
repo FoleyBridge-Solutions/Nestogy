@@ -197,6 +197,8 @@ class StoreBuiltContractRequest extends FormRequest
                         $percentage = (float) ($pricingOverride['amount'] ?? 100);
                         $finalPrice = $basePrice * ($percentage / 100);
                         break;
+                    default:
+                        break;
                 }
             }
 
