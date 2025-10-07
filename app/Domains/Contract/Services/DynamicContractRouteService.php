@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 
 class DynamicContractRouteService
 {
+    private const ACTION_INDEX = '@index';
+
     protected Router $router;
 
     protected array $registeredRoutes = [];
@@ -156,7 +158,7 @@ class DynamicContractRouteService
         $type = $item->config['type'] ?? 'page';
         switch ($type) {
             case 'list':
-                return $controller.'@index';
+                return $controller.self::ACTION_INDEX;
 
             case 'create':
                 return $controller.'@create';
@@ -168,10 +170,10 @@ class DynamicContractRouteService
                 return $controller.'@edit';
 
             case 'custom':
-                return $item->config['controller'] ?? $controller.'@index';
+                return $item->config['controller'] ?? $controller.self::ACTION_INDEX;
 
             default:
-                return $controller.'@index';
+                return $controller.self::ACTION_INDEX;
         }
     }
 
