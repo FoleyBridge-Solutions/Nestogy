@@ -41,13 +41,14 @@ class ResolutionEstimateService
             ->whereIn('status', ['Open', 'In Progress'])
             ->count();
 
+        $factor = 1.6;
         if ($activeTickets <= 5) {
-            return 1.0;
+            $factor = 1.0;
         } elseif ($activeTickets <= 10) {
-            return 1.3;
-        } else {
-            return 1.6;
+            $factor = 1.3;
         }
+
+        return $factor;
     }
 
     protected function getCategoryFactor(?string $category): float
