@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ContactController extends Controller
 {
+    private const ERROR_NO_CLIENT_SELECTED = 'Please select a client first.';
+
     /**
      * ContactController constructor.
      */
@@ -37,7 +39,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
-            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+            return redirect()->route('clients.index')->with('error', self::ERROR_NO_CLIENT_SELECTED);
         }
 
         // Authorize client access
@@ -102,7 +104,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
-            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+            return redirect()->route('clients.index')->with('error', self::ERROR_NO_CLIENT_SELECTED);
         }
 
         // Authorize client access
@@ -125,7 +127,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
-            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+            return redirect()->route('clients.index')->with('error', self::ERROR_NO_CLIENT_SELECTED);
         }
 
         // Authorize client access
@@ -192,7 +194,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
-            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+            return redirect()->route('clients.index')->with('error', self::ERROR_NO_CLIENT_SELECTED);
         }
 
         // Verify contact belongs to client
@@ -223,7 +225,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
-            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+            return redirect()->route('clients.index')->with('error', self::ERROR_NO_CLIENT_SELECTED);
         }
 
         // Verify contact belongs to client
@@ -252,7 +254,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
-            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+            return redirect()->route('clients.index')->with('error', self::ERROR_NO_CLIENT_SELECTED);
         }
 
         // Verify contact belongs to client
@@ -340,7 +342,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
-            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+            return redirect()->route('clients.index')->with('error', self::ERROR_NO_CLIENT_SELECTED);
         }
 
         // Verify contact belongs to client
@@ -372,7 +374,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client) {
-            return redirect()->route('clients.index')->with('error', 'Please select a client first.');
+            return redirect()->route('clients.index')->with('error', self::ERROR_NO_CLIENT_SELECTED);
         }
 
         // Authorize client access
