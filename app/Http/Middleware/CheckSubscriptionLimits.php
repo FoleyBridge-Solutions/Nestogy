@@ -32,39 +32,73 @@ class CheckSubscriptionLimits
     {
         $user = $request->user();
 
-        if (! $user || ! $user->company) {
+        if ($this->shouldSkipCheck($user)) {
             return $next($request);
         }
 
-        // Check if this is a user creation request
         if ($this->isUserCreationRequest($request)) {
-            $company = $user->company;
-
-            // If a different company is specified (for super-admins), use that
-            if ($request->has('company_id') && $user->canAccessCrossTenant()) {
-                $company = \App\Models\Company::find($request->company_id);
-            }
-
-            if ($company) {
-                // Check if the company can add more users
-                if (! $this->subscriptionService->canAddUser($company)) {
-                    $subscription = $company->subscription;
-                    $planName = $subscription ? $subscription->getDisplayName() : 'current';
-                    $limit = $subscription ? $subscription->max_users : 0;
-
-                    $message = "User limit reached. Your {$planName} plan allows {$limit} users. Please upgrade your plan to add more users.";
-
-                    // Add warning if approaching limit
-                    if ($this->subscriptionService->isApproachingUserLimit($company)) {
-                        session()->flash('subscription_warning', 'You are approaching your user limit. Consider upgrading your plan.');
-                    }
-
-                    throw new UserLimitExceededException($message);
-                }
-            }
+            $company = $this->getTargetCompany($request, $user);
+            $this->validateUserLimit($company);
         }
 
         return $next($request);
+    }
+
+    protected function shouldSkipCheck($user): bool
+    {
+        return ! $user || ! $user->company;
+    }
+
+    protected function getTargetCompany(Request $request, $user)
+    {
+        if ($request->has('company_id') && $user->canAccessCrossTenant()) {
+            return \App\Models\Company::find($request->company_id);
+        }
+
+        return $user->company;
+    }
+
+    protected function validateUserLimit($company): void
+    {
+        if (! $company) {
+            return;
+        }
+
+        $subscription = $company->subscription;
+
+        if ($this->canAddMoreUsers($subscription)) {
+            return;
+        }
+
+        $this->addApproachingLimitWarning($subscription);
+        $this->throwUserLimitException($subscription);
+    }
+
+    protected function canAddMoreUsers($subscription): bool
+    {
+        if (! $subscription) {
+            return true;
+        }
+
+        return $subscription->canAddUser();
+    }
+
+    protected function addApproachingLimitWarning($subscription): void
+    {
+        if (! $subscription || ! $subscription->approachingUserLimit()) {
+            return;
+        }
+
+        session()->flash('subscription_warning', 'You are approaching your user limit. Consider upgrading your plan.');
+    }
+
+    protected function throwUserLimitException($subscription): void
+    {
+        $planName = $subscription ? $subscription->getDisplayName() : 'current';
+        $limit = $subscription ? $subscription->max_users : 0;
+        $message = "User limit reached. Your {$planName} plan allows {$limit} users. Please upgrade your plan to add more users.";
+
+        throw new UserLimitExceededException($message);
     }
 
     /**
