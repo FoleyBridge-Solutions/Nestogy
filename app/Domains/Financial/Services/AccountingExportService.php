@@ -223,8 +223,6 @@ class AccountingExportService
         Carbon $startDate,
         Carbon $endDate
     ): string {
-        $client = Client::findOrFail($clientId);
-        
         $timeEntries = TicketTimeEntry::with(['ticket', 'user', 'invoice'])
             ->whereHas('ticket', fn($q) => $q->where('client_id', $clientId))
             ->whereBetween('work_date', [$startDate, $endDate])
