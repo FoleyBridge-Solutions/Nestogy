@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class OfficialTaxDataService extends BaseTaxDataService
 {
+    private const TEXAS_STATE_NAME = 'TEXAS STATE';
+
     protected string $quarter;
 
     protected string $year;
@@ -593,7 +595,7 @@ class OfficialTaxDataService extends BaseTaxDataService
     {
         $sampleRates = [
             [
-                'name' => 'TEXAS STATE',
+                'name' => self::TEXAS_STATE_NAME,
                 'authority_id' => '1',
                 'tax_rate' => 6.25,
             ],
@@ -629,11 +631,11 @@ class OfficialTaxDataService extends BaseTaxDataService
     {
         // Create or get Texas State jurisdiction
         $texasJurisdictionId = $this->createOrGetJurisdiction([
-            'name' => 'TEXAS STATE',
+            'name' => self::TEXAS_STATE_NAME,
             'jurisdiction_type' => 'state',
             'code' => 'TX_1',
             'state_code' => 'TX',
-            'authority_name' => 'TEXAS STATE',
+            'authority_name' => self::TEXAS_STATE_NAME,
             'is_active' => 1,
             'priority' => 1,
             'metadata' => json_encode([
@@ -652,8 +654,8 @@ class OfficialTaxDataService extends BaseTaxDataService
                 'tax_category_id' => 1,
                 'service_type' => $serviceType,
                 'tax_type' => 'sales',
-                'tax_name' => 'TEXAS STATE',
-                'authority_name' => 'TEXAS STATE',
+                'tax_name' => self::TEXAS_STATE_NAME,
+                'authority_name' => self::TEXAS_STATE_NAME,
                 'tax_code' => 'TX_1_'.strtoupper($serviceType),
                 'external_id' => '1', // Maps to jurisdiction code 1 from address data
                 'description' => 'Texas State Sales Tax - 6.25% (automatic)',
@@ -699,7 +701,7 @@ class OfficialTaxDataService extends BaseTaxDataService
         $authorityId = $jurisdiction['authority_id'];
 
         // Special case: Texas State always gets ID '1'
-        if ($authorityId === '1' || $name === 'TEXAS STATE') {
+        if ($authorityId === '1' || $name === self::TEXAS_STATE_NAME) {
             return '1';
         }
 
