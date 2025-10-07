@@ -137,9 +137,9 @@
                         logo="{{ $logoLight }}" 
                         name="{{ $companyName }}" 
                         class="dark:hidden" />
-            <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ $logoDark }}" 
-                        name="{{ $companyName }}" 
+            <flux:brand href="{{ route('dashboard') }}"
+                        logo="{{ $logoDark }}"
+                        name="{{ $companyName }}"
                         class="hidden dark:flex" />
             
             <!-- Mobile Toggle -->
