@@ -20,7 +20,7 @@
                     <input 
                         type="file" 
                         id="camera-input" 
-                        wire:model="photo" 
+                        wire:model="photo"
                         accept="image/*" 
                         capture="environment"
                         class="hidden">
