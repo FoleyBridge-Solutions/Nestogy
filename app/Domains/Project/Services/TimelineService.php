@@ -32,6 +32,11 @@ class TimelineService
     const ZOOM_QUARTER = 'quarter';
 
     /**
+     * Timeline colors
+     */
+    const COLOR_DEFAULT = '#6b7280';
+
+    /**
      * Get comprehensive timeline data for a project
      */
     public function getTimelineData(Project $project, array $options = []): array
@@ -463,12 +468,12 @@ class TimelineService
     protected function getStatusColor(string $status): string
     {
         return match ($status) {
-            'planning' => '#6b7280',
+            'planning' => self::COLOR_DEFAULT,
             'active', 'in_progress' => '#3b82f6',
             'on_hold' => '#f59e0b',
             'completed' => '#10b981',
             'cancelled' => '#ef4444',
-            default => '#6b7280',
+            default => self::COLOR_DEFAULT,
         };
     }
 
@@ -479,7 +484,7 @@ class TimelineService
             'medium' => '#f59e0b',
             'high' => '#f97316',
             'critical' => '#ef4444',
-            default => '#6b7280',
+            default => self::COLOR_DEFAULT,
         };
     }
 
