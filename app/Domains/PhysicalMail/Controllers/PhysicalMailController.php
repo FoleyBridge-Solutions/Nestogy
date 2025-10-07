@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 
 class PhysicalMailController extends Controller
 {
+    private const VALIDATION_SOMETIMES_STRING = 'sometimes|string';
+
     public function __construct(
         private PhysicalMailService $mailService
     ) {}
@@ -121,25 +123,25 @@ class PhysicalMailController extends Controller
         $validated = $request->validate([
             'type' => 'required|in:letter,postcard,cheque,self_mailer',
             'to' => 'required|array',
-            'to.firstName' => 'sometimes|string',
-            'to.lastName' => 'sometimes|string',
-            'to.companyName' => 'sometimes|string',
+            'to.firstName' => self::VALIDATION_SOMETIMES_STRING,
+            'to.lastName' => self::VALIDATION_SOMETIMES_STRING,
+            'to.companyName' => self::VALIDATION_SOMETIMES_STRING,
             'to.addressLine1' => 'required|string',
-            'to.addressLine2' => 'sometimes|string',
-            'to.city' => 'sometimes|string',
-            'to.provinceOrState' => 'sometimes|string',
-            'to.postalOrZip' => 'sometimes|string',
+            'to.addressLine2' => self::VALIDATION_SOMETIMES_STRING,
+            'to.city' => self::VALIDATION_SOMETIMES_STRING,
+            'to.provinceOrState' => self::VALIDATION_SOMETIMES_STRING,
+            'to.postalOrZip' => self::VALIDATION_SOMETIMES_STRING,
             'to.country' => 'sometimes|string|size:2',
             'from' => 'sometimes|array',
-            'template' => 'sometimes|string',
-            'content' => 'sometimes|string',
+            'template' => self::VALIDATION_SOMETIMES_STRING,
+            'content' => self::VALIDATION_SOMETIMES_STRING,
             'pdf' => 'sometimes|url',
             'color' => 'sometimes|boolean',
             'double_sided' => 'sometimes|boolean',
             'address_placement' => 'sometimes|in:top_first_page,insert_blank_page',
-            'size' => 'sometimes|string',
+            'size' => self::VALIDATION_SOMETIMES_STRING,
             'merge_variables' => 'sometimes|array',
-            'mailing_class' => 'sometimes|string',
+            'mailing_class' => self::VALIDATION_SOMETIMES_STRING,
             'extra_service' => 'sometimes|in:certified,certified_return_receipt,registered',
             'metadata' => 'sometimes|array',
             'send_date' => 'sometimes|date',
