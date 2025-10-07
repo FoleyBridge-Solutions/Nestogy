@@ -20,54 +20,91 @@ class RoutesDomainList extends Command
         $domains = $routeManager->getDomainConfig();
         $registered = $routeManager->getRegisteredDomains();
 
-        $enabledOnly = $this->option('enabled');
-        $disabledOnly = $this->option('disabled');
-
         $headers = ['Domain', 'Status', 'Middleware', 'Prefix', 'Priority', 'Description'];
+        $rows = $this->buildTableRows($domains, $registered);
+
+        $this->table($headers, $rows);
+
+        $this->displaySummary($domains, $registered);
+
+        return self::SUCCESS;
+    }
+
+    protected function buildTableRows(array $domains, array $registered): array
+    {
         $rows = [];
 
         foreach ($domains as $name => $config) {
-            $enabled = $config['enabled'] ?? true;
-
-            if ($enabledOnly && ! $enabled) {
+            if ($this->shouldSkipDomain($config)) {
                 continue;
-            }
-            if ($disabledOnly && $enabled) {
-                continue;
-            }
-
-            $status = $enabled ?
-                (isset($registered[$name]) ? '<info>✓ Registered</info>' : '<comment>⚠ Enabled but not registered</comment>') :
-                '<error>✗ Disabled</error>';
-
-            // Handle different config structures
-            $middleware = 'Defined in routes';
-            if (isset($config['middleware'])) {
-                $middleware = is_array($config['middleware']) ?
-                    implode(', ', $config['middleware']) :
-                    $config['middleware'];
-            } elseif (($config['apply_grouping'] ?? true) === false) {
-                $middleware = 'Self-managed';
             }
 
             $rows[] = [
                 $name,
-                $status,
-                $middleware,
+                $this->getDomainStatus($config, $name, $registered),
+                $this->getMiddlewareDisplay($config),
                 $config['prefix'] ?? '—',
                 $config['priority'] ?? 100,
                 $config['description'] ?? '—',
             ];
         }
 
-        $this->table($headers, $rows);
+        return $rows;
+    }
 
+    protected function shouldSkipDomain(array $config): bool
+    {
+        $enabled = $config['enabled'] ?? true;
+        $enabledOnly = $this->option('enabled');
+        $disabledOnly = $this->option('disabled');
+
+        if ($enabledOnly && ! $enabled) {
+            return true;
+        }
+
+        if ($disabledOnly && $enabled) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function getDomainStatus(array $config, string $name, array $registered): string
+    {
+        $enabled = $config['enabled'] ?? true;
+
+        if (! $enabled) {
+            return '<error>✗ Disabled</error>';
+        }
+
+        if (isset($registered[$name])) {
+            return '<info>✓ Registered</info>';
+        }
+
+        return '<comment>⚠ Enabled but not registered</comment>';
+    }
+
+    protected function getMiddlewareDisplay(array $config): string
+    {
+        if (isset($config['middleware'])) {
+            return is_array($config['middleware']) ?
+                implode(', ', $config['middleware']) :
+                $config['middleware'];
+        }
+
+        if (($config['apply_grouping'] ?? true) === false) {
+            return 'Self-managed';
+        }
+
+        return 'Defined in routes';
+    }
+
+    protected function displaySummary(array $domains, array $registered): void
+    {
         $this->newLine();
         $this->info('Total domains: '.count($domains));
         $this->info('Registered: '.count($registered));
         $this->info('Enabled: '.count(array_filter($domains, fn ($config) => $config['enabled'] ?? true)));
-
-        return self::SUCCESS;
     }
 
     protected function validateDomains(DomainRouteManager $routeManager): int
