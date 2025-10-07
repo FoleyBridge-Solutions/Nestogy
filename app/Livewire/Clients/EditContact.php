@@ -244,12 +244,21 @@ class EditContact extends Component
 
     public function update()
     {
-        // Validate all tabs at once for final save
         $this->activeTab = 'all';
         $this->validate();
 
+        $contactData = $this->prepareContactData();
+        $this->contact->update($contactData);
+        $this->ensureSinglePrimaryContact();
+
+        session()->flash('success', 'Contact updated successfully.');
+
+        return redirect()->route('clients.contacts.show', $this->contact);
+    }
+
+    protected function prepareContactData(): array
+    {
         $contactData = [
-            // Basic information
             'name' => $this->name,
             'title' => $this->title,
             'email' => $this->email,
@@ -259,19 +268,16 @@ class EditContact extends Component
             'department' => $this->department,
             'role' => $this->role,
             'notes' => $this->notes,
-            // Contact type
             'primary' => $this->primary,
             'billing' => $this->billing,
             'technical' => $this->technical,
             'important' => $this->important,
-            // Communication preferences
             'preferred_contact_method' => $this->preferred_contact_method,
             'best_time_to_contact' => $this->best_time_to_contact,
             'timezone' => $this->timezone ?: null,
             'language' => $this->language,
             'do_not_disturb' => $this->do_not_disturb,
             'marketing_opt_in' => $this->marketing_opt_in,
-            // Professional details
             'linkedin_url' => $this->linkedin_url ?: null,
             'assistant_name' => $this->assistant_name ?: null,
             'assistant_email' => $this->assistant_email ?: null,
@@ -279,29 +285,42 @@ class EditContact extends Component
             'reports_to_id' => $this->reports_to_id,
             'work_schedule' => $this->work_schedule ?: null,
             'professional_bio' => $this->professional_bio ?: null,
-            // Location & Availability
             'office_location_id' => $this->office_location_id,
             'is_emergency_contact' => $this->is_emergency_contact,
             'is_after_hours_contact' => $this->is_after_hours_contact,
             'out_of_office_start' => $this->out_of_office_start ?: null,
             'out_of_office_end' => $this->out_of_office_end ?: null,
-            // Social & Web presence
             'website' => $this->website ?: null,
             'twitter_handle' => $this->twitter_handle ?: null,
             'facebook_url' => $this->facebook_url ?: null,
             'instagram_handle' => $this->instagram_handle ?: null,
             'company_blog' => $this->company_blog ?: null,
-            // Portal access
             'has_portal_access' => $this->has_portal_access,
             'auth_method' => $this->has_portal_access ? $this->auth_method : null,
             'portal_permissions' => $this->has_portal_access ? $this->portal_permissions : [],
         ];
 
-        // Handle password if portal access is enabled and password is provided
-        if ($this->has_portal_access && $this->password) {
+        if ($this->shouldUpdatePassword()) {
             $contactData['password_hash'] = bcrypt($this->password);
             $contactData['password_changed_at'] = now();
         }
+
+        return $contactData;
+    }
+
+    protected function shouldUpdatePassword(): bool
+    {
+        return $this->has_portal_access && $this->password;
+    }
+
+    protected function ensureSinglePrimaryContact(): void
+    {
+        if ($this->contact->primary) {
+            Contact::where('client_id', $this->contact->client_id)
+                ->where('id', '!=', $this->contact->id)
+                ->update(['primary' => false]);
+        }
+    }
 
         $this->contact->update($contactData);
 
