@@ -20,6 +20,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ClientController extends BaseController
 {
+    private const CONTENT_TYPE_CSV = 'text/csv';
+
     protected $clientService;
 
     protected $metricsService;
@@ -657,7 +659,7 @@ class ClientController extends BaseController
         $filename = 'clients-'.now()->format('Y-m-d').'.csv';
 
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => self::CONTENT_TYPE_CSV,
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
@@ -902,7 +904,7 @@ class ClientController extends BaseController
     public function downloadTemplate()
     {
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => self::CONTENT_TYPE_CSV,
             'Content-Disposition' => 'attachment; filename="clients-import-template.csv"',
         ];
 
@@ -1539,7 +1541,7 @@ class ClientController extends BaseController
             fputcsv($output, $sampleData);
             fclose($output);
         }, $filename, [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => self::CONTENT_TYPE_CSV,
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
