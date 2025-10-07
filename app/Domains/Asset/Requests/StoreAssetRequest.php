@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class StoreAssetRequest extends FormRequest
 {
+    private const MAX_STRING_LENGTH = 'max:255';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -22,18 +24,18 @@ class StoreAssetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', self::MAX_STRING_LENGTH],
             'type' => ['required', Rule::in(Asset::TYPES)],
             'description' => ['nullable', 'string', 'max:1000'],
-            'make' => ['nullable', 'string', 'max:255'],
-            'model' => ['nullable', 'string', 'max:255'],
-            'serial' => ['nullable', 'string', 'max:255'],
-            'os' => ['nullable', 'string', 'max:255'],
+            'make' => ['nullable', 'string', self::MAX_STRING_LENGTH],
+            'model' => ['nullable', 'string', self::MAX_STRING_LENGTH],
+            'serial' => ['nullable', 'string', self::MAX_STRING_LENGTH],
+            'os' => ['nullable', 'string', self::MAX_STRING_LENGTH],
             'ip' => ['nullable', 'ip'],
             'nat_ip' => ['nullable', 'ip'],
             'mac' => ['nullable', 'string', 'max:17'],
-            'uri' => ['nullable', 'url', 'max:255'],
-            'uri_2' => ['nullable', 'url', 'max:255'],
+            'uri' => ['nullable', 'url', self::MAX_STRING_LENGTH],
+            'uri_2' => ['nullable', 'url', self::MAX_STRING_LENGTH],
             'status' => ['required', Rule::in(Asset::STATUSES)],
             'purchase_date' => ['nullable', 'date'],
             'warranty_expire' => ['nullable', 'date', 'after:today'],
@@ -70,7 +72,7 @@ class StoreAssetRequest extends FormRequest
                     $query->where('company_id', $this->user()->company_id);
                 }),
             ],
-            'rmm_id' => ['nullable', 'string', 'max:255'],
+            'rmm_id' => ['nullable', 'string', self::MAX_STRING_LENGTH],
         ];
     }
 
