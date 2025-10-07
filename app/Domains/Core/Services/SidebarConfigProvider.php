@@ -1373,32 +1373,55 @@ class SidebarConfigProvider
         $filteredSections = [];
 
         foreach ($config['sections'] as $sectionKey => $section) {
-            // Check section-level permissions
-            if (isset($section['permission']) && ! $this->userHasPermission($user, $section['permission'])) {
-                continue;
-            }
-
-            // Filter items within section
-            if (isset($section['items'])) {
-                $filteredItems = [];
-                foreach ($section['items'] as $item) {
-                    if (! isset($item['permission']) || $this->userHasPermission($user, $item['permission'])) {
-                        $filteredItems[] = $item;
-                    }
-                }
-
-                if (! empty($filteredItems)) {
-                    $section['items'] = $filteredItems;
-                    $filteredSections[] = $section;
-                }
-            } else {
-                $filteredSections[] = $section;
+            $filteredSection = $this->filterSection($section, $user);
+            
+            if ($filteredSection !== null) {
+                $filteredSections[] = $filteredSection;
             }
         }
 
         $config['sections'] = $filteredSections;
 
         return $config;
+    }
+
+    /**
+     * Filter a single section based on user permissions
+     */
+    protected function filterSection(array $section, $user): ?array
+    {
+        if (isset($section['permission']) && ! $this->userHasPermission($user, $section['permission'])) {
+            return null;
+        }
+
+        if (! isset($section['items'])) {
+            return $section;
+        }
+
+        $filteredItems = $this->filterSectionItems($section['items'], $user);
+
+        if (empty($filteredItems)) {
+            return null;
+        }
+
+        $section['items'] = $filteredItems;
+        return $section;
+    }
+
+    /**
+     * Filter items within a section based on user permissions
+     */
+    protected function filterSectionItems(array $items, $user): array
+    {
+        $filteredItems = [];
+
+        foreach ($items as $item) {
+            if (! isset($item['permission']) || $this->userHasPermission($user, $item['permission'])) {
+                $filteredItems[] = $item;
+            }
+        }
+
+        return $filteredItems;
     }
 
     /**
