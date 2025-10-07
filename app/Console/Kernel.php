@@ -8,6 +8,8 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
+    private const MORNING_NOTIFICATION_TIME = '08:00';
+
     /**
      * Define the application's command schedule.
      *
@@ -132,7 +134,7 @@ class Kernel extends ConsoleKernel
         // Send project deadline reminders
         $schedule->command('projects:send-deadline-reminders')
             ->daily()
-            ->at('08:00')
+            ->at(self::MORNING_NOTIFICATION_TIME)
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/project-reminders.log'));
 
@@ -189,14 +191,14 @@ class Kernel extends ConsoleKernel
         // Send daily digest emails to users
         $schedule->command('digest:send-daily')
             ->daily()
-            ->at('08:00')
+            ->at(self::MORNING_NOTIFICATION_TIME)
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/daily-digest.log'));
         
         // Send manager daily digest
         $schedule->command('digest:send-manager')
             ->daily()
-            ->at('08:00')
+            ->at(self::MORNING_NOTIFICATION_TIME)
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/manager-digest.log'));
         $schedule->job(new \App\Jobs\SendSatisfactionSurveyReminders)
