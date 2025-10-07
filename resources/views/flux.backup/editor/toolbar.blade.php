@@ -17,8 +17,8 @@ $classes = Flux::classes()
         <?php else: ?>
             <?php if ($items !== null): ?>
                 <?php foreach (str($items)->explode(' ') as $item): ?>
-                    <?php if ($item === '|') $item = 'separator'; ?>
-                    <?php if ($item === '~') $item = 'spacer'; ?>
+                    <?php if ($item === '|') { $item = 'separator'; } ?>
+                    <?php if ($item === '~') { $item = 'spacer'; } ?>
                     <flux:delegate-component :component="'editor.' . $item"></flux:delegate-component>
                 <?php endforeach; ?>
             <?php else: ?>
