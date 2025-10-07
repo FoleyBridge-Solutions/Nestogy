@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\DB;
  */
 class SentimentAnalyticsController extends Controller
 {
+    private const COLOR_RED = '#ef4444';
+
     /**
      * Display sentiment analytics dashboard
      */
@@ -166,7 +168,7 @@ class SentimentAnalyticsController extends Controller
             ],
             'tickets_needing_attention' => [
                 'value' => $negativeTicketsNeedingAttention,
-                'color' => $negativeTicketsNeedingAttention > 0 ? '#ef4444' : '#10b981',
+                'color' => $negativeTicketsNeedingAttention > 0 ? self::COLOR_RED : '#10b981',
             ],
             'sentiment_distribution' => [
                 'positive' => $sentimentCounts->get('POSITIVE')->count ?? 0,
@@ -360,7 +362,7 @@ class SentimentAnalyticsController extends Controller
             return [
                 'score' => round($score, 1),
                 'label' => 'Critical',
-                'color' => '#ef4444',
+                'color' => self::COLOR_RED,
                 'risk_level' => 'Critical',
             ];
         }
@@ -537,6 +539,6 @@ class SentimentAnalyticsController extends Controller
             return '#f97316';
         }
 
-        return '#ef4444';
+        return self::COLOR_RED;
     }
 }
