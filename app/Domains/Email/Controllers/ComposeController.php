@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ComposeController extends Controller
 {
+    private const VALIDATION_RULE_ATTACHMENTS_WILDCARD = 'attachments.*';
+
     public function __construct(
         private EmailService $emailService
     ) {}
@@ -68,7 +70,7 @@ class ComposeController extends Controller
             'signature_id' => 'nullable|exists:email_signatures,id',
             'save_as_draft' => 'boolean',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:25600', // 25MB max
+            self::VALIDATION_RULE_ATTACHMENTS_WILDCARD => 'file|max:25600', // 25MB max
         ]);
 
         if ($validator->fails()) {
@@ -254,7 +256,7 @@ class ComposeController extends Controller
             'reply_all' => 'boolean',
             'signature_id' => 'nullable|exists:email_signatures,id',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:25600',
+            self::VALIDATION_RULE_ATTACHMENTS_WILDCARD => 'file|max:25600',
         ]);
 
         if ($validator->fails()) {
@@ -310,7 +312,7 @@ class ComposeController extends Controller
             'include_attachments' => 'boolean',
             'signature_id' => 'nullable|exists:email_signatures,id',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:25600',
+            self::VALIDATION_RULE_ATTACHMENTS_WILDCARD => 'file|max:25600',
         ]);
 
         if ($validator->fails()) {
