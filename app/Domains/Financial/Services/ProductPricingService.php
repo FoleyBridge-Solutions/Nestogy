@@ -20,25 +20,14 @@ class ProductPricingService
         $appliedRules = collect();
         $breakdown = [];
 
-        // Get applicable pricing rules
         $rules = $this->getApplicablePricingRules($product, $client, $quantity);
 
-        // Apply rules in priority order
         foreach ($rules as $rule) {
             if (! $rule->isValid()) {
                 continue;
             }
 
-            // Check if rule can be combined with already applied rules
-            $canApply = true;
-            foreach ($appliedRules as $appliedRule) {
-                if (! $rule->canCombineWith($appliedRule)) {
-                    $canApply = false;
-                    break;
-                }
-            }
-
-            if (! $canApply) {
+            if (! $this->canApplyRule($rule, $appliedRules)) {
                 continue;
             }
 
@@ -57,7 +46,6 @@ class ProductPricingService
             }
         }
 
-        // Apply product-specific discounts if no rules override
         if ($appliedRules->isEmpty() && $product->discount_percentage) {
             $finalPrice = $basePrice * (1 - $product->discount_percentage / 100);
             $breakdown[] = [
@@ -68,7 +56,6 @@ class ProductPricingService
             ];
         }
 
-        // Calculate totals
         $subtotal = $finalPrice * $quantity;
         $tax = $this->calculateTax($product, $subtotal, $client);
         $total = $subtotal + ($product->tax_inclusive ? 0 : $tax);
@@ -146,6 +133,20 @@ class ProductPricingService
             'items' => $itemDetails,
             'selected_products' => $selectedProductIds ?? [],
         ];
+    }
+
+    /**
+     * Check if a rule can be applied with already applied rules
+     */
+    protected function canApplyRule(PricingRule $rule, Collection $appliedRules): bool
+    {
+        foreach ($appliedRules as $appliedRule) {
+            if (! $rule->canCombineWith($appliedRule)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
