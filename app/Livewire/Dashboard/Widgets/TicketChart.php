@@ -85,7 +85,7 @@ class TicketChart extends Component
         $data = [];
         $statusConfig = [
             'open' => ['label' => 'Open', 'color' => 'blue', 'order' => 1],
-            'in-progress' => ['label' => 'In Progress', 'color' => 'yellow', 'order' => 2],
+            'in-progress' => ['label' => Ticket::STATUS_IN_PROGRESS, 'color' => 'yellow', 'order' => 2],
             'in_progress' => ['label' => 'In_progress', 'color' => 'yellow', 'order' => 2], // Handle underscore variant
             'waiting' => ['label' => 'Waiting', 'color' => 'orange', 'order' => 3],
             'on-hold' => ['label' => 'On Hold', 'color' => 'purple', 'order' => 4],
@@ -242,12 +242,12 @@ class TicketChart extends Component
 
         // Open tickets (only relevant for current and all)
         $openTickets = $this->ticketFilter !== 'historical'
-            ? (clone $baseQuery)->whereIn('status', ['open', 'Open', 'in-progress', 'In-Progress', 'In Progress', 'in_progress', 'In_progress', 'waiting', 'Waiting'])->count()
+            ? (clone $baseQuery)->whereIn('status', ['open', 'Open', 'in-progress', 'In-Progress', Ticket::STATUS_IN_PROGRESS, 'in_progress', 'In_progress', 'waiting', 'Waiting'])->count()
             : 0;
 
         // In progress tickets (only relevant for current and all)
         $inProgressTickets = $this->ticketFilter !== 'historical'
-            ? (clone $baseQuery)->whereIn('status', ['in-progress', 'In-Progress', 'In Progress', 'in_progress', 'In_progress'])->count()
+            ? (clone $baseQuery)->whereIn('status', ['in-progress', 'In-Progress', Ticket::STATUS_IN_PROGRESS, 'in_progress', 'In_progress'])->count()
             : 0;
 
         // Critical tickets (always from active tickets only)
