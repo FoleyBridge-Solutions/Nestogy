@@ -359,6 +359,9 @@ class AssetBasedCalculator implements BillingCalculatorInterface
             case 'annually':
                 $nextBilling->modify('+1 year');
                 break;
+            default:
+                $nextBilling->modify('+1 month');
+                break;
         }
 
         return $nextBilling;
