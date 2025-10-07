@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
+const EXPORT_CSV_PATH = '/export/csv';
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -258,7 +260,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{mailQueue}/retry', [\App\Domains\Email\Controllers\MailQueueController::class, 'retry'])->name('retry');
         Route::delete('/{mailQueue}/cancel', [\App\Domains\Email\Controllers\MailQueueController::class, 'cancel'])->name('cancel');
         Route::post('/process', [\App\Domains\Email\Controllers\MailQueueController::class, 'process'])->name('process');
-        Route::get('/export/csv', [\App\Domains\Email\Controllers\MailQueueController::class, 'export'])->name('export');
+        Route::get(EXPORT_CSV_PATH, [\App\Domains\Email\Controllers\MailQueueController::class, 'export'])->name('export');
     });
 
     // Client Management Routes
@@ -274,7 +276,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Client Actions
         Route::post('/validate-batch', [\App\Domains\Client\Controllers\ClientController::class, 'validateBatch'])->name('validate-batch');
         Route::post('/{client}/convert-lead', [\App\Domains\Client\Controllers\ClientController::class, 'convertLead'])->name('convert-lead');
-        Route::get('/export/csv', [\App\Domains\Client\Controllers\ClientController::class, 'exportCsv'])->name('export.csv');
+        Route::get(EXPORT_CSV_PATH, [\App\Domains\Client\Controllers\ClientController::class, 'exportCsv'])->name('export.csv');
         Route::get('/import-template', [\App\Domains\Client\Controllers\ClientController::class, 'downloadTemplate'])->name('import.template');
         Route::get('/download-template', [\App\Domains\Client\Controllers\ClientController::class, 'downloadTemplate'])->name('download-template');
         Route::get('/leads/import', [\App\Domains\Client\Controllers\ClientController::class, 'leadsImportForm'])->name('leads.import');
@@ -415,7 +417,7 @@ Route::middleware(['auth', 'verified'])->prefix('products')->name('products.')->
     Route::delete('/{product}', [\App\Domains\Product\Controllers\ProductController::class, 'destroy'])->name('destroy');
     Route::post('/{product}/duplicate', [\App\Domains\Product\Controllers\ProductController::class, 'duplicate'])->name('duplicate');
     Route::post('/bulk-update', [\App\Domains\Product\Controllers\ProductController::class, 'bulkUpdate'])->name('bulk-update');
-    Route::get('/export/csv', [\App\Domains\Product\Controllers\ProductController::class, 'export'])->name('export');
+    Route::get(EXPORT_CSV_PATH, [\App\Domains\Product\Controllers\ProductController::class, 'export'])->name('export');
     Route::get('/import/form', [\App\Domains\Product\Controllers\ProductController::class, 'import'])->name('import');
     Route::post('/import/process', [\App\Domains\Product\Controllers\ProductController::class, 'processImport'])->name('import.process');
 });
@@ -457,7 +459,7 @@ Route::middleware(['auth', 'verified'])->prefix('services')->name('services.')->
     Route::post('/{service}/duplicate', [\App\Domains\Product\Controllers\ServiceController::class, 'duplicate'])->name('duplicate');
     Route::post('/{service}/calculate-price', [\App\Domains\Product\Controllers\ServiceController::class, 'calculatePrice'])->name('calculate-price');
     Route::post('/bulk-update', [\App\Domains\Product\Controllers\ServiceController::class, 'bulkUpdate'])->name('bulk-update');
-    Route::get('/export/csv', [\App\Domains\Product\Controllers\ServiceController::class, 'export'])->name('export');
+    Route::get(EXPORT_CSV_PATH, [\App\Domains\Product\Controllers\ServiceController::class, 'export'])->name('export');
 
     // Tax calculation routes (legacy - kept for backwards compatibility)
     Route::post('/calculate-tax', [\App\Domains\Financial\Controllers\Api\ServiceTaxController::class, 'calculateTax'])->name('calculate-tax');
