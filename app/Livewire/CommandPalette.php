@@ -18,6 +18,8 @@ use Livewire\Component;
 
 class CommandPalette extends Component
 {
+    private const QUICK_ACTION_SUBTITLE = 'Quick Action';
+
     public $isOpen = false;
 
     public $search = '';
@@ -445,12 +447,12 @@ class CommandPalette extends Component
 
         // Quick action mappings for create/new actions (these are hardcoded for common actions)
         $quickActionMappings = [
-            ['keywords' => ['new ticket', 'create ticket'], 'action' => ['title' => 'Create New Ticket', 'subtitle' => 'Quick Action', 'route_name' => 'tickets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
-            ['keywords' => ['new client', 'add client'], 'action' => ['title' => 'Add New Client', 'subtitle' => 'Quick Action', 'route_name' => 'clients.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
-            ['keywords' => ['new invoice', 'create invoice'], 'action' => ['title' => 'Create Invoice', 'subtitle' => 'Quick Action', 'route_name' => 'financial.invoices.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
-            ['keywords' => ['new project', 'create project'], 'action' => ['title' => 'Create New Project', 'subtitle' => 'Quick Action', 'route_name' => 'projects.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
-            ['keywords' => ['new asset', 'add asset'], 'action' => ['title' => 'Add New Asset', 'subtitle' => 'Quick Action', 'route_name' => 'assets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
-            ['keywords' => ['compose email', 'send email', 'write email'], 'action' => ['title' => 'Compose Email', 'subtitle' => 'Quick Action', 'route_name' => 'email.compose.index', 'route_params' => [], 'icon' => 'pencil-square', 'type' => 'quick_action']],
+            ['keywords' => ['new ticket', 'create ticket'], 'action' => ['title' => 'Create New Ticket', 'subtitle' => self::QUICK_ACTION_SUBTITLE, 'route_name' => 'tickets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['new client', 'add client'], 'action' => ['title' => 'Add New Client', 'subtitle' => self::QUICK_ACTION_SUBTITLE, 'route_name' => 'clients.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['new invoice', 'create invoice'], 'action' => ['title' => 'Create Invoice', 'subtitle' => self::QUICK_ACTION_SUBTITLE, 'route_name' => 'financial.invoices.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['new project', 'create project'], 'action' => ['title' => 'Create New Project', 'subtitle' => self::QUICK_ACTION_SUBTITLE, 'route_name' => 'projects.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['new asset', 'add asset'], 'action' => ['title' => 'Add New Asset', 'subtitle' => self::QUICK_ACTION_SUBTITLE, 'route_name' => 'assets.create', 'route_params' => [], 'icon' => 'plus-circle', 'type' => 'quick_action']],
+            ['keywords' => ['compose email', 'send email', 'write email'], 'action' => ['title' => 'Compose Email', 'subtitle' => self::QUICK_ACTION_SUBTITLE, 'route_name' => 'email.compose.index', 'route_params' => [], 'icon' => 'pencil-square', 'type' => 'quick_action']],
         ];
 
         foreach ($quickActionMappings as $mapping) {
