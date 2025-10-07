@@ -147,55 +147,12 @@ class AssetSelectorFieldType implements ContractFieldInterface
         $assetIds = is_array($value) ? $value : [$value];
         $errors = [];
 
-        // Check if assets exist and are accessible
-        $companyId = Auth::user()->company_id;
-        $query = Asset::where('company_id', $companyId)->whereIn('id', $assetIds);
-
-        // Apply client scoping if configured
-        if ($this->config['client_scoped'] && ! empty($context['client_id'])) {
-            $query->where('client_id', $context['client_id']);
-        }
-
-        // Apply asset type filter
-        if (! empty($this->config['asset_types'])) {
-            $query->whereIn('type', $this->config['asset_types']);
-        }
-
-        // Apply status filter
-        if (! empty($this->config['status_filter'])) {
-            $query->whereIn('status', $this->config['status_filter']);
-        }
-
-        // Apply excluded assets
-        if (! empty($this->config['excluded_assets'])) {
-            $query->whereNotIn('id', $this->config['excluded_assets']);
-        }
-
-        $validAssets = $query->get();
+        $validAssets = $this->getValidAssets($assetIds, $context);
         $validAssetIds = $validAssets->pluck('id')->toArray();
 
-        // Check for invalid asset IDs
-        $invalidIds = array_diff($assetIds, $validAssetIds);
-        if (! empty($invalidIds)) {
-            $errors[] = 'Selected assets are not valid or accessible: '.implode(', ', $invalidIds);
-        }
-
-        // Check maximum selections
-        if ($this->config['max_selections'] && count($assetIds) > $this->config['max_selections']) {
-            $errors[] = "Maximum {$this->config['max_selections']} assets can be selected";
-        }
-
-        // Check required tags
-        if (! empty($this->config['required_tags'])) {
-            foreach ($validAssets as $asset) {
-                $assetTags = $asset->tags ?? [];
-                $hasRequiredTags = ! empty(array_intersect($this->config['required_tags'], $assetTags));
-
-                if (! $hasRequiredTags) {
-                    $errors[] = "Asset '{$asset->name}' does not have required tags: ".implode(', ', $this->config['required_tags']);
-                }
-            }
-        }
+        $this->validateAssetIds($assetIds, $validAssetIds, $errors);
+        $this->validateMaxSelections($assetIds, $errors);
+        $this->validateRequiredTags($validAssets, $errors);
 
         return empty($errors) ?
             ValidationResult::success(['validated_assets' => $validAssets]) :
@@ -644,6 +601,66 @@ class AssetSelectorFieldType implements ContractFieldInterface
             'asset_breakdown' => $assetsByType->map->count()->toArray(),
             'primary_types' => $assetsByType->keys()->take(3)->toArray(),
         ];
+    }
+
+    protected function getValidAssets(array $assetIds, array $context): \Illuminate\Support\Collection
+    {
+        $companyId = Auth::user()->company_id;
+        $query = Asset::where('company_id', $companyId)->whereIn('id', $assetIds);
+
+        $this->applyAssetFilters($query, $context);
+
+        return $query->get();
+    }
+
+    protected function applyAssetFilters($query, array $context): void
+    {
+        if ($this->config['client_scoped'] && ! empty($context['client_id'])) {
+            $query->where('client_id', $context['client_id']);
+        }
+
+        if (! empty($this->config['asset_types'])) {
+            $query->whereIn('type', $this->config['asset_types']);
+        }
+
+        if (! empty($this->config['status_filter'])) {
+            $query->whereIn('status', $this->config['status_filter']);
+        }
+
+        if (! empty($this->config['excluded_assets'])) {
+            $query->whereNotIn('id', $this->config['excluded_assets']);
+        }
+    }
+
+    protected function validateAssetIds(array $assetIds, array $validAssetIds, array &$errors): void
+    {
+        $invalidIds = array_diff($assetIds, $validAssetIds);
+        if (! empty($invalidIds)) {
+            $errors[] = 'Selected assets are not valid or accessible: '.implode(', ', $invalidIds);
+        }
+    }
+
+    protected function validateMaxSelections(array $assetIds, array &$errors): void
+    {
+        if ($this->config['max_selections'] && count($assetIds) > $this->config['max_selections']) {
+            $errors[] = "Maximum {$this->config['max_selections']} assets can be selected";
+        }
+    }
+
+    protected function validateRequiredTags(\Illuminate\Support\Collection $validAssets, array &$errors): void
+    {
+        if (empty($this->config['required_tags'])) {
+            return;
+        }
+
+        foreach ($validAssets as $asset) {
+            $assetTags = $asset->tags ?? [];
+            $hasRequiredTags = ! empty(array_intersect($this->config['required_tags'], $assetTags));
+
+            if (! $hasRequiredTags) {
+                $errors[] = "Asset '{$asset->name}' does not have required tags: ".implode(', ', $this->config['required_tags']);
+            }
+        }
     }
 
     /**
