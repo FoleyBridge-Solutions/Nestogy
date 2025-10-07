@@ -11,6 +11,8 @@ class EditClient extends Component
 {
     use AuthorizesRequests, WithFileUploads;
 
+    private const NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     public Client $client;
 
     // Tab management
@@ -182,12 +184,12 @@ class EditClient extends Component
         return [
             'name' => 'required|string|max:255',
             'type' => 'nullable|in:individual,business',
-            'company_name' => 'nullable|string|max:255',
+            'company_name' => self::NULLABLE_STRING_255,
             'email' => 'required|email|max:255|unique:clients,email,'.$this->client->id,
             'phone' => 'nullable|string|max:50',
             'website' => 'nullable|url|max:255',
             'tax_id_number' => 'nullable|string|max:50',
-            'referral' => 'nullable|string|max:255',
+            'referral' => self::NULLABLE_STRING_255,
             'lead' => 'boolean',
 
             'address' => 'nullable|string|max:500',
@@ -196,8 +198,8 @@ class EditClient extends Component
             'zip_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
 
-            'billing_contact' => 'nullable|string|max:255',
-            'technical_contact' => 'nullable|string|max:255',
+            'billing_contact' => self::NULLABLE_STRING_255,
+            'technical_contact' => self::NULLABLE_STRING_255,
 
             'status' => 'required|in:active,inactive,suspended',
             'hourly_rate' => 'nullable|numeric|min:0',
@@ -223,7 +225,7 @@ class EditClient extends Component
             'contract_end_date' => 'nullable|date|after_or_equal:contract_start_date',
             'sla_id' => 'nullable|exists:slas,id',
 
-            'rmm_id' => 'nullable|string|max:255',
+            'rmm_id' => self::NULLABLE_STRING_255,
 
             'notes' => 'nullable|string',
             'avatar' => 'nullable|image|max:2048',
