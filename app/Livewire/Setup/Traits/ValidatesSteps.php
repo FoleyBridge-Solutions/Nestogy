@@ -7,6 +7,8 @@ use Illuminate\Validation\Rules\Password;
 
 trait ValidatesSteps
 {
+    private const NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     protected function validateCurrentStep(): bool
     {
         return match ($this->currentStep) {
@@ -27,7 +29,7 @@ trait ValidatesSteps
                 'company_email' => 'required|email|max:255',
                 'currency' => 'required|string|size:3|in:USD,EUR,GBP,CAD,AUD,JPY',
                 'company_phone' => 'nullable|string|max:20',
-                'company_address' => 'nullable|string|max:255',
+                'company_address' => self::NULLABLE_STRING_255,
                 'company_city' => 'nullable|string|max:100',
                 'company_state' => 'nullable|string|max:100',
                 'company_zip' => 'nullable|string|max:20',
@@ -59,10 +61,10 @@ trait ValidatesSteps
                 'smtp_host' => 'required|string|max:255',
                 'smtp_port' => 'required|integer|min:1|max:65535',
                 'smtp_encryption' => 'nullable|in:tls,ssl',
-                'smtp_username' => 'nullable|string|max:255',
-                'smtp_password' => 'nullable|string|max:255',
+                'smtp_username' => self::NULLABLE_STRING_255,
+                'smtp_password' => self::NULLABLE_STRING_255,
                 'mail_from_email' => 'nullable|email|max:255',
-                'mail_from_name' => 'nullable|string|max:255',
+                'mail_from_name' => self::NULLABLE_STRING_255,
             ], [
                 'smtp_host.required' => 'SMTP host is required for email configuration.',
                 'smtp_port.required' => 'SMTP port is required.',
