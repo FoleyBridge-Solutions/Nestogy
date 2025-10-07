@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ComposeController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     public function __construct(
         private EmailService $emailService
     ) {}
@@ -61,8 +63,8 @@ class ComposeController extends Controller
         $validator = Validator::make($request->all(), [
             'account_id' => 'required|exists:email_accounts,id',
             'to' => 'required|string',
-            'cc' => 'nullable|string',
-            'bcc' => 'nullable|string',
+            'cc' => self::VALIDATION_NULLABLE_STRING,
+            'bcc' => self::VALIDATION_NULLABLE_STRING,
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
             'signature_id' => 'nullable|exists:email_signatures,id',
@@ -304,9 +306,9 @@ class ComposeController extends Controller
 
         $validator = Validator::make($request->all(), [
             'to' => 'required|string',
-            'cc' => 'nullable|string',
-            'bcc' => 'nullable|string',
-            'body' => 'nullable|string',
+            'cc' => self::VALIDATION_NULLABLE_STRING,
+            'bcc' => self::VALIDATION_NULLABLE_STRING,
+            'body' => self::VALIDATION_NULLABLE_STRING,
             'include_attachments' => 'boolean',
             'signature_id' => 'nullable|exists:email_signatures,id',
             'attachments' => 'nullable|array',
