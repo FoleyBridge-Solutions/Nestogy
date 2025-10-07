@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class ContractController extends Controller
 {
+    private const VALIDATION_RULE_REQUIRED_STRING_255 = 'required|string|max:255';
+
     protected $contractService;
 
     protected $contractGenerationService;
@@ -494,7 +496,7 @@ class ContractController extends Controller
         $this->authorize('update', $contract);
 
         $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => self::VALIDATION_RULE_REQUIRED_STRING_255,
             'description' => 'nullable|string',
             'amendment_type' => 'required|in:pricing_change,term_extension,scope_modification,service_addition,service_removal,sla_modification,payment_terms,compliance_update,general_modification',
             'changes' => 'required|array',
@@ -1019,7 +1021,7 @@ class ContractController extends Controller
     public function templatesStore(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_RULE_REQUIRED_STRING_255,
             'description' => 'nullable|string',
             'template_type' => 'required|string',
             'billing_model' => 'required|string',
@@ -1140,7 +1142,7 @@ class ContractController extends Controller
     public function templatesUpdate(Request $request, \App\Domains\Contract\Models\ContractTemplate $template)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_RULE_REQUIRED_STRING_255,
             'description' => 'nullable|string',
             'template_type' => 'required|string',
             'billing_model' => 'required|string',
