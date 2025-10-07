@@ -177,6 +177,8 @@ class FluxSidebar extends Component
                            $selectedClient->invoices()->where('status', 'draft')->exists();
                 case 'has_assets':
                     return $selectedClient->assets()->count() > 0;
+                default:
+                    return true;
             }
         }
 
