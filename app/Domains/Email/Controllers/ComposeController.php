@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ComposeController extends Controller
 {
+    private const NULLABLE_ARRAY_RULE = 'nullable|array';
+
     public function __construct(
         private EmailService $emailService
     ) {}
@@ -67,7 +69,7 @@ class ComposeController extends Controller
             'body' => 'required|string',
             'signature_id' => 'nullable|exists:email_signatures,id',
             'save_as_draft' => 'boolean',
-            'attachments' => 'nullable|array',
+            'attachments' => self::NULLABLE_ARRAY_RULE,
             'attachments.*' => 'file|max:25600', // 25MB max
         ]);
 
@@ -253,7 +255,7 @@ class ComposeController extends Controller
             'body' => 'required|string',
             'reply_all' => 'boolean',
             'signature_id' => 'nullable|exists:email_signatures,id',
-            'attachments' => 'nullable|array',
+            'attachments' => self::NULLABLE_ARRAY_RULE,
             'attachments.*' => 'file|max:25600',
         ]);
 
@@ -309,7 +311,7 @@ class ComposeController extends Controller
             'body' => 'nullable|string',
             'include_attachments' => 'boolean',
             'signature_id' => 'nullable|exists:email_signatures,id',
-            'attachments' => 'nullable|array',
+            'attachments' => self::NULLABLE_ARRAY_RULE,
             'attachments.*' => 'file|max:25600',
         ]);
 
