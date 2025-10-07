@@ -11,6 +11,8 @@ class ScheduleManager extends Component
 {
     use AuthorizesRequests;
 
+    private const NULLABLE_STRING_RULE = 'nullable|string';
+
     public Contract $contract;
     public $schedules = [];
     public $selectedScheduleId = null;
@@ -85,8 +87,8 @@ class ScheduleManager extends Component
         $this->validate([
             'schedule_type' => 'required|string|in:A,B,C,D,E',
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'content' => 'nullable|string',
+            'description' => self::NULLABLE_STRING_RULE,
+            'content' => self::NULLABLE_STRING_RULE,
             'status' => 'required|string',
             'effective_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after:effective_date',
@@ -135,8 +137,8 @@ class ScheduleManager extends Component
         
         $this->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'content' => 'nullable|string',
+            'description' => self::NULLABLE_STRING_RULE,
+            'content' => self::NULLABLE_STRING_RULE,
             'status' => 'required|string',
             'effective_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after:effective_date',
