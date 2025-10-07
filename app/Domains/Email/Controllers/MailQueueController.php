@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 
 class MailQueueController extends Controller
 {
+    private const COUNT_AGGREGATE = 'count(*) as count';
+
     protected UnifiedMailService $mailService;
 
     public function __construct(UnifiedMailService $mailService)
@@ -160,7 +162,7 @@ class MailQueueController extends Controller
 
         // Status breakdown
         $stats['by_status'] = $query->clone()
-            ->select('status', DB::raw('count(*) as count'))
+            ->select('status', DB::raw(self::COUNT_AGGREGATE))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
@@ -168,14 +170,14 @@ class MailQueueController extends Controller
         // Category breakdown
         $stats['by_category'] = $query->clone()
             ->whereNotNull('category')
-            ->select('category', DB::raw('count(*) as count'))
+            ->select('category', DB::raw(self::COUNT_AGGREGATE))
             ->groupBy('category')
             ->pluck('count', 'category')
             ->toArray();
 
         // Priority breakdown
         $stats['by_priority'] = $query->clone()
-            ->select('priority', DB::raw('count(*) as count'))
+            ->select('priority', DB::raw(self::COUNT_AGGREGATE))
             ->groupBy('priority')
             ->pluck('count', 'priority')
             ->toArray();
