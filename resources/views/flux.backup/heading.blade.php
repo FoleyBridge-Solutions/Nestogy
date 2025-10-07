@@ -25,7 +25,7 @@ $classes = Flux::classes()
         <h1 {{ $attributes->class($classes) }} data-flux-heading>{{ $slot }}</h1>
 
         @break
-    <?php case(2): ?>
+    <?php case 2: ?>
         <h2 {{ $attributes->class($classes) }} data-flux-heading>{{ $slot }}</h2>
 
         @break
