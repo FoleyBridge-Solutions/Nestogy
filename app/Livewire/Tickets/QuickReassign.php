@@ -119,7 +119,7 @@ class QuickReassign extends Component
             TicketComment::create([
                 'ticket_id' => $ticket->id,
                 'company_id' => $ticket->company_id,
-                'content' => "Ticket reassigned from " . ($oldAssignee?->name ?? 'Unassigned') . 
+                'content' => "Ticket reassigned from " . ($oldAssignee?->name ?? 'Unassigned') .
                            " to " . $newAssignee->name . 
                            ($this->reassignReason ? "\n\nReason: " . $this->reassignReason : ''),
                 'visibility' => 'internal',
