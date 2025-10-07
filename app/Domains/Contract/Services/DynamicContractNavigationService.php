@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
  */
 class DynamicContractNavigationService
 {
+    private const CONTRACT_ROUTE_PARAMETER = '/{contract}';
+
     /**
      * Generate navigation menu for current company
      */
@@ -252,12 +254,12 @@ class DynamicContractNavigationService
                     Route::get('/', 'DynamicContractController@index')->name('index');
                     Route::get('/create', 'DynamicContractController@create')->name('create');
                     Route::post('/', 'DynamicContractController@store')->name('store');
-                    Route::get('/{contract}', 'DynamicContractController@show')->name('show');
-                    Route::get('/{contract}/edit', 'DynamicContractController@edit')->name('edit');
-                    Route::put('/{contract}', 'DynamicContractController@update')->name('update');
-                    Route::delete('/{contract}', 'DynamicContractController@destroy')->name('destroy');
-                    Route::get('/{contract}/pdf', 'DynamicContractController@pdf')->name('pdf');
-                    Route::post('/{contract}/status', 'DynamicContractController@updateStatus')->name('status');
+                    Route::get(self::CONTRACT_ROUTE_PARAMETER, 'DynamicContractController@show')->name('show');
+                    Route::get(self::CONTRACT_ROUTE_PARAMETER.'/edit', 'DynamicContractController@edit')->name('edit');
+                    Route::put(self::CONTRACT_ROUTE_PARAMETER, 'DynamicContractController@update')->name('update');
+                    Route::delete(self::CONTRACT_ROUTE_PARAMETER, 'DynamicContractController@destroy')->name('destroy');
+                    Route::get(self::CONTRACT_ROUTE_PARAMETER.'/pdf', 'DynamicContractController@pdf')->name('pdf');
+                    Route::post(self::CONTRACT_ROUTE_PARAMETER.'/status', 'DynamicContractController@updateStatus')->name('status');
                 });
             });
         }
