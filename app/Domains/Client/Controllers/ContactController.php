@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ContactController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     /**
      * ContactController constructor.
      */
@@ -139,13 +141,13 @@ class ContactController extends Controller
         $validator = Validator::make($request->all(), [
             // Basic Information
             'name' => 'required|string|max:255',
-            'title' => 'nullable|string|max:255',
+            'title' => self::VALIDATION_NULLABLE_STRING.'|max:255',
             'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'extension' => 'nullable|string|max:20',
-            'mobile' => 'nullable|string|max:50',
-            'department' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+            'phone' => self::VALIDATION_NULLABLE_STRING.'|max:50',
+            'extension' => self::VALIDATION_NULLABLE_STRING.'|max:20',
+            'mobile' => self::VALIDATION_NULLABLE_STRING.'|max:50',
+            'department' => self::VALIDATION_NULLABLE_STRING.'|max:255',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
 
             // Contact Types
             'primary' => 'boolean',
@@ -272,13 +274,13 @@ class ContactController extends Controller
         $validator = Validator::make($request->all(), [
             // Basic Information
             'name' => 'required|string|max:255',
-            'title' => 'nullable|string|max:255',
+            'title' => self::VALIDATION_NULLABLE_STRING.'|max:255',
             'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'extension' => 'nullable|string|max:20',
-            'mobile' => 'nullable|string|max:50',
-            'department' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+            'phone' => self::VALIDATION_NULLABLE_STRING.'|max:50',
+            'extension' => self::VALIDATION_NULLABLE_STRING.'|max:20',
+            'mobile' => self::VALIDATION_NULLABLE_STRING.'|max:50',
+            'department' => self::VALIDATION_NULLABLE_STRING.'|max:255',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
 
             // Contact Types
             'primary' => 'boolean',
