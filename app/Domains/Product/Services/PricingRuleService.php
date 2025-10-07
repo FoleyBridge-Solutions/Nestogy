@@ -47,10 +47,7 @@ class PricingRuleService
 
     protected function calculateAdjustedPrice(PricingRule $pricingRule, array $data)
     {
-        $basePrice = $data['price'] ?? 0;
-        
-        // Apply pricing rule logic
-        return $basePrice;
+        return $data['price'] ?? 0;
     }
 
     public function bulkUpdate(array $ruleIds, array $data)
