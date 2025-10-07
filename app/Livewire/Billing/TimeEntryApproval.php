@@ -278,7 +278,7 @@ class TimeEntryApproval extends Component
             );
 
             return response()->streamDownload(
-                fn () => print($export['content']),
+                fn () => print $export['content'],
                 $export['filename'],
                 ['Content-Type' => $export['mime_type']]
             );
