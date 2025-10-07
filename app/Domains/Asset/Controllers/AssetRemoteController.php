@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class AssetRemoteController extends Controller
 {
+    private const NO_RMM_MAPPING_MESSAGE = 'No RMM mapping found for this asset';
+
     protected AssetSyncService $syncService;
 
     public function __construct(AssetSyncService $syncService)
@@ -288,7 +290,7 @@ class AssetRemoteController extends Controller
             if (! $mapping) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No RMM mapping found for this asset',
+                    'message' => self::NO_RMM_MAPPING_MESSAGE,
                 ], 400);
             }
 
@@ -338,7 +340,7 @@ class AssetRemoteController extends Controller
             if (! $mapping) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No RMM mapping found for this asset',
+                    'message' => self::NO_RMM_MAPPING_MESSAGE,
                 ], 400);
             }
 
@@ -386,7 +388,7 @@ class AssetRemoteController extends Controller
             if (! $mapping) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No RMM mapping found for this asset',
+                    'message' => self::NO_RMM_MAPPING_MESSAGE,
                 ], 400);
             }
 
@@ -424,7 +426,7 @@ class AssetRemoteController extends Controller
             if (! $mapping) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No RMM mapping found for this asset',
+                    'message' => self::NO_RMM_MAPPING_MESSAGE,
                 ], 400);
             }
 
@@ -462,7 +464,7 @@ class AssetRemoteController extends Controller
             if (! $mapping) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No RMM mapping found for this asset',
+                    'message' => self::NO_RMM_MAPPING_MESSAGE,
                 ], 400);
             }
 
@@ -506,7 +508,7 @@ class AssetRemoteController extends Controller
             if (! $mapping) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No RMM mapping found for this asset',
+                    'message' => self::NO_RMM_MAPPING_MESSAGE,
                 ], 400);
             }
 
@@ -544,7 +546,7 @@ class AssetRemoteController extends Controller
             if (! $mapping) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No RMM mapping found for this asset',
+                    'message' => self::NO_RMM_MAPPING_MESSAGE,
                 ], 400);
             }
 
