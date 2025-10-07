@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ClientPortalController extends Controller
 {
+    private const MIME_TYPE_PDF = 'application/pdf';
+
     protected DigitalSignatureService $signatureService;
 
     public function __construct(DigitalSignatureService $signatureService)
@@ -264,7 +266,7 @@ class ClientPortalController extends Controller
             $pdf = $contract->generatePdf();
 
             return response($pdf, 200, [
-                'Content-Type' => 'application/pdf',
+                'Content-Type' => self::MIME_TYPE_PDF,
                 'Content-Disposition' => 'attachment; filename="contract-'.$contract->contract_number.'.pdf"',
             ]);
         } catch (\Exception $e) {
@@ -404,7 +406,7 @@ class ClientPortalController extends Controller
             $pdf = $invoice->generatePdf();
 
             return response($pdf, 200, [
-                'Content-Type' => 'application/pdf',
+                'Content-Type' => self::MIME_TYPE_PDF,
                 'Content-Disposition' => 'attachment; filename="invoice-'.$invoice->invoice_number.'.pdf"',
             ]);
         } catch (\Exception $e) {
@@ -419,7 +421,7 @@ class ClientPortalController extends Controller
     }
 
     /**
-     * Client profile/settings
+     * View milestone details
      */
     public function profile()
     {
@@ -901,7 +903,7 @@ class ClientPortalController extends Controller
             $pdf = $invoice->generatePdf();
 
             return response($pdf, 200, [
-                'Content-Type' => 'application/pdf',
+                'Content-Type' => self::MIME_TYPE_PDF,
                 'Content-Disposition' => 'attachment; filename="invoice-'.$invoice->invoice_number.'.pdf"',
             ]);
         } catch (\Exception $e) {
