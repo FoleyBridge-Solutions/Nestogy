@@ -92,7 +92,7 @@ class SendLetterJob extends BasePhysicalMailJob
     {
         // First handle Handlebars conditionals (remove them for now)
         $html = preg_replace('/\{\{#if[^}]+\}\}/', '', $html);
-        $html = preg_replace('/\{\{\/if\}\}/', '', $html);
+        $html = str_replace('{{/if}}', '', $html);
 
         // Replace nested variables (e.g., {{to.firstName}})
         foreach ($variables as $key => $value) {
