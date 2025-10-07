@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Validator;
 
 class SignatureController extends Controller
 {
+    private const NULLABLE_STRING_RULE = 'nullable|string';
+
     public function index()
     {
         $signatures = EmailSignature::forUser(Auth::id())
@@ -33,8 +35,8 @@ class SignatureController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'content_html' => 'nullable|string',
-            'content_text' => 'nullable|string',
+            'content_html' => self::NULLABLE_STRING_RULE,
+            'content_text' => self::NULLABLE_STRING_RULE,
             'email_account_id' => 'nullable|exists:email_accounts,id',
             'is_default' => 'boolean',
             'auto_append_replies' => 'boolean',
@@ -91,8 +93,8 @@ class SignatureController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'content_html' => 'nullable|string',
-            'content_text' => 'nullable|string',
+            'content_html' => self::NULLABLE_STRING_RULE,
+            'content_text' => self::NULLABLE_STRING_RULE,
             'email_account_id' => 'nullable|exists:email_accounts,id',
             'is_default' => 'boolean',
             'auto_append_replies' => 'boolean',
