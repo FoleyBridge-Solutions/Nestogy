@@ -70,13 +70,15 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
     // Contract Templates routes (must come before resource routes to avoid conflicts)
     Route::prefix('contracts')->name('contracts.')->group(function () {
         Route::prefix('templates')->name('templates.')->group(function () {
+            $templatePath = '/{template}';
+            
             Route::get('/', [ContractController::class, 'templatesIndex'])->name('index');
             Route::get('/create', [ContractController::class, 'templatesCreate'])->name('create');
             Route::post('/', [ContractController::class, 'templatesStore'])->name('store');
-            Route::get('/{template}', [ContractController::class, 'templatesShow'])->name('show');
-            Route::get('/{template}/edit', [ContractController::class, 'templatesEdit'])->name('edit');
-            Route::put('/{template}', [ContractController::class, 'templatesUpdate'])->name('update');
-            Route::delete('/{template}', [ContractController::class, 'templatesDestroy'])->name('destroy');
+            Route::get($templatePath, [ContractController::class, 'templatesShow'])->name('show');
+            Route::get($templatePath . '/edit', [ContractController::class, 'templatesEdit'])->name('edit');
+            Route::put($templatePath, [ContractController::class, 'templatesUpdate'])->name('update');
+            Route::delete($templatePath, [ContractController::class, 'templatesDestroy'])->name('destroy');
         });
     });
 
