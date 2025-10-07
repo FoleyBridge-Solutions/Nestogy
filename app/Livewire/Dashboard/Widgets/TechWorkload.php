@@ -66,9 +66,15 @@ class TechWorkload extends Component
 
     protected function getWorkloadColor($score)
     {
-        if ($score >= 50) return 'red';
-        if ($score >= 30) return 'orange';
-        if ($score >= 15) return 'yellow';
+        if ($score >= 50) {
+            return 'red';
+        }
+        if ($score >= 30) {
+            return 'orange';
+        }
+        if ($score >= 15) {
+            return 'yellow';
+        }
         return 'green';
     }
 
