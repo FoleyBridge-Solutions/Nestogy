@@ -7,8 +7,8 @@
         
         <div class="flex items-center gap-3 w-full sm:w-auto">
             <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                <button 
-                    wire:click="setViewMode('grid')" 
+                <button
+                    wire:click="setViewMode('grid')"
                     class="px-3 py-2 rounded {{ $viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow' : '' }}">
                     <i class="fas fa-th"></i>
                 </button>
