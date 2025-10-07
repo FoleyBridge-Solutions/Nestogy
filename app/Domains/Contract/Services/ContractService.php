@@ -2312,75 +2312,20 @@ class ContractService
     public function createFromBuilder(array $data, \App\Models\User $user): Contract
     {
         return DB::transaction(function () use ($data, $user) {
-            // Extract contract data and component assignments
             $contractData = $data['contract'] ?? $data;
             $componentAssignments = $data['components'] ?? [];
 
-            // Validate client access
             $client = Client::where('company_id', $user->company_id)
                 ->findOrFail($contractData['client_id']);
 
-            // Prepare contract data
-            $contractData['company_id'] = $user->company_id;
-            $contractData['created_by'] = $user->id;
-
-            // Set dynamic status defaults
-            $config = app(ContractConfigurationRegistry::class, ['companyId' => $user->company_id]);
-            $statuses = $config->getContractStatuses();
-            $signatureStatuses = $config->getContractSignatureStatuses();
-
-            $contractData['status'] = array_search('Draft', $statuses) ?: 'draft';
-            $contractData['signature_status'] = array_search('Pending', $signatureStatuses) ?: 'pending';
-            $contractData['currency_code'] = $contractData['currency_code'] ?? 'USD';
-            $contractData['is_programmable'] = true;
-
-            // Generate contract number
-            if (empty($contractData['contract_number'])) {
-                $contractData['contract_number'] = $this->generateContractNumber('PRG');
-            }
-
-            // Clean up empty values that should be null
-            if (isset($contractData['template_id']) && $contractData['template_id'] === '') {
-                $contractData['template_id'] = null;
-            }
-            if (isset($contractData['end_date']) && $contractData['end_date'] === '') {
-                $contractData['end_date'] = null;
-            }
-
-            // Create the contract
+            $contractData = $this->prepareBuilderContractData($contractData, $user);
             $contract = Contract::create($contractData);
 
-            // Create component assignments
-            foreach ($componentAssignments as $index => $assignmentData) {
-                $component = \App\Domains\Contract\Models\ContractComponent::where('company_id', $user->company_id)
-                    ->findOrFail($assignmentData['component']['id']);
+            $this->createComponentAssignments($contract, $componentAssignments, $user);
 
-                \App\Domains\Contract\Models\ContractComponentAssignment::create([
-                    'contract_id' => $contract->id,
-                    'component_id' => $component->id,
-                    'configuration' => [],
-                    'variable_values' => $assignmentData['variable_values'] ?? [],
-                    'pricing_override' => $assignmentData['has_pricing_override']
-                        ? $assignmentData['pricing_override']
-                        : null,
-                    'status' => 'active',
-                    'sort_order' => $index + 1,
-                    'assigned_by' => $user->id,
-                    'assigned_at' => now(),
-                ]);
-            }
-
-            // Calculate and update total value
-            $totalValue = $contract->componentAssignments()
-                ->with('component')
-                ->get()
-                ->sum(function ($assignment) {
-                    return $assignment->calculatePrice();
-                });
-
+            $totalValue = $this->calculateContractValueFromComponents($contract);
             $contract->update(['contract_value' => $totalValue]);
 
-            // Log activity
             activity()
                 ->performedOn($contract)
                 ->causedBy($user)
@@ -2393,6 +2338,75 @@ class ContractService
 
             return $contract;
         });
+    }
+
+    /**
+     * Prepare contract data for builder creation
+     */
+    protected function prepareBuilderContractData(array $contractData, \App\Models\User $user): array
+    {
+        $contractData['company_id'] = $user->company_id;
+        $contractData['created_by'] = $user->id;
+
+        $config = app(ContractConfigurationRegistry::class, ['companyId' => $user->company_id]);
+        $statuses = $config->getContractStatuses();
+        $signatureStatuses = $config->getContractSignatureStatuses();
+
+        $contractData['status'] = array_search('Draft', $statuses) ?: 'draft';
+        $contractData['signature_status'] = array_search('Pending', $signatureStatuses) ?: 'pending';
+        $contractData['currency_code'] = $contractData['currency_code'] ?? 'USD';
+        $contractData['is_programmable'] = true;
+
+        if (empty($contractData['contract_number'])) {
+            $contractData['contract_number'] = $this->generateContractNumber('PRG');
+        }
+
+        if (isset($contractData['template_id']) && $contractData['template_id'] === '') {
+            $contractData['template_id'] = null;
+        }
+        if (isset($contractData['end_date']) && $contractData['end_date'] === '') {
+            $contractData['end_date'] = null;
+        }
+
+        return $contractData;
+    }
+
+    /**
+     * Create component assignments for a contract
+     */
+    protected function createComponentAssignments(Contract $contract, array $componentAssignments, \App\Models\User $user): void
+    {
+        foreach ($componentAssignments as $index => $assignmentData) {
+            $component = \App\Domains\Contract\Models\ContractComponent::where('company_id', $user->company_id)
+                ->findOrFail($assignmentData['component']['id']);
+
+            \App\Domains\Contract\Models\ContractComponentAssignment::create([
+                'contract_id' => $contract->id,
+                'component_id' => $component->id,
+                'configuration' => [],
+                'variable_values' => $assignmentData['variable_values'] ?? [],
+                'pricing_override' => $assignmentData['has_pricing_override']
+                    ? $assignmentData['pricing_override']
+                    : null,
+                'status' => 'active',
+                'sort_order' => $index + 1,
+                'assigned_by' => $user->id,
+                'assigned_at' => now(),
+            ]);
+        }
+    }
+
+    /**
+     * Calculate contract total value from component assignments
+     */
+    protected function calculateContractValueFromComponents(Contract $contract): float
+    {
+        return $contract->componentAssignments()
+            ->with('component')
+            ->get()
+            ->sum(function ($assignment) {
+                return $assignment->calculatePrice();
+            });
     }
 
     /**
