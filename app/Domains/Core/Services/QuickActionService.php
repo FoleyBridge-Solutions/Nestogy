@@ -399,43 +399,59 @@ class QuickActionService
         ];
 
         if (isset($data['id']) && $data['id']) {
-            // Update existing
-            $action = CustomQuickAction::find($data['id']);
-            if ($action) {
-                // Check permissions
-                $canEdit = false;
-
-                // User can edit their own actions
-                if ($action->user_id === $user->id) {
-                    $canEdit = true;
-                }
-                // Super-admin can edit company actions
-                elseif ($action->visibility === 'company' && Bouncer::is($user)->an('super-admin')) {
-                    $canEdit = true;
-                }
-                // Admin can edit company actions if they have manage-quick-actions permission
-                elseif ($action->visibility === 'company' && $user->can('manage-quick-actions')) {
-                    $canEdit = true;
-                }
-                // Company admin can edit company actions
-                elseif ($action->visibility === 'company' &&
-                        $action->company_id === $user->company_id &&
-                        (Bouncer::is($user)->an('admin') || Bouncer::is($user)->an('company-admin'))) {
-                    $canEdit = true;
-                }
-
-                if (! $canEdit) {
-                    throw new \Exception('You do not have permission to edit this action');
-                }
-
-                $action->update($actionData);
-
-                return $action;
-            }
-        } else {
-            // Create new
-            return CustomQuickAction::create($actionData);
+            return static::updateCustomAction($data['id'], $actionData, $user);
         }
+
+        return CustomQuickAction::create($actionData);
+    }
+
+    /**
+     * Update an existing custom quick action
+     */
+    protected static function updateCustomAction($actionId, array $actionData, User $user)
+    {
+        $action = CustomQuickAction::find($actionId);
+        
+        if (! $action) {
+            return null;
+        }
+
+        if (! static::canEditCustomAction($action, $user)) {
+            throw new \Exception('You do not have permission to edit this action');
+        }
+
+        $action->update($actionData);
+
+        return $action;
+    }
+
+    /**
+     * Check if user can edit a custom quick action
+     */
+    protected static function canEditCustomAction(CustomQuickAction $action, User $user): bool
+    {
+        if ($action->user_id === $user->id) {
+            return true;
+        }
+
+        if ($action->visibility !== 'company') {
+            return false;
+        }
+
+        if (Bouncer::is($user)->an('super-admin')) {
+            return true;
+        }
+
+        if ($user->can('manage-quick-actions')) {
+            return true;
+        }
+
+        if ($action->company_id === $user->company_id &&
+            (Bouncer::is($user)->an('admin') || Bouncer::is($user)->an('company-admin'))) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
