@@ -35,54 +35,85 @@ class SendLetterJob extends BasePhysicalMailJob
             'size' => $this->mailable->size,
         ];
 
-        // Add content (template, HTML, or PDF)
+        $this->addContentToPayload($payload);
+        $this->addOptionalFieldsToPayload($payload);
+
+        return $payload;
+    }
+
+    /**
+     * Add content (template, HTML, or PDF) to payload
+     */
+    private function addContentToPayload(array &$payload): void
+    {
         if ($this->mailable->template_id && $this->mailable->template) {
-            if ($this->mailable->template->postgrid_id) {
-                $payload['template'] = $this->mailable->template->postgrid_id;
-                // Only add merge variables when using PostGrid templates
-                if (! empty($this->mailable->merge_variables)) {
-                    $payload['mergeVariables'] = $this->mailable->merge_variables;
-                }
-            } else {
-                // Process HTML to replace merge variables
-                $html = $this->mailable->template->content;
-                if (! empty($this->mailable->merge_variables)) {
-                    $html = $this->replaceMergeVariables($html, $this->mailable->merge_variables);
-                }
-                $payload['html'] = $html;
-            }
-        } elseif ($this->mailable->content) {
-            // Determine if content is HTML or PDF URL
-            if (filter_var($this->mailable->content, FILTER_VALIDATE_URL)) {
-                $payload['pdf'] = $this->mailable->content;
-            } else {
-                // Process HTML to replace merge variables
-                $html = $this->mailable->content;
-                if (! empty($this->mailable->merge_variables)) {
-                    $html = $this->replaceMergeVariables($html, $this->mailable->merge_variables);
-                }
-                $payload['html'] = $html;
-            }
+            $this->addTemplateContent($payload);
+            return;
         }
 
-        // Add perforation
+        if ($this->mailable->content) {
+            $this->addDirectContent($payload);
+        }
+    }
+
+    /**
+     * Add template-based content to payload
+     */
+    private function addTemplateContent(array &$payload): void
+    {
+        if ($this->mailable->template->postgrid_id) {
+            $payload['template'] = $this->mailable->template->postgrid_id;
+            if (! empty($this->mailable->merge_variables)) {
+                $payload['mergeVariables'] = $this->mailable->merge_variables;
+            }
+            return;
+        }
+
+        $html = $this->mailable->template->content;
+        $payload['html'] = $this->processHtmlWithMergeVariables($html);
+    }
+
+    /**
+     * Add direct content (HTML or PDF) to payload
+     */
+    private function addDirectContent(array &$payload): void
+    {
+        if (filter_var($this->mailable->content, FILTER_VALIDATE_URL)) {
+            $payload['pdf'] = $this->mailable->content;
+            return;
+        }
+
+        $payload['html'] = $this->processHtmlWithMergeVariables($this->mailable->content);
+    }
+
+    /**
+     * Process HTML content with merge variables
+     */
+    private function processHtmlWithMergeVariables(string $html): string
+    {
+        if (empty($this->mailable->merge_variables)) {
+            return $html;
+        }
+
+        return $this->replaceMergeVariables($html, $this->mailable->merge_variables);
+    }
+
+    /**
+     * Add optional fields to payload
+     */
+    private function addOptionalFieldsToPayload(array &$payload): void
+    {
         if ($this->mailable->perforated_page) {
             $payload['perforatedPage'] = $this->mailable->perforated_page;
         }
 
-        // Add extra service (certified, registered, etc.)
         if ($this->mailable->extra_service) {
             $payload['extraService'] = $this->mailable->extra_service;
         }
 
-        // Add return envelope
-        if ($this->mailable->return_envelope_id && $this->mailable->returnEnvelope) {
-            if ($this->mailable->returnEnvelope->postgrid_id) {
-                $payload['returnEnvelope'] = $this->mailable->returnEnvelope->postgrid_id;
-            }
+        if ($this->mailable->return_envelope_id && $this->mailable->returnEnvelope?->postgrid_id) {
+            $payload['returnEnvelope'] = $this->mailable->returnEnvelope->postgrid_id;
         }
-
-        return $payload;
     }
 
     /**
