@@ -29,7 +29,7 @@ class NotificationPreferences extends Component
 
     public $email_enabled = true;
 
-    public $in_app_enabled = true;
+    public $inAppEnabled = true;
 
     public $digest_time = '08:00';
 
@@ -46,7 +46,7 @@ class NotificationPreferences extends Component
         $this->sla_breached = $this->preferences->sla_breached;
         $this->daily_digest = $this->preferences->daily_digest;
         $this->email_enabled = $this->preferences->email_enabled;
-        $this->in_app_enabled = $this->preferences->in_app_enabled;
+        $this->inAppEnabled = $this->preferences->in_app_enabled;
         $this->digest_time = $this->preferences->digest_time;
     }
 
@@ -62,7 +62,7 @@ class NotificationPreferences extends Component
             'sla_breached' => $this->sla_breached,
             'daily_digest' => $this->daily_digest,
             'email_enabled' => $this->email_enabled,
-            'in_app_enabled' => $this->in_app_enabled,
+            'in_app_enabled' => $this->inAppEnabled,
             'digest_time' => $this->digest_time,
         ]);
 

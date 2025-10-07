@@ -18,7 +18,7 @@
                 
                 <div class="mt-4 space-y-3">
                     <flux:checkbox wire:model="email_enabled" label="Email Notifications" />
-                    <flux:checkbox wire:model="in_app_enabled" label="In-App Notifications" />
+                    <flux:checkbox wire:model="inAppEnabled" label="In-App Notifications" />
                 </div>
             </div>
 
