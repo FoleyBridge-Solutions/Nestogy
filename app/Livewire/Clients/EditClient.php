@@ -11,6 +11,8 @@ class EditClient extends Component
 {
     use AuthorizesRequests, WithFileUploads;
 
+    private const MULTIPLIER_VALIDATION_RULE = 'nullable|numeric|min:1';
+
     public Client $client;
 
     // Tab management
@@ -212,10 +214,10 @@ class EditClient extends Component
             'custom_emergency_rate' => 'nullable|numeric|min:0',
             'custom_weekend_rate' => 'nullable|numeric|min:0',
             'custom_holiday_rate' => 'nullable|numeric|min:0',
-            'custom_after_hours_multiplier' => 'nullable|numeric|min:1',
-            'custom_emergency_multiplier' => 'nullable|numeric|min:1',
-            'custom_weekend_multiplier' => 'nullable|numeric|min:1',
-            'custom_holiday_multiplier' => 'nullable|numeric|min:1',
+            'custom_after_hours_multiplier' => self::MULTIPLIER_VALIDATION_RULE,
+            'custom_emergency_multiplier' => self::MULTIPLIER_VALIDATION_RULE,
+            'custom_weekend_multiplier' => self::MULTIPLIER_VALIDATION_RULE,
+            'custom_holiday_multiplier' => self::MULTIPLIER_VALIDATION_RULE,
             'custom_minimum_billing_increment' => 'nullable|numeric|min:0.01|max:2',
             'custom_time_rounding_method' => 'in:nearest,up,down,none',
 
