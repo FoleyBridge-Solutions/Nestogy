@@ -47,7 +47,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         @foreach($photos as $index => $photo)
                             <div class="relative group">
-                                <img 
+                                <img
                                     src="{{ $photo['url'] }}" 
                                     alt="Uploaded photo" 
                                     class="w-full h-40 object-cover rounded-lg">
