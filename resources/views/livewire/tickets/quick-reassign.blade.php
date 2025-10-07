@@ -84,7 +84,7 @@
                                 <!-- Reason -->
                                 <div>
                                     <flux:label for="reason">Reason (Optional)</flux:label>
-                                    <flux:textarea 
+                                    <flux:textarea
                                         wire:model="reassignReason"
                                         id="reason"
                                         rows="3"
