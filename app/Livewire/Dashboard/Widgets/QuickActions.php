@@ -211,22 +211,82 @@ class QuickActions extends Component
     public function executeAction($actionKey, $customId = null)
     {
         try {
-            // Use the service to find and execute the action
             $actionIdentifier = $customId ?? $actionKey;
             $action = QuickActionService::executeAction($actionIdentifier, Auth::user());
 
-            // Handle custom action execution
             if (isset($action['custom_id'])) {
-                $customAction = CustomQuickAction::find($action['custom_id']);
+                return $this->executeCustomAction($action['custom_id']);
+            }
 
-                if ($customAction) {
-                    if ($customAction->type === 'route') {
-                        return redirect()->route($customAction->target, $customAction->parameters ?? []);
-                    } elseif ($customAction->type === 'url') {
-                        $url = $customAction->target;
-                        if (! empty($customAction->parameters)) {
-                            $url .= '?'.http_build_query($customAction->parameters);
-                        }
+            return $this->executeSystemAction($action);
+        } catch (\Exception $e) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => 'Failed to execute action: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    protected function executeCustomAction($customId)
+    {
+        $customAction = CustomQuickAction::find($customId);
+
+        if (! $customAction) {
+            return;
+        }
+
+        if ($customAction->type === 'route') {
+            return redirect()->route($customAction->target, $customAction->parameters ?? []);
+        }
+
+        if ($customAction->type === 'url') {
+            return $this->executeUrlAction($customAction);
+        }
+    }
+
+    protected function executeUrlAction($customAction)
+    {
+        $url = $customAction->target;
+        
+        if (! empty($customAction->parameters)) {
+            $url .= '?'.http_build_query($customAction->parameters);
+        }
+
+        if ($customAction->open_in === 'new_tab') {
+            $this->dispatch('open-url', ['url' => $url, 'target' => '_blank']);
+            return;
+        }
+
+        return redirect()->away($url);
+    }
+
+    protected function executeSystemAction($action)
+    {
+        if (isset($action['route'])) {
+            return redirect()->route($action['route'], $action['parameters'] ?? []);
+        }
+
+        if (isset($action['action'])) {
+            $this->dispatchActionEvent($action['action']);
+        }
+    }
+
+    protected function dispatchActionEvent($actionType)
+    {
+        $eventMap = [
+            'exportReports' => 'export-reports',
+            'remoteAccess' => 'open-remote-access',
+            'clientPortal' => 'open-client-portal',
+        ];
+
+        $event = $eventMap[$actionType] ?? null;
+
+        if ($event) {
+            $this->dispatch($event);
+        } else {
+            $this->dispatch('quick-action-executed', ['action' => $actionType]);
+        }
+    }
 
                         if ($customAction->open_in === 'new_tab') {
                             $this->dispatch('open-url', ['url' => $url, 'target' => '_blank']);
