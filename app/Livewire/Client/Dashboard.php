@@ -563,8 +563,8 @@ class Dashboard extends Component
         })->count();
 
         $warningCount = $assets->filter(function ($asset) {
-            return $asset->warranty_expire && 
-                   $asset->warranty_expire->isFuture() && 
+            return $asset->warranty_expire &&
+                   $asset->warranty_expire->isFuture() &&
                    $asset->warranty_expire->diffInDays(now()) <= 60;
         })->count();
 
