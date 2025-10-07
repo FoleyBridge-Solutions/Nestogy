@@ -5,6 +5,8 @@ use App\Domains\Contract\Controllers\DynamicContractController;
 use App\Http\Middleware\DynamicRouteMiddleware;
 use Illuminate\Support\Facades\Route;
 
+const TYPES_PATH = '/types';
+
 /*
 |--------------------------------------------------------------------------
 | Dynamic Contract Routes
@@ -68,7 +70,7 @@ Route::middleware(['api', 'auth:sanctum', 'company'])
         // Schema and configuration endpoints
         Route::get('/schema', [DynamicContractApiController::class, 'schema'])->name('schema');
         Route::get('/config', [DynamicContractApiController::class, 'config'])->name('config');
-        Route::get('/types', [DynamicContractApiController::class, 'types'])->name('types');
+        Route::get(TYPES_PATH, [DynamicContractApiController::class, 'types'])->name('types');
 
         // Dynamic API routes will be registered here
         // Format: api/contracts/{type}
@@ -106,10 +108,10 @@ Route::middleware(['web', 'auth', 'company', 'can:manage-contracts'])
         Route::delete('/widgets/{id}', [DynamicContractController::class, 'deleteWidget'])->name('widgets.destroy');
 
         // Type management
-        Route::get('/types', [DynamicContractController::class, 'typesIndex'])->name('types.index');
-        Route::post('/types', [DynamicContractController::class, 'createType'])->name('types.store');
-        Route::put('/types/{id}', [DynamicContractController::class, 'updateType'])->name('types.update');
-        Route::delete('/types/{id}', [DynamicContractController::class, 'deleteType'])->name('types.destroy');
+        Route::get(TYPES_PATH, [DynamicContractController::class, 'typesIndex'])->name('types.index');
+        Route::post(TYPES_PATH, [DynamicContractController::class, 'createType'])->name('types.store');
+        Route::put(TYPES_PATH . '/{id}', [DynamicContractController::class, 'updateType'])->name('types.update');
+        Route::delete(TYPES_PATH . '/{id}', [DynamicContractController::class, 'deleteType'])->name('types.destroy');
 
         // Workflow management
         Route::get('/workflows', [DynamicContractController::class, 'workflowsIndex'])->name('workflows.index');
