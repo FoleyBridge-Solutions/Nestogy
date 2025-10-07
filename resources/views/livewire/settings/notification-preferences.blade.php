@@ -64,7 +64,7 @@
                 
                 <div class="mt-4 space-y-3">
                     <flux:checkbox 
-                        wire:model="sla_breach_warning" 
+                        wire:model="slaBreachWarning" 
                         label="SLA Breach Warning"
                         description="Receive notifications when tickets are approaching SLA deadlines" />
                     
