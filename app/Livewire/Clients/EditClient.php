@@ -11,6 +11,8 @@ class EditClient extends Component
 {
     use AuthorizesRequests, WithFileUploads;
 
+    private const NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
     public Client $client;
 
     // Tab management
@@ -200,18 +202,18 @@ class EditClient extends Component
             'technical_contact' => 'nullable|string|max:255',
 
             'status' => 'required|in:active,inactive,suspended',
-            'hourly_rate' => 'nullable|numeric|min:0',
-            'rate' => 'nullable|numeric|min:0',
+            'hourly_rate' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'rate' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'currency_code' => 'required|string|in:USD,EUR,GBP,CAD,AUD,JPY',
             'net_terms' => 'required|in:0,15,30,45,60,90',
 
             'use_custom_rates' => 'boolean',
             'custom_rate_calculation_method' => 'in:fixed_rates,multipliers',
-            'custom_standard_rate' => 'nullable|numeric|min:0',
-            'custom_after_hours_rate' => 'nullable|numeric|min:0',
-            'custom_emergency_rate' => 'nullable|numeric|min:0',
-            'custom_weekend_rate' => 'nullable|numeric|min:0',
-            'custom_holiday_rate' => 'nullable|numeric|min:0',
+            'custom_standard_rate' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'custom_after_hours_rate' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'custom_emergency_rate' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'custom_weekend_rate' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'custom_holiday_rate' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'custom_after_hours_multiplier' => 'nullable|numeric|min:1',
             'custom_emergency_multiplier' => 'nullable|numeric|min:1',
             'custom_weekend_multiplier' => 'nullable|numeric|min:1',
