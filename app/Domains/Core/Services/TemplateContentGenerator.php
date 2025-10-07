@@ -44,79 +44,101 @@ class TemplateContentGenerator
         $content = "SCOPE OF SUPPORT SERVICES:\n";
         $content .= "{{service_provider_short_name}} shall provide the Support Services to the Client for the Supported Infrastructure selected by the Client and detailed in Schedule A.\n\n";
 
-        // Dynamic asset-based service descriptions
+        $content .= $this->generateAssetCoverageContent($variables);
+        $content .= $this->generateServiceLevelAgreementContent($variables);
+        $content .= $this->generateCoverageRulesContent($variables);
+        $content .= $this->generateExclusionsSection($variables);
+
+        return $content;
+    }
+
+    protected function generateAssetCoverageContent(array $variables): string
+    {
         $supportedAssets = $variables['supported_asset_types'] ?? '';
-        if ($supportedAssets) {
-            $content .= "**Supported Infrastructure Coverage:**\n";
-            $content .= "Support services cover the following asset types: {$supportedAssets}.\n\n";
-
-            // Generate specific service descriptions based on asset types
-            $assetTypes = $this->extractAssetTypesFromString($supportedAssets);
-
-            if (in_array('hypervisor_node', $assetTypes) || in_array('server', $assetTypes)) {
-                $content .= "**Server & Hypervisor Support:** Support pertaining to the core server infrastructure and virtualization environment (\"Managed Server Infrastructure\"), encompassing physical servers, hypervisor hosts, management interfaces, cluster functionality, and directly connected storage infrastructure. Support includes monitoring, maintenance, performance optimization, and troubleshooting of server hardware and virtualization platforms as specified in Schedule A.\n\n";
-            }
-
-            if (in_array('workstation', $assetTypes)) {
-                $content .= "**Workstation Support:** Support pertaining to Client-owned physical and virtual workstations (\"Managed Workstations\") as specified in Schedule A, including their operating systems and standard installed business applications. Services include hardware troubleshooting coordination, software support, and direct end-user assistance for issues related to workstation functionality, connectivity, and productivity applications.\n\n";
-            }
-
-            if (in_array('network_device', $assetTypes)) {
-                $content .= "**Network Infrastructure Support:** Support for network devices including routers, switches, firewalls, and wireless access points (\"Managed Network Infrastructure\"). Services encompass configuration management, performance monitoring, security policy implementation, and troubleshooting of network connectivity and performance issues.\n\n";
-            }
-
-            if (in_array('mobile_device', $assetTypes)) {
-                $content .= "**Mobile Device Support:** Support for mobile endpoints including smartphones, tablets, and mobile workstations (\"Managed Mobile Devices\"). Services include device management, security policy enforcement, application support, and connectivity troubleshooting.\n\n";
-            }
-
-            if (in_array('storage', $assetTypes)) {
-                $content .= "**Storage Systems Support:** Support for storage infrastructure including NAS, SAN, and backup appliances (\"Managed Storage Systems\"). Services include capacity monitoring, performance optimization, backup verification, and data recovery assistance.\n\n";
-            }
-
-            if (in_array('security_device', $assetTypes)) {
-                $content .= "**Security Infrastructure Support:** Support for security devices and systems including firewalls, intrusion detection systems, and access control systems (\"Managed Security Infrastructure\"). Services include policy management, threat monitoring, and security incident response coordination.\n\n";
-            }
-
-            if (in_array('printer', $assetTypes)) {
-                $content .= "**Printer & Peripheral Support:** Support for network printers, scanners, and multifunction devices (\"Managed Peripherals\"). Services include driver management, print queue troubleshooting, and coordination of hardware maintenance.\n\n";
-            }
-        } else {
-            // Fallback to generic service description
-            $content .= "The Client may elect from the following service coverage areas based on their infrastructure requirements and service tier selection.\n\n";
+        if (! $supportedAssets) {
+            return "The Client may elect from the following service coverage areas based on their infrastructure requirements and service tier selection.\n\n";
         }
 
-        // Service Level Agreement integration
-        if (! empty($variables['service_tier'])) {
-            $content .= "**Service Level Agreement:**\n";
-            $content .= "The selected {$variables['service_tier']} service tier provides:\n";
-            $content .= "- Response Time: {$variables['response_time_hours']} hours\n";
-            $content .= "- Resolution Target: {$variables['resolution_time_hours']} hours\n";
-            $content .= "- Uptime Guarantee: {$variables['uptime_percentage']}%\n";
-            $content .= "- Support Coverage: {$variables['business_hours']}\n\n";
+        $content = "**Supported Infrastructure Coverage:**\n";
+        $content .= "Support services cover the following asset types: {$supportedAssets}.\n\n";
+
+        $assetTypes = $this->extractAssetTypesFromString($supportedAssets);
+        $content .= $this->generateAssetTypeDescriptions($assetTypes);
+
+        return $content;
+    }
+
+    protected function generateAssetTypeDescriptions(array $assetTypes): string
+    {
+        $descriptions = [
+            ['hypervisor_node', 'server'] => "**Server & Hypervisor Support:** Support pertaining to the core server infrastructure and virtualization environment (\"Managed Server Infrastructure\"), encompassing physical servers, hypervisor hosts, management interfaces, cluster functionality, and directly connected storage infrastructure. Support includes monitoring, maintenance, performance optimization, and troubleshooting of server hardware and virtualization platforms as specified in Schedule A.\n\n",
+            'workstation' => "**Workstation Support:** Support pertaining to Client-owned physical and virtual workstations (\"Managed Workstations\") as specified in Schedule A, including their operating systems and standard installed business applications. Services include hardware troubleshooting coordination, software support, and direct end-user assistance for issues related to workstation functionality, connectivity, and productivity applications.\n\n",
+            'network_device' => "**Network Infrastructure Support:** Support for network devices including routers, switches, firewalls, and wireless access points (\"Managed Network Infrastructure\"). Services encompass configuration management, performance monitoring, security policy implementation, and troubleshooting of network connectivity and performance issues.\n\n",
+            'mobile_device' => "**Mobile Device Support:** Support for mobile endpoints including smartphones, tablets, and mobile workstations (\"Managed Mobile Devices\"). Services include device management, security policy enforcement, application support, and connectivity troubleshooting.\n\n",
+            'storage' => "**Storage Systems Support:** Support for storage infrastructure including NAS, SAN, and backup appliances (\"Managed Storage Systems\"). Services include capacity monitoring, performance optimization, backup verification, and data recovery assistance.\n\n",
+            'security_device' => "**Security Infrastructure Support:** Support for security devices and systems including firewalls, intrusion detection systems, and access control systems (\"Managed Security Infrastructure\"). Services include policy management, threat monitoring, and security incident response coordination.\n\n",
+            'printer' => "**Printer & Peripheral Support:** Support for network printers, scanners, and multifunction devices (\"Managed Peripherals\"). Services include driver management, print queue troubleshooting, and coordination of hardware maintenance.\n\n",
+        ];
+
+        $content = '';
+        foreach ($descriptions as $key => $description) {
+            if (is_array($key)) {
+                if (array_intersect($key, $assetTypes)) {
+                    $content .= $description;
+                }
+            } elseif (in_array($key, $assetTypes)) {
+                $content .= $description;
+            }
         }
 
-        // Coverage rules and conditions
+        return $content;
+    }
+
+    protected function generateServiceLevelAgreementContent(array $variables): string
+    {
+        if (empty($variables['service_tier'])) {
+            return '';
+        }
+
+        $content = "**Service Level Agreement:**\n";
+        $content .= "The selected {$variables['service_tier']} service tier provides:\n";
+        $content .= "- Response Time: {$variables['response_time_hours']} hours\n";
+        $content .= "- Resolution Target: {$variables['resolution_time_hours']} hours\n";
+        $content .= "- Uptime Guarantee: {$variables['uptime_percentage']}%\n";
+        $content .= "- Support Coverage: {$variables['business_hours']}\n\n";
+
+        return $content;
+    }
+
+    protected function generateCoverageRulesContent(array $variables): string
+    {
+        $content = '';
+
         if (! empty($variables['includes_remote_support'])) {
             $content .= 'Support services include remote monitoring, diagnostics, and resolution capabilities. ';
         }
         if (! empty($variables['includes_onsite_support'])) {
             $content .= 'On-site support is included for issues requiring physical presence. ';
         }
-        $content .= "\n\n";
 
-        // Exclusions
-        if (! empty($variables['excluded_asset_types']) || ! empty($variables['excluded_services'])) {
-            $content .= "**Service Exclusions:**\n";
-            if (! empty($variables['excluded_asset_types'])) {
-                $content .= "Excluded asset types: {$variables['excluded_asset_types']}\n";
-            }
-            if (! empty($variables['excluded_services'])) {
-                $content .= "Excluded services: {$variables['excluded_services']}\n";
-            }
-            $content .= "\n";
+        return $content ? $content."\n\n" : '';
+    }
+
+    protected function generateExclusionsSection(array $variables): string
+    {
+        if (empty($variables['excluded_asset_types']) && empty($variables['excluded_services'])) {
+            return '';
         }
 
-        return $content;
+        $content = "**Service Exclusions:**\n";
+        if (! empty($variables['excluded_asset_types'])) {
+            $content .= "Excluded asset types: {$variables['excluded_asset_types']}\n";
+        }
+        if (! empty($variables['excluded_services'])) {
+            $content .= "Excluded services: {$variables['excluded_services']}\n";
+        }
+
+        return $content."\n";
     }
 
     /**
