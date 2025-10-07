@@ -24,6 +24,8 @@ use Illuminate\Validation\ValidationException;
  */
 class ContractService
 {
+    private const DATE_FORMAT_LONG = 'F d, Y';
+
     /**
      * Get contract configuration registry for the current company
      */
@@ -2521,8 +2523,8 @@ class ContractService
         return '# SCHEDULE A - INFRASTRUCTURE SERVICES & SERVICE LEVEL AGREEMENT
 
 **Document Version:** 2.0  
-**Effective Date:** '.now()->format('F d, Y').'  
-**Review Date:** '.now()->addYear()->format('F d, Y').'
+**Effective Date:** '.now()->format(self::DATE_FORMAT_LONG).'  
+**Review Date:** '.now()->addYear()->format(self::DATE_FORMAT_LONG).'
 
 ---
 
@@ -2717,8 +2719,8 @@ If monthly availability falls below the committed {{uptime_target}}%, Client sha
         return '# SCHEDULE B - PRICING & FEES
 
 **Document Version:** 2.0  
-**Effective Date:** '.now()->format('F d, Y').'  
-**Review Date:** '.now()->addYear()->format('F d, Y').'
+**Effective Date:** '.now()->format(self::DATE_FORMAT_LONG).'  
+**Review Date:** '.now()->addYear()->format(self::DATE_FORMAT_LONG).'
 
 ---
 
@@ -2837,8 +2839,8 @@ Automatic credits applied as outlined in Schedule A for SLA violations:
         return '# SCHEDULE C - ADDITIONAL TERMS & CONDITIONS
 
 **Document Version:** 2.0  
-**Effective Date:** '.now()->format('F d, Y').'  
-**Review Date:** '.now()->addYear()->format('F d, Y').'
+**Effective Date:** '.now()->format(self::DATE_FORMAT_LONG).'  
+**Review Date:** '.now()->addYear()->format(self::DATE_FORMAT_LONG).'
 
 ---
 
