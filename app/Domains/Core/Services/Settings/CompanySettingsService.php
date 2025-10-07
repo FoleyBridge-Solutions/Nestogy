@@ -10,6 +10,8 @@ class CompanySettingsService extends BaseSettingsService
 {
     protected string $domain = SettingsConfiguration::DOMAIN_COMPANY;
 
+    private const VALIDATION_NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     /**
      * Get validation rules for each category
      */
@@ -144,13 +146,13 @@ class CompanySettingsService extends BaseSettingsService
             case 'general':
                 return [
                     'company_name' => 'required|string|max:255',
-                    'legal_name' => 'nullable|string|max:255',
+                    'legal_name' => self::VALIDATION_NULLABLE_STRING_255,
                     'tax_id' => 'nullable|string|max:50',
                     'website' => 'nullable|url',
                     'phone' => 'nullable|string|max:20',
                     'email' => 'nullable|email',
-                    'address_line1' => 'nullable|string|max:255',
-                    'address_line2' => 'nullable|string|max:255',
+                    'address_line1' => self::VALIDATION_NULLABLE_STRING_255,
+                    'address_line2' => self::VALIDATION_NULLABLE_STRING_255,
                     'city' => 'nullable|string|max:100',
                     'state' => 'nullable|string|max:100',
                     'postal_code' => 'nullable|string|max:20',
