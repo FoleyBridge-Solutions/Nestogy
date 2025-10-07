@@ -182,7 +182,7 @@
                     All ticket information will be saved automatically
                 </flux:text>
                 <div class="flex gap-2">
-                    <flux:button href="{{ route('tickets.index') }}" 
+                    <flux:button href="{{ route('tickets.index') }}"
                                 variant="ghost"
                                 icon="x-mark">
                         Cancel
