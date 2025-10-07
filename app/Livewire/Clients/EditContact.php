@@ -7,6 +7,8 @@ use Livewire\Component;
 
 class EditContact extends Component
 {
+    private const MAX_LENGTH_50 = 'max:50';
+
     public Contact $contact;
 
     // Tab management
@@ -181,9 +183,9 @@ class EditContact extends Component
             'name' => ['required', 'string', 'max:255'],
             'title' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'string', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
+            'phone' => ['nullable', 'string', self::MAX_LENGTH_50],
             'extension' => ['nullable', 'string', 'max:20'],
-            'mobile' => ['nullable', 'string', 'max:50'],
+            'mobile' => ['nullable', 'string', self::MAX_LENGTH_50],
             'department' => ['nullable', 'string', 'max:255'],
             'role' => ['nullable', 'string', 'max:255'],
             // Contact Type
@@ -200,13 +202,13 @@ class EditContact extends Component
                 'preferred_contact_method' => ['nullable', 'string', 'in:email,phone,mobile,sms'],
                 'best_time_to_contact' => ['nullable', 'string', 'in:morning,afternoon,evening,anytime'],
                 'timezone' => ['nullable', 'string', 'max:100'],
-                'language' => ['nullable', 'string', 'max:50'],
+                'language' => ['nullable', 'string', self::MAX_LENGTH_50],
                 'do_not_disturb' => ['boolean'],
                 'marketing_opt_in' => ['boolean'],
                 'linkedin_url' => ['nullable', 'url', 'max:255'],
                 'assistant_name' => ['nullable', 'string', 'max:255'],
                 'assistant_email' => ['nullable', 'email', 'max:255'],
-                'assistant_phone' => ['nullable', 'string', 'max:50'],
+                'assistant_phone' => ['nullable', 'string', self::MAX_LENGTH_50],
                 'reports_to_id' => ['nullable', 'integer', 'exists:contacts,id'],
                 'work_schedule' => ['nullable', 'string'],
                 'professional_bio' => ['nullable', 'string'],
