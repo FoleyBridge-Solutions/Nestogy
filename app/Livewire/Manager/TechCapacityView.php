@@ -54,8 +54,8 @@ class TechCapacityView extends Component
         $lowCount = $activeTickets->where('priority', Ticket::PRIORITY_LOW)->count();
 
         $overdueCount = $activeTickets->filter(function ($ticket) {
-            return $ticket->priorityQueue && 
-                   $ticket->priorityQueue->sla_deadline && 
+            return $ticket->priorityQueue &&
+                   $ticket->priorityQueue->sla_deadline &&
                    now()->gt($ticket->priorityQueue->sla_deadline);
         })->count();
 
