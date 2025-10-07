@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ContactController extends Controller
 {
+    private const CONTACT_NOT_FOUND_MESSAGE = 'Contact not found for this client';
+
     /**
      * ContactController constructor.
      */
@@ -197,7 +199,7 @@ class ContactController extends Controller
 
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
-            abort(404, 'Contact not found for this client');
+            abort(404, self::CONTACT_NOT_FOUND_MESSAGE);
         }
 
         // Authorize client access
@@ -228,7 +230,7 @@ class ContactController extends Controller
 
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
-            abort(404, 'Contact not found for this client');
+            abort(404, self::CONTACT_NOT_FOUND_MESSAGE);
         }
 
         // Authorize access
@@ -257,7 +259,7 @@ class ContactController extends Controller
 
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
-            abort(404, 'Contact not found for this client');
+            abort(404, self::CONTACT_NOT_FOUND_MESSAGE);
         }
 
         // Authorize access
@@ -345,7 +347,7 @@ class ContactController extends Controller
 
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
-            abort(404, 'Contact not found for this client');
+            abort(404, self::CONTACT_NOT_FOUND_MESSAGE);
         }
 
         // Authorize access
@@ -480,7 +482,7 @@ class ContactController extends Controller
         try {
             // Verify contact belongs to client
             if ($contact->client_id !== $client->id) {
-                return response()->json(['error' => 'Contact not found for this client'], 404);
+                return response()->json(['error' => self::CONTACT_NOT_FOUND_MESSAGE], 404);
             }
 
             // Skip policy checks for now and add simple permission check
@@ -563,7 +565,7 @@ class ContactController extends Controller
     {
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
-            abort(404, 'Contact not found for this client');
+            abort(404, self::CONTACT_NOT_FOUND_MESSAGE);
         }
 
         // Authorize access
@@ -597,7 +599,7 @@ class ContactController extends Controller
     {
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
-            abort(404, 'Contact not found for this client');
+            abort(404, self::CONTACT_NOT_FOUND_MESSAGE);
         }
 
         // Authorize access
@@ -628,7 +630,7 @@ class ContactController extends Controller
     {
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
-            abort(404, 'Contact not found for this client');
+            abort(404, self::CONTACT_NOT_FOUND_MESSAGE);
         }
 
         // Authorize access
@@ -648,7 +650,7 @@ class ContactController extends Controller
     {
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
-            abort(404, 'Contact not found for this client');
+            abort(404, self::CONTACT_NOT_FOUND_MESSAGE);
         }
 
         // Authorize access
@@ -668,7 +670,7 @@ class ContactController extends Controller
     {
         // Verify contact belongs to client
         if ($contact->client_id !== $client->id) {
-            abort(404, 'Contact not found for this client');
+            abort(404, self::CONTACT_NOT_FOUND_MESSAGE);
         }
 
         // Authorize access
@@ -690,7 +692,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client || $contact->client_id !== $client->id) {
-            return response()->json(['error' => 'Contact not found for this client'], 404);
+            return response()->json(['error' => self::CONTACT_NOT_FOUND_MESSAGE], 404);
         }
 
         // Check permissions
@@ -722,7 +724,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client || $contact->client_id !== $client->id) {
-            return response()->json(['error' => 'Contact not found for this client'], 404);
+            return response()->json(['error' => self::CONTACT_NOT_FOUND_MESSAGE], 404);
         }
 
         // Check permissions
@@ -754,7 +756,7 @@ class ContactController extends Controller
         $client = app(NavigationService::class)->getSelectedClient();
 
         if (! $client || $contact->client_id !== $client->id) {
-            return response()->json(['error' => 'Contact not found for this client'], 404);
+            return response()->json(['error' => self::CONTACT_NOT_FOUND_MESSAGE], 404);
         }
 
         // Check permissions
