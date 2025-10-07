@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ContactController extends Controller
 {
+    private const ERROR_INSUFFICIENT_PERMISSIONS = 'Insufficient permissions';
+
     /**
      * ContactController constructor.
      */
@@ -485,7 +487,7 @@ class ContactController extends Controller
 
             // Skip policy checks for now and add simple permission check
             if (! auth()->user()->hasPermission('clients.contacts.manage')) {
-                return response()->json(['error' => 'Insufficient permissions'], 403);
+                return response()->json(['error' => self::ERROR_INSUFFICIENT_PERMISSIONS], 403);
             }
 
             // Log the incoming request for debugging
@@ -695,7 +697,7 @@ class ContactController extends Controller
 
         // Check permissions
         if (! auth()->user()->hasPermission('clients.contacts.manage')) {
-            return response()->json(['error' => 'Insufficient permissions'], 403);
+            return response()->json(['error' => self::ERROR_INSUFFICIENT_PERMISSIONS], 403);
         }
 
         // Send invitation
@@ -727,7 +729,7 @@ class ContactController extends Controller
 
         // Check permissions
         if (! auth()->user()->hasPermission('clients.contacts.manage')) {
-            return response()->json(['error' => 'Insufficient permissions'], 403);
+            return response()->json(['error' => self::ERROR_INSUFFICIENT_PERMISSIONS], 403);
         }
 
         // Resend invitation
@@ -759,7 +761,7 @@ class ContactController extends Controller
 
         // Check permissions
         if (! auth()->user()->hasPermission('clients.contacts.manage')) {
-            return response()->json(['error' => 'Insufficient permissions'], 403);
+            return response()->json(['error' => self::ERROR_INSUFFICIENT_PERMISSIONS], 403);
         }
 
         // Revoke invitation
