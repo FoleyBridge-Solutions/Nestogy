@@ -244,7 +244,8 @@ class DynamicContractFormBuilder
                     case 'end_date':
                         $values[$fieldSlug] = $contract->end_date?->format('Y-m-d');
                         break;
-                        // Add more field mappings as needed
+                    default:
+                        break;
                 }
             }
         }
