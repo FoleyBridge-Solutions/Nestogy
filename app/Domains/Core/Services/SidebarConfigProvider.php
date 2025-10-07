@@ -632,14 +632,46 @@ class SidebarConfigProvider
     {
         $user = auth()->user();
         $accountsCount = $user ? \App\Domains\Email\Models\EmailAccount::forUser($user->id)->active()->count() : 0;
-        $unreadCount = $user ? \App\Domains\Email\Models\EmailMessage::whereHas('emailAccount', function ($q) use ($user) {
-            $q->where('user_id', $user->id)->where('is_active', true);
-        })->unread()->count() : 0;
+        $unreadCount = $this->getEmailUnreadCount($user);
 
-        // Get user's email accounts for dynamic sidebar
         $emailAccounts = $user ? \App\Domains\Email\Models\EmailAccount::forUser($user->id)->active()->with('folders')->get() : collect();
 
-        $sections = [
+        $sections = $this->buildEmailPrimarySections($unreadCount);
+
+        if ($emailAccounts->isNotEmpty()) {
+            $sections[] = $this->buildEmailAccountsSection($emailAccounts);
+        }
+
+        $sections[] = $this->buildEmailFoldersSection($emailAccounts, $unreadCount);
+        $sections[] = $this->buildEmailManagementSection($accountsCount);
+
+        return [
+            'title' => 'Email Management',
+            'icon' => 'envelope',
+            'sections' => $sections,
+        ];
+    }
+
+    /**
+     * Get total unread email count for user
+     */
+    protected function getEmailUnreadCount($user): int
+    {
+        if (! $user) {
+            return 0;
+        }
+
+        return \App\Domains\Email\Models\EmailMessage::whereHas('emailAccount', function ($q) use ($user) {
+            $q->where('user_id', $user->id)->where('is_active', true);
+        })->unread()->count();
+    }
+
+    /**
+     * Build primary email sections (Inbox, Compose)
+     */
+    protected function buildEmailPrimarySections(int $unreadCount): array
+    {
+        return [
             [
                 'type' => 'primary',
                 'items' => [
@@ -660,35 +692,63 @@ class SidebarConfigProvider
                 ],
             ],
         ];
+    }
 
-        // Add email accounts section if user has accounts
-        if ($emailAccounts->isNotEmpty()) {
-            $accountItems = [];
-            foreach ($emailAccounts as $account) {
-                $accountUnreadCount = $account->messages()->unread()->count();
-                $accountItems[] = [
-                    'name' => $account->name,
-                    'route' => 'email.inbox.index',
-                    'route_params' => ['account_id' => $account->id],
-                    'icon' => 'envelope',
-                    'key' => 'account-'.$account->id,
-                    'badge' => $accountUnreadCount > 0 ? $accountUnreadCount : null,
-                    'badge_type' => 'info',
-                    'description' => $account->email_address,
-                ];
-            }
-
-            $sections[] = [
-                'type' => 'section',
-                'title' => 'ACCOUNTS',
-                'expandable' => true,
-                'default_expanded' => false,
-                'items' => $accountItems,
+    /**
+     * Build email accounts section
+     */
+    protected function buildEmailAccountsSection($emailAccounts): array
+    {
+        $accountItems = [];
+        foreach ($emailAccounts as $account) {
+            $accountUnreadCount = $account->messages()->unread()->count();
+            $accountItems[] = [
+                'name' => $account->name,
+                'route' => 'email.inbox.index',
+                'route_params' => ['account_id' => $account->id],
+                'icon' => 'envelope',
+                'key' => 'account-'.$account->id,
+                'badge' => $accountUnreadCount > 0 ? $accountUnreadCount : null,
+                'badge_type' => 'info',
+                'description' => $account->email_address,
             ];
         }
 
-        // Always include folders section with dynamic content
-        $folderItems = [
+        return [
+            'type' => 'section',
+            'title' => 'ACCOUNTS',
+            'expandable' => true,
+            'default_expanded' => false,
+            'items' => $accountItems,
+        ];
+    }
+
+    /**
+     * Build email folders section
+     */
+    protected function buildEmailFoldersSection($emailAccounts, int $unreadCount): array
+    {
+        $folderItems = $this->getDefaultEmailFolders($unreadCount);
+
+        if ($emailAccounts->isNotEmpty()) {
+            $folderItems = array_merge($folderItems, $this->getDynamicEmailFolders($emailAccounts));
+        }
+
+        return [
+            'type' => 'section',
+            'title' => 'FOLDERS',
+            'expandable' => true,
+            'default_expanded' => false,
+            'items' => $folderItems,
+        ];
+    }
+
+    /**
+     * Get default email folder items
+     */
+    protected function getDefaultEmailFolders(int $unreadCount): array
+    {
+        return [
             [
                 'name' => 'Inbox',
                 'route' => 'email.inbox.index',
@@ -716,44 +776,53 @@ class SidebarConfigProvider
                 'key' => 'trash-folder',
             ],
         ];
+    }
 
-        // Add dynamic folders from email accounts
-        if ($emailAccounts->isNotEmpty()) {
-            foreach ($emailAccounts as $account) {
-                // Add synced folders from this account
-                foreach ($account->folders as $folder) {
-                    $folderUnreadCount = $folder->unread_count;
-                    $folderName = $folder->getDisplayName();
+    /**
+     * Get dynamic email folders from accounts
+     */
+    protected function getDynamicEmailFolders($emailAccounts): array
+    {
+        $folderItems = [];
 
-                    // Add account name for non-standard folders
-                    if (! in_array($folder->type, ['inbox', 'sent', 'drafts', 'trash'])) {
-                        $folderName .= ' ('.$account->name.')';
-                    }
-
-                    $folderItems[] = [
-                        'name' => $folderName,
-                        'route' => 'email.inbox.index',
-                        'route_params' => ['account_id' => $account->id, 'folder_id' => $folder->id],
-                        'icon' => $folder->getIcon(),
-                        'key' => 'folder-'.$folder->id,
-                        'badge' => $folderUnreadCount > 0 ? $folderUnreadCount : null,
-                        'badge_type' => 'info',
-                        'description' => $account->email_address,
-                    ];
-                }
+        foreach ($emailAccounts as $account) {
+            foreach ($account->folders as $folder) {
+                $folderItems[] = $this->buildEmailFolderItem($account, $folder);
             }
         }
 
-        $sections[] = [
-            'type' => 'section',
-            'title' => 'FOLDERS',
-            'expandable' => true,
-            'default_expanded' => false,
-            'items' => $folderItems,
-        ];
+        return $folderItems;
+    }
 
-        // Add management section
-        $sections[] = [
+    /**
+     * Build individual email folder item
+     */
+    protected function buildEmailFolderItem($account, $folder): array
+    {
+        $folderName = $folder->getDisplayName();
+
+        if (! in_array($folder->type, ['inbox', 'sent', 'drafts', 'trash'])) {
+            $folderName .= ' ('.$account->name.')';
+        }
+
+        return [
+            'name' => $folderName,
+            'route' => 'email.inbox.index',
+            'route_params' => ['account_id' => $account->id, 'folder_id' => $folder->id],
+            'icon' => $folder->getIcon(),
+            'key' => 'folder-'.$folder->id,
+            'badge' => $folder->unread_count > 0 ? $folder->unread_count : null,
+            'badge_type' => 'info',
+            'description' => $account->email_address,
+        ];
+    }
+
+    /**
+     * Build email management section
+     */
+    protected function buildEmailManagementSection(int $accountsCount): array
+    {
+        return [
             'type' => 'section',
             'title' => 'MANAGEMENT',
             'expandable' => true,
@@ -774,12 +843,6 @@ class SidebarConfigProvider
                     'key' => 'signatures',
                 ],
             ],
-        ];
-
-        return [
-            'title' => 'Email Management',
-            'icon' => 'envelope',
-            'sections' => $sections,
         ];
     }
 
