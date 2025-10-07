@@ -235,7 +235,7 @@ class AssetService
     {
         return DB::transaction(function () use ($asset, $checkOut, $contactId) {
             $data = [
-                'status' => $checkOut ? 'Deployed' : 'Ready To Deploy',
+                'status' => $checkOut ? 'Deployed' : Asset::STATUS_READY_TO_DEPLOY,
             ];
 
             if ($checkOut && $contactId) {
@@ -275,7 +275,7 @@ class AssetService
             'available_assets' => Asset::where('company_id', $companyId)
                 ->whereNull('archived_at')
                 ->where('type', '!=', 'Server')
-                ->where('status', 'Ready To Deploy')
+                ->where('status', Asset::STATUS_READY_TO_DEPLOY)
                 ->count(),
             'assets_by_type' => Asset::where('company_id', $companyId)
                 ->whereNull('archived_at')
@@ -445,7 +445,7 @@ class AssetService
     {
         if ($asset->status === 'Deployed' && $asset->contact_id) {
             return 'checked_out';
-        } elseif ($asset->status === 'Ready To Deploy' && ! $asset->contact_id) {
+        } elseif ($asset->status === Asset::STATUS_READY_TO_DEPLOY && ! $asset->contact_id) {
             return 'checked_in';
         } elseif ($asset->wasRecentlyCreated) {
             return 'created';
