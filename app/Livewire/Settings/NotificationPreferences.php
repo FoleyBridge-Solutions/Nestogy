@@ -31,7 +31,7 @@ class NotificationPreferences extends Component
 
     public $in_app_enabled = true;
 
-    public $digest_time = '08:00';
+    public $digestTime = '08:00';
 
     public function mount()
     {
@@ -47,7 +47,7 @@ class NotificationPreferences extends Component
         $this->daily_digest = $this->preferences->daily_digest;
         $this->email_enabled = $this->preferences->email_enabled;
         $this->in_app_enabled = $this->preferences->in_app_enabled;
-        $this->digest_time = $this->preferences->digest_time;
+        $this->digestTime = $this->preferences->digest_time;
     }
 
     public function save()
@@ -63,7 +63,7 @@ class NotificationPreferences extends Component
             'daily_digest' => $this->daily_digest,
             'email_enabled' => $this->email_enabled,
             'in_app_enabled' => $this->in_app_enabled,
-            'digest_time' => $this->digest_time,
+            'digest_time' => $this->digestTime,
         ]);
 
         $this->success('Notification preferences saved successfully');
