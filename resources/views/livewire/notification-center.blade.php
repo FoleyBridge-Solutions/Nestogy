@@ -36,7 +36,7 @@
             </h3>
             
             @if($unreadCount > 0)
-                <button 
+    <button
                     wire:click="markAllAsRead" 
                     class="text-xs text-white hover:text-blue-100 underline">
                     Mark all read
