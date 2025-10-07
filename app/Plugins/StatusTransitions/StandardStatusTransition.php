@@ -279,6 +279,9 @@ class StandardStatusTransition implements StatusTransitionInterface
                     $errors[] = 'Suspension reason is required';
                 }
                 break;
+
+            default:
+                break;
         }
 
         return $errors;
