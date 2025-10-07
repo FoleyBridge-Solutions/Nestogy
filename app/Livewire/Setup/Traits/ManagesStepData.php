@@ -155,6 +155,9 @@ trait ManagesStepData
                 $this->enable_two_factor = $data['enable_two_factor'] ?? false;
                 $this->enable_audit_logging = $data['enable_audit_logging'] ?? true;
                 break;
+
+            default:
+                break;
         }
     }
 
