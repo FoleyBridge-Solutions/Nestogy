@@ -31,23 +31,50 @@ class TestAssetSupportEvaluation extends Command
 
         $assetSupportService = app(AssetSupportService::class);
 
-        // Get a test client
-        $client = Client::first();
+        $client = $this->getTestClient();
         if (! $client) {
-            $this->error('No clients found. Cannot run test.');
-
             return 1;
         }
 
         $this->info("Using client: {$client->name} (ID: {$client->id}, Company: {$client->company_id})");
 
-        // Clean up any existing test data if reset flag is used
+        $this->handleResetOption();
+
+        $contract = $this->getOrCreateTestContract($client);
+        $schedule = $this->getOrCreateTestSchedule($client, $contract);
+
+        $this->displayScheduleInfo($schedule);
+
+        $assets = $this->getTestAssets($client);
+
+        $this->evaluateAssets($assets, $assetSupportService);
+        $this->displaySummaryStatistics($client, $assetSupportService);
+
+        $this->info("\n✅ Asset support evaluation test completed successfully!");
+
+        return 0;
+    }
+
+    private function getTestClient(): ?Client
+    {
+        $client = Client::first();
+        if (! $client) {
+            $this->error('No clients found. Cannot run test.');
+        }
+
+        return $client;
+    }
+
+    private function handleResetOption(): void
+    {
         if ($this->option('reset')) {
             $this->info('Cleaning up existing test data...');
             Contract::where('contract_number', 'LIKE', 'TEST-%')->delete();
         }
+    }
 
-        // Create or get test contract
+    private function getOrCreateTestContract(Client $client): Contract
+    {
         $contract = Contract::where('client_id', $client->id)
             ->where('contract_number', 'LIKE', 'TEST-%')
             ->first();
@@ -69,7 +96,11 @@ class TestAssetSupportEvaluation extends Command
             $this->info("Using existing contract: {$contract->contract_number}");
         }
 
-        // Create test infrastructure schedule
+        return $contract;
+    }
+
+    private function getOrCreateTestSchedule(Client $client, Contract $contract): ContractSchedule
+    {
         $schedule = $contract->schedules()
             ->where('schedule_type', 'A')
             ->first();
@@ -104,61 +135,81 @@ class TestAssetSupportEvaluation extends Command
             $this->info("Using existing schedule: {$schedule->title}");
         }
 
+        return $schedule;
+    }
+
+    private function displayScheduleInfo(ContractSchedule $schedule): void
+    {
         $supportedTypes = implode(', ', $schedule->supported_asset_types ?? []);
         $this->info("Schedule supports: {$supportedTypes}");
         $this->info('Auto-assign enabled: '.($schedule->auto_assign_assets ? 'YES' : 'NO'));
         $this->info('Schedule is effective: '.($schedule->isEffective() ? 'YES' : 'NO'));
+    }
 
-        // Test with assets from this client
+    private function getTestAssets(Client $client): \Illuminate\Support\Collection
+    {
         $assets = Asset::where('client_id', $client->id)->limit(5)->get();
 
         if ($assets->isEmpty()) {
             $this->warn('No assets found for this client.');
-            // Test with any asset but update its client_id temporarily
             $asset = Asset::first();
             if ($asset) {
-                $originalClientId = $asset->client_id;
                 $asset->update(['client_id' => $client->id]);
                 $this->info("Temporarily assigned asset {$asset->name} to test client");
                 $assets = collect([$asset]);
             }
         }
 
+        return $assets;
+    }
+
+    private function evaluateAssets($assets, AssetSupportService $assetSupportService): void
+    {
         $this->info("\nTesting Asset Support Evaluation:");
         $this->info('=================================');
 
         foreach ($assets as $asset) {
-            $this->info("\nAsset: {$asset->name} (Type: {$asset->type})");
-            $this->info("Current support status: {$asset->support_status}");
+            $this->evaluateSingleAsset($asset, $assetSupportService);
+        }
+    }
 
-            // Evaluate support
-            $evaluation = $assetSupportService->evaluateAssetSupport($asset, true);
+    private function evaluateSingleAsset(Asset $asset, AssetSupportService $assetSupportService): void
+    {
+        $this->info("\nAsset: {$asset->name} (Type: {$asset->type})");
+        $this->info("Current support status: {$asset->support_status}");
 
-            $this->info('Evaluation results:');
-            $this->info("- Previous status: {$evaluation['previous_status']}");
-            $this->info("- New status: {$evaluation['new_status']}");
-            $this->info("- Reason: {$evaluation['reason']}");
+        $evaluation = $assetSupportService->evaluateAssetSupport($asset, true);
 
-            if (isset($evaluation['supporting_schedule'])) {
-                $this->info("- Supporting schedule: {$evaluation['supporting_schedule']['title']}");
-                $this->info("- Support level: {$evaluation['support_level']}");
-                $this->info('- Auto-assigned: '.($evaluation['auto_assigned'] ? 'YES' : 'NO'));
-            }
+        $this->displayEvaluationResults($evaluation);
 
-            if (! empty($evaluation['recommendations'])) {
-                $this->info('- Recommendations:');
-                foreach ($evaluation['recommendations'] as $rec) {
-                    $this->info("  * {$rec['action']}");
-                }
-            }
+        $asset->refresh();
+        $this->info("Final status: {$asset->support_status} ({$asset->support_status_display})");
+        $this->info('Support level: '.($asset->support_level_display ?? 'None'));
+    }
 
-            // Refresh and show final status
-            $asset->refresh();
-            $this->info("Final status: {$asset->support_status} ({$asset->support_status_display})");
-            $this->info('Support level: '.($asset->support_level_display ?? 'None'));
+    private function displayEvaluationResults(array $evaluation): void
+    {
+        $this->info('Evaluation results:');
+        $this->info("- Previous status: {$evaluation['previous_status']}");
+        $this->info("- New status: {$evaluation['new_status']}");
+        $this->info("- Reason: {$evaluation['reason']}");
+
+        if (isset($evaluation['supporting_schedule'])) {
+            $this->info("- Supporting schedule: {$evaluation['supporting_schedule']['title']}");
+            $this->info("- Support level: {$evaluation['support_level']}");
+            $this->info('- Auto-assigned: '.($evaluation['auto_assigned'] ? 'YES' : 'NO'));
         }
 
-        // Show summary statistics
+        if (! empty($evaluation['recommendations'])) {
+            $this->info('- Recommendations:');
+            foreach ($evaluation['recommendations'] as $rec) {
+                $this->info("  * {$rec['action']}");
+            }
+        }
+    }
+
+    private function displaySummaryStatistics(Client $client, AssetSupportService $assetSupportService): void
+    {
         $this->info("\nSupport Status Summary:");
         $this->info('======================');
 
@@ -177,9 +228,5 @@ class TestAssetSupportEvaluation extends Command
         }
 
         $this->info("Auto-assigned: {$stats['auto_assigned_percentage']}%");
-
-        $this->info("\n✅ Asset support evaluation test completed successfully!");
-
-        return 0;
     }
 }
