@@ -521,8 +521,7 @@
                                     <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" 
                                             class="{{ $assetHealth['overall'] >= 80 ? 'text-emerald-500' : ($assetHealth['overall'] >= 50 ? 'text-amber-500' : 'text-rose-500') }}"
                                             stroke-dasharray="351.86" 
-                                            stroke-dashoffset="{{ 351.86 - ($assetHealth['overall'] / 100 * 351.86) }}"
-                                            stroke-linecap="round" />
+                                            stroke-dashoffset="{{ 351.86 - ($assetHealth['overall'] / 100 * 351.86) }}"                                            stroke-linecap="round" />
                                 </svg>
                                 <div class="absolute inset-0 flex items-center justify-center">
                                     <flux:heading size="xl">{{ $assetHealth['overall'] }}%</flux:heading>
