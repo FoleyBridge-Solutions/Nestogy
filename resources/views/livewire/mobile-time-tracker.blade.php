@@ -158,7 +158,7 @@
                     </flux:button>
                 @else
                     <flux:button 
-                        wire:click="stopTimer" 
+                        wire:click="stopTimer"
                         variant="danger" 
                         size="lg"
                         class="flex-1">
