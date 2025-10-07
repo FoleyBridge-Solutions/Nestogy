@@ -285,26 +285,40 @@ class QuickActionService
         }
 
         // For system actions, check by route or action key
-        $action = static::getActionsForUser($user)
+        $action = static::findActionByIdentifier($actionIdentifier, $user);
+
+        return $action ? static::isActionInFavorites($action, $favorites) : false;
+    }
+
+    /**
+     * Find an action by its identifier
+     */
+    protected static function findActionByIdentifier($actionIdentifier, User $user): ?array
+    {
+        return static::getActionsForUser($user)
             ->first(function ($a) use ($actionIdentifier) {
                 return (isset($a['id']) && $a['id'] === $actionIdentifier) ||
                        (isset($a['route']) && $a['route'] === $actionIdentifier) ||
                        (isset($a['action']) && $a['action'] === $actionIdentifier) ||
                        (isset($a['custom_id']) && $a['custom_id'] == $actionIdentifier);
             });
+    }
 
-        if ($action) {
-            $checkKeys = [
-                $action['id'] ?? null,
-                $action['route'] ?? null,
-                $action['action'] ?? null,
-                isset($action['custom_id']) ? 'custom_'.$action['custom_id'] : null,
-            ];
+    /**
+     * Check if an action's identifiers match any favorites
+     */
+    protected static function isActionInFavorites(array $action, array $favorites): bool
+    {
+        $checkKeys = [
+            $action['id'] ?? null,
+            $action['route'] ?? null,
+            $action['action'] ?? null,
+            isset($action['custom_id']) ? 'custom_'.$action['custom_id'] : null,
+        ];
 
-            foreach ($checkKeys as $key) {
-                if ($key && in_array($key, $favorites)) {
-                    return true;
-                }
+        foreach ($checkKeys as $key) {
+            if ($key && in_array($key, $favorites)) {
+                return true;
             }
         }
 
