@@ -13,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class EmailAccountController extends Controller
 {
+    private const EMAIL_ACCOUNT_NOT_FOUND = 'Email account not found';
+
     public function __construct(
         private ImapService $imapService,
         private UnifiedEmailSyncService $unifiedSyncService
@@ -155,7 +157,7 @@ class EmailAccountController extends Controller
             ->first();
 
         if (! $emailAccount) {
-            abort(404, 'Email account not found');
+            abort(404, self::EMAIL_ACCOUNT_NOT_FOUND);
         }
 
         $this->authorize('view', $emailAccount);
@@ -180,7 +182,7 @@ class EmailAccountController extends Controller
             ->first();
 
         if (! $emailAccount) {
-            abort(404, 'Email account not found');
+            abort(404, self::EMAIL_ACCOUNT_NOT_FOUND);
         }
 
         $this->authorize('update', $emailAccount);
@@ -234,7 +236,7 @@ class EmailAccountController extends Controller
             ->first();
 
         if (! $emailAccount) {
-            abort(404, 'Email account not found');
+            abort(404, self::EMAIL_ACCOUNT_NOT_FOUND);
         }
 
         $this->authorize('update', $emailAccount);
@@ -326,7 +328,7 @@ class EmailAccountController extends Controller
             ->first();
 
         if (! $emailAccount) {
-            abort(404, 'Email account not found');
+            abort(404, self::EMAIL_ACCOUNT_NOT_FOUND);
         }
 
         $this->authorize('delete', $emailAccount);
