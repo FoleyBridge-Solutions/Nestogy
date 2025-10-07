@@ -198,6 +198,9 @@ class DynamicContractValidationService
             case ContractFieldDefinition::TYPE_JSON:
                 $rules[] = 'json';
                 break;
+
+            default:
+                break;
         }
 
         // Add custom validation rules from field definition
