@@ -157,7 +157,7 @@
                         Start Timer
                     </flux:button>
                 @else
-                    <flux:button 
+                    <flux:button
                         wire:click="stopTimer" 
                         variant="danger" 
                         size="lg"
