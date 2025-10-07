@@ -255,6 +255,8 @@ class AssetController extends Controller
                     case 'archive':
                         $this->assetService->archive($asset);
                         break;
+                    default:
+                        break;
                 }
                 $count++;
             }
