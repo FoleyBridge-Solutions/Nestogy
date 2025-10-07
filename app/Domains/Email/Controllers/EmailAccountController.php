@@ -13,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class EmailAccountController extends Controller
 {
+    private const PORT_VALIDATION_RULE = 'required|integer|min:1|max:65535';
+
     public function __construct(
         private ImapService $imapService,
         private UnifiedEmailSyncService $unifiedSyncService
@@ -80,12 +82,12 @@ class EmailAccountController extends Controller
             ],
             'provider' => 'required|in:gmail,outlook,yahoo,manual',
             'imap_host' => 'required|string|max:255',
-            'imap_port' => 'required|integer|min:1|max:65535',
+            'imap_port' => self::PORT_VALIDATION_RULE,
             'imap_encryption' => 'required|in:ssl,tls,none',
             'imap_username' => 'required|string|max:255',
             'imap_password' => 'required|string',
             'smtp_host' => 'required|string|max:255',
-            'smtp_port' => 'required|integer|min:1|max:65535',
+            'smtp_port' => self::PORT_VALIDATION_RULE,
             'smtp_encryption' => 'required|in:ssl,tls,none',
             'smtp_username' => 'required|string|max:255',
             'smtp_password' => 'required|string',
@@ -250,12 +252,12 @@ class EmailAccountController extends Controller
                 }),
             ],
             'imap_host' => 'required|string|max:255',
-            'imap_port' => 'required|integer|min:1|max:65535',
+            'imap_port' => self::PORT_VALIDATION_RULE,
             'imap_encryption' => 'required|in:ssl,tls,none',
             'imap_username' => 'required|string|max:255',
             'imap_password' => 'nullable|string',
             'smtp_host' => 'required|string|max:255',
-            'smtp_port' => 'required|integer|min:1|max:65535',
+            'smtp_port' => self::PORT_VALIDATION_RULE,
             'smtp_encryption' => 'required|in:ssl,tls,none',
             'smtp_username' => 'required|string|max:255',
             'smtp_password' => 'nullable|string',
