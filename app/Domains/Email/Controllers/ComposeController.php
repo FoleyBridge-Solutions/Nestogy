@@ -79,64 +79,12 @@ class ComposeController extends Controller
         }
 
         $account = EmailAccount::forUser(Auth::id())->findOrFail($request->account_id);
+        $attachments = $this->processAttachments($request);
+        $emailData = $this->buildEmailData($request, $attachments);
 
-        // Parse email addresses
-        $toAddresses = $this->parseEmailAddresses($request->to);
-        $ccAddresses = $this->parseEmailAddresses($request->cc ?: '');
-        $bccAddresses = $this->parseEmailAddresses($request->bcc ?: '');
-
-        // Handle attachments
-        $attachments = [];
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('email_temp', 'local');
-                $attachments[] = [
-                    'path' => storage_path('app/'.$path),
-                    'name' => $file->getClientOriginalName(),
-                    'mime' => $file->getMimeType(),
-                ];
-            }
-        }
-
-        $emailData = [
-            'to' => $toAddresses,
-            'cc' => $ccAddresses,
-            'bcc' => $bccAddresses,
-            'subject' => $request->subject,
-            'body' => $request->body,
-            'signature_id' => $request->signature_id,
-            'attachments' => $attachments,
-        ];
-
-        // Save as draft or send
-        if ($request->boolean('save_as_draft')) {
-            try {
-                $draft = $this->emailService->saveDraft($emailData, $account);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Draft saved successfully',
-                    'draft_id' => $draft->id,
-                ]);
-
-            } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to save draft: '.$e->getMessage(),
-                ], 500);
-            }
-        } else {
-            $result = $this->emailService->sendEmail($emailData, $account);
-
-            // Clean up temp files
-            foreach ($attachments as $attachment) {
-                if (file_exists($attachment['path'])) {
-                    unlink($attachment['path']);
-                }
-            }
-
-            return response()->json($result, $result['success'] ? 200 : 500);
-        }
+        return $request->boolean('save_as_draft')
+            ? $this->handleDraftSave($emailData, $account)
+            : $this->handleEmailSend($emailData, $account, $attachments);
     }
 
     public function reply(EmailMessage $message)
@@ -394,13 +342,78 @@ class ComposeController extends Controller
         ]);
     }
 
+    private function processAttachments(Request $request): array
+    {
+        $attachments = [];
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('email_temp', 'local');
+                $attachments[] = [
+                    'path' => storage_path('app/'.$path),
+                    'name' => $file->getClientOriginalName(),
+                    'mime' => $file->getMimeType(),
+                ];
+            }
+        }
+
+        return $attachments;
+    }
+
+    private function buildEmailData(Request $request, array $attachments): array
+    {
+        return [
+            'to' => $this->parseEmailAddresses($request->to),
+            'cc' => $this->parseEmailAddresses($request->cc ?: ''),
+            'bcc' => $this->parseEmailAddresses($request->bcc ?: ''),
+            'subject' => $request->subject,
+            'body' => $request->body,
+            'signature_id' => $request->signature_id,
+            'attachments' => $attachments,
+        ];
+    }
+
+    private function handleDraftSave(array $emailData, EmailAccount $account)
+    {
+        try {
+            $draft = $this->emailService->saveDraft($emailData, $account);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Draft saved successfully',
+                'draft_id' => $draft->id,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save draft: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function handleEmailSend(array $emailData, EmailAccount $account, array $attachments)
+    {
+        $result = $this->emailService->sendEmail($emailData, $account);
+        $this->cleanupTempFiles($attachments);
+
+        return response()->json($result, $result['success'] ? 200 : 500);
+    }
+
+    private function cleanupTempFiles(array $attachments): void
+    {
+        foreach ($attachments as $attachment) {
+            if (file_exists($attachment['path'])) {
+                unlink($attachment['path']);
+            }
+        }
+    }
+
     private function parseEmailAddresses(string $addresses): array
     {
         if (empty($addresses)) {
             return [];
         }
 
-        // Simple email parsing - could be enhanced with proper email parsing
         $emails = array_map('trim', explode(',', $addresses));
 
         return array_filter($emails, function ($email) {
