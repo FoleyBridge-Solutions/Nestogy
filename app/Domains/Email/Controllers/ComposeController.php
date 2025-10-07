@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ComposeController extends Controller
 {
+    private const SIGNATURE_VALIDATION_RULE = 'nullable|exists:email_signatures,id';
+
     public function __construct(
         private EmailService $emailService
     ) {}
@@ -65,7 +67,7 @@ class ComposeController extends Controller
             'bcc' => 'nullable|string',
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
-            'signature_id' => 'nullable|exists:email_signatures,id',
+            'signature_id' => self::SIGNATURE_VALIDATION_RULE,
             'save_as_draft' => 'boolean',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:25600', // 25MB max
@@ -252,7 +254,7 @@ class ComposeController extends Controller
         $validator = Validator::make($request->all(), [
             'body' => 'required|string',
             'reply_all' => 'boolean',
-            'signature_id' => 'nullable|exists:email_signatures,id',
+            'signature_id' => self::SIGNATURE_VALIDATION_RULE,
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:25600',
         ]);
@@ -308,7 +310,7 @@ class ComposeController extends Controller
             'bcc' => 'nullable|string',
             'body' => 'nullable|string',
             'include_attachments' => 'boolean',
-            'signature_id' => 'nullable|exists:email_signatures,id',
+            'signature_id' => self::SIGNATURE_VALIDATION_RULE,
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:25600',
         ]);
