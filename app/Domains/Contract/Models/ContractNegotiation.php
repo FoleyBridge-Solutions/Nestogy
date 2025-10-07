@@ -62,11 +62,13 @@ class ContractNegotiation extends Model
         'constraints' => 'array',
         'competitive_context' => 'array',
         'pricing_history' => 'array',
-        'target_value' => 'decimal:2',
-        'minimum_value' => 'decimal:2',
-        'final_value' => 'decimal:2',
+        'target_value' => self::CAST_DECIMAL_2,
+        'minimum_value' => self::CAST_DECIMAL_2,
+        'final_value' => self::CAST_DECIMAL_2,
         'won' => 'boolean',
     ];
+
+    const CAST_DECIMAL_2 = 'decimal:2';
 
     // Negotiation statuses
     const STATUS_ACTIVE = 'active';
