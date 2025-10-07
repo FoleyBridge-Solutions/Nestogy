@@ -102,7 +102,7 @@ class DashboardDataService
                     'start' => $startDate->toDateString(),
                     'end' => $endDate->toDateString(),
                 ],
-                'revenue_summary' => $this->getRevenueSummary($startDate, $endDate),
+                'revenue_summary' => $this->getRevenueSummary($startDate),
                 'mrr_analysis' => $this->getMRRAnalysis($startDate, $endDate),
                 'arr_projection' => $this->getARRProjection(),
                 'service_breakdown' => $this->getServiceRevenueBreakdown($startDate, $endDate),
@@ -672,7 +672,7 @@ class DashboardDataService
         return [];
     }
 
-    private function getRevenueSummary(Carbon $startDate, Carbon $endDate): array
+    private function getRevenueSummary(Carbon $startDate): array
     {
         return [];
     }
