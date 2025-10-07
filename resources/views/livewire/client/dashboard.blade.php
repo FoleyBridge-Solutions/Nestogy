@@ -518,7 +518,7 @@
                             <div class="relative w-32 h-32">
                                 <svg class="transform -rotate-90 w-32 h-32">
                                     <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" class="text-zinc-200 dark:text-zinc-700" />
-                                    <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" 
+                                    <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent"
                                             class="{{ $assetHealth['overall'] >= 80 ? 'text-emerald-500' : ($assetHealth['overall'] >= 50 ? 'text-amber-500' : 'text-rose-500') }}"
                                             stroke-dasharray="351.86" 
                                             stroke-dashoffset="{{ 351.86 - ($assetHealth['overall'] / 100 * 351.86) }}"
