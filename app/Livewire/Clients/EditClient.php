@@ -269,23 +269,56 @@ class EditClient extends Component
     {
         $this->validate();
 
-        // Handle avatar upload
+        $this->handleAvatarUpload();
+        $this->handleAvatarRemoval();
+
+        $updateData = $this->prepareUpdateData();
+
+        $this->client->update($updateData);
+
+        session()->flash('message', 'Client updated successfully!');
+
+        return redirect()->route('clients.show', $this->client);
+    }
+
+    private function handleAvatarUpload()
+    {
         if ($this->avatar) {
             $avatarPath = $this->avatar->store('avatars', 'public');
             $this->client->avatar = $avatarPath;
         }
+    }
 
-        // Handle avatar removal
-        if ($this->remove_avatar && $this->client->avatar) {
-            // Delete old avatar file
-            if (file_exists(storage_path('app/public/'.$this->client->avatar))) {
-                unlink(storage_path('app/public/'.$this->client->avatar));
-            }
-            $this->client->avatar = null;
+    private function handleAvatarRemoval()
+    {
+        if (! $this->remove_avatar || ! $this->client->avatar) {
+            return;
         }
 
-        // Prepare data for update
-        $updateData = [
+        $avatarPath = storage_path('app/public/'.$this->client->avatar);
+        if (file_exists($avatarPath)) {
+            unlink($avatarPath);
+        }
+        $this->client->avatar = null;
+    }
+
+    private function prepareUpdateData()
+    {
+        return array_merge(
+            $this->getBasicData(),
+            $this->getAddressData(),
+            $this->getContactData(),
+            $this->getBillingData(),
+            $this->getCustomRateData(),
+            $this->getContractData(),
+            $this->getIntegrationData(),
+            $this->getAdditionalData()
+        );
+    }
+
+    private function getBasicData()
+    {
+        return [
             'name' => $this->name,
             'type' => $this->type ?: null,
             'company_name' => $this->company_name ?: null,
@@ -295,51 +328,92 @@ class EditClient extends Component
             'tax_id_number' => $this->tax_id_number ?: null,
             'referral' => $this->referral ?: null,
             'lead' => $this->lead,
+        ];
+    }
 
+    private function getAddressData()
+    {
+        return [
             'address' => $this->address ?: null,
             'city' => $this->city ?: null,
             'state' => $this->state ?: null,
             'zip_code' => $this->zip_code ?: null,
             'country' => $this->country ?: null,
+        ];
+    }
 
+    private function getContactData()
+    {
+        return [
             'billing_contact' => $this->billing_contact ?: null,
             'technical_contact' => $this->technical_contact ?: null,
+        ];
+    }
 
+    private function getBillingData()
+    {
+        return [
             'status' => $this->status,
             'hourly_rate' => $this->hourly_rate !== '' ? (float) $this->hourly_rate : null,
             'rate' => $this->rate !== '' ? (float) $this->rate : null,
             'currency_code' => $this->currency_code,
             'net_terms' => (int) $this->net_terms,
+        ];
+    }
 
+    private function getCustomRateData()
+    {
+        return [
             'use_custom_rates' => $this->use_custom_rates,
-            'custom_rate_calculation_method' => $this->use_custom_rates ? $this->custom_rate_calculation_method : null,
-            'custom_standard_rate' => $this->use_custom_rates && $this->custom_standard_rate !== '' ? (float) $this->custom_standard_rate : null,
-            'custom_after_hours_rate' => $this->use_custom_rates && $this->custom_after_hours_rate !== '' ? (float) $this->custom_after_hours_rate : null,
-            'custom_emergency_rate' => $this->use_custom_rates && $this->custom_emergency_rate !== '' ? (float) $this->custom_emergency_rate : null,
-            'custom_weekend_rate' => $this->use_custom_rates && $this->custom_weekend_rate !== '' ? (float) $this->custom_weekend_rate : null,
-            'custom_holiday_rate' => $this->use_custom_rates && $this->custom_holiday_rate !== '' ? (float) $this->custom_holiday_rate : null,
-            'custom_after_hours_multiplier' => $this->use_custom_rates && $this->custom_after_hours_multiplier !== '' ? (float) $this->custom_after_hours_multiplier : null,
-            'custom_emergency_multiplier' => $this->use_custom_rates && $this->custom_emergency_multiplier !== '' ? (float) $this->custom_emergency_multiplier : null,
-            'custom_weekend_multiplier' => $this->use_custom_rates && $this->custom_weekend_multiplier !== '' ? (float) $this->custom_weekend_multiplier : null,
-            'custom_holiday_multiplier' => $this->use_custom_rates && $this->custom_holiday_multiplier !== '' ? (float) $this->custom_holiday_multiplier : null,
-            'custom_minimum_billing_increment' => $this->use_custom_rates && $this->custom_minimum_billing_increment !== '' ? (float) $this->custom_minimum_billing_increment : null,
-            'custom_time_rounding_method' => $this->use_custom_rates ? $this->custom_time_rounding_method : null,
+            'custom_rate_calculation_method' => $this->parseCustomRateField($this->custom_rate_calculation_method, 'string'),
+            'custom_standard_rate' => $this->parseCustomRateField($this->custom_standard_rate, 'float'),
+            'custom_after_hours_rate' => $this->parseCustomRateField($this->custom_after_hours_rate, 'float'),
+            'custom_emergency_rate' => $this->parseCustomRateField($this->custom_emergency_rate, 'float'),
+            'custom_weekend_rate' => $this->parseCustomRateField($this->custom_weekend_rate, 'float'),
+            'custom_holiday_rate' => $this->parseCustomRateField($this->custom_holiday_rate, 'float'),
+            'custom_after_hours_multiplier' => $this->parseCustomRateField($this->custom_after_hours_multiplier, 'float'),
+            'custom_emergency_multiplier' => $this->parseCustomRateField($this->custom_emergency_multiplier, 'float'),
+            'custom_weekend_multiplier' => $this->parseCustomRateField($this->custom_weekend_multiplier, 'float'),
+            'custom_holiday_multiplier' => $this->parseCustomRateField($this->custom_holiday_multiplier, 'float'),
+            'custom_minimum_billing_increment' => $this->parseCustomRateField($this->custom_minimum_billing_increment, 'float'),
+            'custom_time_rounding_method' => $this->parseCustomRateField($this->custom_time_rounding_method, 'string'),
+        ];
+    }
 
+    private function parseCustomRateField($value, $type)
+    {
+        if (! $this->use_custom_rates) {
+            return null;
+        }
+
+        if ($value === '') {
+            return null;
+        }
+
+        return $type === 'float' ? (float) $value : $value;
+    }
+
+    private function getContractData()
+    {
+        return [
             'contract_start_date' => $this->contract_start_date ?: null,
             'contract_end_date' => $this->contract_end_date ?: null,
             'sla_id' => $this->sla_id,
+        ];
+    }
 
+    private function getIntegrationData()
+    {
+        return [
             'rmm_id' => $this->rmm_id ?: null,
+        ];
+    }
 
+    private function getAdditionalData()
+    {
+        return [
             'notes' => $this->notes ?: null,
         ];
-
-        // Update client
-        $this->client->update($updateData);
-
-        session()->flash('message', 'Client updated successfully!');
-
-        return redirect()->route('clients.show', $this->client);
     }
 
     public function render()
