@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ClientPortalController extends Controller
 {
+    private const PDF_EXTENSION = '.pdf';
+
     protected DigitalSignatureService $signatureService;
 
     public function __construct(DigitalSignatureService $signatureService)
@@ -265,7 +267,7 @@ class ClientPortalController extends Controller
 
             return response($pdf, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="contract-'.$contract->contract_number.'.pdf"',
+                'Content-Disposition' => 'attachment; filename="contract-'.$contract->contract_number.self::PDF_EXTENSION.'"',
             ]);
         } catch (\Exception $e) {
             Log::error('Error generating contract PDF for client', [
@@ -405,7 +407,7 @@ class ClientPortalController extends Controller
 
             return response($pdf, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="invoice-'.$invoice->invoice_number.'.pdf"',
+                'Content-Disposition' => 'attachment; filename="invoice-'.$invoice->invoice_number.self::PDF_EXTENSION.'"',
             ]);
         } catch (\Exception $e) {
             Log::error('Error generating invoice PDF for client', [
@@ -419,7 +421,7 @@ class ClientPortalController extends Controller
     }
 
     /**
-     * Client profile/settings
+     * View milestone details
      */
     public function profile()
     {
@@ -902,7 +904,7 @@ class ClientPortalController extends Controller
 
             return response($pdf, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="invoice-'.$invoice->invoice_number.'.pdf"',
+                'Content-Disposition' => 'attachment; filename="invoice-'.$invoice->invoice_number.self::PDF_EXTENSION.'"',
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Unable to download invoice PDF.');
