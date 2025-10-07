@@ -81,43 +81,37 @@ class TimeEntryInvoiceService
 
     protected function groupTimeEntries(Collection $timeEntries, string $groupBy): Collection
     {
-        switch ($groupBy) {
-            case 'ticket':
-                return $timeEntries->groupBy('ticket_id')->map(function ($entries, $ticketId) {
-                    return [
-                        'type' => 'ticket',
-                        'ticket_id' => $ticketId,
-                        'ticket' => $entries->first()->ticket,
-                        'entries' => $entries,
-                    ];
-                })->values();
+        $result = match ($groupBy) {
+            'ticket' => $timeEntries->groupBy('ticket_id')->map(function ($entries, $ticketId) {
+                return [
+                    'type' => 'ticket',
+                    'ticket_id' => $ticketId,
+                    'ticket' => $entries->first()->ticket,
+                    'entries' => $entries,
+                ];
+            })->values(),
+            'date' => $timeEntries->groupBy('work_date')->map(function ($entries, $date) {
+                return [
+                    'type' => 'date',
+                    'date' => $date,
+                    'entries' => $entries,
+                ];
+            })->values(),
+            'user' => $timeEntries->groupBy('user_id')->map(function ($entries, $userId) {
+                return [
+                    'type' => 'user',
+                    'user_id' => $userId,
+                    'user' => $entries->first()->user,
+                    'entries' => $entries,
+                ];
+            })->values(),
+            default => collect([[
+                'type' => 'combined',
+                'entries' => $timeEntries,
+            ]]),
+        };
 
-            case 'date':
-                return $timeEntries->groupBy('work_date')->map(function ($entries, $date) {
-                    return [
-                        'type' => 'date',
-                        'date' => $date,
-                        'entries' => $entries,
-                    ];
-                })->values();
-
-            case 'user':
-                return $timeEntries->groupBy('user_id')->map(function ($entries, $userId) {
-                    return [
-                        'type' => 'user',
-                        'user_id' => $userId,
-                        'user' => $entries->first()->user,
-                        'entries' => $entries,
-                    ];
-                })->values();
-
-            case 'none':
-            default:
-                return collect([[
-                    'type' => 'combined',
-                    'entries' => $timeEntries,
-                ]]);
-        }
+        return $result;
     }
 
     protected function createInvoiceItem(Invoice $invoice, array $group, Client $client): InvoiceItem
