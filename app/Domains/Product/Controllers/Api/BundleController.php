@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 
 class BundleController extends Controller
 {
+    private const BUNDLE_NOT_FOUND_MESSAGE = 'Bundle not found';
+
     protected ProductPricingService $pricingService;
 
     protected ProductSearchService $searchService;
@@ -58,7 +60,7 @@ class BundleController extends Controller
         if ($bundle->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bundle not found',
+                'message' => self::BUNDLE_NOT_FOUND_MESSAGE,
             ], 404);
         }
 
@@ -161,7 +163,7 @@ class BundleController extends Controller
         if ($bundle->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bundle not found',
+                'message' => self::BUNDLE_NOT_FOUND_MESSAGE,
             ], 404);
         }
 
@@ -228,7 +230,7 @@ class BundleController extends Controller
         if ($bundle->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bundle not found',
+                'message' => self::BUNDLE_NOT_FOUND_MESSAGE,
             ], 404);
         }
 
