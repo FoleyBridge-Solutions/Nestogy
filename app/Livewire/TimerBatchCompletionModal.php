@@ -111,27 +111,7 @@ class TimerBatchCompletionModal extends Component
 
     public function confirmStopAll()
     {
-        // Validate
-        if ($this->applyToAll) {
-            $this->validate([
-                'batchDescription' => 'required|string|min:5|max:1000',
-                'batchWorkType' => 'required|string',
-            ], [
-                'batchDescription.required' => 'Please describe what you worked on',
-                'batchDescription.min' => 'Description must be at least 5 characters',
-            ]);
-        } else {
-            // Validate individual settings
-            foreach ($this->individualSettings as $timerId => $settings) {
-                $this->validate([
-                    "individualSettings.{$timerId}.description" => 'required|string|min:5|max:1000',
-                    "individualSettings.{$timerId}.work_type" => 'required|string',
-                ], [
-                    "individualSettings.{$timerId}.description.required" => 'All timers need a description',
-                    "individualSettings.{$timerId}.description.min" => 'Description must be at least 5 characters',
-                ]);
-            }
-        }
+        $this->validateTimerSettings();
 
         $this->isProcessing = true;
         $this->processedCount = 0;
@@ -144,63 +124,11 @@ class TimerBatchCompletionModal extends Component
             $results = [];
 
             foreach ($this->activeTimers as $timer) {
-                // Determine settings to use
-                if ($this->applyToAll) {
-                    $description = $this->batchDescription;
-                    $workType = $this->batchWorkType;
-                    $isBillable = $this->batchIsBillable;
-                    $addComment = $this->batchAddComment;
-                } else {
-                    $settings = $this->individualSettings[$timer->id];
-                    $description = $settings['description'];
-                    $workType = $settings['work_type'];
-                    $isBillable = $settings['is_billable'];
-                    $addComment = $settings['add_comment'];
-                }
+                $settings = $this->getTimerSettings($timer->id);
+                $result = $this->stopTimer($service, $timer, $settings);
 
-                // Stop the timer
-                $result = $service->stopTracking($timer, [
-                    'description' => $description,
-                    'work_performed' => $description,
-                    'work_type' => $workType,
-                    'billable' => $isBillable,
-                ]);
-
-                // Update work type and billable if changed
-                $result->work_type = $workType;
-                $result->billable = $isBillable;
-                $result->save();
-
-                // Add comment if requested
-                if ($addComment && $timer->ticket) {
-                    $hours = round($result->hours_worked, 2);
-                    $minutes = round($result->minutes_worked, 0);
-                    $workTypeLabel = ucwords(str_replace('_', ' ', $workType));
-
-                    $commentContent = "⏱️ **Time Entry Logged** ({$hours} hours / {$minutes} minutes)\n\n";
-                    $commentContent .= "**Work Performed:** {$description}\n";
-                    $commentContent .= "**Work Type:** {$workTypeLabel}\n";
-                    $commentContent .= '**Billable:** '.($isBillable ? 'Yes' : 'No');
-
-                    if ($isBillable && $result->amount > 0) {
-                        $commentContent .= " (Amount: \${$result->amount})";
-                    }
-
-                    $commentService->addComment(
-                        ticket: $timer->ticket,
-                        content: $commentContent,
-                        visibility: TicketComment::VISIBILITY_INTERNAL,
-                        author: Auth::user(),
-                        source: TicketComment::SOURCE_SYSTEM,
-                        options: [
-                            'metadata' => [
-                                'time_entry_id' => $result->id,
-                                'auto_generated' => true,
-                                'type' => 'timer_completion',
-                                'batch_stop' => true,
-                            ],
-                        ]
-                    );
+                if ($settings['add_comment'] && $timer->ticket) {
+                    $this->addTimeEntryComment($commentService, $timer, $result, $settings);
                 }
 
                 $results[] = [
@@ -214,29 +142,8 @@ class TimerBatchCompletionModal extends Component
 
             DB::commit();
 
-            // Calculate totals
-            $totalHours = collect($results)->sum('hours');
-            $totalAmount = collect($results)->sum('amount');
-
-            // Show success message
-            $message = "{$this->processedCount} timers stopped - {$totalHours}h total";
-            if ($totalAmount > 0) {
-                $message .= " (\${$totalAmount})";
-            }
-
-            Flux::toast(
-                heading: 'All Timers Stopped',
-                text: $message,
-                variant: 'success'
-            );
-
-            // Dispatch events
-            $this->dispatch('timer:batch-completion-confirmed', results: $results);
-            $this->dispatch('refreshTimer');
-            $this->dispatch('refreshNavbarTimer');
-            $this->dispatch('time-entry-updated');
-
-            // Close modal
+            $this->showSuccessMessage($results);
+            $this->dispatchCompletionEvents($results);
             $this->closeModal();
 
         } catch (\Exception $e) {
@@ -254,6 +161,116 @@ class TimerBatchCompletionModal extends Component
     public function cancelBatchStop()
     {
         $this->closeModal();
+    }
+
+    protected function validateTimerSettings()
+    {
+        if ($this->applyToAll) {
+            $this->validate([
+                'batchDescription' => 'required|string|min:5|max:1000',
+                'batchWorkType' => 'required|string',
+            ], [
+                'batchDescription.required' => 'Please describe what you worked on',
+                'batchDescription.min' => 'Description must be at least 5 characters',
+            ]);
+        } else {
+            foreach ($this->individualSettings as $timerId => $settings) {
+                $this->validate([
+                    "individualSettings.{$timerId}.description" => 'required|string|min:5|max:1000',
+                    "individualSettings.{$timerId}.work_type" => 'required|string',
+                ], [
+                    "individualSettings.{$timerId}.description.required" => 'All timers need a description',
+                    "individualSettings.{$timerId}.description.min" => 'Description must be at least 5 characters',
+                ]);
+            }
+        }
+    }
+
+    protected function getTimerSettings($timerId)
+    {
+        if ($this->applyToAll) {
+            return [
+                'description' => $this->batchDescription,
+                'work_type' => $this->batchWorkType,
+                'is_billable' => $this->batchIsBillable,
+                'add_comment' => $this->batchAddComment,
+            ];
+        }
+
+        return $this->individualSettings[$timerId];
+    }
+
+    protected function stopTimer($service, $timer, $settings)
+    {
+        $result = $service->stopTracking($timer, [
+            'description' => $settings['description'],
+            'work_performed' => $settings['description'],
+            'work_type' => $settings['work_type'],
+            'billable' => $settings['is_billable'],
+        ]);
+
+        $result->work_type = $settings['work_type'];
+        $result->billable = $settings['is_billable'];
+        $result->save();
+
+        return $result;
+    }
+
+    protected function addTimeEntryComment($commentService, $timer, $result, $settings)
+    {
+        $hours = round($result->hours_worked, 2);
+        $minutes = round($result->minutes_worked, 0);
+        $workTypeLabel = ucwords(str_replace('_', ' ', $settings['work_type']));
+
+        $commentContent = "⏱️ **Time Entry Logged** ({$hours} hours / {$minutes} minutes)\n\n";
+        $commentContent .= "**Work Performed:** {$settings['description']}\n";
+        $commentContent .= "**Work Type:** {$workTypeLabel}\n";
+        $commentContent .= '**Billable:** '.($settings['is_billable'] ? 'Yes' : 'No');
+
+        if ($settings['is_billable'] && $result->amount > 0) {
+            $commentContent .= " (Amount: \${$result->amount})";
+        }
+
+        $commentService->addComment(
+            ticket: $timer->ticket,
+            content: $commentContent,
+            visibility: TicketComment::VISIBILITY_INTERNAL,
+            author: Auth::user(),
+            source: TicketComment::SOURCE_SYSTEM,
+            options: [
+                'metadata' => [
+                    'time_entry_id' => $result->id,
+                    'auto_generated' => true,
+                    'type' => 'timer_completion',
+                    'batch_stop' => true,
+                ],
+            ]
+        );
+    }
+
+    protected function showSuccessMessage($results)
+    {
+        $totalHours = collect($results)->sum('hours');
+        $totalAmount = collect($results)->sum('amount');
+
+        $message = "{$this->processedCount} timers stopped - {$totalHours}h total";
+        if ($totalAmount > 0) {
+            $message .= " (\${$totalAmount})";
+        }
+
+        Flux::toast(
+            heading: 'All Timers Stopped',
+            text: $message,
+            variant: 'success'
+        );
+    }
+
+    protected function dispatchCompletionEvents($results)
+    {
+        $this->dispatch('timer:batch-completion-confirmed', results: $results);
+        $this->dispatch('refreshTimer');
+        $this->dispatch('refreshNavbarTimer');
+        $this->dispatch('time-entry-updated');
     }
 
     protected function closeModal()
