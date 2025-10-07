@@ -338,8 +338,22 @@ class CommunicationLogController extends Controller
     {
         $communications = collect();
 
-        // 1. Manual Communication Logs
-        $manualLogs = CommunicationLog::where('client_id', $client->id)
+        $communications = $communications->concat($this->getManualCommunications($client));
+        $communications = $communications->concat($this->getTicketCommunications($client));
+        $communications = $communications->concat($this->getInvoiceCommunications($client));
+
+        $communications = $this->applyFiltersToCollection($communications, $request);
+        $communications = $communications->sortByDesc('created_at');
+
+        return $this->paginateCollection($communications, $request);
+    }
+
+    /**
+     * Get manual communication logs.
+     */
+    protected function getManualCommunications($client)
+    {
+        return CommunicationLog::where('client_id', $client->id)
             ->with(['user', 'contact'])
             ->get()
             ->map(function ($log) {
@@ -362,95 +376,111 @@ class CommunicationLogController extends Controller
                     'raw_data' => $log,
                 ];
             });
+    }
 
-        $communications = $communications->concat($manualLogs);
-
-        // 2. Ticket Communications
-        if (class_exists('App\Domains\Ticket\Models\Ticket')) {
-            try {
-                $ticketComms = \App\Domains\Ticket\Models\Ticket::where('client_id', $client->id)
-                    ->with(['creator', 'assignee', 'contact'])
-                    ->get()
-                    ->map(function ($ticket) {
-                        return (object) [
-                            'id' => 'ticket_'.$ticket->id,
-                            'type' => 'automatic',
-                            'source' => 'Support Ticket',
-                            'communication_type' => 'support',
-                            'channel' => 'ticket_system',
-                            'subject' => $ticket->title ?? $ticket->subject ?? 'Ticket #'.($ticket->id ?? 'Unknown'),
-                            'notes' => $ticket->description ?? $ticket->notes ?? 'Support ticket created',
-                            'contact_name' => $ticket->contact ? $ticket->contact->name : 'N/A',
-                            'contact_email' => $ticket->contact ? $ticket->contact->email : null,
-                            'contact_phone' => $ticket->contact ? $ticket->contact->phone : null,
-                            'user_name' => $ticket->creator ? $ticket->creator->name : ($ticket->assignee ? $ticket->assignee->name : 'System'),
-                            'follow_up_required' => in_array($ticket->status ?? '', ['open', 'in-progress']),
-                            'follow_up_date' => null,
-                            'created_at' => $ticket->created_at,
-                            'route' => route('tickets.show', $ticket),
-                            'raw_data' => $ticket,
-                        ];
-                    });
-
-                $communications = $communications->concat($ticketComms);
-            } catch (\Exception $e) {
-                // Skip tickets if there's an issue
-                \Log::warning('Could not load tickets for communication log: '.$e->getMessage());
-            }
+    /**
+     * Get ticket communications.
+     */
+    protected function getTicketCommunications($client)
+    {
+        if (!class_exists('App\Domains\Ticket\Models\Ticket')) {
+            return collect();
         }
 
-        // 3. Invoice/Quote Communications
-        if (class_exists('App\Models\Invoice')) {
-            try {
-                $invoiceComms = \App\Models\Invoice::where('client_id', $client->id)
-                    ->whereIn('status', ['sent', 'paid', 'overdue'])
-                    ->with(['client'])
-                    ->get()
-                    ->map(function ($invoice) {
-                        return (object) [
-                            'id' => 'invoice_'.$invoice->id,
-                            'type' => 'automatic',
-                            'source' => 'Invoice',
-                            'communication_type' => 'billing',
-                            'channel' => 'email',
-                            'subject' => 'Invoice #'.($invoice->number ?? $invoice->id).' sent',
-                            'notes' => 'Invoice for $'.number_format($invoice->amount ?? 0, 2).' sent to client',
-                            'contact_name' => $invoice->client->name ?? 'Billing Contact',
-                            'contact_email' => $invoice->client->email ?? null,
-                            'contact_phone' => null,
-                            'user_name' => 'System',
-                            'follow_up_required' => in_array($invoice->status, ['sent', 'overdue']),
-                            'follow_up_date' => $invoice->due_date ?? null,
-                            'created_at' => $invoice->created_at,
-                            'route' => route('financial.invoices.show', $invoice),
-                            'raw_data' => $invoice,
-                        ];
-                    });
+        try {
+            return \App\Domains\Ticket\Models\Ticket::where('client_id', $client->id)
+                ->with(['creator', 'assignee', 'contact'])
+                ->get()
+                ->map(fn($ticket) => $this->mapTicketToCommunication($ticket));
+        } catch (\Exception $e) {
+            \Log::warning('Could not load tickets for communication log: '.$e->getMessage());
+            return collect();
+        }
+    }
 
-                $communications = $communications->concat($invoiceComms);
-            } catch (\Exception $e) {
-                // Skip invoices if there's an issue
-                \Log::warning('Could not load invoices for communication log: '.$e->getMessage());
-            }
+    /**
+     * Map a ticket to a communication object.
+     */
+    protected function mapTicketToCommunication($ticket)
+    {
+        return (object) [
+            'id' => 'ticket_'.$ticket->id,
+            'type' => 'automatic',
+            'source' => 'Support Ticket',
+            'communication_type' => 'support',
+            'channel' => 'ticket_system',
+            'subject' => $ticket->title ?? $ticket->subject ?? 'Ticket #'.($ticket->id ?? 'Unknown'),
+            'notes' => $ticket->description ?? $ticket->notes ?? 'Support ticket created',
+            'contact_name' => $ticket->contact ? $ticket->contact->name : 'N/A',
+            'contact_email' => $ticket->contact ? $ticket->contact->email : null,
+            'contact_phone' => $ticket->contact ? $ticket->contact->phone : null,
+            'user_name' => $ticket->creator ? $ticket->creator->name : ($ticket->assignee ? $ticket->assignee->name : 'System'),
+            'follow_up_required' => in_array($ticket->status ?? '', ['open', 'in-progress']),
+            'follow_up_date' => null,
+            'created_at' => $ticket->created_at,
+            'route' => route('tickets.show', $ticket),
+            'raw_data' => $ticket,
+        ];
+    }
+
+    /**
+     * Get invoice communications.
+     */
+    protected function getInvoiceCommunications($client)
+    {
+        if (!class_exists('App\Models\Invoice')) {
+            return collect();
         }
 
-        // 4. Email Communications (if you have an emails table)
-        // This would require tracking sent emails in a separate table
+        try {
+            return \App\Models\Invoice::where('client_id', $client->id)
+                ->whereIn('status', ['sent', 'paid', 'overdue'])
+                ->with(['client'])
+                ->get()
+                ->map(fn($invoice) => $this->mapInvoiceToCommunication($invoice));
+        } catch (\Exception $e) {
+            \Log::warning('Could not load invoices for communication log: '.$e->getMessage());
+            return collect();
+        }
+    }
 
-        // Apply filters to unified collection
-        $communications = $this->applyFiltersToCollection($communications, $request);
+    /**
+     * Map an invoice to a communication object.
+     */
+    protected function mapInvoiceToCommunication($invoice)
+    {
+        return (object) [
+            'id' => 'invoice_'.$invoice->id,
+            'type' => 'automatic',
+            'source' => 'Invoice',
+            'communication_type' => 'billing',
+            'channel' => 'email',
+            'subject' => 'Invoice #'.($invoice->number ?? $invoice->id).' sent',
+            'notes' => 'Invoice for $'.number_format($invoice->amount ?? 0, 2).' sent to client',
+            'contact_name' => $invoice->client->name ?? 'Billing Contact',
+            'contact_email' => $invoice->client->email ?? null,
+            'contact_phone' => null,
+            'user_name' => 'System',
+            'follow_up_required' => in_array($invoice->status, ['sent', 'overdue']),
+            'follow_up_date' => $invoice->due_date ?? null,
+            'created_at' => $invoice->created_at,
+            'route' => route('financial.invoices.show', $invoice),
+            'raw_data' => $invoice,
+        ];
+    }
 
-        // Sort by date and paginate
-        $communications = $communications->sortByDesc('created_at');
-
-        // Manual pagination for collection
+    /**
+     * Paginate a collection.
+     */
+    protected function paginateCollection($communications, $request)
+    {
         $page = $request->get('page', 1);
         $perPage = 20;
         $total = $communications->count();
-        $communications = $communications->slice(($page - 1) * $perPage, $perPage)->values();
+        $items = $communications->slice(($page - 1) * $perPage, $perPage)->values();
 
         return new \Illuminate\Pagination\LengthAwarePaginator(
-            $communications,
+            $items,
             $total,
             $perPage,
             $page,
