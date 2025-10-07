@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+const ID_PARAMETER = '/{id}';
+
 // Web Routes for Dynamic Contracts
 Route::middleware(['web', 'auth', 'company', DynamicRouteMiddleware::class])
     ->prefix('contracts')
@@ -26,10 +28,10 @@ Route::middleware(['web', 'auth', 'company', DynamicRouteMiddleware::class])
         Route::get('/', [DynamicContractController::class, 'index'])->name('index');
         Route::get('/create', [DynamicContractController::class, 'create'])->name('create');
         Route::post('/', [DynamicContractController::class, 'store'])->name('store');
-        Route::get('/{id}', [DynamicContractController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [DynamicContractController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [DynamicContractController::class, 'update'])->name('update');
-        Route::delete('/{id}', [DynamicContractController::class, 'destroy'])->name('destroy');
+        Route::get(ID_PARAMETER, [DynamicContractController::class, 'show'])->name('show');
+        Route::get(ID_PARAMETER . '/edit', [DynamicContractController::class, 'edit'])->name('edit');
+        Route::put(ID_PARAMETER, [DynamicContractController::class, 'update'])->name('update');
+        Route::delete(ID_PARAMETER, [DynamicContractController::class, 'destroy'])->name('destroy');
 
         // Bulk operations
         Route::post('/bulk-action', [DynamicContractController::class, 'bulkAction'])->name('bulk-action');
@@ -56,9 +58,9 @@ Route::middleware(['api', 'auth:sanctum', 'company'])
         // Default API endpoints
         Route::get('/', [DynamicContractApiController::class, 'index'])->name('index');
         Route::post('/', [DynamicContractApiController::class, 'store'])->name('store');
-        Route::get('/{id}', [DynamicContractApiController::class, 'show'])->name('show');
-        Route::put('/{id}', [DynamicContractApiController::class, 'update'])->name('update');
-        Route::delete('/{id}', [DynamicContractApiController::class, 'destroy'])->name('destroy');
+        Route::get(ID_PARAMETER, [DynamicContractApiController::class, 'show'])->name('show');
+        Route::put(ID_PARAMETER, [DynamicContractApiController::class, 'update'])->name('update');
+        Route::delete(ID_PARAMETER, [DynamicContractApiController::class, 'destroy'])->name('destroy');
 
         // Bulk operations
         Route::post('/bulk-action', [DynamicContractApiController::class, 'bulkAction'])->name('bulk-action');
@@ -103,24 +105,24 @@ Route::middleware(['web', 'auth', 'company', 'can:manage-contracts'])
         // Widget configuration
         Route::get('/widgets', [DynamicContractController::class, 'widgetsIndex'])->name('widgets.index');
         Route::post('/widgets', [DynamicContractController::class, 'saveWidget'])->name('widgets.store');
-        Route::delete('/widgets/{id}', [DynamicContractController::class, 'deleteWidget'])->name('widgets.destroy');
+        Route::delete('/widgets' . ID_PARAMETER, [DynamicContractController::class, 'deleteWidget'])->name('widgets.destroy');
 
         // Type management
         Route::get('/types', [DynamicContractController::class, 'typesIndex'])->name('types.index');
         Route::post('/types', [DynamicContractController::class, 'createType'])->name('types.store');
-        Route::put('/types/{id}', [DynamicContractController::class, 'updateType'])->name('types.update');
-        Route::delete('/types/{id}', [DynamicContractController::class, 'deleteType'])->name('types.destroy');
+        Route::put('/types' . ID_PARAMETER, [DynamicContractController::class, 'updateType'])->name('types.update');
+        Route::delete('/types' . ID_PARAMETER, [DynamicContractController::class, 'deleteType'])->name('types.destroy');
 
         // Workflow management
         Route::get('/workflows', [DynamicContractController::class, 'workflowsIndex'])->name('workflows.index');
         Route::post('/workflows', [DynamicContractController::class, 'createWorkflow'])->name('workflows.store');
-        Route::put('/workflows/{id}', [DynamicContractController::class, 'updateWorkflow'])->name('workflows.update');
+        Route::put('/workflows' . ID_PARAMETER, [DynamicContractController::class, 'updateWorkflow'])->name('workflows.update');
 
         // Plugin management
         Route::get('/plugins', [DynamicContractController::class, 'pluginsIndex'])->name('plugins.index');
         Route::post('/plugins/install', [DynamicContractController::class, 'installPlugin'])->name('plugins.install');
-        Route::post('/plugins/{id}/activate', [DynamicContractController::class, 'activatePlugin'])->name('plugins.activate');
-        Route::post('/plugins/{id}/deactivate', [DynamicContractController::class, 'deactivatePlugin'])->name('plugins.deactivate');
+        Route::post('/plugins' . ID_PARAMETER . '/activate', [DynamicContractController::class, 'activatePlugin'])->name('plugins.activate');
+        Route::post('/plugins' . ID_PARAMETER . '/deactivate', [DynamicContractController::class, 'deactivatePlugin'])->name('plugins.deactivate');
 
         // System tools
         Route::post('/rebuild-routes', [DynamicContractController::class, 'rebuildRoutes'])->name('rebuild-routes');
