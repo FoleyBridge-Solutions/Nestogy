@@ -440,6 +440,15 @@ class AssetLifecycleService
                     'timeline' => 'next_30_days',
                 ];
                 break;
+
+            default:
+                $recommendations[] = [
+                    'type' => 'assessment',
+                    'priority' => 'medium',
+                    'action' => 'Review asset lifecycle stage and update accordingly',
+                    'timeline' => 'next_30_days',
+                ];
+                break;
         }
 
         // Health-based recommendations
