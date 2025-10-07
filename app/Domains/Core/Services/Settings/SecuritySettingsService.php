@@ -62,9 +62,11 @@ class SecuritySettingsService extends BaseSettingsService
 
     public function getDefaultSettings(string $category): array
     {
+        $defaults = [];
+
         switch ($category) {
             case 'authentication':
-                return [
+                $defaults = [
                     'two_factor_enabled' => true,
                     'two_factor_required' => false,
                     'password_min_length' => 12,
@@ -81,9 +83,10 @@ class SecuritySettingsService extends BaseSettingsService
                     'trusted_devices_enabled' => true,
                     'trusted_devices_lifetime' => 30,
                 ];
+                break;
 
             case 'access':
-                return [
+                $defaults = [
                     'ip_whitelist_enabled' => false,
                     'ip_whitelist' => [],
                     'allowed_countries' => [],
@@ -91,9 +94,10 @@ class SecuritySettingsService extends BaseSettingsService
                     'api_rate_limit' => 1000,
                     'concurrent_sessions' => 3,
                 ];
+                break;
 
             case 'audit':
-                return [
+                $defaults = [
                     'audit_enabled' => true,
                     'audit_user_actions' => true,
                     'audit_api_requests' => true,
@@ -104,10 +108,10 @@ class SecuritySettingsService extends BaseSettingsService
                     'failed_login_threshold' => 5,
                     'suspicious_activity_alerts' => true,
                 ];
-
-            default:
-                return [];
+                break;
         }
+
+        return $defaults;
     }
 
     public function getCategoryMetadata(string $category): array
