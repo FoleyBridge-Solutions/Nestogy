@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class ContractController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     protected $contractService;
 
     protected $contractGenerationService;
@@ -495,7 +497,7 @@ class ContractController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'amendment_type' => 'required|in:pricing_change,term_extension,scope_modification,service_addition,service_removal,sla_modification,payment_terms,compliance_update,general_modification',
             'changes' => 'required|array',
             'reason' => 'required|string|max:1000',
@@ -1020,7 +1022,7 @@ class ContractController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'template_type' => 'required|string',
             'billing_model' => 'required|string',
             'variable_fields' => 'nullable|array',
@@ -1141,7 +1143,7 @@ class ContractController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'template_type' => 'required|string',
             'billing_model' => 'required|string',
             'variable_fields' => 'nullable|array',
