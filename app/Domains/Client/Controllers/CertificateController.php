@@ -14,6 +14,8 @@ class CertificateController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_REQUIRED_IN = 'required|in:';
+
     /**
      * Display a listing of certificates for the selected client
      */
@@ -110,7 +112,7 @@ class CertificateController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:'.implode(',', array_keys(ClientCertificate::getTypes())),
+            'type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCertificate::getTypes())),
             'issuer' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
             'serial_number' => 'nullable|string|max:255',
@@ -129,7 +131,7 @@ class CertificateController extends Controller
             'renewal_date' => 'nullable|date|before:expires_at',
             'auto_renewal' => 'boolean',
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
-            'status' => 'required|in:'.implode(',', array_keys(ClientCertificate::getStatuses())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCertificate::getStatuses())),
             'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
@@ -238,7 +240,7 @@ class CertificateController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:'.implode(',', array_keys(ClientCertificate::getTypes())),
+            'type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCertificate::getTypes())),
             'issuer' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
             'serial_number' => 'nullable|string|max:255',
@@ -257,7 +259,7 @@ class CertificateController extends Controller
             'renewal_date' => 'nullable|date|before:expires_at',
             'auto_renewal' => 'boolean',
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
-            'status' => 'required|in:'.implode(',', array_keys(ClientCertificate::getStatuses())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCertificate::getStatuses())),
             'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
