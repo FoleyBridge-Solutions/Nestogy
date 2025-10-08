@@ -278,43 +278,7 @@ class CredentialController extends Controller
                 $q->where('company_id', auth()->user()->company_id);
             });
 
-        // Apply same filters as index (excluding sensitive fields)
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('service_name', 'like', "%{$search}%")
-                    ->orWhere('username', 'like', "%{$search}%");
-            });
-        }
-
-        if ($type = $request->get('credential_type')) {
-            $query->where('credential_type', $type);
-        }
-
-        if ($status = $request->get('status')) {
-            switch ($status) {
-                case 'active':
-                    $query->active();
-                    break;
-                case 'inactive':
-                    $query->inactive();
-                    break;
-                case 'expired':
-                    $query->expired();
-                    break;
-                case 'expiring_soon':
-                    $query->expiringSoon();
-                    break;
-            }
-        }
-
-        if ($clientId = $request->get('client_id')) {
-            $query->where('client_id', $clientId);
-        }
-
-        if ($environment = $request->get('environment')) {
-            $query->where('environment', $environment);
-        }
+        $this->applyExportFilters($query, $request);
 
         $credentials = $query->orderBy('name')->get();
 
@@ -328,47 +292,112 @@ class CredentialController extends Controller
         $callback = function () use ($credentials) {
             $file = fopen('php://output', 'w');
 
-            // CSV headers (excluding sensitive data)
-            fputcsv($file, [
-                'Credential Name',
-                'Client Name',
-                'Type',
-                'Service Name',
-                'Username',
-                'Email',
-                'URL',
-                'Environment',
-                'Status',
-                'Shared',
-                'Access Level',
-                'Expires At',
-                'Last Accessed',
-                'Created By',
-            ]);
+            fputcsv($file, $this->getCsvHeaders());
 
-            // CSV data
             foreach ($credentials as $credential) {
-                fputcsv($file, [
-                    $credential->name,
-                    $credential->client->display_name,
-                    $credential->credential_type,
-                    $credential->service_name,
-                    $credential->username,
-                    $credential->email,
-                    $credential->url,
-                    $credential->environment,
-                    $credential->status_label,
-                    $credential->is_shared ? 'Yes' : 'No',
-                    $credential->access_level,
-                    $credential->expires_at ? $credential->expires_at->format('Y-m-d') : '',
-                    $credential->last_accessed_at ? $credential->last_accessed_at->format('Y-m-d H:i:s') : '',
-                    $credential->creator ? $credential->creator->name : '',
-                ]);
+                fputcsv($file, $this->formatCredentialForCsv($credential));
             }
 
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Apply filters to export query
+     */
+    protected function applyExportFilters($query, Request $request)
+    {
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('service_name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%");
+            });
+        }
+
+        if ($type = $request->get('credential_type')) {
+            $query->where('credential_type', $type);
+        }
+
+        if ($status = $request->get('status')) {
+            $this->applyStatusFilter($query, $status);
+        }
+
+        if ($clientId = $request->get('client_id')) {
+            $query->where('client_id', $clientId);
+        }
+
+        if ($environment = $request->get('environment')) {
+            $query->where('environment', $environment);
+        }
+    }
+
+    /**
+     * Apply status filter to query
+     */
+    protected function applyStatusFilter($query, $status)
+    {
+        switch ($status) {
+            case 'active':
+                $query->active();
+                break;
+            case 'inactive':
+                $query->inactive();
+                break;
+            case 'expired':
+                $query->expired();
+                break;
+            case 'expiring_soon':
+                $query->expiringSoon();
+                break;
+        }
+    }
+
+    /**
+     * Get CSV headers for export
+     */
+    protected function getCsvHeaders()
+    {
+        return [
+            'Credential Name',
+            'Client Name',
+            'Type',
+            'Service Name',
+            'Username',
+            'Email',
+            'URL',
+            'Environment',
+            'Status',
+            'Shared',
+            'Access Level',
+            'Expires At',
+            'Last Accessed',
+            'Created By',
+        ];
+    }
+
+    /**
+     * Format a credential for CSV export
+     */
+    protected function formatCredentialForCsv($credential)
+    {
+        return [
+            $credential->name,
+            $credential->client->display_name,
+            $credential->credential_type,
+            $credential->service_name,
+            $credential->username,
+            $credential->email,
+            $credential->url,
+            $credential->environment,
+            $credential->status_label,
+            $credential->is_shared ? 'Yes' : 'No',
+            $credential->access_level,
+            $credential->expires_at ? $credential->expires_at->format('Y-m-d') : '',
+            $credential->last_accessed_at ? $credential->last_accessed_at->format('Y-m-d H:i:s') : '',
+            $credential->creator ? $credential->creator->name : '',
+        ];
     }
 }
