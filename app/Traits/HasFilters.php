@@ -101,81 +101,122 @@ trait HasFilters
                 continue;
             }
 
-            switch ($key) {
-                case 'search':
-                    if (method_exists($this, 'scopeSearch')) {
-                        $query->search($value);
-                    }
-                    break;
-
-                case 'status':
-                    $query->byStatus($value);
-                    break;
-
-                case 'type':
-                    $query->byType($value);
-                    break;
-
-                case 'client_id':
-                    $query->forClient($value);
-                    break;
-
-                case 'location_id':
-                    $query->forLocation($value);
-                    break;
-
-                case 'user_id':
-                    $query->forUser($value);
-                    break;
-
-                case 'date_from':
-                    $query->where('created_at', '>=', Carbon::parse($value)->startOfDay());
-                    break;
-
-                case 'date_to':
-                    $query->where('created_at', '<=', Carbon::parse($value)->endOfDay());
-                    break;
-
-                case 'created_today':
-                    if ($value) {
-                        $query->createdToday();
-                    }
-                    break;
-
-                case 'created_this_week':
-                    if ($value) {
-                        $query->createdThisWeek();
-                    }
-                    break;
-
-                case 'created_this_month':
-                    if ($value) {
-                        $query->createdThisMonth();
-                    }
-                    break;
-
-                case 'active_only':
-                    if ($value) {
-                        $query->active();
-                    }
-                    break;
-
-                case 'archived':
-                    if ($value) {
-                        $query->archived();
-                    } else {
-                        $query->notArchived();
-                    }
-                    break;
-
-                default:
-                    // Handle custom filters
-                    $this->applyCustomFilter($query, $key, $value);
-                    break;
-            }
+            $this->applySingleFilter($query, $key, $value);
         }
 
         return $query;
+    }
+
+    protected function applySingleFilter(Builder $query, string $key, $value): void
+    {
+        $filterMethod = $this->getFilterMethod($key);
+
+        if ($filterMethod && method_exists($this, $filterMethod)) {
+            $this->$filterMethod($query, $value);
+            return;
+        }
+
+        $this->applyCustomFilter($query, $key, $value);
+    }
+
+    protected function getFilterMethod(string $key): ?string
+    {
+        $filterMethods = [
+            'search' => 'applySearchFilter',
+            'status' => 'applyStatusFilter',
+            'type' => 'applyTypeFilter',
+            'client_id' => 'applyClientIdFilter',
+            'location_id' => 'applyLocationIdFilter',
+            'user_id' => 'applyUserIdFilter',
+            'date_from' => 'applyDateFromFilter',
+            'date_to' => 'applyDateToFilter',
+            'created_today' => 'applyCreatedTodayFilter',
+            'created_this_week' => 'applyCreatedThisWeekFilter',
+            'created_this_month' => 'applyCreatedThisMonthFilter',
+            'active_only' => 'applyActiveOnlyFilter',
+            'archived' => 'applyArchivedFilter',
+        ];
+
+        return $filterMethods[$key] ?? null;
+    }
+
+    protected function applySearchFilter(Builder $query, $value): void
+    {
+        if (method_exists($this, 'scopeSearch')) {
+            $query->search($value);
+        }
+    }
+
+    protected function applyStatusFilter(Builder $query, $value): void
+    {
+        $query->byStatus($value);
+    }
+
+    protected function applyTypeFilter(Builder $query, $value): void
+    {
+        $query->byType($value);
+    }
+
+    protected function applyClientIdFilter(Builder $query, $value): void
+    {
+        $query->forClient($value);
+    }
+
+    protected function applyLocationIdFilter(Builder $query, $value): void
+    {
+        $query->forLocation($value);
+    }
+
+    protected function applyUserIdFilter(Builder $query, $value): void
+    {
+        $query->forUser($value);
+    }
+
+    protected function applyDateFromFilter(Builder $query, $value): void
+    {
+        $query->where('created_at', '>=', Carbon::parse($value)->startOfDay());
+    }
+
+    protected function applyDateToFilter(Builder $query, $value): void
+    {
+        $query->where('created_at', '<=', Carbon::parse($value)->endOfDay());
+    }
+
+    protected function applyCreatedTodayFilter(Builder $query, $value): void
+    {
+        if ($value) {
+            $query->createdToday();
+        }
+    }
+
+    protected function applyCreatedThisWeekFilter(Builder $query, $value): void
+    {
+        if ($value) {
+            $query->createdThisWeek();
+        }
+    }
+
+    protected function applyCreatedThisMonthFilter(Builder $query, $value): void
+    {
+        if ($value) {
+            $query->createdThisMonth();
+        }
+    }
+
+    protected function applyActiveOnlyFilter(Builder $query, $value): void
+    {
+        if ($value) {
+            $query->active();
+        }
+    }
+
+    protected function applyArchivedFilter(Builder $query, $value): void
+    {
+        if ($value) {
+            $query->archived();
+        } else {
+            $query->notArchived();
+        }
     }
 
     protected function applyCustomFilter(Builder $query, string $key, $value): Builder
