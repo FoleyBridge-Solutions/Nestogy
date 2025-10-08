@@ -171,7 +171,7 @@ class ContractAnalyticsService
         $newVsExisting = $this->getNewVsExistingClients($companyId, $startDate, $endDate);
 
         // Client lifetime value
-        $lifetimeValue = $this->getClientLifetimeValue($companyId);
+        $lifetimeValue = $this->getClientLifetimeValue();
 
         return [
             'total_clients' => $clients->count(),
@@ -492,7 +492,7 @@ class ContractAnalyticsService
         return [];
     }
 
-    protected function getClientLifetimeValue(int $companyId): float
+    protected function getClientLifetimeValue(): float
     {
         return 0;
     }
