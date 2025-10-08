@@ -598,49 +598,102 @@ class Contract extends Model
             return 0;
         }
 
-        $monthlyTotal = 0;
         $pricing = $this->pricing_structure;
+        
+        return $this->calculateBaseRecurringRevenue($pricing)
+            + $this->calculatePerUserRevenue($pricing)
+            + $this->calculateAssetBasedRevenue($pricing)
+            + $this->calculateTelecomRevenue($pricing)
+            + $this->calculateComplianceRevenue($pricing);
+    }
 
-        // Base monthly recurring revenue
-        $monthlyTotal += (float) ($pricing['recurring_monthly'] ?? 0);
+    /**
+     * Calculate base monthly recurring revenue.
+     */
+    protected function calculateBaseRecurringRevenue(array $pricing): float
+    {
+        return (float) ($pricing['recurring_monthly'] ?? 0);
+    }
 
-        // Per-user pricing (if applicable)
+    /**
+     * Calculate per-user revenue.
+     */
+    protected function calculatePerUserRevenue(array $pricing): float
+    {
         $perUser = (float) ($pricing['per_user'] ?? 0);
-        if ($perUser > 0) {
-            // Could multiply by user count if available
-            $monthlyTotal += $perUser;
+        
+        return $perUser > 0 ? $perUser : 0;
+    }
+
+    /**
+     * Calculate asset-based revenue.
+     */
+    protected function calculateAssetBasedRevenue(array $pricing): float
+    {
+        if (! isset($pricing['asset_pricing']) || ! is_array($pricing['asset_pricing'])) {
+            return 0;
         }
 
-        // Asset-based pricing
-        if (isset($pricing['asset_pricing']) && is_array($pricing['asset_pricing'])) {
-            foreach ($pricing['asset_pricing'] as $assetType => $config) {
-                if (! empty($config['enabled']) && ! empty($config['price']) && $config['price'] !== '') {
-                    $assetCount = $this->supportedAssets()->where('type', $assetType)->count();
-                    $monthlyTotal += (float) $config['price'] * $assetCount;
-                }
+        $total = 0;
+        foreach ($pricing['asset_pricing'] as $assetType => $config) {
+            if ($this->isAssetPricingEnabled($config)) {
+                $assetCount = $this->supportedAssets()->where('type', $assetType)->count();
+                $total += (float) $config['price'] * $assetCount;
             }
         }
 
-        // Template-specific recurring pricing
-        if (isset($pricing['telecom_pricing'])) {
-            $perChannel = $pricing['telecom_pricing']['perChannel'] ?? '';
-            $callingPlan = $pricing['telecom_pricing']['callingPlan'] ?? '';
-            $e911 = $pricing['telecom_pricing']['e911'] ?? '';
+        return $total;
+    }
 
-            $monthlyTotal += $perChannel !== '' ? (float) $perChannel : 0;
-            $monthlyTotal += $callingPlan !== '' ? (float) $callingPlan : 0;
-            $monthlyTotal += $e911 !== '' ? (float) $e911 : 0;
+    /**
+     * Check if asset pricing is enabled and has a valid price.
+     */
+    protected function isAssetPricingEnabled(array $config): bool
+    {
+        return ! empty($config['enabled']) 
+            && ! empty($config['price']) 
+            && $config['price'] !== '';
+    }
+
+    /**
+     * Calculate telecom-specific revenue.
+     */
+    protected function calculateTelecomRevenue(array $pricing): float
+    {
+        if (! isset($pricing['telecom_pricing'])) {
+            return 0;
         }
 
-        if (isset($pricing['compliance_pricing']['frameworkMonthly'])) {
-            foreach ($pricing['compliance_pricing']['frameworkMonthly'] as $framework => $monthlyFee) {
-                if ($monthlyFee !== '') {
-                    $monthlyTotal += (float) $monthlyFee;
-                }
-            }
+        $telecomPricing = $pricing['telecom_pricing'];
+        
+        return $this->parsePricingValue($telecomPricing['perChannel'] ?? '')
+            + $this->parsePricingValue($telecomPricing['callingPlan'] ?? '')
+            + $this->parsePricingValue($telecomPricing['e911'] ?? '');
+    }
+
+    /**
+     * Calculate compliance framework revenue.
+     */
+    protected function calculateComplianceRevenue(array $pricing): float
+    {
+        if (! isset($pricing['compliance_pricing']['frameworkMonthly'])) {
+            return 0;
         }
 
-        return $monthlyTotal;
+        $total = 0;
+        foreach ($pricing['compliance_pricing']['frameworkMonthly'] as $monthlyFee) {
+            $total += $this->parsePricingValue($monthlyFee);
+        }
+
+        return $total;
+    }
+
+    /**
+     * Parse pricing value to float.
+     */
+    protected function parsePricingValue($value): float
+    {
+        return $value !== '' ? (float) $value : 0;
     }
 
     /**
