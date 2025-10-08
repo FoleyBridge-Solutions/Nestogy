@@ -15,6 +15,8 @@ class LeadController extends BaseResourceController
 {
     use HasClientRelation;
 
+    private const VALIDATION_NULLABLE_STRING_100 = 'nullable|string|max:100';
+
     protected LeadScoringService $leadScoringService;
 
     public function __construct(LeadScoringService $leadScoringService)
@@ -130,22 +132,22 @@ class LeadController extends BaseResourceController
             'title' => 'nullable|string|max:255',
             'website' => 'nullable|url',
             'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
+            'city' => self::VALIDATION_NULLABLE_STRING_100,
+            'state' => self::VALIDATION_NULLABLE_STRING_100,
             'zip_code' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:100',
+            'country' => self::VALIDATION_NULLABLE_STRING_100,
             'lead_source_id' => 'nullable|exists:lead_sources,id',
             'assigned_user_id' => 'nullable|exists:users,id',
             'priority' => 'required|in:low,medium,high,urgent',
-            'industry' => 'nullable|string|max:100',
+            'industry' => self::VALIDATION_NULLABLE_STRING_100,
             'company_size' => 'nullable|integer|min:1',
             'estimated_value' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
-            'utm_source' => 'nullable|string|max:100',
-            'utm_medium' => 'nullable|string|max:100',
-            'utm_campaign' => 'nullable|string|max:100',
-            'utm_content' => 'nullable|string|max:100',
-            'utm_term' => 'nullable|string|max:100',
+            'utm_source' => self::VALIDATION_NULLABLE_STRING_100,
+            'utm_medium' => self::VALIDATION_NULLABLE_STRING_100,
+            'utm_campaign' => self::VALIDATION_NULLABLE_STRING_100,
+            'utm_content' => self::VALIDATION_NULLABLE_STRING_100,
+            'utm_term' => self::VALIDATION_NULLABLE_STRING_100,
         ]);
 
         $validated['company_id'] = auth()->user()->company_id;
@@ -226,15 +228,15 @@ class LeadController extends BaseResourceController
             'title' => 'nullable|string|max:255',
             'website' => 'nullable|url',
             'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
+            'city' => self::VALIDATION_NULLABLE_STRING_100,
+            'state' => self::VALIDATION_NULLABLE_STRING_100,
             'zip_code' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:100',
+            'country' => self::VALIDATION_NULLABLE_STRING_100,
             'lead_source_id' => 'nullable|exists:lead_sources,id',
             'assigned_user_id' => 'nullable|exists:users,id',
             'priority' => 'required|in:low,medium,high,urgent',
             'status' => 'required|in:new,contacted,qualified,unqualified,nurturing,converted,lost',
-            'industry' => 'nullable|string|max:100',
+            'industry' => self::VALIDATION_NULLABLE_STRING_100,
             'company_size' => 'nullable|integer|min:1',
             'estimated_value' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
