@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Log;
  */
 class SlackChannel implements NotificationChannelInterface
 {
+    private const COLOR_GREEN = '#36a64f';
+
     protected array $config;
 
     public function __construct(array $config = [])
@@ -360,15 +362,15 @@ class SlackChannel implements NotificationChannelInterface
     protected function getColorForTicket($ticket): string
     {
         if (! $ticket) {
-            return '#36a64f'; // Default green
+            return self::COLOR_GREEN; // Default green
         }
 
         return match ($ticket->priority ?? 'Medium') {
             'Critical' => '#ff0000', // Red
             'High' => '#ff9900',     // Orange
             'Medium' => '#ffcc00',   // Yellow
-            'Low' => '#36a64f',      // Green
-            default => '#36a64f'
+            'Low' => self::COLOR_GREEN,      // Green
+            default => self::COLOR_GREEN
         };
     }
 
