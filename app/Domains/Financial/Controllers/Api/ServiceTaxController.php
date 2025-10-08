@@ -161,21 +161,7 @@ class ServiceTaxController extends Controller
             $customerId = $request->input('customer_id');
             $providedAddress = $request->input('address');
 
-            // Get address from customer or use provided address
-            $address = null;
-            if ($customerId) {
-                $customer = Client::find($customerId);
-                if ($customer && $customer->company_id === auth()->user()->company_id) {
-                    $address = [
-                        'state' => $customer->state,
-                        'city' => $customer->city,
-                        'zip' => $customer->zip_code,
-                        'country' => $customer->country ?? 'US',
-                    ];
-                }
-            } elseif ($providedAddress) {
-                $address = $providedAddress;
-            }
+            $address = $this->resolveAddress($customerId, $providedAddress);
 
             $results = [
                 'items' => [],
@@ -192,80 +178,9 @@ class ServiceTaxController extends Controller
             $taxEngineRouter->setCompanyId(auth()->user()->company_id);
 
             foreach ($items as $index => $item) {
-                $price = $item['price'];
-                $quantity = $item['quantity'] ?? 1;
-                $serviceType = $item['service_type'] ?? 'general';
-                $serviceData = $item['service_data'] ?? [];
-                $subtotal = $price * $quantity;
-
-                $results['totals']['subtotal'] += $subtotal;
-
-                // If no address provided, return zero tax for this item
-                if (! $address || ! isset($address['state'])) {
-                    $results['items'][] = [
-                        'index' => $index,
-                        'name' => $item['name'],
-                        'subtotal' => $subtotal,
-                        'tax_amount' => 0,
-                        'tax_rate' => 0,
-                        'tax_breakdown' => [],
-                        'total' => $subtotal,
-                        'service_type' => $serviceType,
-                        'message' => 'No address provided for tax calculation',
-                    ];
-                    $results['totals']['total_amount'] += $subtotal;
-
-                    continue;
-                }
-
-                // Calculate taxes using tax engine router
-                $taxCalculation = $taxEngineRouter->calculateTaxes([
-                    'base_price' => $price,
-                    'quantity' => $quantity,
-                    'category_id' => $item['category_id'] ?? null,
-                    'category_type' => $serviceType,
-                    'tax_data' => $serviceData,
-                    'customer_address' => $address,
-                    'customer_id' => $customerId,
-                ]);
-
-                $taxAmount = $taxCalculation['total_tax_amount'] ?? 0;
-                $effectiveRate = $taxCalculation['effective_tax_rate'] ?? 0;
-                $taxBreakdown = $taxCalculation['tax_breakdown'] ?? [];
-
-                $results['items'][] = [
-                    'index' => $index,
-                    'name' => $item['name'],
-                    'subtotal' => $subtotal,
-                    'tax_amount' => $taxAmount,
-                    'tax_rate' => $effectiveRate,
-                    'tax_breakdown' => $taxBreakdown,
-                    'total' => $subtotal + $taxAmount,
-                    'service_type' => $serviceType,
-                    'engine_used' => $taxCalculation['engine_used'] ?? 'general',
-                ];
-
-                $results['totals']['total_tax'] += $taxAmount;
-                $results['totals']['total_amount'] += $subtotal + $taxAmount;
-
-                // Aggregate tax breakdown for summary
-                foreach ($taxBreakdown as $tax) {
-                    $taxName = $tax['tax_name'] ?? 'Unknown Tax';
-                    if (! isset($results['tax_summary'][$taxName])) {
-                        $results['tax_summary'][$taxName] = [
-                            'tax_name' => $taxName,
-                            'tax_type' => $tax['tax_type'] ?? 'unknown',
-                            'authority' => $tax['authority'] ?? 'Unknown',
-                            'total_amount' => 0,
-                            'items_count' => 0,
-                        ];
-                    }
-                    $results['tax_summary'][$taxName]['total_amount'] += $tax['tax_amount'] ?? 0;
-                    $results['tax_summary'][$taxName]['items_count']++;
-                }
+                $this->processQuoteItem($item, $index, $address, $customerId, $taxEngineRouter, $results);
             }
 
-            // Convert tax summary to array
             $results['tax_summary'] = array_values($results['tax_summary']);
 
             return response()->json($results);
@@ -307,6 +222,122 @@ class ServiceTaxController extends Controller
                 'company_name' => $customer->company_name,
             ],
         ]);
+    }
+
+    /**
+     * Resolve address from customer or provided address
+     */
+    protected function resolveAddress(?int $customerId, ?array $providedAddress): ?array
+    {
+        if ($customerId) {
+            $customer = Client::find($customerId);
+            if ($customer && $customer->company_id === auth()->user()->company_id) {
+                return [
+                    'state' => $customer->state,
+                    'city' => $customer->city,
+                    'zip' => $customer->zip_code,
+                    'country' => $customer->country ?? 'US',
+                ];
+            }
+        }
+
+        return $providedAddress;
+    }
+
+    /**
+     * Process a single quote item for tax calculation
+     */
+    protected function processQuoteItem(
+        array $item,
+        int $index,
+        ?array $address,
+        ?int $customerId,
+        $taxEngineRouter,
+        array &$results
+    ): void {
+        $price = $item['price'];
+        $quantity = $item['quantity'] ?? 1;
+        $serviceType = $item['service_type'] ?? 'general';
+        $serviceData = $item['service_data'] ?? [];
+        $subtotal = $price * $quantity;
+
+        $results['totals']['subtotal'] += $subtotal;
+
+        if (! $address || ! isset($address['state'])) {
+            $this->addZeroTaxItem($results, $index, $item, $subtotal, $serviceType);
+            return;
+        }
+
+        $taxCalculation = $taxEngineRouter->calculateTaxes([
+            'base_price' => $price,
+            'quantity' => $quantity,
+            'category_id' => $item['category_id'] ?? null,
+            'category_type' => $serviceType,
+            'tax_data' => $serviceData,
+            'customer_address' => $address,
+            'customer_id' => $customerId,
+        ]);
+
+        $taxAmount = $taxCalculation['total_tax_amount'] ?? 0;
+        $effectiveRate = $taxCalculation['effective_tax_rate'] ?? 0;
+        $taxBreakdown = $taxCalculation['tax_breakdown'] ?? [];
+
+        $results['items'][] = [
+            'index' => $index,
+            'name' => $item['name'],
+            'subtotal' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'tax_rate' => $effectiveRate,
+            'tax_breakdown' => $taxBreakdown,
+            'total' => $subtotal + $taxAmount,
+            'service_type' => $serviceType,
+            'engine_used' => $taxCalculation['engine_used'] ?? 'general',
+        ];
+
+        $results['totals']['total_tax'] += $taxAmount;
+        $results['totals']['total_amount'] += $subtotal + $taxAmount;
+
+        $this->aggregateTaxSummary($results, $taxBreakdown);
+    }
+
+    /**
+     * Add a zero-tax item to results
+     */
+    protected function addZeroTaxItem(array &$results, int $index, array $item, float $subtotal, string $serviceType): void
+    {
+        $results['items'][] = [
+            'index' => $index,
+            'name' => $item['name'],
+            'subtotal' => $subtotal,
+            'tax_amount' => 0,
+            'tax_rate' => 0,
+            'tax_breakdown' => [],
+            'total' => $subtotal,
+            'service_type' => $serviceType,
+            'message' => 'No address provided for tax calculation',
+        ];
+        $results['totals']['total_amount'] += $subtotal;
+    }
+
+    /**
+     * Aggregate tax breakdown for summary
+     */
+    protected function aggregateTaxSummary(array &$results, array $taxBreakdown): void
+    {
+        foreach ($taxBreakdown as $tax) {
+            $taxName = $tax['tax_name'] ?? 'Unknown Tax';
+            if (! isset($results['tax_summary'][$taxName])) {
+                $results['tax_summary'][$taxName] = [
+                    'tax_name' => $taxName,
+                    'tax_type' => $tax['tax_type'] ?? 'unknown',
+                    'authority' => $tax['authority'] ?? 'Unknown',
+                    'total_amount' => 0,
+                    'items_count' => 0,
+                ];
+            }
+            $results['tax_summary'][$taxName]['total_amount'] += $tax['tax_amount'] ?? 0;
+            $results['tax_summary'][$taxName]['items_count']++;
+        }
     }
 
     /**
