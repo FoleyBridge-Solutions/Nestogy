@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ITDocumentationController extends Controller
 {
+    private const FILE_VALIDATION_RULE = 'nullable|file|max:51200';
+
     protected ClientITDocumentationService $service;
 
     protected DocumentationTemplateService $templateService;
@@ -132,7 +134,7 @@ class ITDocumentationController extends Controller
             'network_diagram' => 'nullable|string',
             'related_entities' => 'nullable|array',
             'tags' => 'nullable|string',
-            'file' => 'nullable|file|max:51200', // 50MB max
+            'file' => self::FILE_VALIDATION_RULE, // 50MB max
 
             // New tab configuration fields
             'enabled_tabs' => 'nullable|array',
@@ -270,7 +272,7 @@ class ITDocumentationController extends Controller
             'procedure_steps' => 'nullable|array',
             'related_entities' => 'nullable|array',
             'tags' => 'nullable|string',
-            'file' => 'nullable|file|max:51200', // 50MB max
+            'file' => self::FILE_VALIDATION_RULE, // 50MB max
             'is_active' => 'boolean',
         ]);
 
@@ -328,7 +330,7 @@ class ITDocumentationController extends Controller
             'description' => 'nullable|string',
             'procedure_steps' => 'nullable|array',
             'version_notes' => 'nullable|string',
-            'file' => 'nullable|file|max:51200',
+            'file' => self::FILE_VALIDATION_RULE,
         ]);
 
         // Add version notes to description if provided
