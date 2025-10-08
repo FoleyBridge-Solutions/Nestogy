@@ -5,13 +5,13 @@
     
     <form wire:submit="save">
         <div>
-            <label>Name:</label>
-            <input type="text" wire:model="name" />
+            <label for="name">Name:</label>
+            <input type="text" id="name" wire:model="name" />
         </div>
         
         <div>
-            <label>Email:</label>
-            <input type="email" wire:model="email" />
+            <label for="email">Email:</label>
+            <input type="email" id="email" wire:model="email" />
         </div>
         
         <button type="submit">Save</button>
