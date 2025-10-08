@@ -93,12 +93,7 @@ class LocationPolicy
      */
     public function forceDelete(User $user, Location $location): bool
     {
-        // Admins can always force delete locations from their company
-        if ($user->isAdmin() && $this->sameCompany($user, $location)) {
-            return true;
-        }
-
-        return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
+        return $user->isAdmin() && $this->sameCompany($user, $location);
     }
 
     /**
