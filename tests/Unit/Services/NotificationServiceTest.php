@@ -9,13 +9,13 @@ use App\Models\InAppNotification;
 use App\Models\NotificationPreference;
 use App\Models\User;
 use App\Services\NotificationService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class NotificationServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected NotificationService $service;
     protected User $user;

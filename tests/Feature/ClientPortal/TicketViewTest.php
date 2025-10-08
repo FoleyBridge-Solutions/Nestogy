@@ -7,13 +7,13 @@ use App\Domains\Ticket\Models\TicketComment;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
 class TicketViewTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected Contact $contact;
     protected Client $client;

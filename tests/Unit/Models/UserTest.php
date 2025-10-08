@@ -5,12 +5,12 @@ namespace Tests\Unit\Models;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\UserSetting;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class UserTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_user_with_factory(): void
     {

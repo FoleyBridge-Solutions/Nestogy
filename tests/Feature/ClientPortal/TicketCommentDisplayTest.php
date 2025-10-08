@@ -7,7 +7,7 @@ use App\Domains\Ticket\Models\TicketComment;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Contact;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -17,7 +17,7 @@ use PHPUnit\Framework\Attributes\Test;
  */
 class TicketCommentDisplayTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     #[Test]
     public function customer_comment_displays_after_being_added()

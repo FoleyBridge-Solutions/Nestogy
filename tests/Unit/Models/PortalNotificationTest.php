@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\PortalNotification;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class PortalNotificationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_portal_notification_with_factory(): void
     {

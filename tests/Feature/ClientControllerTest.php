@@ -5,14 +5,14 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ClientControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected User $user;
     protected Company $company;
@@ -257,7 +257,12 @@ class ClientControllerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
-        $this->assertStringContainsString('Client Name', $response->getContent());
+        
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
+        $this->assertStringContainsString('Client Name', $content);
     }
 
     public function test_get_active_clients_returns_active_clients_only(): void
@@ -347,7 +352,12 @@ class ClientControllerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
-        $this->assertStringContainsString('name', $response->getContent());
+        
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
+        $this->assertStringContainsString('name', $content);
     }
 
     public function test_select_client_sets_session(): void
@@ -420,7 +430,7 @@ class ClientControllerTest extends TestCase
         $response = $this->get(route('clients.index'));
 
         $response->assertStatus(200);
-        $this->assertNull(session('selected_client_id'));
+        $response->assertSessionMissing('selected_client_id');
     }
 
     public function test_leads_import_form_returns_view(): void
@@ -437,7 +447,12 @@ class ClientControllerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
-        $this->assertStringContainsString('Last', $response->getContent());
+        
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
+        $this->assertStringContainsString('Last', $content);
     }
 
     public function test_leads_import_creates_leads_from_csv(): void
@@ -500,7 +515,7 @@ class ClientControllerTest extends TestCase
     {
         Storage::fake('local');
 
-        $file = UploadedFile::fake()->create('leads.txt', 100);
+        $file = UploadedFile::fake()->create('leads.pdf', 100);
 
         $response = $this->post(route('clients.leads.import'), [
             'csv_file' => $file,

@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\TicketRating;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class TicketRatingTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_ticket_rating_with_factory(): void
     {

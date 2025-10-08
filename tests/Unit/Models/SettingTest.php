@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\Setting;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class SettingTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_setting_with_factory(): void
     {

@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\KpiCalculation;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class KpiCalculationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_kpi_calculation_with_factory(): void
     {

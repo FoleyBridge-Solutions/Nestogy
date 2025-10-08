@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\ProductTaxData;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class ProductTaxDataTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_product_tax_data_with_factory(): void
     {

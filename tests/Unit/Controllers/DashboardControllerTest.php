@@ -8,12 +8,12 @@ use App\Models\Company;
 use App\Models\Invoice;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected DashboardController $controller;
     protected User $user;

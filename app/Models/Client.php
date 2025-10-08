@@ -283,7 +283,9 @@ class Client extends Model
      */
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'client_tags');
+        return $this->belongsToMany(Tag::class, 'client_tags')
+            ->withPivot('company_id')
+            ->withTimestamps();
     }
 
     /**
@@ -502,7 +504,13 @@ class Client extends Model
      */
     public function syncTags($tagIds)
     {
-        return $this->tags()->sync($tagIds);
+        $pivotData = [];
+        // Use the company_id from the model or fall back to the authenticated user's company
+        $companyId = $this->company_id ?: auth()->user()->company_id;
+        foreach ((array)$tagIds as $tagId) {
+            $pivotData[$tagId] = ['company_id' => $companyId];
+        }
+        return $this->tags()->sync($pivotData);
     }
 
     /**

@@ -5,12 +5,12 @@ namespace Tests\Unit\Models;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Expense;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class ExpenseTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_expense_with_factory(): void
     {

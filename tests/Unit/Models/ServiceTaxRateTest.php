@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\ServiceTaxRate;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class ServiceTaxRateTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_service_tax_rate_with_factory(): void
     {

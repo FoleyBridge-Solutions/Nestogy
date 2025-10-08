@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\DashboardWidget;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class DashboardWidgetTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_dashboard_widget_with_factory(): void
     {

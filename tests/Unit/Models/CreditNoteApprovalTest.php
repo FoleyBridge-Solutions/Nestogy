@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\CreditNoteApproval;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class CreditNoteApprovalTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_credit_note_approval_with_factory(): void
     {

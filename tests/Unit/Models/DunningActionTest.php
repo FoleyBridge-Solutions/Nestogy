@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\DunningAction;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class DunningActionTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_dunning_action_with_factory(): void
     {

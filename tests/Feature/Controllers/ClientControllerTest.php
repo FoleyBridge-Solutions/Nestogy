@@ -10,7 +10,7 @@ use App\Models\Contact;
 use App\Models\Location;
 use App\Models\Tag;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
@@ -18,7 +18,7 @@ use Tests\TestCase;
 
 class ClientControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected User $user;
     protected Company $company;
@@ -30,9 +30,23 @@ class ClientControllerTest extends TestCase
         $this->company = Company::factory()->create();
         $this->user = User::factory()->create(['company_id' => $this->company->id]);
         
-        \Silber\Bouncer\BouncerFacade::scope()->to($this->company->id);
-        \Silber\Bouncer\BouncerFacade::allow($this->user)->everything();
-        \Silber\Bouncer\BouncerFacade::refreshFor($this->user);
+        \Gate::before(function ($user, $ability, $arguments = []) {
+            if ($user->id !== $this->user->id) {
+                return null;
+            }
+            
+            if (!empty($arguments)) {
+                $model = $arguments[0] ?? null;
+                if (is_object($model) && method_exists($model, 'getAttribute')) {
+                    $companyId = $model->getAttribute('company_id');
+                    if ($companyId && $companyId !== $user->company_id) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        });
         
         $this->actingAs($this->user);
     }
@@ -561,7 +575,12 @@ class ClientControllerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
-        $this->assertStringContainsString('Client Name', $response->getContent());
+        
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
+        $this->assertStringContainsString('Client Name', $content);
     }
 
     public function test_export_csv_includes_only_company_clients(): void
@@ -581,7 +600,10 @@ class ClientControllerTest extends TestCase
 
         $response = $this->get(route('clients.export.csv'));
 
-        $content = $response->getContent();
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
         $this->assertStringContainsString('My Company Client', $content);
         $this->assertStringNotContainsString('Other Company Client', $content);
     }
@@ -604,7 +626,10 @@ class ClientControllerTest extends TestCase
 
         $response = $this->get(route('clients.export.csv'));
 
-        $content = $response->getContent();
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
         $this->assertStringContainsString('Active Client', $content);
         $this->assertStringNotContainsString('Archived Client', $content);
     }
@@ -630,7 +655,10 @@ class ClientControllerTest extends TestCase
 
         $response = $this->get(route('clients.export.csv'));
 
-        $content = $response->getContent();
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
         $this->assertStringContainsString($contact->name, $content);
     }
 
@@ -639,7 +667,7 @@ class ClientControllerTest extends TestCase
         $client = Client::factory()->create(['company_id' => $this->company->id]);
         session(['selected_client_id' => $client->id]);
 
-        $response = $this->patchJson(route('clients.update-notes'), [
+        $response = $this->postJson(route('clients.update-notes', $client), [
             'notes' => 'Updated notes content',
         ]);
 
@@ -660,7 +688,7 @@ class ClientControllerTest extends TestCase
         ]);
         session(['selected_client_id' => $client->id]);
 
-        $response = $this->patchJson(route('clients.update-notes'), [
+        $response = $this->postJson(route('clients.update-notes', $client), [
             'notes' => null,
         ]);
 
@@ -913,15 +941,23 @@ class ClientControllerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
-        $this->assertStringContainsString('name', $response->getContent());
-        $this->assertStringContainsString('email', $response->getContent());
+        
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
+        $this->assertStringContainsString('name', $content);
+        $this->assertStringContainsString('email', $content);
     }
 
     public function test_download_template_includes_sample_row(): void
     {
         $response = $this->get(route('clients.import.template'));
 
-        $content = $response->getContent();
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
         $this->assertStringContainsString('Acme Corporation', $content);
     }
 
@@ -930,7 +966,7 @@ class ClientControllerTest extends TestCase
         $client = Client::factory()->create(['company_id' => $this->company->id]);
         session(['selected_client_id' => $client->id]);
 
-        $response = $this->get(route('clients.tags'));
+        $response = $this->get(route('clients.tags', $client));
 
         $response->assertStatus(200);
         $response->assertViewIs('clients.tags');
@@ -942,10 +978,16 @@ class ClientControllerTest extends TestCase
         $client = Client::factory()->create(['company_id' => $this->company->id]);
         session(['selected_client_id' => $client->id]);
 
-        $tag1 = Tag::factory()->create(['company_id' => $this->company->id]);
-        $tag2 = Tag::factory()->create(['company_id' => $this->company->id]);
+        $tag1 = Tag::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => Tag::TYPE_CLIENT,
+        ]);
+        $tag2 = Tag::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => Tag::TYPE_CLIENT,
+        ]);
 
-        $response = $this->post(route('clients.tags'), [
+        $response = $this->post(route('clients.tags', $client), [
             'tags' => [$tag1->id, $tag2->id],
         ]);
 
@@ -958,7 +1000,7 @@ class ClientControllerTest extends TestCase
         $client = Client::factory()->create(['company_id' => $this->company->id]);
         session(['selected_client_id' => $client->id]);
 
-        $response = $this->post(route('clients.tags'), [
+        $response = $this->post(route('clients.tags', $client), [
             'tags' => [99999],
         ]);
 
@@ -1101,7 +1143,8 @@ class ClientControllerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonCount(2);
-        $response->assertJsonFragment([$client1->id, $client2->id]);
+        $response->assertJsonFragment([$client1->id]);
+        $response->assertJsonFragment([$client2->id]);
     }
 
     public function test_validate_batch_validates_ids_are_required(): void
@@ -1196,8 +1239,13 @@ class ClientControllerTest extends TestCase
             str_contains($response->headers->get('content-type'), 'text/csv'),
             'Content-Type header should contain text/csv'
         );
-        $this->assertStringContainsString('Last', $response->getContent());
-        $this->assertStringContainsString('First', $response->getContent());
+        
+        ob_start();
+        $response->sendContent();
+        $content = ob_get_clean();
+        
+        $this->assertStringContainsString('Last', $content);
+        $this->assertStringContainsString('First', $content);
     }
 
     public function test_leads_import_creates_leads_from_csv(): void
@@ -1267,7 +1315,8 @@ class ClientControllerTest extends TestCase
     {
         Storage::fake('local');
 
-        $file = UploadedFile::fake()->create('leads.txt', 100);
+        // Create a PDF file which should fail the mimes:csv,txt validation
+        $file = UploadedFile::fake()->create('leads.pdf', 100);
 
         $response = $this->post(route('clients.leads.import'), [
             'csv_file' => $file,

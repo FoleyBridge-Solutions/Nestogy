@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\SubsidiaryPermission;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class SubsidiaryPermissionTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_subsidiary_permission_with_factory(): void
     {

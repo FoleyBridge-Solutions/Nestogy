@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\RecurringInvoice;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class RecurringInvoiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_recurring_invoice_with_factory(): void
     {

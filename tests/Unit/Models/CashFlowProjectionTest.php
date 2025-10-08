@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\CashFlowProjection;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class CashFlowProjectionTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_cash_flow_projection_with_factory(): void
     {

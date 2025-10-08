@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\RefundRequest;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class RefundRequestTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_refund_request_with_factory(): void
     {

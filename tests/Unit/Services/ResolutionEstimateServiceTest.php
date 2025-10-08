@@ -8,12 +8,12 @@ use App\Models\Company;
 use App\Models\User;
 use App\Services\ResolutionEstimateService;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class ResolutionEstimateServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected ResolutionEstimateService $service;
     protected User $user;

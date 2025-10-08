@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\CompanyCustomization;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class CompanyCustomizationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_company_customization_with_factory(): void
     {

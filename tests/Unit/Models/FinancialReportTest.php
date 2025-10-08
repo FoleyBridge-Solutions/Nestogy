@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\FinancialReport;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class FinancialReportTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_financial_report_with_factory(): void
     {
