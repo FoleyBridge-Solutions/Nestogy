@@ -1322,46 +1322,56 @@ class Setting extends Model
     {
         parent::boot();
 
-        // Generate cron key if cron is enabled
         static::saving(function ($setting) {
-            if ($setting->enable_cron && empty($setting->cron_key)) {
-                $setting->cron_key = bin2hex(random_bytes(32));
-            }
-
-            // Encrypt sensitive settings
-            if (! empty($setting->smtp_password) && ! str_starts_with($setting->smtp_password, 'eyJpdiI6')) {
-                $setting->smtp_password = encrypt($setting->smtp_password);
-            }
-
-            if (! empty($setting->imap_password) && ! str_starts_with($setting->imap_password, 'eyJpdiI6')) {
-                $setting->imap_password = encrypt($setting->imap_password);
-            }
-
-            // Set default values for new settings
-            if (empty($setting->company_country)) {
-                $setting->company_country = 'US';
-            }
-
-            if (empty($setting->company_language)) {
-                $setting->company_language = 'en';
-            }
-
-            if (empty($setting->company_currency)) {
-                $setting->company_currency = 'USD';
-            }
-
-            if (empty($setting->password_min_length)) {
-                $setting->password_min_length = 8;
-            }
-
-            if (empty($setting->session_timeout_minutes)) {
-                $setting->session_timeout_minutes = 480;
-            }
-
-            if (empty($setting->audit_retention_days)) {
-                $setting->audit_retention_days = 365;
-            }
+            $setting->generateCronKeyIfNeeded();
+            $setting->encryptSensitivePasswords();
+            $setting->setDefaultValues();
         });
+    }
+
+    protected function generateCronKeyIfNeeded(): void
+    {
+        if ($this->enable_cron && empty($this->cron_key)) {
+            $this->cron_key = bin2hex(random_bytes(32));
+        }
+    }
+
+    protected function encryptSensitivePasswords(): void
+    {
+        if (! empty($this->smtp_password) && ! str_starts_with($this->smtp_password, 'eyJpdiI6')) {
+            $this->smtp_password = encrypt($this->smtp_password);
+        }
+
+        if (! empty($this->imap_password) && ! str_starts_with($this->imap_password, 'eyJpdiI6')) {
+            $this->imap_password = encrypt($this->imap_password);
+        }
+    }
+
+    protected function setDefaultValues(): void
+    {
+        if (empty($this->company_country)) {
+            $this->company_country = 'US';
+        }
+
+        if (empty($this->company_language)) {
+            $this->company_language = 'en';
+        }
+
+        if (empty($this->company_currency)) {
+            $this->company_currency = 'USD';
+        }
+
+        if (empty($this->password_min_length)) {
+            $this->password_min_length = 8;
+        }
+
+        if (empty($this->session_timeout_minutes)) {
+            $this->session_timeout_minutes = 480;
+        }
+
+        if (empty($this->audit_retention_days)) {
+            $this->audit_retention_days = 365;
+        }
     }
 
     /**
