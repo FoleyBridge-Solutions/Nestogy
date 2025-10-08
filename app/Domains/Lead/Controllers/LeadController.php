@@ -15,6 +15,8 @@ class LeadController extends BaseResourceController
 {
     use HasClientRelation;
 
+    private const VALIDATION_RULE_NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
     protected LeadScoringService $leadScoringService;
 
     public function __construct(LeadScoringService $leadScoringService)
@@ -139,7 +141,7 @@ class LeadController extends BaseResourceController
             'priority' => 'required|in:low,medium,high,urgent',
             'industry' => 'nullable|string|max:100',
             'company_size' => 'nullable|integer|min:1',
-            'estimated_value' => 'nullable|numeric|min:0',
+            'estimated_value' => self::VALIDATION_RULE_NULLABLE_NUMERIC_MIN_ZERO,
             'notes' => 'nullable|string',
             'utm_source' => 'nullable|string|max:100',
             'utm_medium' => 'nullable|string|max:100',
@@ -236,7 +238,7 @@ class LeadController extends BaseResourceController
             'status' => 'required|in:new,contacted,qualified,unqualified,nurturing,converted,lost',
             'industry' => 'nullable|string|max:100',
             'company_size' => 'nullable|integer|min:1',
-            'estimated_value' => 'nullable|numeric|min:0',
+            'estimated_value' => self::VALIDATION_RULE_NULLABLE_NUMERIC_MIN_ZERO,
             'notes' => 'nullable|string',
         ]);
 
@@ -294,7 +296,7 @@ class LeadController extends BaseResourceController
 
         $validated = $request->validate([
             'client_data' => 'sometimes|array',
-            'client_data.hourly_rate' => 'nullable|numeric|min:0',
+            'client_data.hourly_rate' => self::VALIDATION_RULE_NULLABLE_NUMERIC_MIN_ZERO,
             'client_data.notes' => 'nullable|string',
         ]);
 
