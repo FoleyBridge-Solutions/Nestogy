@@ -17,6 +17,30 @@ class RoutesDomainToggle extends Command
         $enable = $this->option('enable');
         $disable = $this->option('disable');
 
+        $validationResult = $this->validateOptions($enable, $disable);
+        if ($validationResult !== null) {
+            return $validationResult;
+        }
+
+        $configPath = config_path('domains.php');
+        $configLoadResult = $this->loadAndValidateConfig($configPath, $domain);
+        if (is_int($configLoadResult)) {
+            return $configLoadResult;
+        }
+
+        $config = $configLoadResult;
+        $newStatus = $enable ? true : false;
+
+        $statusCheckResult = $this->checkCurrentStatus($domain, $config, $newStatus);
+        if ($statusCheckResult !== null) {
+            return $statusCheckResult;
+        }
+
+        return $this->updateConfiguration($configPath, $config, $domain, $newStatus);
+    }
+
+    private function validateOptions(bool $enable, bool $disable): ?int
+    {
         if ($enable && $disable) {
             $this->error('Cannot use both --enable and --disable options.');
 
@@ -29,8 +53,11 @@ class RoutesDomainToggle extends Command
             return self::FAILURE;
         }
 
-        $configPath = config_path('domains.php');
+        return null;
+    }
 
+    private function loadAndValidateConfig(string $configPath, string $domain): array|int
+    {
         if (! File::exists($configPath)) {
             $this->error('Domain configuration file not found. Run routes:domain-generate first.');
 
@@ -46,7 +73,11 @@ class RoutesDomainToggle extends Command
             return self::FAILURE;
         }
 
-        $newStatus = $enable ? true : false;
+        return $config;
+    }
+
+    private function checkCurrentStatus(string $domain, array $config, bool $newStatus): ?int
+    {
         $currentStatus = $config[$domain]['enabled'] ?? true;
 
         if ($currentStatus === $newStatus) {
@@ -56,20 +87,25 @@ class RoutesDomainToggle extends Command
             return self::SUCCESS;
         }
 
+        return null;
+    }
+
+    private function updateConfiguration(string $configPath, array $config, string $domain, bool $newStatus): int
+    {
         $config[$domain]['enabled'] = $newStatus;
 
         $content = "<?php\n\n// Domain Route Configuration\n// Last modified: ".now()->toDateTimeString()."\n\nreturn ".var_export($config, true).";\n";
 
-        if (File::put($configPath, $content)) {
-            $action = $newStatus ? 'enabled' : 'disabled';
-            $this->info("✓ Domain '{$domain}' has been {$action}.");
-            $this->warn('Run `php artisan route:clear` to apply changes.');
-
-            return self::SUCCESS;
-        } else {
+        if (! File::put($configPath, $content)) {
             $this->error('Failed to update configuration file.');
 
             return self::FAILURE;
         }
+
+        $action = $newStatus ? 'enabled' : 'disabled';
+        $this->info("✓ Domain '{$domain}' has been {$action}.");
+        $this->warn('Run `php artisan route:clear` to apply changes.');
+
+        return self::SUCCESS;
     }
 }
