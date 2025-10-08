@@ -2,6 +2,7 @@
 
 namespace App\Domains\PhysicalMail\Services;
 
+use App\Domains\PhysicalMail\Exceptions\TemplateNotFoundException;
 use App\Domains\PhysicalMail\Jobs\SendChequeJob;
 use App\Domains\PhysicalMail\Jobs\SendLetterJob;
 use App\Domains\PhysicalMail\Jobs\SendPostcardJob;
@@ -374,7 +375,7 @@ class PhysicalMailService
             ->first();
 
         if (! $template) {
-            throw new \Exception("Template not found: {$templateName}");
+            throw new TemplateNotFoundException($templateName);
         }
 
         // Prepare data
