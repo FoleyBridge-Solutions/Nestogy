@@ -48,7 +48,7 @@ class PhysicalMailTemplateBuilder
     ): string {
         $styles = $this->getBaseStyles($type, $options);
         $headerContent = $this->getHeaderContent($type, $options);
-        $wrappedContent = $this->wrapContent($content, $type);
+        $wrappedContent = $this->wrapContent($content);
 
         return $this->assembleTemplate($styles, $headerContent, $wrappedContent, $options);
     }
@@ -270,7 +270,7 @@ class PhysicalMailTemplateBuilder
     /**
      * Wrap content based on template type
      */
-    private function wrapContent(string $content, string $type): string
+    private function wrapContent(string $content): string
     {
         return '<div class="content-wrapper">'.$content.'</div>';
     }
