@@ -10,6 +10,8 @@ class Service extends Model
 {
     use HasFactory;
 
+    private const DECIMAL_CAST = 'decimal:2';
+
     protected $fillable = [
         'product_id',
         'service_type',
@@ -39,7 +41,7 @@ class Service extends Model
     ];
 
     protected $casts = [
-        'estimated_hours' => 'decimal:2',
+        'estimated_hours' => self::DECIMAL_CAST,
         'deliverables' => 'array',
         'dependencies' => 'array',
         'requirements' => 'array',
@@ -48,9 +50,9 @@ class Service extends Model
         'required_resources' => 'array',
         'requires_scheduling' => 'boolean',
         'has_setup_fee' => 'boolean',
-        'setup_fee' => 'decimal:2',
+        'setup_fee' => self::DECIMAL_CAST,
         'has_cancellation_fee' => 'boolean',
-        'cancellation_fee' => 'decimal:2',
+        'cancellation_fee' => self::DECIMAL_CAST,
         'auto_renew' => 'boolean',
     ];
 
