@@ -15,6 +15,8 @@ class LeadController extends BaseResourceController
 {
     use HasClientRelation;
 
+    private const VALIDATION_REQUIRED_STRING_255 = 'required|string|max:255';
+
     protected LeadScoringService $leadScoringService;
 
     public function __construct(LeadScoringService $leadScoringService)
@@ -122,8 +124,8 @@ class LeadController extends BaseResourceController
     public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'first_name' => self::VALIDATION_REQUIRED_STRING_255,
+            'last_name' => self::VALIDATION_REQUIRED_STRING_255,
             'email' => 'required|email|unique:leads,email',
             'phone' => 'nullable|string|max:20',
             'company_name' => 'nullable|string|max:255',
@@ -218,8 +220,8 @@ class LeadController extends BaseResourceController
         $this->authorize('update', $lead);
 
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'first_name' => self::VALIDATION_REQUIRED_STRING_255,
+            'last_name' => self::VALIDATION_REQUIRED_STRING_255,
             'email' => 'required|email|unique:leads,email,'.$lead->id,
             'phone' => 'nullable|string|max:20',
             'company_name' => 'nullable|string|max:255',
