@@ -671,84 +671,165 @@ class NavigationService
 
         $navigationMapping = static::$navigationMappings[$activeDomain] ?? [];
 
-        // Direct route match
         if (isset($navigationMapping[$currentRouteName])) {
             return $navigationMapping[$currentRouteName];
         }
 
-        // Handle filtered routes (with query parameters)
-        $request = request();
+        return static::getFilteredNavigationItem($activeDomain, $currentRouteName, request());
+    }
 
-        if ($activeDomain === 'tickets' && $currentRouteName === 'tickets.index') {
-            if ($request->get('filter') === 'my') {
-                return 'my-tickets';
-            }
-            if ($request->get('status') === 'open') {
-                return 'open';
-            }
-            if ($request->get('filter') === 'scheduled') {
-                return 'scheduled';
+    /**
+     * Get navigation item based on query parameters
+     */
+    protected static function getFilteredNavigationItem(string $domain, string $routeName, $request): ?string
+    {
+        $handlers = [
+            'tickets' => 'getTicketsNavigationItem',
+            'projects' => 'getProjectsNavigationItem',
+            'assets' => 'getAssetsNavigationItem',
+            'reports' => 'getReportsNavigationItem',
+        ];
+
+        if (isset($handlers[$domain]) && method_exists(static::class, $handlers[$domain])) {
+            return static::{$handlers[$domain]}($routeName, $request);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get tickets domain navigation item based on query parameters
+     */
+    protected static function getTicketsNavigationItem(string $routeName, $request): ?string
+    {
+        if ($routeName !== 'tickets.index') {
+            return null;
+        }
+
+        $filterMap = [
+            'filter:my' => 'my-tickets',
+            'filter:scheduled' => 'scheduled',
+            'status:open' => 'open',
+        ];
+
+        foreach ($filterMap as $param => $navigationItem) {
+            [$key, $value] = explode(':', $param);
+            if ($request->get($key) === $value) {
+                return $navigationItem;
             }
         }
 
-        if ($activeDomain === 'projects' && $currentRouteName === 'projects.index') {
-            if ($request->get('status') === 'active') {
-                return 'active';
-            }
-            if ($request->get('status') === 'completed') {
-                return 'completed';
-            }
-            if ($request->get('status') === 'planning') {
-                return 'planning';
-            }
-            if ($request->get('status') === 'on_hold') {
-                return 'on-hold';
-            }
-            if ($request->get('status') === 'overdue') {
-                return 'overdue';
-            }
-            if ($request->get('view') === 'timeline') {
-                return 'timeline';
-            }
-            if ($request->get('view') === 'kanban') {
-                return 'kanban';
-            }
-            if ($request->get('assigned_to') === 'me') {
-                return 'my-projects';
-            }
+        return null;
+    }
+
+    /**
+     * Get projects domain navigation item based on query parameters
+     */
+    protected static function getProjectsNavigationItem(string $routeName, $request): ?string
+    {
+        if ($routeName === 'projects.index') {
+            return static::getProjectsIndexNavigationItem($request);
         }
 
-        if ($activeDomain === 'projects' && Str::contains($currentRouteName, 'tasks')) {
-            if ($request->get('view') === 'kanban') {
-                return 'tasks-kanban';
-            }
-            if ($request->get('view') === 'calendar') {
-                return 'tasks-calendar';
-            }
-            if ($request->get('view') === 'gantt') {
-                return 'tasks-gantt';
-            }
-            if ($request->get('assigned_to') === 'me') {
-                return 'my-tasks';
-            }
+        if (Str::contains($routeName, 'tasks')) {
+            return static::getProjectsTasksNavigationItem($request);
         }
 
-        if ($activeDomain === 'assets' && $currentRouteName === 'assets.index') {
-            if ($request->get('view') === 'qr') {
-                return 'qr-codes';
-            }
-            if ($request->get('view') === 'labels') {
-                return 'labels';
-            }
+        return null;
+    }
+
+    /**
+     * Get projects index navigation item based on query parameters
+     */
+    protected static function getProjectsIndexNavigationItem($request): ?string
+    {
+        $statusMap = [
+            'active' => 'active',
+            'completed' => 'completed',
+            'planning' => 'planning',
+            'on_hold' => 'on-hold',
+            'overdue' => 'overdue',
+        ];
+
+        if ($request->has('status') && isset($statusMap[$request->get('status')])) {
+            return $statusMap[$request->get('status')];
         }
 
-        if ($activeDomain === 'reports' && $currentRouteName === 'reports.financial') {
-            if ($request->get('type') === 'invoices') {
-                return 'invoices';
-            }
-            if ($request->get('type') === 'payments') {
-                return 'payments';
-            }
+        $viewMap = [
+            'timeline' => 'timeline',
+            'kanban' => 'kanban',
+        ];
+
+        if ($request->has('view') && isset($viewMap[$request->get('view')])) {
+            return $viewMap[$request->get('view')];
+        }
+
+        if ($request->get('assigned_to') === 'me') {
+            return 'my-projects';
+        }
+
+        return null;
+    }
+
+    /**
+     * Get projects tasks navigation item based on query parameters
+     */
+    protected static function getProjectsTasksNavigationItem($request): ?string
+    {
+        $viewMap = [
+            'kanban' => 'tasks-kanban',
+            'calendar' => 'tasks-calendar',
+            'gantt' => 'tasks-gantt',
+        ];
+
+        if ($request->has('view') && isset($viewMap[$request->get('view')])) {
+            return $viewMap[$request->get('view')];
+        }
+
+        if ($request->get('assigned_to') === 'me') {
+            return 'my-tasks';
+        }
+
+        return null;
+    }
+
+    /**
+     * Get assets domain navigation item based on query parameters
+     */
+    protected static function getAssetsNavigationItem(string $routeName, $request): ?string
+    {
+        if ($routeName !== 'assets.index') {
+            return null;
+        }
+
+        $viewMap = [
+            'qr' => 'qr-codes',
+            'labels' => 'labels',
+        ];
+
+        if ($request->has('view') && isset($viewMap[$request->get('view')])) {
+            return $viewMap[$request->get('view')];
+        }
+
+        return null;
+    }
+
+    /**
+     * Get reports domain navigation item based on query parameters
+     */
+    protected static function getReportsNavigationItem(string $routeName, $request): ?string
+    {
+        if ($routeName !== 'reports.financial') {
+            return null;
+        }
+
+        $typeMap = [
+            'invoices' => 'invoices',
+            'payments' => 'payments',
+        ];
+
+        if ($request->has('type') && isset($typeMap[$request->get('type')])) {
+            return $typeMap[$request->get('type')];
         }
 
         return null;
