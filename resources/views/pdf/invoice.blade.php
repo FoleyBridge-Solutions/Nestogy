@@ -201,6 +201,13 @@
 
     <div class="totals-section">
         <table class="totals-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th class="text-right">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
             <tr>
                 <td>Subtotal:</td>
                 <td class="text-right">{{ $currency ?? '$' }}{{ number_format($items->sum('subtotal') ?? 0, 2) }}</td>
@@ -221,6 +228,7 @@
                 <td>Total:</td>
                 <td class="text-right">{{ $currency ?? '$' }}{{ number_format($invoice->amount ?? 0, 2) }}</td>
             </tr>
+            </tbody>
         </table>
     </div>
 
