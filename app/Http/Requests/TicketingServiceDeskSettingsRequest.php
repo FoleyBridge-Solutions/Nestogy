@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class TicketingServiceDeskSettingsRequest extends FormRequest
 {
+    private const NULLABLE_USER_ID = 'nullable|integer|exists:users,id';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -93,7 +95,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'auto_assignment_rules.consider_availability' => 'boolean',
             'auto_assignment_rules.consider_skills' => 'boolean',
             'auto_assignment_rules.consider_workload' => 'boolean',
-            'auto_assignment_rules.fallback_assignee' => 'nullable|integer|exists:users,id',
+            'auto_assignment_rules.fallback_assignee' => self::NULLABLE_USER_ID,
             'auto_assignment_rules.max_tickets_per_user' => 'integer|min:1|max:100',
             'auto_assignment_rules.skill_matching_threshold' => 'integer|min:1|max:100',
             'auto_assignment_rules.assignment_rules' => 'nullable|array',
@@ -173,7 +175,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_templates.templates.*.subject_template' => 'string|max:255',
             'ticket_templates.templates.*.description_template' => 'string|max:2000',
             'ticket_templates.templates.*.required_fields' => 'nullable|array',
-            'ticket_templates.templates.*.auto_assign_to' => 'nullable|integer|exists:users,id',
+            'ticket_templates.templates.*.auto_assign_to' => self::NULLABLE_USER_ID,
             'ticket_templates.templates.*.enabled' => 'boolean',
 
             // Ticket Automation Rules
@@ -216,7 +218,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'queue_management_settings.queues.*.name' => 'string|max:100',
             'queue_management_settings.queues.*.description' => 'nullable|string|max:255',
             'queue_management_settings.queues.*.max_capacity' => 'nullable|integer|min:1|max:1000',
-            'queue_management_settings.queues.*.default_assignee' => 'nullable|integer|exists:users,id',
+            'queue_management_settings.queues.*.default_assignee' => self::NULLABLE_USER_ID,
             'queue_management_settings.queues.*.sla_id' => 'nullable|integer',
             'queue_management_settings.queues.*.enabled' => 'boolean',
         ];
