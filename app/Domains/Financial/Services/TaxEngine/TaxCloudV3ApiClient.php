@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
+use App\Domains\Financial\Exceptions\TaxCloudApiException;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -268,7 +269,12 @@ class TaxCloudV3ApiClient
                 ];
             } else {
                 $error = $response->json();
-                throw new Exception('Failed to convert cart to order: '.($error['message'] ?? $response->body()));
+                throw new TaxCloudApiException(
+                    'Failed to convert cart to order: '.($error['message'] ?? $response->body()),
+                    $cartId,
+                    $orderId,
+                    $error
+                );
             }
 
         } catch (Exception $e) {
