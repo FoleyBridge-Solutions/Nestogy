@@ -2,6 +2,7 @@
 
 namespace App\Domains\PhysicalMail\Services;
 
+use App\Domains\PhysicalMail\Exceptions\PhysicalMailConfigurationException;
 use App\Models\PhysicalMailSettings;
 
 class CompanyAwarePostGridClient extends PostGridClient
@@ -10,18 +11,30 @@ class CompanyAwarePostGridClient extends PostGridClient
 
     public function __construct(?int $companyId = null)
     {
-        // Get company settings
         $this->settings = PhysicalMailSettings::forCompany($companyId);
 
         if (! $this->settings) {
-            throw new \Exception('No physical mail settings found for company');
+            throw new PhysicalMailConfigurationException(
+                'No physical mail settings found for company',
+                404,
+                null,
+                ['company_id' => $companyId],
+                'Physical mail settings not found for this company.',
+                404
+            );
         }
 
         if (! $this->settings->isConfigured()) {
-            throw new \Exception('Physical mail is not configured for this company');
+            throw new PhysicalMailConfigurationException(
+                'Physical mail is not configured for this company',
+                400,
+                null,
+                ['company_id' => $companyId],
+                'Physical mail is not configured for this company.',
+                400
+            );
         }
 
-        // Initialize parent with company settings
         parent::__construct(
             testMode: $this->settings->shouldUseTestMode(),
             apiKey: $this->settings->getActiveApiKey()

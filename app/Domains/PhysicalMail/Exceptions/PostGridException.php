@@ -2,6 +2,7 @@
 
 namespace App\Domains\PhysicalMail\Exceptions;
 
+use App\Exceptions\BaseException;
 use Exception;
 
 class PostGridException extends Exception
@@ -21,8 +22,15 @@ class PostGridException extends Exception
 
     public function isRetryable(): bool
     {
-        // Determine if this error should trigger a retry
         return in_array($this->code, [500, 502, 503, 504]) ||
                in_array($this->errorType, ['rate_limit', 'timeout', 'service_unavailable']);
+    }
+}
+
+class PhysicalMailConfigurationException extends BaseException
+{
+    protected function getDefaultUserMessage(): string
+    {
+        return 'Physical mail is not configured properly.';
     }
 }
