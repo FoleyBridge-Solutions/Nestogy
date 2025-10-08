@@ -139,7 +139,7 @@ class AssetMaintenanceService
                 $results['restore_point'] = $restoreResult;
 
                 // 3. Install security updates
-                $installResult = $this->installSecurityUpdates($asset, $scanResult['security_updates']);
+                $installResult = $this->installSecurityUpdates($asset);
                 $results['installation'] = $installResult;
 
                 // 4. Verify system stability
@@ -533,7 +533,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function installSecurityUpdates(Asset $asset, array $updates): array
+    protected function installSecurityUpdates(Asset $asset): array
     {
         return ['success' => true, 'reboot_required' => false];
     }
