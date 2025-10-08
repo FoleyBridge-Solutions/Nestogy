@@ -226,7 +226,7 @@
 
                                 <!-- Contract Value -->
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    <label for="contract_value" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                         Contract Value (Annual)
                                         @if($billing_model !== 'fixed')
                                             <span class="text-xs font-normal text-gray-500">(Auto-calculated)</span>
@@ -235,6 +235,7 @@
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">$</span>
                                         <input type="number" 
+                                               id="contract_value"
                                                wire:model.defer="contract_value" 
                                                step="0.01" 
                                                @if(!$canEdit || $billing_model !== 'fixed') disabled readonly @endif
