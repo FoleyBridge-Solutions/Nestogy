@@ -358,6 +358,11 @@ class SubsidiaryCreationService extends BaseService
                     'billing_parent_id' => $parentCompany->getEffectiveBillingParent()->id,
                 ]);
                 break;
+
+            default:
+                throw new \InvalidArgumentException(
+                    "Invalid billing type '{$billingType}'. Must be one of: independent, parent_billed, shared."
+                );
         }
 
         Log::info('Billing configured for subsidiary', [
