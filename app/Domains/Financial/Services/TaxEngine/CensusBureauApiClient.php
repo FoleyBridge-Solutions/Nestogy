@@ -17,6 +17,8 @@ use Exception;
  */
 class CensusBureauApiClient extends BaseApiClient
 {
+    private const LAYER_CENSUS_TRACTS = 'Census Tracts';
+
     protected string $geocodingBaseUrl = 'https://geocoding.geo.census.gov/geocoder';
 
     protected string $dataBaseUrl = 'https://api.census.gov/data';
@@ -143,7 +145,7 @@ class CensusBureauApiClient extends BaseApiClient
         $defaultLayers = [
             'States',
             'Counties',
-            'Census Tracts',
+            self::LAYER_CENSUS_TRACTS,
             'Census Block Groups',
             'Census Blocks',
             'Tribal Block Groups',
@@ -268,8 +270,8 @@ class CensusBureauApiClient extends BaseApiClient
         }
 
         // Census tract (useful for local tax districts)
-        if (! empty($geographies['Census Tracts'])) {
-            $tract = $geographies['Census Tracts'][0];
+        if (! empty($geographies[self::LAYER_CENSUS_TRACTS])) {
+            $tract = $geographies[self::LAYER_CENSUS_TRACTS][0];
             $jurisdictions[] = [
                 'type' => 'census_tract',
                 'name' => 'Census Tract '.($tract['NAME'] ?? ''),
