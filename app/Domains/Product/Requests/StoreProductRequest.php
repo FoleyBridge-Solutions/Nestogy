@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProductRequest extends FormRequest
 {
+    private const NON_NEGATIVE_INTEGER = 'integer|min:0';
+
     public function authorize(): bool
     {
         return true;
@@ -30,9 +32,9 @@ class StoreProductRequest extends FormRequest
             'billing_cycle' => 'required|in:one_time,hourly,daily,weekly,monthly,quarterly,semi_annually,annually',
             'billing_interval' => 'integer|min:1',
             'track_inventory' => 'boolean',
-            'current_stock' => 'integer|min:0',
-            'reserved_stock' => 'integer|min:0',
-            'min_stock_level' => 'integer|min:0',
+            'current_stock' => self::NON_NEGATIVE_INTEGER,
+            'reserved_stock' => self::NON_NEGATIVE_INTEGER,
+            'min_stock_level' => self::NON_NEGATIVE_INTEGER,
             'max_quantity_per_order' => 'nullable|integer|min:1',
             'reorder_level' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
@@ -51,7 +53,7 @@ class StoreProductRequest extends FormRequest
             'custom_fields' => 'nullable|json',
             'image_url' => 'nullable|url',
             'gallery_urls' => 'nullable|json',
-            'sort_order' => 'integer|min:0',
+            'sort_order' => self::NON_NEGATIVE_INTEGER,
             'short_description' => 'nullable|string|max:500',
         ];
     }
