@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
+use App\Domains\Financial\Exceptions\GeocodingApiException;
 use App\Models\TaxApiQueryCache;
 use Exception;
 
@@ -88,7 +89,12 @@ class NominatimApiClient extends BaseApiClient
                     ->get("{$this->baseUrl}/search", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('Nominatim geocoding failed: '.$response->body());
+                    throw new GeocodingApiException(
+                        'Nominatim geocoding failed: '.$response->body(),
+                        'nominatim',
+                        'geocoding',
+                        ['address' => $parameters['q'], 'response' => $response->body()]
+                    );
                 }
 
                 $data = $response->json();
@@ -148,7 +154,12 @@ class NominatimApiClient extends BaseApiClient
                     ->get("{$this->baseUrl}/reverse", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('Nominatim reverse geocoding failed: '.$response->body());
+                    throw new GeocodingApiException(
+                        'Nominatim reverse geocoding failed: '.$response->body(),
+                        'nominatim',
+                        'reverse_geocoding',
+                        ['latitude' => $latitude, 'longitude' => $longitude, 'response' => $response->body()]
+                    );
                 }
 
                 $data = $response->json();
@@ -395,7 +406,12 @@ class NominatimApiClient extends BaseApiClient
                     ->get("{$this->baseUrl}/search", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('Nominatim place search failed: '.$response->body());
+                    throw new GeocodingApiException(
+                        'Nominatim place search failed: '.$response->body(),
+                        'nominatim',
+                        'place_search',
+                        ['place_name' => $parameters['q'], 'place_type' => $placeType, 'response' => $response->body()]
+                    );
                 }
 
                 $data = $response->json();
