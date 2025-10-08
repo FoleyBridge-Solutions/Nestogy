@@ -484,7 +484,23 @@ class ContractAnalyticsService
 
     protected function getClientRetentionRate(int $companyId, Carbon $startDate, Carbon $endDate): float
     {
-        return 0;
+        $clientsAtStart = Client::where('company_id', $companyId)
+            ->where('created_at', '<', $startDate)
+            ->count();
+
+        if ($clientsAtStart === 0) {
+            return 0;
+        }
+
+        $clientsRetained = Client::where('company_id', $companyId)
+            ->where('created_at', '<', $startDate)
+            ->where(function ($query) use ($endDate) {
+                $query->whereNull('deleted_at')
+                    ->orWhere('deleted_at', '>', $endDate);
+            })
+            ->count();
+
+        return ($clientsRetained / $clientsAtStart) * 100;
     }
 
     protected function getNewVsExistingClients(int $companyId, Carbon $startDate, Carbon $endDate): array
@@ -504,7 +520,21 @@ class ContractAnalyticsService
 
     protected function getClientAcquisitionCost(int $companyId, Carbon $startDate, Carbon $endDate): float
     {
-        return 0;
+        $newClients = Client::where('company_id', $companyId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
+        if ($newClients === 0) {
+            return 0;
+        }
+
+        $totalContractValue = Contract::where('company_id', $companyId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('contract_value');
+
+        $averageContractValue = $newClients > 0 ? $totalContractValue / $newClients : 0;
+
+        return $averageContractValue * 0.1;
     }
 
     protected function calculateAverageTimeToSignature(Collection $contracts): float
