@@ -110,6 +110,11 @@ class TaxProfile extends Model
     const ENGINE_CUSTOM = 'custom';
 
     /**
+     * Validation rule constants
+     */
+    const VALIDATION_NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
+    /**
      * Field type definitions for dynamic forms
      */
     const FIELD_TYPES = [
@@ -249,9 +254,9 @@ class TaxProfile extends Model
                         $rules[$field.'.zip'] = 'nullable|string|max:10';
                         break;
                     case 'dimensions':
-                        $rules[$field.'.length'] = 'nullable|numeric|min:0';
-                        $rules[$field.'.width'] = 'nullable|numeric|min:0';
-                        $rules[$field.'.height'] = 'nullable|numeric|min:0';
+                        $rules[$field.'.length'] = self::VALIDATION_NULLABLE_NUMERIC_MIN_ZERO;
+                        $rules[$field.'.width'] = self::VALIDATION_NULLABLE_NUMERIC_MIN_ZERO;
+                        $rules[$field.'.height'] = self::VALIDATION_NULLABLE_NUMERIC_MIN_ZERO;
                         break;
                     default:
                         $rules[$field] = 'required';
