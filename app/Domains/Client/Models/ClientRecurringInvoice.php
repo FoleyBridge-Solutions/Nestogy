@@ -12,6 +12,8 @@ class ClientRecurringInvoice extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
+    private const DECIMAL_CAST = 'decimal:2';
+
     protected $fillable = [
         'client_id',
         'template_name',
@@ -49,12 +51,12 @@ class ClientRecurringInvoice extends Model
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
-        'tax_rate' => 'decimal:2',
-        'tax_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'late_fee_percentage' => 'decimal:2',
-        'late_fee_flat_amount' => 'decimal:2',
+        'amount' => self::DECIMAL_CAST,
+        'tax_rate' => self::DECIMAL_CAST,
+        'tax_amount' => self::DECIMAL_CAST,
+        'total_amount' => self::DECIMAL_CAST,
+        'late_fee_percentage' => self::DECIMAL_CAST,
+        'late_fee_flat_amount' => self::DECIMAL_CAST,
         'start_date' => 'date',
         'end_date' => 'date',
         'next_invoice_date' => 'date',
