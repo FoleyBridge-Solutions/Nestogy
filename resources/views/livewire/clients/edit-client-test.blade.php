@@ -16,8 +16,8 @@
             <div class="space-y-4">
                 <!-- Regular input to test -->
                 <div>
-                    <label class="block mb-1">Name (regular input)</label>
-                    <input type="text" wire:model="name" class="w-full border rounded px-3 py-2" />
+                    <label for="name_input" class="block mb-1">Name (regular input)</label>
+                    <input id="name_input" type="text" wire:model="name" class="w-full border rounded px-3 py-2" />
                     <span class="text-sm text-gray-500">Current value: {{ $name }}</span>
                 </div>
 
