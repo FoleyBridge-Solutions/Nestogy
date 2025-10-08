@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\Log;
  */
 class DashboardDataService
 {
+    private const COLOR_POSITIVE_SENTIMENT = '#10b981';
+
     protected int $companyId;
 
     protected FinancialAnalyticsService $analyticsService;
@@ -1044,7 +1046,7 @@ class DashboardDataService
             'positive_sentiment_rate' => [
                 'value' => $totalInteractions > 0 ? round(($positiveCount / $totalInteractions) * 100, 1) : 0,
                 'label' => 'Positive Rate',
-                'color' => '#10b981',
+                'color' => self::COLOR_POSITIVE_SENTIMENT,
                 'icon' => 'fas fa-smile',
                 'description' => 'Percentage of positive interactions',
                 'trend' => $totalTrend,
@@ -1069,7 +1071,7 @@ class DashboardDataService
                 'positive' => [
                     'count' => $positiveCount,
                     'percentage' => $totalInteractions > 0 ? round(($positiveCount / $totalInteractions) * 100, 1) : 0,
-                    'color' => '#10b981',
+                    'color' => self::COLOR_POSITIVE_SENTIMENT,
                 ],
                 'neutral' => [
                     'count' => $neutralCount,
@@ -1173,7 +1175,7 @@ class DashboardDataService
     private function getSentimentColor(float $score): string
     {
         if ($score > 0.5) {
-            return '#10b981';
+            return self::COLOR_POSITIVE_SENTIMENT;
         } // emerald-500
         if ($score > 0.1) {
             return '#84cc16';
