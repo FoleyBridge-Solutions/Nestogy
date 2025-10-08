@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateClientRequest extends FormRequest
 {
+    private const PHONE_VALIDATION_RULE = 'nullable|string|max:20';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -29,7 +31,7 @@ class UpdateClientRequest extends FormRequest
             'company_name' => 'nullable|string|max:255',
             'type' => 'nullable|string|max:100',
             'email' => ['nullable', 'email', 'max:255', Rule::unique('clients')->ignore($clientId)],
-            'phone' => 'nullable|string|max:20',
+            'phone' => self::PHONE_VALIDATION_RULE,
             'website' => 'nullable|url|max:255',
             'referral' => 'nullable|string|max:255',
             'rate' => 'nullable|numeric|min:0|max:999999.99',
@@ -47,21 +49,21 @@ class UpdateClientRequest extends FormRequest
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:50',
-            'zip_code' => 'nullable|string|max:20',
+            'zip_code' => self::PHONE_VALIDATION_RULE,
             'country' => 'nullable|string|max:100',
-            'location_phone' => 'nullable|string|max:20',
+            'location_phone' => self::PHONE_VALIDATION_RULE,
             'location_address' => 'nullable|string|max:255',
             'location_city' => 'nullable|string|max:100',
             'location_state' => 'nullable|string|max:50',
-            'location_zip' => 'nullable|string|max:20',
+            'location_zip' => self::PHONE_VALIDATION_RULE,
             'location_country' => 'nullable|string|max:100',
 
             // Primary contact information (for updating existing)
             'contact_name' => 'nullable|string|max:255',
             'contact_title' => 'nullable|string|max:100',
-            'contact_phone' => 'nullable|string|max:20',
+            'contact_phone' => self::PHONE_VALIDATION_RULE,
             'contact_extension' => 'nullable|string|max:10',
-            'contact_mobile' => 'nullable|string|max:20',
+            'contact_mobile' => self::PHONE_VALIDATION_RULE,
             'contact_email' => 'nullable|email|max:255',
             'contact_technical' => 'boolean',
             'contact_billing' => 'boolean',
