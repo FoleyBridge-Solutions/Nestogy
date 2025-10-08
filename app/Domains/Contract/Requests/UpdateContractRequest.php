@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateContractRequest extends FormRequest
 {
+    private const SOMETIMES_NULLABLE_ARRAY = 'sometimes|nullable|array';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -46,42 +48,42 @@ class UpdateContractRequest extends FormRequest
             'contract_value' => 'sometimes|numeric|min:0|max:999999999.99',
             'currency_code' => 'sometimes|string|size:3|in:USD,EUR,GBP,CAD,AUD,JPY',
             'payment_terms' => 'sometimes|nullable|string|max:1000',
-            'pricing_structure' => 'sometimes|nullable|array',
+            'pricing_structure' => self::SOMETIMES_NULLABLE_ARRAY,
             'pricing_structure.recurring_monthly' => 'nullable|numeric|min:0',
             'pricing_structure.one_time' => 'nullable|numeric|min:0',
             'pricing_structure.setup_fee' => 'nullable|numeric|min:0',
             'pricing_structure.renewal_adjustment' => 'nullable|array',
-            'sla_terms' => 'sometimes|nullable|array',
+            'sla_terms' => self::SOMETIMES_NULLABLE_ARRAY,
             'sla_terms.response_time_hours' => 'nullable|numeric|min:0.1|max:72',
             'sla_terms.resolution_time_hours' => 'nullable|numeric|min:0.1|max:720',
             'sla_terms.uptime_percentage' => 'nullable|numeric|min:90|max:100',
-            'voip_specifications' => 'sometimes|nullable|array',
+            'voip_specifications' => self::SOMETIMES_NULLABLE_ARRAY,
             'voip_specifications.services' => 'nullable|array',
             'voip_specifications.equipment' => 'nullable|array',
             'voip_specifications.phone_numbers' => 'nullable|integer|min:0',
-            'compliance_requirements' => 'sometimes|nullable|array',
+            'compliance_requirements' => self::SOMETIMES_NULLABLE_ARRAY,
             'terms_and_conditions' => 'sometimes|nullable|string',
-            'custom_clauses' => 'sometimes|nullable|array',
+            'custom_clauses' => self::SOMETIMES_NULLABLE_ARRAY,
             'termination_clause' => 'sometimes|nullable|string',
             'liability_clause' => 'sometimes|nullable|string',
             'confidentiality_clause' => 'sometimes|nullable|string',
             'dispute_resolution' => 'sometimes|nullable|string|max:1000',
             'governing_law' => 'sometimes|nullable|string|max:255',
             'jurisdiction' => 'sometimes|nullable|string|max:255',
-            'milestones' => 'sometimes|nullable|array',
+            'milestones' => self::SOMETIMES_NULLABLE_ARRAY,
             'milestones.*.title' => 'required_with:milestones|string|max:255',
             'milestones.*.description' => 'nullable|string|max:1000',
             'milestones.*.due_date' => 'required_with:milestones|date',
             'milestones.*.value' => 'nullable|numeric|min:0',
-            'deliverables' => 'sometimes|nullable|array',
+            'deliverables' => self::SOMETIMES_NULLABLE_ARRAY,
             'deliverables.*.title' => 'required_with:deliverables|string|max:255',
             'deliverables.*.description' => 'nullable|string|max:1000',
             'deliverables.*.due_date' => 'required_with:deliverables|date',
-            'penalties' => 'sometimes|nullable|array',
+            'penalties' => self::SOMETIMES_NULLABLE_ARRAY,
             'penalties.*.type' => 'required_with:penalties|string|max:100',
             'penalties.*.amount' => 'required_with:penalties|numeric|min:0',
             'penalties.*.description' => 'nullable|string|max:500',
-            'metadata' => 'sometimes|nullable|array',
+            'metadata' => self::SOMETIMES_NULLABLE_ARRAY,
         ];
     }
 
