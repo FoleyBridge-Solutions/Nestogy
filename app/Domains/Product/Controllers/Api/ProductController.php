@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    private const VALIDATION_CLIENT_ID = 'nullable|integer|exists:clients,id';
+
     protected ProductPricingService $pricingService;
 
     protected ProductSearchService $searchService;
@@ -153,7 +155,7 @@ class ProductController extends Controller
         $request->validate([
             'product_ids' => 'required|array',
             'product_ids.*' => 'integer|exists:products,id',
-            'client_id' => 'nullable|integer|exists:clients,id',
+            'client_id' => self::VALIDATION_CLIENT_ID,
         ]);
 
         $client = null;
@@ -197,7 +199,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',
-            'client_id' => 'nullable|integer|exists:clients,id',
+            'client_id' => self::VALIDATION_CLIENT_ID,
             'quantity' => 'integer|min:1',
         ]);
 
@@ -333,7 +335,7 @@ class ProductController extends Controller
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'promo_code' => 'required|string',
-            'client_id' => 'nullable|integer|exists:clients,id',
+            'client_id' => self::VALIDATION_CLIENT_ID,
             'quantity' => 'integer|min:1',
         ]);
 
@@ -378,7 +380,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',
-            'client_id' => 'nullable|integer|exists:clients,id',
+            'client_id' => self::VALIDATION_CLIENT_ID,
             'quantity' => 'integer|min:1',
         ]);
 
