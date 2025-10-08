@@ -21,6 +21,8 @@ use Stripe\Subscription;
  */
 class StripeSubscriptionService
 {
+    private const DATETIME_FORMAT = 'Y-m-d H:i:s';
+
     protected StripeClient $stripe;
 
     public function __construct()
@@ -516,10 +518,10 @@ class StripeSubscriptionService
         // Update client subscription data
         $client->update([
             'subscription_status' => $this->mapStripeSubscriptionStatus($subscription->status),
-            'trial_ends_at' => $subscription->trial_end ? date('Y-m-d H:i:s', $subscription->trial_end) : null,
-            'next_billing_date' => date('Y-m-d H:i:s', $subscription->current_period_end),
-            'subscription_started_at' => $subscription->created ? date('Y-m-d H:i:s', $subscription->created) : null,
-            'subscription_canceled_at' => $subscription->canceled_at ? date('Y-m-d H:i:s', $subscription->canceled_at) : null,
+            'trial_ends_at' => $subscription->trial_end ? date(self::DATETIME_FORMAT, $subscription->trial_end) : null,
+            'next_billing_date' => date(self::DATETIME_FORMAT, $subscription->current_period_end),
+            'subscription_started_at' => $subscription->created ? date(self::DATETIME_FORMAT, $subscription->created) : null,
+            'subscription_canceled_at' => $subscription->canceled_at ? date(self::DATETIME_FORMAT, $subscription->canceled_at) : null,
         ]);
 
         Log::info('Client subscription status synced with Stripe', [
