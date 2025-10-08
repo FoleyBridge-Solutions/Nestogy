@@ -195,6 +195,8 @@ class Ticket extends Model
 
     const SENTIMENT_NEGATIVE = 'NEGATIVE';
 
+    const SENTIMENT_COLOR_DEFAULT = '#94a3b8';
+
     // ===========================================
     // EXISTING RELATIONSHIPS
     // ===========================================
@@ -522,7 +524,7 @@ class Ticket extends Model
         if (! $this->hasSentimentAnalysis()) {
             return [
                 'interpretation' => 'Not Analyzed',
-                'color' => '#94a3b8', // slate-400
+                'color' => self::SENTIMENT_COLOR_DEFAULT,
                 'confidence_level' => 'N/A',
             ];
         }
@@ -560,7 +562,7 @@ class Ticket extends Model
     public function getSentimentColor(): string
     {
         if (! $this->hasSentimentAnalysis()) {
-            return '#94a3b8'; // slate-400
+            return self::SENTIMENT_COLOR_DEFAULT;
         }
 
         return match ($this->sentiment_label) {
@@ -569,7 +571,7 @@ class Ticket extends Model
             self::SENTIMENT_NEUTRAL => '#64748b', // slate-500
             self::SENTIMENT_WEAK_NEGATIVE => '#f97316', // orange-500
             self::SENTIMENT_NEGATIVE => '#ef4444', // red-500
-            default => '#94a3b8' // slate-400
+            default => self::SENTIMENT_COLOR_DEFAULT
         };
     }
 
