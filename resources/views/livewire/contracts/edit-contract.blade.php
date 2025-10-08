@@ -189,8 +189,9 @@
 
                                 <!-- Description -->
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                                    <textarea wire:model.defer="description" 
+                                    <label for="description" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                                    <textarea id="description" 
+                                              wire:model.defer="description" 
                                               rows="4" 
                                               @if(!$canEdit) disabled @endif
                                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg resize-none
