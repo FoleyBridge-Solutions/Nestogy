@@ -11,6 +11,8 @@ class PricingRule extends Model
 {
     use BelongsToCompany, HasFactory;
 
+    private const CAST_DECIMAL_2 = 'decimal:2';
+
     protected $fillable = [
         'company_id',
         'product_id',
@@ -41,9 +43,9 @@ class PricingRule extends Model
     ];
 
     protected $casts = [
-        'discount_value' => 'decimal:2',
-        'price_override' => 'decimal:2',
-        'approval_threshold' => 'decimal:2',
+        'discount_value' => self::CAST_DECIMAL_2,
+        'price_override' => self::CAST_DECIMAL_2,
+        'approval_threshold' => self::CAST_DECIMAL_2,
         'valid_from' => 'datetime',
         'valid_until' => 'datetime',
         'applicable_days' => 'array',
