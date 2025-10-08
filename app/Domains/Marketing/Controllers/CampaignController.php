@@ -15,6 +15,8 @@ use Illuminate\View\View;
 
 class CampaignController extends BaseResourceController
 {
+    private const VALIDATION_NULLABLE_ARRAY = 'nullable|array';
+
     protected CampaignEmailService $campaignEmailService;
 
     public function __construct(CampaignEmailService $campaignEmailService)
@@ -103,8 +105,8 @@ class CampaignController extends BaseResourceController
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:email,nurture,drip,event,webinar,content',
-            'settings' => 'nullable|array',
-            'target_criteria' => 'nullable|array',
+            'settings' => self::VALIDATION_NULLABLE_ARRAY,
+            'target_criteria' => self::VALIDATION_NULLABLE_ARRAY,
             'auto_enroll' => 'boolean',
             'start_date' => 'nullable|date|after:now',
             'end_date' => 'nullable|date|after:start_date',
@@ -194,8 +196,8 @@ class CampaignController extends BaseResourceController
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:email,nurture,drip,event,webinar,content',
-            'settings' => 'nullable|array',
-            'target_criteria' => 'nullable|array',
+            'settings' => self::VALIDATION_NULLABLE_ARRAY,
+            'target_criteria' => self::VALIDATION_NULLABLE_ARRAY,
             'auto_enroll' => 'boolean',
             'start_date' => 'nullable|date|after:now',
             'end_date' => 'nullable|date|after:start_date',
@@ -368,7 +370,7 @@ class CampaignController extends BaseResourceController
             'email_template' => 'required|string',
             'email_text' => 'nullable|string',
             'send_time' => 'nullable|date_format:H:i',
-            'send_days' => 'nullable|array',
+            'send_days' => self::VALIDATION_NULLABLE_ARRAY,
             'send_days.*' => 'integer|min:1|max:7',
         ]);
 
