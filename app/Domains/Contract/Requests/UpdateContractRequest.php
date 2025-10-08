@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateContractRequest extends FormRequest
 {
+    private const SOMETIMES_NULLABLE_STRING = 'sometimes|nullable|string';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -60,11 +62,11 @@ class UpdateContractRequest extends FormRequest
             'voip_specifications.equipment' => 'nullable|array',
             'voip_specifications.phone_numbers' => 'nullable|integer|min:0',
             'compliance_requirements' => 'sometimes|nullable|array',
-            'terms_and_conditions' => 'sometimes|nullable|string',
+            'terms_and_conditions' => self::SOMETIMES_NULLABLE_STRING,
             'custom_clauses' => 'sometimes|nullable|array',
-            'termination_clause' => 'sometimes|nullable|string',
-            'liability_clause' => 'sometimes|nullable|string',
-            'confidentiality_clause' => 'sometimes|nullable|string',
+            'termination_clause' => self::SOMETIMES_NULLABLE_STRING,
+            'liability_clause' => self::SOMETIMES_NULLABLE_STRING,
+            'confidentiality_clause' => self::SOMETIMES_NULLABLE_STRING,
             'dispute_resolution' => 'sometimes|nullable|string|max:1000',
             'governing_law' => 'sometimes|nullable|string|max:255',
             'jurisdiction' => 'sometimes|nullable|string|max:255',
