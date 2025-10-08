@@ -139,7 +139,7 @@ class ContractAnalyticsService
         $paymentPerformance = $this->getPaymentPerformance($companyId, $startDate, $endDate);
 
         // Renewal rates
-        $renewalRates = $this->getRenewalRates($companyId, $startDate, $endDate);
+        $renewalRates = $this->getRenewalRates($companyId, $endDate);
 
         return [
             'contract_completion_rate' => $contracts->count() > 0 ?
@@ -467,7 +467,7 @@ class ContractAnalyticsService
         return [];
     }
 
-    protected function getRenewalRates(int $companyId, Carbon $startDate, Carbon $endDate): array
+    protected function getRenewalRates(int $companyId, Carbon $endDate): array
     {
         return [];
     }
