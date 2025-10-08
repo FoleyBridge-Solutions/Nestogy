@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BillingFinancialSettingsRequest extends FormRequest
 {
+    private const NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -44,52 +46,52 @@ class BillingFinancialSettingsRequest extends FormRequest
 
             // Payment Gateway Individual Fields (matching form fields)
             'paypal_enabled' => 'nullable|boolean',
-            'paypal_client_id' => 'nullable|string|max:255',
-            'paypal_client_secret' => 'nullable|string|max:255',
+            'paypal_client_id' => self::NULLABLE_STRING_255,
+            'paypal_client_secret' => self::NULLABLE_STRING_255,
 
             'stripe_enabled' => 'nullable|boolean',
-            'stripe_publishable_key' => 'nullable|string|max:255',
-            'stripe_secret_key' => 'nullable|string|max:255',
+            'stripe_publishable_key' => self::NULLABLE_STRING_255,
+            'stripe_secret_key' => self::NULLABLE_STRING_255,
 
             'ach_enabled' => 'nullable|boolean',
-            'ach_bank_name' => 'nullable|string|max:255',
+            'ach_bank_name' => self::NULLABLE_STRING_255,
             'ach_routing_number' => 'nullable|string|max:9',
-            'ach_account_number' => 'nullable|string|max:255',
+            'ach_account_number' => self::NULLABLE_STRING_255,
 
             'wire_enabled' => 'nullable|boolean',
-            'wire_bank_name' => 'nullable|string|max:255',
+            'wire_bank_name' => self::NULLABLE_STRING_255,
             'wire_swift_code' => 'nullable|string|max:11',
-            'wire_account_number' => 'nullable|string|max:255',
+            'wire_account_number' => self::NULLABLE_STRING_255,
 
             'check_enabled' => 'nullable|boolean',
-            'check_payto_name' => 'nullable|string|max:255',
+            'check_payto_name' => self::NULLABLE_STRING_255,
             'check_mailing_address' => 'nullable|string',
 
             // Legacy nested array format (for backward compatibility)
             'stripe_settings' => 'nullable|array',
             'stripe_settings.enabled' => 'boolean',
-            'stripe_settings.public_key' => 'nullable|string|max:255',
-            'stripe_settings.secret_key' => 'nullable|string|max:255',
-            'stripe_settings.webhook_secret' => 'nullable|string|max:255',
+            'stripe_settings.public_key' => self::NULLABLE_STRING_255,
+            'stripe_settings.secret_key' => self::NULLABLE_STRING_255,
+            'stripe_settings.webhook_secret' => self::NULLABLE_STRING_255,
             'stripe_settings.connect_enabled' => 'boolean',
 
             'square_settings' => 'nullable|array',
             'square_settings.enabled' => 'boolean',
-            'square_settings.application_id' => 'nullable|string|max:255',
-            'square_settings.access_token' => 'nullable|string|max:255',
-            'square_settings.location_id' => 'nullable|string|max:255',
+            'square_settings.application_id' => self::NULLABLE_STRING_255,
+            'square_settings.access_token' => self::NULLABLE_STRING_255,
+            'square_settings.location_id' => self::NULLABLE_STRING_255,
             'square_settings.sandbox_mode' => 'boolean',
 
             'paypal_settings' => 'nullable|array',
             'paypal_settings.enabled' => 'boolean',
-            'paypal_settings.client_id' => 'nullable|string|max:255',
-            'paypal_settings.client_secret' => 'nullable|string|max:255',
+            'paypal_settings.client_id' => self::NULLABLE_STRING_255,
+            'paypal_settings.client_secret' => self::NULLABLE_STRING_255,
             'paypal_settings.sandbox_mode' => 'boolean',
 
             'authorize_net_settings' => 'nullable|array',
             'authorize_net_settings.enabled' => 'boolean',
-            'authorize_net_settings.api_login_id' => 'nullable|string|max:255',
-            'authorize_net_settings.transaction_key' => 'nullable|string|max:255',
+            'authorize_net_settings.api_login_id' => self::NULLABLE_STRING_255,
+            'authorize_net_settings.transaction_key' => self::NULLABLE_STRING_255,
             'authorize_net_settings.sandbox_mode' => 'boolean',
 
             'ach_settings' => 'nullable|array',
@@ -137,9 +139,9 @@ class BillingFinancialSettingsRequest extends FormRequest
             // QuickBooks Settings
             'quickbooks_settings' => 'nullable|array',
             'quickbooks_settings.enabled' => 'boolean',
-            'quickbooks_settings.company_id' => 'nullable|string|max:255',
-            'quickbooks_settings.client_id' => 'nullable|string|max:255',
-            'quickbooks_settings.client_secret' => 'nullable|string|max:255',
+            'quickbooks_settings.company_id' => self::NULLABLE_STRING_255,
+            'quickbooks_settings.client_id' => self::NULLABLE_STRING_255,
+            'quickbooks_settings.client_secret' => self::NULLABLE_STRING_255,
             'quickbooks_settings.access_token' => 'nullable|string|max:1000',
             'quickbooks_settings.refresh_token' => 'nullable|string|max:1000',
             'quickbooks_settings.sandbox_mode' => 'boolean',
@@ -147,9 +149,9 @@ class BillingFinancialSettingsRequest extends FormRequest
             // Xero Settings
             'xero_settings' => 'nullable|array',
             'xero_settings.enabled' => 'boolean',
-            'xero_settings.client_id' => 'nullable|string|max:255',
-            'xero_settings.client_secret' => 'nullable|string|max:255',
-            'xero_settings.tenant_id' => 'nullable|string|max:255',
+            'xero_settings.client_id' => self::NULLABLE_STRING_255,
+            'xero_settings.client_secret' => self::NULLABLE_STRING_255,
+            'xero_settings.tenant_id' => self::NULLABLE_STRING_255,
             'xero_settings.access_token' => 'nullable|string|max:1000',
             'xero_settings.refresh_token' => 'nullable|string|max:1000',
 
@@ -157,9 +159,9 @@ class BillingFinancialSettingsRequest extends FormRequest
             'sage_settings' => 'nullable|array',
             'sage_settings.enabled' => 'boolean',
             'sage_settings.server_url' => 'nullable|url|max:255',
-            'sage_settings.database_name' => 'nullable|string|max:255',
-            'sage_settings.username' => 'nullable|string|max:255',
-            'sage_settings.password' => 'nullable|string|max:255',
+            'sage_settings.database_name' => self::NULLABLE_STRING_255,
+            'sage_settings.username' => self::NULLABLE_STRING_255,
+            'sage_settings.password' => self::NULLABLE_STRING_255,
 
             // Revenue Recognition
             'revenue_recognition_enabled' => 'boolean',
@@ -189,7 +191,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'invoice_prefix' => 'nullable|string|max:10',
             'invoice_next_number' => 'nullable|integer|min:1',
             'invoice_footer' => 'nullable|string|max:1000',
-            'invoice_from_name' => 'nullable|string|max:255',
+            'invoice_from_name' => self::NULLABLE_STRING_255,
             'invoice_from_email' => 'nullable|email|max:255',
             'invoice_late_fee_enable' => 'boolean',
             'invoice_late_fee_percent' => 'nullable|numeric|min:0|max:100',
@@ -198,7 +200,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'quote_prefix' => 'nullable|string|max:10',
             'quote_next_number' => 'nullable|integer|min:1',
             'quote_footer' => 'nullable|string|max:1000',
-            'quote_from_name' => 'nullable|string|max:255',
+            'quote_from_name' => self::NULLABLE_STRING_255,
             'quote_from_email' => 'nullable|email|max:255',
 
             // Default Settings
