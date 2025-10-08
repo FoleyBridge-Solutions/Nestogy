@@ -63,6 +63,8 @@ class NetworkController extends Controller
                 case 'vlan':
                     $query->withVlan();
                     break;
+                default:
+                    break;
             }
         }
 
