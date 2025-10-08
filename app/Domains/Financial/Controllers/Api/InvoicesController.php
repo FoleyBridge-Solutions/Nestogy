@@ -15,6 +15,8 @@ use Illuminate\Validation\Rule;
 
 class InvoicesController extends Controller
 {
+    private const TAX_RATE_VALIDATION_RULE = 'nullable|numeric|min:0|max:100';
+
     protected RecurringBillingService $billingService;
 
     protected NotificationService $notificationService;
@@ -116,12 +118,12 @@ class InvoicesController extends Controller
             'notes' => 'nullable|string',
             'discount_type' => ['nullable', Rule::in(['fixed', 'percentage'])],
             'discount_value' => 'nullable|numeric|min:0',
-            'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'tax_rate' => self::TAX_RATE_VALIDATION_RULE,
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
             'items.*.quantity' => 'required|numeric|min:0',
             'items.*.rate' => 'required|numeric|min:0',
-            'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
+            'items.*.tax_rate' => self::TAX_RATE_VALIDATION_RULE,
         ]);
 
         try {
@@ -283,7 +285,7 @@ class InvoicesController extends Controller
             'notes' => 'nullable|string',
             'discount_type' => ['nullable', Rule::in(['fixed', 'percentage'])],
             'discount_value' => 'nullable|numeric|min:0',
-            'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'tax_rate' => self::TAX_RATE_VALIDATION_RULE,
         ]);
 
         try {
@@ -299,7 +301,7 @@ class InvoicesController extends Controller
                     'items.*.description' => 'required|string',
                     'items.*.quantity' => 'required|numeric|min:0',
                     'items.*.rate' => 'required|numeric|min:0',
-                    'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
+                    'items.*.tax_rate' => self::TAX_RATE_VALIDATION_RULE,
                 ]);
 
                 // Delete existing items
