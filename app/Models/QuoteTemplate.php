@@ -79,6 +79,11 @@ class QuoteTemplate extends Model
     const DELETED_AT = 'archived_at';
 
     /**
+     * Validation rule constants
+     */
+    const VALIDATION_NULLABLE_ARRAY = 'nullable|array';
+
+    /**
      * Template categories - Generic for any service type
      */
     const CATEGORY_BASIC = 'basic';
@@ -283,15 +288,15 @@ class QuoteTemplate extends Model
             'name' => 'required|string|max:255|unique:quote_templates,name',
             'description' => 'nullable|string',
             'category' => 'required|in:'.$categories,
-            'template_items' => 'nullable|array',
+            'template_items' => self::VALIDATION_NULLABLE_ARRAY,
             'template_items.*.name' => 'required|string|max:255',
             'template_items.*.description' => 'nullable|string',
             'template_items.*.quantity' => 'required|numeric|min:0.01',
             'template_items.*.price' => 'required|numeric|min:0',
             'template_items.*.discount' => 'nullable|numeric|min:0',
-            'service_config' => 'nullable|array',
-            'pricing_config' => 'nullable|array',
-            'tax_config' => 'nullable|array',
+            'service_config' => self::VALIDATION_NULLABLE_ARRAY,
+            'pricing_config' => self::VALIDATION_NULLABLE_ARRAY,
+            'tax_config' => self::VALIDATION_NULLABLE_ARRAY,
             'terms_conditions' => 'nullable|string',
             'is_active' => 'boolean',
         ];
