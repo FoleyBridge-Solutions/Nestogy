@@ -35,7 +35,6 @@ class TexasComptrollerApiClient
         float $amount,
         array $destination,
         ?array $origin = null,
-        ?string $customerId = null,
         array $lineItems = []
     ): array {
         if (! $this->isTexasAddress($destination)) {
