@@ -14,6 +14,8 @@ class RackController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
     /**
      * Display a listing of racks for the selected client
      */
@@ -117,9 +119,9 @@ class RackController extends Controller
             'location' => 'required|string|max:255',
             'rack_number' => 'nullable|integer|min:1',
             'height_units' => 'required|integer|min:1|max:100',
-            'width_inches' => 'nullable|numeric|min:0',
-            'depth_inches' => 'nullable|numeric|min:0',
-            'max_weight_lbs' => 'nullable|numeric|min:0',
+            'width_inches' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'depth_inches' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'max_weight_lbs' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'power_capacity_watts' => 'required|integer|min:0',
             'power_used_watts' => 'nullable|integer|min:0|lte:power_capacity_watts',
             'cooling_requirements' => 'nullable|in:'.implode(',', array_keys(ClientRack::getCoolingRequirements())),
@@ -203,9 +205,9 @@ class RackController extends Controller
             'location' => 'required|string|max:255',
             'rack_number' => 'nullable|integer|min:1',
             'height_units' => 'required|integer|min:1|max:100',
-            'width_inches' => 'nullable|numeric|min:0',
-            'depth_inches' => 'nullable|numeric|min:0',
-            'max_weight_lbs' => 'nullable|numeric|min:0',
+            'width_inches' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'depth_inches' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'max_weight_lbs' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'power_capacity_watts' => 'required|integer|min:0',
             'power_used_watts' => 'nullable|integer|min:0|lte:power_capacity_watts',
             'cooling_requirements' => 'nullable|in:'.implode(',', array_keys(ClientRack::getCoolingRequirements())),
