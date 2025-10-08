@@ -28,6 +28,17 @@ class GeocodingService
             return $cached;
         }
 
+        $result = $this->fetchGeocodeFromApi($addressString, $addressComponents, $cacheKey);
+
+        // Fallback: Generate approximate coordinates based on ZIP code
+        return $result ?? $this->fallbackGeocoding($addressComponents);
+    }
+
+    /**
+     * Fetch geocode data from external API
+     */
+    private function fetchGeocodeFromApi(string $addressString, array $addressComponents, string $cacheKey): ?array
+    {
         try {
             // Use OpenStreetMap Nominatim API (free, no API key required)
             $response = Http::withHeaders([
@@ -62,8 +73,7 @@ class GeocodingService
             ]);
         }
 
-        // Fallback: Generate approximate coordinates based on ZIP code
-        return $this->fallbackGeocoding($addressComponents);
+        return null;
     }
 
     /**
