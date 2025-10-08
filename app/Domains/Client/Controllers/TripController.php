@@ -14,6 +14,8 @@ class TripController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_DATE = 'nullable|date';
+
     /**
      * Display a listing of trips for the selected client
      */
@@ -123,8 +125,8 @@ class TripController extends Controller
             'destination_country' => 'nullable|string|max:100',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'departure_time' => 'nullable|date',
-            'return_time' => 'nullable|date|after:departure_time',
+            'departure_time' => self::VALIDATION_NULLABLE_DATE,
+            'return_time' => self::VALIDATION_NULLABLE_DATE.'|after:departure_time',
             'status' => 'required|in:'.implode(',', array_keys(ClientTrip::getStatuses())),
             'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
             'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
@@ -273,8 +275,8 @@ class TripController extends Controller
             'destination_country' => 'nullable|string|max:100',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'departure_time' => 'nullable|date',
-            'return_time' => 'nullable|date',
+            'departure_time' => self::VALIDATION_NULLABLE_DATE,
+            'return_time' => self::VALIDATION_NULLABLE_DATE,
             'status' => 'required|in:'.implode(',', array_keys(ClientTrip::getStatuses())),
             'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
             'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
