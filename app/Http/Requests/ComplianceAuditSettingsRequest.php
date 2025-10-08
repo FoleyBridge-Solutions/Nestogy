@@ -258,74 +258,117 @@ class ComplianceAuditSettingsRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            // Validate risk tolerance levels sum to 100%
-            $riskSettings = $this->input('risk_assessment_settings', []);
-            if (isset($riskSettings['risk_tolerance_levels'])) {
-                $levels = $riskSettings['risk_tolerance_levels'];
-                if (isset($levels['low'], $levels['medium'], $levels['high'])) {
-                    $total = $levels['low'] + $levels['medium'] + $levels['high'];
-                    if ($total !== 100) {
-                        $validator->errors()->add(
-                            'risk_assessment_settings.risk_tolerance_levels',
-                            'Risk tolerance levels must sum to 100%.'
-                        );
-                    }
-                }
-            }
-
-            // Validate CMMC level requirements
-            $industrySettings = $this->input('industry_compliance_settings', []);
-            if (isset($industrySettings['cmmc']) && $industrySettings['cmmc'] === true) {
-                if (! isset($industrySettings['cmmc_level']) || $industrySettings['cmmc_level'] < 1) {
-                    $validator->errors()->add(
-                        'industry_compliance_settings.cmmc_level',
-                        'CMMC level is required when CMMC compliance is enabled.'
-                    );
-                }
-            }
-
-            // Validate incident response timing sequence
-            $incidentSettings = $this->input('incident_response_settings', []);
-            if (isset($incidentSettings['incident_classification'])) {
-                $classifications = $incidentSettings['incident_classification'];
-                $severityOrder = ['low' => 1, 'medium' => 2, 'high' => 3, 'critical' => 4];
-
-                foreach ($classifications as $index => $classification) {
-                    if (isset($classification['severity'], $classification['response_time_hours'])) {
-                        // Higher severity should have lower response times
-                        foreach ($classifications as $otherIndex => $otherClassification) {
-                            if ($index !== $otherIndex &&
-                                isset($otherClassification['severity'], $otherClassification['response_time_hours'])) {
-
-                                $currentSeverityLevel = $severityOrder[$classification['severity']] ?? 0;
-                                $otherSeverityLevel = $severityOrder[$otherClassification['severity']] ?? 0;
-
-                                if ($currentSeverityLevel > $otherSeverityLevel &&
-                                    $classification['response_time_hours'] >= $otherClassification['response_time_hours']) {
-                                    $validator->errors()->add(
-                                        "incident_response_settings.incident_classification.{$index}.response_time_hours",
-                                        'Higher severity incidents must have shorter response times.'
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Validate training frequency alignment
-            $trainingSettings = $this->input('training_settings', []);
-            if (isset($trainingSettings['phishing_frequency_months'], $trainingSettings['training_frequency_months'])) {
-                $phishingFreq = $trainingSettings['phishing_frequency_months'];
-                $trainingFreq = $trainingSettings['training_frequency_months'];
-
-                if ($phishingFreq > $trainingFreq) {
-                    $validator->errors()->add(
-                        'training_settings.phishing_frequency_months',
-                        'Phishing simulations should occur more frequently than general training.'
-                    );
-                }
-            }
+            $this->validateRiskToleranceLevels($validator);
+            $this->validateCmmcLevelRequirements($validator);
+            $this->validateIncidentResponseTiming($validator);
+            $this->validateTrainingFrequencyAlignment($validator);
         });
+    }
+
+    private function validateRiskToleranceLevels($validator): void
+    {
+        $riskSettings = $this->input('risk_assessment_settings', []);
+        if (!isset($riskSettings['risk_tolerance_levels'])) {
+            return;
+        }
+
+        $levels = $riskSettings['risk_tolerance_levels'];
+        if (!isset($levels['low'], $levels['medium'], $levels['high'])) {
+            return;
+        }
+
+        $total = $levels['low'] + $levels['medium'] + $levels['high'];
+        if ($total !== 100) {
+            $validator->errors()->add(
+                'risk_assessment_settings.risk_tolerance_levels',
+                'Risk tolerance levels must sum to 100%.'
+            );
+        }
+    }
+
+    private function validateCmmcLevelRequirements($validator): void
+    {
+        $industrySettings = $this->input('industry_compliance_settings', []);
+        
+        if (!isset($industrySettings['cmmc']) || $industrySettings['cmmc'] !== true) {
+            return;
+        }
+
+        if (!isset($industrySettings['cmmc_level']) || $industrySettings['cmmc_level'] < 1) {
+            $validator->errors()->add(
+                'industry_compliance_settings.cmmc_level',
+                'CMMC level is required when CMMC compliance is enabled.'
+            );
+        }
+    }
+
+    private function validateIncidentResponseTiming($validator): void
+    {
+        $incidentSettings = $this->input('incident_response_settings', []);
+        
+        if (!isset($incidentSettings['incident_classification'])) {
+            return;
+        }
+
+        $classifications = $incidentSettings['incident_classification'];
+        $severityOrder = ['low' => 1, 'medium' => 2, 'high' => 3, 'critical' => 4];
+
+        foreach ($classifications as $index => $classification) {
+            $this->validateClassificationResponseTime($validator, $classifications, $index, $classification, $severityOrder);
+        }
+    }
+
+    private function validateClassificationResponseTime($validator, array $classifications, $index, array $classification, array $severityOrder): void
+    {
+        if (!isset($classification['severity'], $classification['response_time_hours'])) {
+            return;
+        }
+
+        $currentSeverityLevel = $severityOrder[$classification['severity']] ?? 0;
+
+        foreach ($classifications as $otherIndex => $otherClassification) {
+            if ($index === $otherIndex) {
+                continue;
+            }
+
+            if ($this->hasInvalidResponseTime($classification, $otherClassification, $currentSeverityLevel, $severityOrder)) {
+                $validator->errors()->add(
+                    "incident_response_settings.incident_classification.{$index}.response_time_hours",
+                    'Higher severity incidents must have shorter response times.'
+                );
+                break;
+            }
+        }
+    }
+
+    private function hasInvalidResponseTime(array $classification, array $otherClassification, int $currentSeverityLevel, array $severityOrder): bool
+    {
+        if (!isset($otherClassification['severity'], $otherClassification['response_time_hours'])) {
+            return false;
+        }
+
+        $otherSeverityLevel = $severityOrder[$otherClassification['severity']] ?? 0;
+
+        return $currentSeverityLevel > $otherSeverityLevel 
+            && $classification['response_time_hours'] >= $otherClassification['response_time_hours'];
+    }
+
+    private function validateTrainingFrequencyAlignment($validator): void
+    {
+        $trainingSettings = $this->input('training_settings', []);
+        
+        if (!isset($trainingSettings['phishing_frequency_months'], $trainingSettings['training_frequency_months'])) {
+            return;
+        }
+
+        $phishingFreq = $trainingSettings['phishing_frequency_months'];
+        $trainingFreq = $trainingSettings['training_frequency_months'];
+
+        if ($phishingFreq > $trainingFreq) {
+            $validator->errors()->add(
+                'training_settings.phishing_frequency_months',
+                'Phishing simulations should occur more frequently than general training.'
+            );
+        }
     }
 }
