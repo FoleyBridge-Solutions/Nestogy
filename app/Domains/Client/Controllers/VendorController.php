@@ -74,6 +74,8 @@ class VendorController extends Controller
                 case 'contracts_expiring':
                     $query->contractsExpiringSoon();
                     break;
+                default:
+                    break;
             }
         }
 
@@ -420,6 +422,8 @@ class VendorController extends Controller
                     break;
                 case 'high_rated':
                     $query->highRated();
+                    break;
+                default:
                     break;
             }
         }
