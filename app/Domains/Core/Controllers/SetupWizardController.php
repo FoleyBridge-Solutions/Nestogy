@@ -22,6 +22,8 @@ use Silber\Bouncer\BouncerFacade as Bouncer;
  */
 class SetupWizardController extends Controller
 {
+    private const DEFAULT_TIMEZONE = 'America/New_York';
+
     /**
      * Show the setup wizard welcome page.
      */
@@ -336,7 +338,7 @@ class SetupWizardController extends Controller
             'start_page' => 'dashboard',
 
             // Regional & System Preferences
-            'timezone' => $data['timezone'] ?? 'America/New_York',
+            'timezone' => $data['timezone'] ?? self::DEFAULT_TIMEZONE,
             'date_format' => $data['date_format'] ?? 'Y-m-d',
             'theme' => $data['theme'] ?? 'blue',
             'company_language' => $data['company_language'] ?? 'en',
@@ -359,11 +361,11 @@ class SetupWizardController extends Controller
             'business_hours' => ! empty($data['business_hours_start']) && ! empty($data['business_hours_end']) ? [
                 'start' => $data['business_hours_start'],
                 'end' => $data['business_hours_end'],
-                'timezone' => $data['timezone'] ?? 'America/New_York',
+                'timezone' => $data['timezone'] ?? self::DEFAULT_TIMEZONE,
             ] : [
                 'start' => '08:00',
                 'end' => '18:00',
-                'timezone' => $data['timezone'] ?? 'America/New_York',
+                'timezone' => $data['timezone'] ?? self::DEFAULT_TIMEZONE,
             ],
 
             // MSP Billing Rates (stored as arrays for the Settings model)
