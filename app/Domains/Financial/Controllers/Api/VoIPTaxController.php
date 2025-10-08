@@ -22,6 +22,8 @@ use Illuminate\Validation\ValidationException;
  */
 class VoIPTaxController extends Controller
 {
+    private const NULLABLE_STRING = 'nullable|string';
+
     /**
      * Calculate VoIP taxes for a service amount.
      */
@@ -32,11 +34,11 @@ class VoIPTaxController extends Controller
                 'amount' => 'required|numeric|min:0',
                 'service_type' => 'required|string|in:local,long_distance,international,voip_fixed,voip_nomadic,data,equipment',
                 'service_address' => 'nullable|array',
-                'service_address.address' => 'nullable|string',
-                'service_address.city' => 'nullable|string',
-                'service_address.state' => 'nullable|string',
-                'service_address.zip_code' => 'nullable|string',
-                'service_address.country' => 'nullable|string',
+                'service_address.address' => self::NULLABLE_STRING,
+                'service_address.city' => self::NULLABLE_STRING,
+                'service_address.state' => self::NULLABLE_STRING,
+                'service_address.zip_code' => self::NULLABLE_STRING,
+                'service_address.country' => self::NULLABLE_STRING,
                 'client_id' => 'nullable|integer|exists:clients,id',
                 'calculation_date' => 'nullable|date',
                 'line_count' => 'nullable|integer|min:1',
@@ -81,7 +83,7 @@ class VoIPTaxController extends Controller
             $validated = $request->validate([
                 'jurisdiction_id' => 'nullable|integer|exists:tax_jurisdictions,id',
                 'category_id' => 'nullable|integer|exists:tax_categories,id',
-                'service_type' => 'nullable|string',
+                'service_type' => self::NULLABLE_STRING,
                 'tax_type' => 'nullable|string|in:federal,state,local,municipal,county,special_district',
                 'is_active' => 'nullable|boolean',
                 'effective_date' => 'nullable|date',
@@ -314,7 +316,7 @@ class VoIPTaxController extends Controller
             $validated = $request->validate([
                 'client_id' => 'required|integer|exists:clients,id',
                 'status' => 'nullable|string|in:active,expired,suspended,revoked,pending',
-                'exemption_type' => 'nullable|string',
+                'exemption_type' => self::NULLABLE_STRING,
             ]);
 
             $companyId = auth()->user()->company_id;
@@ -390,7 +392,7 @@ class VoIPTaxController extends Controller
                 'end_date' => 'required|date|after:start_date',
                 'jurisdictions' => 'nullable|array',
                 'jurisdictions.*' => 'integer|exists:tax_jurisdictions,id',
-                'format' => 'nullable|string|in:json,summary',
+                'format' => self::NULLABLE_STRING . '|in:json,summary',
             ]);
 
             $companyId = auth()->user()->company_id;
@@ -478,7 +480,7 @@ class VoIPTaxController extends Controller
             $validated = $request->validate([
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after:start_date',
-                'format' => 'nullable|string|in:json,csv,xml',
+                'format' => self::NULLABLE_STRING . '|in:json,csv,xml',
             ]);
 
             $companyId = auth()->user()->company_id;
@@ -620,7 +622,7 @@ class VoIPTaxController extends Controller
     {
         try {
             $validated = $request->validate([
-                'pattern' => 'nullable|string',
+                'pattern' => self::NULLABLE_STRING,
             ]);
 
             $companyId = auth()->user()->company_id;
