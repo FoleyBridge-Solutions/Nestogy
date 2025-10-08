@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    private const PRODUCT_ID_VALIDATION = 'required|integer|exists:products,id';
+
     protected ProductPricingService $pricingService;
 
     protected ProductSearchService $searchService;
@@ -196,7 +198,7 @@ class ProductController extends Controller
     public function calculatePrice(Request $request): JsonResponse
     {
         $request->validate([
-            'product_id' => 'required|integer|exists:products,id',
+            'product_id' => self::PRODUCT_ID_VALIDATION,
             'client_id' => 'nullable|integer|exists:clients,id',
             'quantity' => 'integer|min:1',
         ]);
@@ -331,7 +333,7 @@ class ProductController extends Controller
     public function applyPromo(Request $request): JsonResponse
     {
         $request->validate([
-            'product_id' => 'required|integer|exists:products,id',
+            'product_id' => self::PRODUCT_ID_VALIDATION,
             'promo_code' => 'required|string',
             'client_id' => 'nullable|integer|exists:clients,id',
             'quantity' => 'integer|min:1',
@@ -377,7 +379,7 @@ class ProductController extends Controller
     public function bestPrice(Request $request): JsonResponse
     {
         $request->validate([
-            'product_id' => 'required|integer|exists:products,id',
+            'product_id' => self::PRODUCT_ID_VALIDATION,
             'client_id' => 'nullable|integer|exists:clients,id',
             'quantity' => 'integer|min:1',
         ]);
