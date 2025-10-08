@@ -130,6 +130,11 @@ class Expense extends Model
     const FREQUENCY_ANNUALLY = 'annually';
 
     /**
+     * Badge class constants for UI
+     */
+    const BADGE_CLASS_DEFAULT = 'bg-gray-100 text-gray-800';
+
+    /**
      * Get the client this expense is for
      */
     public function client()
@@ -482,11 +487,11 @@ class Expense extends Model
             case self::STATUS_INVOICED:
                 return 'bg-indigo-100 text-indigo-800';
             case self::STATUS_DRAFT:
-                return 'bg-gray-100 text-gray-800';
+                return self::BADGE_CLASS_DEFAULT;
             case self::STATUS_CANCELLED:
-                return 'bg-gray-100 text-gray-800';
+                return self::BADGE_CLASS_DEFAULT;
             default:
-                return 'bg-gray-100 text-gray-800';
+                return self::BADGE_CLASS_DEFAULT;
         }
     }
 }
