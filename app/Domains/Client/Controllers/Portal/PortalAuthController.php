@@ -22,6 +22,8 @@ use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
  */
 class PortalAuthController extends Controller
 {
+    private const VALIDATION_RULE_EMAIL = 'required|email';
+
     /**
      * Show the portal login form
      *
@@ -40,7 +42,7 @@ class PortalAuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => self::VALIDATION_RULE_EMAIL,
             'password' => 'required|string',
             'company_code' => 'nullable|string',
             'remember' => 'boolean',
@@ -278,7 +280,7 @@ class PortalAuthController extends Controller
     public function sendPasswordResetLink(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => self::VALIDATION_RULE_EMAIL,
             'company_code' => 'nullable|string',
         ]);
 
@@ -334,7 +336,7 @@ class PortalAuthController extends Controller
     {
         $request->validate([
             'token' => 'required',
-            'email' => 'required|email',
+            'email' => self::VALIDATION_RULE_EMAIL,
             'password' => 'required|min:8|confirmed',
         ]);
 
