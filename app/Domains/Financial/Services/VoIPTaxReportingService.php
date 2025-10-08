@@ -131,7 +131,7 @@ class VoIPTaxReportingService
 
         // Get tax collections for this jurisdiction
         $invoices = $this->getInvoicesForPeriod($startDate, $endDate);
-        $collections = $this->getJurisdictionCollections($invoices, $jurisdiction->name);
+        $collections = $this->getJurisdictionCollections($invoices);
 
         $report['collections'] = [
             'total_base_amount' => $collections['base_amount'],
@@ -690,7 +690,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function getJurisdictionCollections($invoices, $jurisdictionName)
+    protected function getJurisdictionCollections($invoices)
     {
         return [];
     }
