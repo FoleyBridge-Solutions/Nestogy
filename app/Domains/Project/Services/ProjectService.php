@@ -224,7 +224,7 @@ class ProjectService
                     'completion_rate' => $userTasks->count() > 0
                         ? round(($completedTasks / $userTasks->count()) * 100)
                         : 0,
-                    'efficiency' => $this->calculateMemberEfficiency($member, $userTasks),
+                    'efficiency' => $this->calculateMemberEfficiency($userTasks),
                 ],
                 'availability' => $member->availability_percentage ?? 100,
                 'permissions' => [
@@ -556,7 +556,7 @@ class ProjectService
     /**
      * Calculate member efficiency
      */
-    protected function calculateMemberEfficiency(ProjectMember $member, $tasks): float
+    protected function calculateMemberEfficiency($tasks): float
     {
         $completedTasks = $tasks->where('status', Task::STATUS_COMPLETED);
 
