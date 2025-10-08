@@ -34,6 +34,8 @@ class TicketController extends Controller
 {
     use FiltersClientsByAssignment, UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING_MAX_500 = 'nullable|string|max:500';
+
     /**
      * Display a listing of tickets
      */
@@ -449,7 +451,7 @@ class TicketController extends Controller
         $this->authorize('reopen', $ticket);
 
         $validated = $request->validate([
-            'reason' => 'nullable|string|max:500',
+            'reason' => self::VALIDATION_NULLABLE_STRING_MAX_500,
         ]);
 
         try {
@@ -742,7 +744,7 @@ class TicketController extends Controller
 
         $validator = Validator::make($request->all(), [
             'status' => 'required|string',
-            'notes' => 'nullable|string|max:500',
+            'notes' => self::VALIDATION_NULLABLE_STRING_MAX_500,
         ]);
 
         if ($validator->fails()) {
@@ -824,7 +826,7 @@ class TicketController extends Controller
 
         $validator = Validator::make($request->all(), [
             'priority' => 'required|in:Low,Medium,High,Critical',
-            'notes' => 'nullable|string|max:500',
+            'notes' => self::VALIDATION_NULLABLE_STRING_MAX_500,
         ]);
 
         if ($validator->fails()) {
@@ -896,7 +898,7 @@ class TicketController extends Controller
                         ->where('status', true);
                 }),
             ],
-            'notes' => 'nullable|string|max:500',
+            'notes' => self::VALIDATION_NULLABLE_STRING_MAX_500,
         ]);
 
         if ($validator->fails()) {
@@ -1019,7 +1021,7 @@ class TicketController extends Controller
             'scheduled_at' => 'required|date|after:now',
             'duration' => 'nullable|integer|min:15|max:480', // 15 minutes to 8 hours
             'location' => 'nullable|string|max:255',
-            'notes' => 'nullable|string|max:500',
+            'notes' => self::VALIDATION_NULLABLE_STRING_MAX_500,
             'is_onsite' => 'nullable|boolean',
         ]);
 
