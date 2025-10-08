@@ -242,43 +242,7 @@ class LicenseController extends Controller
                 $q->where('company_id', auth()->user()->company_id);
             });
 
-        // Apply same filters as index
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('license_key', 'like', "%{$search}%")
-                    ->orWhere('vendor', 'like', "%{$search}%");
-            });
-        }
-
-        if ($type = $request->get('license_type')) {
-            $query->where('license_type', $type);
-        }
-
-        if ($status = $request->get('status')) {
-            switch ($status) {
-                case 'active':
-                    $query->active();
-                    break;
-                case 'inactive':
-                    $query->inactive();
-                    break;
-                case 'expired':
-                    $query->expired();
-                    break;
-                case 'expiring_soon':
-                    $query->expiringSoon();
-                    break;
-            }
-        }
-
-        if ($clientId = $request->get('client_id')) {
-            $query->where('client_id', $clientId);
-        }
-
-        if ($vendor = $request->get('vendor')) {
-            $query->where('vendor', $vendor);
-        }
+        $this->applyExportFilters($query, $request);
 
         $licenses = $query->orderBy('expiry_date')->get();
 
@@ -338,5 +302,50 @@ class LicenseController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    private function applyExportFilters($query, Request $request)
+    {
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('license_key', 'like', "%{$search}%")
+                    ->orWhere('vendor', 'like', "%{$search}%");
+            });
+        }
+
+        if ($type = $request->get('license_type')) {
+            $query->where('license_type', $type);
+        }
+
+        if ($status = $request->get('status')) {
+            $this->applyStatusFilter($query, $status);
+        }
+
+        if ($clientId = $request->get('client_id')) {
+            $query->where('client_id', $clientId);
+        }
+
+        if ($vendor = $request->get('vendor')) {
+            $query->where('vendor', $vendor);
+        }
+    }
+
+    private function applyStatusFilter($query, $status)
+    {
+        switch ($status) {
+            case 'active':
+                $query->active();
+                break;
+            case 'inactive':
+                $query->inactive();
+                break;
+            case 'expired':
+                $query->expired();
+                break;
+            case 'expiring_soon':
+                $query->expiringSoon();
+                break;
+        }
     }
 }
