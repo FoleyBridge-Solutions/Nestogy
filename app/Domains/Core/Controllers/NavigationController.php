@@ -11,6 +11,8 @@ use Illuminate\Support\Str;
 
 class NavigationController extends Controller
 {
+    private const DEFAULT_CLIENT_NAME = 'No Client';
+
     /**
      * Get navigation tree for current user
      */
@@ -137,7 +139,7 @@ class NavigationController extends Controller
                     'type' => 'ticket',
                     'id' => $ticket->id,
                     'title' => "#{$ticket->id} - {$ticket->subject}",
-                    'subtitle' => $ticket->client ? $ticket->client->name : 'No Client',
+                    'subtitle' => $ticket->client ? $ticket->client->name : self::DEFAULT_CLIENT_NAME,
                     'url' => route('tickets.show', $ticket->id),
                     'icon' => '🎫',
                     'timestamp' => $ticket->updated_at,
@@ -287,7 +289,7 @@ class NavigationController extends Controller
                         'type' => 'ticket',
                         'icon' => '🎫',
                         'title' => "#{$ticket->id} - {$ticket->title}",
-                        'subtitle' => $ticket->client->name ?? 'No Client',
+                        'subtitle' => $ticket->client->name ?? self::DEFAULT_CLIENT_NAME,
                         'url' => route('tickets.show', $ticket->id),
                         'meta' => [
                             'status' => $ticket->status,
@@ -341,7 +343,7 @@ class NavigationController extends Controller
                         'type' => 'invoice',
                         'icon' => '💰',
                         'title' => "Invoice #{$invoice->invoice_number}",
-                        'subtitle' => $invoice->client->name ?? 'No Client',
+                        'subtitle' => $invoice->client->name ?? self::DEFAULT_CLIENT_NAME,
                         'url' => route('financial.invoices.show', $invoice->id),
                         'meta' => [
                             'status' => $invoice->status,
@@ -371,7 +373,7 @@ class NavigationController extends Controller
                         'type' => 'quote',
                         'icon' => '📝',
                         'title' => "Quote #{$quote->quote_number}",
-                        'subtitle' => $quote->client->name ?? 'No Client',
+                        'subtitle' => $quote->client->name ?? self::DEFAULT_CLIENT_NAME,
                         'url' => route('financial.quotes.show', $quote->id),
                         'meta' => [
                             'status' => $quote->status,
@@ -460,7 +462,7 @@ class NavigationController extends Controller
                         'type' => 'contract',
                         'icon' => '📄',
                         'title' => $contract->title ?? "Contract #{$contract->contract_number}",
-                        'subtitle' => $contract->client->name ?? 'No Client',
+                        'subtitle' => $contract->client->name ?? self::DEFAULT_CLIENT_NAME,
                         'url' => route('financial.contracts.show', $contract->id),
                         'meta' => [
                             'status' => $contract->status,
@@ -514,7 +516,7 @@ class NavigationController extends Controller
                         'type' => 'payment',
                         'icon' => '💳',
                         'title' => "Payment #{$payment->id}",
-                        'subtitle' => $payment->client->name ?? 'No Client',
+                        'subtitle' => $payment->client->name ?? self::DEFAULT_CLIENT_NAME,
                         'url' => route('financial.payments.show', $payment->id),
                         'meta' => [
                             'status' => $payment->status,
@@ -719,7 +721,7 @@ class NavigationController extends Controller
                     'type' => 'ticket',
                     'icon' => '🎫',
                     'title' => "#{$ticket->id} - {$ticket->title}",
-                    'subtitle' => $ticket->client->name ?? 'No Client',
+                    'subtitle' => $ticket->client->name ?? self::DEFAULT_CLIENT_NAME,
                     'url' => route('tickets.show', $ticket->id),
                     'meta' => [
                         'status' => $ticket->status,
@@ -767,7 +769,7 @@ class NavigationController extends Controller
                     'type' => 'invoice',
                     'icon' => '💰',
                     'title' => "Invoice #{$invoice->invoice_number}",
-                    'subtitle' => $invoice->client->name ?? 'No Client',
+                    'subtitle' => $invoice->client->name ?? self::DEFAULT_CLIENT_NAME,
                     'url' => route('financial.invoices.show', $invoice->id),
                     'meta' => [
                         'status' => $invoice->status,
