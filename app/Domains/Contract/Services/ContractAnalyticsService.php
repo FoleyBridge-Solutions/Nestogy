@@ -306,7 +306,7 @@ class ContractAnalyticsService
             'contract_value_trend' => $this->getContractValueTrend($companyId, $startDate, $endDate),
             'contract_count_trend' => $this->getContractCountTrend($companyId, $startDate, $endDate),
             'revenue_trend' => $this->getRevenueTrend($companyId, $startDate, $endDate),
-            'client_acquisition_trend' => $this->getClientAcquisitionTrend($companyId, $startDate, $endDate),
+            'client_acquisition_trend' => $this->getClientAcquisitionTrend($companyId, $startDate),
         ];
     }
 
@@ -552,7 +552,7 @@ class ContractAnalyticsService
         return [];
     }
 
-    protected function getClientAcquisitionTrend(int $companyId, Carbon $startDate, Carbon $endDate): array
+    protected function getClientAcquisitionTrend(int $companyId, Carbon $startDate): array
     {
         return [];
     }
