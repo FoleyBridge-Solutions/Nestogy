@@ -15,6 +15,8 @@ class LeadController extends BaseResourceController
 {
     use HasClientRelation;
 
+    private const VALIDATION_ASSIGNED_USER = 'nullable|exists:users,id';
+
     protected LeadScoringService $leadScoringService;
 
     public function __construct(LeadScoringService $leadScoringService)
@@ -135,7 +137,7 @@ class LeadController extends BaseResourceController
             'zip_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
             'lead_source_id' => 'nullable|exists:lead_sources,id',
-            'assigned_user_id' => 'nullable|exists:users,id',
+            'assigned_user_id' => self::VALIDATION_ASSIGNED_USER,
             'priority' => 'required|in:low,medium,high,urgent',
             'industry' => 'nullable|string|max:100',
             'company_size' => 'nullable|integer|min:1',
@@ -231,7 +233,7 @@ class LeadController extends BaseResourceController
             'zip_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
             'lead_source_id' => 'nullable|exists:lead_sources,id',
-            'assigned_user_id' => 'nullable|exists:users,id',
+            'assigned_user_id' => self::VALIDATION_ASSIGNED_USER,
             'priority' => 'required|in:low,medium,high,urgent',
             'status' => 'required|in:new,contacted,qualified,unqualified,nurturing,converted,lost',
             'industry' => 'nullable|string|max:100',
@@ -456,7 +458,7 @@ class LeadController extends BaseResourceController
         $request->validate([
             'csv_file' => 'required|file|mimes:csv,txt|max:10240',
             'lead_source_id' => 'nullable|exists:lead_sources,id',
-            'assigned_user_id' => 'nullable|exists:users,id',
+            'assigned_user_id' => self::VALIDATION_ASSIGNED_USER,
             'default_status' => 'required|in:'.implode(',', array_keys(Lead::getStatuses())),
             'default_interest_level' => 'required|in:low,medium,high,urgent',
             'skip_duplicates' => 'boolean',
