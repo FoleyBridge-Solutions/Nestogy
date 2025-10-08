@@ -6,6 +6,8 @@ use Illuminate\Validation\Rule;
 
 trait HasStandardValidation
 {
+    private const NULLABLE_DATE = 'nullable|date';
+
     protected function getClientValidationRule(): array
     {
         return [
@@ -62,10 +64,10 @@ trait HasStandardValidation
     protected function getStandardDateValidationRules(): array
     {
         return [
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'due_date' => 'nullable|date',
-            'scheduled_at' => 'nullable|date',
+            'start_date' => self::NULLABLE_DATE,
+            'end_date' => self::NULLABLE_DATE . '|after_or_equal:start_date',
+            'due_date' => self::NULLABLE_DATE,
+            'scheduled_at' => self::NULLABLE_DATE,
         ];
     }
 
