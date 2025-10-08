@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class AnalyticsController extends Controller
 {
+    private const VALIDATION_RULE_NULLABLE_DATE = 'nullable|date';
+
     protected FinancialAnalyticsService $analyticsService;
 
     protected DashboardDataService $dashboardService;
@@ -42,8 +44,8 @@ class AnalyticsController extends Controller
     public function executiveDashboard(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_date' => self::VALIDATION_RULE_NULLABLE_DATE,
+            'end_date' => self::VALIDATION_RULE_NULLABLE_DATE.'|after_or_equal:start_date',
             'refresh' => 'boolean',
         ]);
 
@@ -68,8 +70,8 @@ class AnalyticsController extends Controller
     public function revenueDashboard(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_date' => self::VALIDATION_RULE_NULLABLE_DATE,
+            'end_date' => self::VALIDATION_RULE_NULLABLE_DATE.'|after_or_equal:start_date',
             'refresh' => 'boolean',
         ]);
 
@@ -94,8 +96,8 @@ class AnalyticsController extends Controller
     public function customerDashboard(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_date' => self::VALIDATION_RULE_NULLABLE_DATE,
+            'end_date' => self::VALIDATION_RULE_NULLABLE_DATE.'|after_or_equal:start_date',
             'refresh' => 'boolean',
         ]);
 
@@ -120,8 +122,8 @@ class AnalyticsController extends Controller
     public function operationsDashboard(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_date' => self::VALIDATION_RULE_NULLABLE_DATE,
+            'end_date' => self::VALIDATION_RULE_NULLABLE_DATE.'|after_or_equal:start_date',
             'refresh' => 'boolean',
         ]);
 
@@ -217,7 +219,7 @@ class AnalyticsController extends Controller
     public function calculateMRR(Request $request): JsonResponse
     {
         $request->validate([
-            'date' => 'nullable|date',
+            'date' => self::VALIDATION_RULE_NULLABLE_DATE,
         ]);
 
         $date = $request->date ? Carbon::parse($request->date) : null;
@@ -235,7 +237,7 @@ class AnalyticsController extends Controller
     public function calculateARR(Request $request): JsonResponse
     {
         $request->validate([
-            'date' => 'nullable|date',
+            'date' => self::VALIDATION_RULE_NULLABLE_DATE,
         ]);
 
         $date = $request->date ? Carbon::parse($request->date) : null;
@@ -392,8 +394,8 @@ class AnalyticsController extends Controller
         $request->validate([
             'dashboard_type' => 'required|string|in:executive,revenue,customer,operations,forecasting',
             'format' => 'required|string|in:pdf,excel,csv,json',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_date' => self::VALIDATION_RULE_NULLABLE_DATE,
+            'end_date' => self::VALIDATION_RULE_NULLABLE_DATE.'|after_or_equal:start_date',
         ]);
 
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
