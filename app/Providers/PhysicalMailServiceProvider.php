@@ -20,7 +20,7 @@ class PhysicalMailServiceProvider extends ServiceProvider
             if (auth()->check() && auth()->user()->company_id) {
                 try {
                     return new CompanyAwarePostGridClient(auth()->user()->company_id);
-                } catch (\Exception $e) {
+                } catch (\App\Domains\PhysicalMail\Exceptions\PhysicalMailSettingsException $e) {
                     // Fall back to regular client with env config
                     return new PostGridClient;
                 }
