@@ -46,6 +46,11 @@ class CompanyCustomization extends Model
     ];
 
     /**
+     * Default fallback color (blue-500)
+     */
+    const DEFAULT_FALLBACK_COLOR = '#3b82f6';
+
+    /**
      * Default color palette (blue theme)
      */
     const DEFAULT_COLORS = [
@@ -55,7 +60,7 @@ class CompanyCustomization extends Model
             '200' => '#bfdbfe',
             '300' => '#93c5fd',
             '400' => '#60a5fa',
-            '500' => '#3b82f6',
+            '500' => self::DEFAULT_FALLBACK_COLOR,
             '600' => '#2563eb',
             '700' => '#1d4ed8',
             '800' => '#1e40af',
@@ -94,12 +99,12 @@ class CompanyCustomization extends Model
         $value = $colors;
         foreach ($keys as $key) {
             if (! isset($value[$key])) {
-                return $fallback ?: data_get(self::DEFAULT_COLORS, $path, '#3b82f6');
+                return $fallback ?: data_get(self::DEFAULT_COLORS, $path, self::DEFAULT_FALLBACK_COLOR);
             }
             $value = $value[$key];
         }
 
-        return $value ?: ($fallback ?: data_get(self::DEFAULT_COLORS, $path, '#3b82f6'));
+        return $value ?: ($fallback ?: data_get(self::DEFAULT_COLORS, $path, self::DEFAULT_FALLBACK_COLOR));
     }
 
     /**
