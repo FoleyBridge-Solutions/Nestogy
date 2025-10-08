@@ -14,6 +14,8 @@ class CalendarEventController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of calendar events for the selected client
      */
@@ -110,17 +112,17 @@ class CalendarEventController extends Controller
                 }),
             ],
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'event_type' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getTypes())),
-            'location' => 'nullable|string|max:255',
+            'location' => self::NULLABLE_STRING.'|max:255',
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after:start_datetime',
             'all_day' => 'boolean',
             'status' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getStatuses())),
             'priority' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getPriorities())),
-            'attendees' => 'nullable|string',
+            'attendees' => self::NULLABLE_STRING,
             'reminder_minutes' => 'nullable|in:'.implode(',', array_keys(ClientCalendarEvent::getReminderOptions())),
-            'notes' => 'nullable|string',
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -210,17 +212,17 @@ class CalendarEventController extends Controller
                 }),
             ],
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'event_type' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getTypes())),
-            'location' => 'nullable|string|max:255',
+            'location' => self::NULLABLE_STRING.'|max:255',
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after:start_datetime',
             'all_day' => 'boolean',
             'status' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getStatuses())),
             'priority' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getPriorities())),
-            'attendees' => 'nullable|string',
+            'attendees' => self::NULLABLE_STRING,
             'reminder_minutes' => 'nullable|in:'.implode(',', array_keys(ClientCalendarEvent::getReminderOptions())),
-            'notes' => 'nullable|string',
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
