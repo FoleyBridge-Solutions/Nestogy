@@ -16,6 +16,8 @@ class TimeEntryTemplate extends Model
 {
     use BelongsToCompany, HasFactory;
 
+    public const CATEGORY_NETWORK_SUPPORT = 'Network Support';
+
     protected $fillable = [
         'company_id',
         'name',
@@ -216,7 +218,7 @@ class TimeEntryTemplate extends Model
                 'description' => 'Diagnose and resolve network connectivity issues',
                 'work_type' => 'network_support',
                 'default_hours' => 1.0,
-                'category' => 'Network Support',
+                'category' => self::CATEGORY_NETWORK_SUPPORT,
                 'keywords' => ['network', 'internet', 'connection', 'wifi', 'ethernet'],
                 'is_billable' => true,
             ],
@@ -272,7 +274,7 @@ class TimeEntryTemplate extends Model
             'general_support' => 'General Support',
             'account_management' => 'Account Management',
             'email_support' => 'Email Support',
-            'network_support' => 'Network Support',
+            'network_support' => self::CATEGORY_NETWORK_SUPPORT,
             'software_support' => 'Software Support',
             'backup_recovery' => 'Backup/Recovery',
             'security_support' => 'Security Support',
@@ -292,7 +294,7 @@ class TimeEntryTemplate extends Model
         return [
             'Account Support',
             'Email Support',
-            'Network Support',
+            self::CATEGORY_NETWORK_SUPPORT,
             'Software Support',
             'Data Management',
             'Security',
