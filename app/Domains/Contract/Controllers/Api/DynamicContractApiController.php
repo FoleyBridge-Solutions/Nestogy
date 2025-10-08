@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Validator;
 
 class DynamicContractApiController extends Controller
 {
+    private const CONTRACT_NOT_FOUND_MESSAGE = 'Contract not found';
+
     protected DynamicContractFormBuilder $formBuilder;
 
     protected DynamicContractViewBuilder $viewBuilder;
@@ -168,7 +170,7 @@ class DynamicContractApiController extends Controller
         if (! $contract) {
             return response()->json([
                 'success' => false,
-                'message' => 'Contract not found',
+                'message' => self::CONTRACT_NOT_FOUND_MESSAGE,
             ], 404);
         }
 
@@ -192,7 +194,7 @@ class DynamicContractApiController extends Controller
         if (! $contract) {
             return response()->json([
                 'success' => false,
-                'message' => 'Contract not found',
+                'message' => self::CONTRACT_NOT_FOUND_MESSAGE,
             ], 404);
         }
 
@@ -250,7 +252,7 @@ class DynamicContractApiController extends Controller
         if (! $contract) {
             return response()->json([
                 'success' => false,
-                'message' => 'Contract not found',
+                'message' => self::CONTRACT_NOT_FOUND_MESSAGE,
             ], 404);
         }
 
