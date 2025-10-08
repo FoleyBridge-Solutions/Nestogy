@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
+use App\Domains\Financial\Exceptions\TaxCloudApiException;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -114,7 +115,11 @@ class TaxCloudV3ApiClient
                 return $this->formatTaxResponse($data);
             } else {
                 $error = $response->json();
-                throw new Exception('TaxCloud V3 API error: '.($error['message'] ?? $response->body()));
+                throw new TaxCloudApiException(
+                    'TaxCloud V3 API error: '.($error['message'] ?? $response->body()),
+                    'v3',
+                    'carts'
+                );
             }
 
         } catch (Exception $e) {
