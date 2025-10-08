@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class AuthController extends Controller
 {
+    private const EMAIL_VALIDATION_RULE = 'required|email|max:255';
+
     protected PortalAuthService $authService;
 
     public function __construct(PortalAuthService $authService)
@@ -48,7 +50,7 @@ class AuthController extends Controller
 
             // Validate request
             $validator = Validator::make($request->all(), [
-                'email' => 'required|email|max:255',
+                'email' => self::EMAIL_VALIDATION_RULE,
                 'password' => 'required|string|min:6|max:255',
                 'remember_me' => 'boolean',
                 'device_info' => 'array',
@@ -231,7 +233,7 @@ class AuthController extends Controller
 
             // Validate request
             $validator = Validator::make($request->all(), [
-                'email' => 'required|email|max:255',
+                'email' => self::EMAIL_VALIDATION_RULE,
             ]);
 
             if ($validator->fails()) {
@@ -269,7 +271,7 @@ class AuthController extends Controller
 
             // Validate request
             $validator = Validator::make($request->all(), [
-                'email' => 'required|email|max:255',
+                'email' => self::EMAIL_VALIDATION_RULE,
                 'token' => 'required|string|min:32|max:64',
                 'password' => 'required|string|min:8|max:255|confirmed',
                 'password_confirmation' => 'required|string',
