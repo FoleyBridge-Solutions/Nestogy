@@ -190,6 +190,8 @@ class PricingRuleController extends Controller
                 case 'delete':
                     $rule->delete();
                     break;
+                default:
+                    break;
             }
         }
 
