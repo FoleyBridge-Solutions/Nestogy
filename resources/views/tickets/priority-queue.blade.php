@@ -142,7 +142,7 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th width="30">
+                            <th style="width: 30px;">
                                 <input type="checkbox" class="form-check-input" id="select-all">
                             </th>
                             <th>Priority</th>
