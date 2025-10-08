@@ -20,6 +20,8 @@ use Illuminate\Http\Request;
  */
 class InvoiceController extends PortalApiController
 {
+    private const INVOICE_NOT_FOUND = 'Invoice not found';
+
     /**
      * Get invoices for client
      */
@@ -121,7 +123,7 @@ class InvoiceController extends PortalApiController
                 ->first();
 
             if (! $invoice) {
-                return $this->errorResponse('Invoice not found', 404);
+                return $this->errorResponse(self::INVOICE_NOT_FOUND, 404);
             }
 
             $invoiceData = [
@@ -286,7 +288,7 @@ class InvoiceController extends PortalApiController
                 ->first();
 
             if (! $invoice) {
-                return $this->errorResponse('Invoice not found', 404);
+                return $this->errorResponse(self::INVOICE_NOT_FOUND, 404);
             }
 
             // In a real implementation, you would generate or retrieve the PDF
@@ -321,7 +323,7 @@ class InvoiceController extends PortalApiController
                 ->first();
 
             if (! $invoice) {
-                return $this->errorResponse('Invoice not found', 404);
+                return $this->errorResponse(self::INVOICE_NOT_FOUND, 404);
             }
 
             if (! $invoice->canBePaid()) {
