@@ -142,6 +142,9 @@ class RevenueChart extends Component
                     ];
                 }
                 break;
+
+            default:
+                break;
         }
 
         return $data;
