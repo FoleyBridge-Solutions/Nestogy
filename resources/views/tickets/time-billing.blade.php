@@ -71,8 +71,8 @@
                 </div>
                 
                 <div class="min-w-[150px]">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+                    <label for="status-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                    <select id="status-filter" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                         <option value="">All</option>
                         <option value="draft">Draft</option>
                         <option value="submitted">Submitted</option>
