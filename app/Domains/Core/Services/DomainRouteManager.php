@@ -152,7 +152,7 @@ class DomainRouteManager
             // Use Route::group() instead of require_once to allow re-registration in tests
             try {
                 Route::group([], function () use ($routeFile) {
-                    require $routeFile;
+                    require_once $routeFile;
                 });
                 $this->registeredDomains[$domainName] = $config;
             } catch (\Exception $e) {
