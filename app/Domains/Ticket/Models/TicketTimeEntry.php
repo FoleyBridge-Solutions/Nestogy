@@ -61,12 +61,12 @@ class TicketTimeEntry extends Model
         'ticket_id' => 'integer',
         'user_id' => 'integer',
         'company_id' => 'integer',
-        'hours_worked' => 'decimal:2',
+        'hours_worked' => self::DECIMAL_CAST_PRECISION,
         'minutes_worked' => 'integer',
-        'hours_billed' => 'decimal:2',
+        'hours_billed' => self::DECIMAL_CAST_PRECISION,
         'billable' => 'boolean',
-        'hourly_rate' => 'decimal:2',
-        'amount' => 'decimal:2',
+        'hourly_rate' => self::DECIMAL_CAST_PRECISION,
+        'amount' => self::DECIMAL_CAST_PRECISION,
         'work_date' => 'date',
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
@@ -82,8 +82,10 @@ class TicketTimeEntry extends Model
     ];
 
     // ===========================================
-    // ENTRY TYPE CONSTANTS
+    // CONSTANTS
     // ===========================================
+
+    const DECIMAL_CAST_PRECISION = 'decimal:2';
 
     const TYPE_MANUAL = 'manual';
 
