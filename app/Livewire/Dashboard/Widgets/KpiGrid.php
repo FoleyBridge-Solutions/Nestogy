@@ -65,187 +65,231 @@ class KpiGrid extends Component
     {
         $this->loading = true;
         $companyId = Auth::user()->company_id;
-        $baseQuery = ['company_id' => $companyId];
-        $method = $this->getRevenueRecognitionMethod();
-
-        // Get date range based on selected period
+        
         [$startDate, $endDate, $previousStartDate, $previousEndDate] = $this->getDateRanges();
+        
+        $metrics = $this->collectMetrics($companyId, $startDate, $endDate, $previousStartDate, $previousEndDate);
+        
+        $this->kpis = $this->buildKpiArray($metrics);
+        $this->loading = false;
+    }
 
-        // Use centralized cache service to get all invoice stats at once
+    protected function collectMetrics($companyId, $startDate, $endDate, $previousStartDate, $previousEndDate)
+    {
+        $baseQuery = ['company_id' => $companyId];
+        
         $currentStats = DashboardCacheService::getInvoiceStats($companyId, $startDate, $endDate);
         $previousStats = DashboardCacheService::getInvoiceStats($companyId, $previousStartDate, $previousEndDate);
+        
+        [$totalRevenue, $previousRevenue] = $this->calculateRevenue($companyId, $currentStats, $previousStats, $startDate, $endDate, $previousStartDate, $previousEndDate);
+        
+        $clientStats = DashboardCacheService::getClientStats($companyId, $endDate);
+        
+        return [
+            'totalRevenue' => $totalRevenue,
+            'previousRevenue' => $previousRevenue,
+            'revenueChange' => $this->calculatePercentageChange($totalRevenue, $previousRevenue),
+            'pendingInvoices' => ($currentStats['draft_amount'] ?? 0) + ($currentStats['sent_amount'] ?? 0),
+            'pendingCount' => ($currentStats['draft_count'] ?? 0) + ($currentStats['sent_count'] ?? 0),
+            'activeClients' => $clientStats['active_count'] ?? 0,
+            'newClientsThisPeriod' => $this->getNewClientsCount($clientStats, $companyId, $startDate, $endDate),
+            'openTickets' => Ticket::where($baseQuery)->whereIn('status', ['open', 'in_progress', 'waiting'])->count(),
+            'criticalTickets' => Ticket::where($baseQuery)->where('priority', 'critical')->whereIn('status', ['open', 'in_progress'])->count(),
+            'overdueInvoices' => Invoice::where($baseQuery)->whereIn('status', ['overdue', 'Overdue'])->where('due_date', '<', $endDate)->sum('amount'),
+            'previousOverdue' => Invoice::where($baseQuery)->whereIn('status', ['overdue', 'Overdue'])->where('due_date', '<', $previousEndDate)->sum('amount'),
+            'avgResolutionHours' => $this->calculateAverageResolutionTime($companyId, $startDate, $endDate),
+            'previousAvgResolution' => $this->calculateAverageResolutionTime($companyId, $previousStartDate, $previousEndDate),
+            'satisfaction' => $this->calculateCustomerSatisfaction($companyId, $startDate, $endDate),
+            'previousSatisfaction' => $this->calculateCustomerSatisfaction($companyId, $previousStartDate, $previousEndDate),
+            'utilization' => $this->calculateTeamUtilization($companyId),
+        ];
+    }
 
-        // Calculate revenue based on recognition method
+    protected function calculateRevenue($companyId, $currentStats, $previousStats, $startDate, $endDate, $previousStartDate, $previousEndDate)
+    {
+        $method = $this->getRevenueRecognitionMethod();
+        
         if ($method === 'cash') {
             $paymentStats = DashboardCacheService::getPaymentStats($companyId, $startDate, $endDate);
             $previousPaymentStats = DashboardCacheService::getPaymentStats($companyId, $previousStartDate, $previousEndDate);
-            $totalRevenue = $paymentStats['completed_amount'] ?? 0;
-            $previousRevenue = $previousPaymentStats['completed_amount'] ?? 0;
-        } else {
-            $totalRevenue = $currentStats['paid_amount'] ?? 0;
-            $previousRevenue = $previousStats['paid_amount'] ?? 0;
+            return [
+                $paymentStats['completed_amount'] ?? 0,
+                $previousPaymentStats['completed_amount'] ?? 0
+            ];
         }
+        
+        return [
+            $currentStats['paid_amount'] ?? 0,
+            $previousStats['paid_amount'] ?? 0
+        ];
+    }
 
-        $revenueChange = $this->calculatePercentageChange($totalRevenue, $previousRevenue);
-
-        // Pending Invoices - get from cached stats
-        $pendingInvoices = ($currentStats['draft_amount'] ?? 0) + ($currentStats['sent_amount'] ?? 0);
-        $pendingCount = ($currentStats['draft_count'] ?? 0) + ($currentStats['sent_count'] ?? 0);
-
-        // Active Clients - use cached stats
-        $clientStats = DashboardCacheService::getClientStats($companyId, $endDate);
-        $activeClients = $clientStats['active_count'] ?? 0;
-
-        // Calculate new clients based on period
-        $newClientsThisPeriod = match ($this->period) {
+    protected function getNewClientsCount($clientStats, $companyId, $startDate, $endDate)
+    {
+        return match ($this->period) {
             'month' => $clientStats['new_this_month'] ?? 0,
             'quarter' => $clientStats['new_this_quarter'] ?? 0,
             default => Client::where('company_id', $companyId)
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->count()
         };
+    }
 
-        // Open Tickets
-        $openTickets = Ticket::where($baseQuery)
-            ->whereIn('status', ['open', 'in_progress', 'waiting'])
-            ->count();
+    protected function buildKpiArray($metrics)
+    {
+        $periodLabel = $this->getPeriodLabel();
+        $comparisonLabel = $this->getComparisonLabel();
+        
+        $overdueChange = $this->calculatePercentageChange($metrics['overdueInvoices'], $metrics['previousOverdue']);
+        $resolutionChange = round($metrics['avgResolutionHours'] - $metrics['previousAvgResolution'], 1);
+        $satisfactionChange = round($metrics['satisfaction'] - $metrics['previousSatisfaction'], 1);
+        
+        return [
+            $this->buildRevenueKpi($metrics, $periodLabel, $comparisonLabel),
+            $this->buildPendingInvoicesKpi($metrics),
+            $this->buildActiveClientsKpi($metrics),
+            $this->buildOpenTicketsKpi($metrics),
+            $this->buildOverdueKpi($metrics, $overdueChange, $comparisonLabel),
+            $this->buildResolutionKpi($metrics, $resolutionChange, $comparisonLabel),
+            $this->buildSatisfactionKpi($metrics, $satisfactionChange),
+            $this->buildUtilizationKpi($metrics),
+        ];
+    }
 
-        // Critical Tickets
-        $criticalTickets = Ticket::where($baseQuery)
-            ->where('priority', 'critical')
-            ->whereIn('status', ['open', 'in_progress'])
-            ->count();
-
-        // Overdue Invoices (current as of end date)
-        $overdueInvoices = Invoice::where($baseQuery)
-            ->whereIn('status', ['overdue', 'Overdue'])
-            ->where('due_date', '<', $endDate)
-            ->sum('amount');
-
-        // Previous period's overdue for comparison
-        $previousOverdue = Invoice::where($baseQuery)
-            ->whereIn('status', ['overdue', 'Overdue'])
-            ->where('due_date', '<', $previousEndDate)
-            ->sum('amount');
-
-        $overdueChange = $this->calculatePercentageChange($overdueInvoices, $previousOverdue);
-
-        // Average Resolution Time with trend
-        $avgResolutionHours = $this->calculateAverageResolutionTime($companyId, $startDate, $endDate);
-        $previousAvgResolution = $this->calculateAverageResolutionTime($companyId, $previousStartDate, $previousEndDate);
-        $resolutionChange = round($avgResolutionHours - $previousAvgResolution, 1);
-
-        // Customer Satisfaction with trend
-        $satisfaction = $this->calculateCustomerSatisfaction($companyId, $startDate, $endDate);
-        $previousSatisfaction = $this->calculateCustomerSatisfaction($companyId, $previousStartDate, $previousEndDate);
-        $satisfactionChange = round($satisfaction - $previousSatisfaction, 1);
-
-        // Team Utilization
-        $utilization = $this->calculateTeamUtilization($companyId);
-
-        $periodLabel = match ($this->period) {
+    protected function getPeriodLabel()
+    {
+        return match ($this->period) {
             'quarter' => 'Quarterly',
             'year' => 'Yearly',
             'all' => 'Total',
             default => 'Monthly'
         };
+    }
 
-        $comparisonLabel = match ($this->period) {
+    protected function getComparisonLabel()
+    {
+        return match ($this->period) {
             'quarter' => 'vs last quarter',
             'year' => 'vs last year',
             'all' => 'all time',
             default => 'vs last month'
         };
+    }
 
-        $kpis = [
-            [
-                'label' => $periodLabel.' Revenue',
-                'value' => $totalRevenue,
-                'format' => 'currency',
-                'icon' => 'currency-dollar',
-                'color' => 'green',
-                'trend' => $revenueChange >= 0 ? 'up' : 'down',
-                'trendValue' => ($revenueChange >= 0 ? '+' : '').$revenueChange.'%',
-                'description' => $comparisonLabel,
-                'previousValue' => $previousRevenue,
-            ],
-            [
-                'label' => 'Pending Invoices',
-                'value' => $pendingInvoices,
-                'format' => 'currency',
-                'icon' => 'document-text',
-                'color' => 'blue',
-                'trend' => 'stable',
-                'trendValue' => $pendingCount.' invoices',
-                'description' => 'awaiting payment',
-            ],
-            [
-                'label' => 'Active Clients',
-                'value' => $activeClients,
-                'format' => 'number',
-                'icon' => 'user-group',
-                'color' => 'purple',
-                'trend' => $newClientsThisPeriod > 0 ? 'up' : 'stable',
-                'trendValue' => $newClientsThisPeriod > 0 ? '+'.$newClientsThisPeriod : '0',
-                'description' => 'new this '.($this->period === 'all' ? 'period' : $this->period),
-            ],
-            [
-                'label' => 'Open Tickets',
-                'value' => $openTickets,
-                'format' => 'number',
-                'icon' => 'ticket',
-                'color' => 'orange',
-                'trend' => $criticalTickets > 0 ? 'warning' : 'stable',
-                'trendValue' => $criticalTickets.' critical',
-                'description' => 'requiring attention',
-            ],
-            [
-                'label' => 'Overdue Amount',
-                'value' => $overdueInvoices,
-                'format' => 'currency',
-                'icon' => 'exclamation-triangle',
-                'color' => 'red',
-                'trend' => $overdueChange < 0 ? 'down' : ($overdueChange > 0 ? 'up' : 'stable'),
-                'trendValue' => ($overdueChange >= 0 ? '+' : '').$overdueChange.'%',
-                'description' => $comparisonLabel,
-                'previousValue' => $previousOverdue,
-            ],
-            [
-                'label' => 'Avg Resolution',
-                'value' => $avgResolutionHours,
-                'format' => 'hours',
-                'icon' => 'clock',
-                'color' => 'indigo',
-                'trend' => $resolutionChange < 0 ? 'up' : ($resolutionChange > 0 ? 'down' : 'stable'),
-                'trendValue' => ($resolutionChange > 0 ? '+' : '').$resolutionChange.' hrs',
-                'description' => $comparisonLabel,
-                'previousValue' => $previousAvgResolution,
-            ],
-            [
-                'label' => 'Satisfaction',
-                'value' => $satisfaction,
-                'format' => 'rating',
-                'icon' => 'star',
-                'color' => 'yellow',
-                'trend' => $satisfactionChange > 0 ? 'up' : ($satisfactionChange < 0 ? 'down' : 'stable'),
-                'trendValue' => ($satisfactionChange >= 0 ? '+' : '').$satisfactionChange,
-                'description' => 'out of 5.0',
-                'previousValue' => $previousSatisfaction,
-            ],
-            [
-                'label' => 'Team Utilization',
-                'value' => $utilization,
-                'format' => 'percentage',
-                'icon' => 'chart-bar',
-                'color' => 'teal',
-                'trend' => $utilization > 80 ? 'warning' : ($utilization < 40 ? 'low' : 'stable'),
-                'trendValue' => $utilization.'%',
-                'description' => 'capacity used',
-            ],
+    protected function buildRevenueKpi($metrics, $periodLabel, $comparisonLabel)
+    {
+        return [
+            'label' => $periodLabel.' Revenue',
+            'value' => $metrics['totalRevenue'],
+            'format' => 'currency',
+            'icon' => 'currency-dollar',
+            'color' => 'green',
+            'trend' => $metrics['revenueChange'] >= 0 ? 'up' : 'down',
+            'trendValue' => ($metrics['revenueChange'] >= 0 ? '+' : '').$metrics['revenueChange'].'%',
+            'description' => $comparisonLabel,
+            'previousValue' => $metrics['previousRevenue'],
         ];
+    }
 
-        $this->kpis = $kpis;
-        $this->loading = false;
+    protected function buildPendingInvoicesKpi($metrics)
+    {
+        return [
+            'label' => 'Pending Invoices',
+            'value' => $metrics['pendingInvoices'],
+            'format' => 'currency',
+            'icon' => 'document-text',
+            'color' => 'blue',
+            'trend' => 'stable',
+            'trendValue' => $metrics['pendingCount'].' invoices',
+            'description' => 'awaiting payment',
+        ];
+    }
+
+    protected function buildActiveClientsKpi($metrics)
+    {
+        return [
+            'label' => 'Active Clients',
+            'value' => $metrics['activeClients'],
+            'format' => 'number',
+            'icon' => 'user-group',
+            'color' => 'purple',
+            'trend' => $metrics['newClientsThisPeriod'] > 0 ? 'up' : 'stable',
+            'trendValue' => $metrics['newClientsThisPeriod'] > 0 ? '+'.$metrics['newClientsThisPeriod'] : '0',
+            'description' => 'new this '.($this->period === 'all' ? 'period' : $this->period),
+        ];
+    }
+
+    protected function buildOpenTicketsKpi($metrics)
+    {
+        return [
+            'label' => 'Open Tickets',
+            'value' => $metrics['openTickets'],
+            'format' => 'number',
+            'icon' => 'ticket',
+            'color' => 'orange',
+            'trend' => $metrics['criticalTickets'] > 0 ? 'warning' : 'stable',
+            'trendValue' => $metrics['criticalTickets'].' critical',
+            'description' => 'requiring attention',
+        ];
+    }
+
+    protected function buildOverdueKpi($metrics, $overdueChange, $comparisonLabel)
+    {
+        return [
+            'label' => 'Overdue Amount',
+            'value' => $metrics['overdueInvoices'],
+            'format' => 'currency',
+            'icon' => 'exclamation-triangle',
+            'color' => 'red',
+            'trend' => $overdueChange < 0 ? 'down' : ($overdueChange > 0 ? 'up' : 'stable'),
+            'trendValue' => ($overdueChange >= 0 ? '+' : '').$overdueChange.'%',
+            'description' => $comparisonLabel,
+            'previousValue' => $metrics['previousOverdue'],
+        ];
+    }
+
+    protected function buildResolutionKpi($metrics, $resolutionChange, $comparisonLabel)
+    {
+        return [
+            'label' => 'Avg Resolution',
+            'value' => $metrics['avgResolutionHours'],
+            'format' => 'hours',
+            'icon' => 'clock',
+            'color' => 'indigo',
+            'trend' => $resolutionChange < 0 ? 'up' : ($resolutionChange > 0 ? 'down' : 'stable'),
+            'trendValue' => ($resolutionChange > 0 ? '+' : '').$resolutionChange.' hrs',
+            'description' => $comparisonLabel,
+            'previousValue' => $metrics['previousAvgResolution'],
+        ];
+    }
+
+    protected function buildSatisfactionKpi($metrics, $satisfactionChange)
+    {
+        return [
+            'label' => 'Satisfaction',
+            'value' => $metrics['satisfaction'],
+            'format' => 'rating',
+            'icon' => 'star',
+            'color' => 'yellow',
+            'trend' => $satisfactionChange > 0 ? 'up' : ($satisfactionChange < 0 ? 'down' : 'stable'),
+            'trendValue' => ($satisfactionChange >= 0 ? '+' : '').$satisfactionChange,
+            'description' => 'out of 5.0',
+            'previousValue' => $metrics['previousSatisfaction'],
+        ];
+    }
+
+    protected function buildUtilizationKpi($metrics)
+    {
+        return [
+            'label' => 'Team Utilization',
+            'value' => $metrics['utilization'],
+            'format' => 'percentage',
+            'icon' => 'chart-bar',
+            'color' => 'teal',
+            'trend' => $metrics['utilization'] > 80 ? 'warning' : ($metrics['utilization'] < 40 ? 'low' : 'stable'),
+            'trendValue' => $metrics['utilization'].'%',
+            'description' => 'capacity used',
+        ];
     }
 
     protected function getRevenueRecognitionMethod(): string
