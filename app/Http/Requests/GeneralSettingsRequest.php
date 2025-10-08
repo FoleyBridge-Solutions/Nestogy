@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class GeneralSettingsRequest extends FormRequest
 {
+    private const REQUIRED_STRING_255 = 'required|string|max:255';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -21,7 +23,7 @@ class GeneralSettingsRequest extends FormRequest
     {
         return [
             // Company Information
-            'company_name' => 'required|string|max:255',
+            'company_name' => self::REQUIRED_STRING_255,
             'company_logo' => 'nullable|string|max:255',
             'company_colors' => 'nullable|array',
             'company_colors.primary' => 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
@@ -72,7 +74,7 @@ class GeneralSettingsRequest extends FormRequest
             // Localization
             'company_language' => 'required|string|size:2|in:en,es,fr,de,it,pt,nl,pl,ru,ja,zh,ko,ar,hi,sv,no,da,fi,tr,el,cs,hu,ro,bg,hr,sl,sk,lt,lv,et,mt,ga,cy,is,fo,gl,eu,ca,gl,an,ast,co,gd,br,kw,gv',
             'company_currency' => 'required|string|size:3|in:USD,EUR,GBP,CAD,AUD,JPY,CHF,CNY,INR,BRL,MXN,KRW,SGD,HKD,SEK,NOK,DKK,PLN,CZK,HUF,RUB,TRY,ZAR,NZD,ILS,AED,SAR,THB,MYR,PHP,IDR,VND,EGP,MAD,KES,GHS,NGN,ZMW,BWP,SZL,LSL,NAD,MZN,AOA,XOF,XAF,KMF,DJF,ERN,ETB,GMD,GNF,LRD,SLL,STD,CVE,MRU,SHP,XPF,TOP,WST,VUV,SBD,FJD,PGK,TVD,KID,AUD,NZD',
-            'timezone' => 'required|string|max:255',
+            'timezone' => self::REQUIRED_STRING_255,
             'date_format' => 'required|string|in:Y-m-d,m/d/Y,d/m/Y,M d\\, Y,d M Y,j F Y',
 
             // Custom Fields
@@ -84,7 +86,7 @@ class GeneralSettingsRequest extends FormRequest
 
             // Theme and Display
             'theme' => 'required|string|in:blue,green,red,purple,orange,dark,light,corporate',
-            'start_page' => 'required|string|max:255',
+            'start_page' => self::REQUIRED_STRING_255,
         ];
     }
 
