@@ -27,7 +27,7 @@ class CommunicationLogIntegrationService
 
             // Determine communication type and direction
             $type = 'email';
-            $direction = $this->determineDirection($emailMessage, $client);
+            $direction = $this->determineDirection($emailMessage);
             $channel = 'email';
 
             // Create communication log entry
@@ -128,7 +128,7 @@ class CommunicationLogIntegrationService
         return null;
     }
 
-    private function determineDirection(EmailMessage $emailMessage, Client $client): string
+    private function determineDirection(EmailMessage $emailMessage): string
     {
         $accountEmail = strtolower($emailMessage->emailAccount->email_address);
         $fromEmail = strtolower($emailMessage->from_address);
@@ -169,7 +169,7 @@ class CommunicationLogIntegrationService
 
     private function determineContactPerson(EmailMessage $emailMessage, Client $client): ?string
     {
-        $direction = $this->determineDirection($emailMessage, $client);
+        $direction = $this->determineDirection($emailMessage);
 
         if ($direction === 'inbound') {
             // For inbound emails, the contact person is the sender
