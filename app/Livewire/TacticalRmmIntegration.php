@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Exceptions\RmmClientNotFoundException;
 use App\Models\Client;
 use App\Models\RmmClientMapping;
 use App\Models\RmmIntegration;
@@ -352,7 +353,7 @@ class TacticalRmmIntegration extends Component
             $rmmClient = collect($this->rmmClients)->firstWhere('id', $this->selectedRmmClientId);
 
             if (! $rmmClient) {
-                throw new \Exception('RMM client not found');
+                throw new RmmClientNotFoundException($this->selectedRmmClientId);
             }
 
             // Delete any existing mapping for this client
