@@ -210,7 +210,7 @@ class ContractAnalyticsService
             'average_approval_time' => $approvalTime,
             'stages_distribution' => $stagesDistribution,
             'process_bottlenecks' => $bottlenecks,
-            'cycle_time_trends' => $this->getCycleTimeTrends($companyId, $startDate, $endDate),
+            'cycle_time_trends' => $this->getCycleTimeTrends($companyId, $startDate),
         ];
     }
 
@@ -527,7 +527,7 @@ class ContractAnalyticsService
         return [];
     }
 
-    protected function getCycleTimeTrends(int $companyId, Carbon $startDate, Carbon $endDate): array
+    protected function getCycleTimeTrends(int $companyId, Carbon $startDate): array
     {
         return [];
     }
