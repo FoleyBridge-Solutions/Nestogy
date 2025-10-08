@@ -296,7 +296,7 @@ class AssetMaintenanceService
             $results['recycle_bin'] = $recycleResult;
 
             // 5. Old file cleanup (downloads, temp folders)
-            $oldFilesResult = $this->cleanupOldFiles($asset);
+            $oldFilesResult = $this->cleanupOldFiles();
             $results['old_files'] = $oldFilesResult;
 
             // 6. Calculate space reclaimed
@@ -628,7 +628,7 @@ class AssetMaintenanceService
         return ['success' => true, 'space_freed' => '1.2 GB'];
     }
 
-    protected function cleanupOldFiles(Asset $asset): array
+    protected function cleanupOldFiles(): array
     {
         return ['success' => true, 'space_freed' => '800 MB'];
     }
