@@ -76,6 +76,8 @@ class VendorController extends Controller
                 case 'contracts_expiring':
                     $query->contractsExpiringSoon();
                     break;
+                default:
+                    break;
             }
         }
 
