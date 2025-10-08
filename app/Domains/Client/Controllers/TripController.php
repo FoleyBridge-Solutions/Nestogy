@@ -14,6 +14,8 @@ class TripController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
     /**
      * Display a listing of trips for the selected client
      */
@@ -129,10 +131,10 @@ class TripController extends Controller
             'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
             'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
             'accommodation_details' => 'nullable|string',
-            'estimated_expenses' => 'nullable|numeric|min:0',
+            'estimated_expenses' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'currency' => 'required|in:'.implode(',', array_keys(ClientTrip::getCurrencies())),
-            'mileage' => 'nullable|numeric|min:0',
-            'per_diem_amount' => 'nullable|numeric|min:0',
+            'mileage' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'per_diem_amount' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'billable_to_client' => 'boolean',
             'reimbursable' => 'boolean',
             'approval_required' => 'boolean',
@@ -246,11 +248,11 @@ class TripController extends Controller
             'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
             'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
             'accommodation_details' => 'nullable|string',
-            'estimated_expenses' => 'nullable|numeric|min:0',
-            'actual_expenses' => 'nullable|numeric|min:0',
+            'estimated_expenses' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'actual_expenses' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'currency' => 'required|in:'.implode(',', array_keys(ClientTrip::getCurrencies())),
-            'mileage' => 'nullable|numeric|min:0',
-            'per_diem_amount' => 'nullable|numeric|min:0',
+            'mileage' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'per_diem_amount' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'billable_to_client' => 'boolean',
             'reimbursable' => 'boolean',
             'approval_required' => 'boolean',
@@ -360,7 +362,7 @@ class TripController extends Controller
         $this->authorize('update', $trip);
 
         $validator = Validator::make($request->all(), [
-            'actual_expenses' => 'nullable|numeric|min:0',
+            'actual_expenses' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'client_feedback' => 'nullable|string',
             'internal_rating' => 'nullable|integer|min:1|max:5',
             'follow_up_required' => 'boolean',
