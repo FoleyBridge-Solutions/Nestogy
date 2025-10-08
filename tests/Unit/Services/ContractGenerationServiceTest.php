@@ -9,12 +9,12 @@ use App\Models\Client;
 use App\Models\Company;
 use App\Models\Quote;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class ContractGenerationServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected ContractGenerationService $service;
     protected User $user;

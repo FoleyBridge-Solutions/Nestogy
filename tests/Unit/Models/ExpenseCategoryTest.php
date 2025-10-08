@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Domains\Financial\Models\ExpenseCategory;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class ExpenseCategoryTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_expense_category_with_factory(): void
     {

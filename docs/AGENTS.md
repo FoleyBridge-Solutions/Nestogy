@@ -18,6 +18,30 @@ All automated tests live in `tests/`: domain behaviors in `Feature`, pure logic 
 
 **All new code must achieve at least 75% test coverage.** We use [pvoc](https://github.com/akazwz/pvoc) to measure coverage. Run `pvoc` to generate a full coverage report before submitting pull requests.
 
+### Test Execution Best Practices
+**CRITICAL: Always capture test output to files for analysis.** When running tests, use output redirection to save results:
+
+```bash
+# For full test suite
+php vendor/bin/phpunit > test-output.txt 2>&1
+
+# For specific test files
+php vendor/bin/phpunit tests/Feature/SomeTest.php > specific-test.txt 2>&1
+
+# For artisan test command
+php artisan test > artisan-test.txt 2>&1
+
+# For custom test runner
+php run-tests.php --coverage > run-tests-output.txt 2>&1
+```
+
+This allows you to:
+- Review complete error messages and stack traces
+- Analyze failure patterns across multiple test runs
+- Compare before/after results when fixing issues
+- Share detailed output with team members
+- Debug intermittent failures
+
 ## Commit & Pull Request Guidelines
 Commits are imperative and scoped (e.g., "Add varying company sizes to dev seeder"); keep subjects under 72 characters and follow with contextual body bullets when needed. Reference the affected domain in either the subject or first body line so reviewers can route expertise quickly. Pull requests should link tracking issues, note schema changes and seed impacts, include screenshots for UI tweaks, and list any queued background jobs or config toggles required post-deploy.
 

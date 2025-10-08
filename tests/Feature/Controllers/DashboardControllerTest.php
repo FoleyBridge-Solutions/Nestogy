@@ -9,12 +9,12 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected User $user;
     protected Company $company;

@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Domains\Client\Models\ClientDocument;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class ClientDocumentTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_client_document_with_factory(): void
     {

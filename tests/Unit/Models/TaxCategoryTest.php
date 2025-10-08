@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\TaxCategory;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class TaxCategoryTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_tax_category_with_factory(): void
     {

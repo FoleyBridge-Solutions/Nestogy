@@ -8,7 +8,7 @@ use App\Mail\Tickets\TicketCommentAdded;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +17,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class TicketReplyTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected Contact $contact;
     protected Client $client;

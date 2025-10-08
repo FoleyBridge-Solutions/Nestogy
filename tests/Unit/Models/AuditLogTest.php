@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\AuditLog;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class AuditLogTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_audit_log_with_factory(): void
     {

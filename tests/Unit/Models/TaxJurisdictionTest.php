@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\TaxJurisdiction;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class TaxJurisdictionTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_tax_jurisdiction_with_factory(): void
     {

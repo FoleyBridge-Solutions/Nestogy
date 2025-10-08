@@ -8,13 +8,13 @@ use App\Domains\Contract\Services\ContractService;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class ContractServiceScheduleTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected ContractService $service;
     protected User $user;

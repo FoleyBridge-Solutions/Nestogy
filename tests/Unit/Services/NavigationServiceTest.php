@@ -14,13 +14,13 @@ use App\Models\Location;
 use App\Models\Quote;
 use App\Models\Recurring;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class NavigationServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected User $user;
     protected Company $company;

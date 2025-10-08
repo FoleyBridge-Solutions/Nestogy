@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\TaxProfile;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class TaxProfileTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_tax_profile_with_factory(): void
     {

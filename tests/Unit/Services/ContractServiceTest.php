@@ -13,7 +13,7 @@ use App\Models\Client;
 use App\Models\Company;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -21,7 +21,7 @@ use Tests\TestCase;
 
 class ContractServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected ContractService $service;
     protected User $user;

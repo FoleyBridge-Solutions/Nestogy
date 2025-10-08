@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\ClientPortalSession;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class ClientPortalSessionTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_client_portal_session_with_factory(): void
     {

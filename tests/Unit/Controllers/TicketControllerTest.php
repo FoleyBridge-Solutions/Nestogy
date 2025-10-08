@@ -9,14 +9,14 @@ use App\Domains\Ticket\Models\TicketWatcher;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class TicketControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected TicketController $controller;
 

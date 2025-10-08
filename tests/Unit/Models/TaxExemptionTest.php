@@ -4,12 +4,12 @@ namespace Tests\Unit\Models;
 
 use App\Models\TaxExemption;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Tests\TestCase;
 
 class TaxExemptionTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     public function test_can_create_tax_exemption_with_factory(): void
     {

@@ -148,6 +148,11 @@ class ClientController extends BaseController
             $selectedClient = Client::with(['primaryContact', 'primaryLocation'])
                 ->where('company_id', $user->company_id)
                 ->find($selectedClientId);
+            
+            // Clear session if client doesn't exist or doesn't belong to user's company
+            if (!$selectedClient) {
+                \App\Domains\Core\Services\NavigationService::clearSelectedClient();
+            }
         }
 
         if ($request->wantsJson()) {
@@ -603,7 +608,7 @@ class ClientController extends BaseController
 
         try {
             $clientName = $client->name;
-            $this->clientService->deleteClient($client);
+            $client->forceDelete();
 
             Log::warning('Client permanently deleted', [
                 'client_id' => $client->id,
@@ -982,6 +987,11 @@ class ClientController extends BaseController
      */
     public function tags(Request $request, Client $client)
     {
+        // If client has no ID (route binding failed), try to load from session
+        if (!$client->id && session('selected_client_id')) {
+            $client = Client::findOrFail(session('selected_client_id'));
+        }
+        
         $this->authorize('update', $client);
 
         if ($request->isMethod('post')) {

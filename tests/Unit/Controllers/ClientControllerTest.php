@@ -8,13 +8,13 @@ use App\Domains\Client\Services\ClientService;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshesDatabase;
 use Illuminate\Http\Request;
 use Tests\TestCase;
 
 class ClientControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshesDatabase;
 
     protected ClientController $controller;
     protected ClientService $clientService;

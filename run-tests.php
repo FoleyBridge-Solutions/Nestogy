@@ -50,6 +50,12 @@ class TestRunner
         echo "Custom Test Runner - Running tests individually to manage memory\n";
         echo str_repeat("=", 80) . "\n\n";
 
+        // Reset test database to avoid PostgreSQL type constraint issues
+        $this->resetTestDatabase();
+        
+        // Run migrations once at the start
+        $this->runMigrations();
+
         $testFiles = $this->findTestFiles();
         $totalFiles = count($testFiles);
 
@@ -77,6 +83,93 @@ class TestRunner
         echo "\nTotal execution time: {$duration}s\n";
 
         return $this->results['failed'] > 0 || $this->results['errors'] > 0 ? 1 : 0;
+    }
+
+    private function resetTestDatabase(): void
+    {
+        // Load phpunit.xml defaults
+        $phpunitXml = $this->baseDir . '/phpunit.xml';
+        if (file_exists($phpunitXml)) {
+            $xml = simplexml_load_file($phpunitXml);
+            foreach ($xml->php->env as $env) {
+                $name = (string)$env['name'];
+                $value = (string)$env['value'];
+                if (!getenv($name)) {
+                    putenv("{$name}={$value}");
+                }
+            }
+        }
+
+        $dbConnection = getenv('DB_CONNECTION') ?: 'pgsql';
+        
+        if ($dbConnection !== 'pgsql') {
+            return;
+        }
+
+        echo "Resetting PostgreSQL test database...\n";
+
+        $dbHost = getenv('DB_HOST') ?: '127.0.0.1';
+        $dbPort = getenv('DB_PORT') ?: '5432';
+        $dbName = getenv('DB_DATABASE') ?: 'nestogy_test';
+        $dbUser = getenv('DB_USERNAME') ?: 'nestogy';
+        $dbPassword = getenv('DB_PASSWORD') ?: 'nestogy_dev_pass';
+
+        // Build PostgreSQL connection string
+        $pgConnStr = "postgresql://{$dbUser}:{$dbPassword}@{$dbHost}:{$dbPort}/postgres";
+
+        // Terminate all connections to test database
+        $terminateCmd = sprintf(
+            'psql %s -c %s 2>/dev/null',
+            escapeshellarg($pgConnStr),
+            escapeshellarg("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{$dbName}' AND pid <> pg_backend_pid();")
+        );
+        exec($terminateCmd);
+
+        // Force drop database (WITH FORCE handles remaining connections)
+        $dropCmd = sprintf(
+            'psql %s -c %s 2>&1',
+            escapeshellarg($pgConnStr),
+            escapeshellarg("DROP DATABASE IF EXISTS {$dbName} WITH (FORCE);")
+        );
+        exec($dropCmd, $dropOutput, $dropCode);
+
+        // Create fresh database
+        $createCmd = sprintf(
+            'psql %s -c %s 2>&1',
+            escapeshellarg($pgConnStr),
+            escapeshellarg("CREATE DATABASE {$dbName} OWNER {$dbUser};")
+        );
+        exec($createCmd, $createOutput, $createCode);
+
+        if ($createCode !== 0) {
+            echo "ERROR: Failed to create test database (code: {$createCode})\n";
+            if (!empty($createOutput)) {
+                echo "  " . implode("\n  ", $createOutput) . "\n";
+            }
+            exit(1);
+        }
+
+        echo "Test database reset complete\n";
+    }
+
+    private function runMigrations(): void
+    {
+        echo "Running migrations...\n";
+        
+        // Get DB settings from phpunit.xml env vars (already loaded in resetTestDatabase)
+        $dbName = getenv('DB_DATABASE') ?: 'nestogy_test';
+        
+        // Run migrations with correct database environment variable
+        $migrateCmd = "DB_DATABASE={$dbName} php {$this->baseDir}/artisan migrate --force 2>&1";
+        exec($migrateCmd, $output, $code);
+        
+        if ($code !== 0) {
+            echo "ERROR: Migrations failed (code: {$code})\n";
+            echo "  " . implode("\n  ", array_slice($output, -10)) . "\n";
+            exit(1);
+        }
+        
+        echo "Migrations complete\n\n";
     }
 
     private function findTestFiles(): array
@@ -119,7 +212,8 @@ class TestRunner
             $command .= ' --coverage-php=' . escapeshellarg($covFile);
         }
         
-        $command .= ' --no-output ' . escapeshellarg($testFile) . ' 2>&1';
+        // Don't use --no-output so we can parse the results
+        $command .= ' --colors=never --no-progress ' . escapeshellarg($testFile) . ' 2>&1';
 
         $output = [];
         $returnCode = 0;

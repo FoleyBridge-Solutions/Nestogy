@@ -5,34 +5,48 @@
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
+    // ============================================================================
+    // CRITICAL: All literal/specific client routes MUST be defined BEFORE any 
+    // parameterized routes or resource routes to ensure proper route matching.
+    // Literal routes (clients/active, clients/leads, etc.) must come first!
+    // ============================================================================
+    
+    // Client list/index route
+    Route::get('clients', [\App\Domains\Client\Controllers\ClientController::class, 'dynamicIndex'])->name('clients.index');
+    
+    // Specific literal routes - these MUST come before clients/{client}
+    Route::get('clients/active', [\App\Domains\Client\Controllers\ClientController::class, 'getActiveClients'])->name('clients.active');
     Route::get('clients/data', [\App\Domains\Client\Controllers\ClientController::class, 'data'])->name('clients.data');
+    Route::get('clients/leads', [\App\Domains\Client\Controllers\ClientController::class, 'leads'])->name('clients.leads');
+    Route::get('clients/clear-selection', [\App\Domains\Client\Controllers\ClientController::class, 'clearSelection'])->name('clients.clear-selection');
+    Route::get('clients/select-screen', [\App\Domains\Client\Controllers\ClientController::class, 'selectScreen'])->name('clients.select-screen');
+    
+    // Import/Export routes
     Route::get('clients/import', [\App\Domains\Client\Controllers\ClientController::class, 'importForm'])->name('clients.import.form');
     Route::post('clients/import', [\App\Domains\Client\Controllers\ClientController::class, 'import'])->name('clients.import');
     Route::get('clients/import/template', [\App\Domains\Client\Controllers\ClientController::class, 'downloadTemplate'])->name('clients.import.template');
     Route::get('clients/export/csv', [\App\Domains\Client\Controllers\ClientController::class, 'exportCsv'])->name('clients.export.csv');
-    Route::get('clients/leads', [\App\Domains\Client\Controllers\ClientController::class, 'leads'])->name('clients.leads');
+    
+    // Leads routes
     Route::get('clients/leads/import', [\App\Domains\Client\Controllers\ClientController::class, 'leadsImportForm'])->name('clients.leads.import.form');
     Route::post('clients/leads/import', [\App\Domains\Client\Controllers\ClientController::class, 'leadsImport'])->name('clients.leads.import');
     Route::get('clients/leads/import/template', [\App\Domains\Client\Controllers\ClientController::class, 'leadsImportTemplate'])->name('clients.leads.import.template');
-    Route::get('clients/active', [\App\Domains\Client\Controllers\ClientController::class, 'getActiveClients'])->name('clients.active');
-    Route::post('clients/select/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'selectClient'])->name('clients.select');
-    Route::get('clients/clear-selection', [\App\Domains\Client\Controllers\ClientController::class, 'clearSelection'])->name('clients.clear-selection');
-    Route::get('clients/select-screen', [\App\Domains\Client\Controllers\ClientController::class, 'selectScreen'])->name('clients.select-screen');
-    Route::post('clients/{client}/convert-lead', [\App\Domains\Client\Controllers\ClientController::class, 'convertLead'])->name('clients.convert-lead');
-
-    // Dynamic clients route - show list or specific client dashboard based on query/session
-    Route::get('clients', [\App\Domains\Client\Controllers\ClientController::class, 'dynamicIndex'])->name('clients.index');
-
-    // Resource routes - register create/edit/store/update/destroy routes BEFORE the show route
-    Route::resource('clients', \App\Domains\Client\Controllers\ClientController::class)->except(['index', 'show', 'edit']);
-
-    // Use Livewire component for client edit
-    Route::get('clients/{client}/edit', \App\Livewire\Clients\EditClient::class)->name('clients.edit');
-
+    
     // Routes that work with soft-deleted clients - MUST be OUTSIDE require-client middleware
     Route::prefix('clients')->name('clients.')->group(function () {
         Route::post('restore', [\App\Domains\Client\Controllers\ClientController::class, 'restore'])->name('restore');
     });
+    
+    // POST routes with client parameter (these won't conflict with GET routes)
+    Route::post('clients/select/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'selectClient'])->name('clients.select')->where('client', '[0-9]+');
+    Route::post('clients/{client}/convert-lead', [\App\Domains\Client\Controllers\ClientController::class, 'convertLead'])->name('clients.convert-lead')->where('client', '[0-9]+');
+    
+    // Resource routes for create/store/update/destroy (excludes index, show, edit)
+    Route::post('clients', [\App\Domains\Client\Controllers\ClientController::class, 'store'])->name('clients.store');
+    Route::get('clients/create', [\App\Domains\Client\Controllers\ClientController::class, 'create'])->name('clients.create');
+    Route::put('clients/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'update'])->name('clients.update')->where('client', '[0-9]+');
+    Route::patch('clients/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'update'])->where('client', '[0-9]+');
+    Route::delete('clients/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'destroy'])->name('clients.destroy')->where('client', '[0-9]+');
 
     // Client-specific routes (using session-based client context) - MUST come BEFORE the {client} route
     Route::prefix('clients')->name('clients.')->middleware('require-client')->group(function () {
@@ -97,7 +111,12 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::delete('communications/{communication}', [\App\Domains\Client\Controllers\CommunicationLogController::class, 'destroy'])->name('communications.destroy');
     });
 
+    // Parameterized routes - MUST come LAST after all literal routes
+    // Use Livewire component for client edit
+    Route::get('clients/{client}/edit', \App\Livewire\Clients\EditClient::class)->name('clients.edit')->where('client', '[0-9]+');
+    
     // Client show route - display specific client dashboard
-    // This MUST come AFTER all other client routes to avoid catching specific routes like /clients/contacts
-    Route::get('clients/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'show'])->name('clients.show');
+    // This MUST come AFTER all other client routes to avoid catching specific routes
+    // Use regex constraint to only match numeric IDs, preventing conflict with literal routes like 'active'
+    Route::get('clients/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'show'])->name('clients.show')->where('client', '[0-9]+');
 });
