@@ -34,6 +34,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ClientPortalService
 {
+    private const COUNT_QUERY = 'count(*) as count';
+
     protected PortalAuthService $authService;
 
     protected PortalPaymentService $paymentService;
@@ -307,7 +309,7 @@ class ClientPortalService
                 'summary' => [
                     'total_documents' => $client->documents()->count(),
                     'by_category' => $client->documents()
-                        ->select('category', DB::raw('count(*) as count'))
+                        ->select('category', DB::raw(self::COUNT_QUERY))
                         ->groupBy('category')
                         ->pluck('count', 'category')
                         ->toArray(),
@@ -464,7 +466,7 @@ class ClientPortalService
                     'unread_count' => $client->notifications()->unread()->count(),
                     'total_count' => $client->notifications()->count(),
                     'by_category' => $client->notifications()
-                        ->select('category', DB::raw('count(*) as count'))
+                        ->select('category', DB::raw(self::COUNT_QUERY))
                         ->groupBy('category')
                         ->pluck('count', 'category')
                         ->toArray(),
@@ -907,7 +909,7 @@ class ClientPortalService
                 ->count(),
             'storage_used' => $client->getTotalDocumentStorage(),
             'by_category' => $client->documents()
-                ->select('category', DB::raw('count(*) as count'))
+                ->select('category', DB::raw(self::COUNT_QUERY))
                 ->groupBy('category')
                 ->pluck('count', 'category')
                 ->toArray(),
