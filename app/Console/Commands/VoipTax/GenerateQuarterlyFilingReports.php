@@ -126,66 +126,79 @@ class GenerateQuarterlyFilingReports extends Command
         }
 
         foreach ($results as $companyId => $result) {
-            $this->line('');
-            $this->line("<fg=cyan>═══ Company ID: {$companyId} ═══</>");
-
-            if (! $result['success']) {
-                $this->error("❌ Failed: {$result['error']}");
-
-                continue;
-            }
-
-            $this->info("✅ Successfully generated filing reports for Q{$result['quarter']}");
-
-            if (empty($result['filing_reports'])) {
-                $this->warn('   No jurisdictions with quarterly filing requirements found');
-
-                continue;
-            }
-
-            // Display each jurisdiction's filing report
-            foreach ($result['filing_reports'] as $jurisdictionId => $filingReport) {
-                $this->line('');
-                $this->line("  <fg=yellow>Jurisdiction: {$filingReport['jurisdiction']}</>");
-                $this->line("  Authority: {$filingReport['authority']}");
-                $this->line("  Filing Due Date: <fg=red>{$filingReport['filing_due_date']}</>");
-
-                // Display tax collection summary
-                $taxCollected = '$'.number_format($filingReport['tax_collected'], 2);
-                $this->line("  Tax Collected: <fg=green>{$taxCollected}</>");
-
-                // Display return data
-                $returnData = $filingReport['return_data'];
-                $this->line('');
-                $this->line('  <fg=cyan>Filing Data Summary:</>');
-                $this->line('    Gross Receipts: $'.number_format($returnData['gross_receipts'], 2));
-                $this->line('    Taxable Receipts: $'.number_format($returnData['taxable_receipts'], 2));
-                $this->line('    Tax Due: $'.number_format($returnData['tax_due'], 2));
-                $this->line('    Exemptions Claimed: $'.number_format($returnData['exemptions_claimed'], 2));
-                $this->line('    Net Tax Due: $'.number_format($returnData['net_tax_due'], 2));
-
-                // Display required forms
-                if (! empty($filingReport['forms_required'])) {
-                    $this->line('');
-                    $this->line('  <fg=magenta>Required Forms:</> '.implode(', ', $filingReport['forms_required']));
-                }
-
-                // Calculate days until due
-                $dueDate = Carbon::parse($filingReport['filing_due_date']);
-                $daysUntilDue = now()->diffInDays($dueDate, false);
-
-                if ($daysUntilDue < 0) {
-                    $this->line('  <fg=red>⚠️ OVERDUE by '.abs($daysUntilDue).' days!</>');
-                } elseif ($daysUntilDue <= 7) {
-                    $this->line("  <fg=yellow>⚡ Due in {$daysUntilDue} days - file soon!</>");
-                } else {
-                    $this->line("  <fg=green>✓ Due in {$daysUntilDue} days</>");
-                }
-            }
+            $this->displayCompanyFilingReport($companyId, $result);
         }
 
-        // Display summary statistics
         $this->displaySummaryStatistics($results, $quarter);
+    }
+
+    protected function displayCompanyFilingReport(int $companyId, array $result): void
+    {
+        $this->line('');
+        $this->line("<fg=cyan>═══ Company ID: {$companyId} ═══</>");
+
+        if (! $result['success']) {
+            $this->error("❌ Failed: {$result['error']}");
+
+            return;
+        }
+
+        $this->info("✅ Successfully generated filing reports for Q{$result['quarter']}");
+
+        if (empty($result['filing_reports'])) {
+            $this->warn('   No jurisdictions with quarterly filing requirements found');
+
+            return;
+        }
+
+        foreach ($result['filing_reports'] as $jurisdictionId => $filingReport) {
+            $this->displayJurisdictionFilingReport($filingReport);
+        }
+    }
+
+    protected function displayJurisdictionFilingReport(array $filingReport): void
+    {
+        $this->line('');
+        $this->line("  <fg=yellow>Jurisdiction: {$filingReport['jurisdiction']}</>");
+        $this->line("  Authority: {$filingReport['authority']}");
+        $this->line("  Filing Due Date: <fg=red>{$filingReport['filing_due_date']}</>");
+
+        $taxCollected = '$'.number_format($filingReport['tax_collected'], 2);
+        $this->line("  Tax Collected: <fg=green>{$taxCollected}</>");
+
+        $this->displayFilingDataSummary($filingReport['return_data']);
+
+        if (! empty($filingReport['forms_required'])) {
+            $this->line('');
+            $this->line('  <fg=magenta>Required Forms:</> '.implode(', ', $filingReport['forms_required']));
+        }
+
+        $this->displayFilingDueStatus($filingReport['filing_due_date']);
+    }
+
+    protected function displayFilingDataSummary(array $returnData): void
+    {
+        $this->line('');
+        $this->line('  <fg=cyan>Filing Data Summary:</>');
+        $this->line('    Gross Receipts: $'.number_format($returnData['gross_receipts'], 2));
+        $this->line('    Taxable Receipts: $'.number_format($returnData['taxable_receipts'], 2));
+        $this->line('    Tax Due: $'.number_format($returnData['tax_due'], 2));
+        $this->line('    Exemptions Claimed: $'.number_format($returnData['exemptions_claimed'], 2));
+        $this->line('    Net Tax Due: $'.number_format($returnData['net_tax_due'], 2));
+    }
+
+    protected function displayFilingDueStatus(string $filingDueDate): void
+    {
+        $dueDate = Carbon::parse($filingDueDate);
+        $daysUntilDue = now()->diffInDays($dueDate, false);
+
+        if ($daysUntilDue < 0) {
+            $this->line('  <fg=red>⚠️ OVERDUE by '.abs($daysUntilDue).' days!</>');
+        } elseif ($daysUntilDue <= 7) {
+            $this->line("  <fg=yellow>⚡ Due in {$daysUntilDue} days - file soon!</>");
+        } else {
+            $this->line("  <fg=green>✓ Due in {$daysUntilDue} days</>");
+        }
     }
 
     /**
