@@ -58,6 +58,9 @@ class TicketQueue extends Component
             case 'all':
                 $query->whereNotIn('status', ['resolved', 'closed']);
                 break;
+            default:
+                $query->whereNotIn('status', ['resolved', 'closed']);
+                break;
         }
 
         // Sort
