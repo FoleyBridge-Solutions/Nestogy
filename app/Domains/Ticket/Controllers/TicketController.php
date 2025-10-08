@@ -34,6 +34,8 @@ class TicketController extends Controller
 {
     use FiltersClientsByAssignment, UsesSelectedClient;
 
+    private const MSG_FAILED_TO_SCHEDULE_TICKET = 'Failed to schedule ticket';
+
     /**
      * Display a listing of tickets
      */
@@ -1091,7 +1093,7 @@ class TicketController extends Controller
                 ->with('success', 'Ticket scheduled successfully');
 
         } catch (\Exception $e) {
-            Log::error('Failed to schedule ticket', [
+            Log::error(self::MSG_FAILED_TO_SCHEDULE_TICKET, [
                 'ticket_id' => $ticket->id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
@@ -1100,12 +1102,12 @@ class TicketController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to schedule ticket',
+                    'message' => self::MSG_FAILED_TO_SCHEDULE_TICKET,
                 ], 500);
             }
 
             return redirect()->route('tickets.show', $ticket)
-                ->with('error', 'Failed to schedule ticket');
+                ->with('error', self::MSG_FAILED_TO_SCHEDULE_TICKET);
         }
     }
 
