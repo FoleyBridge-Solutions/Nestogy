@@ -19,6 +19,8 @@ use Illuminate\View\View;
  */
 class KbArticleController extends Controller
 {
+    private const VALIDATION_NULLABLE_ARRAY = 'nullable|array';
+
     public function __construct(
         protected KnowledgeBaseService $knowledgeBaseService,
         protected ArticleSearchService $searchService
@@ -123,11 +125,11 @@ class KbArticleController extends Controller
                 KbArticle::VISIBILITY_INTERNAL,
                 KbArticle::VISIBILITY_CLIENT,
             ]),
-            'tags' => 'nullable|array',
+            'tags' => self::VALIDATION_NULLABLE_ARRAY,
             'tags.*' => 'string|max:50',
-            'related_article_ids' => 'nullable|array',
+            'related_article_ids' => self::VALIDATION_NULLABLE_ARRAY,
             'related_article_ids.*' => 'exists:kb_articles,id',
-            'client_ids' => 'nullable|array',
+            'client_ids' => self::VALIDATION_NULLABLE_ARRAY,
             'client_ids.*' => 'exists:clients,id',
         ]);
 
@@ -215,11 +217,11 @@ class KbArticleController extends Controller
                 KbArticle::VISIBILITY_INTERNAL,
                 KbArticle::VISIBILITY_CLIENT,
             ]),
-            'tags' => 'nullable|array',
+            'tags' => self::VALIDATION_NULLABLE_ARRAY,
             'tags.*' => 'string|max:50',
-            'related_article_ids' => 'nullable|array',
+            'related_article_ids' => self::VALIDATION_NULLABLE_ARRAY,
             'related_article_ids.*' => 'exists:kb_articles,id',
-            'client_ids' => 'nullable|array',
+            'client_ids' => self::VALIDATION_NULLABLE_ARRAY,
             'client_ids.*' => 'exists:clients,id',
         ]);
 
