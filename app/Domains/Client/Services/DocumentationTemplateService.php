@@ -6,6 +6,8 @@ use App\Domains\Client\Models\ClientITDocumentation;
 
 class DocumentationTemplateService
 {
+    private const DURATION_30_MINUTES = '30 minutes';
+
     /**
      * Available documentation tabs with configuration
      */
@@ -130,11 +132,11 @@ class DocumentationTemplateService
                 'template_data' => [
                     'procedure_steps' => [
                         ['order' => 1, 'title' => 'Pre-deployment Checklist', 'description' => 'Verify prerequisites', 'duration' => '15 minutes'],
-                        ['order' => 2, 'title' => 'OS Installation', 'description' => 'Install operating system', 'duration' => '30 minutes'],
+                        ['order' => 2, 'title' => 'OS Installation', 'description' => 'Install operating system', 'duration' => self::DURATION_30_MINUTES],
                         ['order' => 3, 'title' => 'Network Configuration', 'description' => 'Configure network settings', 'duration' => '20 minutes'],
                         ['order' => 4, 'title' => 'Security Hardening', 'description' => 'Apply security configurations', 'duration' => '45 minutes'],
                         ['order' => 5, 'title' => 'Application Installation', 'description' => 'Install required applications', 'duration' => '60 minutes'],
-                        ['order' => 6, 'title' => 'Testing & Validation', 'description' => 'Run validation tests', 'duration' => '30 minutes'],
+                        ['order' => 6, 'title' => 'Testing & Validation', 'description' => 'Run validation tests', 'duration' => self::DURATION_30_MINUTES],
                     ],
                     'prerequisites' => [
                         'Valid server hardware or VM allocated',
@@ -183,7 +185,7 @@ class DocumentationTemplateService
                 'enabled_tabs' => ['general', 'procedures', 'compliance', 'resources', 'history'],
                 'template_data' => [
                     'procedure_steps' => [
-                        ['order' => 1, 'title' => 'Detection & Analysis', 'description' => 'Identify and assess incident', 'duration' => '30 minutes'],
+                        ['order' => 1, 'title' => 'Detection & Analysis', 'description' => 'Identify and assess incident', 'duration' => self::DURATION_30_MINUTES],
                         ['order' => 2, 'title' => 'Containment', 'description' => 'Isolate affected systems', 'duration' => '15 minutes'],
                         ['order' => 3, 'title' => 'Eradication', 'description' => 'Remove threat from environment', 'duration' => '60-240 minutes'],
                         ['order' => 4, 'title' => 'Recovery', 'description' => 'Restore normal operations', 'duration' => '60-180 minutes'],
@@ -191,7 +193,7 @@ class DocumentationTemplateService
                     ],
                     'escalation_paths' => [
                         ['level' => 1, 'role' => 'Security Analyst', 'response_time' => '15 minutes'],
-                        ['level' => 2, 'role' => 'Security Manager', 'response_time' => '30 minutes'],
+                        ['level' => 2, 'role' => 'Security Manager', 'response_time' => self::DURATION_30_MINUTES],
                         ['level' => 3, 'role' => 'CISO', 'response_time' => '1 hour'],
                         ['level' => 4, 'role' => 'Executive Team', 'response_time' => '2 hours'],
                     ],
