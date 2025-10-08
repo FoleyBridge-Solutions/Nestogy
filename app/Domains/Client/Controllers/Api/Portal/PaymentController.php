@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class PaymentController extends PortalApiController
 {
+    private const VALIDATION_RULE_CITY_STATE = 'nullable|string|max:100';
+
     protected PortalPaymentService $paymentService;
 
     public function __construct(PortalPaymentService $paymentService, \App\Services\ClientPortalService $portalService, \App\Domains\Security\Services\PortalAuthService $authService)
@@ -199,8 +201,8 @@ class PaymentController extends PortalApiController
                 // Billing address
                 'billing_name' => 'nullable|string|max:255',
                 'billing_address_line1' => 'nullable|string|max:255',
-                'billing_city' => 'nullable|string|max:100',
-                'billing_state' => 'nullable|string|max:100',
+                'billing_city' => self::VALIDATION_RULE_CITY_STATE,
+                'billing_state' => self::VALIDATION_RULE_CITY_STATE,
                 'billing_postal_code' => 'nullable|string|max:20',
                 'billing_country' => 'nullable|string|size:2',
             ]);
@@ -253,8 +255,8 @@ class PaymentController extends PortalApiController
                 'card_exp_year' => 'nullable|integer|min:'.date('Y'),
                 'billing_name' => 'nullable|string|max:255',
                 'billing_address_line1' => 'nullable|string|max:255',
-                'billing_city' => 'nullable|string|max:100',
-                'billing_state' => 'nullable|string|max:100',
+                'billing_city' => self::VALIDATION_RULE_CITY_STATE,
+                'billing_state' => self::VALIDATION_RULE_CITY_STATE,
                 'billing_postal_code' => 'nullable|string|max:20',
                 'billing_country' => 'nullable|string|size:2',
             ]);
