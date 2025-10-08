@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Ticket Status Updated - #{{ $ticket->number }}</title>
     <meta charset="UTF-8">
