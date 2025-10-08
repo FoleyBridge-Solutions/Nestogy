@@ -14,6 +14,8 @@ class CertificateController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of certificates for the selected client
      */
@@ -109,7 +111,7 @@ class CertificateController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'type' => 'required|in:'.implode(',', array_keys(ClientCertificate::getTypes())),
             'issuer' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
@@ -119,7 +121,7 @@ class CertificateController extends Controller
             'fingerprint_sha1' => 'nullable|string|max:255',
             'fingerprint_sha256' => 'nullable|string|max:255',
             'is_wildcard' => 'boolean',
-            'domain_names' => 'nullable|string',
+            'domain_names' => self::VALIDATION_NULLABLE_STRING,
             'certificate_path' => 'nullable|string|max:500',
             'private_key_path' => 'nullable|string|max:500',
             'intermediate_path' => 'nullable|string|max:500',
@@ -133,7 +135,7 @@ class CertificateController extends Controller
             'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -237,7 +239,7 @@ class CertificateController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'type' => 'required|in:'.implode(',', array_keys(ClientCertificate::getTypes())),
             'issuer' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
@@ -247,7 +249,7 @@ class CertificateController extends Controller
             'fingerprint_sha1' => 'nullable|string|max:255',
             'fingerprint_sha256' => 'nullable|string|max:255',
             'is_wildcard' => 'boolean',
-            'domain_names' => 'nullable|string',
+            'domain_names' => self::VALIDATION_NULLABLE_STRING,
             'certificate_path' => 'nullable|string|max:500',
             'private_key_path' => 'nullable|string|max:500',
             'intermediate_path' => 'nullable|string|max:500',
@@ -261,7 +263,7 @@ class CertificateController extends Controller
             'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
