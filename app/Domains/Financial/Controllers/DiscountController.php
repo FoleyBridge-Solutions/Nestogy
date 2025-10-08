@@ -9,6 +9,8 @@ use Illuminate\View\View;
 
 class DiscountController extends Controller
 {
+    private const NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
     public function index(Request $request): View
     {
         $discounts = collect(); // TODO: Load from discounts table
@@ -40,8 +42,8 @@ class DiscountController extends Controller
             'description' => 'nullable|string',
             'type' => 'required|in:percentage,fixed_amount,bogo,volume',
             'value' => 'required|numeric|min:0',
-            'minimum_amount' => 'nullable|numeric|min:0',
-            'maximum_discount' => 'nullable|numeric|min:0',
+            'minimum_amount' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'maximum_discount' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'usage_limit' => 'nullable|integer|min:1',
             'usage_per_client' => 'nullable|integer|min:1',
             'valid_from' => 'required|date',
@@ -82,8 +84,8 @@ class DiscountController extends Controller
             'description' => 'nullable|string',
             'type' => 'required|in:percentage,fixed_amount,bogo,volume',
             'value' => 'required|numeric|min:0',
-            'minimum_amount' => 'nullable|numeric|min:0',
-            'maximum_discount' => 'nullable|numeric|min:0',
+            'minimum_amount' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'maximum_discount' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'usage_limit' => 'nullable|integer|min:1',
             'usage_per_client' => 'nullable|integer|min:1',
             'valid_from' => 'required|date',
