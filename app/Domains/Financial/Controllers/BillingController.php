@@ -138,20 +138,17 @@ class BillingController extends Controller
 
         $newPlan = SubscriptionPlan::findOrFail($request->subscription_plan_id);
 
-        // Check if user can change to this plan (business rules)
         if (! $this->canChangeToPlan($client, $newPlan)) {
             return redirect()->back()
                 ->withErrors(['error' => 'Cannot change to the selected plan at this time.']);
         }
 
         try {
-            // Update Stripe subscription
             $this->stripeService->updateSubscription(
                 $client->stripe_subscription_id,
                 $newPlan->stripe_price_id
             );
 
-            // Update local record
             $client->update(['subscription_plan_id' => $newPlan->id]);
 
             Log::info('Customer changed subscription plan', [
@@ -173,10 +170,10 @@ class BillingController extends Controller
                 'error' => $e->getMessage(),
                 'user_id' => Auth::id(),
             ]);
-
-            return redirect()->back()
-                ->withErrors(['error' => 'Failed to change subscription plan. Please try again or contact support.']);
         }
+
+        return redirect()->back()
+            ->withErrors(['error' => 'Failed to change subscription plan. Please try again or contact support.']);
     }
 
     /**
