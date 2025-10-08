@@ -72,7 +72,7 @@ class VoIPTaxReportingService
 
         // Monthly trends (if period is more than one month)
         if ($startDate->diffInMonths($endDate) >= 1) {
-            $report['monthly_trends'] = $this->getMonthlyTrends($startDate, $endDate, $filters);
+            $report['monthly_trends'] = $this->getMonthlyTrends($startDate, $filters);
         }
 
         // Top clients by tax paid
@@ -686,7 +686,7 @@ class VoIPTaxReportingService
     }
 
     // Additional helper methods would be implemented here...
-    protected function getMonthlyTrends($startDate, $endDate, $filters)
+    protected function getMonthlyTrends($startDate, $filters)
     {
         return [];
     }
