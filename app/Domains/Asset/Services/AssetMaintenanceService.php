@@ -246,7 +246,7 @@ class AssetMaintenanceService
             $results['network_connectivity'] = $networkResult;
 
             // 5. Critical services check
-            $servicesResult = $this->checkCriticalServices($asset);
+            $servicesResult = $this->checkCriticalServices();
             $results['critical_services'] = $servicesResult;
 
             // 6. Generate health score
@@ -598,7 +598,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function checkCriticalServices(Asset $asset): array
+    protected function checkCriticalServices(): array
     {
         return ['success' => true];
     }
