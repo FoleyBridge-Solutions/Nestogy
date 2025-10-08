@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UserManagementSettingsRequest extends FormRequest
 {
+    private const RANGE_ONE_TO_FIVE = 'integer|min:1|max:5';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -91,7 +93,7 @@ class UserManagementSettingsRequest extends FormRequest
             'role_permission_settings.max_custom_roles' => 'integer|min:0|max:20',
             'role_permission_settings.require_approval_for_role_changes' => 'boolean',
             'role_permission_settings.allow_role_inheritance' => 'boolean',
-            'role_permission_settings.permission_inheritance_depth' => 'integer|min:1|max:5',
+            'role_permission_settings.permission_inheritance_depth' => self::RANGE_ONE_TO_FIVE,
 
             // User Session Management
             'session_management_settings' => 'nullable|array',
@@ -125,7 +127,7 @@ class UserManagementSettingsRequest extends FormRequest
             'department_settings.allow_multiple_departments' => 'boolean',
             'department_settings.require_department_assignment' => 'boolean',
             'department_settings.allow_custom_departments' => 'boolean',
-            'department_settings.max_department_levels' => 'integer|min:1|max:5',
+            'department_settings.max_department_levels' => self::RANGE_ONE_TO_FIVE,
             'department_settings.department_budget_tracking' => 'boolean',
 
             // User Communication Settings
@@ -175,7 +177,7 @@ class UserManagementSettingsRequest extends FormRequest
             // Emergency Contact and Safety
             'emergency_settings' => 'nullable|array',
             'emergency_settings.require_emergency_contacts' => 'boolean',
-            'emergency_settings.min_emergency_contacts' => 'integer|min:1|max:5',
+            'emergency_settings.min_emergency_contacts' => self::RANGE_ONE_TO_FIVE,
             'emergency_settings.emergency_notification_enabled' => 'boolean',
             'emergency_settings.wellness_check_enabled' => 'boolean',
             'emergency_settings.panic_button_enabled' => 'boolean',
