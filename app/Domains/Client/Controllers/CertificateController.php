@@ -14,6 +14,8 @@ class CertificateController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     /**
      * Display a listing of certificates for the selected client
      */
@@ -111,13 +113,13 @@ class CertificateController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:'.implode(',', array_keys(ClientCertificate::getTypes())),
-            'issuer' => 'nullable|string|max:255',
-            'subject' => 'nullable|string|max:255',
-            'serial_number' => 'nullable|string|max:255',
+            'issuer' => self::VALIDATION_NULLABLE_STRING_255,
+            'subject' => self::VALIDATION_NULLABLE_STRING_255,
+            'serial_number' => self::VALIDATION_NULLABLE_STRING_255,
             'key_size' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getKeySizes())),
             'algorithm' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getAlgorithms())),
-            'fingerprint_sha1' => 'nullable|string|max:255',
-            'fingerprint_sha256' => 'nullable|string|max:255',
+            'fingerprint_sha1' => self::VALIDATION_NULLABLE_STRING_255,
+            'fingerprint_sha256' => self::VALIDATION_NULLABLE_STRING_255,
             'is_wildcard' => 'boolean',
             'domain_names' => 'nullable|string',
             'certificate_path' => 'nullable|string|max:500',
@@ -239,13 +241,13 @@ class CertificateController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:'.implode(',', array_keys(ClientCertificate::getTypes())),
-            'issuer' => 'nullable|string|max:255',
-            'subject' => 'nullable|string|max:255',
-            'serial_number' => 'nullable|string|max:255',
+            'issuer' => self::VALIDATION_NULLABLE_STRING_255,
+            'subject' => self::VALIDATION_NULLABLE_STRING_255,
+            'serial_number' => self::VALIDATION_NULLABLE_STRING_255,
             'key_size' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getKeySizes())),
             'algorithm' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getAlgorithms())),
-            'fingerprint_sha1' => 'nullable|string|max:255',
-            'fingerprint_sha256' => 'nullable|string|max:255',
+            'fingerprint_sha1' => self::VALIDATION_NULLABLE_STRING_255,
+            'fingerprint_sha256' => self::VALIDATION_NULLABLE_STRING_255,
             'is_wildcard' => 'boolean',
             'domain_names' => 'nullable|string',
             'certificate_path' => 'nullable|string|max:500',
