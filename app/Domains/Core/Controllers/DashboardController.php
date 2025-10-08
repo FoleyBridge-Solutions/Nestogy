@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
+    private const NOTIFICATIONS_TABLE_ERROR = 'Notifications table not accessible: ';
+
     protected ?DashboardDataService $dashboardService = null;
 
     protected ?RealtimeDashboardService $realtimeService = null;
@@ -334,7 +336,7 @@ class DashboardController extends Controller
                 return response()->json($notifications);
             }
         } catch (\Exception $e) {
-            Log::warning('Notifications table not accessible: '.$e->getMessage());
+            Log::warning(self::NOTIFICATIONS_TABLE_ERROR.$e->getMessage());
         }
 
         return response()->json([]); // Return empty array if table doesn't exist
@@ -357,7 +359,7 @@ class DashboardController extends Controller
                 return response()->json(['success' => true]);
             }
         } catch (\Exception $e) {
-            Log::warning('Notifications table not accessible: '.$e->getMessage());
+            Log::warning(self::NOTIFICATIONS_TABLE_ERROR.$e->getMessage());
         }
 
         return response()->json(['success' => false, 'message' => 'Notifications not available']);
@@ -556,7 +558,7 @@ class DashboardController extends Controller
                     });
             }
         } catch (\Exception $e) {
-            Log::warning('Notifications table not accessible: '.$e->getMessage());
+            Log::warning(self::NOTIFICATIONS_TABLE_ERROR.$e->getMessage());
         }
 
         return collect(); // Return empty collection if table doesn't exist
