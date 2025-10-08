@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class RecurringInvoiceController extends Controller
 {
+    private const NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of all recurring invoices
      */
@@ -115,7 +117,7 @@ class RecurringInvoiceController extends Controller
                 }),
             ],
             'template_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'amount' => 'required|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'currency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
@@ -124,16 +126,16 @@ class RecurringInvoiceController extends Controller
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
             'day_of_month' => 'nullable|integer|min:1|max:31',
-            'day_of_week' => 'nullable|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'day_of_week' => self::NULLABLE_STRING.'|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
             'status' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
             'auto_send' => 'boolean',
             'payment_terms_days' => 'nullable|integer|min:1|max:365',
             'late_fee_percentage' => 'nullable|numeric|min:0|max:100',
             'late_fee_flat_amount' => 'nullable|numeric|min:0',
-            'invoice_prefix' => 'nullable|string|max:10',
-            'invoice_notes' => 'nullable|string',
-            'payment_instructions' => 'nullable|string',
-            'line_items' => 'nullable|string',
+            'invoice_prefix' => self::NULLABLE_STRING.'|max:10',
+            'invoice_notes' => self::NULLABLE_STRING,
+            'payment_instructions' => self::NULLABLE_STRING,
+            'line_items' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -244,7 +246,7 @@ class RecurringInvoiceController extends Controller
                 }),
             ],
             'template_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'amount' => 'required|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'currency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
@@ -253,16 +255,16 @@ class RecurringInvoiceController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'day_of_month' => 'nullable|integer|min:1|max:31',
-            'day_of_week' => 'nullable|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'day_of_week' => self::NULLABLE_STRING.'|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
             'status' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
             'auto_send' => 'boolean',
             'payment_terms_days' => 'nullable|integer|min:1|max:365',
             'late_fee_percentage' => 'nullable|numeric|min:0|max:100',
             'late_fee_flat_amount' => 'nullable|numeric|min:0',
-            'invoice_prefix' => 'nullable|string|max:10',
-            'invoice_notes' => 'nullable|string',
-            'payment_instructions' => 'nullable|string',
-            'line_items' => 'nullable|string',
+            'invoice_prefix' => self::NULLABLE_STRING.'|max:10',
+            'invoice_notes' => self::NULLABLE_STRING,
+            'payment_instructions' => self::NULLABLE_STRING,
+            'line_items' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
