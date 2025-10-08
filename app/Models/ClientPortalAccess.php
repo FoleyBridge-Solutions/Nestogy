@@ -403,11 +403,11 @@ class ClientPortalAccess extends Model
 
         $restrictions = $this->time_restrictions[$dayOfWeek];
 
-        if (! isset($restrictions['start']) || ! isset($restrictions['end'])) {
-            return true;
+        if (isset($restrictions['start']) && isset($restrictions['end'])) {
+            return $currentTime >= $restrictions['start'] && $currentTime <= $restrictions['end'];
         }
 
-        return $currentTime >= $restrictions['start'] && $currentTime <= $restrictions['end'];
+        return true;
     }
 
     /**
