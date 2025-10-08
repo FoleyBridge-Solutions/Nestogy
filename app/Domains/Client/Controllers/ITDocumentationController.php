@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ITDocumentationController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     protected ClientITDocumentationService $service;
 
     protected DocumentationTemplateService $templateService;
@@ -120,7 +122,7 @@ class ITDocumentationController extends Controller
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'it_category' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getITCategories())),
             'access_level' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
             'review_schedule' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
@@ -129,17 +131,17 @@ class ITDocumentationController extends Controller
             'software_versions' => 'nullable|array',
             'compliance_requirements' => 'nullable|array',
             'procedure_steps' => 'nullable|array',
-            'network_diagram' => 'nullable|string',
+            'network_diagram' => self::VALIDATION_NULLABLE_STRING,
             'related_entities' => 'nullable|array',
-            'tags' => 'nullable|string',
+            'tags' => self::VALIDATION_NULLABLE_STRING,
             'file' => 'nullable|file|max:51200', // 50MB max
 
             // New tab configuration fields
             'enabled_tabs' => 'nullable|array',
-            'template_used' => 'nullable|string',
+            'template_used' => self::VALIDATION_NULLABLE_STRING,
 
             // Additional comprehensive fields
-            'status' => 'nullable|string|in:draft,review,approved,published',
+            'status' => self::VALIDATION_NULLABLE_STRING.'|in:draft,review,approved,published',
             'effective_date' => 'nullable|date',
             'expiry_date' => 'nullable|date|after:effective_date',
             'ports' => 'nullable|array',
@@ -150,10 +152,10 @@ class ITDocumentationController extends Controller
             'vpn_settings' => 'nullable|array',
             'hardware_references' => 'nullable|array',
             'environment_variables' => 'nullable|array',
-            'procedure_diagram' => 'nullable|string',
+            'procedure_diagram' => self::VALIDATION_NULLABLE_STRING,
             'rollback_procedures' => 'nullable|array',
             'prerequisites' => 'nullable|array',
-            'data_classification' => 'nullable|string',
+            'data_classification' => self::VALIDATION_NULLABLE_STRING,
             'encryption_required' => 'nullable|boolean',
             'audit_requirements' => 'nullable|array',
             'security_controls' => 'nullable|array',
@@ -169,8 +171,8 @@ class ITDocumentationController extends Controller
             'webhooks' => 'nullable|array',
             'scheduled_tasks' => 'nullable|array',
             'uptime_requirement' => 'nullable|numeric|min:0|max:100',
-            'rto' => 'nullable|string',
-            'rpo' => 'nullable|string',
+            'rto' => self::VALIDATION_NULLABLE_STRING,
+            'rpo' => self::VALIDATION_NULLABLE_STRING,
             'performance_metrics' => 'nullable|array',
             'alert_thresholds' => 'nullable|array',
             'escalation_paths' => 'nullable|array',
@@ -259,7 +261,7 @@ class ITDocumentationController extends Controller
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'it_category' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getITCategories())),
             'access_level' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
             'review_schedule' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
@@ -269,7 +271,7 @@ class ITDocumentationController extends Controller
             'compliance_requirements' => 'nullable|array',
             'procedure_steps' => 'nullable|array',
             'related_entities' => 'nullable|array',
-            'tags' => 'nullable|string',
+            'tags' => self::VALIDATION_NULLABLE_STRING,
             'file' => 'nullable|file|max:51200', // 50MB max
             'is_active' => 'boolean',
         ]);
@@ -325,9 +327,9 @@ class ITDocumentationController extends Controller
         $this->authorize('update', $itDocumentation);
 
         $validated = $request->validate([
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'procedure_steps' => 'nullable|array',
-            'version_notes' => 'nullable|string',
+            'version_notes' => self::VALIDATION_NULLABLE_STRING,
             'file' => 'nullable|file|max:51200',
         ]);
 
