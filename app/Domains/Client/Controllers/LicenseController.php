@@ -14,6 +14,8 @@ class LicenseController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_DATE = 'nullable|date';
+
     /**
      * Display a listing of licenses for the selected client
      */
@@ -118,8 +120,8 @@ class LicenseController extends Controller
             'version' => 'nullable|string|max:100',
             'seats' => 'nullable|integer|min:1|max:999999',
             'purchase_date' => 'nullable|date|before_or_equal:today',
-            'renewal_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date',
+            'renewal_date' => self::VALIDATION_NULLABLE_DATE,
+            'expiry_date' => self::VALIDATION_NULLABLE_DATE,
             'purchase_cost' => 'nullable|numeric|min:0|max:9999999.99',
             'renewal_cost' => 'nullable|numeric|min:0|max:9999999.99',
             'is_active' => 'boolean',
@@ -195,8 +197,8 @@ class LicenseController extends Controller
             'version' => 'nullable|string|max:100',
             'seats' => 'nullable|integer|min:1|max:999999',
             'purchase_date' => 'nullable|date|before_or_equal:today',
-            'renewal_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date',
+            'renewal_date' => self::VALIDATION_NULLABLE_DATE,
+            'expiry_date' => self::VALIDATION_NULLABLE_DATE,
             'purchase_cost' => 'nullable|numeric|min:0|max:9999999.99',
             'renewal_cost' => 'nullable|numeric|min:0|max:9999999.99',
             'is_active' => 'boolean',
