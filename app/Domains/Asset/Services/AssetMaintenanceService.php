@@ -192,7 +192,7 @@ class AssetMaintenanceService
             $results['disk_fragmentation'] = $defragResult;
 
             // 4. Startup programs optimization
-            $startupResult = $this->optimizeStartupPrograms($asset);
+            $startupResult = $this->optimizeStartupPrograms();
             $results['startup_optimization'] = $startupResult;
 
             // 5. Registry cleanup
@@ -563,7 +563,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function optimizeStartupPrograms(Asset $asset): array
+    protected function optimizeStartupPrograms(): array
     {
         return ['success' => true];
     }
