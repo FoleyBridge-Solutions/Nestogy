@@ -112,29 +112,23 @@ class CustomQuickAction extends Model
      */
     public function canBeExecutedBy(User $user): bool
     {
-        // Check visibility
+        $canExecute = true;
+
         if ($this->visibility === 'private' && $this->user_id !== $user->id) {
-            return false;
-        }
-
-        if ($this->visibility === 'company' && $this->company_id !== $user->company_id) {
-            return false;
-        }
-
-        if ($this->visibility === 'role') {
+            $canExecute = false;
+        } elseif ($this->visibility === 'company' && $this->company_id !== $user->company_id) {
+            $canExecute = false;
+        } elseif ($this->visibility === 'role') {
             $userRoles = $user->roles->pluck('name')->toArray();
             $allowedRoles = $this->allowed_roles ?? [];
-            if (empty(array_intersect($userRoles, $allowedRoles))) {
-                return false;
-            }
+            $canExecute = !empty(array_intersect($userRoles, $allowedRoles));
         }
 
-        // Check permission if specified
-        if ($this->permission && ! $user->can($this->permission)) {
-            return false;
+        if ($canExecute && $this->permission && ! $user->can($this->permission)) {
+            $canExecute = false;
         }
 
-        return true;
+        return $canExecute;
     }
 
     /**
