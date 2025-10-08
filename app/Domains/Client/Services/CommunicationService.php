@@ -153,6 +153,21 @@ class CommunicationService
                         return false;
                     }
                     break;
+
+                default:
+                    break;
+            }
+        }
+
+        return $this->checkCommunicationFrequencyLimits($client);
+    }
+                    break;
+
+                case 'phone_call':
+                    if ($client->do_not_call) {
+                        return false;
+                    }
+                    break;
             }
         }
 
