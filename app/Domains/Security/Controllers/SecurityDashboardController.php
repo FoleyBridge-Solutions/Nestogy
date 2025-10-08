@@ -16,6 +16,8 @@ use Illuminate\View\View;
 
 class SecurityDashboardController extends BaseResourceController
 {
+    private const COUNT_ALIAS = 'count(*) as count';
+
     protected IpLookupService $ipLookupService;
 
     protected SuspiciousLoginService $suspiciousLoginService;
@@ -145,7 +147,7 @@ class SecurityDashboardController extends BaseResourceController
             'suspicious_ips' => IpLookupLog::where('company_id', $companyId)->bySuspicious(true)->count(),
             'unique_countries' => IpLookupLog::where('company_id', $companyId)->distinct('country_code')->count('country_code'),
             'threat_levels' => IpLookupLog::where('company_id', $companyId)
-                ->select('threat_level', DB::raw('count(*) as count'))
+                ->select('threat_level', DB::raw(self::COUNT_ALIAS))
                 ->groupBy('threat_level')
                 ->pluck('count', 'threat_level')
                 ->toArray(),
@@ -352,7 +354,7 @@ class SecurityDashboardController extends BaseResourceController
 
         $statusBreakdown = SuspiciousLoginAttempt::where('company_id', $companyId)
             ->where('created_at', '>=', $startDate)
-            ->select('status', DB::raw('count(*) as count'))
+            ->select('status', DB::raw(self::COUNT_ALIAS))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
@@ -366,7 +368,7 @@ class SecurityDashboardController extends BaseResourceController
                     WHEN risk_score >= 40 THEN "medium"
                     ELSE "low" 
                 END as risk_level'),
-                DB::raw('count(*) as count')
+                DB::raw(self::COUNT_ALIAS)
             )
             ->groupBy('risk_level')
             ->pluck('count', 'risk_level')
@@ -384,7 +386,7 @@ class SecurityDashboardController extends BaseResourceController
         $topCountries = IpLookupLog::where('company_id', $companyId)
             ->where('created_at', '>=', $startDate)
             ->whereNotNull('country_code')
-            ->select('country_code', 'country', DB::raw('count(*) as count'))
+            ->select('country_code', 'country', DB::raw(self::COUNT_ALIAS))
             ->groupBy(['country_code', 'country'])
             ->orderBy('count', 'desc')
             ->limit(10)
@@ -392,7 +394,7 @@ class SecurityDashboardController extends BaseResourceController
 
         $threatLevels = IpLookupLog::where('company_id', $companyId)
             ->where('created_at', '>=', $startDate)
-            ->select('threat_level', DB::raw('count(*) as count'))
+            ->select('threat_level', DB::raw(self::COUNT_ALIAS))
             ->groupBy('threat_level')
             ->pluck('count', 'threat_level')
             ->toArray();
