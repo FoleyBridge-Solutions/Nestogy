@@ -24,6 +24,11 @@ use Illuminate\Support\Facades\Log;
  */
 class RecurringBillingService
 {
+    const SERVICE_TIER_HOSTED_PBX = 'Hosted PBX';
+    const SERVICE_TIER_SIP_TRUNKING = 'SIP Trunking';
+    const SERVICE_TIER_VOIP_LINES = 'VoIP Lines';
+    const SERVICE_TIER_UNIFIED_COMMUNICATIONS = 'Unified Communications';
+
     protected $voipTaxService;
 
     protected $voipUsageService;
@@ -543,19 +548,19 @@ class RecurringBillingService
         $itemName = strtolower($item->name);
 
         if (str_contains($itemName, 'pbx') || str_contains($itemName, 'hosted')) {
-            return 'Hosted PBX';
+            return self::SERVICE_TIER_HOSTED_PBX;
         }
 
         if (str_contains($itemName, 'sip') || str_contains($itemName, 'trunk')) {
-            return 'SIP Trunking';
+            return self::SERVICE_TIER_SIP_TRUNKING;
         }
 
         if (str_contains($itemName, 'line') || str_contains($itemName, 'voip')) {
-            return 'VoIP Lines';
+            return self::SERVICE_TIER_VOIP_LINES;
         }
 
         if (str_contains($itemName, 'unified') || str_contains($itemName, 'uc')) {
-            return 'Unified Communications';
+            return self::SERVICE_TIER_UNIFIED_COMMUNICATIONS;
         }
 
         return null;
@@ -567,10 +572,10 @@ class RecurringBillingService
     protected function getDefaultAllowanceForTier(string $tierName): array
     {
         $defaults = [
-            'Hosted PBX' => ['minutes' => 1000, 'seats' => 10],
-            'SIP Trunking' => ['minutes' => 5000, 'channels' => 5],
-            'VoIP Lines' => ['minutes' => 500, 'lines' => 1],
-            'Unified Communications' => ['minutes' => 2000, 'users' => 25],
+            self::SERVICE_TIER_HOSTED_PBX => ['minutes' => 1000, 'seats' => 10],
+            self::SERVICE_TIER_SIP_TRUNKING => ['minutes' => 5000, 'channels' => 5],
+            self::SERVICE_TIER_VOIP_LINES => ['minutes' => 500, 'lines' => 1],
+            self::SERVICE_TIER_UNIFIED_COMMUNICATIONS => ['minutes' => 2000, 'users' => 25],
         ];
 
         return $defaults[$tierName] ?? ['minutes' => 1000];
@@ -582,10 +587,10 @@ class RecurringBillingService
     protected function getDefaultOverageRate(string $tierName): float
     {
         $defaults = [
-            'Hosted PBX' => 0.05,
-            'SIP Trunking' => 0.03,
-            'VoIP Lines' => 0.08,
-            'Unified Communications' => 0.04,
+            self::SERVICE_TIER_HOSTED_PBX => 0.05,
+            self::SERVICE_TIER_SIP_TRUNKING => 0.03,
+            self::SERVICE_TIER_VOIP_LINES => 0.08,
+            self::SERVICE_TIER_UNIFIED_COMMUNICATIONS => 0.04,
         ];
 
         return $defaults[$tierName] ?? 0.05;
