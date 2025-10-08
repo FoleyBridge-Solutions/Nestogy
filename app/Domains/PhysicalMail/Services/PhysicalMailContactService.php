@@ -6,9 +6,11 @@ use App\Domains\PhysicalMail\Models\PhysicalMailContact;
 
 class PhysicalMailContactService
 {
+    private PostGridContactClient $contactClient;
+
     public function __construct(private PostGridClient $postgrid)
     {
-        // Dependencies are injected
+        $this->contactClient = new PostGridContactClient($postgrid);
     }
 
     /**
@@ -55,7 +57,7 @@ class PhysicalMailContactService
         // Sync with PostGrid if not already synced
         if (! $contact->postgrid_id) {
             try {
-                $response = $this->postgrid->createContact($contact->toPostGridArray());
+                $response = $this->contactClient->create($contact->toPostGridArray());
                 $contact->update([
                     'postgrid_id' => $response['id'],
                     'address_status' => $response['addressStatus'] ?? 'unverified',
@@ -76,7 +78,7 @@ class PhysicalMailContactService
      */
     public function syncFromPostGrid(string $postgridId): PhysicalMailContact
     {
-        $response = $this->postgrid->getContact($postgridId);
+        $response = $this->contactClient->get($postgridId);
 
         return PhysicalMailContact::fromPostGrid($response);
     }

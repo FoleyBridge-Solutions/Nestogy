@@ -10,12 +10,21 @@ class CompanyAwarePostGridClient extends PostGridClient
 
     public function __construct(?int $companyId = null)
     {
-        // Get company settings
         $this->settings = PhysicalMailSettings::forCompany($companyId);
 
         if (! $this->settings) {
             throw new \Exception('No physical mail settings found for company');
         }
+
+        if (! $this->settings->isConfigured()) {
+            throw new \Exception('Physical mail is not configured for this company');
+        }
+
+        parent::__construct(
+            $this->settings->shouldUseTestMode(),
+            $this->settings->getActiveApiKey()
+        );
+    }
 
         if (! $this->settings->isConfigured()) {
             throw new \Exception('Physical mail is not configured for this company');

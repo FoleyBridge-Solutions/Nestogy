@@ -6,9 +6,11 @@ use App\Domains\PhysicalMail\Models\PhysicalMailTemplate;
 
 class PhysicalMailTemplateService
 {
+    private PostGridTemplateClient $templateClient;
+
     public function __construct(private PostGridClient $postgrid)
     {
-        // Dependencies are injected
+        $this->templateClient = new PostGridTemplateClient($postgrid);
     }
 
     /**
@@ -43,7 +45,7 @@ class PhysicalMailTemplateService
         // Sync with PostGrid if content is provided
         if (! $template->postgrid_id && $template->content) {
             try {
-                $response = $this->postgrid->createTemplate($template->toPostGridArray());
+                $response = $this->templateClient->create($template->toPostGridArray());
                 $template->update(['postgrid_id' => $response['id']]);
             } catch (\Exception $e) {
                 \Log::warning('Failed to sync template with PostGrid', [
@@ -61,7 +63,7 @@ class PhysicalMailTemplateService
      */
     public function syncFromPostGrid(string $postgridId): PhysicalMailTemplate
     {
-        $response = $this->postgrid->getTemplate($postgridId);
+        $response = $this->templateClient->get($postgridId);
 
         return PhysicalMailTemplate::updateOrCreate(
             ['postgrid_id' => $response['id']],

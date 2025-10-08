@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domains\PhysicalMail\Services\PhysicalMailService;
 use App\Domains\PhysicalMail\Services\PostGridClient;
+use App\Domains\PhysicalMail\Services\PostGridLetterClient;
 use Illuminate\Console\Command;
 
 class TestPhysicalMail extends Command
@@ -126,7 +127,8 @@ class TestPhysicalMail extends Command
                     $this->error('❌ Letter was cancelled by PostGrid!');
 
                     // Get detailed info
-                    $letter = $postgrid->getLetter($order->postgrid_id);
+                    $letterClient = new PostGridLetterClient($postgrid);
+                    $letter = $letterClient->get($order->postgrid_id);
                     if (isset($letter['cancellation'])) {
                         $this->error('Cancellation reason: '.$letter['cancellation']['reason']);
                         $this->error('Cancellation note: '.$letter['cancellation']['note']);
