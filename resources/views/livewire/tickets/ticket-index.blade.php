@@ -340,8 +340,8 @@
                     </div>
                     
                     {{-- Quick Actions Bar (appears on hover) --}}
-                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white dark:from-gray-900 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300" onclick="event.stopPropagation()">
-                        <div class="flex gap-2 justify-center">
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white dark:from-gray-900 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div class="flex gap-2 justify-center" onclick="event.stopPropagation()">
                             <flux:button 
                                 variant="ghost" 
                                 size="sm" 
