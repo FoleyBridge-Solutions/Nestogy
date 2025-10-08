@@ -71,21 +71,7 @@ class ProcessFailedPayments extends Command
         }
 
         try {
-            // Get overdue invoices with payment methods
-            $query = Invoice::where('status', '!=', 'paid')
-                ->where('due_date', '<', now())
-                ->whereNotNull('payment_method_id')
-                ->where(function ($q) use ($maxAttempts) {
-                    $q->whereNull('payment_attempts')
-                        ->orWhere('payment_attempts', '<', $maxAttempts);
-                })
-                ->with(['client', 'paymentMethod']);
-
-            if ($companyId) {
-                $query->where('company_id', $companyId);
-            }
-
-            $invoices = $query->get();
+            $invoices = $this->getEligibleInvoices($companyId, $maxAttempts);
 
             if ($invoices->isEmpty()) {
                 $this->info('No invoices requiring payment retry found');
@@ -95,60 +81,10 @@ class ProcessFailedPayments extends Command
 
             $this->info("Found {$invoices->count()} invoices to retry");
 
-            $results = [
-                'successful' => 0,
-                'failed' => 0,
-                'skipped' => 0,
-                'total_collected' => 0,
-            ];
+            $results = $this->processInvoices($invoices, $dryRun, $maxAttempts);
 
-            $progressBar = $this->output->createProgressBar($invoices->count());
-            $progressBar->start();
-
-            foreach ($invoices as $invoice) {
-                $progressBar->advance();
-
-                // Check if we should retry based on last attempt
-                if ($this->shouldRetryPayment($invoice)) {
-                    if (! $dryRun) {
-                        $result = $this->billingService->retryFailedPayment($invoice);
-
-                        if ($result['success']) {
-                            $results['successful']++;
-                            $results['total_collected'] += $invoice->total;
-
-                            // Send success notification
-                            $this->notificationService->notifyPaymentSuccess(
-                                $invoice,
-                                $result['transaction_id'] ?? null
-                            );
-                        } else {
-                            $results['failed']++;
-
-                            // Send failure notification if max attempts reached
-                            if ($invoice->payment_attempts >= $maxAttempts) {
-                                $this->notificationService->notifyPaymentFailed(
-                                    $invoice,
-                                    $result['error'] ?? 'Maximum retry attempts reached'
-                                );
-                            }
-                        }
-                    } else {
-                        $this->info("\nWould retry payment for invoice {$invoice->invoice_number}");
-                        $results['skipped']++;
-                    }
-                } else {
-                    $results['skipped']++;
-                }
-            }
-
-            $progressBar->finish();
-            $this->newLine(2);
-
-            // Display results
             $this->displayResults($results, $dryRun);
 
-            // Log the process
             Log::info('Failed payment retry process completed', [
                 'company_id' => $companyId,
                 'dry_run' => $dryRun,
@@ -165,6 +101,92 @@ class ProcessFailedPayments extends Command
             ]);
 
             return Command::FAILURE;
+        }
+    }
+
+    private function getEligibleInvoices(?int $companyId, int $maxAttempts)
+    {
+        $query = Invoice::where('status', '!=', 'paid')
+            ->where('due_date', '<', now())
+            ->whereNotNull('payment_method_id')
+            ->where(function ($q) use ($maxAttempts) {
+                $q->whereNull('payment_attempts')
+                    ->orWhere('payment_attempts', '<', $maxAttempts);
+            })
+            ->with(['client', 'paymentMethod']);
+
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+
+        return $query->get();
+    }
+
+    private function processInvoices($invoices, bool $dryRun, int $maxAttempts): array
+    {
+        $results = [
+            'successful' => 0,
+            'failed' => 0,
+            'skipped' => 0,
+            'total_collected' => 0,
+        ];
+
+        $progressBar = $this->output->createProgressBar($invoices->count());
+        $progressBar->start();
+
+        foreach ($invoices as $invoice) {
+            $progressBar->advance();
+
+            if ($this->shouldRetryPayment($invoice)) {
+                $this->processInvoicePayment($invoice, $dryRun, $maxAttempts, $results);
+            } else {
+                $results['skipped']++;
+            }
+        }
+
+        $progressBar->finish();
+        $this->newLine(2);
+
+        return $results;
+    }
+
+    private function processInvoicePayment(Invoice $invoice, bool $dryRun, int $maxAttempts, array &$results): void
+    {
+        if ($dryRun) {
+            $this->info("\nWould retry payment for invoice {$invoice->invoice_number}");
+            $results['skipped']++;
+            return;
+        }
+
+        $result = $this->billingService->retryFailedPayment($invoice);
+
+        if ($result['success']) {
+            $this->handleSuccessfulPayment($invoice, $result, $results);
+        } else {
+            $this->handleFailedPayment($invoice, $result, $maxAttempts, $results);
+        }
+    }
+
+    private function handleSuccessfulPayment(Invoice $invoice, array $result, array &$results): void
+    {
+        $results['successful']++;
+        $results['total_collected'] += $invoice->total;
+
+        $this->notificationService->notifyPaymentSuccess(
+            $invoice,
+            $result['transaction_id'] ?? null
+        );
+    }
+
+    private function handleFailedPayment(Invoice $invoice, array $result, int $maxAttempts, array &$results): void
+    {
+        $results['failed']++;
+
+        if ($invoice->payment_attempts >= $maxAttempts) {
+            $this->notificationService->notifyPaymentFailed(
+                $invoice,
+                $result['error'] ?? 'Maximum retry attempts reached'
+            );
         }
     }
 
