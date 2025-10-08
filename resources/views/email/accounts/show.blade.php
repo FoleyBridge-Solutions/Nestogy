@@ -153,7 +153,7 @@
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->smtp_host }}:{{ $account->smtp_port }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Encryption</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Encryption</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ ucfirst($account->smtp_encryption) }}</p>
                                     </div>
                                     <div>
