@@ -280,7 +280,7 @@ class AssetMaintenanceService
 
         try {
             // 1. Temporary files cleanup
-            $tempResult = $this->cleanupTemporaryFiles($asset);
+            $tempResult = $this->cleanupTemporaryFiles();
             $results['temporary_files'] = $tempResult;
 
             // 2. Browser cache cleanup
@@ -608,7 +608,7 @@ class AssetMaintenanceService
         return ['score' => 95, 'status' => 'excellent'];
     }
 
-    protected function cleanupTemporaryFiles(Asset $asset): array
+    protected function cleanupTemporaryFiles(): array
     {
         return ['success' => true, 'space_freed' => '2.5 GB'];
     }
