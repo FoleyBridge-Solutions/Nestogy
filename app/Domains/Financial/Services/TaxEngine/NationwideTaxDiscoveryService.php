@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Log;
  */
 class NationwideTaxDiscoveryService
 {
+    protected const JSON_EXTRACT_APPLICABLE_STATES = "JSON_EXTRACT(metadata, '$.applicable_states') LIKE ?";
+
     protected array $stateTaxRates = [];
 
     protected IntelligentJurisdictionDiscoveryService $discoveryService;
@@ -322,7 +324,7 @@ class NationwideTaxDiscoveryService
         // Try to infer from existing data
         $sample = DB::table('service_tax_rates')
             ->where('authority_name', 'LIKE', "%{$city}%")
-            ->whereRaw("JSON_EXTRACT(metadata, '$.applicable_states') LIKE ?", ["%{$state}%"])
+            ->whereRaw(self::JSON_EXTRACT_APPLICABLE_STATES, ["%{$state}%"])
             ->first();
 
         if ($sample && isset($sample->metadata)) {
@@ -345,7 +347,7 @@ class NationwideTaxDiscoveryService
         // Query for special districts in this ZIP
         $specialRates = DB::table('service_tax_rates')
             ->where('is_active', 1)
-            ->whereRaw("JSON_EXTRACT(metadata, '$.applicable_states') LIKE ?", ["%{$state}%"])
+            ->whereRaw(self::JSON_EXTRACT_APPLICABLE_STATES, ["%{$state}%"])
             ->whereRaw("JSON_EXTRACT(metadata, '$.zip_codes') LIKE ?", ["%{$zip}%"])
             ->where(function ($query) {
                 $query->where('tax_code', 'LIKE', '%MTA%')
@@ -421,7 +423,7 @@ class NationwideTaxDiscoveryService
 
         return Cache::remember($cacheKey, 3600, function () use ($jurisdictionType, $state) {
             $avgRate = DB::table('service_tax_rates')
-                ->whereRaw("JSON_EXTRACT(metadata, '$.applicable_states') LIKE ?", ["%{$state}%"])
+                ->whereRaw(self::JSON_EXTRACT_APPLICABLE_STATES, ["%{$state}%"])
                 ->whereRaw("JSON_EXTRACT(metadata, '$.jurisdiction_type') = ?", [$jurisdictionType])
                 ->where('is_active', 1)
                 ->avg('percentage_rate');
