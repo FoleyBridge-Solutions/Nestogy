@@ -13,6 +13,8 @@ use Illuminate\Console\Command;
  */
 class GenerateMonthlyReports extends Command
 {
+    private const ACTION_ITEMS_COLUMN = 'Action Items';
+
     /**
      * The name and signature of the console command.
      *
@@ -110,7 +112,7 @@ class GenerateMonthlyReports extends Command
                     'Tax Collected' => '$'.number_format($result['report_summary']['total_tax_collected'], 2),
                     'Invoices' => $result['report_summary']['invoice_count'],
                     'Compliance Score' => $result['report_summary']['compliance_score'].'%',
-                    'Action Items' => $result['report_summary']['action_items_count'],
+                    self::ACTION_ITEMS_COLUMN => $result['report_summary']['action_items_count'],
                     'File' => $result['filename'],
                 ];
             } else {
@@ -120,7 +122,7 @@ class GenerateMonthlyReports extends Command
                     'Tax Collected' => 'N/A',
                     'Invoices' => 'N/A',
                     'Compliance Score' => 'N/A',
-                    'Action Items' => 'N/A',
+                    self::ACTION_ITEMS_COLUMN => 'N/A',
                     'File' => 'Error: '.($result['error'] ?? 'Unknown'),
                 ];
             }
@@ -128,7 +130,7 @@ class GenerateMonthlyReports extends Command
 
         $this->table([
             'Company ID', 'Status', 'Tax Collected', 'Invoices',
-            'Compliance Score', 'Action Items', 'File',
+            'Compliance Score', self::ACTION_ITEMS_COLUMN, 'File',
         ], $tableData);
     }
 }
