@@ -15,6 +15,8 @@ use Illuminate\Validation\Rule;
 
 class InvoicesController extends Controller
 {
+    private const NULLABLE_STRING_RULE = 'nullable|string';
+
     protected RecurringBillingService $billingService;
 
     protected NotificationService $notificationService;
@@ -112,8 +114,8 @@ class InvoicesController extends Controller
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'status' => ['sometimes', Rule::in(['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'])],
             'po_number' => 'nullable|string|max:50',
-            'terms' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'terms' => self::NULLABLE_STRING_RULE,
+            'notes' => self::NULLABLE_STRING_RULE,
             'discount_type' => ['nullable', Rule::in(['fixed', 'percentage'])],
             'discount_value' => 'nullable|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
@@ -277,8 +279,8 @@ class InvoicesController extends Controller
             'due_date' => 'sometimes|date|after_or_equal:invoice_date',
             'status' => ['sometimes', Rule::in(['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'])],
             'po_number' => 'nullable|string|max:50',
-            'terms' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'terms' => self::NULLABLE_STRING_RULE,
+            'notes' => self::NULLABLE_STRING_RULE,
             'discount_type' => ['nullable', Rule::in(['fixed', 'percentage'])],
             'discount_value' => 'nullable|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
