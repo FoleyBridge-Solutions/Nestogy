@@ -14,6 +14,8 @@ class CertificateController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_IN = 'nullable|in:';
+
     /**
      * Display a listing of certificates for the selected client
      */
@@ -114,8 +116,8 @@ class CertificateController extends Controller
             'issuer' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
             'serial_number' => 'nullable|string|max:255',
-            'key_size' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getKeySizes())),
-            'algorithm' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getAlgorithms())),
+            'key_size' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientCertificate::getKeySizes())),
+            'algorithm' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientCertificate::getAlgorithms())),
             'fingerprint_sha1' => 'nullable|string|max:255',
             'fingerprint_sha256' => 'nullable|string|max:255',
             'is_wildcard' => 'boolean',
@@ -130,7 +132,7 @@ class CertificateController extends Controller
             'auto_renewal' => 'boolean',
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
             'status' => 'required|in:'.implode(',', array_keys(ClientCertificate::getStatuses())),
-            'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
+            'vendor' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientCertificate::getVendors())),
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
@@ -242,8 +244,8 @@ class CertificateController extends Controller
             'issuer' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
             'serial_number' => 'nullable|string|max:255',
-            'key_size' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getKeySizes())),
-            'algorithm' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getAlgorithms())),
+            'key_size' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientCertificate::getKeySizes())),
+            'algorithm' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientCertificate::getAlgorithms())),
             'fingerprint_sha1' => 'nullable|string|max:255',
             'fingerprint_sha256' => 'nullable|string|max:255',
             'is_wildcard' => 'boolean',
@@ -258,7 +260,7 @@ class CertificateController extends Controller
             'auto_renewal' => 'boolean',
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
             'status' => 'required|in:'.implode(',', array_keys(ClientCertificate::getStatuses())),
-            'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
+            'vendor' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientCertificate::getVendors())),
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
