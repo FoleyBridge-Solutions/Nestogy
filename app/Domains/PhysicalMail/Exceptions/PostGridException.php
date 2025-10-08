@@ -21,8 +21,19 @@ class PostGridException extends Exception
 
     public function isRetryable(): bool
     {
-        // Determine if this error should trigger a retry
         return in_array($this->code, [500, 502, 503, 504]) ||
                in_array($this->errorType, ['rate_limit', 'timeout', 'service_unavailable']);
+    }
+}
+
+class MissingApiKeyException extends PostGridException
+{
+    public function __construct(string $mode = 'current')
+    {
+        parent::__construct(
+            "No API key configured for the {$mode} mode",
+            400,
+            'missing_api_key'
+        );
     }
 }

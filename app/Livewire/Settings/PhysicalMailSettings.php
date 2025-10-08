@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Settings;
 
+use App\Domains\PhysicalMail\Exceptions\MissingApiKeyException;
 use App\Domains\PhysicalMail\Services\PostGridClient;
 use App\Models\PhysicalMailSettings as PhysicalMailSettingsModel;
 use Livewire\Component;
@@ -113,7 +114,7 @@ class PhysicalMailSettings extends Component
             $apiKey = $this->shouldUseTestMode() ? $this->testKey : $this->liveKey;
 
             if (! $apiKey) {
-                throw new \Exception('No API key configured for the current mode');
+                throw new MissingApiKeyException('current');
             }
 
             // Create a temporary PostGrid client with current settings
