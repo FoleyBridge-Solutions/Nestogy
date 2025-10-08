@@ -38,21 +38,26 @@ class RoutesDomainGenerate extends Command
             $this->line("  • {$domain}");
         }
 
-        if (! $force && $this->confirm('Generate configuration file?', true)) {
-            if ($routeManager->generateConfig($force)) {
-                $this->info("✓ Configuration generated: {$configPath}");
-                $this->info('You can now customize the configuration as needed.');
+        return $this->generateConfiguration($routeManager, $configPath, $force);
+    }
 
-                return self::SUCCESS;
-            } else {
-                $this->error('Failed to generate configuration file.');
+    protected function generateConfiguration(DomainRouteManager $routeManager, string $configPath, bool $force): int
+    {
+        if (! $force && ! $this->confirm('Generate configuration file?', true)) {
+            $this->info('Configuration generation cancelled.');
 
-                return self::FAILURE;
-            }
+            return self::SUCCESS;
         }
 
-        $this->info('Configuration generation cancelled.');
+        if ($routeManager->generateConfig($force)) {
+            $this->info("✓ Configuration generated: {$configPath}");
+            $this->info('You can now customize the configuration as needed.');
 
-        return self::SUCCESS;
+            return self::SUCCESS;
+        }
+
+        $this->error('Failed to generate configuration file.');
+
+        return self::FAILURE;
     }
 }
