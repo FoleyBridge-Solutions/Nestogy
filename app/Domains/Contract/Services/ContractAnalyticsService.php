@@ -197,7 +197,7 @@ class ContractAnalyticsService
         $timeToSignature = $this->calculateAverageTimeToSignature($contracts);
 
         // Approval time
-        $approvalTime = $this->calculateAverageApprovalTime($contracts);
+        $approvalTime = $this->calculateAverageApprovalTime();
 
         // Contract stages distribution
         $stagesDistribution = $this->getContractStagesDistribution($companyId);
@@ -512,7 +512,7 @@ class ContractAnalyticsService
         return 0;
     }
 
-    protected function calculateAverageApprovalTime(Collection $contracts): float
+    protected function calculateAverageApprovalTime(): float
     {
         return 0;
     }
