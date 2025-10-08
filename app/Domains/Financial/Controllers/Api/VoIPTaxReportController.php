@@ -18,6 +18,8 @@ use Illuminate\Validation\ValidationException;
  */
 class VoIPTaxReportController extends Controller
 {
+    private const ERROR_INTERNAL_SERVER = 'Internal server error';
+
     protected VoIPTaxReportingService $reportingService;
 
     public function __construct()
@@ -86,7 +88,7 @@ class VoIPTaxReportController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Report generation failed',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                'error' => config('app.debug') ? $e->getMessage() : self::ERROR_INTERNAL_SERVER,
             ], 500);
         }
     }
@@ -141,7 +143,7 @@ class VoIPTaxReportController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Jurisdiction report generation failed',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                'error' => config('app.debug') ? $e->getMessage() : self::ERROR_INTERNAL_SERVER,
             ], 500);
         }
     }
@@ -183,7 +185,7 @@ class VoIPTaxReportController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Service type analysis failed',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                'error' => config('app.debug') ? $e->getMessage() : self::ERROR_INTERNAL_SERVER,
             ], 500);
         }
     }
@@ -240,7 +242,7 @@ class VoIPTaxReportController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Exemption report generation failed',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                'error' => config('app.debug') ? $e->getMessage() : self::ERROR_INTERNAL_SERVER,
             ], 500);
         }
     }
@@ -282,7 +284,7 @@ class VoIPTaxReportController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Rate effectiveness report generation failed',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                'error' => config('app.debug') ? $e->getMessage() : self::ERROR_INTERNAL_SERVER,
             ], 500);
         }
     }
@@ -331,7 +333,7 @@ class VoIPTaxReportController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Dashboard data generation failed',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                'error' => config('app.debug') ? $e->getMessage() : self::ERROR_INTERNAL_SERVER,
             ], 500);
         }
     }
@@ -403,7 +405,7 @@ class VoIPTaxReportController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Report export failed',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                'error' => config('app.debug') ? $e->getMessage() : self::ERROR_INTERNAL_SERVER,
             ], 500);
         }
     }
@@ -437,7 +439,7 @@ class VoIPTaxReportController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch jurisdictions',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
+                'error' => config('app.debug') ? $e->getMessage() : self::ERROR_INTERNAL_SERVER,
             ], 500);
         }
     }
