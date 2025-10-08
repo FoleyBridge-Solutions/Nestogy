@@ -227,7 +227,7 @@ class RealtimeDashboardService
             ->whereNull('archived_at')
             ->withCount([
                 'tickets as open_tickets' => function ($query) {
-                    $query->whereIn('status', ['Open', 'In Progress']);
+                    $query->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS]);
                 },
                 'invoices as overdue_invoices' => function ($query) {
                     $query->where('status', 'Sent')
@@ -297,7 +297,7 @@ class RealtimeDashboardService
                         ->where('resolved_at', '>=', $startDate);
                 },
                 'assignedTickets as tickets_open' => function ($query) {
-                    $query->whereIn('status', ['Open', 'In Progress']);
+                    $query->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS]);
                 },
             ])
             ->get();
@@ -424,7 +424,7 @@ class RealtimeDashboardService
         // Critical tickets
         $criticalTickets = Ticket::where('company_id', $this->companyId)
             ->where('priority', 'Critical')
-            ->whereIn('status', ['Open', 'In Progress'])
+            ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
             ->count();
 
         if ($criticalTickets > 0) {
@@ -651,7 +651,7 @@ class RealtimeDashboardService
             })
             ->withCount([
                 'assignedTickets as active_tasks' => function ($query) {
-                    $query->whereIn('status', ['In Progress']);
+                    $query->whereIn('status', [Ticket::STATUS_IN_PROGRESS]);
                 },
             ])
             ->get();
