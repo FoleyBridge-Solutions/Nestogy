@@ -240,57 +240,81 @@ class RmmMonitoringSettingsRequest extends FormRequest
         ];
     }
 
-    /**
-     * Configure the validator instance.
-     */
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            // Validate that warning thresholds are lower than critical thresholds
-            $thresholds = $this->input('monitoring_alert_thresholds', []);
-
-            if (isset($thresholds['cpu_usage_warning'], $thresholds['cpu_usage_critical'])) {
-                if ($thresholds['cpu_usage_warning'] >= $thresholds['cpu_usage_critical']) {
-                    $validator->errors()->add('monitoring_alert_thresholds.cpu_usage_warning', 'Warning threshold must be lower than critical threshold.');
-                }
-            }
-
-            if (isset($thresholds['memory_usage_warning'], $thresholds['memory_usage_critical'])) {
-                if ($thresholds['memory_usage_warning'] >= $thresholds['memory_usage_critical']) {
-                    $validator->errors()->add('monitoring_alert_thresholds.memory_usage_warning', 'Warning threshold must be lower than critical threshold.');
-                }
-            }
-
-            if (isset($thresholds['disk_usage_warning'], $thresholds['disk_usage_critical'])) {
-                if ($thresholds['disk_usage_warning'] >= $thresholds['disk_usage_critical']) {
-                    $validator->errors()->add('monitoring_alert_thresholds.disk_usage_warning', 'Warning threshold must be lower than critical threshold.');
-                }
-            }
-
-            // Validate escalation timing
-            $escalation = $this->input('escalation_rules', []);
-            if (isset($escalation['first_escalation_minutes'], $escalation['second_escalation_minutes'])) {
-                if ($escalation['first_escalation_minutes'] >= $escalation['second_escalation_minutes']) {
-                    $validator->errors()->add('escalation_rules.second_escalation_minutes', 'Second escalation must be later than first escalation.');
-                }
-            }
-
-            if (isset($escalation['second_escalation_minutes'], $escalation['final_escalation_minutes'])) {
-                if ($escalation['second_escalation_minutes'] >= $escalation['final_escalation_minutes']) {
-                    $validator->errors()->add('escalation_rules.final_escalation_minutes', 'Final escalation must be later than second escalation.');
-                }
-            }
-
-            // Validate patch window
-            $patchSettings = $this->input('patch_management_settings', []);
-            if (isset($patchSettings['patch_window_start'], $patchSettings['patch_window_end'])) {
-                $start = $patchSettings['patch_window_start'];
-                $end = $patchSettings['patch_window_end'];
-
-                if ($start && $end && $start >= $end) {
-                    $validator->errors()->add('patch_management_settings.patch_window_end', 'Patch window end time must be after start time.');
-                }
-            }
+            $this->validateMonitoringThresholds($validator);
+            $this->validateEscalationTiming($validator);
+            $this->validatePatchWindow($validator);
         });
+    }
+
+    private function validateMonitoringThresholds($validator): void
+    {
+        $thresholds = $this->input('monitoring_alert_thresholds', []);
+
+        $this->validateThresholdPair(
+            $validator,
+            $thresholds,
+            'cpu_usage_warning',
+            'cpu_usage_critical',
+            'monitoring_alert_thresholds.cpu_usage_warning'
+        );
+
+        $this->validateThresholdPair(
+            $validator,
+            $thresholds,
+            'memory_usage_warning',
+            'memory_usage_critical',
+            'monitoring_alert_thresholds.memory_usage_warning'
+        );
+
+        $this->validateThresholdPair(
+            $validator,
+            $thresholds,
+            'disk_usage_warning',
+            'disk_usage_critical',
+            'monitoring_alert_thresholds.disk_usage_warning'
+        );
+    }
+
+    private function validateThresholdPair($validator, array $thresholds, string $warningKey, string $criticalKey, string $errorField): void
+    {
+        if (isset($thresholds[$warningKey], $thresholds[$criticalKey])) {
+            if ($thresholds[$warningKey] >= $thresholds[$criticalKey]) {
+                $validator->errors()->add($errorField, 'Warning threshold must be lower than critical threshold.');
+            }
+        }
+    }
+
+    private function validateEscalationTiming($validator): void
+    {
+        $escalation = $this->input('escalation_rules', []);
+
+        if (isset($escalation['first_escalation_minutes'], $escalation['second_escalation_minutes'])) {
+            if ($escalation['first_escalation_minutes'] >= $escalation['second_escalation_minutes']) {
+                $validator->errors()->add('escalation_rules.second_escalation_minutes', 'Second escalation must be later than first escalation.');
+            }
+        }
+
+        if (isset($escalation['second_escalation_minutes'], $escalation['final_escalation_minutes'])) {
+            if ($escalation['second_escalation_minutes'] >= $escalation['final_escalation_minutes']) {
+                $validator->errors()->add('escalation_rules.final_escalation_minutes', 'Final escalation must be later than second escalation.');
+            }
+        }
+    }
+
+    private function validatePatchWindow($validator): void
+    {
+        $patchSettings = $this->input('patch_management_settings', []);
+
+        if (isset($patchSettings['patch_window_start'], $patchSettings['patch_window_end'])) {
+            $start = $patchSettings['patch_window_start'];
+            $end = $patchSettings['patch_window_end'];
+
+            if ($start && $end && $start >= $end) {
+                $validator->errors()->add('patch_management_settings.patch_window_end', 'Patch window end time must be after start time.');
+            }
+        }
     }
 }
