@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Log;
  */
 class TacticalRmmApiClient
 {
+    private const CONTENT_TYPE_JSON = 'application/json';
+
     protected RmmIntegration $integration;
 
     protected string $baseUrl;
@@ -92,8 +94,8 @@ class TacticalRmmApiClient
 
             $response = Http::withHeaders([
                 'X-API-KEY' => $this->apiKey,
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
+                'Accept' => self::CONTENT_TYPE_JSON,
+                'Content-Type' => self::CONTENT_TYPE_JSON,
             ])
                 ->timeout($this->timeout)
                 ->retry($this->retryTimes, 1000) // Retry with 1 second delay
@@ -101,7 +103,7 @@ class TacticalRmmApiClient
                     return $http->withOptions(['query' => $params]);
                 })
                 ->when(in_array($method, ['POST', 'PUT', 'PATCH']), function ($http) use ($data) {
-                    return $http->withBody(json_encode($data), 'application/json');
+                    return $http->withBody(json_encode($data), self::CONTENT_TYPE_JSON);
                 })
                 ->send($method, $url);
 
