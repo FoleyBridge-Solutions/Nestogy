@@ -103,7 +103,7 @@ class ContractAnalyticsService
         $revenueByType = $this->getRevenueByContractType($companyId, $startDate, $endDate);
 
         // Revenue by client
-        $revenueByClient = $this->getRevenueByClient($companyId, $startDate, $endDate);
+        $revenueByClient = $this->getRevenueByClient($companyId, $startDate);
 
         // Recurring vs one-time revenue
         $recurringVsOneTime = $this->getRecurringVsOneTimeRevenue($companyId, $startDate, $endDate);
@@ -447,7 +447,7 @@ class ContractAnalyticsService
     // Additional helper methods would be implemented here...
     // For brevity, I'm including just the essential structure
 
-    protected function getRevenueByClient(int $companyId, Carbon $startDate, Carbon $endDate): array
+    protected function getRevenueByClient(int $companyId, Carbon $startDate): array
     {
         return [];
     }
