@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BillingFinancialSettingsRequest extends FormRequest
 {
+    private const NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -114,7 +116,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'late_fee_settings.enabled' => 'boolean',
             'late_fee_settings.type' => 'nullable|string|in:percentage,fixed',
             'late_fee_settings.percentage' => 'nullable|numeric|min:0|max:100',
-            'late_fee_settings.fixed_amount' => 'nullable|numeric|min:0',
+            'late_fee_settings.fixed_amount' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'late_fee_settings.grace_period_days' => 'integer|min:0|max:30',
             'late_fee_settings.max_fees' => 'integer|min:0|max:10',
 
@@ -172,7 +174,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'purchase_order_settings' => 'nullable|array',
             'purchase_order_settings.enabled' => 'boolean',
             'purchase_order_settings.approval_required' => 'boolean',
-            'purchase_order_settings.approval_threshold' => 'nullable|numeric|min:0',
+            'purchase_order_settings.approval_threshold' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'purchase_order_settings.auto_numbering' => 'boolean',
             'purchase_order_settings.number_prefix' => 'nullable|string|max:10',
             'purchase_order_settings.next_number' => 'nullable|integer|min:1',
@@ -180,7 +182,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             // Expense Approval
             'expense_approval_settings' => 'nullable|array',
             'expense_approval_settings.enabled' => 'boolean',
-            'expense_approval_settings.approval_threshold' => 'nullable|numeric|min:0',
+            'expense_approval_settings.approval_threshold' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'expense_approval_settings.require_receipts' => 'boolean',
             'expense_approval_settings.auto_approve_under_threshold' => 'boolean',
             'expense_approval_settings.approval_workflow' => 'nullable|array',
