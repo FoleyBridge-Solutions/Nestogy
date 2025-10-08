@@ -82,8 +82,8 @@
                 </div>
                 
                 <div class="min-w-[150px]">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+                    <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                    <select id="type" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                         <option value="">All</option>
                         <option value="billable">Billable</option>
                         <option value="non-billable">Non-Billable</option>
