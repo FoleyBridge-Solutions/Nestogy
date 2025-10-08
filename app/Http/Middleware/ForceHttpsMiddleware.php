@@ -94,19 +94,13 @@ class ForceHttpsMiddleware
         }
 
         // Handle different modes
-        switch ($mode) {
-            case 'all':
-                return true;
+        $shouldEnforce = match ($mode) {
+            'all' => true,
+            'none' => false,
+            'selective', default => $this->isSecurePath($request),
+        };
 
-            case 'selective':
-                return $this->isSecurePath($request);
-
-            case 'none':
-                return false;
-
-            default:
-                return $this->isSecurePath($request);
-        }
+        return $shouldEnforce;
     }
 
     /**
