@@ -18,6 +18,8 @@ use Silber\Bouncer\BouncerFacade as Bouncer;
  */
 class RoleController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING_255 = 'required|string|max:255';
+
     protected $roleService;
 
     public function __construct(RoleService $roleService)
@@ -78,8 +80,8 @@ class RoleController extends Controller
         $this->authorize('create', \App\Models\Role::class);
 
         $request->validate([
-            'name' => 'required|string|max:255|unique:bouncer_roles,name',
-            'title' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255 . '|unique:bouncer_roles,name',
+            'title' => self::VALIDATION_REQUIRED_STRING_255,
             'description' => 'nullable|string|max:1000',
             'abilities' => 'array',
             'abilities.*' => 'string|exists:bouncer_abilities,name',
@@ -211,7 +213,7 @@ class RoleController extends Controller
         }
 
         $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => self::VALIDATION_REQUIRED_STRING_255,
             'description' => 'nullable|string|max:1000',
             'abilities' => 'array',
             'abilities.*' => 'string|exists:bouncer_abilities,name',
@@ -360,8 +362,8 @@ class RoleController extends Controller
         $originalRole = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
 
         $request->validate([
-            'name' => 'required|string|max:255|unique:bouncer_roles,name',
-            'title' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255 . '|unique:bouncer_roles,name',
+            'title' => self::VALIDATION_REQUIRED_STRING_255,
         ]);
 
         DB::beginTransaction();
@@ -431,8 +433,8 @@ class RoleController extends Controller
 
         $request->validate([
             'template' => 'required|string|in:help-desk,field-tech,network-admin,security-specialist,project-manager,client-manager,billing-admin',
-            'name' => 'required|string|max:255|unique:bouncer_roles,name',
-            'title' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255 . '|unique:bouncer_roles,name',
+            'title' => self::VALIDATION_REQUIRED_STRING_255,
         ]);
 
         $templates = $this->getMspRoleTemplates();
