@@ -14,6 +14,8 @@ class TripController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of trips for the selected client
      */
@@ -115,7 +117,7 @@ class TripController extends Controller
                 }),
             ],
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'purpose' => 'nullable|string|max:255',
             'destination_address' => 'nullable|string|max:255',
             'destination_city' => 'required|string|max:100',
@@ -128,7 +130,7 @@ class TripController extends Controller
             'status' => 'required|in:'.implode(',', array_keys(ClientTrip::getStatuses())),
             'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
             'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
-            'accommodation_details' => 'nullable|string',
+            'accommodation_details' => self::VALIDATION_NULLABLE_STRING,
             'estimated_expenses' => 'nullable|numeric|min:0',
             'currency' => 'required|in:'.implode(',', array_keys(ClientTrip::getCurrencies())),
             'mileage' => 'nullable|numeric|min:0',
@@ -136,9 +138,9 @@ class TripController extends Controller
             'billable_to_client' => 'boolean',
             'reimbursable' => 'boolean',
             'approval_required' => 'boolean',
-            'attendees' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'expense_breakdown' => 'nullable|string',
+            'attendees' => self::VALIDATION_NULLABLE_STRING,
+            'notes' => self::VALIDATION_NULLABLE_STRING,
+            'expense_breakdown' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -265,7 +267,7 @@ class TripController extends Controller
                 }),
             ],
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'purpose' => 'nullable|string|max:255',
             'destination_address' => 'nullable|string|max:255',
             'destination_city' => 'required|string|max:100',
@@ -278,7 +280,7 @@ class TripController extends Controller
             'status' => 'required|in:'.implode(',', array_keys(ClientTrip::getStatuses())),
             'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
             'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
-            'accommodation_details' => 'nullable|string',
+            'accommodation_details' => self::VALIDATION_NULLABLE_STRING,
             'estimated_expenses' => 'nullable|numeric|min:0',
             'actual_expenses' => 'nullable|numeric|min:0',
             'currency' => 'required|in:'.implode(',', array_keys(ClientTrip::getCurrencies())),
@@ -288,11 +290,11 @@ class TripController extends Controller
             'reimbursable' => 'boolean',
             'approval_required' => 'boolean',
             'follow_up_required' => 'boolean',
-            'attendees' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'client_feedback' => 'nullable|string',
+            'attendees' => self::VALIDATION_NULLABLE_STRING,
+            'notes' => self::VALIDATION_NULLABLE_STRING,
+            'client_feedback' => self::VALIDATION_NULLABLE_STRING,
             'internal_rating' => 'nullable|integer|min:1|max:5',
-            'expense_breakdown' => 'nullable|string',
+            'expense_breakdown' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -427,10 +429,10 @@ class TripController extends Controller
 
         $validator = Validator::make($request->all(), [
             'actual_expenses' => 'nullable|numeric|min:0',
-            'client_feedback' => 'nullable|string',
+            'client_feedback' => self::VALIDATION_NULLABLE_STRING,
             'internal_rating' => 'nullable|integer|min:1|max:5',
             'follow_up_required' => 'boolean',
-            'follow_up_notes' => 'nullable|string',
+            'follow_up_notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
