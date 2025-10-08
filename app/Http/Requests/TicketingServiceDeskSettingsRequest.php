@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class TicketingServiceDeskSettingsRequest extends FormRequest
 {
+    private const HOURS_VALIDATION_RULE = 'integer|min:1|max:168';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -51,7 +53,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_priority_rules.default_priority' => 'string|in:low,medium,high,critical',
             'ticket_priority_rules.escalate_overdue' => 'boolean',
             'ticket_priority_rules.escalation_hours' => 'nullable|array',
-            'ticket_priority_rules.escalation_hours.low' => 'integer|min:1|max:168',
+            'ticket_priority_rules.escalation_hours.low' => self::HOURS_VALIDATION_RULE,
             'ticket_priority_rules.escalation_hours.medium' => 'integer|min:1|max:72',
             'ticket_priority_rules.escalation_hours.high' => 'integer|min:1|max:24',
             'ticket_priority_rules.escalation_hours.critical' => 'integer|min:1|max:4',
@@ -122,8 +124,8 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'approval_workflows.enabled' => 'boolean',
             'approval_workflows.require_approval_for_closure' => 'boolean',
             'approval_workflows.require_approval_for_billing' => 'boolean',
-            'approval_workflows.auto_approve_threshold_hours' => 'nullable|integer|min:1|max:168',
-            'approval_workflows.approval_timeout_hours' => 'integer|min:1|max:168',
+            'approval_workflows.auto_approve_threshold_hours' => 'nullable|' . self::HOURS_VALIDATION_RULE,
+            'approval_workflows.approval_timeout_hours' => self::HOURS_VALIDATION_RULE,
             'approval_workflows.escalate_on_timeout' => 'boolean',
             'approval_workflows.workflows' => 'nullable|array',
             'approval_workflows.workflows.*.name' => 'string|max:100',
@@ -145,7 +147,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'time_tracking_settings.require_time_approval' => 'boolean',
             'time_tracking_settings.billable_time_default' => 'boolean',
             'time_tracking_settings.show_timer_to_clients' => 'boolean',
-            'time_tracking_settings.time_edit_deadline_hours' => 'integer|min:1|max:168',
+            'time_tracking_settings.time_edit_deadline_hours' => self::HOURS_VALIDATION_RULE,
 
             // Customer Satisfaction
             'customer_satisfaction_enabled' => 'boolean',
