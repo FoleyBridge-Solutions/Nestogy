@@ -330,26 +330,7 @@ class DocumentController extends Controller
                 $q->where('company_id', auth()->user()->company_id);
             });
 
-        // Apply same filters as index
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('original_filename', 'like', "%{$search}%");
-            });
-        }
-
-        if ($category = $request->get('category')) {
-            $query->where('category', $category);
-        }
-
-        if ($clientId = $request->get('client_id')) {
-            $query->where('client_id', $clientId);
-        }
-
-        if ($request->has('confidential')) {
-            $query->where('is_confidential', $request->get('confidential') === '1');
-        }
+        $this->applyExportFilters($query, $request);
 
         $documents = $query->orderBy('created_at', 'desc')->get();
 
@@ -363,7 +344,6 @@ class DocumentController extends Controller
         $callback = function () use ($documents) {
             $file = fopen('php://output', 'w');
 
-            // CSV headers
             fputcsv($file, [
                 'Document Name',
                 'Description',
@@ -379,7 +359,6 @@ class DocumentController extends Controller
                 'Version',
             ]);
 
-            // CSV data
             foreach ($documents as $document) {
                 fputcsv($file, [
                     $document->name,
@@ -401,5 +380,28 @@ class DocumentController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    protected function applyExportFilters($query, Request $request)
+    {
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('original_filename', 'like', "%{$search}%");
+            });
+        }
+
+        if ($category = $request->get('category')) {
+            $query->where('category', $category);
+        }
+
+        if ($clientId = $request->get('client_id')) {
+            $query->where('client_id', $clientId);
+        }
+
+        if ($request->has('confidential')) {
+            $query->where('is_confidential', $request->get('confidential') === '1');
+        }
     }
 }
