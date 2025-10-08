@@ -141,29 +141,12 @@ class ProductBundle extends Model
 
         foreach ($products as $product) {
             // Skip optional products not selected
-            if ($selectedProductIds !== null &&
-                ! $product->pivot->is_required &&
-                ! in_array($product->id, $selectedProductIds)) {
+            if ($this->shouldSkipProduct($product, $selectedProductIds)) {
                 continue;
             }
 
-            $quantity = $product->pivot->quantity;
-
-            // Check for price override
-            if ($product->pivot->price_override !== null) {
-                $itemPrice = $product->pivot->price_override;
-            } else {
-                $itemPrice = $product->base_price;
-
-                // Apply item-specific discount
-                if ($product->pivot->discount_type === 'percentage') {
-                    $itemPrice *= (1 - $product->pivot->discount_value / 100);
-                } elseif ($product->pivot->discount_type === 'fixed') {
-                    $itemPrice -= $product->pivot->discount_value;
-                }
-            }
-
-            $total += $itemPrice * $quantity;
+            $itemPrice = $this->calculateItemPrice($product);
+            $total += $itemPrice * $product->pivot->quantity;
         }
 
         // Apply bundle discount
@@ -177,6 +160,38 @@ class ProductBundle extends Model
         }
 
         return $total;
+    }
+
+    /**
+     * Check if product should be skipped in calculation
+     */
+    protected function shouldSkipProduct($product, $selectedProductIds): bool
+    {
+        return $selectedProductIds !== null &&
+            ! $product->pivot->is_required &&
+            ! in_array($product->id, $selectedProductIds);
+    }
+
+    /**
+     * Calculate price for individual item in bundle
+     */
+    protected function calculateItemPrice($product): float
+    {
+        // Check for price override
+        if ($product->pivot->price_override !== null) {
+            return $product->pivot->price_override;
+        }
+
+        $itemPrice = $product->base_price;
+
+        // Apply item-specific discount
+        if ($product->pivot->discount_type === 'percentage') {
+            $itemPrice *= (1 - $product->pivot->discount_value / 100);
+        } elseif ($product->pivot->discount_type === 'fixed') {
+            $itemPrice -= $product->pivot->discount_value;
+        }
+
+        return $itemPrice;
     }
 
     /**
