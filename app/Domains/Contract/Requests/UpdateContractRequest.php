@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateContractRequest extends FormRequest
 {
+    private const NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -47,9 +49,9 @@ class UpdateContractRequest extends FormRequest
             'currency_code' => 'sometimes|string|size:3|in:USD,EUR,GBP,CAD,AUD,JPY',
             'payment_terms' => 'sometimes|nullable|string|max:1000',
             'pricing_structure' => 'sometimes|nullable|array',
-            'pricing_structure.recurring_monthly' => 'nullable|numeric|min:0',
-            'pricing_structure.one_time' => 'nullable|numeric|min:0',
-            'pricing_structure.setup_fee' => 'nullable|numeric|min:0',
+            'pricing_structure.recurring_monthly' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'pricing_structure.one_time' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'pricing_structure.setup_fee' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'pricing_structure.renewal_adjustment' => 'nullable|array',
             'sla_terms' => 'sometimes|nullable|array',
             'sla_terms.response_time_hours' => 'nullable|numeric|min:0.1|max:72',
@@ -72,7 +74,7 @@ class UpdateContractRequest extends FormRequest
             'milestones.*.title' => 'required_with:milestones|string|max:255',
             'milestones.*.description' => 'nullable|string|max:1000',
             'milestones.*.due_date' => 'required_with:milestones|date',
-            'milestones.*.value' => 'nullable|numeric|min:0',
+            'milestones.*.value' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'deliverables' => 'sometimes|nullable|array',
             'deliverables.*.title' => 'required_with:deliverables|string|max:255',
             'deliverables.*.description' => 'nullable|string|max:1000',
