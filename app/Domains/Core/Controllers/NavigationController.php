@@ -125,124 +125,155 @@ class NavigationController extends Controller
         try {
             $companyId = auth()->user()->company_id;
 
-            // Get recent tickets
-            $recentTickets = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
-                ->with('client')
-                ->orderBy('updated_at', 'desc')
-                ->limit(4)
-                ->get();
+            $recentItems = array_merge(
+                $this->getRecentTicketsItems($companyId),
+                $this->getUpcomingTicketsItems($companyId),
+                $this->getRecentInvoicesItems($companyId),
+                $this->getRecentQuotesItems($companyId),
+                $this->getRecentClientsItems($companyId)
+            );
 
-            foreach ($recentTickets as $ticket) {
-                $recentItems[] = [
-                    'type' => 'ticket',
-                    'id' => $ticket->id,
-                    'title' => "#{$ticket->id} - {$ticket->subject}",
-                    'subtitle' => $ticket->client ? $ticket->client->name : 'No Client',
-                    'url' => route('tickets.show', $ticket->id),
-                    'icon' => '🎫',
-                    'timestamp' => $ticket->updated_at,
-                    'status' => $ticket->status,
-                    'priority' => $ticket->priority,
-                ];
-            }
-
-            // Get upcoming scheduled tickets
-            $upcomingTickets = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
-                ->whereNotNull('scheduled_at')
-                ->where('scheduled_at', '>', now())
-                ->where('scheduled_at', '<=', now()->addDays(7))
-                ->with('client')
-                ->orderBy('scheduled_at', 'asc')
-                ->limit(3)
-                ->get();
-
-            foreach ($upcomingTickets as $ticket) {
-                $recentItems[] = [
-                    'type' => 'ticket',
-                    'id' => $ticket->id,
-                    'title' => "#{$ticket->id} - {$ticket->subject}",
-                    'subtitle' => 'Scheduled: '.$ticket->scheduled_at->format('M j, g:i A'),
-                    'url' => route('tickets.show', $ticket->id),
-                    'icon' => '📅',
-                    'timestamp' => $ticket->scheduled_at,
-                    'status' => 'scheduled',
-                    'priority' => $ticket->priority,
-                ];
-            }
-
-            // Get recent invoices
-            $recentInvoices = \App\Models\Invoice::where('company_id', $companyId)
-                ->with('client')
-                ->orderBy('updated_at', 'desc')
-                ->limit(3)
-                ->get();
-
-            foreach ($recentInvoices as $invoice) {
-                $invoiceNumber = $invoice->prefix ? $invoice->prefix.$invoice->number : $invoice->number;
-                $recentItems[] = [
-                    'type' => 'invoice',
-                    'id' => $invoice->id,
-                    'title' => "Invoice #{$invoiceNumber}",
-                    'subtitle' => ($invoice->client ? $invoice->client->name.' - ' : '').'$'.number_format($invoice->amount, 2),
-                    'url' => route('financial.invoices.show', $invoice->id),
-                    'icon' => '💰',
-                    'timestamp' => $invoice->updated_at,
-                    'status' => $invoice->status,
-                ];
-            }
-
-            // Get recent quotes
-            $recentQuotes = \App\Models\Quote::where('company_id', $companyId)
-                ->with('client')
-                ->orderBy('updated_at', 'desc')
-                ->limit(2)
-                ->get();
-
-            foreach ($recentQuotes as $quote) {
-                $quoteNumber = $quote->prefix ? $quote->prefix.$quote->number : $quote->number;
-                $recentItems[] = [
-                    'type' => 'quote',
-                    'id' => $quote->id,
-                    'title' => "Quote #{$quoteNumber}",
-                    'subtitle' => ($quote->client ? $quote->client->name.' - ' : '').'$'.number_format($quote->total, 2),
-                    'url' => route('financial.quotes.show', $quote->id),
-                    'icon' => '📝',
-                    'timestamp' => $quote->updated_at,
-                    'status' => $quote->status,
-                ];
-            }
-
-            // Get recently accessed clients
-            $recentClients = \App\Models\Client::where('company_id', $companyId)
-                ->orderBy('updated_at', 'desc')
-                ->limit(2)
-                ->get();
-
-            foreach ($recentClients as $client) {
-                $recentItems[] = [
-                    'type' => 'client',
-                    'id' => $client->id,
-                    'title' => $client->name,
-                    'subtitle' => $client->email ?: $client->phone ?: 'No contact info',
-                    'url' => route('clients.show', $client->id),
-                    'icon' => '👥',
-                    'timestamp' => $client->updated_at,
-                    'status' => $client->status ?? 'active',
-                ];
-            }
-
-            // Sort by timestamp (most recent first)
             usort($recentItems, function ($a, $b) {
                 return $b['timestamp']->timestamp - $a['timestamp']->timestamp;
             });
 
         } catch (\Exception $e) {
             \Log::error('Error fetching recent items: '.$e->getMessage());
-            // Return empty array on error
             $recentItems = [];
         }
 
         return response()->json(array_slice($recentItems, 0, $limit));
+    }
+
+    private function getRecentTicketsItems(int $companyId): array
+    {
+        $items = [];
+        $recentTickets = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
+            ->with('client')
+            ->orderBy('updated_at', 'desc')
+            ->limit(4)
+            ->get();
+
+        foreach ($recentTickets as $ticket) {
+            $items[] = [
+                'type' => 'ticket',
+                'id' => $ticket->id,
+                'title' => "#{$ticket->id} - {$ticket->subject}",
+                'subtitle' => $ticket->client ? $ticket->client->name : 'No Client',
+                'url' => route('tickets.show', $ticket->id),
+                'icon' => '🎫',
+                'timestamp' => $ticket->updated_at,
+                'status' => $ticket->status,
+                'priority' => $ticket->priority,
+            ];
+        }
+
+        return $items;
+    }
+
+    private function getUpcomingTicketsItems(int $companyId): array
+    {
+        $items = [];
+        $upcomingTickets = \App\Domains\Ticket\Models\Ticket::where('company_id', $companyId)
+            ->whereNotNull('scheduled_at')
+            ->where('scheduled_at', '>', now())
+            ->where('scheduled_at', '<=', now()->addDays(7))
+            ->with('client')
+            ->orderBy('scheduled_at', 'asc')
+            ->limit(3)
+            ->get();
+
+        foreach ($upcomingTickets as $ticket) {
+            $items[] = [
+                'type' => 'ticket',
+                'id' => $ticket->id,
+                'title' => "#{$ticket->id} - {$ticket->subject}",
+                'subtitle' => 'Scheduled: '.$ticket->scheduled_at->format('M j, g:i A'),
+                'url' => route('tickets.show', $ticket->id),
+                'icon' => '📅',
+                'timestamp' => $ticket->scheduled_at,
+                'status' => 'scheduled',
+                'priority' => $ticket->priority,
+            ];
+        }
+
+        return $items;
+    }
+
+    private function getRecentInvoicesItems(int $companyId): array
+    {
+        $items = [];
+        $recentInvoices = \App\Models\Invoice::where('company_id', $companyId)
+            ->with('client')
+            ->orderBy('updated_at', 'desc')
+            ->limit(3)
+            ->get();
+
+        foreach ($recentInvoices as $invoice) {
+            $invoiceNumber = $invoice->prefix ? $invoice->prefix.$invoice->number : $invoice->number;
+            $items[] = [
+                'type' => 'invoice',
+                'id' => $invoice->id,
+                'title' => "Invoice #{$invoiceNumber}",
+                'subtitle' => ($invoice->client ? $invoice->client->name.' - ' : '').'$'.number_format($invoice->amount, 2),
+                'url' => route('financial.invoices.show', $invoice->id),
+                'icon' => '💰',
+                'timestamp' => $invoice->updated_at,
+                'status' => $invoice->status,
+            ];
+        }
+
+        return $items;
+    }
+
+    private function getRecentQuotesItems(int $companyId): array
+    {
+        $items = [];
+        $recentQuotes = \App\Models\Quote::where('company_id', $companyId)
+            ->with('client')
+            ->orderBy('updated_at', 'desc')
+            ->limit(2)
+            ->get();
+
+        foreach ($recentQuotes as $quote) {
+            $quoteNumber = $quote->prefix ? $quote->prefix.$quote->number : $quote->number;
+            $items[] = [
+                'type' => 'quote',
+                'id' => $quote->id,
+                'title' => "Quote #{$quoteNumber}",
+                'subtitle' => ($quote->client ? $quote->client->name.' - ' : '').'$'.number_format($quote->total, 2),
+                'url' => route('financial.quotes.show', $quote->id),
+                'icon' => '📝',
+                'timestamp' => $quote->updated_at,
+                'status' => $quote->status,
+            ];
+        }
+
+        return $items;
+    }
+
+    private function getRecentClientsItems(int $companyId): array
+    {
+        $items = [];
+        $recentClients = \App\Models\Client::where('company_id', $companyId)
+            ->orderBy('updated_at', 'desc')
+            ->limit(2)
+            ->get();
+
+        foreach ($recentClients as $client) {
+            $items[] = [
+                'type' => 'client',
+                'id' => $client->id,
+                'title' => $client->name,
+                'subtitle' => $client->email ?: $client->phone ?: 'No contact info',
+                'url' => route('clients.show', $client->id),
+                'icon' => '👥',
+                'timestamp' => $client->updated_at,
+                'status' => $client->status ?? 'active',
+            ];
+        }
+
+        return $items;
     }
 
     /**
