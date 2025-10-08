@@ -98,6 +98,9 @@ class UpdatePricingRuleRequest extends FormRequest
                         $validator->errors()->add('get_quantity', 'Get quantity is required for this rule type.');
                     }
                     break;
+
+                default:
+                    break;
             }
         });
     }
