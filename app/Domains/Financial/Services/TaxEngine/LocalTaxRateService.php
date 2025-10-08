@@ -384,43 +384,90 @@ class LocalTaxRateService
      */
     protected function getESDMappingForZip(string $zip): array
     {
-        // Use cached discovered mappings for performance
         $cacheKey = "esd_mapping_zip_{$zip}";
 
         return Cache::remember($cacheKey, 3600, function () use ($zip) {
-            // Query actual data to find ESDs for this ZIP
-            $esdJurisdictions = DB::table('address_tax_jurisdictions')
-                ->select('additional_jurisdictions')
-                ->where('zip_code', $zip)
-                ->where('state_code', 'TX')
-                ->whereNotNull('additional_jurisdictions')
-                ->limit(100)
-                ->get();
-
-            $esds = [];
-            foreach ($esdJurisdictions as $record) {
-                $additional = json_decode($record->additional_jurisdictions, true);
-                if (is_array($additional)) {
-                    foreach ($additional as $key => $jurisdictionId) {
-                        // Check if this is an ESD by looking at the jurisdiction details
-                        if (str_starts_with($key, 'spd') || str_contains($key, 'esd')) {
-                            $jurisdiction = DB::table('jurisdiction_master')
-                                ->where('id', $jurisdictionId)
-                                ->first();
-
-                            if ($jurisdiction && str_contains(strtoupper($jurisdiction->jurisdiction_name), 'ESD')) {
-                                // Extract ESD number from name
-                                if (preg_match('/ESD\s*(\d+)/i', $jurisdiction->jurisdiction_name, $matches)) {
-                                    $esds[] = 'ESD '.$matches[1];
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            $esdJurisdictions = $this->fetchEsdJurisdictionsForZip($zip);
+            $esds = $this->extractEsdsFromJurisdictions($esdJurisdictions);
 
             return array_unique($esds);
         });
+    }
+
+    protected function fetchEsdJurisdictionsForZip(string $zip)
+    {
+        return DB::table('address_tax_jurisdictions')
+            ->select('additional_jurisdictions')
+            ->where('zip_code', $zip)
+            ->where('state_code', 'TX')
+            ->whereNotNull('additional_jurisdictions')
+            ->limit(100)
+            ->get();
+    }
+
+    protected function extractEsdsFromJurisdictions($esdJurisdictions): array
+    {
+        $esds = [];
+
+        foreach ($esdJurisdictions as $record) {
+            $additional = json_decode($record->additional_jurisdictions, true);
+            
+            if (!is_array($additional)) {
+                continue;
+            }
+
+            $recordEsds = $this->processAdditionalJurisdictions($additional);
+            $esds = array_merge($esds, $recordEsds);
+        }
+
+        return $esds;
+    }
+
+    protected function processAdditionalJurisdictions(array $additional): array
+    {
+        $esds = [];
+
+        foreach ($additional as $key => $jurisdictionId) {
+            if (!$this->isEsdKey($key)) {
+                continue;
+            }
+
+            $esdName = $this->extractEsdNameFromJurisdiction($jurisdictionId);
+            
+            if ($esdName !== null) {
+                $esds[] = $esdName;
+            }
+        }
+
+        return $esds;
+    }
+
+    protected function isEsdKey(string $key): bool
+    {
+        return str_starts_with($key, 'spd') || str_contains($key, 'esd');
+    }
+
+    protected function extractEsdNameFromJurisdiction(int $jurisdictionId): ?string
+    {
+        $jurisdiction = DB::table('jurisdiction_master')
+            ->where('id', $jurisdictionId)
+            ->first();
+
+        if (!$jurisdiction) {
+            return null;
+        }
+
+        $jurisdictionName = strtoupper($jurisdiction->jurisdiction_name);
+        
+        if (!str_contains($jurisdictionName, 'ESD')) {
+            return null;
+        }
+
+        if (preg_match('/ESD\s*(\d+)/i', $jurisdiction->jurisdiction_name, $matches)) {
+            return 'ESD '.$matches[1];
+        }
+
+        return null;
     }
 
     /**
