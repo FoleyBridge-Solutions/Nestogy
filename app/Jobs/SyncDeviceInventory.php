@@ -7,6 +7,7 @@ use App\Domains\Integration\Models\Integration;
 use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Services\AssetSyncService;
 use App\Domains\Integration\Services\RmmServiceFactory;
+use App\Exceptions\DeviceSyncException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -133,7 +134,15 @@ class SyncDeviceInventory implements ShouldQueue
             $agentResponse = $rmmService->getAgent($this->deviceId);
 
             if (! $agentResponse['success']) {
-                throw new \Exception('Failed to get agent data: '.$agentResponse['error']);
+                throw new DeviceSyncException(
+                    $this->integration->provider,
+                    'Failed to get agent data: '.$agentResponse['error'],
+                    [
+                        'integration_id' => $this->integration->id,
+                        'device_id' => $this->deviceId,
+                        'provider' => $this->integration->provider,
+                    ]
+                );
             }
 
             // Use comprehensive sync
