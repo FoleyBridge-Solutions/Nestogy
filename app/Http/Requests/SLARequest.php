@@ -137,51 +137,79 @@ class SLARequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            // Validate response times are less than resolution times
-            $priorities = ['critical', 'high', 'medium', 'low'];
+            $this->validateResponseResolutionTimes($validator);
+            $this->validateEscalationLevels($validator);
+        });
+    }
 
-            foreach ($priorities as $priority) {
-                $responseField = $priority.'_response_minutes';
-                $resolutionField = $priority.'_resolution_minutes';
+    /**
+     * Validate that response times are less than resolution times.
+     */
+    private function validateResponseResolutionTimes($validator): void
+    {
+        $priorities = ['critical', 'high', 'medium', 'low'];
 
-                if ($this->has($responseField) && $this->has($resolutionField)) {
-                    if ($this->$responseField >= $this->$resolutionField) {
-                        $validator->errors()->add(
-                            $resolutionField,
-                            "Resolution time must be greater than response time for {$priority} priority."
-                        );
-                    }
-                }
-            }
+        foreach ($priorities as $priority) {
+            $responseField = $priority.'_response_minutes';
+            $resolutionField = $priority.'_resolution_minutes';
 
-            // Validate escalation levels if provided
-            if ($this->escalation_enabled && $this->escalation_levels) {
-                $percentages = collect($this->escalation_levels)
-                    ->pluck('percentage')
-                    ->filter()
-                    ->sort()
-                    ->values();
-
-                // Check for duplicate percentages
-                if ($percentages->count() !== $percentages->unique()->count()) {
+            if ($this->has($responseField) && $this->has($resolutionField)) {
+                if ($this->$responseField >= $this->$resolutionField) {
                     $validator->errors()->add(
-                        'escalation_levels',
-                        'Escalation percentages must be unique.'
+                        $resolutionField,
+                        "Resolution time must be greater than response time for {$priority} priority."
                     );
                 }
-
-                // Check for logical progression
-                for ($i = 1; $i < $percentages->count(); $i++) {
-                    if ($percentages[$i] <= $percentages[$i - 1]) {
-                        $validator->errors()->add(
-                            'escalation_levels',
-                            'Escalation percentages must be in ascending order.'
-                        );
-                        break;
-                    }
-                }
             }
-        });
+        }
+    }
+
+    /**
+     * Validate escalation levels configuration.
+     */
+    private function validateEscalationLevels($validator): void
+    {
+        if (!$this->escalation_enabled || !$this->escalation_levels) {
+            return;
+        }
+
+        $percentages = collect($this->escalation_levels)
+            ->pluck('percentage')
+            ->filter()
+            ->sort()
+            ->values();
+
+        $this->validateUniquePercentages($validator, $percentages);
+        $this->validatePercentageProgression($validator, $percentages);
+    }
+
+    /**
+     * Validate that escalation percentages are unique.
+     */
+    private function validateUniquePercentages($validator, $percentages): void
+    {
+        if ($percentages->count() !== $percentages->unique()->count()) {
+            $validator->errors()->add(
+                'escalation_levels',
+                'Escalation percentages must be unique.'
+            );
+        }
+    }
+
+    /**
+     * Validate that escalation percentages are in ascending order.
+     */
+    private function validatePercentageProgression($validator, $percentages): void
+    {
+        for ($i = 1; $i < $percentages->count(); $i++) {
+            if ($percentages[$i] <= $percentages[$i - 1]) {
+                $validator->errors()->add(
+                    'escalation_levels',
+                    'Escalation percentages must be in ascending order.'
+                );
+                break;
+            }
+        }
     }
 
     /**
