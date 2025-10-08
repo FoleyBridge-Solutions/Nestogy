@@ -22,6 +22,8 @@ use Illuminate\Validation\ValidationException;
  */
 class VoIPTaxController extends Controller
 {
+    private const VALIDATION_NULLABLE_BOOLEAN = 'nullable|boolean';
+
     /**
      * Calculate VoIP taxes for a service amount.
      */
@@ -83,7 +85,7 @@ class VoIPTaxController extends Controller
                 'category_id' => 'nullable|integer|exists:tax_categories,id',
                 'service_type' => 'nullable|string',
                 'tax_type' => 'nullable|string|in:federal,state,local,municipal,county,special_district',
-                'is_active' => 'nullable|boolean',
+                'is_active' => self::VALIDATION_NULLABLE_BOOLEAN,
                 'effective_date' => 'nullable|date',
             ]);
 
@@ -184,7 +186,7 @@ class VoIPTaxController extends Controller
             $validated = $request->validate([
                 'jurisdiction_type' => 'nullable|string|in:federal,state,county,city,municipality,special_district,zip_code',
                 'state_code' => 'nullable|string|size:2',
-                'is_active' => 'nullable|boolean',
+                'is_active' => self::VALIDATION_NULLABLE_BOOLEAN,
             ]);
 
             $companyId = auth()->user()->company_id;
@@ -250,8 +252,8 @@ class VoIPTaxController extends Controller
         try {
             $validated = $request->validate([
                 'category_type' => 'nullable|string|in:telecommunications,internet,data_services,equipment,installation,maintenance,hosting,software',
-                'is_taxable' => 'nullable|boolean',
-                'is_active' => 'nullable|boolean',
+                'is_taxable' => self::VALIDATION_NULLABLE_BOOLEAN,
+                'is_active' => self::VALIDATION_NULLABLE_BOOLEAN,
             ]);
 
             $companyId = auth()->user()->company_id;
