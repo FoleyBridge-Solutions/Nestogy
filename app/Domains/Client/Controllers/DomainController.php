@@ -14,6 +14,8 @@ class DomainController extends Controller
 {
     use UsesSelectedClient;
 
+    private const COST_VALIDATION_RULE = 'nullable|numeric|min:0';
+
     /**
      * Display a listing of domains for the selected client
      */
@@ -138,8 +140,8 @@ class DomainController extends Controller
             'lock_status' => 'boolean',
             'whois_guard' => 'boolean',
             'transfer_lock' => 'boolean',
-            'purchase_cost' => 'nullable|numeric|min:0',
-            'renewal_cost' => 'nullable|numeric|min:0',
+            'purchase_cost' => self::COST_VALIDATION_RULE,
+            'renewal_cost' => self::COST_VALIDATION_RULE,
             'transfer_auth_code' => 'nullable|string|max:255',
             'dns_records_count' => 'nullable|integer|min:0',
             'subdomains_count' => 'nullable|integer|min:0',
@@ -267,8 +269,8 @@ class DomainController extends Controller
             'lock_status' => 'boolean',
             'whois_guard' => 'boolean',
             'transfer_lock' => 'boolean',
-            'purchase_cost' => 'nullable|numeric|min:0',
-            'renewal_cost' => 'nullable|numeric|min:0',
+            'purchase_cost' => self::COST_VALIDATION_RULE,
+            'renewal_cost' => self::COST_VALIDATION_RULE,
             'transfer_auth_code' => 'nullable|string|max:255',
             'dns_records_count' => 'nullable|integer|min:0',
             'subdomains_count' => 'nullable|integer|min:0',
