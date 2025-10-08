@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ITDocumentationController extends Controller
 {
+    private const VALIDATION_RULE_CLIENT_ID = 'required|exists:clients,id';
+
     protected ClientITDocumentationService $service;
 
     protected DocumentationTemplateService $templateService;
@@ -118,7 +120,7 @@ class ITDocumentationController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
+            'client_id' => self::VALIDATION_RULE_CLIENT_ID,
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'it_category' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getITCategories())),
@@ -257,7 +259,7 @@ class ITDocumentationController extends Controller
         $this->authorize('update', $itDocumentation);
 
         $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
+            'client_id' => self::VALIDATION_RULE_CLIENT_ID,
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'it_category' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getITCategories())),
@@ -352,7 +354,7 @@ class ITDocumentationController extends Controller
         $this->authorize('view', $itDocumentation);
 
         $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
+            'client_id' => self::VALIDATION_RULE_CLIENT_ID,
         ]);
 
         $duplicated = $this->service->duplicateForClient($itDocumentation, $validated['client_id']);
