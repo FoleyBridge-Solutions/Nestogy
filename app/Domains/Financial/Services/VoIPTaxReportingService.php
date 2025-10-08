@@ -334,7 +334,7 @@ class VoIPTaxReportingService
         $report['revenue_by_rate'] = array_slice($report['rate_utilization'], 0, 10);
 
         // Rate changes analysis
-        $report['rate_changes'] = $this->analyzeRateChanges($startDate, $endDate);
+        $report['rate_changes'] = $this->analyzeRateChanges($endDate);
 
         // Generate recommendations
         $report['recommendations'] = $this->generateRateRecommendations($report['rate_utilization']);
@@ -721,7 +721,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function analyzeRateChanges($startDate, $endDate)
+    protected function analyzeRateChanges($endDate)
     {
         return [];
     }
