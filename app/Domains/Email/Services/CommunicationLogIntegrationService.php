@@ -12,7 +12,7 @@ class CommunicationLogIntegrationService
     public function createCommunicationLogFromEmail(EmailMessage $emailMessage): ?CommunicationLog
     {
         try {
-            // Skip if already logged
+            // Skip if already logged or no client found
             if ($emailMessage->is_communication_logged) {
                 return null;
             }
@@ -81,9 +81,9 @@ class CommunicationLogIntegrationService
                 'email_message_id' => $emailMessage->id,
                 'error' => $e->getMessage(),
             ]);
-
-            return null;
         }
+
+        return null;
     }
 
     private function findClientFromEmailAddresses(EmailMessage $emailMessage): ?Client
