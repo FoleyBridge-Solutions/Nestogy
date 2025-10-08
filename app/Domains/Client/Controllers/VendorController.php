@@ -14,6 +14,8 @@ class VendorController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING_50 = 'nullable|string|max:50';
+
     /**
      * Display a listing of vendors for the selected client
      */
@@ -143,7 +145,7 @@ class VendorController extends Controller
             'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
+            'phone' => self::VALIDATION_NULLABLE_STRING_50,
             'website' => 'nullable|url|max:255',
             'address_line_1' => 'nullable|string|max:255',
             'address_line_2' => 'nullable|string|max:255',
@@ -151,7 +153,7 @@ class VendorController extends Controller
             'state' => 'nullable|string|max:100',
             'zip_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
-            'tax_id' => 'nullable|string|max:50',
+            'tax_id' => self::VALIDATION_NULLABLE_STRING_50,
             'account_number' => 'nullable|string|max:100',
             'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
             'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
@@ -287,7 +289,7 @@ class VendorController extends Controller
             'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
+            'phone' => self::VALIDATION_NULLABLE_STRING_50,
             'website' => 'nullable|url|max:255',
             'address_line_1' => 'nullable|string|max:255',
             'address_line_2' => 'nullable|string|max:255',
@@ -295,7 +297,7 @@ class VendorController extends Controller
             'state' => 'nullable|string|max:100',
             'zip_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
-            'tax_id' => 'nullable|string|max:50',
+            'tax_id' => self::VALIDATION_NULLABLE_STRING_50,
             'account_number' => 'nullable|string|max:100',
             'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
             'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
