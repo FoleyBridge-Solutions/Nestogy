@@ -15,6 +15,8 @@ use Illuminate\View\View;
 
 class CampaignController extends BaseResourceController
 {
+    private const VALIDATION_REQUIRED_STRING_255 = 'required|string|max:255';
+
     protected CampaignEmailService $campaignEmailService;
 
     public function __construct(CampaignEmailService $campaignEmailService)
@@ -100,7 +102,7 @@ class CampaignController extends BaseResourceController
     public function store(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255,
             'description' => 'nullable|string',
             'type' => 'required|in:email,nurture,drip,event,webinar,content',
             'settings' => 'nullable|array',
@@ -191,7 +193,7 @@ class CampaignController extends BaseResourceController
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255,
             'description' => 'nullable|string',
             'type' => 'required|in:email,nurture,drip,event,webinar,content',
             'settings' => 'nullable|array',
@@ -361,10 +363,10 @@ class CampaignController extends BaseResourceController
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255,
             'delay_days' => 'required|integer|min:0|max:365',
             'delay_hours' => 'required|integer|min:0|max:23',
-            'subject_line' => 'required|string|max:255',
+            'subject_line' => self::VALIDATION_REQUIRED_STRING_255,
             'email_template' => 'required|string',
             'email_text' => 'nullable|string',
             'send_time' => 'nullable|date_format:H:i',
