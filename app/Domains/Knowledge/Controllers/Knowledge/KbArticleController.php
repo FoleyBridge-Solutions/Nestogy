@@ -19,6 +19,8 @@ use Illuminate\View\View;
  */
 class KbArticleController extends Controller
 {
+    private const VALIDATION_RULE_ARTICLE_EXISTS = 'exists:kb_articles,id';
+
     public function __construct(
         protected KnowledgeBaseService $knowledgeBaseService,
         protected ArticleSearchService $searchService
@@ -126,7 +128,7 @@ class KbArticleController extends Controller
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'related_article_ids' => 'nullable|array',
-            'related_article_ids.*' => 'exists:kb_articles,id',
+            'related_article_ids.*' => self::VALIDATION_RULE_ARTICLE_EXISTS,
             'client_ids' => 'nullable|array',
             'client_ids.*' => 'exists:clients,id',
         ]);
@@ -218,7 +220,7 @@ class KbArticleController extends Controller
             'tags' => 'nullable|array',
             'tags.*' => 'string|max:50',
             'related_article_ids' => 'nullable|array',
-            'related_article_ids.*' => 'exists:kb_articles,id',
+            'related_article_ids.*' => self::VALIDATION_RULE_ARTICLE_EXISTS,
             'client_ids' => 'nullable|array',
             'client_ids.*' => 'exists:clients,id',
         ]);
@@ -323,7 +325,7 @@ class KbArticleController extends Controller
         $validatedData = $request->validate([
             'action' => 'required|in:publish,unpublish,archive,delete',
             'article_ids' => 'required|array|min:1',
-            'article_ids.*' => 'exists:kb_articles,id',
+            'article_ids.*' => self::VALIDATION_RULE_ARTICLE_EXISTS,
         ]);
 
         $articles = KbArticle::where('company_id', auth()->user()->company_id)
