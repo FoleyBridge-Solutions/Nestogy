@@ -734,7 +734,7 @@ NESTOGY COLLECTIONS DEPARTMENT
         return ['violation' => $client->do_not_call ?? false];
     }
 
-    protected function checkOptOutHandling(Client $client): array
+    protected function checkOptOutHandling(Client $_client): array
     {
         return ['violations' => false];
     }
