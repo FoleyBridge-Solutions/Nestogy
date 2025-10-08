@@ -104,6 +104,7 @@ class Inbox extends Component
     {
         $this->resetPage();
         $this->selected = [];
+        $this->folderId = null;
         $this->messageId = null;
     }
 
