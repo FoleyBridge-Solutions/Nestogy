@@ -313,27 +313,21 @@ class PortalInvitationService
      */
     protected function validateContactForInvitation(Contact $contact): array
     {
-        // Check if contact has email
+        $errorMessage = null;
+
         if (! $contact->email) {
-            return ['valid' => false, 'message' => 'Contact must have an email address'];
+            $errorMessage = 'Contact must have an email address';
+        } elseif ($contact->invitation_status === 'accepted') {
+            $errorMessage = 'Contact has already accepted an invitation';
+        } elseif (! $contact->client || $contact->client->status !== 'active') {
+            $errorMessage = 'Client must be active to send invitations';
+        } elseif ($contact->password_hash && ! $contact->invitation_token) {
+            $errorMessage = 'Contact already has portal access configured';
         }
 
-        // Check if already has accepted invitation
-        if ($contact->invitation_status === 'accepted') {
-            return ['valid' => false, 'message' => 'Contact has already accepted an invitation'];
-        }
-
-        // Check if client is active
-        if (! $contact->client || $contact->client->status !== 'active') {
-            return ['valid' => false, 'message' => 'Client must be active to send invitations'];
-        }
-
-        // Check if contact already has password set
-        if ($contact->password_hash && ! $contact->invitation_token) {
-            return ['valid' => false, 'message' => 'Contact already has portal access configured'];
-        }
-
-        return ['valid' => true];
+        return $errorMessage 
+            ? ['valid' => false, 'message' => $errorMessage]
+            : ['valid' => true];
     }
 
     /**
