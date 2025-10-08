@@ -117,7 +117,7 @@ class EmailAccount extends Model
 
     public function getImapPasswordAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptAttribute($value);
     }
 
     public function setSmtpPasswordAttribute($value)
@@ -129,7 +129,7 @@ class EmailAccount extends Model
 
     public function getSmtpPasswordAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptAttribute($value);
     }
 
     // OAuth token encryption
@@ -142,7 +142,7 @@ class EmailAccount extends Model
 
     public function getOauthAccessTokenAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptAttribute($value);
     }
 
     public function setOauthRefreshTokenAttribute($value)
@@ -153,6 +153,11 @@ class EmailAccount extends Model
     }
 
     public function getOauthRefreshTokenAttribute($value)
+    {
+        return $this->decryptAttribute($value);
+    }
+
+    private function decryptAttribute($value)
     {
         return $value ? Crypt::decryptString($value) : null;
     }
