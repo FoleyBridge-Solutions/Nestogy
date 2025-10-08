@@ -14,6 +14,8 @@ class LicenseController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of licenses for the selected client
      */
@@ -111,11 +113,11 @@ class LicenseController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'license_type' => 'required|in:'.implode(',', array_keys(ClientLicense::getLicenseTypes())),
-            'license_key' => 'nullable|string|max:500',
-            'vendor' => 'nullable|string|max:255',
-            'version' => 'nullable|string|max:100',
+            'license_key' => self::NULLABLE_STRING.'|max:500',
+            'vendor' => self::NULLABLE_STRING.'|max:255',
+            'version' => self::NULLABLE_STRING.'|max:100',
             'seats' => 'nullable|integer|min:1|max:999999',
             'purchase_date' => 'nullable|date|before_or_equal:today',
             'renewal_date' => 'nullable|date',
@@ -125,8 +127,8 @@ class LicenseController extends Controller
             'is_active' => 'boolean',
             'auto_renewal' => 'boolean',
             'support_level' => 'nullable|in:'.implode(',', array_keys(ClientLicense::getSupportLevels())),
-            'license_terms' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'license_terms' => self::NULLABLE_STRING,
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -188,11 +190,11 @@ class LicenseController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'license_type' => 'required|in:'.implode(',', array_keys(ClientLicense::getLicenseTypes())),
-            'license_key' => 'nullable|string|max:500',
-            'vendor' => 'nullable|string|max:255',
-            'version' => 'nullable|string|max:100',
+            'license_key' => self::NULLABLE_STRING.'|max:500',
+            'vendor' => self::NULLABLE_STRING.'|max:255',
+            'version' => self::NULLABLE_STRING.'|max:100',
             'seats' => 'nullable|integer|min:1|max:999999',
             'purchase_date' => 'nullable|date|before_or_equal:today',
             'renewal_date' => 'nullable|date',
@@ -202,8 +204,8 @@ class LicenseController extends Controller
             'is_active' => 'boolean',
             'auto_renewal' => 'boolean',
             'support_level' => 'nullable|in:'.implode(',', array_keys(ClientLicense::getSupportLevels())),
-            'license_terms' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'license_terms' => self::NULLABLE_STRING,
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
