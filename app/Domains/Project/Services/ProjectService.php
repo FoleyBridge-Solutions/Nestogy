@@ -691,8 +691,16 @@ class ProjectService
         $metrics = $this->getBudgetMetrics($project);
         $utilization = $metrics['budget_utilization'];
 
+        if ($utilization <= 80) {
+            $status = 'good';
+        } elseif ($utilization <= 95) {
+            $status = 'warning';
+        } else {
+            $status = 'critical';
+        }
+
         return [
-            'status' => $utilization <= 80 ? 'good' : ($utilization <= 95 ? 'warning' : 'critical'),
+            'status' => $status,
             'utilization' => $utilization,
             'message' => $utilization <= 100 ? "{$utilization}% of budget used" : ($utilization - 100).'% over budget',
         ];
