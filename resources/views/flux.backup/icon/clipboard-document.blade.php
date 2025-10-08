@@ -46,6 +46,4 @@ $classes = Flux::classes('shrink-0')
   <path d="M3 6a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-3.586a1 1 0 0 0-.293-.707L7.293 6.293A1 1 0 0 0 6.586 6H3Z"/>
 </svg>
 
-        <?php break; ?>
-
 <?php endswitch; ?>
