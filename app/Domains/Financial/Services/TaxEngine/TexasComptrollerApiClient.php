@@ -33,7 +33,6 @@ class TexasComptrollerApiClient
     public function calculateTexasTax(
         float $amount,
         array $destination,
-        ?array $origin = null,
         ?string $customerId = null,
         array $lineItems = []
     ): array {
