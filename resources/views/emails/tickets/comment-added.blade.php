@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>New Comment Added - Ticket #{{ $ticket->number }}</title>
     <meta charset="UTF-8">
