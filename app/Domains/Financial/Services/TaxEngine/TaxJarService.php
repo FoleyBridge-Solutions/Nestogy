@@ -23,27 +23,9 @@ class TaxJarService extends BaseTaxDataService
         $address = $params['service_address'] ?? [];
 
         if (empty($address['zip_code'])) {
-            Log::warning('TaxJar: No zip code provided for tax calculation', [
-                'company_id' => $this->companyId,
-                'params' => $params,
-            ]);
-
-            return [
-                'base_amount' => $params['amount'] ?? 0,
-                'total_tax_amount' => 0.0,
-                'tax_breakdown' => [],
-                'jurisdictions' => [],
-                'final_amount' => $params['amount'] ?? 0,
-                'calculation_date' => now()->toISOString(),
-                'service_type' => $params['service_type'] ?? 'general',
-                'federal_taxes' => [],
-                'state_taxes' => [],
-                'local_taxes' => [],
-                'exemptions_applied' => [],
-            ];
+            return $this->getEmptyTaxCalculation($params);
         }
 
-        // Build API URL with parameters
         $queryParams = [
             'street' => $address['address'] ?? '',
             'city' => $address['city'] ?? '',
@@ -69,7 +51,6 @@ class TaxJarService extends BaseTaxDataService
 
             $taxData = $response->json();
 
-            // Debug: show what we got from the API
             Log::info('TaxJar API Response', [
                 'url' => $apiUrl,
                 'response' => $taxData,
@@ -87,6 +68,31 @@ class TaxJarService extends BaseTaxDataService
 
             return $this->getFallbackTaxCalculation($params);
         }
+    }
+
+    /**
+     * Get empty tax calculation when no zip code is provided
+     */
+    protected function getEmptyTaxCalculation(array $params): array
+    {
+        Log::warning('TaxJar: No zip code provided for tax calculation', [
+            'company_id' => $this->companyId,
+            'params' => $params,
+        ]);
+
+        return [
+            'base_amount' => $params['amount'] ?? 0,
+            'total_tax_amount' => 0.0,
+            'tax_breakdown' => [],
+            'jurisdictions' => [],
+            'final_amount' => $params['amount'] ?? 0,
+            'calculation_date' => now()->toISOString(),
+            'service_type' => $params['service_type'] ?? 'general',
+            'federal_taxes' => [],
+            'state_taxes' => [],
+            'local_taxes' => [],
+            'exemptions_applied' => [],
+        ];
     }
 
     /**
