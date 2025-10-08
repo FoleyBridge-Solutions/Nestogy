@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BillingFinancialSettingsRequest extends FormRequest
 {
+    private const VALIDATION_LONG_TEXT = 'nullable|string|max:1000';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -140,8 +142,8 @@ class BillingFinancialSettingsRequest extends FormRequest
             'quickbooks_settings.company_id' => 'nullable|string|max:255',
             'quickbooks_settings.client_id' => 'nullable|string|max:255',
             'quickbooks_settings.client_secret' => 'nullable|string|max:255',
-            'quickbooks_settings.access_token' => 'nullable|string|max:1000',
-            'quickbooks_settings.refresh_token' => 'nullable|string|max:1000',
+            'quickbooks_settings.access_token' => self::VALIDATION_LONG_TEXT,
+            'quickbooks_settings.refresh_token' => self::VALIDATION_LONG_TEXT,
             'quickbooks_settings.sandbox_mode' => 'boolean',
 
             // Xero Settings
@@ -150,8 +152,8 @@ class BillingFinancialSettingsRequest extends FormRequest
             'xero_settings.client_id' => 'nullable|string|max:255',
             'xero_settings.client_secret' => 'nullable|string|max:255',
             'xero_settings.tenant_id' => 'nullable|string|max:255',
-            'xero_settings.access_token' => 'nullable|string|max:1000',
-            'xero_settings.refresh_token' => 'nullable|string|max:1000',
+            'xero_settings.access_token' => self::VALIDATION_LONG_TEXT,
+            'xero_settings.refresh_token' => self::VALIDATION_LONG_TEXT,
 
             // Sage Settings
             'sage_settings' => 'nullable|array',
@@ -188,7 +190,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             // Invoice Settings
             'invoice_prefix' => 'nullable|string|max:10',
             'invoice_next_number' => 'nullable|integer|min:1',
-            'invoice_footer' => 'nullable|string|max:1000',
+            'invoice_footer' => self::VALIDATION_LONG_TEXT,
             'invoice_from_name' => 'nullable|string|max:255',
             'invoice_from_email' => 'nullable|email|max:255',
             'invoice_late_fee_enable' => 'boolean',
@@ -197,7 +199,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             // Quote Settings
             'quote_prefix' => 'nullable|string|max:10',
             'quote_next_number' => 'nullable|integer|min:1',
-            'quote_footer' => 'nullable|string|max:1000',
+            'quote_footer' => self::VALIDATION_LONG_TEXT,
             'quote_from_name' => 'nullable|string|max:255',
             'quote_from_email' => 'nullable|email|max:255',
 
@@ -216,7 +218,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             // Invoice Reminders
             'recurring_auto_send_invoice' => 'boolean',
             'send_invoice_reminders' => 'boolean',
-            'invoice_overdue_reminders' => 'nullable|string|max:1000',
+            'invoice_overdue_reminders' => self::VALIDATION_LONG_TEXT,
         ];
     }
 
