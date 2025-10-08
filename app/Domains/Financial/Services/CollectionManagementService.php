@@ -264,7 +264,19 @@ class CollectionManagementService
             'risk_score' => 0,
         ];
 
-        // Analyze collection notes
+        $this->processCollectionNotes($collectionNotes, $patterns);
+        $this->calculateBehavioralMetrics($client, $patterns);
+        $patterns['cooperation_level'] = $this->determineCooperationLevel($patterns);
+        $patterns['risk_score'] = $this->calculateBehavioralRiskScore($patterns);
+
+        return $patterns;
+    }
+
+    /**
+     * Process collection notes to extract behavioral data.
+     */
+    protected function processCollectionNotes(Collection $collectionNotes, array &$patterns): void
+    {
         foreach ($collectionNotes as $note) {
             if ($note->outcome === CollectionNote::OUTCOME_SPOKE_WITH_CLIENT) {
                 $patterns['successful_contacts']++;
@@ -285,8 +297,13 @@ class CollectionManagementService
                 $patterns['hostile_interactions']++;
             }
         }
+    }
 
-        // Calculate metrics
+    /**
+     * Calculate behavioral metrics from patterns data.
+     */
+    protected function calculateBehavioralMetrics(Client $client, array &$patterns): void
+    {
         $totalAttempts = DunningAction::where('client_id', $client->id)
             ->where('created_at', '>=', Carbon::now()->subMonths(6))
             ->count();
@@ -300,16 +317,31 @@ class CollectionManagementService
             $patterns['promise_to_pay_reliability'] =
                 ($patterns['promises_kept'] / $patterns['promises_made']) * 100;
         }
+    }
 
-        // Determine cooperation level
+    /**
+     * Determine cooperation level based on behavioral patterns.
+     */
+    protected function determineCooperationLevel(array $patterns): string
+    {
         if ($patterns['hostile_interactions'] > 2) {
-            $patterns['cooperation_level'] = 'hostile';
-        } elseif ($patterns['communication_responsiveness'] > 70) {
-            $patterns['cooperation_level'] = 'cooperative';
+            return 'hostile';
         }
 
-        // Calculate risk score
+        if ($patterns['communication_responsiveness'] > 70) {
+            return 'cooperative';
+        }
+
+        return 'neutral';
+    }
+
+    /**
+     * Calculate risk score from behavioral patterns.
+     */
+    protected function calculateBehavioralRiskScore(array $patterns): int
+    {
         $riskScore = 0;
+
         if ($patterns['communication_responsiveness'] < 30) {
             $riskScore += 25;
         }
@@ -323,9 +355,7 @@ class CollectionManagementService
             $riskScore += 20;
         }
 
-        $patterns['risk_score'] = min(100, $riskScore);
-
-        return $patterns;
+        return min(100, $riskScore);
     }
 
     /**
