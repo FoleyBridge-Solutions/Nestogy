@@ -320,7 +320,7 @@ class VoIPTaxReportingService
         $invoices = $this->getInvoicesForPeriod($startDate, $endDate);
 
         foreach ($taxRates as $rate) {
-            $usage = $this->analyzeTaxRateUsage($rate, $invoices);
+            $usage = $this->analyzeTaxRateUsage($invoices);
             if ($usage['applications'] > 0) {
                 $report['rate_utilization'][] = $usage;
             }
@@ -716,7 +716,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function analyzeTaxRateUsage($rate, $invoices)
+    protected function analyzeTaxRateUsage($invoices)
     {
         return [];
     }
