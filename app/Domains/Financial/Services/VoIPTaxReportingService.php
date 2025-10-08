@@ -337,7 +337,7 @@ class VoIPTaxReportingService
         $report['rate_changes'] = $this->analyzeRateChanges($startDate, $endDate);
 
         // Generate recommendations
-        $report['recommendations'] = $this->generateRateRecommendations($report['rate_utilization']);
+        $report['recommendations'] = $this->generateRateRecommendations();
 
         return $report;
     }
@@ -726,7 +726,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function generateRateRecommendations($utilization)
+    protected function generateRateRecommendations()
     {
         return [];
     }
