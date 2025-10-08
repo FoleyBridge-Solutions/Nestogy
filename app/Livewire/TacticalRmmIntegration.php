@@ -85,11 +85,8 @@ class TacticalRmmIntegration extends Component
 
     public function toggleIntegration()
     {
-        if (! $this->enabled && $this->integrationSaved) {
-            // Disable the integration
-            if ($this->integration) {
-                $this->integration->update(['is_active' => false]);
-            }
+        if (! $this->enabled && $this->integrationSaved && $this->integration) {
+            $this->integration->update(['is_active' => false]);
         }
     }
 
