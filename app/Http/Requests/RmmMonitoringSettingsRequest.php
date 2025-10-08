@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RmmMonitoringSettingsRequest extends FormRequest
 {
+    private const SYNC_FREQUENCY_VALIDATION = 'integer|min:5|max:1440';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -27,7 +29,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'connectwise_automate_settings.username' => 'nullable|string|max:255',
             'connectwise_automate_settings.password' => 'nullable|string|max:255',
             'connectwise_automate_settings.client_id' => 'nullable|string|max:255',
-            'connectwise_automate_settings.sync_frequency_minutes' => 'integer|min:5|max:1440',
+            'connectwise_automate_settings.sync_frequency_minutes' => self::SYNC_FREQUENCY_VALIDATION,
             'connectwise_automate_settings.auto_create_tickets' => 'boolean',
             'connectwise_automate_settings.sync_clients' => 'boolean',
             'connectwise_automate_settings.sync_assets' => 'boolean',
@@ -39,7 +41,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'datto_rmm_settings.api_url' => 'nullable|url|max:255',
             'datto_rmm_settings.api_key' => 'nullable|string|max:255',
             'datto_rmm_settings.api_secret' => 'nullable|string|max:255',
-            'datto_rmm_settings.sync_frequency_minutes' => 'integer|min:5|max:1440',
+            'datto_rmm_settings.sync_frequency_minutes' => self::SYNC_FREQUENCY_VALIDATION,
             'datto_rmm_settings.auto_create_tickets' => 'boolean',
             'datto_rmm_settings.sync_devices' => 'boolean',
             'datto_rmm_settings.sync_alerts' => 'boolean',
@@ -54,7 +56,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'ninja_rmm_settings.client_secret' => 'nullable|string|max:255',
             'ninja_rmm_settings.access_token' => 'nullable|string|max:1000',
             'ninja_rmm_settings.refresh_token' => 'nullable|string|max:1000',
-            'ninja_rmm_settings.sync_frequency_minutes' => 'integer|min:5|max:1440',
+            'ninja_rmm_settings.sync_frequency_minutes' => self::SYNC_FREQUENCY_VALIDATION,
             'ninja_rmm_settings.auto_create_tickets' => 'boolean',
             'ninja_rmm_settings.sync_organizations' => 'boolean',
             'ninja_rmm_settings.sync_devices' => 'boolean',
@@ -68,7 +70,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'kaseya_vsa_settings.username' => 'nullable|string|max:255',
             'kaseya_vsa_settings.password' => 'nullable|string|max:255',
             'kaseya_vsa_settings.session_id' => 'nullable|string|max:255',
-            'kaseya_vsa_settings.sync_frequency_minutes' => 'integer|min:5|max:1440',
+            'kaseya_vsa_settings.sync_frequency_minutes' => self::SYNC_FREQUENCY_VALIDATION,
             'kaseya_vsa_settings.auto_create_tickets' => 'boolean',
             'kaseya_vsa_settings.sync_agents' => 'boolean',
             'kaseya_vsa_settings.sync_alarms' => 'boolean',
@@ -81,7 +83,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'auvik_settings.api_url' => 'nullable|url|max:255',
             'auvik_settings.username' => 'nullable|string|max:255',
             'auvik_settings.api_key' => 'nullable|string|max:255',
-            'auvik_settings.sync_frequency_minutes' => 'integer|min:5|max:1440',
+            'auvik_settings.sync_frequency_minutes' => self::SYNC_FREQUENCY_VALIDATION,
             'auvik_settings.auto_create_tickets' => 'boolean',
             'auvik_settings.sync_devices' => 'boolean',
             'auvik_settings.sync_networks' => 'boolean',
@@ -96,7 +98,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'prtg_settings.username' => 'nullable|string|max:255',
             'prtg_settings.password' => 'nullable|string|max:255',
             'prtg_settings.passhash' => 'nullable|string|max:255',
-            'prtg_settings.sync_frequency_minutes' => 'integer|min:5|max:1440',
+            'prtg_settings.sync_frequency_minutes' => self::SYNC_FREQUENCY_VALIDATION,
             'prtg_settings.auto_create_tickets' => 'boolean',
             'prtg_settings.sync_sensors' => 'boolean',
             'prtg_settings.sync_devices' => 'boolean',
@@ -110,7 +112,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'solarwinds_settings.username' => 'nullable|string|max:255',
             'solarwinds_settings.password' => 'nullable|string|max:255',
             'solarwinds_settings.certificate_file' => 'nullable|string|max:255',
-            'solarwinds_settings.sync_frequency_minutes' => 'integer|min:5|max:1440',
+            'solarwinds_settings.sync_frequency_minutes' => self::SYNC_FREQUENCY_VALIDATION,
             'solarwinds_settings.auto_create_tickets' => 'boolean',
             'solarwinds_settings.sync_nodes' => 'boolean',
             'solarwinds_settings.sync_interfaces' => 'boolean',
@@ -128,12 +130,12 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'monitoring_alert_thresholds.network_latency_critical' => 'integer|min:100|max:5000',
             'monitoring_alert_thresholds.network_latency_warning' => 'integer|min:50|max:2000',
             'monitoring_alert_thresholds.uptime_critical_hours' => 'integer|min:1|max:168',
-            'monitoring_alert_thresholds.offline_duration_minutes' => 'integer|min:5|max:1440',
+            'monitoring_alert_thresholds.offline_duration_minutes' => self::SYNC_FREQUENCY_VALIDATION,
 
             // Escalation Rules
             'escalation_rules' => 'nullable|array',
             'escalation_rules.enabled' => 'boolean',
-            'escalation_rules.first_escalation_minutes' => 'integer|min:5|max:1440',
+            'escalation_rules.first_escalation_minutes' => self::SYNC_FREQUENCY_VALIDATION,
             'escalation_rules.second_escalation_minutes' => 'integer|min:10|max:2880',
             'escalation_rules.final_escalation_minutes' => 'integer|min:15|max:4320',
             'escalation_rules.escalate_to_manager' => 'boolean',
