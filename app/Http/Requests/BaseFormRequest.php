@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 abstract class BaseFormRequest extends FormRequest
 {
+    protected const MAX_STRING_LENGTH = 'max:255';
+
     protected string $modelClass;
 
     protected bool $requiresCompanyValidation = true;
@@ -74,7 +76,7 @@ abstract class BaseFormRequest extends FormRequest
 
         // Common field validations
         if ($this->hasField('name')) {
-            $rules['name'] = ['required', 'string', 'max:255'];
+            $rules['name'] = ['required', 'string', self::MAX_STRING_LENGTH];
         }
 
         if ($this->hasField('description')) {
@@ -94,7 +96,7 @@ abstract class BaseFormRequest extends FormRequest
         }
 
         if ($this->hasField('email')) {
-            $rules['email'] = ['nullable', 'email', 'max:255'];
+            $rules['email'] = ['nullable', 'email', self::MAX_STRING_LENGTH];
         }
 
         if ($this->hasField('phone')) {
@@ -102,7 +104,7 @@ abstract class BaseFormRequest extends FormRequest
         }
 
         if ($this->hasField('website')) {
-            $rules['website'] = ['nullable', 'url', 'max:255'];
+            $rules['website'] = ['nullable', 'url', self::MAX_STRING_LENGTH];
         }
 
         // Company-scoped relationship validations
