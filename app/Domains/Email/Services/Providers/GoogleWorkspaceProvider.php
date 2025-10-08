@@ -2,6 +2,7 @@
 
 namespace App\Domains\Email\Services\Providers;
 
+use App\Exceptions\EmailProviderException;
 use App\Models\Company;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -184,7 +185,15 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
                 'response' => $response->body(),
                 'status' => $response->status(),
             ]);
-            throw new \Exception("Failed to retrieve Gmail message: {$messageId}");
+            throw new EmailProviderException(
+                'Google Workspace',
+                "Failed to retrieve Gmail message: {$messageId}",
+                [
+                    'message_id' => $messageId,
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                ]
+            );
         }
 
         return $response->json();
