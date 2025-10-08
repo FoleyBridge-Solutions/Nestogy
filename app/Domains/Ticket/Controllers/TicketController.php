@@ -34,6 +34,8 @@ class TicketController extends Controller
 {
     use FiltersClientsByAssignment, UsesSelectedClient;
 
+    private const ERROR_MERGE_TICKET_FAILED = 'Failed to merge ticket';
+
     /**
      * Display a listing of tickets
      */
@@ -1249,7 +1251,7 @@ class TicketController extends Controller
                 ->with('success', "Ticket merged successfully into #{$targetTicketNum}");
 
         } catch (\Exception $e) {
-            Log::error('Failed to merge ticket', [
+            Log::error(self::ERROR_MERGE_TICKET_FAILED, [
                 'ticket_id' => $ticket->id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
@@ -1258,12 +1260,12 @@ class TicketController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to merge ticket',
+                    'message' => self::ERROR_MERGE_TICKET_FAILED,
                 ], 500);
             }
 
             return redirect()->route('tickets.show', $ticket)
-                ->with('error', 'Failed to merge ticket');
+                ->with('error', self::ERROR_MERGE_TICKET_FAILED);
         }
     }
 
