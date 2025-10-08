@@ -14,6 +14,8 @@ class CalendarEventController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_REQUIRED_IN = 'required|in:';
+
     /**
      * Display a listing of calendar events for the selected client
      */
@@ -111,13 +113,13 @@ class CalendarEventController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'event_type' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getTypes())),
+            'event_type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCalendarEvent::getTypes())),
             'location' => 'nullable|string|max:255',
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after:start_datetime',
             'all_day' => 'boolean',
-            'status' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getStatuses())),
-            'priority' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getPriorities())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCalendarEvent::getStatuses())),
+            'priority' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCalendarEvent::getPriorities())),
             'attendees' => 'nullable|string',
             'reminder_minutes' => 'nullable|in:'.implode(',', array_keys(ClientCalendarEvent::getReminderOptions())),
             'notes' => 'nullable|string',
@@ -211,13 +213,13 @@ class CalendarEventController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'event_type' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getTypes())),
+            'event_type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCalendarEvent::getTypes())),
             'location' => 'nullable|string|max:255',
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after:start_datetime',
             'all_day' => 'boolean',
-            'status' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getStatuses())),
-            'priority' => 'required|in:'.implode(',', array_keys(ClientCalendarEvent::getPriorities())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCalendarEvent::getStatuses())),
+            'priority' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientCalendarEvent::getPriorities())),
             'attendees' => 'nullable|string',
             'reminder_minutes' => 'nullable|in:'.implode(',', array_keys(ClientCalendarEvent::getReminderOptions())),
             'notes' => 'nullable|string',
