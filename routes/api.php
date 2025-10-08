@@ -10,6 +10,8 @@ use App\Domains\Integration\Http\Controllers\Webhooks\NinjaOneWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+const PROJECT_ROUTE_PARAM = '{project}';
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -338,9 +340,9 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
         // Standard CRUD
         Route::get('/', [\App\Domains\Project\Controllers\ProjectController::class, 'index'])->name('index');
         Route::post('/', [\App\Domains\Project\Controllers\ProjectController::class, 'store'])->name('store');
-        Route::get('{project}', [\App\Domains\Project\Controllers\ProjectController::class, 'show'])->name('show');
-        Route::put('{project}', [\App\Domains\Project\Controllers\ProjectController::class, 'update'])->name('update');
-        Route::delete('{project}', [\App\Domains\Project\Controllers\ProjectController::class, 'destroy'])->name('destroy');
+        Route::get(PROJECT_ROUTE_PARAM, [\App\Domains\Project\Controllers\ProjectController::class, 'show'])->name('show');
+        Route::put(PROJECT_ROUTE_PARAM, [\App\Domains\Project\Controllers\ProjectController::class, 'update'])->name('update');
+        Route::delete(PROJECT_ROUTE_PARAM, [\App\Domains\Project\Controllers\ProjectController::class, 'destroy'])->name('destroy');
 
         // Project Actions
         Route::patch('{project}/status', [\App\Domains\Project\Controllers\ProjectController::class, 'updateStatus'])->name('status.update');
