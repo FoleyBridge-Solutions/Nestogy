@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class AnalyticsController extends Controller
 {
+    private const WIDGET_NOT_FOUND_MESSAGE = 'Widget not found';
+
     protected FinancialAnalyticsService $analyticsService;
 
     protected DashboardDataService $dashboardService;
@@ -192,7 +194,7 @@ class AnalyticsController extends Controller
         if (! $widget) {
             return response()->json([
                 'success' => false,
-                'message' => 'Widget not found',
+                'message' => self::WIDGET_NOT_FOUND_MESSAGE,
             ], 404);
         }
 
@@ -478,7 +480,7 @@ class AnalyticsController extends Controller
         if (! $widget) {
             return response()->json([
                 'success' => false,
-                'message' => 'Widget not found',
+                'message' => self::WIDGET_NOT_FOUND_MESSAGE,
             ], 404);
         }
 
@@ -514,7 +516,7 @@ class AnalyticsController extends Controller
         if (! $widget) {
             return response()->json([
                 'success' => false,
-                'message' => 'Widget not found',
+                'message' => self::WIDGET_NOT_FOUND_MESSAGE,
             ], 404);
         }
 
