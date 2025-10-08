@@ -15,6 +15,8 @@ class LeadController extends BaseResourceController
 {
     use HasClientRelation;
 
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     protected LeadScoringService $leadScoringService;
 
     public function __construct(LeadScoringService $leadScoringService)
@@ -129,7 +131,7 @@ class LeadController extends BaseResourceController
             'company_name' => 'nullable|string|max:255',
             'title' => 'nullable|string|max:255',
             'website' => 'nullable|url',
-            'address' => 'nullable|string',
+            'address' => self::VALIDATION_NULLABLE_STRING,
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'zip_code' => 'nullable|string|max:20',
@@ -140,7 +142,7 @@ class LeadController extends BaseResourceController
             'industry' => 'nullable|string|max:100',
             'company_size' => 'nullable|integer|min:1',
             'estimated_value' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
             'utm_source' => 'nullable|string|max:100',
             'utm_medium' => 'nullable|string|max:100',
             'utm_campaign' => 'nullable|string|max:100',
@@ -225,7 +227,7 @@ class LeadController extends BaseResourceController
             'company_name' => 'nullable|string|max:255',
             'title' => 'nullable|string|max:255',
             'website' => 'nullable|url',
-            'address' => 'nullable|string',
+            'address' => self::VALIDATION_NULLABLE_STRING,
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'zip_code' => 'nullable|string|max:20',
@@ -237,7 +239,7 @@ class LeadController extends BaseResourceController
             'industry' => 'nullable|string|max:100',
             'company_size' => 'nullable|integer|min:1',
             'estimated_value' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         $lead->update($validated);
@@ -295,7 +297,7 @@ class LeadController extends BaseResourceController
         $validated = $request->validate([
             'client_data' => 'sometimes|array',
             'client_data.hourly_rate' => 'nullable|numeric|min:0',
-            'client_data.notes' => 'nullable|string',
+            'client_data.notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         $clientData = $validated['client_data'] ?? [];
