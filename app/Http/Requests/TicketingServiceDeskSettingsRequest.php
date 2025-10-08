@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class TicketingServiceDeskSettingsRequest extends FormRequest
 {
+    private const NULLABLE_ARRAY = 'nullable|array';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -32,62 +34,62 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_new_ticket_notification_email' => 'nullable|email|max:255',
 
             // Ticket Categorization Rules
-            'ticket_categorization_rules' => 'nullable|array',
+            'ticket_categorization_rules' => self::NULLABLE_ARRAY,
             'ticket_categorization_rules.enabled' => 'boolean',
             'ticket_categorization_rules.auto_categorize' => 'boolean',
             'ticket_categorization_rules.require_category' => 'boolean',
             'ticket_categorization_rules.allow_multiple_categories' => 'boolean',
             'ticket_categorization_rules.default_category' => 'nullable|string|max:100',
-            'ticket_categorization_rules.keywords' => 'nullable|array',
+            'ticket_categorization_rules.keywords' => self::NULLABLE_ARRAY,
             'ticket_categorization_rules.keywords.*.keyword' => 'string|max:50',
             'ticket_categorization_rules.keywords.*.category' => 'string|max:100',
             'ticket_categorization_rules.keywords.*.priority' => 'string|in:low,medium,high,critical',
 
             // Ticket Priority Rules
-            'ticket_priority_rules' => 'nullable|array',
+            'ticket_priority_rules' => self::NULLABLE_ARRAY,
             'ticket_priority_rules.enabled' => 'boolean',
             'ticket_priority_rules.auto_priority' => 'boolean',
             'ticket_priority_rules.allow_client_set_priority' => 'boolean',
             'ticket_priority_rules.default_priority' => 'string|in:low,medium,high,critical',
             'ticket_priority_rules.escalate_overdue' => 'boolean',
-            'ticket_priority_rules.escalation_hours' => 'nullable|array',
+            'ticket_priority_rules.escalation_hours' => self::NULLABLE_ARRAY,
             'ticket_priority_rules.escalation_hours.low' => 'integer|min:1|max:168',
             'ticket_priority_rules.escalation_hours.medium' => 'integer|min:1|max:72',
             'ticket_priority_rules.escalation_hours.high' => 'integer|min:1|max:24',
             'ticket_priority_rules.escalation_hours.critical' => 'integer|min:1|max:4',
 
             // SLA Definitions
-            'sla_definitions' => 'nullable|array',
+            'sla_definitions' => self::NULLABLE_ARRAY,
             'sla_definitions.enabled' => 'boolean',
             'sla_definitions.default_sla' => 'nullable|string|max:100',
             'sla_definitions.client_specific_slas' => 'boolean',
             'sla_definitions.business_hours_only' => 'boolean',
             'sla_definitions.exclude_weekends' => 'boolean',
             'sla_definitions.exclude_holidays' => 'boolean',
-            'sla_definitions.response_times' => 'nullable|array',
+            'sla_definitions.response_times' => self::NULLABLE_ARRAY,
             'sla_definitions.response_times.critical' => 'integer|min:5|max:1440',
             'sla_definitions.response_times.high' => 'integer|min:15|max:2880',
             'sla_definitions.response_times.medium' => 'integer|min:30|max:4320',
             'sla_definitions.response_times.low' => 'integer|min:60|max:10080',
-            'sla_definitions.resolution_times' => 'nullable|array',
+            'sla_definitions.resolution_times' => self::NULLABLE_ARRAY,
             'sla_definitions.resolution_times.critical' => 'integer|min:30|max:2880',
             'sla_definitions.resolution_times.high' => 'integer|min:120|max:4320',
             'sla_definitions.resolution_times.medium' => 'integer|min:480|max:10080',
             'sla_definitions.resolution_times.low' => 'integer|min:1440|max:20160',
 
             // SLA Escalation Policies
-            'sla_escalation_policies' => 'nullable|array',
+            'sla_escalation_policies' => self::NULLABLE_ARRAY,
             'sla_escalation_policies.enabled' => 'boolean',
             'sla_escalation_policies.breach_warning_percentage' => 'integer|min:50|max:95',
             'sla_escalation_policies.auto_escalate_on_breach' => 'boolean',
-            'sla_escalation_policies.escalation_levels' => 'nullable|array',
+            'sla_escalation_policies.escalation_levels' => self::NULLABLE_ARRAY,
             'sla_escalation_policies.escalation_levels.*.percentage' => 'integer|min:25|max:100',
             'sla_escalation_policies.escalation_levels.*.action' => 'string|in:notify_assignee,notify_manager,notify_client,change_priority,reassign',
-            'sla_escalation_policies.escalation_levels.*.notification_channels' => 'nullable|array',
+            'sla_escalation_policies.escalation_levels.*.notification_channels' => self::NULLABLE_ARRAY,
             'sla_escalation_policies.escalation_levels.*.notification_channels.*' => 'string|in:email,sms,slack,teams,webhook',
 
             // Auto Assignment Rules
-            'auto_assignment_rules' => 'nullable|array',
+            'auto_assignment_rules' => self::NULLABLE_ARRAY,
             'auto_assignment_rules.enabled' => 'boolean',
             'auto_assignment_rules.assignment_method' => 'string|in:round_robin,skill_based,workload_balanced,random,manual',
             'auto_assignment_rules.consider_availability' => 'boolean',
@@ -96,13 +98,13 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'auto_assignment_rules.fallback_assignee' => 'nullable|integer|exists:users,id',
             'auto_assignment_rules.max_tickets_per_user' => 'integer|min:1|max:100',
             'auto_assignment_rules.skill_matching_threshold' => 'integer|min:1|max:100',
-            'auto_assignment_rules.assignment_rules' => 'nullable|array',
+            'auto_assignment_rules.assignment_rules' => self::NULLABLE_ARRAY,
             'auto_assignment_rules.assignment_rules.*.condition' => 'string|max:255',
             'auto_assignment_rules.assignment_rules.*.assignee_id' => 'integer|exists:users,id',
             'auto_assignment_rules.assignment_rules.*.priority' => 'integer|min:1|max:100',
 
             // Routing Logic
-            'routing_logic' => 'nullable|array',
+            'routing_logic' => self::NULLABLE_ARRAY,
             'routing_logic.enabled' => 'boolean',
             'routing_logic.route_by_client' => 'boolean',
             'routing_logic.route_by_category' => 'boolean',
@@ -110,7 +112,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'routing_logic.route_by_priority' => 'boolean',
             'routing_logic.route_by_source' => 'boolean',
             'routing_logic.default_queue' => 'nullable|string|max:100',
-            'routing_logic.routing_rules' => 'nullable|array',
+            'routing_logic.routing_rules' => self::NULLABLE_ARRAY,
             'routing_logic.routing_rules.*.name' => 'string|max:100',
             'routing_logic.routing_rules.*.conditions' => 'array',
             'routing_logic.routing_rules.*.actions' => 'array',
@@ -118,14 +120,14 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'routing_logic.routing_rules.*.enabled' => 'boolean',
 
             // Approval Workflows
-            'approval_workflows' => 'nullable|array',
+            'approval_workflows' => self::NULLABLE_ARRAY,
             'approval_workflows.enabled' => 'boolean',
             'approval_workflows.require_approval_for_closure' => 'boolean',
             'approval_workflows.require_approval_for_billing' => 'boolean',
             'approval_workflows.auto_approve_threshold_hours' => 'nullable|integer|min:1|max:168',
             'approval_workflows.approval_timeout_hours' => 'integer|min:1|max:168',
             'approval_workflows.escalate_on_timeout' => 'boolean',
-            'approval_workflows.workflows' => 'nullable|array',
+            'approval_workflows.workflows' => self::NULLABLE_ARRAY,
             'approval_workflows.workflows.*.name' => 'string|max:100',
             'approval_workflows.workflows.*.trigger_conditions' => 'array',
             'approval_workflows.workflows.*.approvers' => 'array',
@@ -135,7 +137,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
 
             // Time Tracking
             'time_tracking_enabled' => 'boolean',
-            'time_tracking_settings' => 'nullable|array',
+            'time_tracking_settings' => self::NULLABLE_ARRAY,
             'time_tracking_settings.require_time_entry' => 'boolean',
             'time_tracking_settings.allow_manual_time_entry' => 'boolean',
             'time_tracking_settings.auto_start_timer' => 'boolean',
@@ -149,7 +151,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
 
             // Customer Satisfaction
             'customer_satisfaction_enabled' => 'boolean',
-            'csat_settings' => 'nullable|array',
+            'csat_settings' => self::NULLABLE_ARRAY,
             'csat_settings.survey_trigger' => 'string|in:on_closure,on_resolution,manual',
             'csat_settings.survey_delay_hours' => 'integer|min:0|max:168',
             'csat_settings.survey_reminder_enabled' => 'boolean',
@@ -162,27 +164,27 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'csat_settings.escalate_low_ratings' => 'boolean',
 
             // Ticket Templates
-            'ticket_templates' => 'nullable|array',
+            'ticket_templates' => self::NULLABLE_ARRAY,
             'ticket_templates.enabled' => 'boolean',
             'ticket_templates.allow_custom_templates' => 'boolean',
             'ticket_templates.require_template_selection' => 'boolean',
-            'ticket_templates.templates' => 'nullable|array',
+            'ticket_templates.templates' => self::NULLABLE_ARRAY,
             'ticket_templates.templates.*.name' => 'string|max:100',
             'ticket_templates.templates.*.category' => 'string|max:100',
             'ticket_templates.templates.*.priority' => 'string|in:low,medium,high,critical',
             'ticket_templates.templates.*.subject_template' => 'string|max:255',
             'ticket_templates.templates.*.description_template' => 'string|max:2000',
-            'ticket_templates.templates.*.required_fields' => 'nullable|array',
+            'ticket_templates.templates.*.required_fields' => self::NULLABLE_ARRAY,
             'ticket_templates.templates.*.auto_assign_to' => 'nullable|integer|exists:users,id',
             'ticket_templates.templates.*.enabled' => 'boolean',
 
             // Ticket Automation Rules
-            'ticket_automation_rules' => 'nullable|array',
+            'ticket_automation_rules' => self::NULLABLE_ARRAY,
             'ticket_automation_rules.enabled' => 'boolean',
             'ticket_automation_rules.run_on_create' => 'boolean',
             'ticket_automation_rules.run_on_update' => 'boolean',
             'ticket_automation_rules.run_on_close' => 'boolean',
-            'ticket_automation_rules.rules' => 'nullable|array',
+            'ticket_automation_rules.rules' => self::NULLABLE_ARRAY,
             'ticket_automation_rules.rules.*.name' => 'string|max:100',
             'ticket_automation_rules.rules.*.trigger' => 'string|in:on_create,on_update,on_close,on_reopen,on_assign,time_based',
             'ticket_automation_rules.rules.*.conditions' => 'array',
@@ -191,7 +193,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_automation_rules.rules.*.priority' => 'integer|min:1|max:100',
 
             // Multi-channel Settings
-            'multichannel_settings' => 'nullable|array',
+            'multichannel_settings' => self::NULLABLE_ARRAY,
             'multichannel_settings.email_enabled' => 'boolean',
             'multichannel_settings.portal_enabled' => 'boolean',
             'multichannel_settings.phone_enabled' => 'boolean',
@@ -200,19 +202,19 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'multichannel_settings.teams_enabled' => 'boolean',
             'multichannel_settings.whatsapp_enabled' => 'boolean',
             'multichannel_settings.unified_inbox' => 'boolean',
-            'multichannel_settings.channel_routing' => 'nullable|array',
-            'multichannel_settings.response_templates' => 'nullable|array',
+            'multichannel_settings.channel_routing' => self::NULLABLE_ARRAY,
+            'multichannel_settings.response_templates' => self::NULLABLE_ARRAY,
             'multichannel_settings.auto_acknowledge' => 'boolean',
             'multichannel_settings.acknowledgment_template' => 'nullable|string|max:500',
 
             // Queue Management
-            'queue_management_settings' => 'nullable|array',
+            'queue_management_settings' => self::NULLABLE_ARRAY,
             'queue_management_settings.enabled' => 'boolean',
             'queue_management_settings.default_queue' => 'nullable|string|max:100',
             'queue_management_settings.auto_queue_assignment' => 'boolean',
             'queue_management_settings.queue_capacity_limits' => 'boolean',
             'queue_management_settings.queue_sla_inheritance' => 'boolean',
-            'queue_management_settings.queues' => 'nullable|array',
+            'queue_management_settings.queues' => self::NULLABLE_ARRAY,
             'queue_management_settings.queues.*.name' => 'string|max:100',
             'queue_management_settings.queues.*.description' => 'nullable|string|max:255',
             'queue_management_settings.queues.*.max_capacity' => 'nullable|integer|min:1|max:1000',
