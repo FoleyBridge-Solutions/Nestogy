@@ -111,59 +111,107 @@ class UpdateContractRequest extends FormRequest
         $validator->after(function ($validator) {
             $contract = $this->route('contract');
 
-            // Only allow editing of draft and pending review contracts
-            if (! in_array($contract->status, [Contract::STATUS_DRAFT, Contract::STATUS_PENDING_REVIEW])) {
-                $validator->errors()->add('status', 'Only draft and pending review contracts can be edited.');
-
+            if (! $this->validateContractStatus($validator, $contract)) {
                 return;
             }
 
-            // Validate that end_date is required if term_months is not provided
-            $endDate = $this->input('end_date', $contract->end_date);
-            $termMonths = $this->input('term_months', $contract->term_months);
-
-            if (! $endDate && ! $termMonths) {
-                $validator->errors()->add('end_date', 'Either end date or term in months must be provided.');
-                $validator->errors()->add('term_months', 'Either end date or term in months must be provided.');
-            }
-
-            // Validate that auto_renewal requires renewal_notice_days
-            $autoRenewal = $this->input('auto_renewal', $contract->auto_renewal);
-            $renewalNoticeDays = $this->input('renewal_notice_days', $contract->renewal_notice_days);
-
-            if ($autoRenewal && ! $renewalNoticeDays) {
-                $validator->errors()->add('renewal_notice_days', 'Renewal notice days is required when auto renewal is enabled.');
-            }
-
-            // Validate pricing structure
-            if ($this->has('pricing_structure') && $this->pricing_structure) {
-                $contractValue = $this->input('contract_value', $contract->contract_value);
-                $total = ($this->input('pricing_structure.recurring_monthly', 0) * 12) +
-                        $this->input('pricing_structure.one_time', 0) +
-                        $this->input('pricing_structure.setup_fee', 0);
-
-                if ($total > $contractValue) {
-                    $validator->errors()->add('pricing_structure', 'Total pricing structure cannot exceed contract value.');
-                }
-            }
-
-            // Validate start date changes don't affect signed/active contracts
-            if ($this->has('start_date') && $this->start_date !== $contract->start_date->format('Y-m-d')) {
-                if (in_array($contract->status, [Contract::STATUS_SIGNED, Contract::STATUS_ACTIVE])) {
-                    $validator->errors()->add('start_date', 'Cannot change start date of signed or active contracts.');
-                }
-            }
-
-            // Validate that milestones due dates are after start date
-            if ($this->has('milestones') && $this->milestones) {
-                $startDate = $this->input('start_date', $contract->start_date->format('Y-m-d'));
-                foreach ($this->milestones as $index => $milestone) {
-                    if (isset($milestone['due_date']) && $milestone['due_date'] <= $startDate) {
-                        $validator->errors()->add("milestones.{$index}.due_date", 'Milestone due date must be after the contract start date.');
-                    }
-                }
-            }
+            $this->validateEndDateOrTermMonths($validator, $contract);
+            $this->validateAutoRenewalRequirements($validator, $contract);
+            $this->validatePricingStructure($validator, $contract);
+            $this->validateStartDateChanges($validator, $contract);
+            $this->validateMilestoneDueDates($validator, $contract);
         });
+    }
+
+    /**
+     * Validate that only draft and pending review contracts can be edited.
+     */
+    protected function validateContractStatus($validator, Contract $contract): bool
+    {
+        if (! in_array($contract->status, [Contract::STATUS_DRAFT, Contract::STATUS_PENDING_REVIEW])) {
+            $validator->errors()->add('status', 'Only draft and pending review contracts can be edited.');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate that either end_date or term_months is provided.
+     */
+    protected function validateEndDateOrTermMonths($validator, Contract $contract): void
+    {
+        $endDate = $this->input('end_date', $contract->end_date);
+        $termMonths = $this->input('term_months', $contract->term_months);
+
+        if (! $endDate && ! $termMonths) {
+            $validator->errors()->add('end_date', 'Either end date or term in months must be provided.');
+            $validator->errors()->add('term_months', 'Either end date or term in months must be provided.');
+        }
+    }
+
+    /**
+     * Validate that auto_renewal requires renewal_notice_days.
+     */
+    protected function validateAutoRenewalRequirements($validator, Contract $contract): void
+    {
+        $autoRenewal = $this->input('auto_renewal', $contract->auto_renewal);
+        $renewalNoticeDays = $this->input('renewal_notice_days', $contract->renewal_notice_days);
+
+        if ($autoRenewal && ! $renewalNoticeDays) {
+            $validator->errors()->add('renewal_notice_days', 'Renewal notice days is required when auto renewal is enabled.');
+        }
+    }
+
+    /**
+     * Validate that pricing structure does not exceed contract value.
+     */
+    protected function validatePricingStructure($validator, Contract $contract): void
+    {
+        if (! $this->has('pricing_structure') || ! $this->pricing_structure) {
+            return;
+        }
+
+        $contractValue = $this->input('contract_value', $contract->contract_value);
+        $total = ($this->input('pricing_structure.recurring_monthly', 0) * 12) +
+                $this->input('pricing_structure.one_time', 0) +
+                $this->input('pricing_structure.setup_fee', 0);
+
+        if ($total > $contractValue) {
+            $validator->errors()->add('pricing_structure', 'Total pricing structure cannot exceed contract value.');
+        }
+    }
+
+    /**
+     * Validate that start date changes are not made to signed or active contracts.
+     */
+    protected function validateStartDateChanges($validator, Contract $contract): void
+    {
+        if (! $this->has('start_date') || $this->start_date === $contract->start_date->format('Y-m-d')) {
+            return;
+        }
+
+        if (in_array($contract->status, [Contract::STATUS_SIGNED, Contract::STATUS_ACTIVE])) {
+            $validator->errors()->add('start_date', 'Cannot change start date of signed or active contracts.');
+        }
+    }
+
+    /**
+     * Validate that milestone due dates are after the contract start date.
+     */
+    protected function validateMilestoneDueDates($validator, Contract $contract): void
+    {
+        if (! $this->has('milestones') || ! $this->milestones) {
+            return;
+        }
+
+        $startDate = $this->input('start_date', $contract->start_date->format('Y-m-d'));
+        foreach ($this->milestones as $index => $milestone) {
+            if (isset($milestone['due_date']) && $milestone['due_date'] <= $startDate) {
+                $validator->errors()->add("milestones.{$index}.due_date", 'Milestone due date must be after the contract start date.');
+            }
+        }
     }
 
     /**
