@@ -421,6 +421,8 @@ class VendorController extends Controller
                 case 'high_rated':
                     $query->highRated();
                     break;
+                default:
+                    break;
             }
         }
 
