@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class ServiceTaxController extends Controller
 {
+    private const TWO_CHAR_CODE_RULE = 'nullable|string|max:2';
+
     protected ?ServiceTaxCalculator $taxCalculator = null;
 
     protected function getTaxCalculator(): ServiceTaxCalculator
@@ -34,10 +36,10 @@ class ServiceTaxController extends Controller
             'quantity' => 'nullable|integer|min:1',
             'customer_id' => 'nullable|exists:clients,id',
             'address' => 'nullable|array',
-            'address.state' => 'nullable|string|max:2',
+            'address.state' => self::TWO_CHAR_CODE_RULE,
             'address.city' => 'nullable|string|max:255',
             'address.zip' => 'nullable|string|max:10',
-            'address.country' => 'nullable|string|max:2',
+            'address.country' => self::TWO_CHAR_CODE_RULE,
             'service_type' => 'nullable|string|in:general,voip,cloud,saas,professional',
             'category_id' => 'nullable|exists:categories,id',
         ]);
@@ -150,10 +152,10 @@ class ServiceTaxController extends Controller
             'items.*.service_data.minutes' => 'nullable|integer|min:0',
             'customer_id' => 'nullable|exists:clients,id',
             'address' => 'nullable|array',
-            'address.state' => 'nullable|string|max:2',
+            'address.state' => self::TWO_CHAR_CODE_RULE,
             'address.city' => 'nullable|string|max:255',
             'address.zip' => 'nullable|string|max:10',
-            'address.country' => 'nullable|string|max:2',
+            'address.country' => self::TWO_CHAR_CODE_RULE,
         ]);
 
         try {
