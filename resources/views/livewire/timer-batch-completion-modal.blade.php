@@ -69,13 +69,13 @@
                                 </flux:select>
 
                                 <div class="space-y-3">
-                                    <label class="flex items-center gap-2">
-                                        <flux:checkbox wire:model="batchIsBillable" />
+                                    <label for="batchIsBillable" class="flex items-center gap-2">
+                                        <flux:checkbox wire:model="batchIsBillable" id="batchIsBillable" />
                                         <span class="text-sm">Billable Work</span>
                                     </label>
 
-                                    <label class="flex items-center gap-2">
-                                        <flux:checkbox wire:model="batchAddComment" />
+                                    <label for="batchAddComment" class="flex items-center gap-2">
+                                        <flux:checkbox wire:model="batchAddComment" id="batchAddComment" />
                                         <span class="text-sm">Add to Ticket Activity</span>
                                     </label>
                                 </div>
@@ -109,12 +109,12 @@
                                             </flux:select>
 
                                             <div class="space-y-2">
-                                                <label class="flex items-center gap-1 text-xs">
-                                                    <flux:checkbox wire:model="individualSettings.{{ $timer['id'] }}.is_billable" />
+                                                <label for="isBillable_{{ $timer['id'] }}" class="flex items-center gap-1 text-xs">
+                                                    <flux:checkbox wire:model="individualSettings.{{ $timer['id'] }}.is_billable" id="isBillable_{{ $timer['id'] }}" />
                                                     <span>Billable</span>
                                                 </label>
-                                                <label class="flex items-center gap-1 text-xs">
-                                                    <flux:checkbox wire:model="individualSettings.{{ $timer['id'] }}.add_comment" />
+                                                <label for="addComment_{{ $timer['id'] }}" class="flex items-center gap-1 text-xs">
+                                                    <flux:checkbox wire:model="individualSettings.{{ $timer['id'] }}.add_comment" id="addComment_{{ $timer['id'] }}" />
                                                     <span>Add Comment</span>
                                                 </label>
                                             </div>
