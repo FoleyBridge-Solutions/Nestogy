@@ -274,60 +274,14 @@ class ContractLifecycleService
     public function calculateRevenueForecast(Carbon $startDate, Carbon $endDate, ?Company $company = null): array
     {
         try {
-            $query = Contract::where('status', 'active')
-                ->where(function ($q) use ($startDate, $endDate) {
-                    $q->whereBetween('start_date', [$startDate, $endDate])
-                        ->orWhereBetween('end_date', [$startDate, $endDate])
-                        ->orWhere(function ($q2) use ($startDate, $endDate) {
-                            $q2->where('start_date', '<=', $startDate)
-                                ->where('end_date', '>=', $endDate);
-                        });
-                });
+            $contracts = $this->getActiveContractsInDateRange($startDate, $endDate, $company);
 
-            if ($company) {
-                $query->where('company_id', $company->id);
-            }
+            $forecast = $this->initializeForecast($contracts->count());
 
-            $contracts = $query->get();
-
-            $forecast = [
-                'total_contracts' => $contracts->count(),
-                'base_revenue' => 0,
-                'escalated_revenue' => 0,
-                'auto_renewing' => 0,
-                'expiring' => 0,
-                'monthly_breakdown' => [],
-            ];
-
-            // Calculate monthly breakdown
             $currentDate = $startDate->copy();
             while ($currentDate <= $endDate) {
                 $monthKey = $currentDate->format('Y-m');
-                $monthlyRevenue = 0;
-
-                foreach ($contracts as $contract) {
-                    if ($this->isContractActiveInMonth($contract, $currentDate)) {
-                        $monthlyValue = $this->calculateMonthlyValue($contract);
-                        $monthlyRevenue += $monthlyValue;
-
-                        // Add to totals
-                        $forecast['base_revenue'] += $monthlyValue;
-
-                        // Calculate escalated value if auto-renewing
-                        if ($contract->auto_renew && $contract->end_date->isSameMonth($currentDate)) {
-                            $escalationRate = $contract->escalation_rate ?? 3.0;
-                            $escalatedMonthly = $this->calculateEscalatedPrice($monthlyValue, $escalationRate);
-                            $forecast['escalated_revenue'] += ($escalatedMonthly - $monthlyValue);
-                            $forecast['auto_renewing']++;
-                        }
-
-                        // Count expiring contracts
-                        if (! $contract->auto_renew && $contract->end_date->isSameMonth($currentDate)) {
-                            $forecast['expiring']++;
-                        }
-                    }
-                }
-
+                $monthlyRevenue = $this->processMonthlyContracts($contracts, $currentDate, $forecast);
                 $forecast['monthly_breakdown'][$monthKey] = $monthlyRevenue;
                 $currentDate->addMonth();
             }
@@ -343,6 +297,82 @@ class ContractLifecycleService
                 'end_date' => $endDate,
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Get active contracts within date range
+     */
+    protected function getActiveContractsInDateRange(Carbon $startDate, Carbon $endDate, ?Company $company)
+    {
+        $query = Contract::where('status', 'active')
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                    ->orWhere(function ($q2) use ($startDate, $endDate) {
+                        $q2->where('start_date', '<=', $startDate)
+                            ->where('end_date', '>=', $endDate);
+                    });
+            });
+
+        if ($company) {
+            $query->where('company_id', $company->id);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Initialize forecast array structure
+     */
+    protected function initializeForecast(int $totalContracts): array
+    {
+        return [
+            'total_contracts' => $totalContracts,
+            'base_revenue' => 0,
+            'escalated_revenue' => 0,
+            'auto_renewing' => 0,
+            'expiring' => 0,
+            'monthly_breakdown' => [],
+        ];
+    }
+
+    /**
+     * Process contracts for a given month
+     */
+    protected function processMonthlyContracts($contracts, Carbon $currentDate, array &$forecast): float
+    {
+        $monthlyRevenue = 0;
+
+        foreach ($contracts as $contract) {
+            if ($this->isContractActiveInMonth($contract, $currentDate)) {
+                $monthlyValue = $this->calculateMonthlyValue($contract);
+                $monthlyRevenue += $monthlyValue;
+                $forecast['base_revenue'] += $monthlyValue;
+
+                $this->processContractRenewalStatus($contract, $currentDate, $monthlyValue, $forecast);
+            }
+        }
+
+        return $monthlyRevenue;
+    }
+
+    /**
+     * Process contract renewal status and update forecast
+     */
+    protected function processContractRenewalStatus(Contract $contract, Carbon $currentDate, float $monthlyValue, array &$forecast): void
+    {
+        if (!$contract->end_date->isSameMonth($currentDate)) {
+            return;
+        }
+
+        if ($contract->auto_renew) {
+            $escalationRate = $contract->escalation_rate ?? 3.0;
+            $escalatedMonthly = $this->calculateEscalatedPrice($monthlyValue, $escalationRate);
+            $forecast['escalated_revenue'] += ($escalatedMonthly - $monthlyValue);
+            $forecast['auto_renewing']++;
+        } else {
+            $forecast['expiring']++;
         }
     }
 
