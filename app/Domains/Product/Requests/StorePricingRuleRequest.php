@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StorePricingRuleRequest extends FormRequest
 {
+    private const NULLABLE_INTEGER_MIN_ONE = 'nullable|integer|min:1';
+
     public function authorize(): bool
     {
         return true;
@@ -26,10 +28,10 @@ class StorePricingRuleRequest extends FormRequest
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
             'fixed_price' => 'nullable|numeric|min:0',
-            'min_quantity' => 'nullable|integer|min:1',
+            'min_quantity' => self::NULLABLE_INTEGER_MIN_ONE,
             'min_price' => 'nullable|numeric|min:0',
-            'buy_quantity' => 'nullable|integer|min:1',
-            'get_quantity' => 'nullable|integer|min:1',
+            'buy_quantity' => self::NULLABLE_INTEGER_MIN_ONE,
+            'get_quantity' => self::NULLABLE_INTEGER_MIN_ONE,
             'conditions' => 'nullable|json',
         ];
     }
