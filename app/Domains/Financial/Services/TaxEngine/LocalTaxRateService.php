@@ -116,7 +116,6 @@ class LocalTaxRateService
         float $amount,
         ?array $destination = null,
         ?array $origin = null,
-        ?string $customerId = null,
         array $lineItems = []
     ): array {
         try {
