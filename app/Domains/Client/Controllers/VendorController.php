@@ -14,6 +14,8 @@ class VendorController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_REQUIRED_IN = 'required|in:';
+
     /**
      * Display a listing of vendors for the selected client
      */
@@ -139,7 +141,7 @@ class VendorController extends Controller
             ],
             'vendor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'vendor_type' => 'required|in:'.implode(',', array_keys(ClientVendor::getVendorTypes())),
+            'vendor_type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientVendor::getVendorTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -155,7 +157,7 @@ class VendorController extends Controller
             'account_number' => 'nullable|string|max:100',
             'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
             'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
-            'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
+            'relationship_status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
             'start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:start_date',
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
@@ -283,7 +285,7 @@ class VendorController extends Controller
             ],
             'vendor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'vendor_type' => 'required|in:'.implode(',', array_keys(ClientVendor::getVendorTypes())),
+            'vendor_type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientVendor::getVendorTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -299,7 +301,7 @@ class VendorController extends Controller
             'account_number' => 'nullable|string|max:100',
             'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
             'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
-            'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
+            'relationship_status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
             'start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:start_date',
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
