@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class RecurringInvoiceController extends Controller
 {
+    private const VALIDATION_REQUIRED_IN = 'required|in:';
+
     /**
      * Display a listing of all recurring invoices
      */
@@ -118,14 +120,14 @@ class RecurringInvoiceController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
-            'currency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
-            'frequency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
+            'currency' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
+            'frequency' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
             'interval_count' => 'nullable|integer|min:1',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'nullable|date|after:start_date',
             'day_of_month' => 'nullable|integer|min:1|max:31',
             'day_of_week' => 'nullable|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            'status' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
             'auto_send' => 'boolean',
             'payment_terms_days' => 'nullable|integer|min:1|max:365',
             'late_fee_percentage' => 'nullable|numeric|min:0|max:100',
@@ -247,14 +249,14 @@ class RecurringInvoiceController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
-            'currency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
-            'frequency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
+            'currency' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
+            'frequency' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
             'interval_count' => 'nullable|integer|min:1',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'day_of_month' => 'nullable|integer|min:1|max:31',
             'day_of_week' => 'nullable|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            'status' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
             'auto_send' => 'boolean',
             'payment_terms_days' => 'nullable|integer|min:1|max:365',
             'late_fee_percentage' => 'nullable|numeric|min:0|max:100',
