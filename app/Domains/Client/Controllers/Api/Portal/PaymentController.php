@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class PaymentController extends PortalApiController
 {
+    private const VALIDATION_NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     protected PortalPaymentService $paymentService;
 
     public function __construct(PortalPaymentService $paymentService, \App\Services\ClientPortalService $portalService, \App\Domains\Security\Services\PortalAuthService $authService)
@@ -174,7 +176,7 @@ class PaymentController extends PortalApiController
             $validator = Validator::make($request->all(), [
                 'type' => 'required|string|in:credit_card,debit_card,bank_account,digital_wallet',
                 'provider' => 'nullable|string|in:stripe,paypal,authorize_net,square',
-                'name' => 'nullable|string|max:255',
+                'name' => self::VALIDATION_NULLABLE_STRING_255,
                 'description' => 'nullable|string|max:500',
                 'is_default' => 'boolean',
 
@@ -190,15 +192,15 @@ class PaymentController extends PortalApiController
                 'bank_routing_number' => 'required_if:type,bank_account|string',
                 'bank_account_type' => 'required_if:type,bank_account|string|in:checking,savings',
                 'bank_account_holder_name' => 'required_if:type,bank_account|string|max:255',
-                'bank_name' => 'nullable|string|max:255',
+                'bank_name' => self::VALIDATION_NULLABLE_STRING_255,
 
                 // Digital wallet fields
                 'wallet_type' => 'required_if:type,digital_wallet|string|in:paypal,apple_pay,google_pay',
                 'wallet_email' => 'required_if:wallet_type,paypal|email',
 
                 // Billing address
-                'billing_name' => 'nullable|string|max:255',
-                'billing_address_line1' => 'nullable|string|max:255',
+                'billing_name' => self::VALIDATION_NULLABLE_STRING_255,
+                'billing_address_line1' => self::VALIDATION_NULLABLE_STRING_255,
                 'billing_city' => 'nullable|string|max:100',
                 'billing_state' => 'nullable|string|max:100',
                 'billing_postal_code' => 'nullable|string|max:20',
@@ -243,7 +245,7 @@ class PaymentController extends PortalApiController
 
             // Validate request
             $validator = Validator::make($request->all(), [
-                'name' => 'nullable|string|max:255',
+                'name' => self::VALIDATION_NULLABLE_STRING_255,
                 'description' => 'nullable|string|max:500',
                 'is_default' => 'boolean',
                 'is_active' => 'boolean',
@@ -251,8 +253,8 @@ class PaymentController extends PortalApiController
                 // Limited updates allowed for security
                 'card_exp_month' => 'nullable|integer|between:1,12',
                 'card_exp_year' => 'nullable|integer|min:'.date('Y'),
-                'billing_name' => 'nullable|string|max:255',
-                'billing_address_line1' => 'nullable|string|max:255',
+                'billing_name' => self::VALIDATION_NULLABLE_STRING_255,
+                'billing_address_line1' => self::VALIDATION_NULLABLE_STRING_255,
                 'billing_city' => 'nullable|string|max:100',
                 'billing_state' => 'nullable|string|max:100',
                 'billing_postal_code' => 'nullable|string|max:20',
@@ -450,7 +452,7 @@ class PaymentController extends PortalApiController
 
             // Validate request
             $validator = Validator::make($request->all(), [
-                'name' => 'nullable|string|max:255',
+                'name' => self::VALIDATION_NULLABLE_STRING_255,
                 'is_active' => 'boolean',
                 'minimum_amount' => 'nullable|numeric|min:0',
                 'maximum_amount' => 'nullable|numeric|min:0',
