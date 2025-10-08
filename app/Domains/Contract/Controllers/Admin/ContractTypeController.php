@@ -12,6 +12,8 @@ use Illuminate\View\View;
 
 class ContractTypeController extends Controller
 {
+    private const VALIDATION_NULLABLE_ARRAY = 'nullable|array';
+
     protected ContractConfigurationRegistry $configRegistry;
 
     public function __construct()
@@ -63,8 +65,8 @@ class ContractTypeController extends Controller
                 'supports_milestones' => 'boolean',
                 'auto_renew' => 'boolean',
                 'requires_approval' => 'boolean',
-                'workflow_stages' => 'nullable|array',
-                'notification_settings' => 'nullable|array',
+                'workflow_stages' => self::VALIDATION_NULLABLE_ARRAY,
+                'notification_settings' => self::VALIDATION_NULLABLE_ARRAY,
             ]);
 
             $contractType = $this->configRegistry->createContractType($validated);
@@ -136,8 +138,8 @@ class ContractTypeController extends Controller
                 'supports_milestones' => 'boolean',
                 'auto_renew' => 'boolean',
                 'requires_approval' => 'boolean',
-                'workflow_stages' => 'nullable|array',
-                'notification_settings' => 'nullable|array',
+                'workflow_stages' => self::VALIDATION_NULLABLE_ARRAY,
+                'notification_settings' => self::VALIDATION_NULLABLE_ARRAY,
             ]);
 
             $contractType = $this->configRegistry->updateContractType($id, $validated);
