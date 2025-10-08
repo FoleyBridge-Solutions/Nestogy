@@ -4,7 +4,11 @@ namespace App\Domains\Security\Controllers;
 
 use App\Domains\Product\Services\SubscriptionService;
 use App\Domains\Security\Services\RoleService;
+use App\Domains\Security\Services\UserAnalyticsService;
+use App\Domains\Security\Services\UserProfileService;
+use App\Domains\Security\Services\UserQueryService;
 use App\Domains\Security\Services\UserService;
+use App\Domains\Security\Services\UserStatusService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
@@ -20,16 +24,29 @@ use Illuminate\Validation\Rule;
 class UserController extends Controller
 {
     protected $userService;
-
     protected $roleService;
-
     protected $subscriptionService;
+    protected $queryService;
+    protected $profileService;
+    protected $statusService;
+    protected $analyticsService;
 
-    public function __construct(UserService $userService, RoleService $roleService, SubscriptionService $subscriptionService)
-    {
+    public function __construct(
+        UserService $userService,
+        RoleService $roleService,
+        SubscriptionService $subscriptionService,
+        UserQueryService $queryService,
+        UserProfileService $profileService,
+        UserStatusService $statusService,
+        UserAnalyticsService $analyticsService
+    ) {
         $this->userService = $userService;
         $this->roleService = $roleService;
         $this->subscriptionService = $subscriptionService;
+        $this->queryService = $queryService;
+        $this->profileService = $profileService;
+        $this->statusService = $statusService;
+        $this->analyticsService = $analyticsService;
     }
 
     /**
@@ -335,7 +352,7 @@ class UserController extends Controller
         }
 
         try {
-            $this->userService->updateUserPassword($user, $request->get('password'));
+            $this->profileService->updateUserPassword($user, $request->get('password'));
 
             Log::info('User password updated', [
                 'user_id' => $user->id,
@@ -380,7 +397,7 @@ class UserController extends Controller
             $oldRole = $user->userSetting->role ?? 1;
             $newRole = $request->get('role');
 
-            $this->userService->updateUserRole($user, $newRole);
+            $this->profileService->updateUserRole($user, $newRole);
 
             Log::info('User role updated', [
                 'user_id' => $user->id,
@@ -427,7 +444,7 @@ class UserController extends Controller
             $oldStatus = $user->status;
             $newStatus = $request->get('status');
 
-            $this->userService->updateUserStatus($user, $newStatus);
+            $this->statusService->updateUserStatus($user, $newStatus);
 
             Log::info('User status updated', [
                 'user_id' => $user->id,
@@ -474,7 +491,7 @@ class UserController extends Controller
         }
 
         try {
-            $this->userService->archiveUser($user);
+            $this->statusService->archiveUser($user);
 
             Log::info('User archived', [
                 'user_id' => $user->id,
@@ -513,7 +530,7 @@ class UserController extends Controller
         $this->authorize('restore', $user);
 
         try {
-            $this->userService->restoreUser($user);
+            $this->statusService->restoreUser($user);
 
             Log::info('User restored', [
                 'user_id' => $user->id,
@@ -633,7 +650,7 @@ class UserController extends Controller
         ]);
 
         try {
-            $updatedUser = $this->userService->updateUserProfile($user, $request->all());
+            $updatedUser = $this->profileService->updateUserProfile($user, $request->all());
 
             Log::info('User profile updated', [
                 'user_id' => $user->id,
@@ -704,8 +721,7 @@ class UserController extends Controller
                 $user->userSetting->update(['theme' => $request->get('theme')]);
             }
 
-            // Update other user preferences through the service
-            $this->userService->updateUserSettings($user, $request->all());
+            $this->profileService->updateUserSettings($user, $request->all());
 
             Log::info('User settings updated', [
                 'user_id' => $user->id,
