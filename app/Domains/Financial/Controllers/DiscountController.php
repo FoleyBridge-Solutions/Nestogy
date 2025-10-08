@@ -9,6 +9,8 @@ use Illuminate\View\View;
 
 class DiscountController extends Controller
 {
+    private const POSITIVE_INTEGER_VALIDATION = 'nullable|integer|min:1';
+
     public function index(Request $request): View
     {
         $discounts = collect(); // TODO: Load from discounts table
@@ -42,8 +44,8 @@ class DiscountController extends Controller
             'value' => 'required|numeric|min:0',
             'minimum_amount' => 'nullable|numeric|min:0',
             'maximum_discount' => 'nullable|numeric|min:0',
-            'usage_limit' => 'nullable|integer|min:1',
-            'usage_per_client' => 'nullable|integer|min:1',
+            'usage_limit' => self::POSITIVE_INTEGER_VALIDATION,
+            'usage_per_client' => self::POSITIVE_INTEGER_VALIDATION,
             'valid_from' => 'required|date',
             'valid_to' => 'required|date|after:valid_from',
             'is_active' => 'boolean',
@@ -84,8 +86,8 @@ class DiscountController extends Controller
             'value' => 'required|numeric|min:0',
             'minimum_amount' => 'nullable|numeric|min:0',
             'maximum_discount' => 'nullable|numeric|min:0',
-            'usage_limit' => 'nullable|integer|min:1',
-            'usage_per_client' => 'nullable|integer|min:1',
+            'usage_limit' => self::POSITIVE_INTEGER_VALIDATION,
+            'usage_per_client' => self::POSITIVE_INTEGER_VALIDATION,
             'valid_from' => 'required|date',
             'valid_to' => 'required|date|after:valid_from',
             'is_active' => 'boolean',
