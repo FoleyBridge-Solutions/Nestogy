@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class AuthController extends Controller
 {
+    private const REQUIRED_STRING = 'required|string';
+
     protected PortalAuthService $authService;
 
     public function __construct(PortalAuthService $authService)
@@ -49,7 +51,7 @@ class AuthController extends Controller
             // Validate request
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|max:255',
-                'password' => 'required|string|min:6|max:255',
+                'password' => self::REQUIRED_STRING.'|min:6|max:255',
                 'remember_me' => 'boolean',
                 'device_info' => 'array',
             ]);
@@ -115,9 +117,9 @@ class AuthController extends Controller
 
             // Validate request
             $validator = Validator::make($request->all(), [
-                'session_id' => 'required|string',
-                'mfa_code' => 'required|string|min:4|max:8',
-                'mfa_method' => 'required|string|in:sms,email,totp',
+                'session_id' => self::REQUIRED_STRING,
+                'mfa_code' => self::REQUIRED_STRING.'|min:4|max:8',
+                'mfa_method' => self::REQUIRED_STRING.'|in:sms,email,totp',
             ]);
 
             if ($validator->fails()) {
@@ -270,9 +272,9 @@ class AuthController extends Controller
             // Validate request
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|max:255',
-                'token' => 'required|string|min:32|max:64',
-                'password' => 'required|string|min:8|max:255|confirmed',
-                'password_confirmation' => 'required|string',
+                'token' => self::REQUIRED_STRING.'|min:32|max:64',
+                'password' => self::REQUIRED_STRING.'|min:8|max:255|confirmed',
+                'password_confirmation' => self::REQUIRED_STRING,
             ]);
 
             if ($validator->fails()) {
@@ -320,9 +322,9 @@ class AuthController extends Controller
 
             // Validate request
             $validator = Validator::make($request->all(), [
-                'current_password' => 'required|string',
-                'new_password' => 'required|string|min:8|max:255|confirmed',
-                'new_password_confirmation' => 'required|string',
+                'current_password' => self::REQUIRED_STRING,
+                'new_password' => self::REQUIRED_STRING.'|min:8|max:255|confirmed',
+                'new_password_confirmation' => self::REQUIRED_STRING,
             ]);
 
             if ($validator->fails()) {
