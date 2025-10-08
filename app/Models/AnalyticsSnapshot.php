@@ -240,16 +240,24 @@ class AnalyticsSnapshot extends Model
                 $current = (float) $this->$field;
                 $previous = (float) $previousSnapshot->$field;
 
-                if ($previous > 0) {
-                    $percentageChange = (($current - $previous) / $previous) * 100;
-                    $comparison[$field] = [
-                        'current' => $current,
-                        'previous' => $previous,
-                        'change' => $current - $previous,
-                        'percentage_change' => round($percentageChange, 2),
-                        'trend' => $current > $previous ? 'up' : ($current < $previous ? 'down' : 'stable'),
-                    ];
+            if ($previous > 0) {
+                $percentageChange = (($current - $previous) / $previous) * 100;
+                
+                $trend = 'stable';
+                if ($current > $previous) {
+                    $trend = 'up';
+                } elseif ($current < $previous) {
+                    $trend = 'down';
                 }
+                
+                $comparison[$field] = [
+                    'current' => $current,
+                    'previous' => $previous,
+                    'change' => $current - $previous,
+                    'percentage_change' => round($percentageChange, 2),
+                    'trend' => $trend,
+                ];
+            }
             }
         }
 
