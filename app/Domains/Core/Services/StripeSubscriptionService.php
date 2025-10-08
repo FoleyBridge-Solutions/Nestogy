@@ -554,68 +554,75 @@ class StripeSubscriptionService
      */
     public function ensureStripePriceExists(\App\Models\SubscriptionPlan $plan): ?string
     {
-        // Skip if no Stripe price ID is set
-        if (! $plan->stripe_price_id) {
-            return null;
-        }
-
-        // Skip if this is a free plan (both fixed and per-user)
-        if ($plan->pricing_model === 'fixed' && $plan->price_monthly == 0) {
-            return null;
-        }
-        if ($plan->pricing_model === 'per_user' && $plan->price_per_user_monthly == 0) {
+        if ($this->shouldSkipPriceCreation($plan)) {
             return null;
         }
 
         try {
-            // Try to retrieve the price first
             $price = $this->stripe->prices->retrieve($plan->stripe_price_id);
             Log::info('Stripe price exists', ['price_id' => $price->id]);
 
             return $price->id;
         } catch (ApiErrorException $e) {
-            // If price doesn't exist, create it
             if (strpos($e->getMessage(), 'No such price') !== false) {
-                Log::info('Creating Stripe price for plan', [
-                    'plan' => $plan->name,
-                    'price_id' => $plan->stripe_price_id,
-                ]);
-
-                // First, create or get the product
-                $product = $this->ensureStripeProductExists($plan);
-
-                // Determine the price amount based on pricing model
-                $unitAmount = 0;
-                if ($plan->pricing_model === 'per_user') {
-                    $unitAmount = (int) ($plan->price_per_user_monthly * 100); // Per user price in cents
-                } else {
-                    $unitAmount = (int) ($plan->price_monthly * 100); // Fixed price in cents
-                }
-
-                // Create the price
-                $price = $this->stripe->prices->create([
-                    'product' => $product->id,
-                    'unit_amount' => $unitAmount,
-                    'currency' => 'usd',
-                    'recurring' => [
-                        'interval' => 'month',
-                    ],
-                    'lookup_key' => $plan->stripe_price_id,
-                ]);
-
-                // Update the plan with the actual Stripe price ID
-                $plan->update(['stripe_price_id' => $price->id]);
-
-                Log::info('Stripe price created', [
-                    'price_id' => $price->id,
-                    'amount' => $plan->price_monthly,
-                ]);
-
-                return $price->id;
+                return $this->createStripePrice($plan);
             }
 
             throw $e;
         }
+    }
+
+    protected function shouldSkipPriceCreation(\App\Models\SubscriptionPlan $plan): bool
+    {
+        if (! $plan->stripe_price_id) {
+            return true;
+        }
+
+        if ($plan->pricing_model === 'fixed' && $plan->price_monthly == 0) {
+            return true;
+        }
+
+        if ($plan->pricing_model === 'per_user' && $plan->price_per_user_monthly == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function createStripePrice(\App\Models\SubscriptionPlan $plan): string
+    {
+        Log::info('Creating Stripe price for plan', [
+            'plan' => $plan->name,
+            'price_id' => $plan->stripe_price_id,
+        ]);
+
+        $product = $this->ensureStripeProductExists($plan);
+
+        $unitAmount = 0;
+        if ($plan->pricing_model === 'per_user') {
+            $unitAmount = (int) ($plan->price_per_user_monthly * 100);
+        } else {
+            $unitAmount = (int) ($plan->price_monthly * 100);
+        }
+
+        $price = $this->stripe->prices->create([
+            'product' => $product->id,
+            'unit_amount' => $unitAmount,
+            'currency' => 'usd',
+            'recurring' => [
+                'interval' => 'month',
+            ],
+            'lookup_key' => $plan->stripe_price_id,
+        ]);
+
+        $plan->update(['stripe_price_id' => $price->id]);
+
+        Log::info('Stripe price created', [
+            'price_id' => $price->id,
+            'amount' => $plan->price_monthly,
+        ]);
+
+        return $price->id;
     }
 
     /**
