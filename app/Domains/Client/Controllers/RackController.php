@@ -14,6 +14,8 @@ class RackController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_REQUIRED_STRING_255 = 'required|string|max:255';
+
     /**
      * Display a listing of racks for the selected client
      */
@@ -112,9 +114,9 @@ class RackController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255,
             'description' => 'nullable|string',
-            'location' => 'required|string|max:255',
+            'location' => self::VALIDATION_REQUIRED_STRING_255,
             'rack_number' => 'nullable|integer|min:1',
             'height_units' => 'required|integer|min:1|max:100',
             'width_inches' => 'nullable|numeric|min:0',
@@ -198,9 +200,9 @@ class RackController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255,
             'description' => 'nullable|string',
-            'location' => 'required|string|max:255',
+            'location' => self::VALIDATION_REQUIRED_STRING_255,
             'rack_number' => 'nullable|integer|min:1',
             'height_units' => 'required|integer|min:1|max:100',
             'width_inches' => 'nullable|numeric|min:0',
