@@ -263,74 +263,90 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            // Validate SLA response vs resolution times
-            $slaDef = $this->input('sla_definitions', []);
-            if (isset($slaDef['response_times'], $slaDef['resolution_times'])) {
-                $responseTimes = $slaDef['response_times'];
-                $resolutionTimes = $slaDef['resolution_times'];
-
-                foreach (['critical', 'high', 'medium', 'low'] as $priority) {
-                    if (isset($responseTimes[$priority], $resolutionTimes[$priority])) {
-                        if ($responseTimes[$priority] >= $resolutionTimes[$priority]) {
-                            $validator->errors()->add(
-                                "sla_definitions.resolution_times.{$priority}",
-                                "Resolution time must be greater than response time for {$priority} priority."
-                            );
-                        }
-                    }
-                }
-            }
-
-            // Validate escalation hours sequence
-            $priorityRules = $this->input('ticket_priority_rules', []);
-            if (isset($priorityRules['escalation_hours'])) {
-                $escalationHours = $priorityRules['escalation_hours'];
-
-                if (isset($escalationHours['critical'], $escalationHours['high']) &&
-                    $escalationHours['critical'] >= $escalationHours['high']) {
-                    $validator->errors()->add(
-                        'ticket_priority_rules.escalation_hours.high',
-                        'High priority escalation time must be greater than critical priority.'
-                    );
-                }
-
-                if (isset($escalationHours['high'], $escalationHours['medium']) &&
-                    $escalationHours['high'] >= $escalationHours['medium']) {
-                    $validator->errors()->add(
-                        'ticket_priority_rules.escalation_hours.medium',
-                        'Medium priority escalation time must be greater than high priority.'
-                    );
-                }
-
-                if (isset($escalationHours['medium'], $escalationHours['low']) &&
-                    $escalationHours['medium'] >= $escalationHours['low']) {
-                    $validator->errors()->add(
-                        'ticket_priority_rules.escalation_hours.low',
-                        'Low priority escalation time must be greater than medium priority.'
-                    );
-                }
-            }
-
-            // Validate CSAT rating scale and threshold
-            $csatSettings = $this->input('csat_settings', []);
-            if (isset($csatSettings['rating_scale'], $csatSettings['low_rating_threshold'])) {
-                $scale = $csatSettings['rating_scale'];
-                $threshold = $csatSettings['low_rating_threshold'];
-
-                $maxThreshold = match ($scale) {
-                    '3_point' => 2,
-                    '5_star' => 3,
-                    '10_point' => 5,
-                    default => 3
-                };
-
-                if ($threshold > $maxThreshold) {
-                    $validator->errors()->add(
-                        'csat_settings.low_rating_threshold',
-                        "Low rating threshold cannot exceed {$maxThreshold} for {$scale} scale."
-                    );
-                }
-            }
+            $this->validateSlaResponseAndResolutionTimes($validator);
+            $this->validateEscalationHoursSequence($validator);
+            $this->validateCsatRatingScaleAndThreshold($validator);
         });
+    }
+
+    private function validateSlaResponseAndResolutionTimes($validator): void
+    {
+        $slaDef = $this->input('sla_definitions', []);
+        if (!isset($slaDef['response_times'], $slaDef['resolution_times'])) {
+            return;
+        }
+
+        $responseTimes = $slaDef['response_times'];
+        $resolutionTimes = $slaDef['resolution_times'];
+
+        foreach (['critical', 'high', 'medium', 'low'] as $priority) {
+            if (isset($responseTimes[$priority], $resolutionTimes[$priority])) {
+                if ($responseTimes[$priority] >= $resolutionTimes[$priority]) {
+                    $validator->errors()->add(
+                        "sla_definitions.resolution_times.{$priority}",
+                        "Resolution time must be greater than response time for {$priority} priority."
+                    );
+                }
+            }
+        }
+    }
+
+    private function validateEscalationHoursSequence($validator): void
+    {
+        $priorityRules = $this->input('ticket_priority_rules', []);
+        if (!isset($priorityRules['escalation_hours'])) {
+            return;
+        }
+
+        $escalationHours = $priorityRules['escalation_hours'];
+
+        if (isset($escalationHours['critical'], $escalationHours['high']) &&
+            $escalationHours['critical'] >= $escalationHours['high']) {
+            $validator->errors()->add(
+                'ticket_priority_rules.escalation_hours.high',
+                'High priority escalation time must be greater than critical priority.'
+            );
+        }
+
+        if (isset($escalationHours['high'], $escalationHours['medium']) &&
+            $escalationHours['high'] >= $escalationHours['medium']) {
+            $validator->errors()->add(
+                'ticket_priority_rules.escalation_hours.medium',
+                'Medium priority escalation time must be greater than high priority.'
+            );
+        }
+
+        if (isset($escalationHours['medium'], $escalationHours['low']) &&
+            $escalationHours['medium'] >= $escalationHours['low']) {
+            $validator->errors()->add(
+                'ticket_priority_rules.escalation_hours.low',
+                'Low priority escalation time must be greater than medium priority.'
+            );
+        }
+    }
+
+    private function validateCsatRatingScaleAndThreshold($validator): void
+    {
+        $csatSettings = $this->input('csat_settings', []);
+        if (!isset($csatSettings['rating_scale'], $csatSettings['low_rating_threshold'])) {
+            return;
+        }
+
+        $scale = $csatSettings['rating_scale'];
+        $threshold = $csatSettings['low_rating_threshold'];
+
+        $maxThreshold = match ($scale) {
+            '3_point' => 2,
+            '5_star' => 3,
+            '10_point' => 5,
+            default => 3
+        };
+
+        if ($threshold > $maxThreshold) {
+            $validator->errors()->add(
+                'csat_settings.low_rating_threshold',
+                "Low rating threshold cannot exceed {$maxThreshold} for {$scale} scale."
+            );
+        }
     }
 }
