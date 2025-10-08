@@ -15,6 +15,8 @@ class ServiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const CURRENCY_VALIDATION_RULE = 'nullable|numeric|min:0|max:999999.99';
+
     /**
      * Display a listing of services for the selected client
      */
@@ -152,8 +154,8 @@ class ServiceController extends Controller
             'end_date' => 'nullable|date|after:start_date',
             'renewal_date' => 'nullable|date',
             'billing_cycle' => 'nullable|in:'.implode(',', array_keys(ClientService::getBillingCycles())),
-            'monthly_cost' => 'nullable|numeric|min:0|max:999999.99',
-            'setup_cost' => 'nullable|numeric|min:0|max:999999.99',
+            'monthly_cost' => self::CURRENCY_VALIDATION_RULE,
+            'setup_cost' => self::CURRENCY_VALIDATION_RULE,
             'total_contract_value' => 'nullable|numeric|min:0|max:9999999.99',
             'currency' => 'nullable|string|size:3',
             'auto_renewal' => 'boolean',
@@ -291,8 +293,8 @@ class ServiceController extends Controller
             'end_date' => 'nullable|date|after:start_date',
             'renewal_date' => 'nullable|date',
             'billing_cycle' => 'nullable|in:'.implode(',', array_keys(ClientService::getBillingCycles())),
-            'monthly_cost' => 'nullable|numeric|min:0|max:999999.99',
-            'setup_cost' => 'nullable|numeric|min:0|max:999999.99',
+            'monthly_cost' => self::CURRENCY_VALIDATION_RULE,
+            'setup_cost' => self::CURRENCY_VALIDATION_RULE,
             'total_contract_value' => 'nullable|numeric|min:0|max:9999999.99',
             'currency' => 'nullable|string|size:3',
             'auto_renewal' => 'boolean',
