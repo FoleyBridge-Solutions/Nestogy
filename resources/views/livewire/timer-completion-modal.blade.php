@@ -49,9 +49,9 @@
                     {{-- Template Suggestions --}}
                     @if(!empty($suggestedTemplates))
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <div class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Quick Templates
-                            </label>
+                            </div>
                             <div class="space-y-2">
                                 @foreach($suggestedTemplates as $template)
                                     <button
