@@ -107,54 +107,54 @@ class EmailAccount extends Model
                $this->oauth_expires_at->isFuture();
     }
 
-    // Mutators for password encryption
+    private function encryptValue($value): ?string
+    {
+        return $value ? Crypt::encryptString($value) : null;
+    }
+
+    private function decryptValue($value): ?string
+    {
+        return $value ? Crypt::decryptString($value) : null;
+    }
+
     public function setImapPasswordAttribute($value)
     {
-        if ($value) {
-            $this->attributes['imap_password'] = Crypt::encryptString($value);
-        }
+        $this->attributes['imap_password'] = $this->encryptValue($value);
     }
 
     public function getImapPasswordAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptValue($value);
     }
 
     public function setSmtpPasswordAttribute($value)
     {
-        if ($value) {
-            $this->attributes['smtp_password'] = Crypt::encryptString($value);
-        }
+        $this->attributes['smtp_password'] = $this->encryptValue($value);
     }
 
     public function getSmtpPasswordAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptValue($value);
     }
 
-    // OAuth token encryption
     public function setOauthAccessTokenAttribute($value)
     {
-        if ($value) {
-            $this->attributes['oauth_access_token'] = Crypt::encryptString($value);
-        }
+        $this->attributes['oauth_access_token'] = $this->encryptValue($value);
     }
 
     public function getOauthAccessTokenAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptValue($value);
     }
 
     public function setOauthRefreshTokenAttribute($value)
     {
-        if ($value) {
-            $this->attributes['oauth_refresh_token'] = Crypt::encryptString($value);
-        }
+        $this->attributes['oauth_refresh_token'] = $this->encryptValue($value);
     }
 
     public function getOauthRefreshTokenAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptValue($value);
     }
 
     // Helper methods
