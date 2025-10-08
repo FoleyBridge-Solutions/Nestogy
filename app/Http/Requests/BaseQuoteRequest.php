@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class BaseQuoteRequest extends FormRequest
 {
+    protected const NULLABLE_STRING = 'nullable|string';
+
     /**
      * Get common validation rules for quote operations.
      */
@@ -38,8 +40,8 @@ abstract class BaseQuoteRequest extends FormRequest
             'currency_code' => 'required|string|size:3',
 
             // Content
-            'note' => 'nullable|string',
-            'terms_conditions' => 'nullable|string',
+            'note' => self::NULLABLE_STRING,
+            'terms_conditions' => self::NULLABLE_STRING,
 
             // Auto-renewal settings
             'auto_renew' => 'nullable|boolean',
@@ -73,7 +75,7 @@ abstract class BaseQuoteRequest extends FormRequest
             // Quote items
             'items' => 'nullable|array',
             'items.*.name' => 'required_with:items|string|max:255',
-            'items.*.description' => 'nullable|string',
+            'items.*.description' => self::NULLABLE_STRING,
             'items.*.quantity' => 'required_with:items|numeric|min:0.01|max:999999',
             'items.*.price' => 'required_with:items|numeric|min:0|max:999999.99',
             'items.*.discount' => 'nullable|numeric|min:0',
