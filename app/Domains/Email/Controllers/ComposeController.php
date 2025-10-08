@@ -321,30 +321,7 @@ class ComposeController extends Controller
         }
 
         $account = $message->emailAccount;
-
-        // Handle attachments
-        $attachments = [];
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('email_temp', 'local');
-                $attachments[] = [
-                    'path' => storage_path('app/'.$path),
-                    'name' => $file->getClientOriginalName(),
-                    'mime' => $file->getMimeType(),
-                ];
-            }
-        }
-
-        // Include original attachments if requested
-        if ($request->boolean('include_attachments')) {
-            foreach ($message->attachments as $attachment) {
-                $attachments[] = [
-                    'path' => storage_path('app/'.$attachment->storage_path),
-                    'name' => $attachment->filename,
-                    'mime' => $attachment->content_type,
-                ];
-            }
-        }
+        $attachments = $this->processForwardAttachments($request, $message);
 
         $forwardData = [
             'to' => $this->parseEmailAddresses($request->to),
@@ -357,15 +334,7 @@ class ComposeController extends Controller
 
         $result = $this->emailService->forwardEmail($message, $forwardData, $account);
 
-        // Clean up temp files (but not original attachments)
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $index => $file) {
-                $tempPath = $attachments[$index]['path'];
-                if (file_exists($tempPath)) {
-                    unlink($tempPath);
-                }
-            }
-        }
+        $this->cleanupTempAttachments($request, $attachments);
 
         return response()->json($result, $result['success'] ? 200 : 500);
     }
@@ -392,6 +361,64 @@ class ComposeController extends Controller
                 'body' => $draft->body_html,
             ],
         ]);
+    }
+
+    private function processForwardAttachments(Request $request, EmailMessage $message): array
+    {
+        $attachments = $this->storeUploadedAttachments($request);
+
+        if ($request->boolean('include_attachments')) {
+            $attachments = array_merge($attachments, $this->getOriginalAttachments($message));
+        }
+
+        return $attachments;
+    }
+
+    private function storeUploadedAttachments(Request $request): array
+    {
+        $attachments = [];
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('email_temp', 'local');
+                $attachments[] = [
+                    'path' => storage_path('app/'.$path),
+                    'name' => $file->getClientOriginalName(),
+                    'mime' => $file->getMimeType(),
+                ];
+            }
+        }
+
+        return $attachments;
+    }
+
+    private function getOriginalAttachments(EmailMessage $message): array
+    {
+        $attachments = [];
+
+        foreach ($message->attachments as $attachment) {
+            $attachments[] = [
+                'path' => storage_path('app/'.$attachment->storage_path),
+                'name' => $attachment->filename,
+                'mime' => $attachment->content_type,
+            ];
+        }
+
+        return $attachments;
+    }
+
+    private function cleanupTempAttachments(Request $request, array $attachments): void
+    {
+        if (!$request->hasFile('attachments')) {
+            return;
+        }
+
+        foreach ($request->file('attachments') as $index => $file) {
+            $tempPath = $attachments[$index]['path'];
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+        }
     }
 
     private function parseEmailAddresses(string $addresses): array
