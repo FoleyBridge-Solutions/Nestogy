@@ -165,10 +165,8 @@ class EmailProviderValidationService
         }
 
         // For OAuth connections, validate domain
-        if (($data['connection_type'] ?? 'manual') === 'oauth') {
-            if (! $this->validateEmailDomain($company, $data['email_address'])) {
-                $errors[] = 'Email domain is not allowed for this company\'s email provider';
-            }
+        if (($data['connection_type'] ?? 'manual') === 'oauth' && ! $this->validateEmailDomain($company, $data['email_address'])) {
+            $errors[] = 'Email domain is not allowed for this company\'s email provider';
         }
 
         // For manual connections, validate IMAP/SMTP settings
