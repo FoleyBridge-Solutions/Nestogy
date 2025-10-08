@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Log;
  */
 class EntityResolverService
 {
+    private const BELONGS_TO_COMPANY_TRAIT = 'App\Traits\BelongsToCompany';
+
     /**
      * Entity model mappings
      */
@@ -87,7 +89,7 @@ class EntityResolverService
         $query = $modelClass::where('id', $id);
 
         // Apply company scoping if model supports it
-        if (method_exists($modelClass, 'scopeCompany') || in_array('App\Traits\BelongsToCompany', class_uses_recursive($modelClass))) {
+        if (method_exists($modelClass, 'scopeCompany') || in_array(self::BELONGS_TO_COMPANY_TRAIT, class_uses_recursive($modelClass))) {
             $companyId = $context['company_id'] ?? auth()->user()->company_id;
             $query->where('company_id', $companyId);
         }
@@ -103,7 +105,7 @@ class EntityResolverService
         $query = $modelClass::query();
 
         // Apply company scoping
-        if (method_exists($modelClass, 'scopeCompany') || in_array('App\Traits\BelongsToCompany', class_uses_recursive($modelClass))) {
+        if (method_exists($modelClass, 'scopeCompany') || in_array(self::BELONGS_TO_COMPANY_TRAIT, class_uses_recursive($modelClass))) {
             $companyId = $context['company_id'] ?? auth()->user()->company_id;
             $query->where('company_id', $companyId);
         }
@@ -158,7 +160,7 @@ class EntityResolverService
         $query = $modelClass::query();
 
         // Apply company scoping
-        if (method_exists($modelClass, 'scopeCompany') || in_array('App\Traits\BelongsToCompany', class_uses_recursive($modelClass))) {
+        if (method_exists($modelClass, 'scopeCompany') || in_array(self::BELONGS_TO_COMPANY_TRAIT, class_uses_recursive($modelClass))) {
             $companyId = $context['company_id'] ?? auth()->user()->company_id;
             $query->where('company_id', $companyId);
         }
@@ -355,7 +357,7 @@ class EntityResolverService
         $queryBuilder = $modelClass::query();
 
         // Apply company scoping
-        if (method_exists($modelClass, 'scopeCompany') || in_array('App\Traits\BelongsToCompany', class_uses_recursive($modelClass))) {
+        if (method_exists($modelClass, 'scopeCompany') || in_array(self::BELONGS_TO_COMPANY_TRAIT, class_uses_recursive($modelClass))) {
             $companyId = $context['company_id'] ?? auth()->user()->company_id;
             $queryBuilder->where('company_id', $companyId);
         }
@@ -430,7 +432,7 @@ class EntityResolverService
             $query = $modelClass::query();
 
             // Apply company scoping
-            if (method_exists($modelClass, 'scopeCompany') || in_array('App\Traits\BelongsToCompany', class_uses_recursive($modelClass))) {
+            if (method_exists($modelClass, 'scopeCompany') || in_array(self::BELONGS_TO_COMPANY_TRAIT, class_uses_recursive($modelClass))) {
                 $companyId = $context['company_id'] ?? auth()->user()->company_id;
                 $query->where('company_id', $companyId);
             }
