@@ -29,6 +29,8 @@ use Illuminate\Validation\Rules\Password;
  */
 class CompanyRegistrationController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING_100 = 'nullable|string|max:100';
+
     protected StripeSubscriptionService $stripeService;
 
     protected SubscriptionService $subscriptionService;
@@ -246,10 +248,10 @@ class CompanyRegistrationController extends Controller
             'company_email' => 'required|email|max:255',
             'company_phone' => 'nullable|string|max:20',
             'company_address' => 'nullable|string|max:255',
-            'company_city' => 'nullable|string|max:100',
-            'company_state' => 'nullable|string|max:100',
+            'company_city' => self::VALIDATION_NULLABLE_STRING_100,
+            'company_state' => self::VALIDATION_NULLABLE_STRING_100,
             'company_zip' => 'nullable|string|max:20',
-            'company_country' => 'nullable|string|max:100',
+            'company_country' => self::VALIDATION_NULLABLE_STRING_100,
             'company_website' => 'nullable|url|max:255',
 
             // Admin user information
