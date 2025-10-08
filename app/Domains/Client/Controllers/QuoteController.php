@@ -135,31 +135,7 @@ class QuoteController extends Controller
                 ->withInput();
         }
 
-        // Process line items
-        $lineItems = [];
-        if ($request->line_items) {
-            $lines = explode("\n", $request->line_items);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (! empty($line)) {
-                    // Try to parse "Description | Qty | Price" format
-                    $parts = explode('|', $line);
-                    if (count($parts) >= 3) {
-                        $lineItems[] = [
-                            'description' => trim($parts[0]),
-                            'quantity' => (float) trim($parts[1]),
-                            'unit_price' => (float) trim($parts[2]),
-                        ];
-                    } else {
-                        $lineItems[] = [
-                            'description' => $line,
-                            'quantity' => 1,
-                            'unit_price' => 0,
-                        ];
-                    }
-                }
-            }
-        }
+        $lineItems = $this->parseLineItems($request->line_items);
 
         $quote = new ClientQuote([
             'client_id' => $request->client_id,
@@ -186,7 +162,6 @@ class QuoteController extends Controller
 
         $quote->company_id = auth()->user()->company_id;
 
-        // Calculate totals
         $quote->calculateTotals();
 
         $quote->save();
@@ -265,31 +240,7 @@ class QuoteController extends Controller
                 ->withInput();
         }
 
-        // Process line items
-        $lineItems = [];
-        if ($request->line_items) {
-            $lines = explode("\n", $request->line_items);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (! empty($line)) {
-                    // Try to parse "Description | Qty | Price" format
-                    $parts = explode('|', $line);
-                    if (count($parts) >= 3) {
-                        $lineItems[] = [
-                            'description' => trim($parts[0]),
-                            'quantity' => (float) trim($parts[1]),
-                            'unit_price' => (float) trim($parts[2]),
-                        ];
-                    } else {
-                        $lineItems[] = [
-                            'description' => $line,
-                            'quantity' => 1,
-                            'unit_price' => 0,
-                        ];
-                    }
-                }
-            }
-        }
+        $lineItems = $this->parseLineItems($request->line_items);
 
         $quote->fill([
             'client_id' => $request->client_id,
@@ -509,5 +460,39 @@ class QuoteController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    private function parseLineItems(?string $lineItemsString): array
+    {
+        $lineItems = [];
+        
+        if (! $lineItemsString) {
+            return $lineItems;
+        }
+
+        $lines = explode("\n", $lineItemsString);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+
+            $parts = explode('|', $line);
+            if (count($parts) >= 3) {
+                $lineItems[] = [
+                    'description' => trim($parts[0]),
+                    'quantity' => (float) trim($parts[1]),
+                    'unit_price' => (float) trim($parts[2]),
+                ];
+            } else {
+                $lineItems[] = [
+                    'description' => $line,
+                    'quantity' => 1,
+                    'unit_price' => 0,
+                ];
+            }
+        }
+
+        return $lineItems;
     }
 }
