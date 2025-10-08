@@ -16,6 +16,8 @@ use Exception;
  */
 class TaxCloudApiClient extends BaseApiClient
 {
+    protected const TIC_GENERAL_MERCHANDISE = '00000';
+
     protected string $baseUrl = 'https://api.taxcloud.com/1.0/TaxCloud';
 
     protected ?string $apiLoginId;
@@ -196,7 +198,7 @@ class TaxCloudApiClient extends BaseApiClient
                     [
                         'index' => 0,
                         'item_id' => 'test_item',
-                        'tic' => '00000', // General merchandise
+                        'tic' => self::TIC_GENERAL_MERCHANDISE, // General merchandise
                         'price' => 100.00,
                         'quantity' => 1,
                         'description' => 'Test item for jurisdiction lookup',
@@ -256,7 +258,7 @@ class TaxCloudApiClient extends BaseApiClient
             'support' => '30070',          // Computer Services
             'consultation' => '30070',     // Computer Services
             'installation' => '30070',     // Computer Services
-            'equipment' => '00000',        // General merchandise
+            'equipment' => self::TIC_GENERAL_MERCHANDISE,        // General merchandise
             'software' => '30240',         // Prewritten Software
         ];
 
@@ -308,7 +310,7 @@ class TaxCloudApiClient extends BaseApiClient
             $formatted[] = [
                 'Index' => $item['index'] ?? $index,
                 'ItemID' => $item['item_id'] ?? "item_{$index}",
-                'TIC' => $item['tic'] ?? '00000',
+                'TIC' => $item['tic'] ?? self::TIC_GENERAL_MERCHANDISE,
                 'Price' => (float) ($item['price'] ?? 0),
                 'Qty' => (float) ($item['quantity'] ?? 1),
             ];
@@ -371,7 +373,7 @@ class TaxCloudApiClient extends BaseApiClient
                 'quantity' => $originalItem['quantity'] ?? 1,
                 'tax_amount' => $tax,
                 'taxable' => $tax > 0,
-                'tic' => $originalItem['tic'] ?? '00000',
+                'tic' => $originalItem['tic'] ?? self::TIC_GENERAL_MERCHANDISE,
             ];
 
             // Extract jurisdiction information from first item
@@ -480,7 +482,7 @@ class TaxCloudApiClient extends BaseApiClient
                 'examples' => ['Cloud Hosting', 'Data Storage', 'Backup Services'],
             ],
             // Equipment
-            '00000' => [
+            self::TIC_GENERAL_MERCHANDISE => [
                 'description' => 'General Merchandise',
                 'keywords' => ['equipment', 'hardware', 'device', 'router', 'server'],
                 'examples' => ['Network Equipment', 'Computer Hardware'],
