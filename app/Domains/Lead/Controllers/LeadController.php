@@ -15,6 +15,8 @@ class LeadController extends BaseResourceController
 {
     use HasClientRelation;
 
+    private const PRIORITY_VALIDATION_RULE = 'required|in:low,medium,high,urgent';
+
     protected LeadScoringService $leadScoringService;
 
     public function __construct(LeadScoringService $leadScoringService)
@@ -136,7 +138,7 @@ class LeadController extends BaseResourceController
             'country' => 'nullable|string|max:100',
             'lead_source_id' => 'nullable|exists:lead_sources,id',
             'assigned_user_id' => 'nullable|exists:users,id',
-            'priority' => 'required|in:low,medium,high,urgent',
+            'priority' => self::PRIORITY_VALIDATION_RULE,
             'industry' => 'nullable|string|max:100',
             'company_size' => 'nullable|integer|min:1',
             'estimated_value' => 'nullable|numeric|min:0',
@@ -232,7 +234,7 @@ class LeadController extends BaseResourceController
             'country' => 'nullable|string|max:100',
             'lead_source_id' => 'nullable|exists:lead_sources,id',
             'assigned_user_id' => 'nullable|exists:users,id',
-            'priority' => 'required|in:low,medium,high,urgent',
+            'priority' => self::PRIORITY_VALIDATION_RULE,
             'status' => 'required|in:new,contacted,qualified,unqualified,nurturing,converted,lost',
             'industry' => 'nullable|string|max:100',
             'company_size' => 'nullable|integer|min:1',
@@ -458,7 +460,7 @@ class LeadController extends BaseResourceController
             'lead_source_id' => 'nullable|exists:lead_sources,id',
             'assigned_user_id' => 'nullable|exists:users,id',
             'default_status' => 'required|in:'.implode(',', array_keys(Lead::getStatuses())),
-            'default_interest_level' => 'required|in:low,medium,high,urgent',
+            'default_interest_level' => self::PRIORITY_VALIDATION_RULE,
             'skip_duplicates' => 'boolean',
             'import_notes' => 'nullable|string|max:1000',
         ]);
