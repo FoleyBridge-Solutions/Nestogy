@@ -27,6 +27,8 @@ class InvoiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     protected $invoiceService;
 
     protected $paymentService;
@@ -326,7 +328,7 @@ class InvoiceController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'quantity' => 'required|numeric|min:0',
             'price' => 'required|numeric|min:0',
             'tax_id' => 'nullable|exists:taxes,id',
@@ -375,7 +377,7 @@ class InvoiceController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'quantity' => 'required|numeric|min:0',
             'price' => 'required|numeric|min:0',
             'tax_id' => 'nullable|exists:taxes,id',
@@ -778,7 +780,7 @@ class InvoiceController extends Controller
         $this->authorize('update', $invoice);
 
         $request->validate([
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         try {
@@ -827,7 +829,7 @@ class InvoiceController extends Controller
             'payment_terms' => 'nullable|string|in:net_15,net_30,net_45,net_60,immediate',
             'auto_renewal' => 'boolean',
             'renewal_notice_days' => 'nullable|integer|min:1|max:365',
-            'terms_and_conditions' => 'nullable|string',
+            'terms_and_conditions' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         try {
@@ -930,7 +932,7 @@ class InvoiceController extends Controller
             'billing_period_end' => 'required|date|after:billing_period_start',
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
-            'description_override' => 'nullable|string',
+            'description_override' => self::VALIDATION_NULLABLE_STRING,
             'milestone_ids' => 'nullable|array',
             'milestone_ids.*' => 'exists:contract_milestones,id',
         ]);
