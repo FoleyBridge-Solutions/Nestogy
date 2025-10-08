@@ -213,7 +213,7 @@ class VoIPTaxReportingService
 
         // Trends over time
         if ($startDate->diffInDays($endDate) > 30) {
-            $report['trends'] = $this->getServiceTypeTrends($startDate, $endDate);
+            $report['trends'] = $this->getServiceTypeTrends($startDate);
         }
 
         return $report;
@@ -711,7 +711,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function getServiceTypeTrends($startDate, $endDate)
+    protected function getServiceTypeTrends($startDate)
     {
         return [];
     }
