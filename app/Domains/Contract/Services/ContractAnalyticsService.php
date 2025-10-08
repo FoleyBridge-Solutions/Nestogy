@@ -162,7 +162,7 @@ class ContractAnalyticsService
         $clients = Client::where('company_id', $companyId)->get();
 
         // Top clients by contract value
-        $topClientsByValue = $this->getTopClientsByValue($companyId, 10);
+        $topClientsByValue = $this->getTopClientsByValue($companyId);
 
         // Client retention
         $clientRetention = $this->getClientRetentionRate($companyId, $startDate, $endDate);
@@ -477,7 +477,7 @@ class ContractAnalyticsService
         return [];
     }
 
-    protected function getTopClientsByValue(int $companyId, int $limit): array
+    protected function getTopClientsByValue(int $companyId): array
     {
         return [];
     }
