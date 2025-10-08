@@ -15,6 +15,8 @@ class ServiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_IN_RULE = 'nullable|in:';
+
     /**
      * Display a listing of services for the selected client
      */
@@ -146,12 +148,12 @@ class ServiceController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
-            'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
+            'category' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientService::getServiceCategories())),
             'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'renewal_date' => 'nullable|date',
-            'billing_cycle' => 'nullable|in:'.implode(',', array_keys(ClientService::getBillingCycles())),
+            'billing_cycle' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientService::getBillingCycles())),
             'monthly_cost' => 'nullable|numeric|min:0|max:999999.99',
             'setup_cost' => 'nullable|numeric|min:0|max:999999.99',
             'total_contract_value' => 'nullable|numeric|min:0|max:9999999.99',
@@ -159,8 +161,8 @@ class ServiceController extends Controller
             'auto_renewal' => 'boolean',
             'contract_terms' => 'nullable|string',
             'sla_terms' => 'nullable|string',
-            'service_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceLevels())),
-            'priority_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getPriorityLevels())),
+            'service_level' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientService::getServiceLevels())),
+            'priority_level' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientService::getPriorityLevels())),
             'assigned_technician' => [
                 'nullable',
                 'exists:users,id',
@@ -285,12 +287,12 @@ class ServiceController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
-            'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
+            'category' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientService::getServiceCategories())),
             'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'renewal_date' => 'nullable|date',
-            'billing_cycle' => 'nullable|in:'.implode(',', array_keys(ClientService::getBillingCycles())),
+            'billing_cycle' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientService::getBillingCycles())),
             'monthly_cost' => 'nullable|numeric|min:0|max:999999.99',
             'setup_cost' => 'nullable|numeric|min:0|max:999999.99',
             'total_contract_value' => 'nullable|numeric|min:0|max:9999999.99',
@@ -298,8 +300,8 @@ class ServiceController extends Controller
             'auto_renewal' => 'boolean',
             'contract_terms' => 'nullable|string',
             'sla_terms' => 'nullable|string',
-            'service_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceLevels())),
-            'priority_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getPriorityLevels())),
+            'service_level' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientService::getServiceLevels())),
+            'priority_level' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientService::getPriorityLevels())),
             'assigned_technician' => [
                 'nullable',
                 'exists:users,id',
