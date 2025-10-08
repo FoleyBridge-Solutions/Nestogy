@@ -272,6 +272,8 @@ class PermissionController extends Controller
                     case 'remove_ability':
                         Bouncer::disallow($user)->to($request->ability);
                         break;
+                    default:
+                        throw new \InvalidArgumentException("Unsupported action: {$request->action}");
                 }
             }
 
