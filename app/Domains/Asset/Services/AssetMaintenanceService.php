@@ -180,7 +180,7 @@ class AssetMaintenanceService
 
         try {
             // 1. Performance baseline capture
-            $baselineResult = $this->capturePerformanceBaseline($asset);
+            $baselineResult = $this->capturePerformanceBaseline();
             $results['baseline'] = $baselineResult;
 
             // 2. Memory optimization
@@ -548,7 +548,7 @@ class AssetMaintenanceService
         return $this->syncService->rebootDevice($asset, $options);
     }
 
-    protected function capturePerformanceBaseline(Asset $asset): array
+    protected function capturePerformanceBaseline(): array
     {
         return ['success' => true];
     }
