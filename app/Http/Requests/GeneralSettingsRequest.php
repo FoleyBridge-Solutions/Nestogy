@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class GeneralSettingsRequest extends FormRequest
 {
+    private const TIME_FORMAT_VALIDATION = 'nullable|date_format:H:i';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -38,32 +40,32 @@ class GeneralSettingsRequest extends FormRequest
             // Business Operations
             'business_hours' => 'nullable|array',
             'business_hours.monday' => 'nullable|array',
-            'business_hours.monday.start' => 'nullable|date_format:H:i',
-            'business_hours.monday.end' => 'nullable|date_format:H:i|after:business_hours.monday.start',
+            'business_hours.monday.start' => self::TIME_FORMAT_VALIDATION,
+            'business_hours.monday.end' => self::TIME_FORMAT_VALIDATION . '|after:business_hours.monday.start',
             'business_hours.monday.enabled' => 'boolean',
             'business_hours.tuesday' => 'nullable|array',
-            'business_hours.tuesday.start' => 'nullable|date_format:H:i',
-            'business_hours.tuesday.end' => 'nullable|date_format:H:i|after:business_hours.tuesday.start',
+            'business_hours.tuesday.start' => self::TIME_FORMAT_VALIDATION,
+            'business_hours.tuesday.end' => self::TIME_FORMAT_VALIDATION . '|after:business_hours.tuesday.start',
             'business_hours.tuesday.enabled' => 'boolean',
             'business_hours.wednesday' => 'nullable|array',
-            'business_hours.wednesday.start' => 'nullable|date_format:H:i',
-            'business_hours.wednesday.end' => 'nullable|date_format:H:i|after:business_hours.wednesday.start',
+            'business_hours.wednesday.start' => self::TIME_FORMAT_VALIDATION,
+            'business_hours.wednesday.end' => self::TIME_FORMAT_VALIDATION . '|after:business_hours.wednesday.start',
             'business_hours.wednesday.enabled' => 'boolean',
             'business_hours.thursday' => 'nullable|array',
-            'business_hours.thursday.start' => 'nullable|date_format:H:i',
-            'business_hours.thursday.end' => 'nullable|date_format:H:i|after:business_hours.thursday.start',
+            'business_hours.thursday.start' => self::TIME_FORMAT_VALIDATION,
+            'business_hours.thursday.end' => self::TIME_FORMAT_VALIDATION . '|after:business_hours.thursday.start',
             'business_hours.thursday.enabled' => 'boolean',
             'business_hours.friday' => 'nullable|array',
-            'business_hours.friday.start' => 'nullable|date_format:H:i',
-            'business_hours.friday.end' => 'nullable|date_format:H:i|after:business_hours.friday.start',
+            'business_hours.friday.start' => self::TIME_FORMAT_VALIDATION,
+            'business_hours.friday.end' => self::TIME_FORMAT_VALIDATION . '|after:business_hours.friday.start',
             'business_hours.friday.enabled' => 'boolean',
             'business_hours.saturday' => 'nullable|array',
-            'business_hours.saturday.start' => 'nullable|date_format:H:i',
-            'business_hours.saturday.end' => 'nullable|date_format:H:i|after:business_hours.saturday.start',
+            'business_hours.saturday.start' => self::TIME_FORMAT_VALIDATION,
+            'business_hours.saturday.end' => self::TIME_FORMAT_VALIDATION . '|after:business_hours.saturday.start',
             'business_hours.saturday.enabled' => 'boolean',
             'business_hours.sunday' => 'nullable|array',
-            'business_hours.sunday.start' => 'nullable|date_format:H:i',
-            'business_hours.sunday.end' => 'nullable|date_format:H:i|after:business_hours.sunday.start',
+            'business_hours.sunday.start' => self::TIME_FORMAT_VALIDATION,
+            'business_hours.sunday.end' => self::TIME_FORMAT_VALIDATION . '|after:business_hours.sunday.start',
             'business_hours.sunday.enabled' => 'boolean',
 
             'company_holidays' => 'nullable|array',
