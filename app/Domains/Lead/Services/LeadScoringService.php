@@ -154,10 +154,18 @@ class LeadScoringService
     {
         $score = 0;
 
-        // Technology indicators from notes/custom fields
+        $score += $this->scoreTechnologyFit($lead);
+        $score += $this->scorePainPointFit($lead);
+        $score += $this->scoreBudgetFit($lead);
+        $score += $this->scoreDecisionMakerTitle($lead);
+
+        return min($score, 50);
+    }
+
+    protected function scoreTechnologyFit(Lead $lead): int
+    {
         $techIndicators = $this->extractTechIndicators($lead);
 
-        // High-fit technology stack indicators
         $highFitTech = [
             'office_365',
             'microsoft_365',
@@ -173,13 +181,18 @@ class LeadScoringService
             'vpn',
         ];
 
+        $score = 0;
         foreach ($highFitTech as $tech) {
             if (in_array($tech, $techIndicators)) {
                 $score += 3;
             }
         }
 
-        // Pain point indicators
+        return $score;
+    }
+
+    protected function scorePainPointFit(Lead $lead): int
+    {
         $painPoints = $this->extractPainPoints($lead);
         $mspPainPoints = [
             'security_breach',
@@ -193,40 +206,56 @@ class LeadScoringService
             'staff_turnover',
         ];
 
+        $score = 0;
         foreach ($mspPainPoints as $pain) {
             if (in_array($pain, $painPoints)) {
                 $score += 4;
             }
         }
 
-        // Budget indicators
-        if ($lead->estimated_value) {
-            if ($lead->estimated_value >= 50000) {
-                $score += 15; // High-value opportunity
-            } elseif ($lead->estimated_value >= 25000) {
-                $score += 10; // Medium-value
-            } elseif ($lead->estimated_value >= 10000) {
-                $score += 5; // Standard MSP contract
-            }
+        return $score;
+    }
+
+    protected function scoreBudgetFit(Lead $lead): int
+    {
+        if (!$lead->estimated_value) {
+            return 0;
         }
 
-        // Title-based scoring
+        if ($lead->estimated_value >= 50000) {
+            return 15;
+        }
+
+        if ($lead->estimated_value >= 25000) {
+            return 10;
+        }
+
+        if ($lead->estimated_value >= 10000) {
+            return 5;
+        }
+
+        return 0;
+    }
+
+    protected function scoreDecisionMakerTitle(Lead $lead): int
+    {
+        if (!$lead->title) {
+            return 0;
+        }
+
         $decisionMakerTitles = [
             'ceo', 'cto', 'cio', 'owner', 'president', 'vp', 'director',
             'manager', 'head', 'chief', 'founder',
         ];
 
-        if ($lead->title) {
-            $titleLower = strtolower($lead->title);
-            foreach ($decisionMakerTitles as $title) {
-                if (str_contains($titleLower, $title)) {
-                    $score += 10;
-                    break;
-                }
+        $titleLower = strtolower($lead->title);
+        foreach ($decisionMakerTitles as $title) {
+            if (str_contains($titleLower, $title)) {
+                return 10;
             }
         }
 
-        return min($score, 50); // Max 50 points for fit
+        return 0;
     }
 
     /**
