@@ -11,6 +11,8 @@ class ClientQuote extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
+    protected const DECIMAL_CAST = 'decimal:2';
+
     protected $fillable = [
         'client_id',
         'quote_number',
@@ -54,12 +56,12 @@ class ClientQuote extends Model
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
-        'tax_rate' => 'decimal:2',
-        'tax_amount' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'conversion_probability' => 'decimal:2',
+        'amount' => self::DECIMAL_CAST,
+        'tax_rate' => self::DECIMAL_CAST,
+        'tax_amount' => self::DECIMAL_CAST,
+        'discount_amount' => self::DECIMAL_CAST,
+        'total_amount' => self::DECIMAL_CAST,
+        'conversion_probability' => self::DECIMAL_CAST,
         'valid_until' => 'date',
         'issued_date' => 'date',
         'accepted_date' => 'date',
