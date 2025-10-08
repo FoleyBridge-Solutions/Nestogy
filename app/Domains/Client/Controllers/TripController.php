@@ -14,6 +14,8 @@ class TripController extends Controller
 {
     use UsesSelectedClient;
 
+    private const LOCATION_FIELD_VALIDATION = 'nullable|string|max:100';
+
     /**
      * Display a listing of trips for the selected client
      */
@@ -119,8 +121,8 @@ class TripController extends Controller
             'purpose' => 'nullable|string|max:255',
             'destination_address' => 'nullable|string|max:255',
             'destination_city' => 'required|string|max:100',
-            'destination_state' => 'nullable|string|max:100',
-            'destination_country' => 'nullable|string|max:100',
+            'destination_state' => self::LOCATION_FIELD_VALIDATION,
+            'destination_country' => self::LOCATION_FIELD_VALIDATION,
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'departure_time' => 'nullable|date',
@@ -269,8 +271,8 @@ class TripController extends Controller
             'purpose' => 'nullable|string|max:255',
             'destination_address' => 'nullable|string|max:255',
             'destination_city' => 'required|string|max:100',
-            'destination_state' => 'nullable|string|max:100',
-            'destination_country' => 'nullable|string|max:100',
+            'destination_state' => self::LOCATION_FIELD_VALIDATION,
+            'destination_country' => self::LOCATION_FIELD_VALIDATION,
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'departure_time' => 'nullable|date',
