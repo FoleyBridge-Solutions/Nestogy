@@ -212,23 +212,11 @@ class CommunicationLogIntegrationService
 
     public function shouldCreateCommunicationLog(EmailMessage $emailMessage): bool
     {
-        // Don't log if already logged
-        if ($emailMessage->is_communication_logged) {
-            return false;
-        }
-
-        // Don't log drafts
-        if ($emailMessage->is_draft) {
-            return false;
-        }
-
-        // Don't log deleted messages
-        if ($emailMessage->is_deleted) {
-            return false;
-        }
-
-        // Only log if account has auto-logging enabled
-        if (! $emailMessage->emailAccount->auto_log_communications) {
+        // Check all conditions that would prevent logging
+        if ($emailMessage->is_communication_logged
+            || $emailMessage->is_draft
+            || $emailMessage->is_deleted
+            || ! $emailMessage->emailAccount->auto_log_communications) {
             return false;
         }
 
