@@ -14,6 +14,8 @@ class CredentialController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_IN_RULE = 'nullable|in:';
+
     /**
      * Display a listing of credentials for the selected client
      */
@@ -135,8 +137,8 @@ class CredentialController extends Controller
             'expires_at' => 'nullable|date|after:today',
             'is_active' => 'boolean',
             'is_shared' => 'boolean',
-            'environment' => 'nullable|in:'.implode(',', array_keys(ClientCredential::getEnvironments())),
-            'access_level' => 'nullable|in:'.implode(',', array_keys(ClientCredential::getAccessLevels())),
+            'environment' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientCredential::getEnvironments())),
+            'access_level' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientCredential::getAccessLevels())),
             'notes' => 'nullable|string',
         ]);
 
@@ -220,8 +222,8 @@ class CredentialController extends Controller
             'expires_at' => 'nullable|date|after:today',
             'is_active' => 'boolean',
             'is_shared' => 'boolean',
-            'environment' => 'nullable|in:'.implode(',', array_keys(ClientCredential::getEnvironments())),
-            'access_level' => 'nullable|in:'.implode(',', array_keys(ClientCredential::getAccessLevels())),
+            'environment' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientCredential::getEnvironments())),
+            'access_level' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientCredential::getAccessLevels())),
             'notes' => 'nullable|string',
         ]);
 
