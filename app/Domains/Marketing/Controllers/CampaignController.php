@@ -15,6 +15,8 @@ use Illuminate\View\View;
 
 class CampaignController extends BaseResourceController
 {
+    private const ERROR_CAMPAIGN_CANNOT_BE_EDITED = 'Campaign cannot be edited in current status';
+
     protected CampaignEmailService $campaignEmailService;
 
     public function __construct(CampaignEmailService $campaignEmailService)
@@ -168,7 +170,7 @@ class CampaignController extends BaseResourceController
 
         if (! $campaign->canBeEdited()) {
             return redirect()->route('marketing.campaigns.show', $campaign)
-                ->with('error', 'Campaign cannot be edited in current status');
+                ->with('error', self::ERROR_CAMPAIGN_CANNOT_BE_EDITED);
         }
 
         return view('marketing.campaigns.edit', compact('campaign'));
@@ -184,10 +186,10 @@ class CampaignController extends BaseResourceController
 
         if (! $campaign->canBeEdited()) {
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'Campaign cannot be edited in current status'], 400);
+                return response()->json(['error' => self::ERROR_CAMPAIGN_CANNOT_BE_EDITED], 400);
             }
 
-            return back()->with('error', 'Campaign cannot be edited in current status');
+            return back()->with('error', self::ERROR_CAMPAIGN_CANNOT_BE_EDITED);
         }
 
         $validated = $request->validate([
@@ -357,7 +359,7 @@ class CampaignController extends BaseResourceController
         $this->authorize('update', $campaign);
 
         if (! $campaign->canBeEdited()) {
-            return response()->json(['error' => 'Campaign cannot be edited in current status'], 400);
+            return response()->json(['error' => self::ERROR_CAMPAIGN_CANNOT_BE_EDITED], 400);
         }
 
         $validated = $request->validate([
