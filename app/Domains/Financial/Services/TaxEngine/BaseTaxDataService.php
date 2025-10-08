@@ -3,7 +3,6 @@
 namespace App\Domains\Financial\Services\TaxEngine;
 
 use Exception;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -24,12 +23,16 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
 
     protected string $stateName;
 
-    protected array $apiConfig;
+    protected TaxServiceConfigurationManager $configManager;
+
+    protected TaxServiceCacheManager $cacheManager;
+
+    protected TaxServiceDatabaseManager $databaseManager;
 
     public function __construct(array $config = [])
     {
         $this->config = array_merge([
-            'cache_ttl' => 3600, // 1 hour
+            'cache_ttl' => 3600,
             'enable_caching' => true,
             'round_precision' => 4,
             'batch_size' => 1000,
@@ -37,99 +40,32 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
             'retry_attempts' => 3,
         ], $config);
 
-        $this->loadApiConfiguration();
+        $stateCode = $this->getStateCode();
+        $this->configManager = new TaxServiceConfigurationManager($stateCode, $this->companyId);
+        $this->cacheManager = new TaxServiceCacheManager($stateCode, $this->companyId, $this->config);
+        $this->databaseManager = new TaxServiceDatabaseManager($stateCode, $this->companyId, $this->config);
     }
 
-    /**
-     * Set the company ID for operations
-     */
     public function setCompanyId(int $companyId): self
     {
         $this->companyId = $companyId;
+        $this->configManager->setCompanyId($companyId);
+        $this->cacheManager->setCompanyId($companyId);
+        $this->databaseManager->setCompanyId($companyId);
 
         return $this;
     }
 
-    /**
-     * Load API configuration from database or config files
-     */
-    protected function loadApiConfiguration(): void
-    {
-        // Load from company-specific configuration in database
-        if ($this->companyId) {
-            $this->apiConfig = $this->loadFromDatabase();
-        } else {
-            // Fallback to config files
-            $this->apiConfig = $this->loadFromConfig();
-        }
-    }
-
-    /**
-     * Load configuration from database
-     */
-    protected function loadFromDatabase(): array
-    {
-        $config = DB::table('company_tax_configurations')
-            ->where('company_id', $this->companyId)
-            ->where('state_code', $this->getStateCode())
-            ->where('is_active', true)
-            ->first();
-
-        if ($config) {
-            return [
-                'api_key' => $config->api_key,
-                'base_url' => $config->api_base_url,
-                'enabled' => $config->is_enabled,
-                'auto_update' => $config->auto_update_enabled,
-                'update_frequency' => $config->update_frequency,
-                'last_updated' => $config->last_updated,
-                'metadata' => json_decode($config->metadata ?? '{}', true),
-            ];
-        }
-
-        return $this->getDefaultConfig();
-    }
-
-    /**
-     * Load configuration from Laravel config files
-     */
-    protected function loadFromConfig(): array
-    {
-        $configKey = strtolower($this->getStateCode()).'_tax';
-        $config = config($configKey, []);
-
-        return array_merge($this->getDefaultConfig(), $config);
-    }
-
-    /**
-     * Get default configuration
-     */
-    protected function getDefaultConfig(): array
-    {
-        return [
-            'api_key' => null,
-            'base_url' => null,
-            'enabled' => false,
-            'auto_update' => false,
-            'update_frequency' => 'quarterly',
-            'last_updated' => null,
-            'metadata' => [],
-        ];
-    }
-
-    /**
-     * Check if service is configured
-     */
     public function isConfigured(): bool
     {
-        return ! empty($this->apiConfig['api_key']) &&
-               ! empty($this->apiConfig['base_url']) &&
-               $this->apiConfig['enabled'];
+        return $this->configManager->isConfigured();
     }
 
-    /**
-     * Get configuration status
-     */
+    protected function getApiConfig(): array
+    {
+        return $this->configManager->getApiConfig();
+    }
+
     public function getConfigurationStatus(): array
     {
         $rateCount = DB::table('service_tax_rates')
@@ -137,31 +73,32 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
             ->where('is_active', 1)
             ->count();
 
+        $apiConfig = $this->configManager->getApiConfig();
+
         return [
             'configured' => $this->isConfigured(),
             'state_code' => $this->getStateCode(),
             'state_name' => $this->getStateName(),
             'tax_rates' => $rateCount,
-            'last_updated' => $this->apiConfig['last_updated'],
-            'auto_update' => $this->apiConfig['auto_update'],
+            'last_updated' => $apiConfig['last_updated'],
+            'auto_update' => $apiConfig['auto_update'],
             'source' => $this->getStateCode().'_official',
-            'cost' => 'FREE', // Most official sources are free
+            'cost' => 'FREE',
         ];
     }
 
-    /**
-     * Make HTTP request with retry logic
-     */
     protected function makeHttpRequest(string $method, string $url, array $options = []): array
     {
         try {
+            $apiConfig = $this->configManager->getApiConfig();
+
             $headers = array_merge([
                 'Accept' => 'application/json',
                 'User-Agent' => 'Nestogy-MSP/1.0',
             ], $options['headers'] ?? []);
 
-            if ($this->apiConfig['api_key']) {
-                $headers['x-api-key'] = $this->apiConfig['api_key'];
+            if ($apiConfig['api_key']) {
+                $headers['x-api-key'] = $apiConfig['api_key'];
             }
 
             $request = Http::withHeaders($headers)
@@ -202,111 +139,46 @@ abstract class BaseTaxDataService implements TaxDataServiceInterface
         }
     }
 
-    /**
-     * Generate cache key
-     */
     protected function generateCacheKey(string $operation, array $params = []): string
     {
-        $keyData = array_merge([
-            'company_id' => $this->companyId,
-            'state' => $this->getStateCode(),
-            'operation' => $operation,
-        ], $params);
-
-        return 'tax_'.md5(json_encode($keyData));
+        return $this->cacheManager->generateCacheKey($operation, $params);
     }
 
-    /**
-     * Get cached data or execute callback
-     */
     protected function getCachedData(string $key, callable $callback)
     {
-        if (! $this->config['enable_caching']) {
-            return $callback();
-        }
-
-        return Cache::remember($key, $this->config['cache_ttl'], $callback);
+        return $this->cacheManager->getCachedData($key, $callback);
     }
 
-    /**
-     * Clear cache for this service
-     */
     public function clearCache(): void
     {
-        $pattern = "tax_*{$this->getStateCode()}*";
-
-        // Clear cache entries matching pattern
-        if (config('cache.default') === 'redis') {
-            $prefix = config('cache.prefix', '');
-            $fullPattern = $prefix.$pattern;
-            $keys = Cache::getRedis()->keys($fullPattern);
-            if (! empty($keys)) {
-                Cache::getRedis()->del($keys);
-            }
-        } else {
-            Cache::flush(); // Fallback for other drivers
-        }
-
-        Log::info("Cache cleared for {$this->getStateCode()} tax service", [
-            'company_id' => $this->companyId,
-            'pattern' => $pattern,
-        ]);
+        $this->cacheManager->clearCache();
     }
 
-    /**
-     * Bulk insert tax rates
-     */
     protected function bulkInsertTaxRates(array $rates): int
     {
-        $inserted = 0;
-        $chunks = array_chunk($rates, $this->config['batch_size']);
-
-        foreach ($chunks as $chunk) {
-            DB::table('service_tax_rates')->insert($chunk);
-            $inserted += count($chunk);
-        }
-
-        return $inserted;
+        return $this->databaseManager->bulkInsertTaxRates($rates);
     }
 
-    /**
-     * Create or get jurisdiction record
-     */
     protected function createOrGetJurisdiction(array $data): int
     {
-        $existing = DB::table('tax_jurisdictions')
-            ->where('code', $data['code'])
-            ->where('state_code', $this->getStateCode())
-            ->first();
-
-        if ($existing) {
-            return $existing->id;
-        }
-
-        return DB::table('tax_jurisdictions')->insertGetId(array_merge($data, [
-            'company_id' => $this->companyId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]));
+        return $this->databaseManager->createOrGetJurisdiction($data);
     }
 
-    /**
-     * Get service metadata
-     */
     public function getServiceMetadata(): array
     {
+        $apiConfig = $this->configManager->getApiConfig();
+
         return [
             'state_code' => $this->getStateCode(),
             'state_name' => $this->getStateName(),
             'service_type' => get_class($this),
             'configured' => $this->isConfigured(),
-            'api_configured' => ! empty($this->apiConfig['api_key']),
-            'last_updated' => $this->apiConfig['last_updated'],
-            'auto_update' => $this->apiConfig['auto_update'],
+            'api_configured' => ! empty($apiConfig['api_key']),
+            'last_updated' => $apiConfig['last_updated'],
+            'auto_update' => $apiConfig['auto_update'],
         ];
     }
 
-    // Abstract methods that must be implemented by concrete classes
     abstract public function getStateCode(): string;
 
     abstract public function getStateName(): string;

@@ -60,7 +60,8 @@ class OfficialTaxDataService extends BaseTaxDataService
             ];
         }
 
-        $url = $this->apiConfig['base_url'].'/list-files';
+        $apiConfig = $this->getApiConfig();
+        $url = $apiConfig['base_url'].'/list-files';
 
         $response = $this->makeHttpRequest('get', $url);
 
@@ -104,7 +105,8 @@ class OfficialTaxDataService extends BaseTaxDataService
             ];
         }
 
-        $url = $this->apiConfig['base_url'].'/get-link?file-path='.urlencode($filePath);
+        $apiConfig = $this->getApiConfig();
+        $url = $apiConfig['base_url'].'/get-link?file-path='.urlencode($filePath);
 
         $response = $this->makeHttpRequest('get', $url, [
             'without_redirecting' => true,
