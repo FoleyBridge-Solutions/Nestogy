@@ -194,6 +194,11 @@ class ServiceTaxRate extends Model
     const CALC_EXCLUSIVE = 'exclusive';
 
     /**
+     * Validation rule prefix
+     */
+    const VALIDATION_REQUIRED_IN = 'required|in:';
+
+    /**
      * Get the tax jurisdiction.
      */
     public function jurisdiction(): BelongsTo
@@ -299,15 +304,15 @@ class ServiceTaxRate extends Model
             'tax_jurisdiction_id' => 'required|exists:tax_jurisdictions,id',
             'tax_category_id' => 'required|exists:tax_categories,id',
             'service_type' => 'required|string|max:50',
-            'tax_type' => 'required|in:'.implode(',', static::getTaxTypes()),
+            'tax_type' => self::VALIDATION_REQUIRED_IN.implode(',', static::getTaxTypes()),
             'tax_name' => 'required|string|max:255',
             'authority_name' => 'required|string|max:255',
             'tax_code' => 'nullable|string|max:50',
             'regulatory_code' => 'nullable|string|max:50',
-            'rate_type' => 'required|in:'.implode(',', static::getRateTypes()),
+            'rate_type' => self::VALIDATION_REQUIRED_IN.implode(',', static::getRateTypes()),
             'percentage_rate' => 'nullable|numeric|min:0|max:100',
             'fixed_amount' => 'nullable|numeric|min:0',
-            'calculation_method' => 'required|in:'.implode(',', static::getCalculationMethods()),
+            'calculation_method' => self::VALIDATION_REQUIRED_IN.implode(',', static::getCalculationMethods()),
             'is_active' => 'boolean',
             'is_recoverable' => 'boolean',
             'is_compound' => 'boolean',
