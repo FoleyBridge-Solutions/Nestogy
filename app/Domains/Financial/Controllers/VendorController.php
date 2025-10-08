@@ -8,6 +8,8 @@ use Illuminate\View\View;
 
 class VendorController extends Controller
 {
+    private const NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     public function index(Request $request): View
     {
         $vendors = collect(); // TODO: Load from vendors table
@@ -32,13 +34,13 @@ class VendorController extends Controller
             'name' => 'required|string|max:255',
             'vendor_code' => 'required|string|max:50|unique:vendors,vendor_code',
             'type' => 'required|in:supplier,contractor,service_provider,consultant',
-            'contact_name' => 'nullable|string|max:255',
+            'contact_name' => self::NULLABLE_STRING_255,
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'tax_id' => 'nullable|string|max:50',
             'payment_terms' => 'required|in:net_15,net_30,net_45,net_60,due_on_receipt',
-            'bank_account' => 'nullable|string|max:255',
+            'bank_account' => self::NULLABLE_STRING_255,
             'notes' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
@@ -76,13 +78,13 @@ class VendorController extends Controller
             'name' => 'required|string|max:255',
             'vendor_code' => 'required|string|max:50|unique:vendors,vendor_code,'.$id,
             'type' => 'required|in:supplier,contractor,service_provider,consultant',
-            'contact_name' => 'nullable|string|max:255',
+            'contact_name' => self::NULLABLE_STRING_255,
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'tax_id' => 'nullable|string|max:50',
             'payment_terms' => 'required|in:net_15,net_30,net_45,net_60,due_on_receipt',
-            'bank_account' => 'nullable|string|max:255',
+            'bank_account' => self::NULLABLE_STRING_255,
             'notes' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
