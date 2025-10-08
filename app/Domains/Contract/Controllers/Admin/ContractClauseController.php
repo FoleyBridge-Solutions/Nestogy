@@ -11,6 +11,8 @@ use Illuminate\View\View;
 
 class ContractClauseController extends Controller
 {
+    private const VALIDATION_NULLABLE_JSON = 'nullable|json';
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -45,8 +47,8 @@ class ContractClauseController extends Controller
                 'category' => 'required|string|max:50',
                 'type' => 'required|string|max:50',
                 'content' => 'required|string',
-                'variables' => 'nullable|json',
-                'conditions' => 'nullable|json',
+                'variables' => self::VALIDATION_NULLABLE_JSON,
+                'conditions' => self::VALIDATION_NULLABLE_JSON,
                 'is_required' => 'boolean',
                 'is_active' => 'boolean',
                 'sort_order' => 'integer|min:0',
@@ -113,8 +115,8 @@ class ContractClauseController extends Controller
                 'category' => 'required|string|max:50',
                 'type' => 'required|string|max:50',
                 'content' => 'required|string',
-                'variables' => 'nullable|json',
-                'conditions' => 'nullable|json',
+                'variables' => self::VALIDATION_NULLABLE_JSON,
+                'conditions' => self::VALIDATION_NULLABLE_JSON,
                 'is_required' => 'boolean',
                 'is_active' => 'boolean',
                 'sort_order' => 'integer|min:0',
