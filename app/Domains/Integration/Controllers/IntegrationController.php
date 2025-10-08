@@ -23,6 +23,8 @@ use Illuminate\Validation\ValidationException;
  */
 class IntegrationController extends Controller
 {
+    private const FEATURE_DEVICE_MONITORING = 'Device monitoring';
+
     protected RMMIntegrationService $rmmService;
 
     public function __construct(RMMIntegrationService $rmmService)
@@ -386,7 +388,7 @@ class IntegrationController extends Controller
             'connectwise' => [
                 'name' => 'ConnectWise Automate',
                 'description' => 'Leading RMM platform with comprehensive monitoring capabilities',
-                'features' => ['Device monitoring', 'Alert management', 'Patch management', 'Script deployment'],
+                'features' => [self::FEATURE_DEVICE_MONITORING, 'Alert management', 'Patch management', 'Script deployment'],
                 'auth_methods' => ['api_key'],
                 'webhook_support' => true,
                 'bidirectional_sync' => true,
@@ -394,7 +396,7 @@ class IntegrationController extends Controller
             'datto' => [
                 'name' => 'Datto RMM',
                 'description' => 'Cloud-based RMM with backup integration',
-                'features' => ['Device monitoring', 'Backup alerts', 'Patch management', 'Mobile support'],
+                'features' => [self::FEATURE_DEVICE_MONITORING, 'Backup alerts', 'Patch management', 'Mobile support'],
                 'auth_methods' => ['shared_secret'],
                 'webhook_support' => true,
                 'bidirectional_sync' => true,
@@ -402,7 +404,7 @@ class IntegrationController extends Controller
             'ninja' => [
                 'name' => 'NinjaOne',
                 'description' => 'Modern RMM platform with intuitive interface',
-                'features' => ['Device monitoring', 'Software management', 'Security monitoring', 'Automation'],
+                'features' => [self::FEATURE_DEVICE_MONITORING, 'Software management', 'Security monitoring', 'Automation'],
                 'auth_methods' => ['bearer_token'],
                 'webhook_support' => true,
                 'bidirectional_sync' => true,
