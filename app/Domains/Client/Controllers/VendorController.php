@@ -390,7 +390,22 @@ class VendorController extends Controller
                 $q->where('company_id', auth()->user()->company_id);
             });
 
-        // Apply same filters as index
+        $this->applyExportFilters($query, $request);
+
+        $vendors = $query->orderBy('vendor_name')->get();
+
+        $filename = 'vendors_'.date('Y-m-d_H-i-s').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        return response()->stream($this->generateCsvCallback($vendors), 200, $headers);
+    }
+
+    private function applyExportFilters($query, Request $request)
+    {
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('vendor_name', 'like', "%{$search}%")
@@ -407,40 +422,36 @@ class VendorController extends Controller
             $query->where('category', $category);
         }
 
-        if ($status = $request->get('status')) {
-            switch ($status) {
-                case 'preferred':
-                    $query->preferred();
-                    break;
-                case 'approved':
-                    $query->approved();
-                    break;
-                case 'active':
-                    $query->active();
-                    break;
-                case 'high_rated':
-                    $query->highRated();
-                    break;
-            }
-        }
+        $this->applyStatusFilter($query, $request->get('status'));
 
         if ($clientId = $request->get('client_id')) {
             $query->where('client_id', $clientId);
         }
+    }
 
-        $vendors = $query->orderBy('vendor_name')->get();
+    private function applyStatusFilter($query, $status)
+    {
+        if (!$status) {
+            return;
+        }
 
-        $filename = 'vendors_'.date('Y-m-d_H-i-s').'.csv';
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        $statusMethods = [
+            'preferred' => 'preferred',
+            'approved' => 'approved',
+            'active' => 'active',
+            'high_rated' => 'highRated',
         ];
 
-        $callback = function () use ($vendors) {
+        if (isset($statusMethods[$status])) {
+            $query->{$statusMethods[$status]}();
+        }
+    }
+
+    private function generateCsvCallback($vendors)
+    {
+        return function () use ($vendors) {
             $file = fopen('php://output', 'w');
 
-            // CSV headers
             fputcsv($file, [
                 'Vendor Name',
                 'Client Name',
@@ -460,31 +471,33 @@ class VendorController extends Controller
                 'Contract End Date',
             ]);
 
-            // CSV data
             foreach ($vendors as $vendor) {
-                fputcsv($file, [
-                    $vendor->vendor_name,
-                    $vendor->client->display_name,
-                    $vendor->vendor_type,
-                    $vendor->category,
-                    $vendor->contact_person,
-                    $vendor->email,
-                    $vendor->phone,
-                    $vendor->city,
-                    $vendor->state,
-                    $vendor->status_label,
-                    $vendor->is_preferred ? 'Yes' : 'No',
-                    $vendor->is_approved ? 'Yes' : 'No',
-                    $vendor->overall_rating,
-                    $vendor->total_spent,
-                    $vendor->last_order_date ? $vendor->last_order_date->format('Y-m-d') : '',
-                    $vendor->contract_end_date ? $vendor->contract_end_date->format('Y-m-d') : '',
-                ]);
+                fputcsv($file, $this->formatVendorForCsv($vendor));
             }
 
             fclose($file);
         };
+    }
 
-        return response()->stream($callback, 200, $headers);
+    private function formatVendorForCsv($vendor)
+    {
+        return [
+            $vendor->vendor_name,
+            $vendor->client->display_name,
+            $vendor->vendor_type,
+            $vendor->category,
+            $vendor->contact_person,
+            $vendor->email,
+            $vendor->phone,
+            $vendor->city,
+            $vendor->state,
+            $vendor->status_label,
+            $vendor->is_preferred ? 'Yes' : 'No',
+            $vendor->is_approved ? 'Yes' : 'No',
+            $vendor->overall_rating,
+            $vendor->total_spent,
+            $vendor->last_order_date ? $vendor->last_order_date->format('Y-m-d') : '',
+            $vendor->contract_end_date ? $vendor->contract_end_date->format('Y-m-d') : '',
+        ];
     }
 }
