@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 class TaxEngineController extends Controller
 {
+    private const VALIDATION_NULLABLE_NUMERIC = 'nullable|numeric|min:0';
+
     protected TaxEngineRouter $taxEngine;
 
     protected TaxProfileService $profileService;
@@ -61,12 +63,12 @@ class TaxEngineController extends Controller
                 'tax_data.line_count' => 'nullable|integer|min:1',
                 'tax_data.minutes' => 'nullable|integer|min:0',
                 'tax_data.extensions' => 'nullable|integer|min:0',
-                'tax_data.data_usage' => 'nullable|numeric|min:0',
-                'tax_data.storage_amount' => 'nullable|numeric|min:0',
+                'tax_data.data_usage' => self::VALIDATION_NULLABLE_NUMERIC,
+                'tax_data.storage_amount' => self::VALIDATION_NULLABLE_NUMERIC,
                 'tax_data.user_count' => 'nullable|integer|min:1',
-                'tax_data.weight' => 'nullable|numeric|min:0',
+                'tax_data.weight' => self::VALIDATION_NULLABLE_NUMERIC,
                 'tax_data.dimensions' => 'nullable|array',
-                'tax_data.hours' => 'nullable|numeric|min:0',
+                'tax_data.hours' => self::VALIDATION_NULLABLE_NUMERIC,
                 'tax_data.service_location' => 'nullable|array',
                 'tax_data.service_type' => 'nullable|string',
             ]);
@@ -261,11 +263,11 @@ class TaxEngineController extends Controller
                 'quote_data.items.*.name' => 'required|string|max:255',
                 'quote_data.items.*.quantity' => 'required|numeric|min:0.01',
                 'quote_data.items.*.price' => 'required|numeric|min:0',
-                'quote_data.items.*.discount' => 'nullable|numeric|min:0',
+                'quote_data.items.*.discount' => self::VALIDATION_NULLABLE_NUMERIC,
                 'quote_data.items.*.category_id' => 'nullable|exists:categories,id',
                 'quote_data.items.*.product_id' => 'nullable|exists:products,id',
                 'quote_data.items.*.tax_data' => 'nullable|array',
-                'quote_data.discount_amount' => 'nullable|numeric|min:0',
+                'quote_data.discount_amount' => self::VALIDATION_NULLABLE_NUMERIC,
             ]);
 
             $quoteData = $validated['quote_data'];
