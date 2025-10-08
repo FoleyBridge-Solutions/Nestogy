@@ -2,6 +2,7 @@
 
 namespace App\Domains\PhysicalMail\Jobs;
 
+use App\Domains\PhysicalMail\Exceptions\MissingContactException;
 use App\Domains\PhysicalMail\Services\PostGridClient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -111,7 +112,7 @@ abstract class BasePhysicalMailJob implements ShouldQueue
     protected function getContactPayload($contact): mixed
     {
         if (! $contact) {
-            throw new \Exception('Contact not found');
+            throw new MissingContactException();
         }
 
         // If contact has PostGrid ID, use that
