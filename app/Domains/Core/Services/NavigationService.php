@@ -2654,6 +2654,9 @@ class NavigationService
             case 'financial':
                 $params['status'] = 'Draft,Sent,Overdue';
                 break;
+
+            default:
+                break;
         }
 
         return $params;
