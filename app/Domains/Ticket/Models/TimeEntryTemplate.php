@@ -16,6 +16,8 @@ class TimeEntryTemplate extends Model
 {
     use BelongsToCompany, HasFactory;
 
+    public const CATEGORY_EMAIL_SUPPORT = 'Email Support';
+
     protected $fillable = [
         'company_id',
         'name',
@@ -207,7 +209,7 @@ class TimeEntryTemplate extends Model
                 'description' => 'Configure email account and settings',
                 'work_type' => 'email_support',
                 'default_hours' => 0.5,
-                'category' => 'Email Support',
+                'category' => self::CATEGORY_EMAIL_SUPPORT,
                 'keywords' => ['email', 'outlook', 'mail', 'setup', 'configure'],
                 'is_billable' => true,
             ],
@@ -271,7 +273,7 @@ class TimeEntryTemplate extends Model
         return [
             'general_support' => 'General Support',
             'account_management' => 'Account Management',
-            'email_support' => 'Email Support',
+            'email_support' => self::CATEGORY_EMAIL_SUPPORT,
             'network_support' => 'Network Support',
             'software_support' => 'Software Support',
             'backup_recovery' => 'Backup/Recovery',
@@ -291,7 +293,7 @@ class TimeEntryTemplate extends Model
     {
         return [
             'Account Support',
-            'Email Support',
+            self::CATEGORY_EMAIL_SUPPORT,
             'Network Support',
             'Software Support',
             'Data Management',
