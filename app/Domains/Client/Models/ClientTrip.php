@@ -11,6 +11,8 @@ class ClientTrip extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
+    private const DECIMAL_CAST = 'decimal:2';
+
     protected $fillable = [
         'client_id',
         'trip_number',
@@ -64,11 +66,11 @@ class ClientTrip extends Model
         'end_date' => 'date',
         'departure_time' => 'datetime',
         'return_time' => 'datetime',
-        'estimated_expenses' => 'decimal:2',
-        'actual_expenses' => 'decimal:2',
-        'per_diem_amount' => 'decimal:2',
-        'reimbursement_amount' => 'decimal:2',
-        'mileage' => 'decimal:2',
+        'estimated_expenses' => self::DECIMAL_CAST,
+        'actual_expenses' => self::DECIMAL_CAST,
+        'per_diem_amount' => self::DECIMAL_CAST,
+        'reimbursement_amount' => self::DECIMAL_CAST,
+        'mileage' => self::DECIMAL_CAST,
         'billable_to_client' => 'boolean',
         'reimbursable' => 'boolean',
         'follow_up_required' => 'boolean',
