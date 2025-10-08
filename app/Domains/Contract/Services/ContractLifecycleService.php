@@ -361,7 +361,6 @@ class ContractLifecycleService
                 'metrics' => [],
             ];
 
-            // Get SLA requirements from contract
             $slaRequirements = $contract->sla_requirements ?? [];
 
             if (empty($slaRequirements)) {
@@ -373,48 +372,40 @@ class ContractLifecycleService
             $totalChecks = 0;
             $passedChecks = 0;
 
-            // Check response time SLA
-            if (isset($slaRequirements['response_time'])) {
-                $responseCompliance = $this->checkResponseTimeSla($contract, $slaRequirements['response_time']);
-                $slaMetrics['metrics']['response_time'] = $responseCompliance;
-                $totalChecks++;
-                if ($responseCompliance['compliant']) {
-                    $passedChecks++;
-                } else {
-                    $slaMetrics['violations'][] = 'Response time SLA violated';
-                }
-            }
+            $this->processSlaCheck(
+                $slaRequirements,
+                'response_time',
+                fn($req) => $this->checkResponseTimeSla($contract, $req),
+                'Response time SLA violated',
+                $slaMetrics,
+                $totalChecks,
+                $passedChecks
+            );
 
-            // Check resolution time SLA
-            if (isset($slaRequirements['resolution_time'])) {
-                $resolutionCompliance = $this->checkResolutionTimeSla($contract, $slaRequirements['resolution_time']);
-                $slaMetrics['metrics']['resolution_time'] = $resolutionCompliance;
-                $totalChecks++;
-                if ($resolutionCompliance['compliant']) {
-                    $passedChecks++;
-                } else {
-                    $slaMetrics['violations'][] = 'Resolution time SLA violated';
-                }
-            }
+            $this->processSlaCheck(
+                $slaRequirements,
+                'resolution_time',
+                fn($req) => $this->checkResolutionTimeSla($contract, $req),
+                'Resolution time SLA violated',
+                $slaMetrics,
+                $totalChecks,
+                $passedChecks
+            );
 
-            // Check uptime SLA
-            if (isset($slaRequirements['uptime_percentage'])) {
-                $uptimeCompliance = $this->checkUptimeSla($contract, $slaRequirements['uptime_percentage']);
-                $slaMetrics['metrics']['uptime'] = $uptimeCompliance;
-                $totalChecks++;
-                if ($uptimeCompliance['compliant']) {
-                    $passedChecks++;
-                } else {
-                    $slaMetrics['violations'][] = 'Uptime SLA violated';
-                }
-            }
+            $this->processSlaCheck(
+                $slaRequirements,
+                'uptime_percentage',
+                fn($req) => $this->checkUptimeSla($contract, $req),
+                'Uptime SLA violated',
+                $slaMetrics,
+                $totalChecks,
+                $passedChecks
+            );
 
-            // Calculate overall compliance rate
             $slaMetrics['compliance_rate'] = $totalChecks > 0
                 ? round(($passedChecks / $totalChecks) * 100, 2)
                 : 100;
 
-            // Log SLA violations
             if (! empty($slaMetrics['violations'])) {
                 activity()
                     ->performedOn($contract)
@@ -430,6 +421,27 @@ class ContractLifecycleService
                 'error' => $e->getMessage(),
             ]);
             throw $e;
+        }
+    }
+
+    protected function processSlaCheck(
+        array $slaRequirements,
+        string $requirementKey,
+        callable $checkMethod,
+        string $violationMessage,
+        array &$slaMetrics,
+        int &$totalChecks,
+        int &$passedChecks
+    ): void {
+        if (isset($slaRequirements[$requirementKey])) {
+            $compliance = $checkMethod($slaRequirements[$requirementKey]);
+            $slaMetrics['metrics'][$requirementKey] = $compliance;
+            $totalChecks++;
+            if ($compliance['compliant']) {
+                $passedChecks++;
+            } else {
+                $slaMetrics['violations'][] = $violationMessage;
+            }
         }
     }
 
