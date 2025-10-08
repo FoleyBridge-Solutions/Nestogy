@@ -706,8 +706,16 @@ class ProjectService
         $stats = $this->getProjectStatistics($project);
         $completionRate = $stats['tasks']['completion_rate'];
 
+        if ($completionRate >= 70) {
+            $status = 'good';
+        } elseif ($completionRate >= 50) {
+            $status = 'warning';
+        } else {
+            $status = 'critical';
+        }
+
         return [
-            'status' => $completionRate >= 70 ? 'good' : ($completionRate >= 50 ? 'warning' : 'critical'),
+            'status' => $status,
             'completion_rate' => $completionRate,
             'message' => "{$completionRate}% of tasks completed",
         ];
