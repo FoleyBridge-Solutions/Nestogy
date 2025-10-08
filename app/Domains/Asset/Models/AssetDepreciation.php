@@ -14,6 +14,8 @@ class AssetDepreciation extends Model
 
     protected $table = 'asset_depreciations';
 
+    const CAST_DECIMAL_2 = 'decimal:2';
+
     protected $fillable = [
         'company_id',
         'asset_id',
@@ -33,13 +35,13 @@ class AssetDepreciation extends Model
     protected $casts = [
         'company_id' => 'integer',
         'asset_id' => 'integer',
-        'original_cost' => 'decimal:2',
-        'salvage_value' => 'decimal:2',
+        'original_cost' => self::CAST_DECIMAL_2,
+        'salvage_value' => self::CAST_DECIMAL_2,
         'useful_life_years' => 'integer',
         'depreciation_rate' => 'decimal:4',
         'start_date' => 'date',
-        'annual_depreciation' => 'decimal:2',
-        'accumulated_depreciation' => 'decimal:2',
+        'annual_depreciation' => self::CAST_DECIMAL_2,
+        'accumulated_depreciation' => self::CAST_DECIMAL_2,
         'units_produced' => 'integer',
         'total_units_expected' => 'integer',
     ];
