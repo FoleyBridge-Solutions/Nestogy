@@ -295,6 +295,8 @@ class QuoteWizard extends Component
                     unset($this->validationErrors['expire_date']);
                 }
                 break;
+            default:
+                break;
         }
     }
 
