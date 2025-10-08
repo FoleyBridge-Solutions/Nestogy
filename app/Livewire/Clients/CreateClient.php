@@ -12,6 +12,8 @@ class CreateClient extends Component
 {
     use WithFileUploads;
 
+    private const NULLABLE_STRING_MAX_255 = 'nullable|max:255';
+
     // Tab management
     public $currentTab = 'basic';
 
@@ -91,12 +93,12 @@ class CreateClient extends Component
         'name' => 'required|min:2|max:255',
         'email' => 'required|email|unique:clients,email',
         'type' => 'required|in:individual,business',
-        'company' => 'nullable|max:255',
+        'company' => self::NULLABLE_STRING_MAX_255,
         'phone' => 'nullable|max:50',
         'website' => 'nullable|url|max:255',
         'tax_id_number' => 'nullable|max:50',
-        'referral' => 'nullable|max:255',
-        'address' => 'nullable|max:255',
+        'referral' => self::NULLABLE_STRING_MAX_255,
+        'address' => self::NULLABLE_STRING_MAX_255,
         'city' => 'nullable|max:100',
         'state' => 'nullable|max:100',
         'zip_code' => 'nullable|max:20',
