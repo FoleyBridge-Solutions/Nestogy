@@ -147,39 +147,6 @@ class TripController extends Controller
                 ->withInput();
         }
 
-        // Process attendees
-        $attendees = [];
-        if ($request->attendees) {
-            $attendees = array_map('trim', explode(',', $request->attendees));
-            $attendees = array_filter($attendees);
-        }
-
-        // Process expense breakdown
-        $expenseBreakdown = [];
-        if ($request->expense_breakdown) {
-            $lines = explode("\n", $request->expense_breakdown);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (! empty($line)) {
-                    // Try to parse "Category | Amount | Description" format
-                    $parts = explode('|', $line);
-                    if (count($parts) >= 2) {
-                        $expenseBreakdown[] = [
-                            'category' => trim($parts[0]),
-                            'amount' => (float) trim($parts[1]),
-                            'description' => isset($parts[2]) ? trim($parts[2]) : '',
-                        ];
-                    } else {
-                        $expenseBreakdown[] = [
-                            'category' => 'Other',
-                            'amount' => 0,
-                            'description' => $line,
-                        ];
-                    }
-                }
-            }
-        }
-
         $trip = new ClientTrip([
             'client_id' => $request->client_id,
             'trip_number' => ClientTrip::generateTripNumber(),
@@ -205,9 +172,9 @@ class TripController extends Controller
             'billable_to_client' => $request->has('billable_to_client'),
             'reimbursable' => $request->has('reimbursable'),
             'approval_required' => $request->has('approval_required'),
-            'attendees' => $attendees,
+            'attendees' => $this->processAttendees($request->attendees),
             'notes' => $request->notes,
-            'expense_breakdown' => $expenseBreakdown,
+            'expense_breakdown' => $this->processExpenseBreakdown($request->expense_breakdown),
             'created_by' => auth()->id(),
         ]);
 
@@ -301,39 +268,6 @@ class TripController extends Controller
                 ->withInput();
         }
 
-        // Process attendees
-        $attendees = [];
-        if ($request->attendees) {
-            $attendees = array_map('trim', explode(',', $request->attendees));
-            $attendees = array_filter($attendees);
-        }
-
-        // Process expense breakdown
-        $expenseBreakdown = [];
-        if ($request->expense_breakdown) {
-            $lines = explode("\n", $request->expense_breakdown);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (! empty($line)) {
-                    // Try to parse "Category | Amount | Description" format
-                    $parts = explode('|', $line);
-                    if (count($parts) >= 2) {
-                        $expenseBreakdown[] = [
-                            'category' => trim($parts[0]),
-                            'amount' => (float) trim($parts[1]),
-                            'description' => isset($parts[2]) ? trim($parts[2]) : '',
-                        ];
-                    } else {
-                        $expenseBreakdown[] = [
-                            'category' => 'Other',
-                            'amount' => 0,
-                            'description' => $line,
-                        ];
-                    }
-                }
-            }
-        }
-
         $trip->fill([
             'client_id' => $request->client_id,
             'title' => $request->title,
@@ -360,11 +294,11 @@ class TripController extends Controller
             'reimbursable' => $request->has('reimbursable'),
             'approval_required' => $request->has('approval_required'),
             'follow_up_required' => $request->has('follow_up_required'),
-            'attendees' => $attendees,
+            'attendees' => $this->processAttendees($request->attendees),
             'notes' => $request->notes,
             'client_feedback' => $request->client_feedback,
             'internal_rating' => $request->internal_rating,
-            'expense_breakdown' => $expenseBreakdown,
+            'expense_breakdown' => $this->processExpenseBreakdown($request->expense_breakdown),
         ]);
 
         $trip->save();
@@ -585,5 +519,56 @@ class TripController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    private function processAttendees(?string $attendeesString): array
+    {
+        if (! $attendeesString) {
+            return [];
+        }
+
+        $attendees = array_map('trim', explode(',', $attendeesString));
+
+        return array_filter($attendees);
+    }
+
+    private function processExpenseBreakdown(?string $expenseBreakdownString): array
+    {
+        if (! $expenseBreakdownString) {
+            return [];
+        }
+
+        $expenseBreakdown = [];
+        $lines = explode("\n", $expenseBreakdownString);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+
+            $expenseBreakdown[] = $this->parseExpenseLine($line);
+        }
+
+        return $expenseBreakdown;
+    }
+
+    private function parseExpenseLine(string $line): array
+    {
+        $parts = explode('|', $line);
+
+        if (count($parts) >= 2) {
+            return [
+                'category' => trim($parts[0]),
+                'amount' => (float) trim($parts[1]),
+                'description' => isset($parts[2]) ? trim($parts[2]) : '',
+            ];
+        }
+
+        return [
+            'category' => 'Other',
+            'amount' => 0,
+            'description' => $line,
+        ];
     }
 }
