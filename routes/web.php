@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
+const ROUTE_CREATE = '/create';
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -132,7 +134,7 @@ Route::middleware(['auth', 'verified', 'subsidiary.access'])->group(function () 
     Route::prefix('subsidiaries')->name('subsidiaries.')->group(function () {
         // Main subsidiary management
         Route::get('/', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'create'])->name('create');
+        Route::get(ROUTE_CREATE, [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'create'])->name('create');
         Route::post('/', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'store'])->name('store');
         Route::get('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'show'])->name('show');
         Route::get('/{subsidiary}/edit', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'edit'])->name('edit');
@@ -163,7 +165,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // IT Documentation routes (global)
     Route::prefix('it-documentation')->name('clients.it-documentation.')->group(function () {
         Route::get('/', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'create'])->name('create');
+        Route::get(ROUTE_CREATE, [\App\Domains\Client\Controllers\ITDocumentationController::class, 'create'])->name('create');
         Route::post('/', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'store'])->name('store');
         Route::get('/export', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'export'])->name('export');
         Route::get('/overdue-reviews', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'overdueReviews'])->name('overdue-reviews');
@@ -243,7 +245,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/account', [\App\Domains\Security\Controllers\UserController::class, 'destroyAccount'])->name('account.destroy');
         Route::get('/', [\App\Domains\Security\Controllers\UserController::class, 'index'])->name('index');
         Route::get('/export', [\App\Domains\Security\Controllers\UserController::class, 'export'])->name('export.csv');
-        Route::get('/create', [\App\Domains\Security\Controllers\UserController::class, 'create'])->name('create');
+        Route::get(ROUTE_CREATE, [\App\Domains\Security\Controllers\UserController::class, 'create'])->name('create');
         Route::post('/', [\App\Domains\Security\Controllers\UserController::class, 'store'])->name('store')->middleware('subscription.limits');
         Route::get('/{user}', [\App\Domains\Security\Controllers\UserController::class, 'show'])->name('show');
         Route::get('/{user}/edit', [\App\Domains\Security\Controllers\UserController::class, 'edit'])->name('edit');
@@ -264,7 +266,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Client Management Routes
     Route::prefix('clients')->name('clients.')->group(function () {
         Route::get('/', [\App\Domains\Client\Controllers\ClientController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Domains\Client\Controllers\ClientController::class, 'create'])->name('create');
+        Route::get(ROUTE_CREATE, [\App\Domains\Client\Controllers\ClientController::class, 'create'])->name('create');
         Route::post('/', [\App\Domains\Client\Controllers\ClientController::class, 'store'])->name('store');
         Route::get('/{client}', [\App\Domains\Client\Controllers\ClientController::class, 'show'])->name('show');
         Route::get('/{client}/edit', [\App\Domains\Client\Controllers\ClientController::class, 'edit'])->name('edit');
@@ -288,7 +290,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Ticket Management Routes
     Route::prefix('tickets')->name('tickets.')->group(function () {
         Route::get('/', [\App\Domains\Ticket\Controllers\TicketController::class, 'index'])->name('index');
-        Route::get('/create', [\App\Domains\Ticket\Controllers\TicketController::class, 'create'])->name('create');
+        Route::get(ROUTE_CREATE, [\App\Domains\Ticket\Controllers\TicketController::class, 'create'])->name('create');
         Route::post('/', [\App\Domains\Ticket\Controllers\TicketController::class, 'store'])->name('store');
         Route::get('/export', [\App\Domains\Ticket\Controllers\TicketController::class, 'export'])->name('export');
         Route::get('/search', [\App\Domains\Ticket\Controllers\TicketController::class, 'search'])->name('search');
@@ -407,7 +409,7 @@ Route::middleware(['auth', 'verified'])->prefix('products')->name('products.')->
     Route::get('categories', [App\Domains\Financial\Controllers\QuoteController::class, 'getProductCategories'])->name('categories');
 
     Route::get('/', [\App\Domains\Product\Controllers\ProductController::class, 'index'])->name('index');
-    Route::get('/create', [\App\Domains\Product\Controllers\ProductController::class, 'create'])->name('create');
+    Route::get(ROUTE_CREATE, [\App\Domains\Product\Controllers\ProductController::class, 'create'])->name('create');
     Route::post('/', [\App\Domains\Product\Controllers\ProductController::class, 'store'])->name('store');
     Route::get('/{product}', [\App\Domains\Product\Controllers\ProductController::class, 'show'])->name('show');
     Route::get('/{product}/edit', [\App\Domains\Product\Controllers\ProductController::class, 'edit'])->name('edit');
@@ -423,7 +425,7 @@ Route::middleware(['auth', 'verified'])->prefix('products')->name('products.')->
 // Bundle Management routes
 Route::middleware(['auth', 'verified'])->prefix('bundles')->name('bundles.')->group(function () {
     Route::get('/', [\App\Domains\Product\Controllers\BundleController::class, 'index'])->name('index');
-    Route::get('/create', [\App\Domains\Product\Controllers\BundleController::class, 'create'])->name('create');
+    Route::get(ROUTE_CREATE, [\App\Domains\Product\Controllers\BundleController::class, 'create'])->name('create');
     Route::post('/', [\App\Domains\Product\Controllers\BundleController::class, 'store'])->name('store');
     Route::get('/{bundle}', [\App\Domains\Product\Controllers\BundleController::class, 'show'])->name('show');
     Route::get('/{bundle}/edit', [\App\Domains\Product\Controllers\BundleController::class, 'edit'])->name('edit');
@@ -435,7 +437,7 @@ Route::middleware(['auth', 'verified'])->prefix('bundles')->name('bundles.')->gr
 // Pricing Rules Management routes
 Route::middleware(['auth', 'verified'])->prefix('pricing-rules')->name('pricing-rules.')->group(function () {
     Route::get('/', [\App\Domains\Product\Controllers\PricingRuleController::class, 'index'])->name('index');
-    Route::get('/create', [\App\Domains\Product\Controllers\PricingRuleController::class, 'create'])->name('create');
+    Route::get(ROUTE_CREATE, [\App\Domains\Product\Controllers\PricingRuleController::class, 'create'])->name('create');
     Route::post('/', [\App\Domains\Product\Controllers\PricingRuleController::class, 'store'])->name('store');
     Route::get('/{pricingRule}', [\App\Domains\Product\Controllers\PricingRuleController::class, 'show'])->name('show');
     Route::get('/{pricingRule}/edit', [\App\Domains\Product\Controllers\PricingRuleController::class, 'edit'])->name('edit');
@@ -448,7 +450,7 @@ Route::middleware(['auth', 'verified'])->prefix('pricing-rules')->name('pricing-
 // Service Management routes
 Route::middleware(['auth', 'verified'])->prefix('services')->name('services.')->group(function () {
     Route::get('/', [\App\Domains\Product\Controllers\ServiceController::class, 'index'])->name('index');
-    Route::get('/create', [\App\Domains\Product\Controllers\ServiceController::class, 'create'])->name('create');
+    Route::get(ROUTE_CREATE, [\App\Domains\Product\Controllers\ServiceController::class, 'create'])->name('create');
     Route::post('/', [\App\Domains\Product\Controllers\ServiceController::class, 'store'])->name('store');
     Route::get('/{service}', [\App\Domains\Product\Controllers\ServiceController::class, 'show'])->name('show');
     Route::get('/{service}/edit', [\App\Domains\Product\Controllers\ServiceController::class, 'edit'])->name('edit');
