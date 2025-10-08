@@ -165,7 +165,7 @@ class ContractAnalyticsService
         $topClientsByValue = $this->getTopClientsByValue($companyId, 10);
 
         // Client retention
-        $clientRetention = $this->getClientRetentionRate($companyId, $startDate, $endDate);
+        $clientRetention = $this->getClientRetentionRate($startDate, $endDate);
 
         // New vs existing clients
         $newVsExisting = $this->getNewVsExistingClients($companyId, $startDate, $endDate);
@@ -482,7 +482,7 @@ class ContractAnalyticsService
         return [];
     }
 
-    protected function getClientRetentionRate(int $companyId, Carbon $startDate, Carbon $endDate): float
+    protected function getClientRetentionRate(Carbon $startDate, Carbon $endDate): float
     {
         return 0;
     }
