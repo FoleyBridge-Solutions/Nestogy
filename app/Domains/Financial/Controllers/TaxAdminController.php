@@ -254,9 +254,11 @@ class TaxAdminController extends Controller
                     break;
 
                 case 'recalculate':
-                    // Clear caches to force recalculation
                     $this->taxEngine->clearTaxCaches();
                     break;
+
+                default:
+                    throw new \InvalidArgumentException('Invalid bulk operation: ' . $validated['operation']);
             }
         });
 
