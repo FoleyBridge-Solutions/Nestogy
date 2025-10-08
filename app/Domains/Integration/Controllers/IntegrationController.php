@@ -23,6 +23,8 @@ use Illuminate\Validation\ValidationException;
  */
 class IntegrationController extends Controller
 {
+    private const COUNT_EXPRESSION = 'count(*) as count';
+
     protected RMMIntegrationService $rmmService;
 
     public function __construct(RMMIntegrationService $rmmService)
@@ -467,13 +469,13 @@ class IntegrationController extends Controller
                         $query->forCompany();
                     })->mapped()->count(),
                     'provider_breakdown' => Integration::forCompany()
-                        ->select('provider', DB::raw('count(*) as count'))
+                        ->select('provider', DB::raw(self::COUNT_EXPRESSION))
                         ->groupBy('provider')
                         ->pluck('count', 'provider'),
                     'alert_severity_breakdown' => RMMAlert::whereHas('integration', function ($query) {
                         $query->forCompany();
                     })->recent(24 * 7)
-                        ->select('severity', DB::raw('count(*) as count'))
+                        ->select('severity', DB::raw(self::COUNT_EXPRESSION))
                         ->groupBy('severity')
                         ->pluck('count', 'severity'),
                 ];
@@ -508,7 +510,7 @@ class IntegrationController extends Controller
                     'last_7d' => $integration->rmmAlerts()->recent(24 * 7)->count(),
                     'last_30d' => $integration->rmmAlerts()->recent(24 * 30)->count(),
                     'by_severity' => $integration->rmmAlerts()
-                        ->select('severity', DB::raw('count(*) as count'))
+                        ->select('severity', DB::raw(self::COUNT_EXPRESSION))
                         ->groupBy('severity')
                         ->pluck('count', 'severity'),
                     'processed' => $integration->rmmAlerts()->processed()->count(),
