@@ -15,6 +15,8 @@ class ServiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_DATE = 'nullable|date';
+
     /**
      * Display a listing of services for the selected client
      */
@@ -148,9 +150,9 @@ class ServiceController extends Controller
             'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
             'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'renewal_date' => 'nullable|date',
+            'start_date' => self::VALIDATION_NULLABLE_DATE,
+            'end_date' => self::VALIDATION_NULLABLE_DATE.'|after:start_date',
+            'renewal_date' => self::VALIDATION_NULLABLE_DATE,
             'billing_cycle' => 'nullable|in:'.implode(',', array_keys(ClientService::getBillingCycles())),
             'monthly_cost' => 'nullable|numeric|min:0|max:999999.99',
             'setup_cost' => 'nullable|numeric|min:0|max:999999.99',
@@ -184,8 +186,8 @@ class ServiceController extends Controller
             'monitoring_enabled' => 'boolean',
             'backup_schedule' => 'nullable|string',
             'maintenance_schedule' => 'nullable|string',
-            'last_review_date' => 'nullable|date|before_or_equal:today',
-            'next_review_date' => 'nullable|date',
+            'last_review_date' => self::VALIDATION_NULLABLE_DATE.'|before_or_equal:today',
+            'next_review_date' => self::VALIDATION_NULLABLE_DATE,
             'client_satisfaction' => 'nullable|integer|min:1|max:10',
             'notes' => 'nullable|string',
             'tags' => 'nullable|string',
@@ -287,9 +289,9 @@ class ServiceController extends Controller
             'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
             'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'renewal_date' => 'nullable|date',
+            'start_date' => self::VALIDATION_NULLABLE_DATE,
+            'end_date' => self::VALIDATION_NULLABLE_DATE.'|after:start_date',
+            'renewal_date' => self::VALIDATION_NULLABLE_DATE,
             'billing_cycle' => 'nullable|in:'.implode(',', array_keys(ClientService::getBillingCycles())),
             'monthly_cost' => 'nullable|numeric|min:0|max:999999.99',
             'setup_cost' => 'nullable|numeric|min:0|max:999999.99',
@@ -323,8 +325,8 @@ class ServiceController extends Controller
             'monitoring_enabled' => 'boolean',
             'backup_schedule' => 'nullable|string',
             'maintenance_schedule' => 'nullable|string',
-            'last_review_date' => 'nullable|date|before_or_equal:today',
-            'next_review_date' => 'nullable|date',
+            'last_review_date' => self::VALIDATION_NULLABLE_DATE.'|before_or_equal:today',
+            'next_review_date' => self::VALIDATION_NULLABLE_DATE,
             'client_satisfaction' => 'nullable|integer|min:1|max:10',
             'notes' => 'nullable|string',
             'tags' => 'nullable|string',
