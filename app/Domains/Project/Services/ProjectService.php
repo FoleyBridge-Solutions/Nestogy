@@ -736,8 +736,15 @@ class ProjectService
         // For now, we'll use a simplified metric
         $efficiency = $this->calculateTimeEfficiency($project);
 
+        $status = 'critical';
+        if ($efficiency >= 80) {
+            $status = 'good';
+        } elseif ($efficiency >= 60) {
+            $status = 'warning';
+        }
+
         return [
-            'status' => $efficiency >= 80 ? 'good' : ($efficiency >= 60 ? 'warning' : 'critical'),
+            'status' => $status,
             'efficiency' => $efficiency,
             'message' => "{$efficiency}% efficiency rating",
         ];
