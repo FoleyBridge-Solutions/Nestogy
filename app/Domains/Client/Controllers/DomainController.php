@@ -14,6 +14,8 @@ class DomainController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_IN = 'nullable|in:';
+
     /**
      * Display a listing of domains for the selected client
      */
@@ -122,11 +124,11 @@ class DomainController extends Controller
             'description' => 'nullable|string',
             'domain_name' => 'required|string|max:255',
             'tld' => 'required|string|max:20',
-            'registrar' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getRegistrars())),
+            'registrar' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientDomain::getRegistrars())),
             'registrar_account' => 'nullable|string|max:255',
             'registrar_url' => 'nullable|url',
             'nameservers' => 'nullable|string',
-            'dns_provider' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getDnsProviders())),
+            'dns_provider' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientDomain::getDnsProviders())),
             'dns_account' => 'nullable|string|max:255',
             'registered_at' => 'nullable|date|before_or_equal:today',
             'expires_at' => 'required|date|after:registered_at',
@@ -251,11 +253,11 @@ class DomainController extends Controller
             'description' => 'nullable|string',
             'domain_name' => 'required|string|max:255',
             'tld' => 'required|string|max:20',
-            'registrar' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getRegistrars())),
+            'registrar' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientDomain::getRegistrars())),
             'registrar_account' => 'nullable|string|max:255',
             'registrar_url' => 'nullable|url',
             'nameservers' => 'nullable|string',
-            'dns_provider' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getDnsProviders())),
+            'dns_provider' => self::VALIDATION_NULLABLE_IN.implode(',', array_keys(ClientDomain::getDnsProviders())),
             'dns_account' => 'nullable|string|max:255',
             'registered_at' => 'nullable|date|before_or_equal:today',
             'expires_at' => 'required|date|after:registered_at',
