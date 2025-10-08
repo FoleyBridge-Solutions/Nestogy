@@ -58,6 +58,10 @@ class TicketChart extends Component
             case 'timeline':
                 $this->loadTimelineData($companyId);
                 break;
+
+            default:
+                $this->chartData = [];
+                break;
         }
 
         $this->calculateStats($companyId);
