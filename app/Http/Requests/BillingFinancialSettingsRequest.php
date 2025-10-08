@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BillingFinancialSettingsRequest extends FormRequest
 {
+    private const ACCOUNT_ID_VALIDATION_RULE = 'nullable|integer|exists:accounts,id';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -202,10 +204,10 @@ class BillingFinancialSettingsRequest extends FormRequest
             'quote_from_email' => 'nullable|email|max:255',
 
             // Default Settings
-            'default_transfer_from_account' => 'nullable|integer|exists:accounts,id',
-            'default_transfer_to_account' => 'nullable|integer|exists:accounts,id',
-            'default_payment_account' => 'nullable|integer|exists:accounts,id',
-            'default_expense_account' => 'nullable|integer|exists:accounts,id',
+            'default_transfer_from_account' => self::ACCOUNT_ID_VALIDATION_RULE,
+            'default_transfer_to_account' => self::ACCOUNT_ID_VALIDATION_RULE,
+            'default_payment_account' => self::ACCOUNT_ID_VALIDATION_RULE,
+            'default_expense_account' => self::ACCOUNT_ID_VALIDATION_RULE,
             'default_payment_method' => 'nullable|string|max:50',
             'default_expense_payment_method' => 'nullable|string|max:50',
             'default_net_terms' => 'nullable|integer|min:0|max:365',
