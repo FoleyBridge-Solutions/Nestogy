@@ -53,24 +53,24 @@ class SendManagerDigest extends Command
         return [
             // Open tickets summary
             'open_tickets' => Ticket::where('company_id', $companyId)
-                ->whereIn('status', ['Open', 'In Progress', 'Awaiting Customer'])
+                ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS, 'Awaiting Customer'])
                 ->count(),
 
             // Tickets by priority
             'critical_tickets' => Ticket::where('company_id', $companyId)
                 ->where('priority', 'Critical')
-                ->whereIn('status', ['Open', 'In Progress'])
+                ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
                 ->count(),
 
             'high_priority_tickets' => Ticket::where('company_id', $companyId)
                 ->where('priority', 'High')
-                ->whereIn('status', ['Open', 'In Progress'])
+                ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
                 ->count(),
 
             // Unassigned tickets
             'unassigned_tickets' => Ticket::where('company_id', $companyId)
                 ->whereNull('assigned_to')
-                ->whereIn('status', ['Open', 'In Progress'])
+                ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
                 ->count(),
 
             // SLA breaches
@@ -78,7 +78,7 @@ class SendManagerDigest extends Command
 
             // Completed yesterday
             'completed_yesterday' => Ticket::where('company_id', $companyId)
-                ->whereIn('status', ['Resolved', 'Closed'])
+                ->whereIn('status', [Ticket::STATUS_RESOLVED, Ticket::STATUS_CLOSED])
                 ->whereDate('updated_at', $yesterday)
                 ->with('assignee:id,name')
                 ->get(['id', 'number', 'subject', 'assigned_to', 'updated_at']),
@@ -98,12 +98,12 @@ class SendManagerDigest extends Command
             // Top performers (by resolved tickets)
             'top_performers' => User::where('company_id', $companyId)
                 ->whereHas('assignedTickets', function ($q) use ($yesterday) {
-                    $q->whereIn('status', ['Resolved', 'Closed'])
+                    $q->whereIn('status', [Ticket::STATUS_RESOLVED, Ticket::STATUS_CLOSED])
                       ->whereDate('updated_at', $yesterday);
                 })
                 ->withCount([
                     'assignedTickets as resolved_yesterday' => function ($q) use ($yesterday) {
-                        $q->whereIn('status', ['Resolved', 'Closed'])
+                        $q->whereIn('status', [Ticket::STATUS_RESOLVED, Ticket::STATUS_CLOSED])
                           ->whereDate('updated_at', $yesterday);
                     }
                 ])
@@ -125,7 +125,7 @@ class SendManagerDigest extends Command
         ];
 
         return Ticket::where('company_id', $companyId)
-            ->whereIn('status', ['Open', 'In Progress', 'Awaiting Customer'])
+            ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS, 'Awaiting Customer'])
             ->get()
             ->filter(function ($ticket) use ($slaHours) {
                 $hours = $slaHours[$ticket->priority] ?? 24;
