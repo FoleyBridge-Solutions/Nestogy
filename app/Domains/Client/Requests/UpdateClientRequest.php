@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateClientRequest extends FormRequest
 {
+    private const NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -26,12 +28,12 @@ class UpdateClientRequest extends FormRequest
         return [
             // Client basic information
             'name' => 'required|string|max:255',
-            'company_name' => 'nullable|string|max:255',
+            'company_name' => self::NULLABLE_STRING_255,
             'type' => 'nullable|string|max:100',
             'email' => ['nullable', 'email', 'max:255', Rule::unique('clients')->ignore($clientId)],
             'phone' => 'nullable|string|max:20',
             'website' => 'nullable|url|max:255',
-            'referral' => 'nullable|string|max:255',
+            'referral' => self::NULLABLE_STRING_255,
             'rate' => 'nullable|numeric|min:0|max:999999.99',
             'currency_code' => 'nullable|string|size:3',
             'net_terms' => 'nullable|integer|min:0|max:365',
@@ -43,21 +45,21 @@ class UpdateClientRequest extends FormRequest
             'hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
 
             // Primary location information (for updating existing)
-            'location_name' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
+            'location_name' => self::NULLABLE_STRING_255,
+            'address' => self::NULLABLE_STRING_255,
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:50',
             'zip_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
             'location_phone' => 'nullable|string|max:20',
-            'location_address' => 'nullable|string|max:255',
+            'location_address' => self::NULLABLE_STRING_255,
             'location_city' => 'nullable|string|max:100',
             'location_state' => 'nullable|string|max:50',
             'location_zip' => 'nullable|string|max:20',
             'location_country' => 'nullable|string|max:100',
 
             // Primary contact information (for updating existing)
-            'contact_name' => 'nullable|string|max:255',
+            'contact_name' => self::NULLABLE_STRING_255,
             'contact_title' => 'nullable|string|max:100',
             'contact_phone' => 'nullable|string|max:20',
             'contact_extension' => 'nullable|string|max:10',
