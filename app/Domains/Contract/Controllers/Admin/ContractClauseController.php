@@ -11,6 +11,8 @@ use Illuminate\View\View;
 
 class ContractClauseController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING_50 = 'required|string|max:50';
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -42,8 +44,8 @@ class ContractClauseController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'category' => 'required|string|max:50',
-                'type' => 'required|string|max:50',
+                'category' => self::VALIDATION_REQUIRED_STRING_50,
+                'type' => self::VALIDATION_REQUIRED_STRING_50,
                 'content' => 'required|string',
                 'variables' => 'nullable|json',
                 'conditions' => 'nullable|json',
@@ -110,8 +112,8 @@ class ContractClauseController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'category' => 'required|string|max:50',
-                'type' => 'required|string|max:50',
+                'category' => self::VALIDATION_REQUIRED_STRING_50,
+                'type' => self::VALIDATION_REQUIRED_STRING_50,
                 'content' => 'required|string',
                 'variables' => 'nullable|json',
                 'conditions' => 'nullable|json',
