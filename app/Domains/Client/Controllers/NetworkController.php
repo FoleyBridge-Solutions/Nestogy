@@ -341,6 +341,8 @@ class NetworkController extends Controller
                 case 'monitored':
                     $query->monitored();
                     break;
+                default:
+                    break;
             }
         }
 
