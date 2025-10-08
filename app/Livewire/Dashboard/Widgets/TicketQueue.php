@@ -80,6 +80,14 @@ class TicketQueue extends Component
             case 'updated_at':
                 $query->orderBy('updated_at', 'desc');
                 break;
+            default:
+                $query->orderByRaw("CASE 
+                    WHEN priority = 'Critical' THEN 1 
+                    WHEN priority = 'High' THEN 2 
+                    WHEN priority = 'Medium' THEN 3 
+                    WHEN priority = 'Low' THEN 4 
+                    ELSE 5 END")
+                    ->orderBy('created_at', 'asc');
         }
 
         $this->tickets = $query->with(['client', 'assignee'])
