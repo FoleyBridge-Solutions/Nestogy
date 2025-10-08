@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateITDocumentationRequest extends FormRequest
 {
+    private const NULLABLE_ARRAY = 'nullable|array';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -48,20 +50,20 @@ class UpdateITDocumentationRequest extends FormRequest
                 'string',
                 Rule::in(array_keys(ClientITDocumentation::getReviewSchedules())),
             ],
-            'system_references' => 'nullable|array',
+            'system_references' => self::NULLABLE_ARRAY,
             'system_references.*' => 'string|max:255',
-            'ip_addresses' => 'nullable|array',
+            'ip_addresses' => self::NULLABLE_ARRAY,
             'ip_addresses.*' => 'string|max:45', // IPv6 max length
-            'software_versions' => 'nullable|array',
+            'software_versions' => self::NULLABLE_ARRAY,
             'software_versions.*.name' => 'required_with:software_versions|string|max:255',
             'software_versions.*.version' => 'required_with:software_versions|string|max:100',
-            'compliance_requirements' => 'nullable|array',
+            'compliance_requirements' => self::NULLABLE_ARRAY,
             'compliance_requirements.*' => 'string|max:255',
-            'procedure_steps' => 'nullable|array',
+            'procedure_steps' => self::NULLABLE_ARRAY,
             'procedure_steps.*.title' => 'required_with:procedure_steps|string|max:255',
             'procedure_steps.*.description' => 'required_with:procedure_steps|string|max:2000',
             'procedure_steps.*.order' => 'required_with:procedure_steps|integer|min:1',
-            'related_entities' => 'nullable|array',
+            'related_entities' => self::NULLABLE_ARRAY,
             'related_entities.*.type' => 'required_with:related_entities|string|max:100',
             'related_entities.*.id' => 'required_with:related_entities|integer',
             'related_entities.*.name' => 'required_with:related_entities|string|max:255',
