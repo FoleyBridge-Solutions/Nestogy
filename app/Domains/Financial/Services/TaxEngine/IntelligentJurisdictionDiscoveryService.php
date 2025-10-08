@@ -127,40 +127,55 @@ class IntelligentJurisdictionDiscoveryService
      */
     protected function getJurisdictionTypeIndicators(): array
     {
-        // Dynamically discover these from the database
         static $indicators = null;
 
         if ($indicators === null) {
             $indicators = Cache::remember('jurisdiction_type_indicators', 3600, function () {
-                // Analyze jurisdiction names to find common patterns
                 $names = DB::table('jurisdiction_master')
                     ->pluck('jurisdiction_name')
                     ->toArray();
 
-                $commonTerms = [];
-                $termFrequency = [];
-
-                foreach ($names as $name) {
-                    $words = preg_split('/\s+/', strtoupper($name));
-                    foreach ($words as $word) {
-                        if (strlen($word) > 2) {
-                            $termFrequency[$word] = ($termFrequency[$word] ?? 0) + 1;
-                        }
-                    }
-                }
-
-                // Extract terms that appear frequently (indicators of jurisdiction types)
-                foreach ($termFrequency as $term => $frequency) {
-                    if ($frequency > 2) {
-                        $commonTerms[] = $term;
-                    }
-                }
-
-                return $commonTerms;
+                return $this->extractCommonTerms($names);
             });
         }
 
         return $indicators;
+    }
+
+    /**
+     * Extract common terms from jurisdiction names
+     */
+    protected function extractCommonTerms(array $names): array
+    {
+        $termFrequency = $this->calculateTermFrequency($names);
+
+        $commonTerms = [];
+        foreach ($termFrequency as $term => $frequency) {
+            if ($frequency > 2) {
+                $commonTerms[] = $term;
+            }
+        }
+
+        return $commonTerms;
+    }
+
+    /**
+     * Calculate term frequency from names
+     */
+    protected function calculateTermFrequency(array $names): array
+    {
+        $termFrequency = [];
+
+        foreach ($names as $name) {
+            $words = preg_split('/\s+/', strtoupper($name));
+            foreach ($words as $word) {
+                if (strlen($word) > 2) {
+                    $termFrequency[$word] = ($termFrequency[$word] ?? 0) + 1;
+                }
+            }
+        }
+
+        return $termFrequency;
     }
 
     /**
