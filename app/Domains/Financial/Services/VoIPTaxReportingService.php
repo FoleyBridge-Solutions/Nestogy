@@ -209,7 +209,7 @@ class VoIPTaxReportingService
         }
 
         // Comparative analysis
-        $report['comparative_analysis'] = $this->getServiceTypeComparison($report['service_types']);
+        $report['comparative_analysis'] = $this->getServiceTypeComparison();
 
         // Trends over time
         if ($startDate->diffInDays($endDate) > 30) {
@@ -706,7 +706,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function getServiceTypeComparison($serviceTypes)
+    protected function getServiceTypeComparison()
     {
         return [];
     }
