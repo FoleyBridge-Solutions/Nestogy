@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 
 class SettingsService
 {
+    private const DEFAULT_DATABASE_VERSION = '1.0.0';
+
     /**
      * Update company and settings data
      */
@@ -32,7 +34,7 @@ class SettingsService
                 // Create settings if they don't exist
                 $setting = Setting::create([
                     'company_id' => $company->id,
-                    'current_database_version' => '1.0.0',
+                    'current_database_version' => self::DEFAULT_DATABASE_VERSION,
                     'start_page' => 'dashboard',
                     'theme' => 'blue',
                     'timezone' => $data['timezone'],
@@ -179,7 +181,7 @@ class SettingsService
             if (! $setting) {
                 $setting = Setting::create([
                     'company_id' => $company->id,
-                    'current_database_version' => '1.0.0',
+                    'current_database_version' => self::DEFAULT_DATABASE_VERSION,
                     'start_page' => 'dashboard',
                     'theme' => 'blue',
                     'timezone' => 'UTC',
@@ -317,7 +319,7 @@ class SettingsService
             if (! $setting) {
                 $setting = Setting::create([
                     'company_id' => $company->id,
-                    'current_database_version' => '1.0.0',
+                    'current_database_version' => self::DEFAULT_DATABASE_VERSION,
                     'start_page' => 'dashboard',
                     'theme' => 'blue',
                     'timezone' => 'UTC',
