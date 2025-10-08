@@ -6,6 +6,8 @@ use App\Domains\Client\Models\ClientITDocumentation;
 
 class DocumentationTemplateService
 {
+    private const DURATION_15_MINUTES = '15 minutes';
+
     /**
      * Available documentation tabs with configuration
      */
@@ -129,7 +131,7 @@ class DocumentationTemplateService
                 'enabled_tabs' => ['general', 'technical', 'procedures', 'testing', 'monitoring'],
                 'template_data' => [
                     'procedure_steps' => [
-                        ['order' => 1, 'title' => 'Pre-deployment Checklist', 'description' => 'Verify prerequisites', 'duration' => '15 minutes'],
+                        ['order' => 1, 'title' => 'Pre-deployment Checklist', 'description' => 'Verify prerequisites', 'duration' => self::DURATION_15_MINUTES],
                         ['order' => 2, 'title' => 'OS Installation', 'description' => 'Install operating system', 'duration' => '30 minutes'],
                         ['order' => 3, 'title' => 'Network Configuration', 'description' => 'Configure network settings', 'duration' => '20 minutes'],
                         ['order' => 4, 'title' => 'Security Hardening', 'description' => 'Apply security configurations', 'duration' => '45 minutes'],
@@ -161,7 +163,7 @@ class DocumentationTemplateService
                         ['order' => 1, 'title' => 'Pre-backup Validation', 'description' => 'Check database status', 'duration' => '5 minutes'],
                         ['order' => 2, 'title' => 'Backup Execution', 'description' => 'Run backup process', 'duration' => '30-120 minutes'],
                         ['order' => 3, 'title' => 'Backup Verification', 'description' => 'Verify backup integrity', 'duration' => '10 minutes'],
-                        ['order' => 4, 'title' => 'Off-site Transfer', 'description' => 'Transfer to remote storage', 'duration' => '15-60 minutes'],
+                        ['order' => 4, 'title' => 'Off-site Transfer', 'description' => 'Transfer to remote storage', 'duration' => self::DURATION_15_MINUTES . '-60 minutes'],
                         ['order' => 5, 'title' => 'Retention Management', 'description' => 'Apply retention policies', 'duration' => '5 minutes'],
                     ],
                     'rollback_procedures' => [
@@ -184,7 +186,7 @@ class DocumentationTemplateService
                 'template_data' => [
                     'procedure_steps' => [
                         ['order' => 1, 'title' => 'Detection & Analysis', 'description' => 'Identify and assess incident', 'duration' => '30 minutes'],
-                        ['order' => 2, 'title' => 'Containment', 'description' => 'Isolate affected systems', 'duration' => '15 minutes'],
+                        ['order' => 2, 'title' => 'Containment', 'description' => 'Isolate affected systems', 'duration' => self::DURATION_15_MINUTES],
                         ['order' => 3, 'title' => 'Eradication', 'description' => 'Remove threat from environment', 'duration' => '60-240 minutes'],
                         ['order' => 4, 'title' => 'Recovery', 'description' => 'Restore normal operations', 'duration' => '60-180 minutes'],
                         ['order' => 5, 'title' => 'Post-Incident Review', 'description' => 'Document lessons learned', 'duration' => '60 minutes'],
