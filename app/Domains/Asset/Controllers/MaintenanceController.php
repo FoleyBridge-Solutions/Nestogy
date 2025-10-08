@@ -13,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class MaintenanceController extends Controller
 {
+    private const REQUIRED_STRING_RULE = 'required|string';
+
     /**
      * Display a listing of all maintenance records (standalone view)
      */
@@ -127,7 +129,7 @@ class MaintenanceController extends Controller
                 }),
             ],
             'cost' => 'nullable|numeric|min:0',
-            'description' => 'required|string',
+            'description' => self::REQUIRED_STRING_RULE,
             'next_maintenance_date' => 'nullable|date|after:scheduled_date',
             'status' => 'required|in:scheduled,in_progress,completed,cancelled',
         ]);
@@ -214,7 +216,7 @@ class MaintenanceController extends Controller
                 }),
             ],
             'cost' => 'nullable|numeric|min:0',
-            'description' => 'required|string',
+            'description' => self::REQUIRED_STRING_RULE,
             'next_maintenance_date' => 'nullable|date|after:scheduled_date',
             'status' => 'required|in:scheduled,in_progress,completed,cancelled',
         ]);
@@ -353,7 +355,7 @@ class MaintenanceController extends Controller
         $request->validate([
             'next_maintenance_date' => 'required|date|after:today',
             'maintenance_type' => 'required|in:preventive,corrective,emergency,upgrade,inspection',
-            'description' => 'required|string',
+            'description' => self::REQUIRED_STRING_RULE,
         ]);
 
         // Create new maintenance record
