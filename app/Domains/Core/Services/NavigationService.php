@@ -2630,6 +2630,9 @@ class NavigationService
                     ];
                 }
                 break;
+
+            default:
+                break;
         }
 
         return $actions;
