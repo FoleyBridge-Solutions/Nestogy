@@ -596,37 +596,65 @@ class NavigationService
     {
         $currentRouteName = Route::currentRouteName();
 
+        if (static::shouldHideSidebar($currentRouteName)) {
+            return null;
+        }
+
+        return static::findDomainForRoute($currentRouteName);
+    }
+
+    /**
+     * Determine if the sidebar should be hidden for the given route
+     */
+    protected static function shouldHideSidebar(?string $currentRouteName): bool
+    {
         if (! $currentRouteName) {
-            return null;
+            return true;
         }
 
-        // Special case: Hide sidebar on clients.index when no client is selected
         if ($currentRouteName === 'clients.index' && ! static::getSelectedClient()) {
-            return null;
+            return true;
         }
 
-        // Hide sidebar on client create/edit routes
         if (in_array($currentRouteName, ['clients.create', 'clients.store'])) {
-            return null;
+            return true;
         }
 
-        foreach (static::$domainMappings as $domain => $config) {
-            // Check route patterns
-            foreach ($config['routes'] as $routePattern) {
-                if (Str::is($routePattern, $currentRouteName)) {
-                    return $domain;
-                }
-            }
+        return false;
+    }
 
-            // Check URL patterns
-            foreach ($config['patterns'] as $pattern) {
-                if (Str::contains($currentRouteName, $pattern)) {
-                    return $domain;
-                }
+    /**
+     * Find the domain that matches the given route name
+     */
+    protected static function findDomainForRoute(string $currentRouteName): ?string
+    {
+        foreach (static::$domainMappings as $domain => $config) {
+            if (static::routeMatchesDomain($currentRouteName, $config)) {
+                return $domain;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Check if a route matches a domain configuration
+     */
+    protected static function routeMatchesDomain(string $currentRouteName, array $config): bool
+    {
+        foreach ($config['routes'] as $routePattern) {
+            if (Str::is($routePattern, $currentRouteName)) {
+                return true;
+            }
+        }
+
+        foreach ($config['patterns'] as $pattern) {
+            if (Str::contains($currentRouteName, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
