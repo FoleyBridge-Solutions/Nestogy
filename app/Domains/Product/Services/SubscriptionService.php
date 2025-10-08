@@ -160,7 +160,7 @@ class SubscriptionService
         return $subscription;
     }
 
-    public function changeSubscriptionPlan(Subscription $subscription, $newProductId, $prorate = true): Subscription
+    public function changeSubscriptionPlan(Subscription $subscription, $newProductId): Subscription
     {
         // This would handle plan changes with optional proration
         // Implementation depends on business logic
