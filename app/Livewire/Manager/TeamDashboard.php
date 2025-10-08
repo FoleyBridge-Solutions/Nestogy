@@ -208,15 +208,17 @@ class TeamDashboard extends Component
 
     protected function getWorkloadStatus($score)
     {
+        $status = ['label' => 'Light', 'color' => 'green'];
+
         if ($score >= 15) {
-            return ['label' => 'Overloaded', 'color' => 'red'];
+            $status = ['label' => 'Overloaded', 'color' => 'red'];
         } elseif ($score >= 10) {
-            return ['label' => 'Heavy', 'color' => 'orange'];
+            $status = ['label' => 'Heavy', 'color' => 'orange'];
         } elseif ($score >= 5) {
-            return ['label' => 'Moderate', 'color' => 'yellow'];
-        } else {
-            return ['label' => 'Light', 'color' => 'green'];
+            $status = ['label' => 'Moderate', 'color' => 'yellow'];
         }
+
+        return $status;
     }
 
     public function refresh()
