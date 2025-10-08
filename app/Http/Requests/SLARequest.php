@@ -7,6 +7,8 @@ use Illuminate\Validation\Rule;
 
 class SLARequest extends FormRequest
 {
+    private const NULLABLE_ARRAY = 'nullable|array';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -58,10 +60,10 @@ class SLARequest extends FormRequest
 
             // Escalation Settings
             'escalation_enabled' => 'boolean',
-            'escalation_levels' => 'nullable|array',
+            'escalation_levels' => self::NULLABLE_ARRAY,
             'escalation_levels.*.percentage' => 'integer|min:25|max:100',
             'escalation_levels.*.action' => 'string|in:notify_assignee,notify_manager,notify_client,change_priority,reassign',
-            'escalation_levels.*.notification_channels' => 'nullable|array',
+            'escalation_levels.*.notification_channels' => self::NULLABLE_ARRAY,
             'escalation_levels.*.notification_channels.*' => 'string|in:email,sms,slack,teams,webhook',
             'breach_warning_percentage' => 'required|integer|min:50|max:95',
 
@@ -73,7 +75,7 @@ class SLARequest extends FormRequest
             // Notifications
             'notify_on_breach' => 'boolean',
             'notify_on_warning' => 'boolean',
-            'notification_emails' => 'nullable|array',
+            'notification_emails' => self::NULLABLE_ARRAY,
             'notification_emails.*' => 'email',
 
             // Validity Period
