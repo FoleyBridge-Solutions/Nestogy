@@ -17,6 +17,8 @@ use Exception;
  */
 class CensusBureauApiClient extends BaseApiClient
 {
+    private const LAYER_CONGRESSIONAL_DISTRICTS = 'Congressional Districts';
+
     protected string $geocodingBaseUrl = 'https://geocoding.geo.census.gov/geocoder';
 
     protected string $dataBaseUrl = 'https://api.census.gov/data';
@@ -148,7 +150,7 @@ class CensusBureauApiClient extends BaseApiClient
             'Census Blocks',
             'Tribal Block Groups',
             'Tribal Census Tracts',
-            'Congressional Districts',
+            self::LAYER_CONGRESSIONAL_DISTRICTS,
             'State Legislative Districts - Upper',
             'State Legislative Districts - Lower',
         ];
@@ -280,8 +282,8 @@ class CensusBureauApiClient extends BaseApiClient
         }
 
         // Congressional district
-        if (! empty($geographies['Congressional Districts'])) {
-            $district = $geographies['Congressional Districts'][0];
+        if (! empty($geographies[self::LAYER_CONGRESSIONAL_DISTRICTS])) {
+            $district = $geographies[self::LAYER_CONGRESSIONAL_DISTRICTS][0];
             $jurisdictions[] = [
                 'type' => 'congressional_district',
                 'name' => 'Congressional District '.($district['CD'] ?? ''),
