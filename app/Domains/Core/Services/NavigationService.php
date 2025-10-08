@@ -2129,103 +2129,97 @@ class NavigationService
      */
     public static function getClientNavigationItems($user): array
     {
-        $items = [];
         $selectedClient = static::getSelectedClient();
 
         if (! $selectedClient) {
-            // No client selected - show client selection items
-            if ($user->hasPermission('clients.view')) {
-                $items['index'] = 'Select Client';
-                $items['leads'] = 'Client Leads';
-            }
+            return static::getClientSelectionNavigationItems($user);
+        }
 
-            if ($user->hasPermission('clients.create')) {
-                $items['create'] = 'Add New Client';
-            }
+        return static::getClientSpecificNavigationItems($user);
+    }
 
-            if ($user->hasPermission('clients.export')) {
-                $items['export'] = 'Export Clients';
-            }
+    protected static function getClientSelectionNavigationItems($user): array
+    {
+        $itemPermissions = [
+            'index' => 'clients.view',
+            'leads' => 'clients.view',
+            'create' => 'clients.create',
+            'export' => 'clients.export',
+            'import' => 'clients.import',
+        ];
 
-            if ($user->hasPermission('clients.import')) {
-                $items['import'] = 'Import Clients';
-            }
-        } else {
-            // Client selected - show client-specific items
-            $items['client-dashboard'] = 'Client Dashboard';
-            $items['switch'] = 'Switch Client';
+        $itemLabels = [
+            'index' => 'Select Client',
+            'leads' => 'Client Leads',
+            'create' => 'Add New Client',
+            'export' => 'Export Clients',
+            'import' => 'Import Clients',
+        ];
 
-            // Add client-specific functionality
-            if ($user->hasPermission('clients.contacts.view')) {
-                $items['contacts'] = 'Contacts';
-            }
+        return static::buildNavigationItems($user, $itemPermissions, $itemLabels);
+    }
 
-            if ($user->hasPermission('clients.locations.view')) {
-                $items['locations'] = 'Locations';
-            }
+    protected static function getClientSpecificNavigationItems($user): array
+    {
+        $items = [
+            'client-dashboard' => 'Client Dashboard',
+            'switch' => 'Switch Client',
+        ];
 
-            if ($user->hasPermission('clients.documents.view')) {
-                $items['documents'] = 'Documents';
-            }
+        $itemPermissions = [
+            'contacts' => 'clients.contacts.view',
+            'locations' => 'clients.locations.view',
+            'documents' => 'clients.documents.view',
+            'files' => 'clients.files.view',
+            'licenses' => 'clients.licenses.view',
+            'credentials' => 'clients.credentials.view',
+            'networks' => 'clients.networks.view',
+            'services' => 'clients.services.view',
+            'vendors' => 'clients.vendors.view',
+            'racks' => 'clients.racks.view',
+            'certificates' => 'clients.certificates.view',
+            'domains' => 'clients.domains.view',
+            'calendar-events' => 'clients.calendar-events.view',
+            'recurring-invoices' => 'clients.recurring-invoices.view',
+            'quotes' => 'clients.quotes.view',
+            'contracts' => 'contracts.view',
+            'invoices' => 'financial.invoices.view',
+            'trips' => 'clients.trips.view',
+        ];
 
-            if ($user->hasPermission('clients.files.view')) {
-                $items['files'] = 'Files';
-            }
+        $itemLabels = [
+            'contacts' => 'Contacts',
+            'locations' => 'Locations',
+            'documents' => 'Documents',
+            'files' => 'Files',
+            'licenses' => 'Licenses',
+            'credentials' => 'Credentials',
+            'networks' => 'Networks',
+            'services' => 'Services',
+            'vendors' => 'Vendors',
+            'racks' => 'Racks',
+            'certificates' => 'Certificates',
+            'domains' => 'Domains',
+            'calendar-events' => 'Calendar Events',
+            'recurring-invoices' => 'Recurring Invoices',
+            'quotes' => 'Quotes',
+            'contracts' => 'Contracts',
+            'invoices' => 'Invoices',
+            'trips' => 'Trips',
+        ];
 
-            if ($user->hasPermission('clients.licenses.view')) {
-                $items['licenses'] = 'Licenses';
-            }
+        $permissionBasedItems = static::buildNavigationItems($user, $itemPermissions, $itemLabels);
 
-            if ($user->hasPermission('clients.credentials.view')) {
-                $items['credentials'] = 'Credentials';
-            }
+        return array_merge($items, $permissionBasedItems);
+    }
 
-            if ($user->hasPermission('clients.networks.view')) {
-                $items['networks'] = 'Networks';
-            }
+    protected static function buildNavigationItems($user, array $itemPermissions, array $itemLabels): array
+    {
+        $items = [];
 
-            if ($user->hasPermission('clients.services.view')) {
-                $items['services'] = 'Services';
-            }
-
-            if ($user->hasPermission('clients.vendors.view')) {
-                $items['vendors'] = 'Vendors';
-            }
-
-            if ($user->hasPermission('clients.racks.view')) {
-                $items['racks'] = 'Racks';
-            }
-
-            if ($user->hasPermission('clients.certificates.view')) {
-                $items['certificates'] = 'Certificates';
-            }
-
-            if ($user->hasPermission('clients.domains.view')) {
-                $items['domains'] = 'Domains';
-            }
-
-            if ($user->hasPermission('clients.calendar-events.view')) {
-                $items['calendar-events'] = 'Calendar Events';
-            }
-
-            if ($user->hasPermission('clients.recurring-invoices.view')) {
-                $items['recurring-invoices'] = 'Recurring Invoices';
-            }
-
-            if ($user->hasPermission('clients.quotes.view')) {
-                $items['quotes'] = 'Quotes';
-            }
-
-            if ($user->hasPermission('contracts.view')) {
-                $items['contracts'] = 'Contracts';
-            }
-
-            if ($user->hasPermission('financial.invoices.view')) {
-                $items['invoices'] = 'Invoices';
-            }
-
-            if ($user->hasPermission('clients.trips.view')) {
-                $items['trips'] = 'Trips';
+        foreach ($itemPermissions as $key => $permission) {
+            if ($user->hasPermission($permission)) {
+                $items[$key] = $itemLabels[$key];
             }
         }
 
