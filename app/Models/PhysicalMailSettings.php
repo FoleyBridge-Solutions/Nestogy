@@ -154,9 +154,11 @@ class PhysicalMailSettings extends Model
      */
     public function updateConnectionTest(bool $success, ?string $message = null): void
     {
+        $status = $success ? 'success' : ($message ?: 'failed');
+
         $this->update([
             'last_connection_test' => now(),
-            'last_connection_status' => $success ? 'success' : ($message ?: 'failed'),
+            'last_connection_status' => $status,
         ]);
     }
 }
