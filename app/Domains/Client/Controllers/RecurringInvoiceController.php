@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class RecurringInvoiceController extends Controller
 {
+    private const PERCENTAGE_VALIDATION_RULE = 'nullable|numeric|min:0|max:100';
+
     /**
      * Display a listing of all recurring invoices
      */
@@ -117,7 +119,7 @@ class RecurringInvoiceController extends Controller
             'template_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
-            'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'tax_rate' => self::PERCENTAGE_VALIDATION_RULE,
             'currency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
             'frequency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
             'interval_count' => 'nullable|integer|min:1',
@@ -128,7 +130,7 @@ class RecurringInvoiceController extends Controller
             'status' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
             'auto_send' => 'boolean',
             'payment_terms_days' => 'nullable|integer|min:1|max:365',
-            'late_fee_percentage' => 'nullable|numeric|min:0|max:100',
+            'late_fee_percentage' => self::PERCENTAGE_VALIDATION_RULE,
             'late_fee_flat_amount' => 'nullable|numeric|min:0',
             'invoice_prefix' => 'nullable|string|max:10',
             'invoice_notes' => 'nullable|string',
@@ -246,7 +248,7 @@ class RecurringInvoiceController extends Controller
             'template_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
-            'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'tax_rate' => self::PERCENTAGE_VALIDATION_RULE,
             'currency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getCurrencies())),
             'frequency' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getFrequencies())),
             'interval_count' => 'nullable|integer|min:1',
@@ -257,7 +259,7 @@ class RecurringInvoiceController extends Controller
             'status' => 'required|in:'.implode(',', array_keys(ClientRecurringInvoice::getStatuses())),
             'auto_send' => 'boolean',
             'payment_terms_days' => 'nullable|integer|min:1|max:365',
-            'late_fee_percentage' => 'nullable|numeric|min:0|max:100',
+            'late_fee_percentage' => self::PERCENTAGE_VALIDATION_RULE,
             'late_fee_flat_amount' => 'nullable|numeric|min:0',
             'invoice_prefix' => 'nullable|string|max:10',
             'invoice_notes' => 'nullable|string',
