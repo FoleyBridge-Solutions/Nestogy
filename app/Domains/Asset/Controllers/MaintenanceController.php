@@ -13,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class MaintenanceController extends Controller
 {
+    private const MAINTENANCE_TYPE_VALIDATION_RULE = 'required|in:preventive,corrective,emergency,upgrade,inspection';
+
     /**
      * Display a listing of all maintenance records (standalone view)
      */
@@ -109,7 +111,7 @@ class MaintenanceController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'maintenance_type' => 'required|in:preventive,corrective,emergency,upgrade,inspection',
+            'maintenance_type' => self::MAINTENANCE_TYPE_VALIDATION_RULE,
             'scheduled_date' => 'required|date',
             'completed_date' => 'nullable|date|after_or_equal:scheduled_date',
             'technician_id' => [
@@ -196,7 +198,7 @@ class MaintenanceController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'maintenance_type' => 'required|in:preventive,corrective,emergency,upgrade,inspection',
+            'maintenance_type' => self::MAINTENANCE_TYPE_VALIDATION_RULE,
             'scheduled_date' => 'required|date',
             'completed_date' => 'nullable|date|after_or_equal:scheduled_date',
             'technician_id' => [
@@ -352,7 +354,7 @@ class MaintenanceController extends Controller
 
         $request->validate([
             'next_maintenance_date' => 'required|date|after:today',
-            'maintenance_type' => 'required|in:preventive,corrective,emergency,upgrade,inspection',
+            'maintenance_type' => self::MAINTENANCE_TYPE_VALIDATION_RULE,
             'description' => 'required|string',
         ]);
 
