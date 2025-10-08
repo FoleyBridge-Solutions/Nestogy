@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class AnalyticsController extends Controller
 {
+    private const VALIDATION_REQUIRED_DATE = 'required|date';
+
     protected FinancialAnalyticsService $analyticsService;
 
     protected DashboardDataService $dashboardService;
@@ -270,8 +272,8 @@ class AnalyticsController extends Controller
     public function quoteToCashAnalysis(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_date' => self::VALIDATION_REQUIRED_DATE,
+            'end_date' => self::VALIDATION_REQUIRED_DATE.'|after_or_equal:start_date',
         ]);
 
         $startDate = Carbon::parse($request->start_date);
@@ -291,8 +293,8 @@ class AnalyticsController extends Controller
     public function serviceProfitability(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_date' => self::VALIDATION_REQUIRED_DATE,
+            'end_date' => self::VALIDATION_REQUIRED_DATE.'|after_or_equal:start_date',
         ]);
 
         $startDate = Carbon::parse($request->start_date);
@@ -312,8 +314,8 @@ class AnalyticsController extends Controller
     public function cashFlowProjections(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'start_date' => self::VALIDATION_REQUIRED_DATE,
+            'end_date' => self::VALIDATION_REQUIRED_DATE.'|after:start_date',
             'model' => 'nullable|string|in:linear,seasonal,ml_based,manual',
         ]);
 
@@ -335,8 +337,8 @@ class AnalyticsController extends Controller
     public function taxCompliance(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_date' => self::VALIDATION_REQUIRED_DATE,
+            'end_date' => self::VALIDATION_REQUIRED_DATE.'|after_or_equal:start_date',
         ]);
 
         $startDate = Carbon::parse($request->start_date);
@@ -356,8 +358,8 @@ class AnalyticsController extends Controller
     public function creditRefundImpact(Request $request): JsonResponse
     {
         $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_date' => self::VALIDATION_REQUIRED_DATE,
+            'end_date' => self::VALIDATION_REQUIRED_DATE.'|after_or_equal:start_date',
         ]);
 
         $startDate = Carbon::parse($request->start_date);
