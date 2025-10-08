@@ -129,12 +129,10 @@ class MailHistory extends Component
         $order = PhysicalMailOrder::findOrFail($orderId);
 
         if (! $order->pdf_url) {
-            $this->dispatch('notify', [
+            return $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'PDF not available for this mail',
             ]);
-
-            return;
         }
 
         return redirect()->away($order->pdf_url);
