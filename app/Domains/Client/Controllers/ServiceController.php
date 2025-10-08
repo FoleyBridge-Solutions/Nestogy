@@ -15,6 +15,8 @@ class ServiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_RULE_SHORT_STRING = 'nullable|string|max:100';
+
     /**
      * Display a listing of services for the selected client
      */
@@ -177,9 +179,9 @@ class ServiceController extends Controller
             ],
             'escalation_contact' => 'nullable|string|max:255',
             'service_hours' => 'nullable|string',
-            'response_time' => 'nullable|string|max:100',
-            'resolution_time' => 'nullable|string|max:100',
-            'availability_target' => 'nullable|string|max:100',
+            'response_time' => self::VALIDATION_RULE_SHORT_STRING,
+            'resolution_time' => self::VALIDATION_RULE_SHORT_STRING,
+            'availability_target' => self::VALIDATION_RULE_SHORT_STRING,
             'performance_metrics' => 'nullable|string',
             'monitoring_enabled' => 'boolean',
             'backup_schedule' => 'nullable|string',
@@ -316,9 +318,9 @@ class ServiceController extends Controller
             ],
             'escalation_contact' => 'nullable|string|max:255',
             'service_hours' => 'nullable|string',
-            'response_time' => 'nullable|string|max:100',
-            'resolution_time' => 'nullable|string|max:100',
-            'availability_target' => 'nullable|string|max:100',
+            'response_time' => self::VALIDATION_RULE_SHORT_STRING,
+            'resolution_time' => self::VALIDATION_RULE_SHORT_STRING,
+            'availability_target' => self::VALIDATION_RULE_SHORT_STRING,
             'performance_metrics' => 'nullable|string',
             'monitoring_enabled' => 'boolean',
             'backup_schedule' => 'nullable|string',
