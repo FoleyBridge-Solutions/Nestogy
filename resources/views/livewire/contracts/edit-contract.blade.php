@@ -268,8 +268,9 @@
                                 <!-- Financial Configuration -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Currency</label>
-                                        <select wire:model.defer="currency_code" 
+                                        <label for="currency_code" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Currency</label>
+                                        <select id="currency_code" 
+                                                wire:model.defer="currency_code" 
                                                 @if(!$canEdit) disabled @endif
                                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg
                                                        {{ $canEdit ? 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500' : 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' }}">
