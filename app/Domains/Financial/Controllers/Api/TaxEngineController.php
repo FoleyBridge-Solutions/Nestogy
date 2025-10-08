@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 class TaxEngineController extends Controller
 {
+    private const PRODUCT_ID_VALIDATION = 'nullable|exists:products,id';
+
     protected TaxEngineRouter $taxEngine;
 
     protected TaxProfileService $profileService;
@@ -46,7 +48,7 @@ class TaxEngineController extends Controller
                 // Category identification
                 'category_id' => 'nullable|exists:categories,id',
                 'category_type' => 'nullable|string',
-                'product_id' => 'nullable|exists:products,id',
+                'product_id' => self::PRODUCT_ID_VALIDATION,
 
                 // Customer/Address
                 'customer_id' => 'nullable|exists:clients,id',
@@ -151,7 +153,7 @@ class TaxEngineController extends Controller
                 'items.*.name' => 'nullable|string|max:255',
                 'items.*.category_id' => 'nullable|exists:categories,id',
                 'items.*.category_type' => 'nullable|string',
-                'items.*.product_id' => 'nullable|exists:products,id',
+                'items.*.product_id' => self::PRODUCT_ID_VALIDATION,
                 'items.*.tax_data' => 'nullable|array',
 
                 // Global settings for all items
@@ -263,7 +265,7 @@ class TaxEngineController extends Controller
                 'quote_data.items.*.price' => 'required|numeric|min:0',
                 'quote_data.items.*.discount' => 'nullable|numeric|min:0',
                 'quote_data.items.*.category_id' => 'nullable|exists:categories,id',
-                'quote_data.items.*.product_id' => 'nullable|exists:products,id',
+                'quote_data.items.*.product_id' => self::PRODUCT_ID_VALIDATION,
                 'quote_data.items.*.tax_data' => 'nullable|array',
                 'quote_data.discount_amount' => 'nullable|numeric|min:0',
             ]);
@@ -381,6 +383,8 @@ class TaxEngineController extends Controller
         try {
             $validated = $request->validate([
                 'category_id' => 'nullable|exists:categories,id',
+                'category_type' => 'nullable|string',
+                'product_id' => self::PRODUCT_ID_VALIDATION,
             ]);
 
             $this->taxEngine->clearTaxCaches($validated['category_id'] ?? null);
@@ -479,7 +483,7 @@ class TaxEngineController extends Controller
             $validated = $request->validate([
                 'category_id' => 'nullable|exists:categories,id',
                 'category_type' => 'nullable|string',
-                'product_id' => 'nullable|exists:products,id',
+                'product_id' => self::PRODUCT_ID_VALIDATION,
             ]);
 
             // Get tax profile
@@ -534,7 +538,7 @@ class TaxEngineController extends Controller
             $validated = $request->validate([
                 'category_id' => 'nullable|exists:categories,id',
                 'category_type' => 'nullable|string',
-                'product_id' => 'nullable|exists:products,id',
+                'product_id' => self::PRODUCT_ID_VALIDATION,
             ]);
 
             // Get required fields
@@ -575,7 +579,7 @@ class TaxEngineController extends Controller
             $validated = $request->validate([
                 'category_id' => 'nullable|exists:categories,id',
                 'category_type' => 'nullable|string',
-                'product_id' => 'nullable|exists:products,id',
+                'product_id' => self::PRODUCT_ID_VALIDATION,
                 'tax_data' => 'required|array',
             ]);
 
@@ -702,7 +706,7 @@ class TaxEngineController extends Controller
                 // Line item details
                 'base_price' => 'required|numeric|min:0',
                 'quantity' => 'nullable|integer|min:1',
-                'product_id' => 'nullable|exists:products,id',
+                'product_id' => self::PRODUCT_ID_VALIDATION,
 
                 // Customer details
                 'customer_id' => 'required|exists:clients,id',
