@@ -7,6 +7,8 @@ use App\Domains\Email\Models\EmailFolder;
 use App\Domains\Email\Models\EmailMessage;
 use App\Domains\Email\Services\EmailService;
 use App\Domains\Email\Services\ImapService;
+use App\Livewire\Email\Concerns\ManagesMessageSelection;
+use App\Livewire\Email\Concerns\PerformsBulkMessageActions;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -16,6 +18,8 @@ use Livewire\WithPagination;
 class Inbox extends Component
 {
     use WithPagination;
+    use ManagesMessageSelection;
+    use PerformsBulkMessageActions;
 
     // Queryable state
     public $accountId;
@@ -37,11 +41,6 @@ class Inbox extends Component
     public $sortBy = 'sent_at';
 
     public $sortDirection = 'desc';
-
-    // Selection state
-    public array $selected = [];
-
-    public bool $selectPage = false;
 
     protected $queryString = [
         'accountId' => ['as' => 'account_id', 'except' => null],
@@ -224,76 +223,6 @@ class Inbox extends Component
             // Refresh stats and list
             $this->dispatch('message-read');
         }
-    }
-
-    public function toggleSelectPage()
-    {
-        $this->selectPage = ! $this->selectPage;
-        if ($this->selectPage) {
-            $this->selected = $this->messages()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
-        } else {
-            $this->selected = [];
-        }
-    }
-
-    public function toggleSelect($id)
-    {
-        $id = (string) $id;
-        if (in_array($id, $this->selected)) {
-            $this->selected = array_values(array_diff($this->selected, [$id]));
-        } else {
-            $this->selected[] = $id;
-        }
-    }
-
-    public function clearSelection()
-    {
-        $this->selected = [];
-        $this->selectPage = false;
-    }
-
-    public function bulkMarkRead()
-    {
-        $messages = EmailMessage::whereIn('id', $this->selected)->get();
-        foreach ($messages as $m) {
-            app(EmailService::class)->markAsRead($m);
-        }
-        $this->clearSelection();
-        Flux::toast('Marked as read.');
-    }
-
-    public function bulkMarkUnread()
-    {
-        $messages = EmailMessage::whereIn('id', $this->selected)->get();
-        foreach ($messages as $m) {
-            app(EmailService::class)->markAsUnread($m);
-        }
-        $this->clearSelection();
-        Flux::toast('Marked as unread.');
-    }
-
-    public function bulkFlag()
-    {
-        EmailMessage::whereIn('id', $this->selected)->get()->each->flag();
-        $this->clearSelection();
-        Flux::toast('Flagged messages.');
-    }
-
-    public function bulkUnflag()
-    {
-        EmailMessage::whereIn('id', $this->selected)->get()->each->unflag();
-        $this->clearSelection();
-        Flux::toast('Unflagged messages.');
-    }
-
-    public function bulkDelete()
-    {
-        $messages = EmailMessage::whereIn('id', $this->selected)->get();
-        foreach ($messages as $m) {
-            app(EmailService::class)->deleteEmail($m);
-        }
-        $this->clearSelection();
-        Flux::toast('Moved to trash.', variant: 'warning');
     }
 
     public function refreshInbox()
