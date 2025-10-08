@@ -438,7 +438,6 @@ class TicketService
         $escalatedTickets = collect();
 
         try {
-            // Get tickets approaching or past SLA deadlines
             $ticketsToCheck = TicketPriorityQueue::with('ticket')
                 ->where('is_escalated', false)
                 ->where(function ($query) {
@@ -454,35 +453,15 @@ class TicketService
                     continue;
                 }
 
-                $shouldEscalate = false;
-                $escalationReason = '';
+                $escalationResult = $this->checkEscalationNeeded($ticket, $queueItem);
 
-                // Check response SLA breach
-                if (! $ticket->first_response_at && $queueItem->response_deadline <= now()) {
-                    $shouldEscalate = true;
-                    $escalationReason = 'Response SLA breached';
-                } elseif (! $ticket->first_response_at && $queueItem->response_deadline <= now()->addMinutes(30)) {
-                    $shouldEscalate = true;
-                    $escalationReason = 'Response SLA at risk (30 minutes remaining)';
-                }
-
-                // Check resolution SLA breach
-                if (! $ticket->isClosed() && $queueItem->sla_deadline <= now()) {
-                    $shouldEscalate = true;
-                    $escalationReason = 'Resolution SLA breached';
-                } elseif (! $ticket->isClosed() && $queueItem->sla_deadline <= now()->addHours(1)) {
-                    $shouldEscalate = true;
-                    $escalationReason = 'Resolution SLA at risk (1 hour remaining)';
-                }
-
-                if ($shouldEscalate) {
-                    $this->escalateTicket($ticket, $escalationReason);
+                if ($escalationResult['should_escalate']) {
+                    $this->escalateTicket($ticket, $escalationResult['reason']);
                     $escalatedTickets->push($ticket);
 
-                    // Mark as escalated to avoid repeated escalations
                     $queueItem->is_escalated = true;
                     $queueItem->escalated_at = now();
-                    $queueItem->escalation_reason = $escalationReason;
+                    $queueItem->escalation_reason = $escalationResult['reason'];
                     $queueItem->save();
                 }
             }
@@ -500,6 +479,33 @@ class TicketService
         }
 
         return $escalatedTickets;
+    }
+
+    protected function checkEscalationNeeded(Ticket $ticket, TicketPriorityQueue $queueItem): array
+    {
+        $shouldEscalate = false;
+        $escalationReason = '';
+
+        if (! $ticket->first_response_at && $queueItem->response_deadline <= now()) {
+            $shouldEscalate = true;
+            $escalationReason = 'Response SLA breached';
+        } elseif (! $ticket->first_response_at && $queueItem->response_deadline <= now()->addMinutes(30)) {
+            $shouldEscalate = true;
+            $escalationReason = 'Response SLA at risk (30 minutes remaining)';
+        }
+
+        if (! $ticket->isClosed() && $queueItem->sla_deadline <= now()) {
+            $shouldEscalate = true;
+            $escalationReason = 'Resolution SLA breached';
+        } elseif (! $ticket->isClosed() && $queueItem->sla_deadline <= now()->addHours(1)) {
+            $shouldEscalate = true;
+            $escalationReason = 'Resolution SLA at risk (1 hour remaining)';
+        }
+
+        return [
+            'should_escalate' => $shouldEscalate,
+            'reason' => $escalationReason,
+        ];
     }
 
     /**
