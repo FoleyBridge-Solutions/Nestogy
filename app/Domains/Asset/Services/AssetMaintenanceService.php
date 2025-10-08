@@ -200,7 +200,7 @@ class AssetMaintenanceService
             $results['registry_cleanup'] = $registryResult;
 
             // 6. Performance verification
-            $verificationResult = $this->verifyPerformanceImprovement($asset, $baselineResult);
+            $verificationResult = $this->verifyPerformanceImprovement($asset);
             $results['performance_verification'] = $verificationResult;
 
         } catch (\Exception $e) {
@@ -573,7 +573,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function verifyPerformanceImprovement(Asset $asset, array $baseline): array
+    protected function verifyPerformanceImprovement(Asset $asset): array
     {
         return ['success' => true];
     }
