@@ -14,6 +14,8 @@ class DomainController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_REQUIRED_STRING_MAX_255 = 'required|string|max:255';
+
     /**
      * Display a listing of domains for the selected client
      */
@@ -118,9 +120,9 @@ class DomainController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_MAX_255,
             'description' => 'nullable|string',
-            'domain_name' => 'required|string|max:255',
+            'domain_name' => self::VALIDATION_REQUIRED_STRING_MAX_255,
             'tld' => 'required|string|max:20',
             'registrar' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getRegistrars())),
             'registrar_account' => 'nullable|string|max:255',
@@ -247,9 +249,9 @@ class DomainController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_MAX_255,
             'description' => 'nullable|string',
-            'domain_name' => 'required|string|max:255',
+            'domain_name' => self::VALIDATION_REQUIRED_STRING_MAX_255,
             'tld' => 'required|string|max:20',
             'registrar' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getRegistrars())),
             'registrar_account' => 'nullable|string|max:255',
