@@ -10,6 +10,8 @@ class ClausesLibrary extends Component
 {
     use WithPagination;
 
+    private const STANDARD_CLAUSE_PREFIX = 'Standard ';
+
     public $search = '';
 
     public $categoryFilter = '';
@@ -76,7 +78,7 @@ class ClausesLibrary extends Component
         foreach ($mspClauses as $clause) {
             ContractClause::create([
                 'title' => $clause['title'],
-                'content' => 'Standard '.$clause['title'].' clause content.',
+                'content' => self::STANDARD_CLAUSE_PREFIX.$clause['title'].' clause content.',
                 'category' => $clause['category'],
                 'type' => $clause['type'],
                 'review_status' => 'approved',
@@ -100,7 +102,7 @@ class ClausesLibrary extends Component
         foreach ($legalClauses as $clause) {
             ContractClause::create([
                 'title' => $clause['title'],
-                'content' => 'Standard '.$clause['title'].' legal provision.',
+                'content' => self::STANDARD_CLAUSE_PREFIX.$clause['title'].' legal provision.',
                 'category' => $clause['category'],
                 'type' => $clause['type'],
                 'review_status' => 'approved',
@@ -123,7 +125,7 @@ class ClausesLibrary extends Component
         foreach ($complianceClauses as $clause) {
             ContractClause::create([
                 'title' => $clause['title'],
-                'content' => 'Standard '.$clause['title'].' compliance requirements.',
+                'content' => self::STANDARD_CLAUSE_PREFIX.$clause['title'].' compliance requirements.',
                 'category' => $clause['category'],
                 'type' => $clause['type'],
                 'review_status' => 'approved',
