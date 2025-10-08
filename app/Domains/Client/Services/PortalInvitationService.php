@@ -55,73 +55,12 @@ class PortalInvitationService
     public function sendInvitation(Contact $contact, User $sentBy): array
     {
         try {
-            // Check if invitations are enabled
-            if (! $this->config['enabled']) {
-                return $this->errorResponse('Portal invitations are currently disabled');
+            $validationError = $this->validateInvitationRequest($contact);
+            if ($validationError !== null) {
+                return $validationError;
             }
 
-            // Validate contact can receive invitation
-            $validation = $this->validateContactForInvitation($contact);
-            if (! $validation['valid']) {
-                return $this->errorResponse($validation['message']);
-            }
-
-            // Check rate limits
-            if (! $this->checkRateLimits($contact)) {
-                return $this->errorResponse('Rate limit exceeded. Please try again later.');
-            }
-
-            // Generate unique token
-            $token = $this->generateInvitationToken();
-            $expiresAt = now()->addHours($this->config['expiration_hours']);
-
-            // Update contact with invitation details
-            $contact->update([
-                'invitation_token' => Hash::make($token),
-                'invitation_sent_at' => now(),
-                'invitation_expires_at' => $expiresAt,
-                'invitation_sent_by' => $sentBy->id,
-                'invitation_status' => 'sent',
-                'has_portal_access' => true,
-            ]);
-
-            // Send invitation email
-            $emailSent = $this->sendInvitationEmail($contact, $token);
-            
-            if (!$emailSent) {
-                // Rollback invitation status if email failed
-                $contact->update([
-                    'invitation_status' => 'failed',
-                    'invitation_token' => null,
-                ]);
-                
-                return $this->errorResponse('Failed to send invitation email. Please check your email configuration.');
-            }
-
-            // Log activity
-            activity()
-                ->causedBy($sentBy)
-                ->performedOn($contact)
-                ->withProperties([
-                    'action' => 'invitation_sent',
-                    'expires_at' => $expiresAt,
-                    'client_id' => $contact->client_id,
-                ])
-                ->log('Portal invitation sent to contact');
-
-            // Log to communication log
-            $this->logCommunication($contact, $sentBy, 'invitation_sent',
-                "Portal invitation sent to {$contact->name}",
-                "Invitation email sent to {$contact->email}. The invitation will expire on {$expiresAt->format('F j, Y \a\t g:i A')}. The contact can use this invitation to set up their own password for portal access."
-            );
-
-            // Update rate limiter
-            $this->updateRateLimiter($contact);
-
-            return $this->successResponse('Invitation sent successfully', [
-                'expires_at' => $expiresAt,
-                'contact_id' => $contact->id,
-            ]);
+            return $this->processSendInvitation($contact, $sentBy);
 
         } catch (Exception $e) {
             Log::error('Failed to send portal invitation', [
@@ -306,6 +245,78 @@ class PortalInvitationService
             'revoked' => $stats['revoked'] ?? 0,
             'acceptance_rate' => $this->calculateAcceptanceRate($stats),
         ];
+    }
+
+    /**
+     * Validate invitation request (combines all validation checks)
+     */
+    protected function validateInvitationRequest(Contact $contact): ?array
+    {
+        if (! $this->config['enabled']) {
+            return $this->errorResponse('Portal invitations are currently disabled');
+        }
+
+        $validation = $this->validateContactForInvitation($contact);
+        if (! $validation['valid']) {
+            return $this->errorResponse($validation['message']);
+        }
+
+        if (! $this->checkRateLimits($contact)) {
+            return $this->errorResponse('Rate limit exceeded. Please try again later.');
+        }
+
+        return null;
+    }
+
+    /**
+     * Process sending the invitation (after validation passes)
+     */
+    protected function processSendInvitation(Contact $contact, User $sentBy): array
+    {
+        $token = $this->generateInvitationToken();
+        $expiresAt = now()->addHours($this->config['expiration_hours']);
+
+        $contact->update([
+            'invitation_token' => Hash::make($token),
+            'invitation_sent_at' => now(),
+            'invitation_expires_at' => $expiresAt,
+            'invitation_sent_by' => $sentBy->id,
+            'invitation_status' => 'sent',
+            'has_portal_access' => true,
+        ]);
+
+        $emailSent = $this->sendInvitationEmail($contact, $token);
+        
+        if (!$emailSent) {
+            $contact->update([
+                'invitation_status' => 'failed',
+                'invitation_token' => null,
+            ]);
+            
+            return $this->errorResponse('Failed to send invitation email. Please check your email configuration.');
+        }
+
+        activity()
+            ->causedBy($sentBy)
+            ->performedOn($contact)
+            ->withProperties([
+                'action' => 'invitation_sent',
+                'expires_at' => $expiresAt,
+                'client_id' => $contact->client_id,
+            ])
+            ->log('Portal invitation sent to contact');
+
+        $this->logCommunication($contact, $sentBy, 'invitation_sent',
+            "Portal invitation sent to {$contact->name}",
+            "Invitation email sent to {$contact->email}. The invitation will expire on {$expiresAt->format('F j, Y \a\t g:i A')}. The contact can use this invitation to set up their own password for portal access."
+        );
+
+        $this->updateRateLimiter($contact);
+
+        return $this->successResponse('Invitation sent successfully', [
+            'expires_at' => $expiresAt,
+            'contact_id' => $contact->id,
+        ]);
     }
 
     /**
