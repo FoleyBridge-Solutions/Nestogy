@@ -14,6 +14,8 @@ class NetworkController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     /**
      * Display a listing of networks for the selected client
      */
@@ -130,19 +132,19 @@ class NetworkController extends Controller
             'dhcp_range_start' => 'nullable|ip',
             'dhcp_range_end' => 'nullable|ip',
             'vlan_id' => 'nullable|integer|min:1|max:4094',
-            'ssid' => 'nullable|string|max:255',
-            'wifi_password' => 'nullable|string|max:255',
+            'ssid' => self::VALIDATION_NULLABLE_STRING_255,
+            'wifi_password' => self::VALIDATION_NULLABLE_STRING_255,
             'security_type' => 'nullable|in:'.implode(',', array_keys(ClientNetwork::getSecurityTypes())),
             'bandwidth' => 'nullable|string|max:100',
-            'provider' => 'nullable|string|max:255',
-            'circuit_id' => 'nullable|string|max:255',
+            'provider' => self::VALIDATION_NULLABLE_STRING_255,
+            'circuit_id' => self::VALIDATION_NULLABLE_STRING_255,
             'static_routes' => 'nullable|string',
             'firewall_rules' => 'nullable|string',
             'vpn_config' => 'nullable|string',
             'monitoring_enabled' => 'boolean',
             'backup_config' => 'nullable|string',
             'is_active' => 'boolean',
-            'location' => 'nullable|string|max:255',
+            'location' => self::VALIDATION_NULLABLE_STRING_255,
             'equipment' => 'nullable|string',
             'notes' => 'nullable|string',
             'last_audit_date' => 'nullable|date|before_or_equal:today',
@@ -240,19 +242,19 @@ class NetworkController extends Controller
             'dhcp_range_start' => 'nullable|ip',
             'dhcp_range_end' => 'nullable|ip',
             'vlan_id' => 'nullable|integer|min:1|max:4094',
-            'ssid' => 'nullable|string|max:255',
-            'wifi_password' => 'nullable|string|max:255',
+            'ssid' => self::VALIDATION_NULLABLE_STRING_255,
+            'wifi_password' => self::VALIDATION_NULLABLE_STRING_255,
             'security_type' => 'nullable|in:'.implode(',', array_keys(ClientNetwork::getSecurityTypes())),
             'bandwidth' => 'nullable|string|max:100',
-            'provider' => 'nullable|string|max:255',
-            'circuit_id' => 'nullable|string|max:255',
+            'provider' => self::VALIDATION_NULLABLE_STRING_255,
+            'circuit_id' => self::VALIDATION_NULLABLE_STRING_255,
             'static_routes' => 'nullable|string',
             'firewall_rules' => 'nullable|string',
             'vpn_config' => 'nullable|string',
             'monitoring_enabled' => 'boolean',
             'backup_config' => 'nullable|string',
             'is_active' => 'boolean',
-            'location' => 'nullable|string|max:255',
+            'location' => self::VALIDATION_NULLABLE_STRING_255,
             'equipment' => 'nullable|string',
             'notes' => 'nullable|string',
             'last_audit_date' => 'nullable|date|before_or_equal:today',
