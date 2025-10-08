@@ -42,35 +42,31 @@ class ClientPolicy
      */
     public function view(User $user, Client $client): bool
     {
-        // Check same company first - deny if different company
         if (!$this->sameCompany($user, $client)) {
             return false;
         }
 
-        // Admins have full access to all clients in their company
         if ($user->isA('admin')) {
             return true;
         }
 
-        // For technicians - check if they have client restrictions
-        if ($user->isA('technician')) {
-            // If technician has NO client assignments, they can access all clients
-            if ($user->assignedClients()->count() === 0) {
-                return $user->can('clients.*') || $user->can('clients.view');
-            }
-
-            // If technician has client assignments, only allow access to assigned clients
-            if (!$user->isAssignedToClient($client->id)) {
-                return false;
-            }
+        if ($user->isA('technician') && !$this->canTechnicianAccessClient($user, $client)) {
+            return false;
         }
 
-        // Check for wildcard permission or specific view permission
-        if ($user->can('clients.*') || $user->can('clients.view')) {
+        return $user->can('clients.*') || $user->can('clients.view');
+    }
+
+    /**
+     * Determine if a technician can access a specific client.
+     */
+    private function canTechnicianAccessClient(User $user, Client $client): bool
+    {
+        if ($user->assignedClients()->count() === 0) {
             return true;
         }
 
-        return false;
+        return $user->isAssignedToClient($client->id);
     }
 
     /**
