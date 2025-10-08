@@ -283,9 +283,14 @@ class ContractLanguageEditor extends Component
         }
         
         $content = $this->editorMode === 'raw' ? $this->content : $this->previewContent;
-        $pattern = $this->useRegex 
-            ? '/' . $this->searchQuery . '/' . ($this->caseSensitive ? '' : 'i')
-            : '/' . preg_quote($this->searchQuery, '/') . '/' . ($this->caseSensitive ? '' : 'i');
+        
+        $modifiers = $this->caseSensitive ? '' : 'i';
+        
+        if ($this->useRegex) {
+            $pattern = '/' . $this->searchQuery . '/' . $modifiers;
+        } else {
+            $pattern = '/' . preg_quote($this->searchQuery, '/') . '/' . $modifiers;
+        }
         
         preg_match_all($pattern, $content, $matches, PREG_OFFSET_CAPTURE);
         
@@ -336,9 +341,13 @@ class ContractLanguageEditor extends Component
         
         $this->pushToUndoStack();
         
-        $pattern = $this->useRegex 
-            ? '/' . $this->searchQuery . '/' . ($this->caseSensitive ? '' : 'i')
-            : '/' . preg_quote($this->searchQuery, '/') . '/' . ($this->caseSensitive ? '' : 'i');
+        $modifiers = $this->caseSensitive ? '' : 'i';
+        
+        if ($this->useRegex) {
+            $pattern = '/' . $this->searchQuery . '/' . $modifiers;
+        } else {
+            $pattern = '/' . preg_quote($this->searchQuery, '/') . '/' . $modifiers;
+        }
         
         $count = 0;
         $this->content = preg_replace($pattern, $this->replaceQuery, $this->content, -1, $count);
