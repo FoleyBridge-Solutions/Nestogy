@@ -15,6 +15,8 @@ use Illuminate\Validation\Rule;
 
 class InvoicesController extends Controller
 {
+    private const VALIDATION_REQUIRED_NUMERIC_MIN_ZERO = 'required|numeric|min:0';
+
     protected RecurringBillingService $billingService;
 
     protected NotificationService $notificationService;
@@ -119,8 +121,8 @@ class InvoicesController extends Controller
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
-            'items.*.quantity' => 'required|numeric|min:0',
-            'items.*.rate' => 'required|numeric|min:0',
+            'items.*.quantity' => self::VALIDATION_REQUIRED_NUMERIC_MIN_ZERO,
+            'items.*.rate' => self::VALIDATION_REQUIRED_NUMERIC_MIN_ZERO,
             'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
         ]);
 
@@ -297,8 +299,8 @@ class InvoicesController extends Controller
                     'items' => 'required|array|min:1',
                     'items.*.id' => 'nullable|exists:invoice_items,id',
                     'items.*.description' => 'required|string',
-                    'items.*.quantity' => 'required|numeric|min:0',
-                    'items.*.rate' => 'required|numeric|min:0',
+                    'items.*.quantity' => self::VALIDATION_REQUIRED_NUMERIC_MIN_ZERO,
+                    'items.*.rate' => self::VALIDATION_REQUIRED_NUMERIC_MIN_ZERO,
                     'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
                 ]);
 
