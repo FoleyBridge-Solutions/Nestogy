@@ -202,7 +202,7 @@ class VoIPTaxReportingService
         $serviceTypes = ['local', 'long_distance', 'international', 'voip_fixed', 'voip_nomadic', 'data', 'equipment'];
 
         foreach ($serviceTypes as $serviceType) {
-            $analysis = $this->analyzeServiceType($invoices, $serviceType);
+            $analysis = $this->analyzeServiceType($invoices);
             if ($analysis['transaction_count'] > 0) {
                 $report['service_types'][$serviceType] = $analysis;
             }
@@ -701,7 +701,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function analyzeServiceType($invoices, $serviceType)
+    protected function analyzeServiceType($invoices)
     {
         return [];
     }
