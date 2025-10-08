@@ -47,6 +47,9 @@ class MyTickets extends Component
                 // This would require a pivot table for watchers
                 $query->where('assigned_to', $user->id); // Fallback to assigned
                 break;
+            default:
+                $query->where('assigned_to', $user->id);
+                break;
         }
 
         // Filter by status
