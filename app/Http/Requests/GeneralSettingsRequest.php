@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class GeneralSettingsRequest extends FormRequest
 {
+    private const HEX_COLOR_VALIDATION = 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -24,9 +26,9 @@ class GeneralSettingsRequest extends FormRequest
             'company_name' => 'required|string|max:255',
             'company_logo' => 'nullable|string|max:255',
             'company_colors' => 'nullable|array',
-            'company_colors.primary' => 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
-            'company_colors.secondary' => 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
-            'company_colors.accent' => 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
+            'company_colors.primary' => self::HEX_COLOR_VALIDATION,
+            'company_colors.secondary' => self::HEX_COLOR_VALIDATION,
+            'company_colors.accent' => self::HEX_COLOR_VALIDATION,
 
             // Contact Information
             'business_address' => 'nullable|string|max:500',
