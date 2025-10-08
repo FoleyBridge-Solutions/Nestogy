@@ -619,6 +619,12 @@ class CollectionManagementService
                 $strategy['contact_frequency'] = 'daily';
                 $strategy['escalation_timeline'] = 7;
                 break;
+
+            default:
+                $strategy['strategy_type'] = 'standard';
+                $strategy['contact_frequency'] = 'weekly';
+                $strategy['escalation_timeline'] = 30;
+                break;
         }
 
         return $strategy;
