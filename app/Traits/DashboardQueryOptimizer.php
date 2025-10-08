@@ -79,18 +79,18 @@ trait DashboardQueryOptimizer
      */
     protected static function executeBulkInvoiceQueries(array $queries): array
     {
+        $results = [];
+
         if (empty($queries)) {
-            return [];
+            return $results;
         }
 
-        // Build a single query with multiple CASE statements
         $companyId = $queries[0]['company_id'] ?? null;
         if (! $companyId) {
-            return [];
+            return $results;
         }
 
         $selectClauses = [];
-        $results = [];
 
         foreach ($queries as $query) {
             $key = $query['key'];
@@ -112,24 +112,21 @@ trait DashboardQueryOptimizer
             }
         }
 
-        if (empty($selectClauses)) {
-            return [];
-        }
+        if (! empty($selectClauses)) {
+            $sql = 'SELECT '.implode(', ', $selectClauses).' 
+                    FROM invoices 
+                    WHERE company_id = ? AND archived_at IS NULL';
 
-        $sql = 'SELECT '.implode(', ', $selectClauses).' 
-                FROM invoices 
-                WHERE company_id = ? AND archived_at IS NULL';
+            $data = DB::selectOne($sql, [$companyId]);
 
-        $data = DB::selectOne($sql, [$companyId]);
-
-        // Parse results
-        foreach ($queries as $query) {
-            $key = $query['key'];
-            $results[$key] = [
-                'sum' => $data->{"sum_{$key}"} ?? 0,
-                'count' => $data->{"count_{$key}"} ?? 0,
-                'avg' => $data->{"avg_{$key}"} ?? 0,
-            ];
+            foreach ($queries as $query) {
+                $key = $query['key'];
+                $results[$key] = [
+                    'sum' => $data->{"sum_{$key}"} ?? 0,
+                    'count' => $data->{"count_{$key}"} ?? 0,
+                    'avg' => $data->{"avg_{$key}"} ?? 0,
+                ];
+            }
         }
 
         return $results;
