@@ -13,6 +13,8 @@ use Illuminate\Console\Command;
  */
 class GenerateMonthlyReports extends Command
 {
+    private const COLUMN_COMPANY_ID = 'Company ID';
+
     /**
      * The name and signature of the console command.
      *
@@ -105,7 +107,7 @@ class GenerateMonthlyReports extends Command
         foreach ($results as $companyId => $result) {
             if ($result['success']) {
                 $tableData[] = [
-                    'Company ID' => $companyId,
+                    self::COLUMN_COMPANY_ID => $companyId,
                     'Status' => '✅ Success',
                     'Tax Collected' => '$'.number_format($result['report_summary']['total_tax_collected'], 2),
                     'Invoices' => $result['report_summary']['invoice_count'],
@@ -115,7 +117,7 @@ class GenerateMonthlyReports extends Command
                 ];
             } else {
                 $tableData[] = [
-                    'Company ID' => $companyId,
+                    self::COLUMN_COMPANY_ID => $companyId,
                     'Status' => '❌ Failed',
                     'Tax Collected' => 'N/A',
                     'Invoices' => 'N/A',
@@ -127,7 +129,7 @@ class GenerateMonthlyReports extends Command
         }
 
         $this->table([
-            'Company ID', 'Status', 'Tax Collected', 'Invoices',
+            self::COLUMN_COMPANY_ID, 'Status', 'Tax Collected', 'Invoices',
             'Compliance Score', 'Action Items', 'File',
         ], $tableData);
     }
