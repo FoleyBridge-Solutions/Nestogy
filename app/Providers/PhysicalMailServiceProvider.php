@@ -15,7 +15,7 @@ class PhysicalMailServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Bind PostGridClient to use company-aware version when in request context
-        $this->app->bind(PostGridClient::class, function ($app) {
+        $this->app->bind(PostGridClient::class, function () {
             // If we're in a request context with an authenticated user
             if (auth()->check() && auth()->user()->company_id) {
                 try {
