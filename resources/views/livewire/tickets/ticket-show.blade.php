@@ -386,8 +386,7 @@
                     <div class="space-y-2">
                         {{-- Status --}}
                         <div>
-                            <label class="text-xs text-gray-500">Status</label>
-                            <flux:select wire:model="status" wire:change="updateStatus" size="sm">
+                            <flux:select wire:model="status" wire:change="updateStatus" size="sm" label="Status">
                                 @foreach($statuses as $statusOption)
                                     <option value="{{ $statusOption }}">
                                         {{ ucfirst(str_replace('_', ' ', $statusOption)) }}
