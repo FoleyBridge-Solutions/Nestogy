@@ -188,7 +188,7 @@ class AssetMaintenanceService
             $results['memory_optimization'] = $memoryResult;
 
             // 3. Disk defragmentation check
-            $defragResult = $this->checkDiskFragmentation($asset);
+            $defragResult = $this->checkDiskFragmentation();
             $results['disk_fragmentation'] = $defragResult;
 
             // 4. Startup programs optimization
@@ -558,7 +558,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function checkDiskFragmentation(Asset $asset): array
+    protected function checkDiskFragmentation(): array
     {
         return ['success' => true];
     }
