@@ -22,6 +22,8 @@ use Silber\Bouncer\BouncerFacade as Bouncer;
  */
 class SetupWizardController extends Controller
 {
+    private const NULLABLE_BOOLEAN_RULE = 'nullable|boolean';
+
     /**
      * Show the setup wizard welcome page.
      */
@@ -151,12 +153,12 @@ class SetupWizardController extends Controller
             'default_hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
 
             // Module Selections
-            'module_ticketing' => 'nullable|boolean',
-            'module_invoicing' => 'nullable|boolean',
-            'module_assets' => 'nullable|boolean',
-            'module_projects' => 'nullable|boolean',
-            'module_contracts' => 'nullable|boolean',
-            'module_reporting' => 'nullable|boolean',
+            'module_ticketing' => self::NULLABLE_BOOLEAN_RULE,
+            'module_invoicing' => self::NULLABLE_BOOLEAN_RULE,
+            'module_assets' => self::NULLABLE_BOOLEAN_RULE,
+            'module_projects' => self::NULLABLE_BOOLEAN_RULE,
+            'module_contracts' => self::NULLABLE_BOOLEAN_RULE,
+            'module_reporting' => self::NULLABLE_BOOLEAN_RULE,
 
             // MSP Business Settings
             'business_hours_start' => 'nullable|date_format:H:i',
@@ -175,8 +177,8 @@ class SetupWizardController extends Controller
             'invoice_late_fee_percent' => 'nullable|numeric|min:0|max:100',
 
             // Security Options
-            'enable_two_factor' => 'nullable|boolean',
-            'enable_audit_logging' => 'nullable|boolean',
+            'enable_two_factor' => self::NULLABLE_BOOLEAN_RULE,
+            'enable_audit_logging' => self::NULLABLE_BOOLEAN_RULE,
         ], [
             'company_name.required' => 'Company name is required to set up your ERP system.',
             'company_email.required' => 'Company email is required.',
