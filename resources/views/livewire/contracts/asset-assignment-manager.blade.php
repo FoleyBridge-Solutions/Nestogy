@@ -275,8 +275,9 @@
                 
                 <div class="grid grid-cols-2 gap-2 mt-2">
                     @foreach($availableServices as $key => $label)
-                        <label class="flex items-center gap-2 p-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                        <label for="edit-service-{{ $key }}" class="flex items-center gap-2 p-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
                             <flux:checkbox 
+                                id="edit-service-{{ $key }}"
                                 wire:click="toggleService('{{ $key }}')"
                                 :checked="in_array('{{ $key }}', $assigned_services)"
                             />
