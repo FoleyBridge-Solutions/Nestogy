@@ -33,6 +33,8 @@ class DashboardDataService
 
     protected ?string $revenueRecognitionMethod = null;
 
+    private const COLOR_NEGATIVE_SENTIMENT = '#ef4444';
+
     public function __construct(int $companyId)
     {
         $this->companyId = $companyId;
@@ -1052,7 +1054,7 @@ class DashboardDataService
             'negative_sentiment_alerts' => [
                 'value' => $negativeTickets,
                 'label' => 'Need Attention',
-                'color' => $negativeTickets > 0 ? '#ef4444' : '#64748b',
+                'color' => $negativeTickets > 0 ? self::COLOR_NEGATIVE_SENTIMENT : '#64748b',
                 'icon' => 'fas fa-exclamation-triangle',
                 'description' => 'High-confidence negative tickets requiring immediate attention',
                 'trend' => $negativeTrend,
@@ -1079,7 +1081,7 @@ class DashboardDataService
                 'negative' => [
                     'count' => $negativeCount,
                     'percentage' => $totalInteractions > 0 ? round(($negativeCount / $totalInteractions) * 100, 1) : 0,
-                    'color' => '#ef4444',
+                    'color' => self::COLOR_NEGATIVE_SENTIMENT,
                 ],
             ],
             'sentiment_trends' => $this->getSentimentTrends($startDate, $endDate),
@@ -1185,7 +1187,7 @@ class DashboardDataService
             return '#f97316';
         } // orange-500
 
-        return '#ef4444'; // red-500
+        return self::COLOR_NEGATIVE_SENTIMENT; // red-500
     }
 
     protected function getRevenueRecognitionMethod(): string
