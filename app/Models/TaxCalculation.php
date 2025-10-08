@@ -295,6 +295,9 @@ class TaxCalculation extends Model
                             ];
                         }
                         break;
+
+                    default:
+                        break;
                 }
             }
         }
