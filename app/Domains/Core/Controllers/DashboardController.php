@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
+    private const EXTRACT_HOUR_FROM_CREATED_AT = 'EXTRACT(hour from created_at)';
+
     protected ?DashboardDataService $dashboardService = null;
 
     protected ?RealtimeDashboardService $realtimeService = null;
@@ -784,9 +786,9 @@ class DashboardController extends Controller
         // Get hourly breakdown
         $hourlyBreakdown = Ticket::where($baseQuery)
             ->whereBetween('created_at', [$today, $endOfDay])
-            ->selectRaw("EXTRACT(hour from created_at) as hour, COUNT(*) as count, AVG(CASE WHEN priority = 'Critical' THEN 3 WHEN priority = 'High' THEN 2 ELSE 1 END) as avg_priority")
-            ->groupByRaw('EXTRACT(hour from created_at)')
-            ->orderByRaw('EXTRACT(hour from created_at)')
+            ->selectRaw(self::EXTRACT_HOUR_FROM_CREATED_AT . " as hour, COUNT(*) as count, AVG(CASE WHEN priority = 'Critical' THEN 3 WHEN priority = 'High' THEN 2 ELSE 1 END) as avg_priority")
+            ->groupByRaw(self::EXTRACT_HOUR_FROM_CREATED_AT)
+            ->orderByRaw(self::EXTRACT_HOUR_FROM_CREATED_AT)
             ->get();
 
         // Get recent solutions/knowledge base (recently closed tickets)
