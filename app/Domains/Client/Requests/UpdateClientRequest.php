@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateClientRequest extends FormRequest
 {
+    private const PHONE_NUMBER_PATTERN = '/[^0-9]/';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -147,31 +149,31 @@ class UpdateClientRequest extends FormRequest
         // Clean phone numbers
         if ($this->has('phone')) {
             $this->merge([
-                'phone' => preg_replace('/[^0-9]/', '', $this->phone),
+                'phone' => preg_replace(self::PHONE_NUMBER_PATTERN, '', $this->phone),
             ]);
         }
 
         if ($this->has('location_phone')) {
             $this->merge([
-                'location_phone' => preg_replace('/[^0-9]/', '', $this->location_phone),
+                'location_phone' => preg_replace(self::PHONE_NUMBER_PATTERN, '', $this->location_phone),
             ]);
         }
 
         if ($this->has('contact_phone')) {
             $this->merge([
-                'contact_phone' => preg_replace('/[^0-9]/', '', $this->contact_phone),
+                'contact_phone' => preg_replace(self::PHONE_NUMBER_PATTERN, '', $this->contact_phone),
             ]);
         }
 
         if ($this->has('contact_mobile')) {
             $this->merge([
-                'contact_mobile' => preg_replace('/[^0-9]/', '', $this->contact_mobile),
+                'contact_mobile' => preg_replace(self::PHONE_NUMBER_PATTERN, '', $this->contact_mobile),
             ]);
         }
 
         if ($this->has('contact_extension')) {
             $this->merge([
-                'contact_extension' => preg_replace('/[^0-9]/', '', $this->contact_extension),
+                'contact_extension' => preg_replace(self::PHONE_NUMBER_PATTERN, '', $this->contact_extension),
             ]);
         }
 
