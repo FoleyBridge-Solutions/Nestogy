@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class AnalyticsController extends Controller
 {
+    private const VALIDATION_END_DATE_AFTER_START = 'required|date|after_or_equal:start_date';
+
     protected FinancialAnalyticsService $analyticsService;
 
     protected DashboardDataService $dashboardService;
@@ -271,7 +273,7 @@ class AnalyticsController extends Controller
     {
         $request->validate([
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'end_date' => self::VALIDATION_END_DATE_AFTER_START,
         ]);
 
         $startDate = Carbon::parse($request->start_date);
@@ -292,7 +294,7 @@ class AnalyticsController extends Controller
     {
         $request->validate([
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'end_date' => self::VALIDATION_END_DATE_AFTER_START,
         ]);
 
         $startDate = Carbon::parse($request->start_date);
@@ -336,7 +338,7 @@ class AnalyticsController extends Controller
     {
         $request->validate([
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'end_date' => self::VALIDATION_END_DATE_AFTER_START,
         ]);
 
         $startDate = Carbon::parse($request->start_date);
@@ -357,7 +359,7 @@ class AnalyticsController extends Controller
     {
         $request->validate([
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'end_date' => self::VALIDATION_END_DATE_AFTER_START,
         ]);
 
         $startDate = Carbon::parse($request->start_date);
