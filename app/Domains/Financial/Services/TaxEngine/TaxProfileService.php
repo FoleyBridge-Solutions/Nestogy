@@ -292,6 +292,9 @@ class TaxProfileService
                             $errors[$field] = "{$fieldDef['label']} must include at least a state";
                         }
                         break;
+
+                    default:
+                        break;
                 }
             }
         }
