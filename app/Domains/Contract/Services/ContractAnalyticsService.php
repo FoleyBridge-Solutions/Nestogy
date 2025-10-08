@@ -200,7 +200,7 @@ class ContractAnalyticsService
         $approvalTime = $this->calculateAverageApprovalTime($contracts);
 
         // Contract stages distribution
-        $stagesDistribution = $this->getContractStagesDistribution($companyId);
+        $stagesDistribution = $this->getContractStagesDistribution();
 
         // Bottleneck analysis
         $bottlenecks = $this->identifyProcessBottlenecks($companyId, $startDate);
@@ -517,7 +517,7 @@ class ContractAnalyticsService
         return 0;
     }
 
-    protected function getContractStagesDistribution(int $companyId): array
+    protected function getContractStagesDistribution(): array
     {
         return [];
     }
