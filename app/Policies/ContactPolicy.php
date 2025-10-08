@@ -69,7 +69,7 @@ class ContactPolicy
             return true;
         }
 
-        return $user->can('clients.contacts.manage') && $this->sameCompany($user, $contact);
+        return $user->can('clients.contacts.delete') && $this->sameCompany($user, $contact);
     }
 
     /**
