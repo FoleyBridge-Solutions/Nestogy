@@ -88,6 +88,11 @@ class ContractMilestone extends Model
     use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
+     * Cast type for decimal values with 2 decimal places
+     */
+    private const CAST_DECIMAL_2 = 'decimal:2';
+
+    /**
      * The table associated with the model.
      */
     protected $table = 'contract_milestones';
@@ -176,8 +181,8 @@ class ContractMilestone extends Model
         'prerequisites' => 'array',
         'dependencies' => 'array',
         'blocks' => 'array',
-        'milestone_value' => 'decimal:2',
-        'invoice_amount' => 'decimal:2',
+        'milestone_value' => self::CAST_DECIMAL_2,
+        'invoice_amount' => self::CAST_DECIMAL_2,
         'billable' => 'boolean',
         'completion_percentage' => 'integer',
         'progress_metrics' => 'array',
@@ -193,8 +198,8 @@ class ContractMilestone extends Model
         'compliance_requirements' => 'array',
         'assigned_resources' => 'array',
         'resource_requirements' => 'array',
-        'budget_allocated' => 'decimal:2',
-        'budget_spent' => 'decimal:2',
+        'budget_allocated' => self::CAST_DECIMAL_2,
+        'budget_spent' => self::CAST_DECIMAL_2,
         'risk_factors' => 'array',
         'mitigation_strategies' => 'array',
         'stakeholders' => 'array',
@@ -211,7 +216,7 @@ class ContractMilestone extends Model
         'auto_invoice_generation' => 'boolean',
         'auto_service_activation' => 'boolean',
         'performance_metrics' => 'array',
-        'client_satisfaction_score' => 'decimal:2',
+        'client_satisfaction_score' => self::CAST_DECIMAL_2,
         'sort_order' => 'integer',
         'is_critical_path' => 'boolean',
         'created_by' => 'integer',
