@@ -35,6 +35,8 @@ use Illuminate\Support\Facades\Log;
  */
 class QuoteController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     protected $quoteService;
 
     protected $emailService;
@@ -405,7 +407,7 @@ class QuoteController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'quantity' => 'required|numeric|min:0.01',
             'price' => 'required|numeric|min:0',
             'tax_id' => 'nullable|exists:taxes,id',
@@ -454,7 +456,7 @@ class QuoteController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'quantity' => 'required|numeric|min:0.01',
             'price' => 'required|numeric|min:0',
             'tax_id' => 'nullable|exists:taxes,id',
@@ -1364,7 +1366,7 @@ class QuoteController extends Controller
             'document' => 'required|array',
             'recipient_email' => 'required|email',
             'subject' => 'nullable|string|max:255',
-            'message' => 'nullable|string',
+            'message' => self::VALIDATION_NULLABLE_STRING,
             'cc_self' => 'boolean',
         ]);
 
