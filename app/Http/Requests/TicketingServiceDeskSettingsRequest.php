@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class TicketingServiceDeskSettingsRequest extends FormRequest
 {
+    private const PRIORITY_VALIDATION_RULE = 'string|in:low,medium,high,critical';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -41,14 +43,14 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_categorization_rules.keywords' => 'nullable|array',
             'ticket_categorization_rules.keywords.*.keyword' => 'string|max:50',
             'ticket_categorization_rules.keywords.*.category' => 'string|max:100',
-            'ticket_categorization_rules.keywords.*.priority' => 'string|in:low,medium,high,critical',
+            'ticket_categorization_rules.keywords.*.priority' => self::PRIORITY_VALIDATION_RULE,
 
             // Ticket Priority Rules
             'ticket_priority_rules' => 'nullable|array',
             'ticket_priority_rules.enabled' => 'boolean',
             'ticket_priority_rules.auto_priority' => 'boolean',
             'ticket_priority_rules.allow_client_set_priority' => 'boolean',
-            'ticket_priority_rules.default_priority' => 'string|in:low,medium,high,critical',
+            'ticket_priority_rules.default_priority' => self::PRIORITY_VALIDATION_RULE,
             'ticket_priority_rules.escalate_overdue' => 'boolean',
             'ticket_priority_rules.escalation_hours' => 'nullable|array',
             'ticket_priority_rules.escalation_hours.low' => 'integer|min:1|max:168',
@@ -169,7 +171,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_templates.templates' => 'nullable|array',
             'ticket_templates.templates.*.name' => 'string|max:100',
             'ticket_templates.templates.*.category' => 'string|max:100',
-            'ticket_templates.templates.*.priority' => 'string|in:low,medium,high,critical',
+            'ticket_templates.templates.*.priority' => self::PRIORITY_VALIDATION_RULE,
             'ticket_templates.templates.*.subject_template' => 'string|max:255',
             'ticket_templates.templates.*.description_template' => 'string|max:2000',
             'ticket_templates.templates.*.required_fields' => 'nullable|array',
