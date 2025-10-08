@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 
 class StoreClientRequest extends BaseFormRequest
 {
+    private const PHONE_NUMBER_REGEX = '/[^0-9]/';
+
     protected function initializeRequest(): void
     {
         $this->modelClass = Client::class;
@@ -138,25 +140,25 @@ class StoreClientRequest extends BaseFormRequest
         // Clean phone numbers
         if ($this->has('location_phone')) {
             $this->merge([
-                'location_phone' => preg_replace('/[^0-9]/', '', $this->location_phone),
+                'location_phone' => preg_replace(self::PHONE_NUMBER_REGEX, '', $this->location_phone),
             ]);
         }
 
         if ($this->has('contact_phone')) {
             $this->merge([
-                'contact_phone' => preg_replace('/[^0-9]/', '', $this->contact_phone),
+                'contact_phone' => preg_replace(self::PHONE_NUMBER_REGEX, '', $this->contact_phone),
             ]);
         }
 
         if ($this->has('contact_mobile')) {
             $this->merge([
-                'contact_mobile' => preg_replace('/[^0-9]/', '', $this->contact_mobile),
+                'contact_mobile' => preg_replace(self::PHONE_NUMBER_REGEX, '', $this->contact_mobile),
             ]);
         }
 
         if ($this->has('contact_extension')) {
             $this->merge([
-                'contact_extension' => preg_replace('/[^0-9]/', '', $this->contact_extension),
+                'contact_extension' => preg_replace(self::PHONE_NUMBER_REGEX, '', $this->contact_extension),
             ]);
         }
 
