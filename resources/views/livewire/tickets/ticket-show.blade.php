@@ -410,8 +410,7 @@
 
                         {{-- Assignee --}}
                         <div>
-                            <label class="text-xs text-gray-500">Assignee</label>
-                            <flux:select wire:model="assignedTo" wire:change="updateAssignee" size="sm">
+                            <flux:select wire:model="assignedTo" wire:change="updateAssignee" size="sm" label="Assignee">
                                 <option value="">Unassigned</option>
                                 @foreach($technicians as $tech)
                                     <option value="{{ $tech->id }}">{{ $tech->name }}</option>
