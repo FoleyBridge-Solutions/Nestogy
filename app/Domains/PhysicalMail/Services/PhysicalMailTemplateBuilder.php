@@ -46,7 +46,7 @@ class PhysicalMailTemplateBuilder
         string $type = self::TYPE_LETTER,
         array $options = []
     ): string {
-        $styles = $this->getBaseStyles($type, $options);
+        $styles = $this->getBaseStyles($options);
         $headerContent = $this->getHeaderContent($type, $options);
         $wrappedContent = $this->wrapContent($content, $type);
 
@@ -56,7 +56,7 @@ class PhysicalMailTemplateBuilder
     /**
      * Get base CSS styles for the template
      */
-    private function getBaseStyles(string $type, array $options): string
+    private function getBaseStyles(array $options): string
     {
         $topMargin = ($options['top_margin'] ?? self::MARGIN_TOP_SAFE) * self::INCH_TO_PX;
         $sideMargin = self::MARGIN_SIDE * self::INCH_TO_PX;
