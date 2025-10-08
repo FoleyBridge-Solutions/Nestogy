@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Log;
  */
 class IntelligentJurisdictionDiscoveryService
 {
+    private const WHITESPACE_PATTERN = '/\s+/';
+
     /**
      * Discover jurisdiction patterns from imported address data
      * This replaces all hardcoded patterns with dynamic discovery
@@ -141,7 +143,7 @@ class IntelligentJurisdictionDiscoveryService
                 $termFrequency = [];
 
                 foreach ($names as $name) {
-                    $words = preg_split('/\s+/', strtoupper($name));
+                    $words = preg_split(self::WHITESPACE_PATTERN, strtoupper($name));
                     foreach ($words as $word) {
                         if (strlen($word) > 2) {
                             $termFrequency[$word] = ($termFrequency[$word] ?? 0) + 1;
@@ -183,7 +185,7 @@ class IntelligentJurisdictionDiscoveryService
         }
 
         // Extract any remaining geographic identifiers
-        $geoWords = preg_split('/\s+/', $name);
+        $geoWords = preg_split(self::WHITESPACE_PATTERN, $name);
         foreach ($geoWords as $word) {
             if ($this->isGeographicTerm($word)) {
                 $terms[] = $word;
@@ -214,7 +216,7 @@ class IntelligentJurisdictionDiscoveryService
                     ->toArray();
 
                 foreach ($counties as $county) {
-                    $words = preg_split('/\s+/', strtoupper($county));
+                    $words = preg_split(self::WHITESPACE_PATTERN, strtoupper($county));
                     $terms = array_merge($terms, $words);
                 }
 
@@ -226,7 +228,7 @@ class IntelligentJurisdictionDiscoveryService
                     ->toArray();
 
                 foreach ($cities as $city) {
-                    $words = preg_split('/\s+/', strtoupper($city));
+                    $words = preg_split(self::WHITESPACE_PATTERN, strtoupper($city));
                     $terms = array_merge($terms, $words);
                 }
 
