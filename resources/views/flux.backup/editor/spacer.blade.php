@@ -1,3 +1,3 @@
 @pure
 
-<div class="flex-1" role="none"></div>
+<div class="flex-1"></div>
