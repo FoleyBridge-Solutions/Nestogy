@@ -86,14 +86,13 @@ class TaxServiceFactory
     {
         $stateCode = strtoupper($stateCode);
 
-        // Check if service is available
+        // Check if service is available and company configuration
         if (! isset(self::$availableServices[$stateCode])) {
             Log::warning("Tax service not available for state: {$stateCode}");
 
             return null;
         }
 
-        // Check company configuration
         $config = self::getCompanyTaxConfig($companyId, $stateCode);
         if (! $config || ! $config->is_enabled) {
             Log::info("Tax service not enabled for company {$companyId} in state {$stateCode}");
@@ -112,9 +111,9 @@ class TaxServiceFactory
                 'company_id' => $companyId,
                 'error' => $e->getMessage(),
             ]);
-
-            return null;
         }
+
+        return null;
     }
 
     /**
