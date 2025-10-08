@@ -293,7 +293,7 @@ class ContractAnalyticsService
             'overdue_milestones' => $overdueMilestones,
             'overdue_payments_value' => $overduePayments,
             'compliance_risk_score' => $this->calculateComplianceRiskScore($companyId),
-            'renewal_risk' => $this->getRenewalRiskAnalysis($companyId),
+            'renewal_risk' => $this->getRenewalRiskAnalysis(),
         ];
     }
 
@@ -532,7 +532,7 @@ class ContractAnalyticsService
         return [];
     }
 
-    protected function getRenewalRiskAnalysis(int $companyId): array
+    protected function getRenewalRiskAnalysis(): array
     {
         return [];
     }
