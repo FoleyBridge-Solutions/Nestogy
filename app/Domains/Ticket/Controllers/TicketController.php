@@ -34,6 +34,8 @@ class TicketController extends Controller
 {
     use FiltersClientsByAssignment, UsesSelectedClient;
 
+    private const VALIDATION_REQUIRED_STRING = 'required|string';
+
     /**
      * Display a listing of tickets
      */
@@ -215,8 +217,8 @@ class TicketController extends Controller
                     $query->where('client_id', $request->client_id);
                 }),
             ],
-            'subject' => 'required|string|max:255',
-            'details' => 'required|string',
+            'subject' => self::VALIDATION_REQUIRED_STRING.'|max:255',
+            'details' => self::VALIDATION_REQUIRED_STRING,
             'priority' => 'required|in:Low,Medium,High,Critical',
             'status' => 'required|in:new,open,in_progress,pending,resolved,closed',
             'assigned_to' => [
@@ -379,7 +381,7 @@ class TicketController extends Controller
         $this->authorize('addReply', $ticket);
 
         $validated = $request->validate([
-            'content' => 'required|string|min:1',
+            'content' => self::VALIDATION_REQUIRED_STRING.'|min:1',
             'visibility' => 'required|in:public,internal',
             'time_minutes' => 'nullable|integer|min:1|max:480',
         ]);
@@ -420,7 +422,7 @@ class TicketController extends Controller
         $this->authorize('resolve', $ticket);
 
         $validated = $request->validate([
-            'resolution_summary' => 'required|string|min:10|max:1000',
+            'resolution_summary' => self::VALIDATION_REQUIRED_STRING.'|min:10|max:1000',
             'allow_client_reopen' => 'boolean',
         ]);
 
@@ -545,8 +547,8 @@ class TicketController extends Controller
                     $query->where('client_id', $request->client_id);
                 }),
             ],
-            'subject' => 'required|string|max:255',
-            'details' => 'required|string',
+            'subject' => self::VALIDATION_REQUIRED_STRING.'|max:255',
+            'details' => self::VALIDATION_REQUIRED_STRING,
             'priority' => 'required|in:Low,Medium,High,Critical',
             'status' => 'required|in:new,open,in_progress,pending,resolved,closed',
             'assigned_to' => [
@@ -683,7 +685,7 @@ class TicketController extends Controller
         $this->authorize('update', $ticket);
 
         $validator = Validator::make($request->all(), [
-            'content' => 'required|string',
+            'content' => self::VALIDATION_REQUIRED_STRING,
             'type' => 'required|in:public,private,internal',
             'attachments' => 'nullable|array',
             'time_spent' => 'nullable|integer|min:0', // minutes
@@ -741,7 +743,7 @@ class TicketController extends Controller
         $this->authorize('update', $ticket);
 
         $validator = Validator::make($request->all(), [
-            'status' => 'required|string',
+            'status' => self::VALIDATION_REQUIRED_STRING,
             'notes' => 'nullable|string|max:500',
         ]);
 
