@@ -61,18 +61,23 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
             <div class="flex flex-wrap gap-4">
                 <div class="flex-1 min-w-[200px]">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
                     <div class="flex gap-2">
-                        <input type="date" class="flex-1 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700" 
-                               wire:model="dateFrom" placeholder="From">
-                        <input type="date" class="flex-1 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700" 
-                               wire:model="dateTo" placeholder="To">
+                        <div class="flex-1">
+                            <label for="date_from" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From</label>
+                            <input id="date_from" type="date" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700" 
+                                   wire:model="dateFrom">
+                        </div>
+                        <div class="flex-1">
+                            <label for="date_to" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To</label>
+                            <input id="date_to" type="date" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700" 
+                                   wire:model="dateTo">
+                        </div>
                     </div>
                 </div>
                 
                 <div class="min-w-[150px]">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+                    <label for="status_filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                    <select id="status_filter" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                         <option value="">All</option>
                         <option value="draft">Draft</option>
                         <option value="submitted">Submitted</option>
@@ -82,8 +87,8 @@
                 </div>
                 
                 <div class="min-w-[150px]">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                    <select class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+                    <label for="type_filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                    <select id="type_filter" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
                         <option value="">All</option>
                         <option value="billable">Billable</option>
                         <option value="non-billable">Non-Billable</option>
