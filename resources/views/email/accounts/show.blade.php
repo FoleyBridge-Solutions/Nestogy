@@ -134,7 +134,7 @@
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->imap_username }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">SSL Validation</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">SSL Validation</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->imap_validate_cert ? 'Enabled' : 'Disabled' }}</p>
                                     </div>
                                 </div>
