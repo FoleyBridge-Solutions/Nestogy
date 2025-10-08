@@ -10,6 +10,8 @@ use App\Domains\Integration\Http\Controllers\Webhooks\NinjaOneWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+const NO_RMM_INTEGRATION_MESSAGE = 'No RMM integration found';
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -560,7 +562,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
             Route::get('rmm', function (\Illuminate\Http\Request $request) {
                 $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', auth()->user()->company_id)->first();
                 if (! $integration) {
-                    return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+                    return response()->json(['success' => false, 'message' => NO_RMM_INTEGRATION_MESSAGE], 404);
                 }
 
                 try {
@@ -584,7 +586,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
                 $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', auth()->user()->company_id)->first();
 
                 if (! $integration) {
-                    return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+                    return response()->json(['success' => false, 'message' => NO_RMM_INTEGRATION_MESSAGE], 404);
                 }
 
                 $mappings = \App\Domains\Integration\Models\RmmClientMapping::where('integration_id', $integration->id)
@@ -602,7 +604,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
                 $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', auth()->user()->company_id)->first();
 
                 if (! $integration) {
-                    return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+                    return response()->json(['success' => false, 'message' => NO_RMM_INTEGRATION_MESSAGE], 404);
                 }
 
                 $validated = $request->validate([
@@ -632,7 +634,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
                 $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', auth()->user()->company_id)->first();
 
                 if (! $integration) {
-                    return response()->json(['success' => false, 'message' => 'No RMM integration found'], 404);
+                    return response()->json(['success' => false, 'message' => NO_RMM_INTEGRATION_MESSAGE], 404);
                 }
 
                 $mapping = \App\Domains\Integration\Models\RmmClientMapping::where('id', $mappingId)
