@@ -168,7 +168,7 @@ class ContractAnalyticsService
         $clientRetention = $this->getClientRetentionRate($companyId, $startDate, $endDate);
 
         // New vs existing clients
-        $newVsExisting = $this->getNewVsExistingClients($companyId, $startDate, $endDate);
+        $newVsExisting = $this->getNewVsExistingClients($startDate, $endDate);
 
         // Client lifetime value
         $lifetimeValue = $this->getClientLifetimeValue($companyId);
@@ -487,7 +487,7 @@ class ContractAnalyticsService
         return 0;
     }
 
-    protected function getNewVsExistingClients(int $companyId, Carbon $startDate, Carbon $endDate): array
+    protected function getNewVsExistingClients(Carbon $startDate, Carbon $endDate): array
     {
         return [];
     }
