@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 class TaxEngineController extends Controller
 {
+    private const VALIDATION_RULE_NULLABLE_ARRAY = 'nullable|array';
+
     protected TaxEngineRouter $taxEngine;
 
     protected TaxProfileService $profileService;
@@ -50,14 +52,14 @@ class TaxEngineController extends Controller
 
                 // Customer/Address
                 'customer_id' => 'nullable|exists:clients,id',
-                'customer_address' => 'nullable|array',
+                'customer_address' => self::VALIDATION_RULE_NULLABLE_ARRAY,
                 'customer_address.state' => 'nullable|string|max:2',
                 'customer_address.city' => 'nullable|string|max:255',
                 'customer_address.zip' => 'nullable|string|max:10',
                 'customer_address.country' => 'nullable|string|max:2',
 
                 // Category-specific tax data
-                'tax_data' => 'nullable|array',
+                'tax_data' => self::VALIDATION_RULE_NULLABLE_ARRAY,
                 'tax_data.line_count' => 'nullable|integer|min:1',
                 'tax_data.minutes' => 'nullable|integer|min:0',
                 'tax_data.extensions' => 'nullable|integer|min:0',
@@ -65,9 +67,9 @@ class TaxEngineController extends Controller
                 'tax_data.storage_amount' => 'nullable|numeric|min:0',
                 'tax_data.user_count' => 'nullable|integer|min:1',
                 'tax_data.weight' => 'nullable|numeric|min:0',
-                'tax_data.dimensions' => 'nullable|array',
+                'tax_data.dimensions' => self::VALIDATION_RULE_NULLABLE_ARRAY,
                 'tax_data.hours' => 'nullable|numeric|min:0',
-                'tax_data.service_location' => 'nullable|array',
+                'tax_data.service_location' => self::VALIDATION_RULE_NULLABLE_ARRAY,
                 'tax_data.service_type' => 'nullable|string',
             ]);
 
@@ -152,11 +154,11 @@ class TaxEngineController extends Controller
                 'items.*.category_id' => 'nullable|exists:categories,id',
                 'items.*.category_type' => 'nullable|string',
                 'items.*.product_id' => 'nullable|exists:products,id',
-                'items.*.tax_data' => 'nullable|array',
+                'items.*.tax_data' => self::VALIDATION_RULE_NULLABLE_ARRAY,
 
                 // Global settings for all items
                 'customer_id' => 'nullable|exists:clients,id',
-                'customer_address' => 'nullable|array',
+                'customer_address' => self::VALIDATION_RULE_NULLABLE_ARRAY,
                 'calculation_type' => 'nullable|string|in:preview,final,estimate',
             ]);
 
@@ -264,7 +266,7 @@ class TaxEngineController extends Controller
                 'quote_data.items.*.discount' => 'nullable|numeric|min:0',
                 'quote_data.items.*.category_id' => 'nullable|exists:categories,id',
                 'quote_data.items.*.product_id' => 'nullable|exists:products,id',
-                'quote_data.items.*.tax_data' => 'nullable|array',
+                'quote_data.items.*.tax_data' => self::VALIDATION_RULE_NULLABLE_ARRAY,
                 'quote_data.discount_amount' => 'nullable|numeric|min:0',
             ]);
 
@@ -413,7 +415,7 @@ class TaxEngineController extends Controller
     {
         try {
             $validated = $request->validate([
-                'category_ids' => 'nullable|array',
+                'category_ids' => self::VALIDATION_RULE_NULLABLE_ARRAY,
                 'category_ids.*' => 'exists:categories,id',
             ]);
 
@@ -708,7 +710,7 @@ class TaxEngineController extends Controller
                 'customer_id' => 'required|exists:clients,id',
 
                 // Dynamic tax data
-                'tax_data' => 'nullable|array',
+                'tax_data' => self::VALIDATION_RULE_NULLABLE_ARRAY,
             ]);
 
             // Get customer and verify company access
