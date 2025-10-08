@@ -2,6 +2,7 @@
 
 namespace App\Domains\Integration\Services;
 
+use App\Domains\Integration\Exceptions\DeviceInventoryException;
 use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Models\RmmIntegration;
 use App\Models\Asset;
@@ -125,7 +126,15 @@ class AssetSyncService
             $inventoryResult = $rmmService->getFullDeviceInventory($agentId);
 
             if (! $inventoryResult['success']) {
-                throw new \Exception('Failed to get device inventory: '.($inventoryResult['errors']['agent'] ?? 'Unknown error'));
+                throw new DeviceInventoryException(
+                    $integration->rmm_platform,
+                    $agentId,
+                    $inventoryResult['errors']['agent'] ?? 'Unknown error',
+                    [
+                        'integration_id' => $integration->id,
+                        'errors' => $inventoryResult['errors'] ?? [],
+                    ]
+                );
             }
 
             $inventory = $inventoryResult['data'];
