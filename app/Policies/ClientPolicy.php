@@ -12,7 +12,7 @@ class ClientPolicy
      * Super admins have unrestricted access.
      * Admins and technicians must pass through individual policy methods for company checks.
      */
-    public function before(User $user, string $ability): ?bool
+    public function before(User $user): ?bool
     {
         // Only super admins get automatic bypass
         // Everyone else (including admins) must pass through policy methods
