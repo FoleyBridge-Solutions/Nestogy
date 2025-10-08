@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BillingFinancialSettingsRequest extends FormRequest
 {
+    private const NULLABLE_POSITIVE_INTEGER = 'nullable|integer|min:1';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -175,7 +177,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'purchase_order_settings.approval_threshold' => 'nullable|numeric|min:0',
             'purchase_order_settings.auto_numbering' => 'boolean',
             'purchase_order_settings.number_prefix' => 'nullable|string|max:10',
-            'purchase_order_settings.next_number' => 'nullable|integer|min:1',
+            'purchase_order_settings.next_number' => self::NULLABLE_POSITIVE_INTEGER,
 
             // Expense Approval
             'expense_approval_settings' => 'nullable|array',
@@ -187,7 +189,7 @@ class BillingFinancialSettingsRequest extends FormRequest
 
             // Invoice Settings
             'invoice_prefix' => 'nullable|string|max:10',
-            'invoice_next_number' => 'nullable|integer|min:1',
+            'invoice_next_number' => self::NULLABLE_POSITIVE_INTEGER,
             'invoice_footer' => 'nullable|string|max:1000',
             'invoice_from_name' => 'nullable|string|max:255',
             'invoice_from_email' => 'nullable|email|max:255',
@@ -196,7 +198,7 @@ class BillingFinancialSettingsRequest extends FormRequest
 
             // Quote Settings
             'quote_prefix' => 'nullable|string|max:10',
-            'quote_next_number' => 'nullable|integer|min:1',
+            'quote_next_number' => self::NULLABLE_POSITIVE_INTEGER,
             'quote_footer' => 'nullable|string|max:1000',
             'quote_from_name' => 'nullable|string|max:255',
             'quote_from_email' => 'nullable|email|max:255',
