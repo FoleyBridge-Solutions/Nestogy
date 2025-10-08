@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
+use App\Domains\Financial\Exceptions\TaxEngineApiException;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -119,7 +120,7 @@ class TexasComptrollerApiClient
 
                 return $taxData;
             } else {
-                throw new Exception('API request failed with status: '.$response->status());
+                throw TaxEngineApiException::apiRequestFailed('texas_comptroller', $response->status());
             }
 
         } catch (Exception $e) {
