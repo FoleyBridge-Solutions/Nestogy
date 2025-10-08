@@ -26,7 +26,7 @@ class EmailMessagePolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function create(User): bool
     {
         return true;
     }
