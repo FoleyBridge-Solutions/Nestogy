@@ -14,6 +14,8 @@ class VendorController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_PAST_DATE = 'nullable|date|before_or_equal:today';
+
     /**
      * Display a listing of vendors for the selected client
      */
@@ -161,7 +163,7 @@ class VendorController extends Controller
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
             'currency' => 'nullable|string|size:3',
             'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
-            'last_order_date' => 'nullable|date|before_or_equal:today',
+            'last_order_date' => self::VALIDATION_PAST_DATE,
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
             'performance_rating' => 'nullable|integer|min:1|max:5',
@@ -179,7 +181,7 @@ class VendorController extends Controller
             'specializations' => 'nullable|string',
             'notes' => 'nullable|string',
             'tags' => 'nullable|string',
-            'last_review_date' => 'nullable|date|before_or_equal:today',
+            'last_review_date' => self::VALIDATION_PAST_DATE,
             'next_review_date' => 'nullable|date',
         ]);
 
@@ -305,7 +307,7 @@ class VendorController extends Controller
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
             'currency' => 'nullable|string|size:3',
             'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
-            'last_order_date' => 'nullable|date|before_or_equal:today',
+            'last_order_date' => self::VALIDATION_PAST_DATE,
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
             'performance_rating' => 'nullable|integer|min:1|max:5',
@@ -323,7 +325,7 @@ class VendorController extends Controller
             'specializations' => 'nullable|string',
             'notes' => 'nullable|string',
             'tags' => 'nullable|string',
-            'last_review_date' => 'nullable|date|before_or_equal:today',
+            'last_review_date' => self::VALIDATION_PAST_DATE,
             'next_review_date' => 'nullable|date',
         ]);
 
