@@ -574,4 +574,55 @@ class TripController extends Controller
 
         return $expenseBreakdown;
     }
+
+    private function processAttendees(?string $attendeesString): array
+    {
+        if (! $attendeesString) {
+            return [];
+        }
+
+        $attendees = array_map('trim', explode(',', $attendeesString));
+
+        return array_filter($attendees);
+    }
+
+    private function processExpenseBreakdown(?string $expenseBreakdownString): array
+    {
+        if (! $expenseBreakdownString) {
+            return [];
+        }
+
+        $expenseBreakdown = [];
+        $lines = explode("\n", $expenseBreakdownString);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+
+            $expenseBreakdown[] = $this->parseExpenseLine($line);
+        }
+
+        return $expenseBreakdown;
+    }
+
+    private function parseExpenseLine(string $line): array
+    {
+        $parts = explode('|', $line);
+
+        if (count($parts) >= 2) {
+            return [
+                'category' => trim($parts[0]),
+                'amount' => (float) trim($parts[1]),
+                'description' => isset($parts[2]) ? trim($parts[2]) : '',
+            ];
+        }
+
+        return [
+            'category' => 'Other',
+            'amount' => 0,
+            'description' => $line,
+        ];
+    }
 }
