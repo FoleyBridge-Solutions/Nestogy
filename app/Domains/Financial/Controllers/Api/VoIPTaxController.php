@@ -22,6 +22,8 @@ use Illuminate\Validation\ValidationException;
  */
 class VoIPTaxController extends Controller
 {
+    private const ERROR_VALIDATION_FAILED = 'Validation failed';
+
     /**
      * Calculate VoIP taxes for a service amount.
      */
@@ -59,7 +61,7 @@ class VoIPTaxController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'error' => 'Validation failed',
+                'error' => self::ERROR_VALIDATION_FAILED,
                 'details' => $e->errors(),
             ], 422);
 
@@ -162,7 +164,7 @@ class VoIPTaxController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'error' => 'Validation failed',
+                'error' => self::ERROR_VALIDATION_FAILED,
                 'details' => $e->errors(),
             ], 422);
 
@@ -229,7 +231,7 @@ class VoIPTaxController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'error' => 'Validation failed',
+                'error' => self::ERROR_VALIDATION_FAILED,
                 'details' => $e->errors(),
             ], 422);
 
@@ -366,7 +368,7 @@ class VoIPTaxController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'error' => 'Validation failed',
+                'error' => self::ERROR_VALIDATION_FAILED,
                 'details' => $e->errors(),
             ], 422);
 
@@ -430,7 +432,7 @@ class VoIPTaxController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'error' => 'Validation failed',
+                'error' => self::ERROR_VALIDATION_FAILED,
                 'details' => $e->errors(),
             ], 422);
 
@@ -507,7 +509,7 @@ class VoIPTaxController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'error' => 'Validation failed',
+                'error' => self::ERROR_VALIDATION_FAILED,
                 'details' => $e->errors(),
             ], 422);
 
@@ -556,7 +558,7 @@ class VoIPTaxController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'error' => 'Validation failed',
+                'error' => self::ERROR_VALIDATION_FAILED,
                 'details' => $e->errors(),
             ], 422);
 
