@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ITDocumentationController extends Controller
 {
+    private const VALIDATION_REQUIRED_IN = 'required|in:';
+
     protected ClientITDocumentationService $service;
 
     protected DocumentationTemplateService $templateService;
@@ -121,9 +123,9 @@ class ITDocumentationController extends Controller
             'client_id' => 'required|exists:clients,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'it_category' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getITCategories())),
-            'access_level' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
-            'review_schedule' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
+            'it_category' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientITDocumentation::getITCategories())),
+            'access_level' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
+            'review_schedule' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
             'system_references' => 'nullable|array',
             'ip_addresses' => 'nullable|array',
             'software_versions' => 'nullable|array',
@@ -260,9 +262,9 @@ class ITDocumentationController extends Controller
             'client_id' => 'required|exists:clients,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'it_category' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getITCategories())),
-            'access_level' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
-            'review_schedule' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
+            'it_category' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientITDocumentation::getITCategories())),
+            'access_level' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
+            'review_schedule' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientITDocumentation::getReviewSchedules())),
             'system_references' => 'nullable|array',
             'ip_addresses' => 'nullable|array',
             'software_versions' => 'nullable|array',
@@ -424,7 +426,7 @@ class ITDocumentationController extends Controller
         $validated = $request->validate([
             'documentation_ids' => 'required|array',
             'documentation_ids.*' => 'exists:client_it_documentation,id',
-            'access_level' => 'required|in:'.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
+            'access_level' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientITDocumentation::getAccessLevels())),
         ]);
 
         $updated = $this->service->bulkUpdateAccessLevel(
