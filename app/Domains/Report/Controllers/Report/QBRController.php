@@ -17,6 +17,8 @@ use Illuminate\View\View;
  */
 class QBRController extends Controller
 {
+    private const YEAR_VALIDATION_RULE_PREFIX = 'required|integer|min:2020|max:';
+
     public function __construct(
         protected ExecutiveReportService $executiveService,
         protected ExportService $exportService
@@ -50,7 +52,7 @@ class QBRController extends Controller
     public function generate(Request $request): View
     {
         $request->validate([
-            'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
+            'year' => self::YEAR_VALIDATION_RULE_PREFIX.(now()->year + 1),
             'quarter' => 'required|integer|min:1|max:4',
         ]);
 
@@ -84,7 +86,7 @@ class QBRController extends Controller
     public function preview(Request $request): JsonResponse
     {
         $request->validate([
-            'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
+            'year' => self::YEAR_VALIDATION_RULE_PREFIX.(now()->year + 1),
             'quarter' => 'required|integer|min:1|max:4',
         ]);
 
@@ -125,7 +127,7 @@ class QBRController extends Controller
     public function export(Request $request)
     {
         $request->validate([
-            'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
+            'year' => self::YEAR_VALIDATION_RULE_PREFIX.(now()->year + 1),
             'quarter' => 'required|integer|min:1|max:4',
             'format' => 'required|string|in:pdf,excel,powerpoint',
             'template' => 'string|in:executive,client,detailed',
@@ -174,7 +176,7 @@ class QBRController extends Controller
     public function data(Request $request): JsonResponse
     {
         $request->validate([
-            'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
+            'year' => self::YEAR_VALIDATION_RULE_PREFIX.(now()->year + 1),
             'quarter' => 'required|integer|min:1|max:4',
         ]);
 
