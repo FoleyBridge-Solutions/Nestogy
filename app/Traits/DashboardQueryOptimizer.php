@@ -140,13 +140,9 @@ trait DashboardQueryOptimizer
      */
     protected static function executeBulkPaymentQueries(array $queries): array
     {
-        if (empty($queries)) {
-            return [];
-        }
-
-        // Similar implementation for payments
         $companyId = $queries[0]['company_id'] ?? null;
-        if (! $companyId) {
+        
+        if (empty($queries) || ! $companyId) {
             return [];
         }
 
@@ -176,7 +172,6 @@ trait DashboardQueryOptimizer
 
         $data = DB::selectOne($sql, [$companyId]);
 
-        // Parse results
         foreach ($queries as $query) {
             $key = $query['key'];
             $results[$key] = [
