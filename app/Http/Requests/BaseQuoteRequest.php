@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class BaseQuoteRequest extends FormRequest
 {
+    protected const NULLABLE_ARRAY_RULE = 'nullable|array';
+
     /**
      * Get common validation rules for quote operations.
      */
@@ -47,22 +49,22 @@ abstract class BaseQuoteRequest extends FormRequest
 
             // Template and VoIP configuration
             'template_name' => 'nullable|string|max:100',
-            'voip_config' => 'nullable|array',
+            'voip_config' => self::NULLABLE_ARRAY_RULE,
             'voip_config.extensions' => 'nullable|integer|min:1|max:1000',
             'voip_config.concurrent_calls' => 'nullable|integer|min:1|max:500',
-            'voip_config.features' => 'nullable|array',
+            'voip_config.features' => self::NULLABLE_ARRAY_RULE,
             'voip_config.features.voicemail' => 'nullable|boolean',
             'voip_config.features.call_forwarding' => 'nullable|boolean',
             'voip_config.features.conference_calling' => 'nullable|boolean',
             'voip_config.features.auto_attendant' => 'nullable|boolean',
-            'voip_config.equipment' => 'nullable|array',
+            'voip_config.equipment' => self::NULLABLE_ARRAY_RULE,
             'voip_config.equipment.desk_phones' => 'nullable|integer|min:0|max:1000',
             'voip_config.equipment.wireless_phones' => 'nullable|integer|min:0|max:1000',
             'voip_config.equipment.conference_phone' => 'nullable|integer|min:0|max:100',
-            'voip_config.monthly_allowances' => 'nullable|array',
+            'voip_config.monthly_allowances' => self::NULLABLE_ARRAY_RULE,
 
             // Pricing model
-            'pricing_model' => 'nullable|array',
+            'pricing_model' => self::NULLABLE_ARRAY_RULE,
             'pricing_model.type' => 'nullable|in:flat_rate,tiered,usage_based,hybrid',
             'pricing_model.setup_fee' => 'nullable|numeric|min:0|max:999999.99',
             'pricing_model.monthly_recurring' => 'nullable|numeric|min:0|max:999999.99',
@@ -71,7 +73,7 @@ abstract class BaseQuoteRequest extends FormRequest
             'pricing_model.equipment_lease' => 'nullable|numeric|min:0|max:999999.99',
 
             // Quote items
-            'items' => 'nullable|array',
+            'items' => self::NULLABLE_ARRAY_RULE,
             'items.*.name' => 'required_with:items|string|max:255',
             'items.*.description' => 'nullable|string',
             'items.*.quantity' => 'required_with:items|numeric|min:0.01|max:999999',
