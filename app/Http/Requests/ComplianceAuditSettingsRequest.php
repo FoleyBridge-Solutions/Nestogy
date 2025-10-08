@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ComplianceAuditSettingsRequest extends FormRequest
 {
+    private const QUARTERLY_TO_BIENNIAL_VALIDATION = 'integer|min:3|max:24';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -133,7 +135,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             // Risk Assessment Settings
             'risk_assessment_settings' => 'nullable|array',
             'risk_assessment_settings.enabled' => 'boolean',
-            'risk_assessment_settings.assessment_frequency_months' => 'integer|min:3|max:24',
+            'risk_assessment_settings.assessment_frequency_months' => self::QUARTERLY_TO_BIENNIAL_VALIDATION,
             'risk_assessment_settings.risk_scoring_method' => 'string|in:qualitative,quantitative,hybrid',
             'risk_assessment_settings.risk_appetite_defined' => 'boolean',
             'risk_assessment_settings.risk_tolerance_levels' => 'nullable|array',
@@ -153,7 +155,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'vendor_compliance_settings.contract_security_clauses' => 'boolean',
             'vendor_compliance_settings.ongoing_monitoring' => 'boolean',
             'vendor_compliance_settings.performance_reviews' => 'boolean',
-            'vendor_compliance_settings.review_frequency_months' => 'integer|min:3|max:24',
+            'vendor_compliance_settings.review_frequency_months' => self::QUARTERLY_TO_BIENNIAL_VALIDATION,
             'vendor_compliance_settings.termination_procedures' => 'boolean',
             'vendor_compliance_settings.data_return_requirements' => 'boolean',
 
@@ -198,7 +200,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'training_settings.security_awareness_required' => 'boolean',
             'training_settings.compliance_training_required' => 'boolean',
             'training_settings.role_specific_training' => 'boolean',
-            'training_settings.training_frequency_months' => 'integer|min:3|max:24',
+            'training_settings.training_frequency_months' => self::QUARTERLY_TO_BIENNIAL_VALIDATION,
             'training_settings.training_completion_tracking' => 'boolean',
             'training_settings.phishing_simulations' => 'boolean',
             'training_settings.phishing_frequency_months' => 'integer|min:1|max:12',
