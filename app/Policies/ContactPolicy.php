@@ -90,12 +90,8 @@ class ContactPolicy
      */
     public function forceDelete(User $user, Contact $contact): bool
     {
-        // Admins can always force delete contacts from their company
-        if ($user->isAdmin() && $this->sameCompany($user, $contact)) {
-            return true;
-        }
-
-        return $user->can('clients.contacts.manage') && $this->sameCompany($user, $contact);
+        // Only admins can permanently delete contacts from their company
+        return $user->isAdmin() && $this->sameCompany($user, $contact);
     }
 
     /**
