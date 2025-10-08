@@ -180,17 +180,12 @@ class PortalInvitationService
     public function acceptInvitation(string $token, string $password): array
     {
         try {
-            // Validate token
-            $contact = $this->validateToken($token);
-            if (! $contact) {
-                return $this->errorResponse('Invalid or expired invitation token');
+            $validationResult = $this->validateInvitationAcceptance($token, $password);
+            if (!$validationResult['valid']) {
+                return $validationResult['response'];
             }
 
-            // Validate password requirements
-            $passwordValidation = $this->validatePassword($password);
-            if (! $passwordValidation['valid']) {
-                return $this->errorResponse($passwordValidation['message'], 'INVALID_PASSWORD', $passwordValidation['errors']);
-            }
+            $contact = $validationResult['contact'];
 
             // Set password and mark invitation as accepted
             $contact->update([
@@ -305,6 +300,33 @@ class PortalInvitationService
             'expired' => $stats['expired'] ?? 0,
             'revoked' => $stats['revoked'] ?? 0,
             'acceptance_rate' => $this->calculateAcceptanceRate($stats),
+        ];
+    }
+
+    /**
+     * Validate invitation acceptance
+     */
+    protected function validateInvitationAcceptance(string $token, string $password): array
+    {
+        $contact = $this->validateToken($token);
+        if (! $contact) {
+            return [
+                'valid' => false,
+                'response' => $this->errorResponse('Invalid or expired invitation token'),
+            ];
+        }
+
+        $passwordValidation = $this->validatePassword($password);
+        if (! $passwordValidation['valid']) {
+            return [
+                'valid' => false,
+                'response' => $this->errorResponse($passwordValidation['message'], 'INVALID_PASSWORD', $passwordValidation['errors']),
+            ];
+        }
+
+        return [
+            'valid' => true,
+            'contact' => $contact,
         ];
     }
 
