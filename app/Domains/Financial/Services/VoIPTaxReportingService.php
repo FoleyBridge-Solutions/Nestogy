@@ -731,7 +731,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function getTopJurisdictions($invoices, $limit)
+    protected function getTopJurisdictions($invoices)
     {
         return [];
     }
