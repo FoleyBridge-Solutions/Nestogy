@@ -256,6 +256,10 @@ class NavbarTimer extends Component
             case 'cancel':
                 // Do nothing, just close modal
                 break;
+
+            default:
+                // Invalid action, just close modal
+                break;
         }
 
         $this->showMultiTimerModal = false;
