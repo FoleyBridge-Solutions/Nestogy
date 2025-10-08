@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RmmMonitoringSettingsRequest extends FormRequest
 {
+    private const CRITICAL_THRESHOLD_RULE = 'integer|min:50|max:100';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -119,11 +121,11 @@ class RmmMonitoringSettingsRequest extends FormRequest
 
             // Monitoring Alert Thresholds
             'monitoring_alert_thresholds' => 'nullable|array',
-            'monitoring_alert_thresholds.cpu_usage_critical' => 'integer|min:50|max:100',
+            'monitoring_alert_thresholds.cpu_usage_critical' => self::CRITICAL_THRESHOLD_RULE,
             'monitoring_alert_thresholds.cpu_usage_warning' => 'integer|min:30|max:90',
-            'monitoring_alert_thresholds.memory_usage_critical' => 'integer|min:50|max:100',
+            'monitoring_alert_thresholds.memory_usage_critical' => self::CRITICAL_THRESHOLD_RULE,
             'monitoring_alert_thresholds.memory_usage_warning' => 'integer|min:30|max:90',
-            'monitoring_alert_thresholds.disk_usage_critical' => 'integer|min:50|max:100',
+            'monitoring_alert_thresholds.disk_usage_critical' => self::CRITICAL_THRESHOLD_RULE,
             'monitoring_alert_thresholds.disk_usage_warning' => 'integer|min:30|max:90',
             'monitoring_alert_thresholds.network_latency_critical' => 'integer|min:100|max:5000',
             'monitoring_alert_thresholds.network_latency_warning' => 'integer|min:50|max:2000',
