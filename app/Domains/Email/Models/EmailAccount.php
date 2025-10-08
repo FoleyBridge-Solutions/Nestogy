@@ -107,7 +107,11 @@ class EmailAccount extends Model
                $this->oauth_expires_at->isFuture();
     }
 
-    // Mutators for password encryption
+    private function decryptAttribute($value): ?string
+    {
+        return $value ? Crypt::decryptString($value) : null;
+    }
+
     public function setImapPasswordAttribute($value)
     {
         if ($value) {
@@ -117,7 +121,7 @@ class EmailAccount extends Model
 
     public function getImapPasswordAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptAttribute($value);
     }
 
     public function setSmtpPasswordAttribute($value)
@@ -129,10 +133,9 @@ class EmailAccount extends Model
 
     public function getSmtpPasswordAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptAttribute($value);
     }
 
-    // OAuth token encryption
     public function setOauthAccessTokenAttribute($value)
     {
         if ($value) {
@@ -142,7 +145,7 @@ class EmailAccount extends Model
 
     public function getOauthAccessTokenAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptAttribute($value);
     }
 
     public function setOauthRefreshTokenAttribute($value)
@@ -154,7 +157,7 @@ class EmailAccount extends Model
 
     public function getOauthRefreshTokenAttribute($value)
     {
-        return $value ? Crypt::decryptString($value) : null;
+        return $this->decryptAttribute($value);
     }
 
     // Helper methods
