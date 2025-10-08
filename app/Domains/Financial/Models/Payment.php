@@ -37,11 +37,13 @@ class Payment extends Model
         'chargeback_date',
     ];
 
+    private const CAST_DECIMAL_2 = 'decimal:2';
+
     protected $casts = [
-        'amount' => 'decimal:2',
-        'gateway_fee' => 'decimal:2',
-        'refund_amount' => 'decimal:2',
-        'chargeback_amount' => 'decimal:2',
+        'amount' => self::CAST_DECIMAL_2,
+        'gateway_fee' => self::CAST_DECIMAL_2,
+        'refund_amount' => self::CAST_DECIMAL_2,
+        'chargeback_amount' => self::CAST_DECIMAL_2,
         'payment_date' => 'datetime',
         'refunded_at' => 'datetime',
         'chargeback_date' => 'datetime',
