@@ -14,6 +14,8 @@ class VendorController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_DATE = 'nullable|date';
+
     /**
      * Display a listing of vendors for the selected client
      */
@@ -156,12 +158,12 @@ class VendorController extends Controller
             'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
             'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
             'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
-            'start_date' => 'nullable|date',
-            'contract_end_date' => 'nullable|date|after:start_date',
+            'start_date' => self::VALIDATION_NULLABLE_DATE,
+            'contract_end_date' => self::VALIDATION_NULLABLE_DATE.'|after:start_date',
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
             'currency' => 'nullable|string|size:3',
             'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
-            'last_order_date' => 'nullable|date|before_or_equal:today',
+            'last_order_date' => self::VALIDATION_NULLABLE_DATE.'|before_or_equal:today',
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
             'performance_rating' => 'nullable|integer|min:1|max:5',
@@ -179,8 +181,8 @@ class VendorController extends Controller
             'specializations' => 'nullable|string',
             'notes' => 'nullable|string',
             'tags' => 'nullable|string',
-            'last_review_date' => 'nullable|date|before_or_equal:today',
-            'next_review_date' => 'nullable|date',
+            'last_review_date' => self::VALIDATION_NULLABLE_DATE.'|before_or_equal:today',
+            'next_review_date' => self::VALIDATION_NULLABLE_DATE,
         ]);
 
         if ($validator->fails()) {
@@ -300,12 +302,12 @@ class VendorController extends Controller
             'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
             'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
             'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
-            'start_date' => 'nullable|date',
-            'contract_end_date' => 'nullable|date|after:start_date',
+            'start_date' => self::VALIDATION_NULLABLE_DATE,
+            'contract_end_date' => self::VALIDATION_NULLABLE_DATE.'|after:start_date',
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
             'currency' => 'nullable|string|size:3',
             'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
-            'last_order_date' => 'nullable|date|before_or_equal:today',
+            'last_order_date' => self::VALIDATION_NULLABLE_DATE.'|before_or_equal:today',
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
             'performance_rating' => 'nullable|integer|min:1|max:5',
@@ -323,8 +325,8 @@ class VendorController extends Controller
             'specializations' => 'nullable|string',
             'notes' => 'nullable|string',
             'tags' => 'nullable|string',
-            'last_review_date' => 'nullable|date|before_or_equal:today',
-            'next_review_date' => 'nullable|date',
+            'last_review_date' => self::VALIDATION_NULLABLE_DATE.'|before_or_equal:today',
+            'next_review_date' => self::VALIDATION_NULLABLE_DATE,
         ]);
 
         if ($validator->fails()) {
