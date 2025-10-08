@@ -234,7 +234,7 @@ class AssetMaintenanceService
             $results['system_status'] = $statusResult;
 
             // 2. Hardware health check
-            $hardwareResult = $this->checkHardwareHealth($asset);
+            $hardwareResult = $this->checkHardwareHealth();
             $results['hardware_health'] = $hardwareResult;
 
             // 3. Security status check
@@ -583,7 +583,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function checkHardwareHealth(Asset $asset): array
+    protected function checkHardwareHealth(): array
     {
         return ['success' => true];
     }
