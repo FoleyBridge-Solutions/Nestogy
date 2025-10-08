@@ -676,8 +676,16 @@ class ProjectService
         $expected = $project->getExpectedProgress();
         $variance = $progress - $expected;
 
+        if ($variance >= -5) {
+            $status = 'good';
+        } elseif ($variance >= -15) {
+            $status = 'warning';
+        } else {
+            $status = 'critical';
+        }
+
         return [
-            'status' => $variance >= -5 ? 'good' : ($variance >= -15 ? 'warning' : 'critical'),
+            'status' => $status,
             'variance' => $variance,
             'message' => $variance >= 0 ? 'On schedule' : "{$variance}% behind schedule",
         ];
