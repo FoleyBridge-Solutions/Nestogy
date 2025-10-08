@@ -244,7 +244,7 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="btn-group btn-group-sm" role="group">
+                                <div class="btn-group btn-group-sm">
                                     <a href="{{ route('tickets.show', $item->ticket_id) }}" class="btn btn-outline-primary" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
