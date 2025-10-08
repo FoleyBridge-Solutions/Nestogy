@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasCurrencyFormatting;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,7 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Account extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasCurrencyFormatting;
 
     /**
      * The table associated with the model.
@@ -166,33 +167,6 @@ class Account extends Model
     public function getFormattedOpeningBalance(): string
     {
         return $this->formatCurrency($this->opening_balance);
-    }
-
-    /**
-     * Format amount with currency.
-     */
-    public function formatCurrency(float $amount): string
-    {
-        $symbol = $this->getCurrencySymbol();
-
-        return $symbol.number_format($amount, 2);
-    }
-
-    /**
-     * Get currency symbol.
-     */
-    public function getCurrencySymbol(): string
-    {
-        $symbols = [
-            'USD' => '$',
-            'EUR' => '€',
-            'GBP' => '£',
-            'CAD' => 'C$',
-            'AUD' => 'A$',
-            'JPY' => '¥',
-        ];
-
-        return $symbols[$this->currency_code] ?? $this->currency_code;
     }
 
     /**
