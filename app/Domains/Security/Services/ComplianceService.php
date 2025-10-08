@@ -266,7 +266,7 @@ class ComplianceService
         }
 
         // Check state-specific licensing requirements
-        $licensingCheck = $this->checkCollectionLicensing($state);
+        $licensingCheck = $this->checkCollectionLicensing();
         if (! $licensingCheck['compliant']) {
             $compliance['violations'][] = [
                 'type' => 'licensing_violation',
@@ -749,7 +749,7 @@ NESTOGY COLLECTIONS DEPARTMENT
         return ['violation' => false];
     }
 
-    protected function checkCollectionLicensing(string $state): array
+    protected function checkCollectionLicensing(): array
     {
         return ['compliant' => true];
     }
