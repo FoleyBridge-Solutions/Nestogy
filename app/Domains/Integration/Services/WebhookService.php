@@ -230,45 +230,60 @@ class WebhookService
 
         switch ($authMethod) {
             case 'api_key':
-                $apiKey = data_get($credentials, 'api_key');
-                if (! $apiKey) {
-                    throw new \Exception('API key not configured');
-                }
-
-                $providedKey = $request->header('X-API-Key')
-                            ?: $request->header('Authorization')
-                            ?: $request->input('api_key');
-
-                if (! $providedKey || ! hash_equals($apiKey, $providedKey)) {
-                    throw new \Exception('Invalid API key');
-                }
+                $this->authenticateGenericApiKey($request, $credentials);
                 break;
 
             case 'hmac':
-                $secret = data_get($credentials, 'hmac_secret');
-                if (! $secret) {
-                    throw new \Exception('HMAC secret not configured');
-                }
-
-                $signature = $request->header('X-Signature');
-                if (! $signature) {
-                    throw new \Exception('Missing signature header');
-                }
-
-                $payload = $request->getContent();
-                $expected = hash_hmac('sha256', $payload, $secret);
-
-                if (! hash_equals($expected, $signature)) {
-                    throw new \Exception('Invalid HMAC signature');
-                }
+                $this->authenticateGenericHmac($request, $credentials);
                 break;
 
             case 'none':
-                // No authentication required
                 break;
 
             default:
                 throw new \Exception("Unsupported auth method: {$authMethod}");
+        }
+    }
+
+    /**
+     * Authenticate generic webhook using API key.
+     */
+    private function authenticateGenericApiKey(Request $request, array $credentials): void
+    {
+        $apiKey = data_get($credentials, 'api_key');
+        if (! $apiKey) {
+            throw new \Exception('API key not configured');
+        }
+
+        $providedKey = $request->header('X-API-Key')
+                    ?: $request->header('Authorization')
+                    ?: $request->input('api_key');
+
+        if (! $providedKey || ! hash_equals($apiKey, $providedKey)) {
+            throw new \Exception('Invalid API key');
+        }
+    }
+
+    /**
+     * Authenticate generic webhook using HMAC.
+     */
+    private function authenticateGenericHmac(Request $request, array $credentials): void
+    {
+        $secret = data_get($credentials, 'hmac_secret');
+        if (! $secret) {
+            throw new \Exception('HMAC secret not configured');
+        }
+
+        $signature = $request->header('X-Signature');
+        if (! $signature) {
+            throw new \Exception('Missing signature header');
+        }
+
+        $payload = $request->getContent();
+        $expected = hash_hmac('sha256', $payload, $secret);
+
+        if (! hash_equals($expected, $signature)) {
+            throw new \Exception('Invalid HMAC signature');
         }
     }
 
