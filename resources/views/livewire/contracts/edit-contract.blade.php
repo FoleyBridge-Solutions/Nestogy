@@ -251,8 +251,9 @@
 
                                 <!-- Status -->
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Status *</label>
-                                    <select wire:model.defer="status" 
+                                    <label for="status" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Status *</label>
+                                    <select id="status" 
+                                            wire:model.defer="status" 
                                             @if(!$canEdit) disabled @endif
                                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg
                                                    {{ $canEdit ? 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500' : 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' }}">
