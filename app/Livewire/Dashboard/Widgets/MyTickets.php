@@ -57,7 +57,8 @@ class MyTickets extends Component
             case 'closed':
                 $query->whereIn('status', ['resolved', 'closed']);
                 break;
-                // 'all' doesn't add any filter
+            default:
+                break;
         }
 
         $this->tickets = $query->with(['client', 'creator'])
