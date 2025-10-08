@@ -381,7 +381,7 @@ class VoIPTaxReportingService
                     'change_percent' => $this->calculatePercentChange($previous['effective_tax_rate'], $current['effective_tax_rate']),
                 ],
             ],
-            'top_jurisdictions' => $this->getTopJurisdictions($invoices, 5),
+            'top_jurisdictions' => $this->getTopJurisdictions(5),
             'recent_exemptions' => $this->getRecentExemptions(10),
             'compliance_alerts' => $this->getComplianceAlerts(),
         ];
@@ -731,7 +731,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function getTopJurisdictions($invoices, $limit)
+    protected function getTopJurisdictions($limit)
     {
         return [];
     }
