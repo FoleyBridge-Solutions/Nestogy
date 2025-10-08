@@ -2,6 +2,7 @@
 
 namespace App\Domains\Email\Services\Providers;
 
+use App\Domains\Email\Exceptions\OAuthTokenRefreshException;
 use App\Models\Company;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -68,7 +69,14 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
                 'response' => $response->body(),
                 'status' => $response->status(),
             ]);
-            throw new \Exception('Failed to refresh OAuth tokens');
+            throw new OAuthTokenRefreshException(
+                'Google Workspace',
+                'OAuth token refresh request failed',
+                [
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                ]
+            );
         }
 
         return $response->json();
