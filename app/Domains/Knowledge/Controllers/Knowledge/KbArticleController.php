@@ -354,6 +354,8 @@ class KbArticleController extends Controller
                         $article->delete();
                     }
                     break;
+                default:
+                    break;
             }
             $count++;
         }
