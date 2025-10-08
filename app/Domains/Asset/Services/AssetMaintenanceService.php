@@ -292,7 +292,7 @@ class AssetMaintenanceService
             $results['log_rotation'] = $logsResult;
 
             // 4. Recycle bin cleanup
-            $recycleResult = $this->cleanupRecycleBin($asset);
+            $recycleResult = $this->cleanupRecycleBin();
             $results['recycle_bin'] = $recycleResult;
 
             // 5. Old file cleanup (downloads, temp folders)
@@ -623,7 +623,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function cleanupRecycleBin(Asset $asset): array
+    protected function cleanupRecycleBin(): array
     {
         return ['success' => true, 'space_freed' => '1.2 GB'];
     }
