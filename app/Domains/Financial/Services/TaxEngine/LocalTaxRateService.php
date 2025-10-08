@@ -346,18 +346,33 @@ class LocalTaxRateService
     protected function addCitySpecificFiltering($query, string $city, string $state, ?string $zip = null): mixed
     {
         $city = strtoupper($city);
-
-        // Use intelligent discovery to find relevant jurisdictions for this city
         $jurisdictions = $this->discoverCityJurisdictions($city, $state, $zip);
 
-        if (! empty($jurisdictions)) {
-            $query->where(function ($cityQuery) use ($jurisdictions) {
-                foreach ($jurisdictions as $jurisdiction) {
-                    $cityQuery->orWhere(function ($q) use ($jurisdiction) {
-                        // Match by authority name or tax code
-                        if (isset($jurisdiction['authority_name'])) {
-                            $q->where('authority_name', 'LIKE', '%'.$jurisdiction['authority_name'].'%');
-                        }
+        if (empty($jurisdictions)) {
+            return $query->orWhere('authority_name', 'LIKE', "%{$city}%");
+        }
+
+        return $query->where(function ($cityQuery) use ($jurisdictions) {
+            foreach ($jurisdictions as $jurisdiction) {
+                $this->addJurisdictionConditions($cityQuery, $jurisdiction);
+            }
+        });
+    }
+
+    protected function addJurisdictionConditions($query, array $jurisdiction): void
+    {
+        $query->orWhere(function ($q) use ($jurisdiction) {
+            if (isset($jurisdiction['authority_name'])) {
+                $q->where('authority_name', 'LIKE', '%'.$jurisdiction['authority_name'].'%');
+            }
+            if (isset($jurisdiction['tax_code'])) {
+                $q->orWhere('tax_code', 'LIKE', '%'.$jurisdiction['tax_code'].'%');
+            }
+            if (isset($jurisdiction['external_id'])) {
+                $q->orWhere('external_id', $jurisdiction['external_id']);
+            }
+        });
+    }
                         if (isset($jurisdiction['tax_code'])) {
                             $q->orWhere('tax_code', 'LIKE', '%'.$jurisdiction['tax_code'].'%');
                         }
