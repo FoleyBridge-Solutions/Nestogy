@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Email;
 
+use App\Domains\Email\Exceptions\EmailPermissionException;
+use App\Domains\Email\Exceptions\OAuthTokenException;
 use App\Domains\Email\Models\EmailAccount;
 use App\Domains\Email\Services\OAuthTokenManager;
 use App\Domains\Email\Services\UnifiedEmailSyncService;
@@ -111,11 +113,20 @@ class EmailAccountsIndex extends Component
 
             // Test based on connection type
             if ($account->connection_type === 'oauth') {
-                // Check if tokens are valid
                 $valid = $this->tokenManager->ensureValidTokens($account);
                 if (! $valid) {
-                    throw new \Exception('OAuth tokens are invalid or expired');
+                    throw new OAuthTokenException(
+                        'OAuth tokens are invalid or expired',
+                        0,
+                        null,
+                        ['account_id' => $account->id],
+                        'OAuth tokens are invalid or expired'
+                    );
                 }
+                $message = 'OAuth connection is valid and tokens are fresh';
+            } else {
+                $message = 'IMAP/SMTP connection test - feature coming soon';
+            }
                 $message = 'OAuth connection is valid and tokens are fresh';
             } else {
                 // For IMAP accounts, we'll implement a basic test later
