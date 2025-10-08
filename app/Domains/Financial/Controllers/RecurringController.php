@@ -101,6 +101,8 @@ class RecurringController extends Controller
                 case 'expiring':
                     $query->expiringSoon(30);
                     break;
+                default:
+                    break;
             }
         }
 
