@@ -169,7 +169,6 @@ class VoIPTaxReportingService
             $report['filing_summary'] = $this->generateFilingSummary(
                 $jurisdiction,
                 $collections,
-                $exemptions,
                 $startDate,
                 $endDate
             );
@@ -696,7 +695,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function generateFilingSummary($jurisdiction, $collections, $exemptions, $startDate, $endDate)
+    protected function generateFilingSummary($jurisdiction, $collections, $startDate, $endDate)
     {
         return [];
     }
