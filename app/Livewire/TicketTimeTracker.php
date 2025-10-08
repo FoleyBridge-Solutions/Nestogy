@@ -13,6 +13,8 @@ use Livewire\Component;
 
 class TicketTimeTracker extends Component
 {
+    private const INITIAL_ELAPSED_TIME = '00:00:00';
+
     public $ticketId;
 
     // Timer state (store ID only for Livewire hydration)
@@ -24,7 +26,7 @@ class TicketTimeTracker extends Component
 
     public $isPaused = false;
 
-    public $elapsedTime = '00:00:00';
+    public $elapsedTime = self::INITIAL_ELAPSED_TIME;
 
     public $liveRevenue = 0;
 
@@ -88,7 +90,7 @@ class TicketTimeTracker extends Component
         $this->activeTimerStartedAt = null;
         $this->isTimerRunning = false;
         $this->isPaused = false;
-        $this->elapsedTime = '00:00:00';
+        $this->elapsedTime = self::INITIAL_ELAPSED_TIME;
         $this->liveRevenue = 0;
         $this->rateMultiplier = 1;
         $this->rateBadge = 'Standard';
@@ -588,7 +590,7 @@ class TicketTimeTracker extends Component
         $this->isPaused = false;
         $this->activeTimerId = null;
         $this->activeTimerStartedAt = null;
-        $this->elapsedTime = '00:00:00';
+        $this->elapsedTime = self::INITIAL_ELAPSED_TIME;
         $this->liveRevenue = 0;
 
         // Reload all data
