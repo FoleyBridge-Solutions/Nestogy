@@ -253,7 +253,7 @@
                 onclick="window.location.href='{{ route('tickets.show', $ticket) }}'"
             >
                 {{-- Selection Checkbox --}}
-                <div class="absolute top-3 left-3 z-10" onclick="event.stopPropagation()">
+                <div class="absolute top-3 left-3 z-10" @click.stop>
                     <flux:checkbox 
                         wire:model.live="selectedTickets" 
                         value="{{ $ticket->id }}"
