@@ -22,6 +22,8 @@ use Silber\Bouncer\BouncerFacade as Bouncer;
  */
 class SetupWizardController extends Controller
 {
+    private const NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     /**
      * Show the setup wizard welcome page.
      */
@@ -120,7 +122,7 @@ class SetupWizardController extends Controller
             'company_name' => 'required|string|max:255',
             'company_email' => 'required|email|max:255',
             'company_phone' => 'nullable|string|max:20',
-            'company_address' => 'nullable|string|max:255',
+            'company_address' => self::NULLABLE_STRING_255,
             'company_city' => 'nullable|string|max:100',
             'company_state' => 'nullable|string|max:100',
             'company_zip' => 'nullable|string|max:20',
@@ -134,13 +136,13 @@ class SetupWizardController extends Controller
             'admin_password' => ['required', 'confirmed', Password::defaults()],
 
             // SMTP Configuration (optional)
-            'smtp_host' => 'nullable|string|max:255',
+            'smtp_host' => self::NULLABLE_STRING_255,
             'smtp_port' => 'nullable|integer|min:1|max:65535',
             'smtp_encryption' => 'nullable|in:tls,ssl',
-            'smtp_username' => 'nullable|string|max:255',
-            'smtp_password' => 'nullable|string|max:255',
+            'smtp_username' => self::NULLABLE_STRING_255,
+            'smtp_password' => self::NULLABLE_STRING_255,
             'mail_from_email' => 'nullable|email|max:255',
-            'mail_from_name' => 'nullable|string|max:255',
+            'mail_from_name' => self::NULLABLE_STRING_255,
 
             // System Preferences
             'timezone' => 'required|string|max:255',
@@ -469,10 +471,10 @@ class SetupWizardController extends Controller
             'smtp_host' => 'required|string|max:255',
             'smtp_port' => 'required|integer|min:1|max:65535',
             'smtp_encryption' => 'nullable|in:tls,ssl',
-            'smtp_username' => 'nullable|string|max:255',
-            'smtp_password' => 'nullable|string|max:255',
+            'smtp_username' => self::NULLABLE_STRING_255,
+            'smtp_password' => self::NULLABLE_STRING_255,
             'mail_from_email' => 'nullable|email|max:255',
-            'mail_from_name' => 'nullable|string|max:255',
+            'mail_from_name' => self::NULLABLE_STRING_255,
             'company_email' => 'required|email|max:255',
             'company_name' => 'required|string|max:255',
         ]);
