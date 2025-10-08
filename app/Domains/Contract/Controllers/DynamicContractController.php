@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Log;
  */
 class DynamicContractController extends Controller
 {
+    private const ERROR_CONTRACT_TYPE_MISMATCH = 'Contract not found for this type';
+
     protected $formBuilder;
 
     protected $viewBuilder;
@@ -209,7 +211,7 @@ class DynamicContractController extends Controller
 
         // Validate contract type matches
         if ($contract->contract_type !== $contractType) {
-            abort(404, 'Contract not found for this type');
+            abort(404, self::ERROR_CONTRACT_TYPE_MISMATCH);
         }
 
         // Build view configuration
@@ -245,7 +247,7 @@ class DynamicContractController extends Controller
 
         // Validate contract type matches
         if ($contract->contract_type !== $contractType) {
-            abort(404, 'Contract not found for this type');
+            abort(404, self::ERROR_CONTRACT_TYPE_MISMATCH);
         }
 
         // Check if contract can be edited
@@ -273,7 +275,7 @@ class DynamicContractController extends Controller
 
         // Validate contract type matches
         if ($contract->contract_type !== $contractType) {
-            abort(404, 'Contract not found for this type');
+            abort(404, self::ERROR_CONTRACT_TYPE_MISMATCH);
         }
 
         try {
@@ -346,7 +348,7 @@ class DynamicContractController extends Controller
 
         // Validate contract type matches
         if ($contract->contract_type !== $contractType) {
-            abort(404, 'Contract not found for this type');
+            abort(404, self::ERROR_CONTRACT_TYPE_MISMATCH);
         }
 
         try {
@@ -399,7 +401,7 @@ class DynamicContractController extends Controller
 
         // Validate contract type matches
         if ($contract->contract_type !== $contractType) {
-            abort(404, 'Contract not found for this type');
+            abort(404, self::ERROR_CONTRACT_TYPE_MISMATCH);
         }
 
         $request->validate([
@@ -468,7 +470,7 @@ class DynamicContractController extends Controller
 
         // Validate contract type matches
         if ($contract->contract_type !== $contractType) {
-            abort(404, 'Contract not found for this type');
+            abort(404, self::ERROR_CONTRACT_TYPE_MISMATCH);
         }
 
         try {
