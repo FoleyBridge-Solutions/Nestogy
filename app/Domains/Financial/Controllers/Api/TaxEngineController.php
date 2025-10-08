@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 class TaxEngineController extends Controller
 {
+    private const VALIDATION_NULLABLE_INTEGER_MIN_1 = 'nullable|integer|min:1';
+
     protected TaxEngineRouter $taxEngine;
 
     protected TaxProfileService $profileService;
@@ -41,7 +43,7 @@ class TaxEngineController extends Controller
             $validated = $request->validate([
                 // Base pricing
                 'base_price' => 'required|numeric|min:0',
-                'quantity' => 'nullable|integer|min:1',
+                'quantity' => self::VALIDATION_NULLABLE_INTEGER_MIN_1,
 
                 // Category identification
                 'category_id' => 'nullable|exists:categories,id',
@@ -58,12 +60,12 @@ class TaxEngineController extends Controller
 
                 // Category-specific tax data
                 'tax_data' => 'nullable|array',
-                'tax_data.line_count' => 'nullable|integer|min:1',
+                'tax_data.line_count' => self::VALIDATION_NULLABLE_INTEGER_MIN_1,
                 'tax_data.minutes' => 'nullable|integer|min:0',
                 'tax_data.extensions' => 'nullable|integer|min:0',
                 'tax_data.data_usage' => 'nullable|numeric|min:0',
                 'tax_data.storage_amount' => 'nullable|numeric|min:0',
-                'tax_data.user_count' => 'nullable|integer|min:1',
+                'tax_data.user_count' => self::VALIDATION_NULLABLE_INTEGER_MIN_1,
                 'tax_data.weight' => 'nullable|numeric|min:0',
                 'tax_data.dimensions' => 'nullable|array',
                 'tax_data.hours' => 'nullable|numeric|min:0',
@@ -147,7 +149,7 @@ class TaxEngineController extends Controller
             $validated = $request->validate([
                 'items' => 'required|array|min:1|max:100', // Limit to 100 items per request
                 'items.*.base_price' => 'required|numeric|min:0',
-                'items.*.quantity' => 'nullable|integer|min:1',
+                'items.*.quantity' => self::VALIDATION_NULLABLE_INTEGER_MIN_1,
                 'items.*.name' => 'nullable|string|max:255',
                 'items.*.category_id' => 'nullable|exists:categories,id',
                 'items.*.category_type' => 'nullable|string',
@@ -701,7 +703,7 @@ class TaxEngineController extends Controller
             $validated = $request->validate([
                 // Line item details
                 'base_price' => 'required|numeric|min:0',
-                'quantity' => 'nullable|integer|min:1',
+                'quantity' => self::VALIDATION_NULLABLE_INTEGER_MIN_1,
                 'product_id' => 'nullable|exists:products,id',
 
                 // Customer details
