@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class BaseQuoteRequest extends FormRequest
 {
+    protected const CURRENCY_AMOUNT_VALIDATION = 'nullable|numeric|min:0|max:999999.99';
+
     /**
      * Get common validation rules for quote operations.
      */
@@ -33,7 +35,7 @@ abstract class BaseQuoteRequest extends FormRequest
             'approval_status' => 'nullable|in:'.implode(',', Quote::getAvailableApprovalStatuses()),
 
             // Financial information
-            'discount_amount' => 'nullable|numeric|min:0|max:999999.99',
+            'discount_amount' => self::CURRENCY_AMOUNT_VALIDATION,
             'discount_type' => 'required|in:percentage,fixed',
             'currency_code' => 'required|string|size:3',
 
@@ -64,11 +66,11 @@ abstract class BaseQuoteRequest extends FormRequest
             // Pricing model
             'pricing_model' => 'nullable|array',
             'pricing_model.type' => 'nullable|in:flat_rate,tiered,usage_based,hybrid',
-            'pricing_model.setup_fee' => 'nullable|numeric|min:0|max:999999.99',
-            'pricing_model.monthly_recurring' => 'nullable|numeric|min:0|max:999999.99',
+            'pricing_model.setup_fee' => self::CURRENCY_AMOUNT_VALIDATION,
+            'pricing_model.monthly_recurring' => self::CURRENCY_AMOUNT_VALIDATION,
             'pricing_model.per_extension' => 'nullable|numeric|min:0|max:9999.99',
             'pricing_model.per_minute_overage' => 'nullable|numeric|min:0|max:99.99',
-            'pricing_model.equipment_lease' => 'nullable|numeric|min:0|max:999999.99',
+            'pricing_model.equipment_lease' => self::CURRENCY_AMOUNT_VALIDATION,
 
             // Quote items
             'items' => 'nullable|array',
