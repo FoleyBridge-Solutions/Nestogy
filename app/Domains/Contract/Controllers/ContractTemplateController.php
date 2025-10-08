@@ -19,6 +19,8 @@ use Illuminate\View\View;
  */
 class ContractTemplateController extends BaseResourceController
 {
+    private const VALIDATION_SOMETIMES_STRING = 'sometimes|string';
+
     protected function initializeController(): void
     {
         $this->service = app(ContractTemplateService::class);
@@ -256,9 +258,9 @@ class ContractTemplateController extends BaseResourceController
         $this->authorize('create', ContractTemplate::class);
 
         $changes = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'status' => 'sometimes|string',
+            'name' => self::VALIDATION_SOMETIMES_STRING.'|max:255',
+            'description' => self::VALIDATION_SOMETIMES_STRING,
+            'status' => self::VALIDATION_SOMETIMES_STRING,
         ]);
 
         $newVersion = $this->service->createVersion($template, $changes);
@@ -277,8 +279,8 @@ class ContractTemplateController extends BaseResourceController
         $this->authorize('create', ContractTemplate::class);
 
         $overrides = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
+            'name' => self::VALIDATION_SOMETIMES_STRING.'|max:255',
+            'description' => self::VALIDATION_SOMETIMES_STRING,
         ]);
 
         $duplicate = $this->service->duplicate($template, $overrides);
