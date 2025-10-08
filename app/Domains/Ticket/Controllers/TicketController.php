@@ -41,106 +41,16 @@ class TicketController extends Controller
      */
     public function index(Request $request)
     {
-        // Start with base query
         $query = Ticket::query();
 
-        // Apply client-based filtering for technicians
         $query = $this->applyClientFilter($query, 'client_id');
-
-        // Also ensure company scope
         $query->where('company_id', auth()->user()->company_id);
 
-        // Apply search filters
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('subject', 'like', "%{$search}%")
-                    ->orWhere('number', 'like', "%{$search}%")
-                    ->orWhere('details', 'like', "%{$search}%")
-                    ->orWhereHas('client', function ($cq) use ($search) {
-                        $cq->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        // Apply filters
-        if ($status = $request->get('status')) {
-            $query->where('status', $status);
-        }
-
-        if ($priority = $request->get('priority')) {
-            $query->where('priority', $priority);
-        }
-
-        if ($assigneeId = $request->get('assigned_to')) {
-            $query->where('assigned_to', $assigneeId);
-        }
-
-        // Apply client filter from session if client is selected
-        $this->applyClientFilter($query);
-
-        if ($categoryId = $request->get('category_id')) {
-            $query->where('category_id', $categoryId);
-        }
-
-        // Date range filters
-        if ($startDate = $request->get('start_date')) {
-            $query->whereDate('created_at', '>=', $startDate);
-        }
-
-        if ($endDate = $request->get('end_date')) {
-            $query->whereDate('created_at', '<=', $endDate);
-        }
-
-        // Advanced filters
-        if ($request->has('overdue')) {
-            $query->where('scheduled_at', '<', now())
-                ->whereNotIn('status', ['closed', 'resolved']);
-        }
-
-        if ($request->has('unassigned')) {
-            $query->whereNull('assigned_to');
-        }
-
-        if ($request->has('watching')) {
-            $query->whereHas('watchers', function ($q) {
-                $q->where('user_id', auth()->id());
-            });
-        }
-
-        // Sentiment filters
-        if ($sentiment = $request->get('sentiment')) {
-            $query->where('sentiment_label', $sentiment);
-        }
-
-        if ($request->has('negative_sentiment_attention')) {
-            $query->whereIn('sentiment_label', ['NEGATIVE', 'WEAK_NEGATIVE'])
-                ->where('sentiment_confidence', '>', 0.6);
-        }
-
-        if ($request->has('with_sentiment_analysis')) {
-            $query->whereNotNull('sentiment_analyzed_at');
-        }
-
-        if ($request->has('without_sentiment_analysis')) {
-            $query->whereNull('sentiment_analyzed_at');
-        }
-
-        if ($sentimentScoreMin = $request->get('sentiment_score_min')) {
-            $query->where('sentiment_score', '>=', $sentimentScoreMin);
-        }
-
-        if ($sentimentScoreMax = $request->get('sentiment_score_max')) {
-            $query->where('sentiment_score', '<=', $sentimentScoreMax);
-        }
-
-        // Sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-
-        $allowedSorts = ['created_at', 'updated_at', 'scheduled_at', 'priority', 'status', 'number', 'sentiment_score', 'sentiment_analyzed_at'];
-        if (in_array($sortBy, $allowedSorts)) {
-            $query->orderBy($sortBy, $sortOrder);
-        }
+        $this->applyBasicFilters($query, $request);
+        $this->applyDateFilters($query, $request);
+        $this->applyAdvancedFilters($query, $request);
+        $this->applySentimentFilters($query, $request);
+        $this->applySorting($query, $request);
 
         $tickets = $query->with([
             'client',
@@ -154,7 +64,6 @@ class TicketController extends Controller
             ->paginate($request->get('per_page', 25))
             ->appends($request->query());
 
-        // Get filter options
         $filterOptions = $this->getFilterOptions();
 
         if ($request->wantsJson()) {
@@ -1480,6 +1389,106 @@ class TicketController extends Controller
                 'changes' => $changes,
                 'user_id' => auth()->id(),
             ]);
+        }
+    }
+
+    private function applyBasicFilters($query, Request $request): void
+    {
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                    ->orWhere('number', 'like', "%{$search}%")
+                    ->orWhere('details', 'like', "%{$search}%")
+                    ->orWhereHas('client', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($status = $request->get('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($priority = $request->get('priority')) {
+            $query->where('priority', $priority);
+        }
+
+        if ($assigneeId = $request->get('assigned_to')) {
+            $query->where('assigned_to', $assigneeId);
+        }
+
+        $this->applyClientFilter($query);
+
+        if ($categoryId = $request->get('category_id')) {
+            $query->where('category_id', $categoryId);
+        }
+    }
+
+    private function applyDateFilters($query, Request $request): void
+    {
+        if ($startDate = $request->get('start_date')) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate = $request->get('end_date')) {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+    }
+
+    private function applyAdvancedFilters($query, Request $request): void
+    {
+        if ($request->has('overdue')) {
+            $query->where('scheduled_at', '<', now())
+                ->whereNotIn('status', ['closed', 'resolved']);
+        }
+
+        if ($request->has('unassigned')) {
+            $query->whereNull('assigned_to');
+        }
+
+        if ($request->has('watching')) {
+            $query->whereHas('watchers', function ($q) {
+                $q->where('user_id', auth()->id());
+            });
+        }
+    }
+
+    private function applySentimentFilters($query, Request $request): void
+    {
+        if ($sentiment = $request->get('sentiment')) {
+            $query->where('sentiment_label', $sentiment);
+        }
+
+        if ($request->has('negative_sentiment_attention')) {
+            $query->whereIn('sentiment_label', ['NEGATIVE', 'WEAK_NEGATIVE'])
+                ->where('sentiment_confidence', '>', 0.6);
+        }
+
+        if ($request->has('with_sentiment_analysis')) {
+            $query->whereNotNull('sentiment_analyzed_at');
+        }
+
+        if ($request->has('without_sentiment_analysis')) {
+            $query->whereNull('sentiment_analyzed_at');
+        }
+
+        if ($sentimentScoreMin = $request->get('sentiment_score_min')) {
+            $query->where('sentiment_score', '>=', $sentimentScoreMin);
+        }
+
+        if ($sentimentScoreMax = $request->get('sentiment_score_max')) {
+            $query->where('sentiment_score', '<=', $sentimentScoreMax);
+        }
+    }
+
+    private function applySorting($query, Request $request): void
+    {
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        $allowedSorts = ['created_at', 'updated_at', 'scheduled_at', 'priority', 'status', 'number', 'sentiment_score', 'sentiment_analyzed_at'];
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder);
         }
     }
 
