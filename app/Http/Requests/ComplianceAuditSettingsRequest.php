@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ComplianceAuditSettingsRequest extends FormRequest
 {
+    private const RISK_TOLERANCE_VALIDATION = 'integer|min:1|max:100';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -137,9 +139,9 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'risk_assessment_settings.risk_scoring_method' => 'string|in:qualitative,quantitative,hybrid',
             'risk_assessment_settings.risk_appetite_defined' => 'boolean',
             'risk_assessment_settings.risk_tolerance_levels' => 'nullable|array',
-            'risk_assessment_settings.risk_tolerance_levels.low' => 'integer|min:1|max:100',
-            'risk_assessment_settings.risk_tolerance_levels.medium' => 'integer|min:1|max:100',
-            'risk_assessment_settings.risk_tolerance_levels.high' => 'integer|min:1|max:100',
+            'risk_assessment_settings.risk_tolerance_levels.low' => self::RISK_TOLERANCE_VALIDATION,
+            'risk_assessment_settings.risk_tolerance_levels.medium' => self::RISK_TOLERANCE_VALIDATION,
+            'risk_assessment_settings.risk_tolerance_levels.high' => self::RISK_TOLERANCE_VALIDATION,
             'risk_assessment_settings.third_party_risk_assessment' => 'boolean',
             'risk_assessment_settings.continuous_monitoring' => 'boolean',
             'risk_assessment_settings.risk_register_maintenance' => 'boolean',
