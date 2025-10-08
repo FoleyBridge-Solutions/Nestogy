@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Email;
 
+use App\Domains\Email\Exceptions\EmailAccountPermissionException;
 use App\Domains\Email\Models\EmailAccount;
 use App\Domains\Email\Services\OAuthTokenManager;
 use App\Domains\Email\Services\UnifiedEmailSyncService;
@@ -60,9 +61,8 @@ class EmailAccountsIndex extends Component
 
             $account = EmailAccount::findOrFail($accountId);
 
-            // Authorization check
             if ($account->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountPermissionException('sync');
             }
 
             error_log("LIVEWIRE_DEBUG: Starting sync for account {$accountId}");
@@ -106,10 +106,9 @@ class EmailAccountsIndex extends Component
             $account = EmailAccount::findOrFail($accountId);
 
             if ($account->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountPermissionException('test connection');
             }
 
-            // Test based on connection type
             if ($account->connection_type === 'oauth') {
                 // Check if tokens are valid
                 $valid = $this->tokenManager->ensureValidTokens($account);
@@ -148,10 +147,9 @@ class EmailAccountsIndex extends Component
             $account = EmailAccount::findOrFail($accountId);
 
             if ($account->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountPermissionException('set as default');
             }
 
-            // Remove default from all other accounts
             EmailAccount::where('user_id', Auth::id())
                 ->where('id', '!=', $accountId)
                 ->update(['is_default' => false]);
@@ -197,7 +195,7 @@ class EmailAccountsIndex extends Component
             }
 
             if ($this->accountToDelete->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountPermissionException('delete');
             }
 
             $name = $this->accountToDelete->name;
