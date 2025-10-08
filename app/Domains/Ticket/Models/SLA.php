@@ -57,6 +57,8 @@ class SLA extends Model
 
     protected $table = 'slas';
 
+    private const CAST_DECIMAL_2 = 'decimal:2';
+
     protected $fillable = [
         'company_id',
         'name',
@@ -108,9 +110,9 @@ class SLA extends Model
         'escalation_enabled' => 'boolean',
         'escalation_levels' => 'array',
         'breach_warning_percentage' => 'integer',
-        'uptime_percentage' => 'decimal:2',
-        'first_call_resolution_target' => 'decimal:2',
-        'customer_satisfaction_target' => 'decimal:2',
+        'uptime_percentage' => self::CAST_DECIMAL_2,
+        'first_call_resolution_target' => self::CAST_DECIMAL_2,
+        'customer_satisfaction_target' => self::CAST_DECIMAL_2,
         'notify_on_breach' => 'boolean',
         'notify_on_warning' => 'boolean',
         'notification_emails' => 'array',
