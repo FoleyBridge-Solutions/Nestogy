@@ -15,6 +15,8 @@ class LeadController extends BaseResourceController
 {
     use HasClientRelation;
 
+    private const VALIDATION_NULLABLE_STRING_20 = 'nullable|string|max:20';
+
     protected LeadScoringService $leadScoringService;
 
     public function __construct(LeadScoringService $leadScoringService)
@@ -125,14 +127,14 @@ class LeadController extends BaseResourceController
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:leads,email',
-            'phone' => 'nullable|string|max:20',
+            'phone' => self::VALIDATION_NULLABLE_STRING_20,
             'company_name' => 'nullable|string|max:255',
             'title' => 'nullable|string|max:255',
             'website' => 'nullable|url',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
-            'zip_code' => 'nullable|string|max:20',
+            'zip_code' => self::VALIDATION_NULLABLE_STRING_20,
             'country' => 'nullable|string|max:100',
             'lead_source_id' => 'nullable|exists:lead_sources,id',
             'assigned_user_id' => 'nullable|exists:users,id',
@@ -221,14 +223,14 @@ class LeadController extends BaseResourceController
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:leads,email,'.$lead->id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => self::VALIDATION_NULLABLE_STRING_20,
             'company_name' => 'nullable|string|max:255',
             'title' => 'nullable|string|max:255',
             'website' => 'nullable|url',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
-            'zip_code' => 'nullable|string|max:20',
+            'zip_code' => self::VALIDATION_NULLABLE_STRING_20,
             'country' => 'nullable|string|max:100',
             'lead_source_id' => 'nullable|exists:lead_sources,id',
             'assigned_user_id' => 'nullable|exists:users,id',
