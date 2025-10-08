@@ -54,47 +54,17 @@ class TicketCreatedStrategy implements NotificationStrategyInterface
         $recipients = [
             'email' => [],
             'slack' => [],
-            'sms' => [], // For high priority tickets
+            'sms' => [],
         ];
 
-        // Notify assignee if assigned
-        if ($ticket->assignee) {
-            $recipients['email'][] = $ticket->assignee;
-            $recipients['slack'][] = $ticket->assignee;
+        $this->addAssigneeRecipients($ticket, $recipients);
 
-            // SMS for critical tickets
-            if ($ticket->priority === 'Critical') {
-                $recipients['sms'][] = $ticket->assignee;
-            }
-        }
-
-        // Notify client contact if public ticket
         if ($ticket->contact && $ticket->is_public) {
             $recipients['email'][] = $ticket->contact;
         }
 
-        // Notify watchers
-        if ($ticket->watchers) {
-            foreach ($ticket->watchers as $watcher) {
-                if ($watcher->user) {
-                    $recipients['email'][] = $watcher->user;
-                    $recipients['slack'][] = $watcher->user;
-                }
-            }
-        }
-
-        // Notify supervisors for high/critical priority tickets
-        if (in_array($ticket->priority, ['High', 'Critical'])) {
-            $supervisors = $this->getSupervisors($ticket);
-            foreach ($supervisors as $supervisor) {
-                $recipients['email'][] = $supervisor;
-                $recipients['slack'][] = $supervisor;
-
-                if ($ticket->priority === 'Critical') {
-                    $recipients['sms'][] = $supervisor;
-                }
-            }
-        }
+        $this->addWatcherRecipients($ticket, $recipients);
+        $this->addSupervisorRecipients($ticket, $recipients);
 
         return $recipients;
     }
@@ -181,6 +151,60 @@ class TicketCreatedStrategy implements NotificationStrategyInterface
     public function getPriority(): string
     {
         return 'normal';
+    }
+
+    /**
+     * Add assignee to recipients if assigned.
+     */
+    protected function addAssigneeRecipients(Ticket $ticket, array &$recipients): void
+    {
+        if (!$ticket->assignee) {
+            return;
+        }
+
+        $recipients['email'][] = $ticket->assignee;
+        $recipients['slack'][] = $ticket->assignee;
+
+        if ($ticket->priority === 'Critical') {
+            $recipients['sms'][] = $ticket->assignee;
+        }
+    }
+
+    /**
+     * Add watchers to recipients.
+     */
+    protected function addWatcherRecipients(Ticket $ticket, array &$recipients): void
+    {
+        if (!$ticket->watchers) {
+            return;
+        }
+
+        foreach ($ticket->watchers as $watcher) {
+            if ($watcher->user) {
+                $recipients['email'][] = $watcher->user;
+                $recipients['slack'][] = $watcher->user;
+            }
+        }
+    }
+
+    /**
+     * Add supervisors to recipients for high/critical priority tickets.
+     */
+    protected function addSupervisorRecipients(Ticket $ticket, array &$recipients): void
+    {
+        if (!in_array($ticket->priority, ['High', 'Critical'])) {
+            return;
+        }
+
+        $supervisors = $this->getSupervisors($ticket);
+        foreach ($supervisors as $supervisor) {
+            $recipients['email'][] = $supervisor;
+            $recipients['slack'][] = $supervisor;
+
+            if ($ticket->priority === 'Critical') {
+                $recipients['sms'][] = $supervisor;
+            }
+        }
     }
 
     /**
