@@ -24,6 +24,8 @@ use Illuminate\Http\Request;
  */
 class CollectionDashboardController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     protected CollectionAnalyticsService $analyticsService;
 
     protected CollectionManagementService $collectionService;
@@ -207,7 +209,7 @@ class CollectionDashboardController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'trigger_criteria' => 'required|array',
             'risk_strategy' => 'required|string',
             'is_active' => 'boolean',
@@ -341,7 +343,7 @@ class CollectionDashboardController extends Controller
         $validated = $request->validate([
             'reason' => 'required|string',
             'scheduled_date' => 'nullable|date',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         try {
@@ -377,7 +379,7 @@ class CollectionDashboardController extends Controller
             'total_amount' => 'required|numeric|min:0',
             'duration_months' => 'required|integer|min:1|max:24',
             'down_payment_percent' => 'nullable|numeric|min:0|max:50',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
             'invoice_ids' => 'required|array|min:1',
             'invoice_ids.*' => 'exists:invoices,id',
         ]);
