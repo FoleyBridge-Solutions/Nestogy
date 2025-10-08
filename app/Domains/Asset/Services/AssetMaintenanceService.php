@@ -196,7 +196,7 @@ class AssetMaintenanceService
             $results['startup_optimization'] = $startupResult;
 
             // 5. Registry cleanup
-            $registryResult = $this->performRegistryCleanup($asset);
+            $registryResult = $this->performRegistryCleanup();
             $results['registry_cleanup'] = $registryResult;
 
             // 6. Performance verification
@@ -568,7 +568,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function performRegistryCleanup(Asset $asset): array
+    protected function performRegistryCleanup(): array
     {
         return ['success' => true];
     }
