@@ -283,7 +283,28 @@ class CalendarEventController extends Controller
                 $q->where('company_id', auth()->user()->company_id);
             });
 
-        // Apply same filters as index
+        $this->applyExportFilters($query, $request);
+
+        $events = $query->orderBy('start_datetime', 'asc')->get();
+
+        $filename = 'calendar_events_'.date('Y-m-d_H-i-s').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($events) {
+            $file = fopen('php://output', 'w');
+            $this->writeCalendarEventsCsv($file, $events);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function applyExportFilters($query, Request $request)
+    {
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
@@ -303,60 +324,49 @@ class CalendarEventController extends Controller
         if ($clientId = $request->get('client_id')) {
             $query->where('client_id', $clientId);
         }
+    }
 
-        $events = $query->orderBy('start_datetime', 'asc')->get();
+    private function writeCalendarEventsCsv($file, $events)
+    {
+        fputcsv($file, [
+            'Event Title',
+            'Type',
+            'Client Name',
+            'Start DateTime',
+            'End DateTime',
+            'Duration',
+            'Location',
+            'Status',
+            'Priority',
+            'Attendees',
+            'All Day',
+            'Reminder',
+            'Created By',
+            'Created At',
+        ]);
 
-        $filename = 'calendar_events_'.date('Y-m-d_H-i-s').'.csv';
+        foreach ($events as $event) {
+            fputcsv($file, $this->formatEventRow($event));
+        }
+    }
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
+    private function formatEventRow($event)
+    {
+        return [
+            $event->title,
+            $event->event_type,
+            $event->client->display_name,
+            $event->start_datetime->format('Y-m-d H:i:s'),
+            $event->end_datetime->format('Y-m-d H:i:s'),
+            $event->duration_human,
+            $event->location,
+            $event->status,
+            $event->priority,
+            is_array($event->attendees) ? implode('; ', $event->attendees) : '',
+            $event->all_day ? 'Yes' : 'No',
+            $event->reminder_minutes ? ClientCalendarEvent::getReminderOptions()[$event->reminder_minutes] : 'None',
+            $event->creator ? $event->creator->name : '',
+            $event->created_at->format('Y-m-d H:i:s'),
         ];
-
-        $callback = function () use ($events) {
-            $file = fopen('php://output', 'w');
-
-            // CSV headers
-            fputcsv($file, [
-                'Event Title',
-                'Type',
-                'Client Name',
-                'Start DateTime',
-                'End DateTime',
-                'Duration',
-                'Location',
-                'Status',
-                'Priority',
-                'Attendees',
-                'All Day',
-                'Reminder',
-                'Created By',
-                'Created At',
-            ]);
-
-            // CSV data
-            foreach ($events as $event) {
-                fputcsv($file, [
-                    $event->title,
-                    $event->event_type,
-                    $event->client->display_name,
-                    $event->start_datetime->format('Y-m-d H:i:s'),
-                    $event->end_datetime->format('Y-m-d H:i:s'),
-                    $event->duration_human,
-                    $event->location,
-                    $event->status,
-                    $event->priority,
-                    is_array($event->attendees) ? implode('; ', $event->attendees) : '',
-                    $event->all_day ? 'Yes' : 'No',
-                    $event->reminder_minutes ? ClientCalendarEvent::getReminderOptions()[$event->reminder_minutes] : 'None',
-                    $event->creator ? $event->creator->name : '',
-                    $event->created_at->format('Y-m-d H:i:s'),
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
     }
 }
