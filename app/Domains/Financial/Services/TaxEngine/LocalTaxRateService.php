@@ -540,87 +540,108 @@ class LocalTaxRateService
         $cacheKey = "city_jurisdictions_{$state}_{$city}".($zip ? "_{$zip}" : '');
 
         return Cache::remember($cacheKey, 3600, function () use ($city, $state, $zip) {
-            $jurisdictions = [];
+            $query = $this->buildBaseCityJurisdictionsQuery($state);
 
-            // Query actual data to find jurisdictions for this city
-            $query = DB::table('service_tax_rates')
-                ->select('authority_name', 'tax_code', 'external_id')
-                ->where('is_active', 1)
-                ->whereRaw("JSON_CONTAINS(JSON_EXTRACT(metadata, '$.applicable_states'), JSON_QUOTE(?))", [$state]);
-
-            // If we have a ZIP, use it to find more precise jurisdictions
             if ($zip) {
-                // Find jurisdictions from address data
-                $addressJurisdictions = DB::table('address_tax_jurisdictions')
-                    ->select(['county_jurisdiction_id', 'city_jurisdiction_id', 'primary_transit_id'])
-                    ->where('zip_code', $zip)
-                    ->where('state_code', $state)
-                    ->limit(10)
-                    ->get();
-
-                $jurisdictionIds = [];
-                foreach ($addressJurisdictions as $addr) {
-                    if ($addr->county_jurisdiction_id) {
-                        $jurisdictionIds[] = $addr->county_jurisdiction_id;
-                    }
-                    if ($addr->city_jurisdiction_id) {
-                        $jurisdictionIds[] = $addr->city_jurisdiction_id;
-                    }
-                    if ($addr->primary_transit_id) {
-                        $jurisdictionIds[] = $addr->primary_transit_id;
-                    }
-                }
-
-                if (! empty($jurisdictionIds)) {
-                    // Get jurisdiction codes
-                    $codes = DB::table('jurisdiction_master')
-                        ->whereIn('id', array_unique($jurisdictionIds))
-                        ->pluck('jurisdiction_code')
-                        ->toArray();
-
-                    if (! empty($codes)) {
-                        $query->whereIn('external_id', $codes);
-                    }
-                }
+                $this->applyZipBasedJurisdictionFiltering($query, $zip, $state);
             }
 
-            // Also include jurisdictions that match the city name
             $query->orWhere('authority_name', 'LIKE', "%{$city}%");
 
-            $results = $query->distinct()->get();
+            $jurisdictions = $this->extractJurisdictionsFromQueryResults($query->distinct()->get());
 
-            foreach ($results as $result) {
-                $jurisdictions[] = [
-                    'authority_name' => $result->authority_name,
-                    'tax_code' => $result->tax_code,
-                    'external_id' => $result->external_id,
-                ];
-            }
-
-            // Also check for county jurisdictions that typically apply to cities
             if (empty($jurisdictions)) {
-                // Try to find the county for this city
-                $countyName = $this->discoverCountyForCity($city, $state);
-                if ($countyName) {
-                    $countyJurisdictions = DB::table('service_tax_rates')
-                        ->select('authority_name', 'tax_code', 'external_id')
-                        ->where('is_active', 1)
-                        ->where('authority_name', 'LIKE', "%{$countyName}%")
-                        ->distinct()
-                        ->get();
-
-                    foreach ($countyJurisdictions as $result) {
-                        $jurisdictions[] = [
-                            'authority_name' => $result->authority_name,
-                            'tax_code' => $result->tax_code,
-                            'external_id' => $result->external_id,
-                        ];
-                    }
-                }
+                $jurisdictions = $this->fetchCountyJurisdictionsAsFallback($city, $state);
             }
 
             return $jurisdictions;
         });
+    }
+
+    protected function buildBaseCityJurisdictionsQuery(string $state)
+    {
+        return DB::table('service_tax_rates')
+            ->select('authority_name', 'tax_code', 'external_id')
+            ->where('is_active', 1)
+            ->whereRaw("JSON_CONTAINS(JSON_EXTRACT(metadata, '$.applicable_states'), JSON_QUOTE(?))", [$state]);
+    }
+
+    protected function applyZipBasedJurisdictionFiltering($query, string $zip, string $state): void
+    {
+        $jurisdictionIds = $this->collectJurisdictionIdsFromAddress($zip, $state);
+
+        if (! empty($jurisdictionIds)) {
+            $codes = $this->getJurisdictionCodesFromIds($jurisdictionIds);
+
+            if (! empty($codes)) {
+                $query->whereIn('external_id', $codes);
+            }
+        }
+    }
+
+    protected function collectJurisdictionIdsFromAddress(string $zip, string $state): array
+    {
+        $addressJurisdictions = DB::table('address_tax_jurisdictions')
+            ->select(['county_jurisdiction_id', 'city_jurisdiction_id', 'primary_transit_id'])
+            ->where('zip_code', $zip)
+            ->where('state_code', $state)
+            ->limit(10)
+            ->get();
+
+        $jurisdictionIds = [];
+        foreach ($addressJurisdictions as $addr) {
+            if ($addr->county_jurisdiction_id) {
+                $jurisdictionIds[] = $addr->county_jurisdiction_id;
+            }
+            if ($addr->city_jurisdiction_id) {
+                $jurisdictionIds[] = $addr->city_jurisdiction_id;
+            }
+            if ($addr->primary_transit_id) {
+                $jurisdictionIds[] = $addr->primary_transit_id;
+            }
+        }
+
+        return $jurisdictionIds;
+    }
+
+    protected function getJurisdictionCodesFromIds(array $jurisdictionIds): array
+    {
+        return DB::table('jurisdiction_master')
+            ->whereIn('id', array_unique($jurisdictionIds))
+            ->pluck('jurisdiction_code')
+            ->toArray();
+    }
+
+    protected function extractJurisdictionsFromQueryResults($results): array
+    {
+        $jurisdictions = [];
+
+        foreach ($results as $result) {
+            $jurisdictions[] = [
+                'authority_name' => $result->authority_name,
+                'tax_code' => $result->tax_code,
+                'external_id' => $result->external_id,
+            ];
+        }
+
+        return $jurisdictions;
+    }
+
+    protected function fetchCountyJurisdictionsAsFallback(string $city, string $state): array
+    {
+        $countyName = $this->discoverCountyForCity($city, $state);
+        if (! $countyName) {
+            return [];
+        }
+
+        $countyJurisdictions = DB::table('service_tax_rates')
+            ->select('authority_name', 'tax_code', 'external_id')
+            ->where('is_active', 1)
+            ->where('authority_name', 'LIKE', "%{$countyName}%")
+            ->distinct()
+            ->get();
+
+        return $this->extractJurisdictionsFromQueryResults($countyJurisdictions);
     }
 
     /**
