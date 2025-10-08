@@ -11,6 +11,8 @@ class ClientRack extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
+    private const DECIMAL_TWO_PLACES = 'decimal:2';
+
     protected $fillable = [
         'company_id',
         'client_id',
@@ -45,9 +47,9 @@ class ClientRack extends Model
         'client_id' => 'integer',
         'rack_number' => 'integer',
         'height_units' => 'integer',
-        'width_inches' => 'decimal:2',
-        'depth_inches' => 'decimal:2',
-        'max_weight_lbs' => 'decimal:2',
+        'width_inches' => self::DECIMAL_TWO_PLACES,
+        'depth_inches' => self::DECIMAL_TWO_PLACES,
+        'max_weight_lbs' => self::DECIMAL_TWO_PLACES,
         'power_capacity_watts' => 'integer',
         'power_used_watts' => 'integer',
         'temperature_celsius' => 'decimal:1',
