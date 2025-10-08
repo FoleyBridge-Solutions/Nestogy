@@ -16,6 +16,8 @@ class TimeEntryTemplate extends Model
 {
     use BelongsToCompany, HasFactory;
 
+    public const CATEGORY_SOFTWARE_SUPPORT = 'Software Support';
+
     protected $fillable = [
         'company_id',
         'name',
@@ -225,7 +227,7 @@ class TimeEntryTemplate extends Model
                 'description' => 'Install and configure software applications',
                 'work_type' => 'software_support',
                 'default_hours' => 0.75,
-                'category' => 'Software Support',
+                'category' => self::CATEGORY_SOFTWARE_SUPPORT,
                 'keywords' => ['install', 'software', 'application', 'program', 'setup'],
                 'is_billable' => true,
             ],
@@ -273,7 +275,7 @@ class TimeEntryTemplate extends Model
             'account_management' => 'Account Management',
             'email_support' => 'Email Support',
             'network_support' => 'Network Support',
-            'software_support' => 'Software Support',
+            'software_support' => self::CATEGORY_SOFTWARE_SUPPORT,
             'backup_recovery' => 'Backup/Recovery',
             'security_support' => 'Security Support',
             'maintenance' => 'System Maintenance',
@@ -293,7 +295,7 @@ class TimeEntryTemplate extends Model
             'Account Support',
             'Email Support',
             'Network Support',
-            'Software Support',
+            self::CATEGORY_SOFTWARE_SUPPORT,
             'Data Management',
             'Security',
             'Maintenance',
