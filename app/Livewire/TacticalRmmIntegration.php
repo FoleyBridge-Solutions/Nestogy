@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Domains\Integration\Exceptions\RmmIntegrationNotFoundException;
 use App\Models\Client;
 use App\Models\RmmClientMapping;
 use App\Models\RmmIntegration;
@@ -103,7 +104,7 @@ class TacticalRmmIntegration extends Component
             if ($this->integrationSaved && empty($this->apiUrl) && empty($this->apiKey)) {
                 // Test with saved credentials
                 if (! $this->integration) {
-                    throw new \Exception('No saved integration found');
+                    throw new RmmIntegrationNotFoundException();
                 }
 
                 $service = new TacticalRmmService($this->integration);
