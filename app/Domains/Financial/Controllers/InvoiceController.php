@@ -27,6 +27,8 @@ class InvoiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NUMERIC_MIN_ZERO = 'required|numeric|min:0';
+
     protected $invoiceService;
 
     protected $paymentService;
@@ -327,8 +329,8 @@ class InvoiceController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'quantity' => 'required|numeric|min:0',
-            'price' => 'required|numeric|min:0',
+            'quantity' => self::VALIDATION_NUMERIC_MIN_ZERO,
+            'price' => self::VALIDATION_NUMERIC_MIN_ZERO,
             'tax_id' => 'nullable|exists:taxes,id',
             'category_id' => 'nullable|exists:categories,id',
             'discount' => 'nullable|numeric|min:0|max:100',
@@ -376,8 +378,8 @@ class InvoiceController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'quantity' => 'required|numeric|min:0',
-            'price' => 'required|numeric|min:0',
+            'quantity' => self::VALIDATION_NUMERIC_MIN_ZERO,
+            'price' => self::VALIDATION_NUMERIC_MIN_ZERO,
             'tax_id' => 'nullable|exists:taxes,id',
             'category_id' => 'nullable|exists:categories,id',
             'discount' => 'nullable|numeric|min:0|max:100',
