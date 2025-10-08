@@ -14,6 +14,8 @@ class VendorController extends Controller
 {
     use UsesSelectedClient;
 
+    private const MONETARY_VALUE_VALIDATION = 'nullable|numeric|min:0|max:99999999.99';
+
     /**
      * Display a listing of vendors for the selected client
      */
@@ -158,11 +160,11 @@ class VendorController extends Controller
             'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
             'start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:start_date',
-            'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
+            'contract_value' => self::MONETARY_VALUE_VALIDATION,
             'currency' => 'nullable|string|size:3',
             'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
             'last_order_date' => 'nullable|date|before_or_equal:today',
-            'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
+            'total_spent' => self::MONETARY_VALUE_VALIDATION,
             'average_response_time' => 'nullable|string|max:100',
             'performance_rating' => 'nullable|integer|min:1|max:5',
             'reliability_rating' => 'nullable|integer|min:1|max:5',
@@ -171,7 +173,7 @@ class VendorController extends Controller
             'is_preferred' => 'boolean',
             'is_approved' => 'boolean',
             'requires_approval' => 'boolean',
-            'approval_limit' => 'nullable|numeric|min:0|max:99999999.99',
+            'approval_limit' => self::MONETARY_VALUE_VALIDATION,
             'certifications' => 'nullable|string',
             'insurance_info' => 'nullable|string',
             'backup_contacts' => 'nullable|string',
@@ -302,11 +304,11 @@ class VendorController extends Controller
             'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
             'start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:start_date',
-            'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
+            'contract_value' => self::MONETARY_VALUE_VALIDATION,
             'currency' => 'nullable|string|size:3',
             'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
             'last_order_date' => 'nullable|date|before_or_equal:today',
-            'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
+            'total_spent' => self::MONETARY_VALUE_VALIDATION,
             'average_response_time' => 'nullable|string|max:100',
             'performance_rating' => 'nullable|integer|min:1|max:5',
             'reliability_rating' => 'nullable|integer|min:1|max:5',
@@ -315,7 +317,7 @@ class VendorController extends Controller
             'is_preferred' => 'boolean',
             'is_approved' => 'boolean',
             'requires_approval' => 'boolean',
-            'approval_limit' => 'nullable|numeric|min:0|max:99999999.99',
+            'approval_limit' => self::MONETARY_VALUE_VALIDATION,
             'certifications' => 'nullable|string',
             'insurance_info' => 'nullable|string',
             'backup_contacts' => 'nullable|string',
