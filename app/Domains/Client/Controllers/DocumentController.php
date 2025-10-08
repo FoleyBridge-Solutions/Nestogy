@@ -16,6 +16,8 @@ class DocumentController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of documents for the selected client
      */
@@ -98,12 +100,12 @@ class DocumentController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'category' => 'required|in:'.implode(',', array_keys(ClientDocument::getCategories())),
             'file' => 'required|file|max:51200', // 50MB max
             'is_confidential' => 'boolean',
             'expires_at' => 'nullable|date|after:today',
-            'tags' => 'nullable|string',
+            'tags' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -198,11 +200,11 @@ class DocumentController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::VALIDATION_NULLABLE_STRING,
             'category' => 'required|in:'.implode(',', array_keys(ClientDocument::getCategories())),
             'is_confidential' => 'boolean',
             'expires_at' => 'nullable|date|after:today',
-            'tags' => 'nullable|string',
+            'tags' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -269,7 +271,7 @@ class DocumentController extends Controller
 
         $validator = Validator::make($request->all(), [
             'file' => 'required|file|max:51200', // 50MB max
-            'version_notes' => 'nullable|string',
+            'version_notes' => self::VALIDATION_NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
