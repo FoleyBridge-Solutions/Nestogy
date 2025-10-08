@@ -14,6 +14,8 @@ class VendorController extends Controller
 {
     use UsesSelectedClient;
 
+    private const RATING_VALIDATION_RULE = 'nullable|integer|min:1|max:5';
+
     /**
      * Display a listing of vendors for the selected client
      */
@@ -164,10 +166,10 @@ class VendorController extends Controller
             'last_order_date' => 'nullable|date|before_or_equal:today',
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
-            'performance_rating' => 'nullable|integer|min:1|max:5',
-            'reliability_rating' => 'nullable|integer|min:1|max:5',
-            'cost_rating' => 'nullable|integer|min:1|max:5',
-            'overall_rating' => 'nullable|integer|min:1|max:5',
+            'performance_rating' => self::RATING_VALIDATION_RULE,
+            'reliability_rating' => self::RATING_VALIDATION_RULE,
+            'cost_rating' => self::RATING_VALIDATION_RULE,
+            'overall_rating' => self::RATING_VALIDATION_RULE,
             'is_preferred' => 'boolean',
             'is_approved' => 'boolean',
             'requires_approval' => 'boolean',
@@ -308,10 +310,10 @@ class VendorController extends Controller
             'last_order_date' => 'nullable|date|before_or_equal:today',
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
-            'performance_rating' => 'nullable|integer|min:1|max:5',
-            'reliability_rating' => 'nullable|integer|min:1|max:5',
-            'cost_rating' => 'nullable|integer|min:1|max:5',
-            'overall_rating' => 'nullable|integer|min:1|max:5',
+            'performance_rating' => self::RATING_VALIDATION_RULE,
+            'reliability_rating' => self::RATING_VALIDATION_RULE,
+            'cost_rating' => self::RATING_VALIDATION_RULE,
+            'overall_rating' => self::RATING_VALIDATION_RULE,
             'is_preferred' => 'boolean',
             'is_approved' => 'boolean',
             'requires_approval' => 'boolean',
