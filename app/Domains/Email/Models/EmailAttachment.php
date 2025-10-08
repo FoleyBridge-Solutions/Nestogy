@@ -97,24 +97,22 @@ class EmailAttachment extends Model
     public function getIconClass(): string
     {
         if ($this->isImageFile()) {
-            return 'heroicon-o-photo';
+            $icon = 'heroicon-o-photo';
+        } elseif ($this->isPdfFile()) {
+            $icon = 'heroicon-o-document-text';
+        } elseif ($this->isDocumentFile()) {
+            $icon = 'heroicon-o-document';
+        } else {
+            $icon = match ($this->getFileExtension()) {
+                'zip', 'rar', '7z', 'tar', 'gz' => 'heroicon-o-archive-box',
+                'mp3', 'wav', 'ogg', 'm4a' => 'heroicon-o-musical-note',
+                'mp4', 'avi', 'mov', 'wmv', 'flv' => 'heroicon-o-film',
+                'txt' => 'heroicon-o-document-text',
+                default => 'heroicon-o-paper-clip'
+            };
         }
 
-        if ($this->isPdfFile()) {
-            return 'heroicon-o-document-text';
-        }
-
-        if ($this->isDocumentFile()) {
-            return 'heroicon-o-document';
-        }
-
-        return match ($this->getFileExtension()) {
-            'zip', 'rar', '7z', 'tar', 'gz' => 'heroicon-o-archive-box',
-            'mp3', 'wav', 'ogg', 'm4a' => 'heroicon-o-musical-note',
-            'mp4', 'avi', 'mov', 'wmv', 'flv' => 'heroicon-o-film',
-            'txt' => 'heroicon-o-document-text',
-            default => 'heroicon-o-paper-clip'
-        };
+        return $icon;
     }
 
     public function getUrl(): string
