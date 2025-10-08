@@ -338,50 +338,87 @@ class ClientRecurringInvoice extends Model
      */
     public function calculateNextInvoiceDate($fromDate = null)
     {
-        if (! $fromDate) {
-            $fromDate = $this->last_invoice_date ?: $this->start_date;
-        }
+        $fromDate = $fromDate ?: ($this->last_invoice_date ?: $this->start_date);
 
         if (! $fromDate) {
             return null;
         }
 
         $date = Carbon::parse($fromDate);
-
-        switch ($this->frequency) {
-            case 'daily':
-                $date->addDays($this->interval_count ?: 1);
-                break;
-            case 'weekly':
-                $date->addWeeks($this->interval_count ?: 1);
-                if ($this->day_of_week) {
-                    $date->next($this->day_of_week);
-                }
-                break;
-            case 'biweekly':
-                $date->addWeeks(2 * ($this->interval_count ?: 1));
-                break;
-            case 'monthly':
-                $date->addMonths($this->interval_count ?: 1);
-                if ($this->day_of_month) {
-                    $date->day(min($this->day_of_month, $date->daysInMonth));
-                }
-                break;
-            case 'quarterly':
-                $date->addMonths(3 * ($this->interval_count ?: 1));
-                break;
-            case 'semiannually':
-                $date->addMonths(6 * ($this->interval_count ?: 1));
-                break;
-            case 'annually':
-                $date->addYears($this->interval_count ?: 1);
-                break;
-            case 'custom':
-                $date->addDays($this->interval_count ?: 1);
-                break;
-        }
+        $this->applyFrequencyToDate($date);
 
         return $date->toDate();
+    }
+
+    /**
+     * Apply frequency calculation to the given date
+     */
+    private function applyFrequencyToDate(Carbon $date): void
+    {
+        $frequencyHandlers = [
+            'daily' => 'applyDailyFrequency',
+            'weekly' => 'applyWeeklyFrequency',
+            'biweekly' => 'applyBiweeklyFrequency',
+            'monthly' => 'applyMonthlyFrequency',
+            'quarterly' => 'applyQuarterlyFrequency',
+            'semiannually' => 'applySemiannuallyFrequency',
+            'annually' => 'applyAnnuallyFrequency',
+            'custom' => 'applyCustomFrequency',
+        ];
+
+        $handler = $frequencyHandlers[$this->frequency] ?? null;
+
+        if ($handler && method_exists($this, $handler)) {
+            $this->$handler($date);
+        }
+    }
+
+    private function applyDailyFrequency(Carbon $date): void
+    {
+        $date->addDays($this->interval_count ?: 1);
+    }
+
+    private function applyWeeklyFrequency(Carbon $date): void
+    {
+        $date->addWeeks($this->interval_count ?: 1);
+        
+        if ($this->day_of_week) {
+            $date->next($this->day_of_week);
+        }
+    }
+
+    private function applyBiweeklyFrequency(Carbon $date): void
+    {
+        $date->addWeeks(2 * ($this->interval_count ?: 1));
+    }
+
+    private function applyMonthlyFrequency(Carbon $date): void
+    {
+        $date->addMonths($this->interval_count ?: 1);
+        
+        if ($this->day_of_month) {
+            $date->day(min($this->day_of_month, $date->daysInMonth));
+        }
+    }
+
+    private function applyQuarterlyFrequency(Carbon $date): void
+    {
+        $date->addMonths(3 * ($this->interval_count ?: 1));
+    }
+
+    private function applySemiannuallyFrequency(Carbon $date): void
+    {
+        $date->addMonths(6 * ($this->interval_count ?: 1));
+    }
+
+    private function applyAnnuallyFrequency(Carbon $date): void
+    {
+        $date->addYears($this->interval_count ?: 1);
+    }
+
+    private function applyCustomFrequency(Carbon $date): void
+    {
+        $date->addDays($this->interval_count ?: 1);
     }
 
     /**
