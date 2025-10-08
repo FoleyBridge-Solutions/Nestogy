@@ -126,11 +126,7 @@ class TicketCommentAttachment extends Model
             return 'document-text';
         }
 
-        if ($this->isDocument()) {
-            return 'document';
-        }
-
-        return 'paper-clip';
+        return $this->isDocument() ? 'document' : 'paper-clip';
     }
 
     /**
