@@ -316,17 +316,15 @@ class PhysicalMailTemplateBuilder
 
         foreach ($elements as $element) {
             $style = $element->getAttribute('style');
-            if (preg_match('/position:\s*absolute/i', $style)) {
-                if (preg_match('/top:\s*(\d+)(px|pt|in|cm)/i', $style, $matches)) {
-                    $value = (float) $matches[1];
-                    $unit = $matches[2];
+            if (preg_match('/position:\s*absolute/i', $style) && preg_match('/top:\s*(\d+)(px|pt|in|cm)/i', $style, $matches)) {
+                $value = (float) $matches[1];
+                $unit = $matches[2];
 
-                    // Convert to inches
-                    $inches = $this->convertToInches($value, $unit);
+                // Convert to inches
+                $inches = $this->convertToInches($value, $unit);
 
-                    if ($inches < self::ADDRESS_ZONE_HEIGHT) {
-                        return true; // Content in address zone
-                    }
+                if ($inches < self::ADDRESS_ZONE_HEIGHT) {
+                    return true; // Content in address zone
                 }
             }
         }
