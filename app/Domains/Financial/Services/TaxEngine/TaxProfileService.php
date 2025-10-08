@@ -265,6 +265,19 @@ class TaxProfileService
     {
         $errors = [];
 
+        $errors = array_merge($errors, $this->validateRequiredFields($taxData, $profile));
+        $errors = array_merge($errors, $this->validateFieldTypes($taxData, $profile));
+
+        return $errors;
+    }
+
+    /**
+     * Validate required fields
+     */
+    protected function validateRequiredFields(array $taxData, TaxProfile $profile): array
+    {
+        $errors = [];
+
         foreach ($profile->required_fields as $field) {
             if (! isset($taxData[$field]) || empty($taxData[$field])) {
                 $fieldDef = $profile->getFieldDefinition($field);
@@ -273,30 +286,72 @@ class TaxProfileService
             }
         }
 
-        // Additional validation based on field types
+        return $errors;
+    }
+
+    /**
+     * Validate field types
+     */
+    protected function validateFieldTypes(array $taxData, TaxProfile $profile): array
+    {
+        $errors = [];
+
         foreach ($taxData as $field => $value) {
             $fieldDef = $profile->getFieldDefinition($field);
 
             if ($fieldDef) {
-                switch ($fieldDef['type']) {
-                    case 'number':
-                        if (! is_numeric($value)) {
-                            $errors[$field] = "{$fieldDef['label']} must be a number";
-                        } elseif (isset($fieldDef['min']) && $value < $fieldDef['min']) {
-                            $errors[$field] = "{$fieldDef['label']} must be at least {$fieldDef['min']}";
-                        }
-                        break;
-
-                    case 'address':
-                        if (! is_array($value) || ! isset($value['state'])) {
-                            $errors[$field] = "{$fieldDef['label']} must include at least a state";
-                        }
-                        break;
+                $fieldError = $this->validateFieldByType($field, $value, $fieldDef);
+                if ($fieldError) {
+                    $errors[$field] = $fieldError;
                 }
             }
         }
 
         return $errors;
+    }
+
+    /**
+     * Validate field by type
+     */
+    protected function validateFieldByType(string $field, $value, array $fieldDef): ?string
+    {
+        switch ($fieldDef['type']) {
+            case 'number':
+                return $this->validateNumberField($value, $fieldDef);
+
+            case 'address':
+                return $this->validateAddressField($value, $fieldDef);
+        }
+
+        return null;
+    }
+
+    /**
+     * Validate number field
+     */
+    protected function validateNumberField($value, array $fieldDef): ?string
+    {
+        if (! is_numeric($value)) {
+            return "{$fieldDef['label']} must be a number";
+        }
+
+        if (isset($fieldDef['min']) && $value < $fieldDef['min']) {
+            return "{$fieldDef['label']} must be at least {$fieldDef['min']}";
+        }
+
+        return null;
+    }
+
+    /**
+     * Validate address field
+     */
+    protected function validateAddressField($value, array $fieldDef): ?string
+    {
+        if (! is_array($value) || ! isset($value['state'])) {
+            return "{$fieldDef['label']} must include at least a state";
+        }
+
+        return null;
     }
 
     /**
