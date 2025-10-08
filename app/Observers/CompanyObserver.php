@@ -32,7 +32,7 @@ class CompanyObserver
     /**
      * Handle the Company "deleted" event.
      */
-    public function deleted(Company $company): void
+    public function deleted(): void
     {
         //
     }
