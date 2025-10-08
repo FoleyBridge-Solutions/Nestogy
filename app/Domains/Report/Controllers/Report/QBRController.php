@@ -17,6 +17,8 @@ use Illuminate\View\View;
  */
 class QBRController extends Controller
 {
+    private const DATE_FORMAT = 'M j, Y';
+
     public function __construct(
         protected ExecutiveReportService $executiveService,
         protected ExportService $exportService
@@ -100,8 +102,8 @@ class QBRController extends Controller
             $previewData = [
                 'period' => [
                     'quarter' => "Q{$quarter} {$year}",
-                    'start' => $quarterStart->format('M j, Y'),
-                    'end' => $quarterEnd->format('M j, Y'),
+                    'start' => $quarterStart->format(self::DATE_FORMAT),
+                    'end' => $quarterEnd->format(self::DATE_FORMAT),
                 ],
                 'data_availability' => $this->checkDataAvailability($companyId, $quarterStart, $quarterEnd),
                 'estimated_sections' => $this->getEstimatedSections($companyId, $quarterStart, $quarterEnd),
@@ -259,8 +261,8 @@ class QBRController extends Controller
                 'year' => $year,
                 'quarter' => $quarter,
                 'label' => "Q{$quarter} {$year}",
-                'start_date' => $quarterStart->format('M j, Y'),
-                'end_date' => $quarterEnd->format('M j, Y'),
+                'start_date' => $quarterStart->format(self::DATE_FORMAT),
+                'end_date' => $quarterEnd->format(self::DATE_FORMAT),
                 'is_current' => ($year === $currentYear && $quarter === $currentQuarter),
                 'is_complete' => $quarterEnd->isPast(),
             ];
