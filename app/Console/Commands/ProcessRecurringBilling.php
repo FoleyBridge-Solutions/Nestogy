@@ -21,6 +21,8 @@ class ProcessRecurringBilling extends Command
 
     private const DEFAULT_BATCH_SIZE = 100;
 
+    private const SEPARATOR_LINE = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+
     /**
      * The name and signature of the console command.
      *
@@ -115,9 +117,9 @@ class ProcessRecurringBilling extends Command
      */
     protected function displayHeader(): void
     {
-        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->info(self::SEPARATOR_LINE);
         $this->info('🔄 VoIP Recurring Billing High-Performance Processor');
-        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->info(self::SEPARATOR_LINE);
         $this->info('Started: '.now()->format('Y-m-d H:i:s'));
 
         if ($this->option('company')) {
@@ -220,9 +222,9 @@ class ProcessRecurringBilling extends Command
     protected function displayResults(array $results): void
     {
         $this->newLine();
-        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->info(self::SEPARATOR_LINE);
         $this->info('📈 Processing Results');
-        $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->info(self::SEPARATOR_LINE);
 
         $this->info("✅ Processed: {$results['processed']}");
         $this->info("❌ Failed: {$results['failed']}");
