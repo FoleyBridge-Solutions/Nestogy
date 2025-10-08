@@ -4,15 +4,20 @@ namespace App\Domains\Email\Models;
 
 use App\Models\CommunicationLog;
 use App\Domains\Ticket\Models\Ticket;
+use App\Domains\Email\Traits\HasEmailScopes;
+use App\Domains\Email\Traits\HasEmailStatusOperations;
+use App\Domains\Email\Traits\HasEmailHelpers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class EmailMessage extends Model
 {
     use HasFactory;
+    use HasEmailScopes;
+    use HasEmailStatusOperations;
+    use HasEmailHelpers;
 
     protected $fillable = [
         'email_account_id',
@@ -102,162 +107,5 @@ class EmailMessage extends Model
     public function communicationLog(): BelongsTo
     {
         return $this->belongsTo(CommunicationLog::class);
-    }
-
-    // Helper methods
-    public function getThreadMessages(): \Illuminate\Database\Eloquent\Collection
-    {
-        if (! $this->thread_id) {
-            return collect([$this]);
-        }
-
-        return static::where('thread_id', $this->thread_id)
-            ->orderBy('sent_at')
-            ->get();
-    }
-
-    public function generatePreview(int $length = 200): string
-    {
-        $text = $this->body_text ?: strip_tags($this->body_html);
-
-        return Str::limit($text, $length);
-    }
-
-    public function getAllRecipients(): array
-    {
-        $recipients = [];
-
-        if ($this->to_addresses) {
-            $recipients = array_merge($recipients, $this->to_addresses);
-        }
-
-        if ($this->cc_addresses) {
-            $recipients = array_merge($recipients, $this->cc_addresses);
-        }
-
-        if ($this->bcc_addresses) {
-            $recipients = array_merge($recipients, $this->bcc_addresses);
-        }
-
-        return array_unique($recipients);
-    }
-
-    public function isFromClient(): bool
-    {
-        // Check if the from_address belongs to any client
-        return \App\Models\Client::where('email', $this->from_address)
-            ->orWhereJsonContains('contact_emails', $this->from_address)
-            ->exists();
-    }
-
-    public function getClientFromSender(): ?\App\Models\Client
-    {
-        return \App\Models\Client::where('email', $this->from_address)
-            ->orWhereJsonContains('contact_emails', $this->from_address)
-            ->first();
-    }
-
-    public function markAsRead(): self
-    {
-        if (! $this->is_read) {
-            $this->update(['is_read' => true]);
-            $this->emailFolder->decrement('unread_count');
-        }
-
-        return $this;
-    }
-
-    public function markAsUnread(): self
-    {
-        if ($this->is_read) {
-            $this->update(['is_read' => false]);
-            $this->emailFolder->increment('unread_count');
-        }
-
-        return $this;
-    }
-
-    public function flag(): self
-    {
-        $this->update(['is_flagged' => true]);
-
-        return $this;
-    }
-
-    public function unflag(): self
-    {
-        $this->update(['is_flagged' => false]);
-
-        return $this;
-    }
-
-    // Scopes
-    public function scopeUnread($query)
-    {
-        return $query->where('is_read', false);
-    }
-
-    public function scopeRead($query)
-    {
-        return $query->where('is_read', true);
-    }
-
-    public function scopeFlagged($query)
-    {
-        return $query->where('is_flagged', true);
-    }
-
-    public function scopeDrafts($query)
-    {
-        return $query->where('is_draft', true);
-    }
-
-    public function scopeNotDeleted($query)
-    {
-        return $query->where('is_deleted', false);
-    }
-
-    public function scopeWithAttachments($query)
-    {
-        return $query->where('has_attachments', true);
-    }
-
-    public function scopeInThread($query, string $threadId)
-    {
-        return $query->where('thread_id', $threadId);
-    }
-
-    public function scopeFromDate($query, $date)
-    {
-        return $query->where('sent_at', '>=', $date);
-    }
-
-    public function scopeToDate($query, $date)
-    {
-        return $query->where('sent_at', '<=', $date);
-    }
-
-    public function scopeSearch($query, string $term)
-    {
-        return $query->where(function ($q) use ($term) {
-            $q->where('subject', 'like', "%{$term}%")
-                ->orWhere('body_text', 'like', "%{$term}%")
-                ->orWhere('from_address', 'like', "%{$term}%")
-                ->orWhere('from_name', 'like', "%{$term}%");
-        });
-    }
-
-    public function scopeFromSender($query, string $email)
-    {
-        return $query->where('from_address', $email);
-    }
-
-    public function scopeToRecipient($query, string $email)
-    {
-        return $query->where(function ($q) use ($email) {
-            $q->whereJsonContains('to_addresses', $email)
-                ->orWhereJsonContains('cc_addresses', $email)
-                ->orWhereJsonContains('bcc_addresses', $email);
-        });
     }
 }
