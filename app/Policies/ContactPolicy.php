@@ -77,12 +77,7 @@ class ContactPolicy
      */
     public function restore(User $user, Contact $contact): bool
     {
-        // Admins can always restore contacts from their company
-        if ($user->isAdmin() && $this->sameCompany($user, $contact)) {
-            return true;
-        }
-
-        return $user->can('clients.contacts.manage') && $this->sameCompany($user, $contact);
+        return $user->isAdmin() && $this->sameCompany($user, $contact);
     }
 
     /**
