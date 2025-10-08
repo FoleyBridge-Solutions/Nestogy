@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class QuoteController extends Controller
 {
+    private const VALIDATION_REQUIRED_IN = 'required|in:';
+
     /**
      * Display a listing of all quotes (standalone view)
      */
@@ -112,13 +114,13 @@ class QuoteController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'currency' => 'required|in:'.implode(',', array_keys(ClientQuote::getCurrencies())),
+            'currency' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientQuote::getCurrencies())),
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
             'discount_type' => 'nullable|in:'.implode(',', array_keys(ClientQuote::getDiscountTypes())),
             'valid_until' => 'nullable|date|after:today',
             'issued_date' => 'nullable|date',
-            'status' => 'required|in:'.implode(',', array_keys(ClientQuote::getStatuses())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientQuote::getStatuses())),
             'conversion_probability' => 'nullable|numeric|min:0|max:100',
             'follow_up_date' => 'nullable|date',
             'terms_conditions' => 'nullable|string',
@@ -242,13 +244,13 @@ class QuoteController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'currency' => 'required|in:'.implode(',', array_keys(ClientQuote::getCurrencies())),
+            'currency' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientQuote::getCurrencies())),
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
             'discount_type' => 'nullable|in:'.implode(',', array_keys(ClientQuote::getDiscountTypes())),
             'valid_until' => 'nullable|date',
             'issued_date' => 'nullable|date',
-            'status' => 'required|in:'.implode(',', array_keys(ClientQuote::getStatuses())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientQuote::getStatuses())),
             'conversion_probability' => 'nullable|numeric|min:0|max:100',
             'follow_up_date' => 'nullable|date',
             'terms_conditions' => 'nullable|string',
