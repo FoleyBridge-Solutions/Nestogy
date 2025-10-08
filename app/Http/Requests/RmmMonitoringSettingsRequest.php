@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RmmMonitoringSettingsRequest extends FormRequest
 {
+    private const URL_VALIDATION_RULE = 'nullable|url|max:255';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -23,7 +25,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             // ConnectWise Automate Settings
             'connectwise_automate_settings' => 'nullable|array',
             'connectwise_automate_settings.enabled' => 'boolean',
-            'connectwise_automate_settings.server_url' => 'nullable|url|max:255',
+            'connectwise_automate_settings.server_url' => self::URL_VALIDATION_RULE,
             'connectwise_automate_settings.username' => 'nullable|string|max:255',
             'connectwise_automate_settings.password' => 'nullable|string|max:255',
             'connectwise_automate_settings.client_id' => 'nullable|string|max:255',
@@ -36,7 +38,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             // Datto RMM Settings
             'datto_rmm_settings' => 'nullable|array',
             'datto_rmm_settings.enabled' => 'boolean',
-            'datto_rmm_settings.api_url' => 'nullable|url|max:255',
+            'datto_rmm_settings.api_url' => self::URL_VALIDATION_RULE,
             'datto_rmm_settings.api_key' => 'nullable|string|max:255',
             'datto_rmm_settings.api_secret' => 'nullable|string|max:255',
             'datto_rmm_settings.sync_frequency_minutes' => 'integer|min:5|max:1440',
@@ -49,7 +51,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             // NinjaOne Settings
             'ninja_rmm_settings' => 'nullable|array',
             'ninja_rmm_settings.enabled' => 'boolean',
-            'ninja_rmm_settings.instance_url' => 'nullable|url|max:255',
+            'ninja_rmm_settings.instance_url' => self::URL_VALIDATION_RULE,
             'ninja_rmm_settings.client_id' => 'nullable|string|max:255',
             'ninja_rmm_settings.client_secret' => 'nullable|string|max:255',
             'ninja_rmm_settings.access_token' => 'nullable|string|max:1000',
@@ -64,7 +66,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             // Kaseya VSA Settings
             'kaseya_vsa_settings' => 'nullable|array',
             'kaseya_vsa_settings.enabled' => 'boolean',
-            'kaseya_vsa_settings.server_url' => 'nullable|url|max:255',
+            'kaseya_vsa_settings.server_url' => self::URL_VALIDATION_RULE,
             'kaseya_vsa_settings.username' => 'nullable|string|max:255',
             'kaseya_vsa_settings.password' => 'nullable|string|max:255',
             'kaseya_vsa_settings.session_id' => 'nullable|string|max:255',
@@ -78,7 +80,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             // Auvik Settings
             'auvik_settings' => 'nullable|array',
             'auvik_settings.enabled' => 'boolean',
-            'auvik_settings.api_url' => 'nullable|url|max:255',
+            'auvik_settings.api_url' => self::URL_VALIDATION_RULE,
             'auvik_settings.username' => 'nullable|string|max:255',
             'auvik_settings.api_key' => 'nullable|string|max:255',
             'auvik_settings.sync_frequency_minutes' => 'integer|min:5|max:1440',
@@ -92,7 +94,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             // PRTG Settings
             'prtg_settings' => 'nullable|array',
             'prtg_settings.enabled' => 'boolean',
-            'prtg_settings.server_url' => 'nullable|url|max:255',
+            'prtg_settings.server_url' => self::URL_VALIDATION_RULE,
             'prtg_settings.username' => 'nullable|string|max:255',
             'prtg_settings.password' => 'nullable|string|max:255',
             'prtg_settings.passhash' => 'nullable|string|max:255',
@@ -106,7 +108,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             // SolarWinds Settings
             'solarwinds_settings' => 'nullable|array',
             'solarwinds_settings.enabled' => 'boolean',
-            'solarwinds_settings.server_url' => 'nullable|url|max:255',
+            'solarwinds_settings.server_url' => self::URL_VALIDATION_RULE,
             'solarwinds_settings.username' => 'nullable|string|max:255',
             'solarwinds_settings.password' => 'nullable|string|max:255',
             'solarwinds_settings.certificate_file' => 'nullable|string|max:255',
