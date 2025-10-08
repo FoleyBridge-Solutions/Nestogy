@@ -305,6 +305,8 @@ class CredentialController extends Controller
                 case 'expiring_soon':
                     $query->expiringSoon();
                     break;
+                default:
+                    break;
             }
         }
 
