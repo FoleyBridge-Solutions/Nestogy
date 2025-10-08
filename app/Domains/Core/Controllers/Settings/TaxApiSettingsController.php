@@ -327,6 +327,8 @@ class TaxApiSettingsController extends Controller
                 case 'integer':
                     $rule[] = 'integer';
                     break;
+                default:
+                    break;
             }
 
             $rules[$key] = implode('|', $rule);
