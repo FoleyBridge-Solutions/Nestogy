@@ -23,7 +23,7 @@ class SentimentAnalysisService extends BaseApiClient
 
     public function __construct(int $companyId, array $config = [])
     {
-        $this->apiKey = config('services.api_ninjas.key') ?? config('services.api_ninjas.key');
+        $this->apiKey = $config['api_key'] ?? config('services.api_ninjas.key');
 
         if (! $this->apiKey) {
             throw new Exception('API Ninjas API key not configured for sentiment analysis');
