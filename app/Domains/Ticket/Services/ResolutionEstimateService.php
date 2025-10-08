@@ -194,15 +194,14 @@ class ResolutionEstimateService
             ->whereNotIn('status', [Ticket::STATUS_CLOSED, Ticket::STATUS_RESOLVED])
             ->count();
 
-        if ($activeTickets <= 3) {
-            return 1.0;
-        } elseif ($activeTickets <= 6) {
-            return 1.2;
-        } elseif ($activeTickets <= 10) {
-            return 1.4;
-        } else {
-            return 1.6;
-        }
+        $factor = match (true) {
+            $activeTickets <= 3 => 1.0,
+            $activeTickets <= 6 => 1.2,
+            $activeTickets <= 10 => 1.4,
+            default => 1.6,
+        };
+
+        return $factor;
     }
 
     protected function estimateComplexity(Ticket $ticket): int
