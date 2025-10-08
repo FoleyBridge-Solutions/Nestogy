@@ -370,6 +370,11 @@ class ProjectService
             $tasks = $milestone->tasks;
             $completedTasks = $tasks->where('status', Task::STATUS_COMPLETED)->count();
 
+            $daysRemaining = null;
+            if ($milestone->due_date && ! $milestone->isCompleted()) {
+                $daysRemaining = $milestone->due_date->isFuture() ? $milestone->due_date->diffInDays(now()) : 0;
+            }
+
             return [
                 'id' => $milestone->id,
                 'name' => $milestone->name,
@@ -384,9 +389,7 @@ class ProjectService
                 ],
                 'is_completed' => $milestone->isCompleted(),
                 'is_overdue' => ! $milestone->isCompleted() && $milestone->due_date?->isPast(),
-                'days_remaining' => $milestone->due_date && ! $milestone->isCompleted()
-                    ? ($milestone->due_date->isFuture() ? $milestone->due_date->diffInDays(now()) : 0)
-                    : null,
+                'days_remaining' => $daysRemaining,
             ];
         })->toArray();
     }
