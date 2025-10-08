@@ -235,6 +235,8 @@ class ProductController extends Controller
                         $product->update(['category_id' => $request->category_id]);
                     }
                     break;
+                default:
+                    break;
             }
         }
 
