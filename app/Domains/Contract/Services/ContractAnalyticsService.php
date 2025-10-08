@@ -150,7 +150,7 @@ class ContractAnalyticsService
             'milestone_performance' => $milestonePerformance,
             'payment_performance' => $paymentPerformance,
             'renewal_rates' => $renewalRates,
-            'client_satisfaction' => $this->getClientSatisfactionMetrics($companyId, $startDate, $endDate),
+            'client_satisfaction' => $this->getClientSatisfactionMetrics($companyId, $startDate),
         ];
     }
 
@@ -472,7 +472,7 @@ class ContractAnalyticsService
         return [];
     }
 
-    protected function getClientSatisfactionMetrics(int $companyId, Carbon $startDate, Carbon $endDate): array
+    protected function getClientSatisfactionMetrics(int $companyId, Carbon $startDate): array
     {
         return [];
     }
