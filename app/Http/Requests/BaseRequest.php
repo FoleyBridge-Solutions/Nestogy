@@ -7,6 +7,8 @@ use Illuminate\Validation\Rule;
 
 abstract class BaseRequest extends FormRequest
 {
+    protected const NULLABLE_DATE_RULE = 'nullable|date';
+
     protected function getClientValidationRule(): array
     {
         return [
@@ -79,10 +81,10 @@ abstract class BaseRequest extends FormRequest
     protected function getStandardDateRules(): array
     {
         return [
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'due_date' => 'nullable|date',
-            'scheduled_at' => 'nullable|date',
+            'start_date' => self::NULLABLE_DATE_RULE,
+            'end_date' => self::NULLABLE_DATE_RULE.'|after_or_equal:start_date',
+            'due_date' => self::NULLABLE_DATE_RULE,
+            'scheduled_at' => self::NULLABLE_DATE_RULE,
         ];
     }
 
