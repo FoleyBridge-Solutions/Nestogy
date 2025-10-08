@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class BaseQuoteRequest extends FormRequest
 {
+    protected const NULLABLE_BOOLEAN = 'nullable|boolean';
+
     /**
      * Get common validation rules for quote operations.
      */
@@ -42,7 +44,7 @@ abstract class BaseQuoteRequest extends FormRequest
             'terms_conditions' => 'nullable|string',
 
             // Auto-renewal settings
-            'auto_renew' => 'nullable|boolean',
+            'auto_renew' => self::NULLABLE_BOOLEAN,
             'auto_renew_days' => 'nullable|integer|min:1|max:365|required_if:auto_renew,true',
 
             // Template and VoIP configuration
@@ -51,10 +53,10 @@ abstract class BaseQuoteRequest extends FormRequest
             'voip_config.extensions' => 'nullable|integer|min:1|max:1000',
             'voip_config.concurrent_calls' => 'nullable|integer|min:1|max:500',
             'voip_config.features' => 'nullable|array',
-            'voip_config.features.voicemail' => 'nullable|boolean',
-            'voip_config.features.call_forwarding' => 'nullable|boolean',
-            'voip_config.features.conference_calling' => 'nullable|boolean',
-            'voip_config.features.auto_attendant' => 'nullable|boolean',
+            'voip_config.features.voicemail' => self::NULLABLE_BOOLEAN,
+            'voip_config.features.call_forwarding' => self::NULLABLE_BOOLEAN,
+            'voip_config.features.conference_calling' => self::NULLABLE_BOOLEAN,
+            'voip_config.features.auto_attendant' => self::NULLABLE_BOOLEAN,
             'voip_config.equipment' => 'nullable|array',
             'voip_config.equipment.desk_phones' => 'nullable|integer|min:0|max:1000',
             'voip_config.equipment.wireless_phones' => 'nullable|integer|min:0|max:1000',
