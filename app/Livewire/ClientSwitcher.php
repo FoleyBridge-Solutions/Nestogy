@@ -433,13 +433,10 @@ class ClientSwitcher extends Component
         }
 
         $client = Client::find($clientId);
-        if (! $client) {
-            $favoriteCache[$cacheKey] = false;
-
-            return false;
-        }
-
-        $isFavorite = $this->getFavoriteService()->isFavorite($this->getUser(), $client);
+        $isFavorite = $client 
+            ? $this->getFavoriteService()->isFavorite($this->getUser(), $client)
+            : false;
+        
         $favoriteCache[$cacheKey] = $isFavorite;
 
         return $isFavorite;
