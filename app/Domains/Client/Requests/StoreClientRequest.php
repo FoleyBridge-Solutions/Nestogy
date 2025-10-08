@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 
 class StoreClientRequest extends BaseFormRequest
 {
+    private const VALIDATION_NULLABLE_STRING_MAX_50 = 'nullable|string|max:50';
+
     protected function initializeRequest(): void
     {
         $this->modelClass = Client::class;
@@ -24,7 +26,7 @@ class StoreClientRequest extends BaseFormRequest
             'rate' => 'nullable|numeric|min:0|max:999999.99',
             'currency_code' => $this->getCurrencyValidationRule(),
             'net_terms' => 'nullable|integer|min:0|max:365',
-            'tax_id_number' => 'nullable|string|max:50',
+            'tax_id_number' => self::VALIDATION_NULLABLE_STRING_MAX_50,
             'rmm_id' => 'nullable|integer',
             'lead' => 'boolean',
             'hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
@@ -33,13 +35,13 @@ class StoreClientRequest extends BaseFormRequest
             'location_name' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:50',
+            'state' => self::VALIDATION_NULLABLE_STRING_MAX_50,
             'zip_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
             'location_phone' => 'nullable|string|max:20',
             'location_address' => 'nullable|string|max:255',
             'location_city' => 'nullable|string|max:100',
-            'location_state' => 'nullable|string|max:50',
+            'location_state' => self::VALIDATION_NULLABLE_STRING_MAX_50,
             'location_zip' => 'nullable|string|max:20',
             'location_country' => 'nullable|string|max:100',
 
