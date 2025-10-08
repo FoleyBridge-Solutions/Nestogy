@@ -172,7 +172,7 @@
                             <div class="p-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sync Interval</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sync Interval</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->sync_interval_minutes }} minutes</p>
                                     </div>
                                     <div>
