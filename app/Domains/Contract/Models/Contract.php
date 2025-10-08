@@ -221,6 +221,11 @@ class Contract extends Model
 
     const RENEWAL_NONE = 'none';
 
+    /**
+     * Validation rule prefix for required enum fields
+     */
+    const VALIDATION_REQUIRED_IN = 'required|in:';
+
     // Configuration cache is now handled by HasCompanyConfiguration trait
 
     /**
@@ -925,13 +930,13 @@ class Contract extends Model
         $renewalTypes = array_keys($this->getAvailableRenewalTypes($companyId));
 
         return [
-            'contract_type' => 'required|in:'.implode(',', $contractTypes ?: ['default']),
-            'status' => 'required|in:'.implode(',', $statuses ?: ['draft']),
+            'contract_type' => self::VALIDATION_REQUIRED_IN.implode(',', $contractTypes ?: ['default']),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', $statuses ?: ['draft']),
             'title' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'term_months' => 'nullable|integer|min:1|max:120',
-            'renewal_type' => 'required|in:'.implode(',', $renewalTypes ?: ['none']),
+            'renewal_type' => self::VALIDATION_REQUIRED_IN.implode(',', $renewalTypes ?: ['none']),
             'contract_value' => 'required|numeric|min:0',
             'currency_code' => 'required|string|size:3',
             'client_id' => 'required|integer|exists:clients,id',
