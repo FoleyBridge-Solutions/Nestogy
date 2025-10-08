@@ -14,6 +14,8 @@ class CalendarEventController extends Controller
 {
     use UsesSelectedClient;
 
+    private const DATETIME_FORMAT = 'Y-m-d H:i:s';
+
     /**
      * Display a listing of calendar events for the selected client
      */
@@ -338,8 +340,8 @@ class CalendarEventController extends Controller
                     $event->title,
                     $event->event_type,
                     $event->client->display_name,
-                    $event->start_datetime->format('Y-m-d H:i:s'),
-                    $event->end_datetime->format('Y-m-d H:i:s'),
+                    $event->start_datetime->format(self::DATETIME_FORMAT),
+                    $event->end_datetime->format(self::DATETIME_FORMAT),
                     $event->duration_human,
                     $event->location,
                     $event->status,
@@ -348,7 +350,7 @@ class CalendarEventController extends Controller
                     $event->all_day ? 'Yes' : 'No',
                     $event->reminder_minutes ? ClientCalendarEvent::getReminderOptions()[$event->reminder_minutes] : 'None',
                     $event->creator ? $event->creator->name : '',
-                    $event->created_at->format('Y-m-d H:i:s'),
+                    $event->created_at->format(self::DATETIME_FORMAT),
                 ]);
             }
 
