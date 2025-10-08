@@ -14,6 +14,8 @@ class NetworkController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_RULE_NULLABLE_STRING_MAX_100 = 'nullable|string|max:100';
+
     /**
      * Display a listing of networks for the selected client
      */
@@ -123,7 +125,7 @@ class NetworkController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'network_type' => 'required|in:'.implode(',', array_keys(ClientNetwork::getNetworkTypes())),
-            'ip_range' => 'nullable|string|max:100',
+            'ip_range' => self::VALIDATION_RULE_NULLABLE_STRING_MAX_100,
             'subnet_mask' => 'nullable|string|max:50',
             'gateway' => 'nullable|ip',
             'dns_servers' => 'nullable|string',
@@ -133,7 +135,7 @@ class NetworkController extends Controller
             'ssid' => 'nullable|string|max:255',
             'wifi_password' => 'nullable|string|max:255',
             'security_type' => 'nullable|in:'.implode(',', array_keys(ClientNetwork::getSecurityTypes())),
-            'bandwidth' => 'nullable|string|max:100',
+            'bandwidth' => self::VALIDATION_RULE_NULLABLE_STRING_MAX_100,
             'provider' => 'nullable|string|max:255',
             'circuit_id' => 'nullable|string|max:255',
             'static_routes' => 'nullable|string',
@@ -233,7 +235,7 @@ class NetworkController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'network_type' => 'required|in:'.implode(',', array_keys(ClientNetwork::getNetworkTypes())),
-            'ip_range' => 'nullable|string|max:100',
+            'ip_range' => self::VALIDATION_RULE_NULLABLE_STRING_MAX_100,
             'subnet_mask' => 'nullable|string|max:50',
             'gateway' => 'nullable|ip',
             'dns_servers' => 'nullable|string',
@@ -243,7 +245,7 @@ class NetworkController extends Controller
             'ssid' => 'nullable|string|max:255',
             'wifi_password' => 'nullable|string|max:255',
             'security_type' => 'nullable|in:'.implode(',', array_keys(ClientNetwork::getSecurityTypes())),
-            'bandwidth' => 'nullable|string|max:100',
+            'bandwidth' => self::VALIDATION_RULE_NULLABLE_STRING_MAX_100,
             'provider' => 'nullable|string|max:255',
             'circuit_id' => 'nullable|string|max:255',
             'static_routes' => 'nullable|string',
