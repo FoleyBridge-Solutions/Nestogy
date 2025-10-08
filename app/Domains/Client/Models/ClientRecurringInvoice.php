@@ -379,6 +379,9 @@ class ClientRecurringInvoice extends Model
             case 'custom':
                 $date->addDays($this->interval_count ?: 1);
                 break;
+            default:
+                $date->addMonths($this->interval_count ?: 1);
+                break;
         }
 
         return $date->toDate();
