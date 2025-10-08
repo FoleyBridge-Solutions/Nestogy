@@ -14,6 +14,8 @@ class NetworkController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_IP = 'nullable|ip';
+
     /**
      * Display a listing of networks for the selected client
      */
@@ -125,10 +127,10 @@ class NetworkController extends Controller
             'network_type' => 'required|in:'.implode(',', array_keys(ClientNetwork::getNetworkTypes())),
             'ip_range' => 'nullable|string|max:100',
             'subnet_mask' => 'nullable|string|max:50',
-            'gateway' => 'nullable|ip',
+            'gateway' => self::VALIDATION_NULLABLE_IP,
             'dns_servers' => 'nullable|string',
-            'dhcp_range_start' => 'nullable|ip',
-            'dhcp_range_end' => 'nullable|ip',
+            'dhcp_range_start' => self::VALIDATION_NULLABLE_IP,
+            'dhcp_range_end' => self::VALIDATION_NULLABLE_IP,
             'vlan_id' => 'nullable|integer|min:1|max:4094',
             'ssid' => 'nullable|string|max:255',
             'wifi_password' => 'nullable|string|max:255',
@@ -235,10 +237,10 @@ class NetworkController extends Controller
             'network_type' => 'required|in:'.implode(',', array_keys(ClientNetwork::getNetworkTypes())),
             'ip_range' => 'nullable|string|max:100',
             'subnet_mask' => 'nullable|string|max:50',
-            'gateway' => 'nullable|ip',
+            'gateway' => self::VALIDATION_NULLABLE_IP,
             'dns_servers' => 'nullable|string',
-            'dhcp_range_start' => 'nullable|ip',
-            'dhcp_range_end' => 'nullable|ip',
+            'dhcp_range_start' => self::VALIDATION_NULLABLE_IP,
+            'dhcp_range_end' => self::VALIDATION_NULLABLE_IP,
             'vlan_id' => 'nullable|integer|min:1|max:4094',
             'ssid' => 'nullable|string|max:255',
             'wifi_password' => 'nullable|string|max:255',
