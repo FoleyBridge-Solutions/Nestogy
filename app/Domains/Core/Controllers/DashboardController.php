@@ -148,7 +148,7 @@ class DashboardController extends Controller
                 ->count(),
 
             'open_tickets' => Ticket::where('company_id', $companyId)
-                ->whereIn('status', ['Open', 'In Progress', 'Waiting'])
+                ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS, Ticket::STATUS_WAITING])
                 ->count(),
 
             'overdue_invoices' => Invoice::where('company_id', $companyId)
@@ -224,18 +224,18 @@ class DashboardController extends Controller
 
         // Map to expected statuses
         $statusMap = [
-            'New' => 'Open',
-            'Open' => 'Open',
-            'In Progress' => 'In Progress',
-            'Waiting' => 'In Progress',
-            'Resolved' => 'Resolved',
-            'Closed' => 'Closed',
+            'New' => Ticket::STATUS_OPEN,
+            'Open' => Ticket::STATUS_OPEN,
+            'In Progress' => Ticket::STATUS_IN_PROGRESS,
+            'Waiting' => Ticket::STATUS_IN_PROGRESS,
+            'Resolved' => Ticket::STATUS_RESOLVED,
+            'Closed' => Ticket::STATUS_CLOSED,
         ];
 
-        $mappedCounts = ['Open' => 0, 'In Progress' => 0, 'Resolved' => 0, 'Closed' => 0];
+        $mappedCounts = [Ticket::STATUS_OPEN => 0, Ticket::STATUS_IN_PROGRESS => 0, Ticket::STATUS_RESOLVED => 0, Ticket::STATUS_CLOSED => 0];
 
         foreach ($statusCounts as $status => $count) {
-            $mappedStatus = $statusMap[$status] ?? 'Open';
+            $mappedStatus = $statusMap[$status] ?? Ticket::STATUS_OPEN;
             $mappedCounts[$mappedStatus] += $count;
         }
 
@@ -602,7 +602,7 @@ class DashboardController extends Controller
     {
         $urgentTickets = Ticket::where($baseQuery)
             ->whereIn('priority', ['Critical', 'High'])
-            ->whereIn('status', ['Open', 'In Progress'])
+            ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
             ->with(['client', 'assignee'])
             ->orderBy('priority')
             ->orderBy('created_at')
@@ -619,7 +619,7 @@ class DashboardController extends Controller
 
         // Check for tickets that have been open for more than 24 hours (simplified SLA check)
         $slaBreaches = Ticket::where($baseQuery)
-            ->whereIn('status', ['Open', 'In Progress'])
+            ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
             ->where('created_at', '<', now()->subHours(24))
             ->with(['client', 'assignee'])
             ->orderBy('created_at')
@@ -628,7 +628,7 @@ class DashboardController extends Controller
 
         // Get escalation data - tickets approaching SLA breach
         $escalations = Ticket::where($baseQuery)
-            ->whereIn('status', ['Open', 'In Progress'])
+            ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
             ->whereBetween('created_at', [now()->subHours(23), now()->subHours(20)])
             ->with(['client', 'assignee'])
             ->orderBy('created_at')
@@ -637,7 +637,7 @@ class DashboardController extends Controller
         // Get team workload
         $teamWorkload = User::where('company_id', $userContext->company_id)
             ->withCount(['assignedTickets as active_tickets' => function ($query) {
-                $query->whereIn('status', ['Open', 'In Progress']);
+                $query->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS]);
             }])
             ->orderBy('active_tickets', 'desc')
             ->limit(10)
@@ -647,11 +647,11 @@ class DashboardController extends Controller
         $clientImpact = Client::where('company_id', $userContext->company_id)
             ->whereHas('tickets', function ($query) {
                 $query->whereIn('priority', ['Critical', 'High'])
-                    ->whereIn('status', ['Open', 'In Progress']);
+                    ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS]);
             })
             ->withCount(['tickets as critical_tickets' => function ($query) {
                 $query->whereIn('priority', ['Critical', 'High'])
-                    ->whereIn('status', ['Open', 'In Progress']);
+                    ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS]);
             }])
             ->orderBy('critical_tickets', 'desc')
             ->limit(10)
@@ -731,7 +731,7 @@ class DashboardController extends Controller
         if ($userContext->isTech || $userContext->isAdmin) {
             $myAssignedTickets = Ticket::where($baseQuery)
                 ->where('assigned_to', $userContext->id)
-                ->whereIn('status', ['Open', 'In Progress'])
+                ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
                 ->with(['client'])
                 ->orderBy('priority')
                 ->orderBy('created_at')
@@ -741,7 +741,7 @@ class DashboardController extends Controller
         // Get team availability
         $teamAvailability = User::where('company_id', $userContext->company_id)
             ->withCount(['assignedTickets as today_tickets' => function ($query) use ($today, $endOfDay) {
-                $query->whereIn('status', ['Open', 'In Progress'])
+                $query->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
                     ->whereBetween('scheduled_at', [$today, $endOfDay]);
             }])
             ->get()
@@ -1145,7 +1145,7 @@ class DashboardController extends Controller
             ],
             'open_tickets' => [
                 'label' => 'Open Tickets',
-                'value' => Ticket::where($baseQuery)->whereIn('status', ['Open', 'In Progress'])->count(),
+                'value' => Ticket::where($baseQuery)->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])->count(),
                 'format' => 'number',
                 'icon' => 'ticket',
                 'trend' => 'down',
@@ -1179,7 +1179,7 @@ class DashboardController extends Controller
         return [
             'my_open_tickets' => [
                 'label' => 'My Open Tickets',
-                'value' => Ticket::where($baseQuery)->where('assigned_to', $userId)->whereIn('status', ['Open', 'In Progress'])->count(),
+                'value' => Ticket::where($baseQuery)->where('assigned_to', $userId)->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])->count(),
                 'format' => 'number',
                 'icon' => 'user',
                 'trend' => 'stable',
@@ -1274,7 +1274,7 @@ class DashboardController extends Controller
         return [
             'open_tickets' => [
                 'label' => 'Open Tickets',
-                'value' => Ticket::where($baseQuery)->whereIn('status', ['Open', 'In Progress'])->count(),
+                'value' => Ticket::where($baseQuery)->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])->count(),
                 'format' => 'number',
                 'icon' => 'ticket',
                 'trend' => 'stable',
@@ -1354,7 +1354,7 @@ class DashboardController extends Controller
                 // Critical ticket alerts
                 $criticalTickets = Ticket::where($baseQuery)
                     ->where('priority', 'Critical')
-                    ->whereIn('status', ['Open', 'In Progress'])
+                    ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
                     ->count();
 
                 if ($criticalTickets > 0) {
