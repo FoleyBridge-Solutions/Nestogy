@@ -7,6 +7,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateServiceRequest extends FormRequest
 {
+    private const NULLABLE_INTEGER_MIN_ZERO = 'nullable|integer|min:0';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -55,13 +57,13 @@ class UpdateServiceRequest extends FormRequest
 
             // Optional service fields
             'track_inventory' => 'boolean',
-            'current_stock' => 'nullable|integer|min:0',
-            'min_stock_level' => 'nullable|integer|min:0',
+            'current_stock' => self::NULLABLE_INTEGER_MIN_ZERO,
+            'min_stock_level' => self::NULLABLE_INTEGER_MIN_ZERO,
             'max_quantity_per_order' => 'nullable|integer|min:1',
-            'reorder_level' => 'nullable|integer|min:0',
+            'reorder_level' => self::NULLABLE_INTEGER_MIN_ZERO,
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0',
+            'sort_order' => self::NULLABLE_INTEGER_MIN_ZERO,
             'short_description' => 'nullable|string|max:500',
 
             // Legacy/compatibility fields
