@@ -14,6 +14,8 @@ class DomainController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of domains for the selected client
      */
@@ -119,15 +121,15 @@ class DomainController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'domain_name' => 'required|string|max:255',
             'tld' => 'required|string|max:20',
             'registrar' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getRegistrars())),
-            'registrar_account' => 'nullable|string|max:255',
+            'registrar_account' => self::NULLABLE_STRING.'|max:255',
             'registrar_url' => 'nullable|url',
-            'nameservers' => 'nullable|string',
+            'nameservers' => self::NULLABLE_STRING,
             'dns_provider' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getDnsProviders())),
-            'dns_account' => 'nullable|string|max:255',
+            'dns_account' => self::NULLABLE_STRING.'|max:255',
             'registered_at' => 'nullable|date|before_or_equal:today',
             'expires_at' => 'required|date|after:registered_at',
             'renewal_date' => 'nullable|date|before:expires_at',
@@ -140,11 +142,11 @@ class DomainController extends Controller
             'transfer_lock' => 'boolean',
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
-            'transfer_auth_code' => 'nullable|string|max:255',
+            'transfer_auth_code' => self::NULLABLE_STRING.'|max:255',
             'dns_records_count' => 'nullable|integer|min:0',
             'subdomains_count' => 'nullable|integer|min:0',
             'email_forwards_count' => 'nullable|integer|min:0',
-            'notes' => 'nullable|string',
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -248,15 +250,15 @@ class DomainController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'domain_name' => 'required|string|max:255',
             'tld' => 'required|string|max:20',
             'registrar' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getRegistrars())),
-            'registrar_account' => 'nullable|string|max:255',
+            'registrar_account' => self::NULLABLE_STRING.'|max:255',
             'registrar_url' => 'nullable|url',
-            'nameservers' => 'nullable|string',
+            'nameservers' => self::NULLABLE_STRING,
             'dns_provider' => 'nullable|in:'.implode(',', array_keys(ClientDomain::getDnsProviders())),
-            'dns_account' => 'nullable|string|max:255',
+            'dns_account' => self::NULLABLE_STRING.'|max:255',
             'registered_at' => 'nullable|date|before_or_equal:today',
             'expires_at' => 'required|date|after:registered_at',
             'renewal_date' => 'nullable|date|before:expires_at',
@@ -269,11 +271,11 @@ class DomainController extends Controller
             'transfer_lock' => 'boolean',
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
-            'transfer_auth_code' => 'nullable|string|max:255',
+            'transfer_auth_code' => self::NULLABLE_STRING.'|max:255',
             'dns_records_count' => 'nullable|integer|min:0',
             'subdomains_count' => 'nullable|integer|min:0',
             'email_forwards_count' => 'nullable|integer|min:0',
-            'notes' => 'nullable|string',
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
