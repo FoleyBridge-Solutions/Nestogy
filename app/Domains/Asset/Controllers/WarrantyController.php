@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class WarrantyController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of all warranty records (standalone view)
      */
@@ -109,8 +111,8 @@ class WarrantyController extends Controller
             'warranty_end_date' => 'required|date|after:warranty_start_date',
             'warranty_provider' => 'required|string|max:255',
             'warranty_type' => 'required|in:manufacturer,extended,third_party,service_contract',
-            'terms' => 'nullable|string',
-            'coverage_details' => 'nullable|string',
+            'terms' => self::VALIDATION_NULLABLE_STRING,
+            'coverage_details' => self::VALIDATION_NULLABLE_STRING,
             'vendor_id' => [
                 'nullable',
                 'exists:vendors,id',
@@ -124,7 +126,7 @@ class WarrantyController extends Controller
             'contact_email' => 'nullable|email',
             'contact_phone' => 'nullable|string|max:50',
             'reference_number' => 'nullable|string|max:100',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
             'status' => 'required|in:active,expired,cancelled,pending',
         ]);
 
@@ -191,8 +193,8 @@ class WarrantyController extends Controller
             'warranty_end_date' => 'required|date|after:warranty_start_date',
             'warranty_provider' => 'required|string|max:255',
             'warranty_type' => 'required|in:manufacturer,extended,third_party,service_contract',
-            'terms' => 'nullable|string',
-            'coverage_details' => 'nullable|string',
+            'terms' => self::VALIDATION_NULLABLE_STRING,
+            'coverage_details' => self::VALIDATION_NULLABLE_STRING,
             'vendor_id' => [
                 'nullable',
                 'exists:vendors,id',
@@ -206,7 +208,7 @@ class WarrantyController extends Controller
             'contact_email' => 'nullable|email',
             'contact_phone' => 'nullable|string|max:50',
             'reference_number' => 'nullable|string|max:100',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
             'status' => 'required|in:active,expired,cancelled,pending',
         ]);
 
