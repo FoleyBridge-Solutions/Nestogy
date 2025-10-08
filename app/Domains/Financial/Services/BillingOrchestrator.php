@@ -141,7 +141,7 @@ class BillingOrchestrator
 
         // Calculate setup fees
         if ($service->has_setup_fee) {
-            $setupFees = $this->calculateServiceSetupFees($service, $client);
+            $setupFees = $this->calculateServiceSetupFees($service);
             $fees['setup_fees'] = $setupFees['fees'];
             $fees['total_setup_cost'] = $setupFees['total_setup_cost'];
         }
@@ -396,7 +396,7 @@ class BillingOrchestrator
     }
 
     // Legacy methods for backward compatibility
-    protected function calculateServiceSetupFees(Service $service, ?Client $client = null): array
+    protected function calculateServiceSetupFees(Service $service): array
     {
         // Implementation from original BillingService
         return ['fees' => [], 'total_setup_cost' => 0];
