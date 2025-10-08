@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class TicketingServiceDeskSettingsRequest extends FormRequest
 {
+    private const PERCENTAGE_VALIDATION_RULE = 'integer|min:1|max:100';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -94,12 +96,12 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'auto_assignment_rules.consider_skills' => 'boolean',
             'auto_assignment_rules.consider_workload' => 'boolean',
             'auto_assignment_rules.fallback_assignee' => 'nullable|integer|exists:users,id',
-            'auto_assignment_rules.max_tickets_per_user' => 'integer|min:1|max:100',
-            'auto_assignment_rules.skill_matching_threshold' => 'integer|min:1|max:100',
+            'auto_assignment_rules.max_tickets_per_user' => self::PERCENTAGE_VALIDATION_RULE,
+            'auto_assignment_rules.skill_matching_threshold' => self::PERCENTAGE_VALIDATION_RULE,
             'auto_assignment_rules.assignment_rules' => 'nullable|array',
             'auto_assignment_rules.assignment_rules.*.condition' => 'string|max:255',
             'auto_assignment_rules.assignment_rules.*.assignee_id' => 'integer|exists:users,id',
-            'auto_assignment_rules.assignment_rules.*.priority' => 'integer|min:1|max:100',
+            'auto_assignment_rules.assignment_rules.*.priority' => self::PERCENTAGE_VALIDATION_RULE,
 
             // Routing Logic
             'routing_logic' => 'nullable|array',
@@ -114,7 +116,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'routing_logic.routing_rules.*.name' => 'string|max:100',
             'routing_logic.routing_rules.*.conditions' => 'array',
             'routing_logic.routing_rules.*.actions' => 'array',
-            'routing_logic.routing_rules.*.priority' => 'integer|min:1|max:100',
+            'routing_logic.routing_rules.*.priority' => self::PERCENTAGE_VALIDATION_RULE,
             'routing_logic.routing_rules.*.enabled' => 'boolean',
 
             // Approval Workflows
@@ -188,7 +190,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_automation_rules.rules.*.conditions' => 'array',
             'ticket_automation_rules.rules.*.actions' => 'array',
             'ticket_automation_rules.rules.*.enabled' => 'boolean',
-            'ticket_automation_rules.rules.*.priority' => 'integer|min:1|max:100',
+            'ticket_automation_rules.rules.*.priority' => self::PERCENTAGE_VALIDATION_RULE,
 
             // Multi-channel Settings
             'multichannel_settings' => 'nullable|array',
