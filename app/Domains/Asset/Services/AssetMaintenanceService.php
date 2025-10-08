@@ -230,7 +230,7 @@ class AssetMaintenanceService
 
         try {
             // 1. System status check
-            $statusResult = $this->checkSystemStatus($asset);
+            $statusResult = $this->checkSystemStatus();
             $results['system_status'] = $statusResult;
 
             // 2. Hardware health check
@@ -578,7 +578,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function checkSystemStatus(Asset $asset): array
+    protected function checkSystemStatus(): array
     {
         return ['success' => true];
     }
