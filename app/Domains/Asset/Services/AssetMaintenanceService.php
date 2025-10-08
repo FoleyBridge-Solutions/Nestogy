@@ -288,7 +288,7 @@ class AssetMaintenanceService
             $results['browser_caches'] = $browserResult;
 
             // 3. System logs rotation
-            $logsResult = $this->rotateSystemLogs($asset);
+            $logsResult = $this->rotateSystemLogs();
             $results['log_rotation'] = $logsResult;
 
             // 4. Recycle bin cleanup
@@ -618,7 +618,7 @@ class AssetMaintenanceService
         return ['success' => true, 'space_freed' => '500 MB'];
     }
 
-    protected function rotateSystemLogs(Asset $asset): array
+    protected function rotateSystemLogs(): array
     {
         return ['success' => true];
     }
