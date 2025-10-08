@@ -14,7 +14,7 @@ class SidebarServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Register the SidebarConfigProvider as a singleton
-        $this->app->singleton(SidebarConfigProvider::class, function ($app) {
+        $this->app->singleton(SidebarConfigProvider::class, function () {
             return new SidebarConfigProvider;
         });
     }
