@@ -511,7 +511,26 @@ class TripController extends Controller
                 $q->where('company_id', auth()->user()->company_id);
             });
 
-        // Apply same filters as index
+        $this->applyExportFilters($query, $request);
+
+        $trips = $query->orderBy('start_date', 'desc')->get();
+
+        $filename = 'trips_'.date('Y-m-d_H-i-s').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        return response()->stream(
+            fn() => $this->generateCsvOutput($trips),
+            200,
+            $headers
+        );
+    }
+
+    private function applyExportFilters($query, Request $request)
+    {
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('trip_number', 'like', "%{$search}%")
@@ -526,64 +545,52 @@ class TripController extends Controller
         if ($clientId = $request->get('client_id')) {
             $query->where('client_id', $clientId);
         }
+    }
 
-        $trips = $query->orderBy('start_date', 'desc')->get();
+    private function generateCsvOutput($trips)
+    {
+        $file = fopen('php://output', 'w');
 
-        $filename = 'trips_'.date('Y-m-d_H-i-s').'.csv';
+        fputcsv($file, [
+            'Trip Number',
+            'Title',
+            'Client Name',
+            'Destination',
+            'Start Date',
+            'End Date',
+            'Duration (Days)',
+            'Status',
+            'Trip Type',
+            'Transportation',
+            'Estimated Expenses',
+            'Actual Expenses',
+            'Currency',
+            'Billable',
+            'Reimbursable',
+            'Created At',
+        ]);
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
-
-        $callback = function () use ($trips) {
-            $file = fopen('php://output', 'w');
-
-            // CSV headers
+        foreach ($trips as $trip) {
             fputcsv($file, [
-                'Trip Number',
-                'Title',
-                'Client Name',
-                'Destination',
-                'Start Date',
-                'End Date',
-                'Duration (Days)',
-                'Status',
-                'Trip Type',
-                'Transportation',
-                'Estimated Expenses',
-                'Actual Expenses',
-                'Currency',
-                'Billable',
-                'Reimbursable',
-                'Created At',
+                $trip->trip_number,
+                $trip->title,
+                $trip->client->display_name,
+                $trip->formatted_destination,
+                $trip->start_date->format('Y-m-d'),
+                $trip->end_date->format('Y-m-d'),
+                $trip->duration_in_days,
+                $trip->status,
+                $trip->trip_type,
+                $trip->transportation_mode,
+                $trip->estimated_expenses ?: 0,
+                $trip->actual_expenses ?: 0,
+                $trip->currency,
+                $trip->billable_to_client ? 'Yes' : 'No',
+                $trip->reimbursable ? 'Yes' : 'No',
+                $trip->created_at->format('Y-m-d H:i:s'),
             ]);
+        }
 
-            // CSV data
-            foreach ($trips as $trip) {
-                fputcsv($file, [
-                    $trip->trip_number,
-                    $trip->title,
-                    $trip->client->display_name,
-                    $trip->formatted_destination,
-                    $trip->start_date->format('Y-m-d'),
-                    $trip->end_date->format('Y-m-d'),
-                    $trip->duration_in_days,
-                    $trip->status,
-                    $trip->trip_type,
-                    $trip->transportation_mode,
-                    $trip->estimated_expenses ?: 0,
-                    $trip->actual_expenses ?: 0,
-                    $trip->currency,
-                    $trip->billable_to_client ? 'Yes' : 'No',
-                    $trip->reimbursable ? 'Yes' : 'No',
-                    $trip->created_at->format('Y-m-d H:i:s'),
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        fclose($file);
     }
 }
