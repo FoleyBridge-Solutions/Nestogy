@@ -31,6 +31,8 @@ class LoginController extends Controller
      */
     protected $redirectTo = '/dashboard';
 
+    protected const RATE_LIMIT_TIMER_SUFFIX = ':timer';
+
     protected SuspiciousLoginService $suspiciousLoginService;
 
     protected IpLookupService $ipLookupService;
@@ -354,14 +356,14 @@ class LoginController extends Controller
         $attempts = cache()->get($key, 0);
 
         if ($attempts >= 10) { // 10 attempts per hour per IP
-            $remainingMinutes = cache()->get($key.':timer', 0) - time();
+            $remainingMinutes = cache()->get($key.self::RATE_LIMIT_TIMER_SUFFIX, 0) - time();
             if ($remainingMinutes > 0) {
                 throw ValidationException::withMessages([
                     'email' => ['Too many login attempts. Please try again later.'],
                 ]);
             } else {
                 cache()->forget($key);
-                cache()->forget($key.':timer');
+                cache()->forget($key.self::RATE_LIMIT_TIMER_SUFFIX);
             }
         }
     }
@@ -396,7 +398,7 @@ class LoginController extends Controller
         cache()->put($key, $attempts, now()->addHour());
 
         if ($attempts >= 10) {
-            cache()->put($key.':timer', time() + 3600, now()->addHour()); // 1 hour lockout
+            cache()->put($key.self::RATE_LIMIT_TIMER_SUFFIX, time() + 3600, now()->addHour()); // 1 hour lockout
         }
     }
 
@@ -410,7 +412,7 @@ class LoginController extends Controller
     {
         $key = 'login_attempts:'.$request->ip();
         cache()->forget($key);
-        cache()->forget($key.':timer');
+        cache()->forget($key.self::RATE_LIMIT_TIMER_SUFFIX);
     }
 
     /**
