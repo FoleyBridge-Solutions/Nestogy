@@ -251,7 +251,7 @@ class ComplianceService
 
         // Check interest rate limits
         if (isset($stateRules['max_interest_rate'])) {
-            $interestCheck = $this->checkInterestRateCompliance($client, $stateRules['max_interest_rate']);
+            $interestCheck = $this->checkInterestRateCompliance($stateRules['max_interest_rate']);
             if ($interestCheck['violation']) {
                 $compliance['violations'][] = $interestCheck['details'];
             }
@@ -739,7 +739,7 @@ NESTOGY COLLECTIONS DEPARTMENT
         return ['violations' => false];
     }
 
-    protected function checkInterestRateCompliance(Client $client, float $maxRate): array
+    protected function checkInterestRateCompliance(float $maxRate): array
     {
         return ['violation' => false];
     }
