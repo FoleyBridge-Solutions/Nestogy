@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Domains\Ticket\Exceptions\TimerNotFoundException;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Domains\Ticket\Services\TimeTrackingService;
@@ -159,7 +160,7 @@ class NavbarTimer extends Component
         try {
             $timer = TicketTimeEntry::find($timerId);
             if (! $timer) {
-                throw new \Exception('Timer not found');
+                throw new TimerNotFoundException($timerId);
             }
 
             $service = app(TimeTrackingService::class);
@@ -183,7 +184,7 @@ class NavbarTimer extends Component
         try {
             $timer = TicketTimeEntry::find($timerId);
             if (! $timer) {
-                throw new \Exception('Timer not found');
+                throw new TimerNotFoundException($timerId);
             }
 
             $service = app(TimeTrackingService::class);

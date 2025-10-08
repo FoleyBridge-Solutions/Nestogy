@@ -162,6 +162,17 @@ class TicketTimeTrackingException extends TicketException
 }
 
 /**
+ * Timer Not Found Exception
+ */
+class TimerNotFoundException extends BaseNotFoundException
+{
+    public function __construct(mixed $timerId = null, array $context = [])
+    {
+        parent::__construct('Timer', $timerId, $context);
+    }
+}
+
+/**
  * Ticket Workflow Exception
  */
 class TicketWorkflowException extends TicketBusinessException
