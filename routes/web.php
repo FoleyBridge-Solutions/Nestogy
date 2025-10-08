@@ -130,25 +130,27 @@ Route::post('/switch-company', [\App\Http\Middleware\SubsidiaryAccessMiddleware:
 // Subsidiary Management Routes
 Route::middleware(['auth', 'verified', 'subsidiary.access'])->group(function () {
     Route::prefix('subsidiaries')->name('subsidiaries.')->group(function () {
+        const SUBSIDIARY_PARAM = '/{subsidiary}';
+        
         // Main subsidiary management
         Route::get('/', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'index'])->name('index');
         Route::get('/create', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'create'])->name('create');
         Route::post('/', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'store'])->name('store');
-        Route::get('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'show'])->name('show');
-        Route::get('/{subsidiary}/edit', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'edit'])->name('edit');
-        Route::put('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'update'])->name('update');
-        Route::delete('/{subsidiary}', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'destroy'])->name('destroy');
+        Route::get(SUBSIDIARY_PARAM, [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'show'])->name('show');
+        Route::get(SUBSIDIARY_PARAM.'/edit', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'edit'])->name('edit');
+        Route::put(SUBSIDIARY_PARAM, [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'update'])->name('update');
+        Route::delete(SUBSIDIARY_PARAM, [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'destroy'])->name('destroy');
 
         // Hierarchy visualization
         Route::get('/hierarchy/tree', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'hierarchyTree'])->name('hierarchy.tree');
 
         // Permission management
-        Route::get('/{subsidiary}/permissions', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'permissions'])->name('permissions');
+        Route::get(SUBSIDIARY_PARAM.'/permissions', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'permissions'])->name('permissions');
         Route::post('/permissions/grant', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'grantPermission'])->name('grant-permission');
         Route::delete('/permissions/{permission}/revoke', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'revokePermission'])->name('revoke-permission');
 
         // User management
-        Route::get('/{subsidiary}/users', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'users'])->name('users');
+        Route::get(SUBSIDIARY_PARAM.'/users', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'users'])->name('users');
         Route::post('/users/grant-access', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'grantUserAccess'])->name('grant-user-access');
         Route::delete('/users/{crossCompanyUser}/revoke', [\App\Domains\Client\Controllers\SubsidiaryManagementController::class, 'revokeUserAccess'])->name('revoke-user-access');
     });
