@@ -190,7 +190,24 @@ class ProcessContractRenewals extends Command
      */
     protected function processCompany(Company $company, bool $isDryRun, array $notificationDays, bool $verboseLogging): array
     {
-        $results = [
+        $results = $this->initializeResults();
+
+        try {
+            $this->processRenewals($company, $isDryRun, $verboseLogging, $results);
+            $this->processNotifications($company, $notificationDays, $verboseLogging, $results);
+        } catch (\Exception $e) {
+            $this->handleProcessingError($company, $e, $results);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Initialize results array
+     */
+    protected function initializeResults(): array
+    {
+        return [
             'contracts_checked' => 0,
             'renewed' => 0,
             'escalated' => 0,
@@ -201,79 +218,124 @@ class ProcessContractRenewals extends Command
             'revenue_impact' => 0,
             'errors' => [],
         ];
+    }
 
-        try {
-            // Process auto-renewals with price escalation
-            $renewalResults = $this->contractService->processAutoRenewals($company, $isDryRun);
+    /**
+     * Process auto-renewals for a company
+     */
+    protected function processRenewals(Company $company, bool $isDryRun, bool $verboseLogging, array &$results): void
+    {
+        $renewalResults = $this->contractService->processAutoRenewals($company, $isDryRun);
 
-            foreach ($renewalResults as $result) {
-                $results['contracts_checked']++;
+        foreach ($renewalResults as $result) {
+            $results['contracts_checked']++;
 
-                if ($result['status'] === 'renewed' || ($isDryRun && $result['dry_run'])) {
-                    $results['renewed']++;
-
-                    // Track escalation
-                    if ($result['new_value'] > $result['original_value']) {
-                        $results['escalated']++;
-                        $results['revenue_impact'] += ($result['new_value'] - $result['original_value']);
-                    }
-
-                    if ($verboseLogging) {
-                        $this->info("  ✓ Renewed contract {$result['contract_id']}: \${$result['original_value']} → \${$result['new_value']}");
-                    }
-                } elseif ($result['status'] === 'failed') {
-                    $results['failed']++;
-                    $results['errors'][] = [
-                        'company_id' => $company->id,
-                        'contract_id' => $result['contract_id'],
-                        'error' => $result['error'] ?? 'Unknown error',
-                    ];
-
-                    if ($verboseLogging) {
-                        $this->error("  ✗ Failed to renew contract {$result['contract_id']}");
-                    }
-                }
+            if ($this->isRenewalSuccessful($result, $isDryRun)) {
+                $this->handleSuccessfulRenewal($result, $company, $verboseLogging, $results);
+            } elseif ($result['status'] === 'failed') {
+                $this->handleFailedRenewal($result, $company, $verboseLogging, $results);
             }
+        }
+    }
 
-            // Send renewal notifications at specified intervals
-            foreach ($notificationDays as $days) {
-                $days = (int) trim($days);
-                $notificationResults = $this->contractService->sendRenewalNotifications($days, $company);
+    /**
+     * Check if renewal was successful
+     */
+    protected function isRenewalSuccessful(array $result, bool $isDryRun): bool
+    {
+        return $result['status'] === 'renewed' || ($isDryRun && $result['dry_run']);
+    }
 
-                foreach ($notificationResults as $notification) {
-                    if ($notification['status'] === 'sent') {
-                        // Track by interval
-                        switch ($days) {
-                            case 90:
-                                $results['notifications_90']++;
-                                break;
-                            case 60:
-                                $results['notifications_60']++;
-                                break;
-                            case self::DEFAULT_TIMEOUT:
-                                $results['notifications_30']++;
-                                break;
-                            default:
-                                // No action needed
-                                break;
-                        }
+    /**
+     * Handle successful renewal
+     */
+    protected function handleSuccessfulRenewal(array $result, Company $company, bool $verboseLogging, array &$results): void
+    {
+        $results['renewed']++;
 
-                        if ($verboseLogging) {
-                            $this->info("  ✉ Sent {$days}-day notification for contract {$notification['contract_id']} to {$notification['recipient']}");
-                        }
-                    }
-                }
-            }
-
-        } catch (\Exception $e) {
-            $results['errors'][] = [
-                'company_id' => $company->id,
-                'error' => $e->getMessage(),
-            ];
-            $this->error("  Error processing company {$company->id}: ".$e->getMessage());
+        if ($result['new_value'] > $result['original_value']) {
+            $results['escalated']++;
+            $results['revenue_impact'] += ($result['new_value'] - $result['original_value']);
         }
 
-        return $results;
+        if ($verboseLogging) {
+            $this->info("  ✓ Renewed contract {$result['contract_id']}: \${$result['original_value']} → \${$result['new_value']}");
+        }
+    }
+
+    /**
+     * Handle failed renewal
+     */
+    protected function handleFailedRenewal(array $result, Company $company, bool $verboseLogging, array &$results): void
+    {
+        $results['failed']++;
+        $results['errors'][] = [
+            'company_id' => $company->id,
+            'contract_id' => $result['contract_id'],
+            'error' => $result['error'] ?? 'Unknown error',
+        ];
+
+        if ($verboseLogging) {
+            $this->error("  ✗ Failed to renew contract {$result['contract_id']}");
+        }
+    }
+
+    /**
+     * Process renewal notifications for a company
+     */
+    protected function processNotifications(Company $company, array $notificationDays, bool $verboseLogging, array &$results): void
+    {
+        foreach ($notificationDays as $days) {
+            $days = (int) trim($days);
+            $notificationResults = $this->contractService->sendRenewalNotifications($days, $company);
+
+            foreach ($notificationResults as $notification) {
+                if ($notification['status'] === 'sent') {
+                    $this->trackNotification($days, $results);
+                    $this->logNotification($notification, $days, $verboseLogging);
+                }
+            }
+        }
+    }
+
+    /**
+     * Track notification by interval
+     */
+    protected function trackNotification(int $days, array &$results): void
+    {
+        switch ($days) {
+            case 90:
+                $results['notifications_90']++;
+                break;
+            case 60:
+                $results['notifications_60']++;
+                break;
+            case self::DEFAULT_TIMEOUT:
+                $results['notifications_30']++;
+                break;
+        }
+    }
+
+    /**
+     * Log notification if verbose logging is enabled
+     */
+    protected function logNotification(array $notification, int $days, bool $verboseLogging): void
+    {
+        if ($verboseLogging) {
+            $this->info("  ✉ Sent {$days}-day notification for contract {$notification['contract_id']} to {$notification['recipient']}");
+        }
+    }
+
+    /**
+     * Handle processing error
+     */
+    protected function handleProcessingError(Company $company, \Exception $e, array &$results): void
+    {
+        $results['errors'][] = [
+            'company_id' => $company->id,
+            'error' => $e->getMessage(),
+        ];
+        $this->error("  Error processing company {$company->id}: ".$e->getMessage());
     }
 
     /**
