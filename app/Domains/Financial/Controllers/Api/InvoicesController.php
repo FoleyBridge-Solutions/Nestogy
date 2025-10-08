@@ -258,7 +258,6 @@ class InvoicesController extends Controller
      */
     public function update(Request $request, Invoice $invoice): JsonResponse
     {
-        // Ensure user has access to this invoice
         if ($invoice->company_id !== auth()->user()->company_id) {
             return response()->json([
                 'success' => false,
@@ -266,7 +265,6 @@ class InvoicesController extends Controller
             ], 403);
         }
 
-        // Cannot edit paid or cancelled invoices
         if (in_array($invoice->status, ['paid', 'cancelled'])) {
             return response()->json([
                 'success' => false,
@@ -291,84 +289,12 @@ class InvoicesController extends Controller
 
             $oldStatus = $invoice->status;
 
-            // If items are being updated, recalculate totals
             if ($request->has('items')) {
-                $itemsValidated = $request->validate([
-                    'items' => 'required|array|min:1',
-                    'items.*.id' => 'nullable|exists:invoice_items,id',
-                    'items.*.description' => 'required|string',
-                    'items.*.quantity' => 'required|numeric|min:0',
-                    'items.*.rate' => 'required|numeric|min:0',
-                    'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
-                ]);
-
-                // Delete existing items
-                $invoice->items()->delete();
-
-                // Calculate new totals
-                $subtotal = 0;
-                $taxTotal = 0;
-
-                foreach ($itemsValidated['items'] as $item) {
-                    $itemTotal = $item['quantity'] * $item['rate'];
-                    $subtotal += $itemTotal;
-
-                    if (isset($item['tax_rate'])) {
-                        $taxTotal += $itemTotal * ($item['tax_rate'] / 100);
-                    }
-
-                    $itemTax = isset($item['tax_rate'])
-                        ? $itemTotal * ($item['tax_rate'] / 100)
-                        : 0;
-
-                    InvoiceItem::create([
-                        'invoice_id' => $invoice->id,
-                        'description' => $item['description'],
-                        'quantity' => $item['quantity'],
-                        'rate' => $item['rate'],
-                        'tax_rate' => $item['tax_rate'] ?? 0,
-                        'amount' => $itemTotal,
-                        'tax_amount' => $itemTax,
-                        'total' => $itemTotal + $itemTax,
-                    ]);
-                }
-
-                // Apply discount
-                $discountAmount = 0;
-                $discountType = $validated['discount_type'] ?? $invoice->discount_type;
-                $discountValue = $validated['discount_value'] ?? $invoice->discount_value;
-
-                if ($discountType && $discountValue) {
-                    if ($discountType === 'percentage') {
-                        $discountAmount = $subtotal * ($discountValue / 100);
-                    } else {
-                        $discountAmount = $discountValue;
-                    }
-                }
-
-                // Apply invoice-level tax
-                $taxRate = $validated['tax_rate'] ?? $invoice->tax_rate ?? 0;
-                if ($taxRate) {
-                    $taxTotal += ($subtotal - $discountAmount) * ($taxRate / 100);
-                }
-
-                $total = $subtotal - $discountAmount + $taxTotal;
-
-                $validated['subtotal'] = $subtotal;
-                $validated['tax'] = $taxTotal;
-                $validated['total'] = $total;
+                $this->updateInvoiceItems($request, $invoice, $validated);
             }
 
             $invoice->update($validated);
-
-            // Send notifications for status changes
-            if (isset($validated['status']) && $oldStatus !== $validated['status']) {
-                if ($validated['status'] === 'sent') {
-                    $this->notificationService->notifyInvoiceSent($invoice);
-                } elseif ($validated['status'] === 'paid') {
-                    $this->notificationService->notifyPaymentReceived($invoice, $invoice->total);
-                }
-            }
+            $this->handleStatusChangeNotifications($invoice, $oldStatus, $validated);
 
             DB::commit();
 
@@ -599,6 +525,128 @@ class InvoicesController extends Controller
                 'message' => 'Failed to send invoice',
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Update invoice items and recalculate totals
+     */
+    private function updateInvoiceItems(Request $request, Invoice $invoice, array &$validated): void
+    {
+        $itemsValidated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'nullable|exists:invoice_items,id',
+            'items.*.description' => 'required|string',
+            'items.*.quantity' => 'required|numeric|min:0',
+            'items.*.rate' => 'required|numeric|min:0',
+            'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        $invoice->items()->delete();
+
+        $totals = $this->calculateInvoiceTotals(
+            $itemsValidated['items'],
+            $validated,
+            $invoice
+        );
+
+        $this->createInvoiceItems($invoice->id, $itemsValidated['items']);
+
+        $validated['subtotal'] = $totals['subtotal'];
+        $validated['tax'] = $totals['tax'];
+        $validated['total'] = $totals['total'];
+    }
+
+    /**
+     * Calculate invoice totals including discount and tax
+     */
+    private function calculateInvoiceTotals(array $items, array $validated, Invoice $invoice): array
+    {
+        $subtotal = 0;
+        $taxTotal = 0;
+
+        foreach ($items as $item) {
+            $itemTotal = $item['quantity'] * $item['rate'];
+            $subtotal += $itemTotal;
+
+            if (isset($item['tax_rate'])) {
+                $taxTotal += $itemTotal * ($item['tax_rate'] / 100);
+            }
+        }
+
+        $discountAmount = $this->calculateDiscountAmount(
+            $subtotal,
+            $validated['discount_type'] ?? $invoice->discount_type,
+            $validated['discount_value'] ?? $invoice->discount_value
+        );
+
+        $taxRate = $validated['tax_rate'] ?? $invoice->tax_rate ?? 0;
+        if ($taxRate) {
+            $taxTotal += ($subtotal - $discountAmount) * ($taxRate / 100);
+        }
+
+        $total = $subtotal - $discountAmount + $taxTotal;
+
+        return [
+            'subtotal' => $subtotal,
+            'tax' => $taxTotal,
+            'total' => $total,
+        ];
+    }
+
+    /**
+     * Calculate discount amount based on type and value
+     */
+    private function calculateDiscountAmount(float $subtotal, ?string $discountType, ?float $discountValue): float
+    {
+        if (!$discountType || !$discountValue) {
+            return 0;
+        }
+
+        if ($discountType === 'percentage') {
+            return $subtotal * ($discountValue / 100);
+        }
+
+        return $discountValue;
+    }
+
+    /**
+     * Create invoice items from array
+     */
+    private function createInvoiceItems(int $invoiceId, array $items): void
+    {
+        foreach ($items as $item) {
+            $itemTotal = $item['quantity'] * $item['rate'];
+            $itemTax = isset($item['tax_rate'])
+                ? $itemTotal * ($item['tax_rate'] / 100)
+                : 0;
+
+            InvoiceItem::create([
+                'invoice_id' => $invoiceId,
+                'description' => $item['description'],
+                'quantity' => $item['quantity'],
+                'rate' => $item['rate'],
+                'tax_rate' => $item['tax_rate'] ?? 0,
+                'amount' => $itemTotal,
+                'tax_amount' => $itemTax,
+                'total' => $itemTotal + $itemTax,
+            ]);
+        }
+    }
+
+    /**
+     * Handle notifications for invoice status changes
+     */
+    private function handleStatusChangeNotifications(Invoice $invoice, string $oldStatus, array $validated): void
+    {
+        if (!isset($validated['status']) || $oldStatus === $validated['status']) {
+            return;
+        }
+
+        if ($validated['status'] === 'sent') {
+            $this->notificationService->notifyInvoiceSent($invoice);
+        } elseif ($validated['status'] === 'paid') {
+            $this->notificationService->notifyPaymentReceived($invoice, $invoice->total);
         }
     }
 
