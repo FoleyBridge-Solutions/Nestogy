@@ -109,6 +109,11 @@ class Setting extends Model
     use HasFactory;
 
     /**
+     * Validation rule constant for nullable array fields.
+     */
+    private const VALIDATION_NULLABLE_ARRAY = 'nullable|array';
+
+    /**
      * The table associated with the model.
      */
     protected $table = 'settings';
@@ -1191,7 +1196,7 @@ class Setting extends Model
 
             // General & Company
             'company_logo' => 'nullable|string|max:255',
-            'company_colors' => 'nullable|array',
+            'company_colors' => self::VALIDATION_NULLABLE_ARRAY,
             'company_address' => 'nullable|string|max:255',
             'company_city' => 'nullable|string|max:100',
             'company_state' => 'nullable|string|max:100',
@@ -1200,8 +1205,8 @@ class Setting extends Model
             'company_phone' => 'nullable|string|max:50',
             'company_website' => 'nullable|url|max:255',
             'company_tax_id' => 'nullable|string|max:50',
-            'business_hours' => 'nullable|array',
-            'company_holidays' => 'nullable|array',
+            'business_hours' => self::VALIDATION_NULLABLE_ARRAY,
+            'company_holidays' => self::VALIDATION_NULLABLE_ARRAY,
             'company_language' => 'nullable|string|size:2',
             'company_currency' => 'nullable|string|size:3',
 
@@ -1213,15 +1218,15 @@ class Setting extends Model
             'password_expiry_days' => 'integer|min:30|max:365',
             'password_history_count' => 'integer|min:1|max:24',
             'two_factor_enabled' => 'boolean',
-            'two_factor_methods' => 'nullable|array',
+            'two_factor_methods' => self::VALIDATION_NULLABLE_ARRAY,
             'session_timeout_minutes' => 'integer|min:5|max:1440',
             'force_single_session' => 'boolean',
             'max_login_attempts' => 'integer|min:3|max:10',
             'lockout_duration_minutes' => 'integer|min:5|max:60',
-            'allowed_ip_ranges' => 'nullable|array',
-            'blocked_ip_ranges' => 'nullable|array',
+            'allowed_ip_ranges' => self::VALIDATION_NULLABLE_ARRAY,
+            'blocked_ip_ranges' => self::VALIDATION_NULLABLE_ARRAY,
             'geo_blocking_enabled' => 'boolean',
-            'allowed_countries' => 'nullable|array',
+            'allowed_countries' => self::VALIDATION_NULLABLE_ARRAY,
             'audit_logging_enabled' => 'boolean',
             'audit_retention_days' => 'integer|min:90|max:2555',
 
