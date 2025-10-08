@@ -74,22 +74,9 @@ class SuspiciousLoginService extends BaseService
         $riskScore = 0;
         $reasons = [];
 
-        if ($ipLookup->isSuspicious()) {
-            if ($ipLookup->is_vpn) {
-                $riskScore += 30;
-                $reasons[] = SuspiciousLoginAttempt::REASON_VPN_DETECTED;
-            }
-
-            if ($ipLookup->is_proxy) {
-                $riskScore += 25;
-                $reasons[] = SuspiciousLoginAttempt::REASON_PROXY_DETECTED;
-            }
-
-            if ($ipLookup->is_tor) {
-                $riskScore += 50;
-                $reasons[] = SuspiciousLoginAttempt::REASON_TOR_DETECTED;
-            }
-        }
+        $suspiciousIpAnalysis = $this->analyzeSuspiciousIpFlags($ipLookup);
+        $riskScore += $suspiciousIpAnalysis['risk_score'];
+        $reasons = array_merge($reasons, $suspiciousIpAnalysis['reasons']);
 
         $userLoginHistory = $this->getUserLoginHistory($user);
 
@@ -101,31 +88,74 @@ class SuspiciousLoginService extends BaseService
             $reasons[] = SuspiciousLoginAttempt::REASON_NEW_REGION;
         }
 
-        $lastLoginLocation = $this->getLastLoginLocation($user);
-        if ($lastLoginLocation && $ipLookup->latitude && $ipLookup->longitude) {
-            $distance = $this->calculateDistance(
-                $lastLoginLocation['latitude'],
-                $lastLoginLocation['longitude'],
-                $ipLookup->latitude,
-                $ipLookup->longitude
-            );
-
-            $lastLoginTime = $this->getLastLoginTime($user);
-            if ($lastLoginTime) {
-                $timeDiffHours = now()->diffInHours($lastLoginTime);
-                $maxPossibleSpeed = 900;
-
-                if ($timeDiffHours > 0 && ($distance / $timeDiffHours) > $maxPossibleSpeed) {
-                    $riskScore += 35;
-                    $reasons[] = SuspiciousLoginAttempt::REASON_IMPOSSIBLE_TRAVEL;
-                }
-            }
-        }
+        $impossibleTravelAnalysis = $this->analyzeImpossibleTravel($user, $ipLookup);
+        $riskScore += $impossibleTravelAnalysis['risk_score'];
+        $reasons = array_merge($reasons, $impossibleTravelAnalysis['reasons']);
 
         $highRiskCountries = config('security.geo_blocking.high_risk_countries', []);
         if (in_array($ipLookup->country_code, $highRiskCountries)) {
             $riskScore += 25;
             $reasons[] = SuspiciousLoginAttempt::REASON_HIGH_RISK_COUNTRY;
+        }
+
+        return ['risk_score' => $riskScore, 'reasons' => $reasons];
+    }
+
+    protected function analyzeSuspiciousIpFlags(IpLookupLog $ipLookup): array
+    {
+        $riskScore = 0;
+        $reasons = [];
+
+        if (! $ipLookup->isSuspicious()) {
+            return ['risk_score' => $riskScore, 'reasons' => $reasons];
+        }
+
+        if ($ipLookup->is_vpn) {
+            $riskScore += 30;
+            $reasons[] = SuspiciousLoginAttempt::REASON_VPN_DETECTED;
+        }
+
+        if ($ipLookup->is_proxy) {
+            $riskScore += 25;
+            $reasons[] = SuspiciousLoginAttempt::REASON_PROXY_DETECTED;
+        }
+
+        if ($ipLookup->is_tor) {
+            $riskScore += 50;
+            $reasons[] = SuspiciousLoginAttempt::REASON_TOR_DETECTED;
+        }
+
+        return ['risk_score' => $riskScore, 'reasons' => $reasons];
+    }
+
+    protected function analyzeImpossibleTravel(User $user, IpLookupLog $ipLookup): array
+    {
+        $riskScore = 0;
+        $reasons = [];
+
+        $lastLoginLocation = $this->getLastLoginLocation($user);
+        if (! $lastLoginLocation || ! $ipLookup->latitude || ! $ipLookup->longitude) {
+            return ['risk_score' => $riskScore, 'reasons' => $reasons];
+        }
+
+        $distance = $this->calculateDistance(
+            $lastLoginLocation['latitude'],
+            $lastLoginLocation['longitude'],
+            $ipLookup->latitude,
+            $ipLookup->longitude
+        );
+
+        $lastLoginTime = $this->getLastLoginTime($user);
+        if (! $lastLoginTime) {
+            return ['risk_score' => $riskScore, 'reasons' => $reasons];
+        }
+
+        $timeDiffHours = now()->diffInHours($lastLoginTime);
+        $maxPossibleSpeed = 900;
+
+        if ($timeDiffHours > 0 && ($distance / $timeDiffHours) > $maxPossibleSpeed) {
+            $riskScore += 35;
+            $reasons[] = SuspiciousLoginAttempt::REASON_IMPOSSIBLE_TRAVEL;
         }
 
         return ['risk_score' => $riskScore, 'reasons' => $reasons];
