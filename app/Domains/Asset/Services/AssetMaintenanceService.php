@@ -284,7 +284,7 @@ class AssetMaintenanceService
             $results['temporary_files'] = $tempResult;
 
             // 2. Browser cache cleanup
-            $browserResult = $this->cleanupBrowserCaches($asset);
+            $browserResult = $this->cleanupBrowserCaches();
             $results['browser_caches'] = $browserResult;
 
             // 3. System logs rotation
@@ -613,7 +613,7 @@ class AssetMaintenanceService
         return ['success' => true, 'space_freed' => '2.5 GB'];
     }
 
-    protected function cleanupBrowserCaches(Asset $asset): array
+    protected function cleanupBrowserCaches(): array
     {
         return ['success' => true, 'space_freed' => '500 MB'];
     }
