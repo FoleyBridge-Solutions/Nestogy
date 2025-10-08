@@ -184,7 +184,7 @@ class AssetMaintenanceService
             $results['baseline'] = $baselineResult;
 
             // 2. Memory optimization
-            $memoryResult = $this->optimizeMemoryUsage($asset);
+            $memoryResult = $this->optimizeMemoryUsage();
             $results['memory_optimization'] = $memoryResult;
 
             // 3. Disk defragmentation check
@@ -553,7 +553,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function optimizeMemoryUsage(Asset $asset): array
+    protected function optimizeMemoryUsage(): array
     {
         return ['success' => true];
     }
