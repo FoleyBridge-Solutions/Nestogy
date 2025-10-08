@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\DB;
  */
 class TaxReportController extends Controller
 {
+    private const EXPORT_PATH_PLACEHOLDER = '/path/to/export';
+
     public function __construct()
     {
         $this->middleware(['auth', 'verified']);
@@ -530,25 +532,25 @@ class TaxReportController extends Controller
     private function exportSummaryReport(int $companyId, array $dateRange, string $format)
     {
         // Implementation for CSV/Excel export
-        return response()->download('/path/to/export');
+        return response()->download(self::EXPORT_PATH_PLACEHOLDER);
     }
 
     private function exportJurisdictionReport(int $companyId, array $dateRange, string $format)
     {
         // Implementation for jurisdiction report export
-        return response()->download('/path/to/export');
+        return response()->download(self::EXPORT_PATH_PLACEHOLDER);
     }
 
     private function exportComplianceReport(int $companyId, array $dateRange, string $format)
     {
         // Implementation for compliance report export
-        return response()->download('/path/to/export');
+        return response()->download(self::EXPORT_PATH_PLACEHOLDER);
     }
 
     private function exportPerformanceReport(int $companyId, array $dateRange, string $format)
     {
         // Implementation for performance report export
-        return response()->download('/path/to/export');
+        return response()->download(self::EXPORT_PATH_PLACEHOLDER);
     }
 
     private function getTaxTrendData(int $companyId, array $dateRange): array
