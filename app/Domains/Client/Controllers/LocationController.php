@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class LocationController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING_255 = 'required|string|max:255';
+
     /**
      * LocationController constructor.
      */
@@ -155,11 +157,11 @@ class LocationController extends Controller
                     $query->where('client_id', $client->id);
                 }),
             ],
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255,
             'description' => 'nullable|string',
-            'address_line_1' => 'required|string|max:255',
+            'address_line_1' => self::VALIDATION_REQUIRED_STRING_255,
             'address_line_2' => 'nullable|string|max:255',
-            'city' => 'required|string|max:255',
+            'city' => self::VALIDATION_REQUIRED_STRING_255,
             'state' => 'nullable|string|max:100',
             'zip_code' => 'nullable|string|max:20',
             'country' => 'required|string|max:100',
@@ -291,11 +293,11 @@ class LocationController extends Controller
                     $query->where('client_id', $client->id);
                 }),
             ],
-            'name' => 'required|string|max:255',
+            'name' => self::VALIDATION_REQUIRED_STRING_255,
             'description' => 'nullable|string',
-            'address_line_1' => 'required|string|max:255',
+            'address_line_1' => self::VALIDATION_REQUIRED_STRING_255,
             'address_line_2' => 'nullable|string|max:255',
-            'city' => 'required|string|max:255',
+            'city' => self::VALIDATION_REQUIRED_STRING_255,
             'state' => 'nullable|string|max:100',
             'zip_code' => 'nullable|string|max:20',
             'country' => 'required|string|max:100',
