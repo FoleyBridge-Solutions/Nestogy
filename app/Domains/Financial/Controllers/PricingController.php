@@ -8,6 +8,8 @@ use Illuminate\View\View;
 
 class PricingController extends Controller
 {
+    private const NULLABLE_POSITIVE_INTEGER = 'nullable|integer|min:1';
+
     public function index(Request $request): View
     {
         $pricingRules = collect(); // TODO: Load from pricing_rules table
@@ -34,8 +36,8 @@ class PricingController extends Controller
             'product_ids' => 'nullable|array',
             'service_ids' => 'nullable|array',
             'client_ids' => 'nullable|array',
-            'min_quantity' => 'nullable|integer|min:1',
-            'max_quantity' => 'nullable|integer|min:1',
+            'min_quantity' => self::NULLABLE_POSITIVE_INTEGER,
+            'max_quantity' => self::NULLABLE_POSITIVE_INTEGER,
             'discount_type' => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'valid_from' => 'nullable|date',
@@ -79,8 +81,8 @@ class PricingController extends Controller
             'product_ids' => 'nullable|array',
             'service_ids' => 'nullable|array',
             'client_ids' => 'nullable|array',
-            'min_quantity' => 'nullable|integer|min:1',
-            'max_quantity' => 'nullable|integer|min:1',
+            'min_quantity' => self::NULLABLE_POSITIVE_INTEGER,
+            'max_quantity' => self::NULLABLE_POSITIVE_INTEGER,
             'discount_type' => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'valid_from' => 'nullable|date',
