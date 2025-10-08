@@ -417,6 +417,13 @@ class ContractAutomationService
             case 'contact_added':
                 $this->handleContactAddedWorkflow($contract, $settings);
                 break;
+
+            default:
+                Log::warning('Unknown automation trigger received', [
+                    'contract_id' => $contract->id,
+                    'trigger' => $trigger,
+                ]);
+                break;
         }
     }
 
