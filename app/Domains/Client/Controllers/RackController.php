@@ -14,6 +14,8 @@ class RackController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of racks for the selected client
      */
@@ -113,7 +115,7 @@ class RackController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'location' => 'required|string|max:255',
             'rack_number' => 'nullable|integer|min:1',
             'height_units' => 'required|integer|min:1|max:100',
@@ -123,7 +125,7 @@ class RackController extends Controller
             'power_capacity_watts' => 'required|integer|min:0',
             'power_used_watts' => 'nullable|integer|min:0|lte:power_capacity_watts',
             'cooling_requirements' => 'nullable|in:'.implode(',', array_keys(ClientRack::getCoolingRequirements())),
-            'network_connections' => 'nullable|string',
+            'network_connections' => self::NULLABLE_STRING,
             'status' => 'required|in:'.implode(',', array_keys(ClientRack::getStatuses())),
             'temperature_celsius' => 'nullable|numeric|min:-50|max:100',
             'humidity_percent' => 'nullable|numeric|min:0|max:100',
@@ -132,8 +134,8 @@ class RackController extends Controller
             'serial_number' => 'nullable|string|max:255',
             'purchase_date' => 'nullable|date|before_or_equal:today',
             'warranty_expiry' => 'nullable|date|after:purchase_date',
-            'maintenance_schedule' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'maintenance_schedule' => self::NULLABLE_STRING,
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -199,7 +201,7 @@ class RackController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'location' => 'required|string|max:255',
             'rack_number' => 'nullable|integer|min:1',
             'height_units' => 'required|integer|min:1|max:100',
@@ -209,7 +211,7 @@ class RackController extends Controller
             'power_capacity_watts' => 'required|integer|min:0',
             'power_used_watts' => 'nullable|integer|min:0|lte:power_capacity_watts',
             'cooling_requirements' => 'nullable|in:'.implode(',', array_keys(ClientRack::getCoolingRequirements())),
-            'network_connections' => 'nullable|string',
+            'network_connections' => self::NULLABLE_STRING,
             'status' => 'required|in:'.implode(',', array_keys(ClientRack::getStatuses())),
             'temperature_celsius' => 'nullable|numeric|min:-50|max:100',
             'humidity_percent' => 'nullable|numeric|min:0|max:100',
@@ -218,8 +220,8 @@ class RackController extends Controller
             'serial_number' => 'nullable|string|max:255',
             'purchase_date' => 'nullable|date|before_or_equal:today',
             'warranty_expiry' => 'nullable|date|after:purchase_date',
-            'maintenance_schedule' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'maintenance_schedule' => self::NULLABLE_STRING,
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
