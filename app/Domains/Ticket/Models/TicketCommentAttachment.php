@@ -146,10 +146,6 @@ class TicketCommentAttachment extends Model
             return 'red';
         }
 
-        if ($this->isDocument()) {
-            return 'green';
-        }
-
-        return 'gray';
+        return $this->isDocument() ? 'green' : 'gray';
     }
 }
