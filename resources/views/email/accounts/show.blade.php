@@ -184,7 +184,7 @@
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->auto_log_communications ? 'Enabled' : 'Disabled' }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Created</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Created</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->created_at->format('M j, Y g:i A') }}</p>
                                     </div>
                                 </div>
