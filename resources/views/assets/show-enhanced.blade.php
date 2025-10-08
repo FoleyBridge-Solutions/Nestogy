@@ -135,7 +135,7 @@
                             <flux:card>
                                 <flux:heading size="lg">Recent Activity</flux:heading>
                                 <div class="mt-4 flow-root">
-                                    <ul role="list" class="-mb-8">
+                                    <ul class="-mb-8">
                                         <li>
                                             <div class="relative pb-8">
                                                 <span class="absolute left-4 top-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700" aria-hidden="true"></span>
