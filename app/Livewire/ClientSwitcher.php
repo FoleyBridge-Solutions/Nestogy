@@ -350,12 +350,7 @@ class ClientSwitcher extends Component
     #[On('client-selected')]
     public function handleClientSelected(...$params)
     {
-        $clientId = $params['clientId'] ?? $params[0] ?? null;
-        if ($clientId) {
-            $this->selectedClientId = $clientId;
-            unset($this->currentClient);
-            unset($this->recentClients);
-        }
+        $this->handleClientChange(...$params);
     }
 
     /**
