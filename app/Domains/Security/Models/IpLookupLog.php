@@ -108,6 +108,8 @@ class IpLookupLog extends Model
             case self::THREAT_LEVEL_LOW:
                 $score += 10;
                 break;
+            default:
+                break;
         }
 
         return min($score, 100);
