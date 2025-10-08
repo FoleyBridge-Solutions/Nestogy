@@ -274,7 +274,20 @@ class LocalTaxRateService
      */
     protected function getApplicableTaxRatesLegacy(string $serviceType, ?array $destination = null): array
     {
-        $query = DB::table('service_tax_rates')
+        $query = $this->buildBaseTaxRateQuery($serviceType);
+
+        if ($destination && isset($destination['state'])) {
+            $this->applyLocationFiltering($query, $destination);
+        }
+
+        return $query->orderBy('priority', 'asc')
+            ->get()
+            ->toArray();
+    }
+
+    protected function buildBaseTaxRateQuery(string $serviceType)
+    {
+        return DB::table('service_tax_rates')
             ->where('company_id', $this->companyId)
             ->where('service_type', $serviceType)
             ->where('is_active', 1)
@@ -283,41 +296,37 @@ class LocalTaxRateService
                 $query->whereNull('expiry_date')
                     ->orWhere('expiry_date', '>', now());
             });
+    }
 
-        // Apply location filtering if destination is provided
-        if ($destination && isset($destination['state'])) {
-            $state = strtoupper($destination['state']);
-            $city = isset($destination['city']) ? strtoupper($destination['city']) : null;
-            $zip = isset($destination['zip']) ? $destination['zip'] : null;
+    protected function applyLocationFiltering($query, array $destination): void
+    {
+        $state = strtoupper($destination['state']);
+        $city = isset($destination['city']) ? strtoupper($destination['city']) : null;
+        $zip = isset($destination['zip']) ? $destination['zip'] : null;
 
-            $query->where(function ($locationQuery) use ($state, $city, $zip) {
-                // Only include rates that apply to this specific state
-                $locationQuery->whereRaw("JSON_CONTAINS(JSON_EXTRACT(metadata, '$.applicable_states'), JSON_QUOTE(?))", [$state]);
+        $query->where(function ($locationQuery) use ($state, $city, $zip) {
+            $locationQuery->whereRaw("JSON_CONTAINS(JSON_EXTRACT(metadata, '$.applicable_states'), JSON_QUOTE(?))", [$state]);
 
-                // Apply geographic filtering based on address
-                if ($city || $zip) {
-                    $locationQuery->where(function ($geoQuery) use ($state, $city, $zip) {
-                        // Always include state-level taxes
-                        $geoQuery->where('tax_code', 'LIKE', '%STATE%')
-                            ->orWhere('authority_name', 'LIKE', '%STATE%');
+            if ($city || $zip) {
+                $this->applyGeographicFiltering($locationQuery, $state, $city, $zip);
+            }
+        });
+    }
 
-                        // Add city-specific filtering based on known jurisdictions
-                        if ($city) {
-                            $geoQuery = $this->addCitySpecificFiltering($geoQuery, $city, $state, $zip);
-                        }
+    protected function applyGeographicFiltering($locationQuery, string $state, ?string $city, ?string $zip): void
+    {
+        $locationQuery->where(function ($geoQuery) use ($state, $city, $zip) {
+            $geoQuery->where('tax_code', 'LIKE', '%STATE%')
+                ->orWhere('authority_name', 'LIKE', '%STATE%');
 
-                        // Add ZIP-based filtering if available
-                        if ($zip) {
-                            $geoQuery = $this->addZipBasedFiltering($geoQuery, $zip);
-                        }
-                    });
-                }
-            });
-        }
+            if ($city) {
+                $geoQuery = $this->addCitySpecificFiltering($geoQuery, $city, $state, $zip);
+            }
 
-        return $query->orderBy('priority', 'asc')
-            ->get()
-            ->toArray();
+            if ($zip) {
+                $geoQuery = $this->addZipBasedFiltering($geoQuery, $zip);
+            }
+        });
     }
 
     /**
