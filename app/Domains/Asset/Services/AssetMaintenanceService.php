@@ -250,7 +250,7 @@ class AssetMaintenanceService
             $results['critical_services'] = $servicesResult;
 
             // 6. Generate health score
-            $healthScore = $this->calculateHealthScore($results);
+            $healthScore = $this->calculateHealthScore();
             $results['health_score'] = $healthScore;
 
         } catch (\Exception $e) {
@@ -603,7 +603,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function calculateHealthScore(array $results): array
+    protected function calculateHealthScore(): array
     {
         return ['score' => 95, 'status' => 'excellent'];
     }
