@@ -146,8 +146,9 @@
                             <div class="space-y-6">
                                 <!-- Contract Title -->
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Contract Title *</label>
+                                    <label for="contract-title" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Contract Title *</label>
                                     <input type="text" 
+                                           id="contract-title"
                                            wire:model.defer="title" 
                                            @if(!$canEdit) disabled @endif
                                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg 
