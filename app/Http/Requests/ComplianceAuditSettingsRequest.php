@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ComplianceAuditSettingsRequest extends FormRequest
 {
+    private const MONTHLY_FREQUENCY_VALIDATION = 'integer|min:6|max:24';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -48,9 +50,9 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'hipaa_settings.minimum_necessary_standard' => 'boolean',
             'hipaa_settings.breach_notification_enabled' => 'boolean',
             'hipaa_settings.breach_notification_days' => 'integer|min:1|max:60',
-            'hipaa_settings.risk_assessment_frequency_months' => 'integer|min:6|max:24',
+            'hipaa_settings.risk_assessment_frequency_months' => self::MONTHLY_FREQUENCY_VALIDATION,
             'hipaa_settings.employee_training_required' => 'boolean',
-            'hipaa_settings.employee_training_frequency_months' => 'integer|min:6|max:24',
+            'hipaa_settings.employee_training_frequency_months' => self::MONTHLY_FREQUENCY_VALIDATION,
             'hipaa_settings.baa_tracking_enabled' => 'boolean',
             'hipaa_settings.audit_log_retention_years' => 'integer|min:6|max:10',
 
@@ -211,7 +213,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'documentation_settings.procedure_documentation' => 'boolean',
             'documentation_settings.version_control' => 'boolean',
             'documentation_settings.approval_workflows' => 'boolean',
-            'documentation_settings.review_frequency_months' => 'integer|min:6|max:24',
+            'documentation_settings.review_frequency_months' => self::MONTHLY_FREQUENCY_VALIDATION,
             'documentation_settings.acknowledgment_tracking' => 'boolean',
             'documentation_settings.change_notifications' => 'boolean',
             'documentation_settings.document_retention' => 'boolean',
