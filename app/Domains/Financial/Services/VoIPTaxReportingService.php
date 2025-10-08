@@ -170,7 +170,6 @@ class VoIPTaxReportingService
                 $jurisdiction,
                 $collections,
                 $exemptions,
-                $startDate,
                 $endDate
             );
         }
@@ -696,7 +695,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function generateFilingSummary($jurisdiction, $collections, $exemptions, $startDate, $endDate)
+    protected function generateFilingSummary($jurisdiction, $collections, $exemptions, $endDate)
     {
         return [];
     }
