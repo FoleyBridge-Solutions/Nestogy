@@ -296,7 +296,7 @@ class ComplianceService
         $requiredDocs = [
             'collection_notes' => CollectionNote::where('client_id', $client->id)->exists(),
             'dunning_actions' => DunningAction::where('client_id', $client->id)->exists(),
-            'validation_notice' => $this->hasValidationNotice($client),
+            'validation_notice' => $this->hasValidationNotice(),
             'dispute_records' => $this->hasDisputeRecords($client),
         ];
 
@@ -754,7 +754,7 @@ NESTOGY COLLECTIONS DEPARTMENT
         return ['compliant' => true];
     }
 
-    protected function hasValidationNotice(Client $client): bool
+    protected function hasValidationNotice(): bool
     {
         return true;
     }
