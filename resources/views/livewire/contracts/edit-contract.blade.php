@@ -282,8 +282,9 @@
                                         @error('currency_code') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Payment Terms</label>
+                                        <label for="payment_terms" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Payment Terms</label>
                                         <input type="text" 
+                                               id="payment_terms"
                                                wire:model.defer="payment_terms" 
                                                @if(!$canEdit) disabled @endif
                                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg
