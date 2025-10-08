@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Auth;
 
 class SearchController extends Controller
 {
+    private const CLIENT_RELATION_FIELDS = 'client:id,name';
+
     public function global(Request $request)
     {
         $query = $request->get('q', '');
@@ -172,7 +174,7 @@ class SearchController extends Controller
                 $q->where('subject', 'like', "%{$query}%")
                     ->orWhere('ticket_number', 'like', "%{$query}%");
             })
-            ->with('client:id,name')
+            ->with(self::CLIENT_RELATION_FIELDS)
             ->limit(5)
             ->get(['id', 'ticket_number', 'subject', 'status', 'priority', 'client_id']);
 
@@ -199,7 +201,7 @@ class SearchController extends Controller
                     ->orWhere('serial_number', 'like', "%{$query}%")
                     ->orWhere('asset_tag', 'like', "%{$query}%");
             })
-            ->with('client:id,name')
+            ->with(self::CLIENT_RELATION_FIELDS)
             ->limit(5)
             ->get(['id', 'name', 'serial_number', 'type', 'client_id']);
 
@@ -220,7 +222,7 @@ class SearchController extends Controller
             ->where(function ($q) use ($query) {
                 $q->where('number', 'like', "%{$query}%");
             })
-            ->with('client:id,name')
+            ->with(self::CLIENT_RELATION_FIELDS)
             ->limit(3)
             ->get(['id', 'number', 'total', 'status', 'client_id']);
 
@@ -245,7 +247,7 @@ class SearchController extends Controller
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%");
             })
-            ->with('client:id,name')
+            ->with(self::CLIENT_RELATION_FIELDS)
             ->limit(3)
             ->get(['id', 'name', 'status', 'client_id']);
 
