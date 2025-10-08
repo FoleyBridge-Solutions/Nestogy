@@ -101,24 +101,21 @@ class CommunicationLogIntegrationService
             return strtolower($email) !== strtolower($accountEmail);
         });
 
-        // Try to find client by primary email
+        // Try multiple strategies to find client
         foreach ($allEmails as $email) {
+            // Try to find client by primary email
             $client = Client::where('email', $email)->first();
             if ($client) {
                 return $client;
             }
-        }
 
-        // Try to find client by contact emails (if stored in JSON field)
-        foreach ($allEmails as $email) {
+            // Try to find client by contact emails (if stored in JSON field)
             $client = Client::whereJsonContains('contact_emails', $email)->first();
             if ($client) {
                 return $client;
             }
-        }
 
-        // Try to find client through contacts
-        foreach ($allEmails as $email) {
+            // Try to find client through contacts
             $contact = \App\Models\Contact::where('email', $email)->first();
             if ($contact && $contact->client) {
                 return $contact->client;
