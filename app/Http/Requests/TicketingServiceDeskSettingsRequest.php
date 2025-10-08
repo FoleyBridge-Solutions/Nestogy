@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class TicketingServiceDeskSettingsRequest extends FormRequest
 {
+    private const STRING_MAX_100 = 'string|max:100';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -37,10 +39,10 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_categorization_rules.auto_categorize' => 'boolean',
             'ticket_categorization_rules.require_category' => 'boolean',
             'ticket_categorization_rules.allow_multiple_categories' => 'boolean',
-            'ticket_categorization_rules.default_category' => 'nullable|string|max:100',
+            'ticket_categorization_rules.default_category' => 'nullable|' . self::STRING_MAX_100,
             'ticket_categorization_rules.keywords' => 'nullable|array',
             'ticket_categorization_rules.keywords.*.keyword' => 'string|max:50',
-            'ticket_categorization_rules.keywords.*.category' => 'string|max:100',
+            'ticket_categorization_rules.keywords.*.category' => self::STRING_MAX_100,
             'ticket_categorization_rules.keywords.*.priority' => 'string|in:low,medium,high,critical',
 
             // Ticket Priority Rules
@@ -59,7 +61,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             // SLA Definitions
             'sla_definitions' => 'nullable|array',
             'sla_definitions.enabled' => 'boolean',
-            'sla_definitions.default_sla' => 'nullable|string|max:100',
+            'sla_definitions.default_sla' => 'nullable|' . self::STRING_MAX_100,
             'sla_definitions.client_specific_slas' => 'boolean',
             'sla_definitions.business_hours_only' => 'boolean',
             'sla_definitions.exclude_weekends' => 'boolean',
@@ -109,9 +111,9 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'routing_logic.route_by_keywords' => 'boolean',
             'routing_logic.route_by_priority' => 'boolean',
             'routing_logic.route_by_source' => 'boolean',
-            'routing_logic.default_queue' => 'nullable|string|max:100',
+            'routing_logic.default_queue' => 'nullable|' . self::STRING_MAX_100,
             'routing_logic.routing_rules' => 'nullable|array',
-            'routing_logic.routing_rules.*.name' => 'string|max:100',
+            'routing_logic.routing_rules.*.name' => self::STRING_MAX_100,
             'routing_logic.routing_rules.*.conditions' => 'array',
             'routing_logic.routing_rules.*.actions' => 'array',
             'routing_logic.routing_rules.*.priority' => 'integer|min:1|max:100',
@@ -126,7 +128,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'approval_workflows.approval_timeout_hours' => 'integer|min:1|max:168',
             'approval_workflows.escalate_on_timeout' => 'boolean',
             'approval_workflows.workflows' => 'nullable|array',
-            'approval_workflows.workflows.*.name' => 'string|max:100',
+            'approval_workflows.workflows.*.name' => self::STRING_MAX_100,
             'approval_workflows.workflows.*.trigger_conditions' => 'array',
             'approval_workflows.workflows.*.approvers' => 'array',
             'approval_workflows.workflows.*.approvers.*' => 'integer|exists:users,id',
@@ -167,8 +169,8 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_templates.allow_custom_templates' => 'boolean',
             'ticket_templates.require_template_selection' => 'boolean',
             'ticket_templates.templates' => 'nullable|array',
-            'ticket_templates.templates.*.name' => 'string|max:100',
-            'ticket_templates.templates.*.category' => 'string|max:100',
+            'ticket_templates.templates.*.name' => self::STRING_MAX_100,
+            'ticket_templates.templates.*.category' => self::STRING_MAX_100,
             'ticket_templates.templates.*.priority' => 'string|in:low,medium,high,critical',
             'ticket_templates.templates.*.subject_template' => 'string|max:255',
             'ticket_templates.templates.*.description_template' => 'string|max:2000',
@@ -183,7 +185,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_automation_rules.run_on_update' => 'boolean',
             'ticket_automation_rules.run_on_close' => 'boolean',
             'ticket_automation_rules.rules' => 'nullable|array',
-            'ticket_automation_rules.rules.*.name' => 'string|max:100',
+            'ticket_automation_rules.rules.*.name' => self::STRING_MAX_100,
             'ticket_automation_rules.rules.*.trigger' => 'string|in:on_create,on_update,on_close,on_reopen,on_assign,time_based',
             'ticket_automation_rules.rules.*.conditions' => 'array',
             'ticket_automation_rules.rules.*.actions' => 'array',
@@ -208,12 +210,12 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             // Queue Management
             'queue_management_settings' => 'nullable|array',
             'queue_management_settings.enabled' => 'boolean',
-            'queue_management_settings.default_queue' => 'nullable|string|max:100',
+            'queue_management_settings.default_queue' => 'nullable|' . self::STRING_MAX_100,
             'queue_management_settings.auto_queue_assignment' => 'boolean',
             'queue_management_settings.queue_capacity_limits' => 'boolean',
             'queue_management_settings.queue_sla_inheritance' => 'boolean',
             'queue_management_settings.queues' => 'nullable|array',
-            'queue_management_settings.queues.*.name' => 'string|max:100',
+            'queue_management_settings.queues.*.name' => self::STRING_MAX_100,
             'queue_management_settings.queues.*.description' => 'nullable|string|max:255',
             'queue_management_settings.queues.*.max_capacity' => 'nullable|integer|min:1|max:1000',
             'queue_management_settings.queues.*.default_assignee' => 'nullable|integer|exists:users,id',
