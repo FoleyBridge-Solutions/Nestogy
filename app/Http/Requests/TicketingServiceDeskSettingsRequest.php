@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class TicketingServiceDeskSettingsRequest extends FormRequest
 {
+    private const NULLABLE_STRING_MAX_100 = 'nullable|string|max:100';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -37,7 +39,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'ticket_categorization_rules.auto_categorize' => 'boolean',
             'ticket_categorization_rules.require_category' => 'boolean',
             'ticket_categorization_rules.allow_multiple_categories' => 'boolean',
-            'ticket_categorization_rules.default_category' => 'nullable|string|max:100',
+            'ticket_categorization_rules.default_category' => self::NULLABLE_STRING_MAX_100,
             'ticket_categorization_rules.keywords' => 'nullable|array',
             'ticket_categorization_rules.keywords.*.keyword' => 'string|max:50',
             'ticket_categorization_rules.keywords.*.category' => 'string|max:100',
@@ -59,7 +61,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             // SLA Definitions
             'sla_definitions' => 'nullable|array',
             'sla_definitions.enabled' => 'boolean',
-            'sla_definitions.default_sla' => 'nullable|string|max:100',
+            'sla_definitions.default_sla' => self::NULLABLE_STRING_MAX_100,
             'sla_definitions.client_specific_slas' => 'boolean',
             'sla_definitions.business_hours_only' => 'boolean',
             'sla_definitions.exclude_weekends' => 'boolean',
@@ -109,7 +111,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             'routing_logic.route_by_keywords' => 'boolean',
             'routing_logic.route_by_priority' => 'boolean',
             'routing_logic.route_by_source' => 'boolean',
-            'routing_logic.default_queue' => 'nullable|string|max:100',
+            'routing_logic.default_queue' => self::NULLABLE_STRING_MAX_100,
             'routing_logic.routing_rules' => 'nullable|array',
             'routing_logic.routing_rules.*.name' => 'string|max:100',
             'routing_logic.routing_rules.*.conditions' => 'array',
@@ -208,7 +210,7 @@ class TicketingServiceDeskSettingsRequest extends FormRequest
             // Queue Management
             'queue_management_settings' => 'nullable|array',
             'queue_management_settings.enabled' => 'boolean',
-            'queue_management_settings.default_queue' => 'nullable|string|max:100',
+            'queue_management_settings.default_queue' => self::NULLABLE_STRING_MAX_100,
             'queue_management_settings.auto_queue_assignment' => 'boolean',
             'queue_management_settings.queue_capacity_limits' => 'boolean',
             'queue_management_settings.queue_sla_inheritance' => 'boolean',
