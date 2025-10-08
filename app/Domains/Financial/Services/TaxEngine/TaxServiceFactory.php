@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
+use App\Domains\Financial\Exceptions\TaxServiceException;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -306,11 +307,11 @@ class TaxServiceFactory
     public static function registerService(string $stateCode, string $serviceClass): void
     {
         if (! class_exists($serviceClass)) {
-            throw new Exception("Service class {$serviceClass} does not exist");
+            throw TaxServiceException::serviceClassNotFound($serviceClass);
         }
 
         if (! is_subclass_of($serviceClass, TaxDataServiceInterface::class)) {
-            throw new Exception("Service class {$serviceClass} must implement TaxDataServiceInterface");
+            throw TaxServiceException::invalidServiceClass($serviceClass);
         }
 
         self::$availableServices[strtoupper($stateCode)] = $serviceClass;
