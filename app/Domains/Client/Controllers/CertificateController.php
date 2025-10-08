@@ -331,12 +331,37 @@ class CertificateController extends Controller
      */
     public function export(Request $request)
     {
+        $query = $this->buildExportQuery($request);
+        $certificates = $query->orderBy('expires_at', 'asc')->get();
+
+        $filename = 'certificates_'.date('Y-m-d_H-i-s').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($certificates) {
+            $this->writeCsvData($certificates);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function buildExportQuery(Request $request)
+    {
         $query = ClientCertificate::with(['client'])
             ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
-        // Apply same filters as index
+        $this->applyExportFilters($query, $request);
+
+        return $query;
+    }
+
+    private function applyExportFilters($query, Request $request)
+    {
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -360,66 +385,59 @@ class CertificateController extends Controller
         if ($vendor = $request->get('vendor')) {
             $query->where('vendor', $vendor);
         }
+    }
 
-        $certificates = $query->orderBy('expires_at', 'asc')->get();
+    private function writeCsvData($certificates)
+    {
+        $file = fopen('php://output', 'w');
 
-        $filename = 'certificates_'.date('Y-m-d_H-i-s').'.csv';
+        fputcsv($file, [
+            'Certificate Name',
+            'Type',
+            'Client Name',
+            'Primary Domain',
+            'Issuer',
+            'Status',
+            'Key Size',
+            'Algorithm',
+            'Is Wildcard',
+            'Issued Date',
+            'Expiry Date',
+            'Days Until Expiry',
+            'Vendor',
+            'Purchase Cost',
+            'Renewal Cost',
+            'Auto Renewal',
+            'Created At',
+        ]);
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        foreach ($certificates as $certificate) {
+            fputcsv($file, $this->formatCertificateRow($certificate));
+        }
+
+        fclose($file);
+    }
+
+    private function formatCertificateRow($certificate)
+    {
+        return [
+            $certificate->name,
+            $certificate->type,
+            $certificate->client->display_name,
+            $certificate->primary_domain ?: 'N/A',
+            $certificate->issuer,
+            $certificate->status,
+            $certificate->key_size,
+            $certificate->algorithm_display,
+            $certificate->is_wildcard ? 'Yes' : 'No',
+            $certificate->issued_at ? $certificate->issued_at->format('Y-m-d') : '',
+            $certificate->expires_at ? $certificate->expires_at->format('Y-m-d') : '',
+            $certificate->days_until_expiry,
+            $certificate->vendor,
+            $certificate->purchase_cost,
+            $certificate->renewal_cost,
+            $certificate->auto_renewal ? 'Yes' : 'No',
+            $certificate->created_at->format('Y-m-d H:i:s'),
         ];
-
-        $callback = function () use ($certificates) {
-            $file = fopen('php://output', 'w');
-
-            // CSV headers
-            fputcsv($file, [
-                'Certificate Name',
-                'Type',
-                'Client Name',
-                'Primary Domain',
-                'Issuer',
-                'Status',
-                'Key Size',
-                'Algorithm',
-                'Is Wildcard',
-                'Issued Date',
-                'Expiry Date',
-                'Days Until Expiry',
-                'Vendor',
-                'Purchase Cost',
-                'Renewal Cost',
-                'Auto Renewal',
-                'Created At',
-            ]);
-
-            // CSV data
-            foreach ($certificates as $certificate) {
-                fputcsv($file, [
-                    $certificate->name,
-                    $certificate->type,
-                    $certificate->client->display_name,
-                    $certificate->primary_domain ?: 'N/A',
-                    $certificate->issuer,
-                    $certificate->status,
-                    $certificate->key_size,
-                    $certificate->algorithm_display,
-                    $certificate->is_wildcard ? 'Yes' : 'No',
-                    $certificate->issued_at ? $certificate->issued_at->format('Y-m-d') : '',
-                    $certificate->expires_at ? $certificate->expires_at->format('Y-m-d') : '',
-                    $certificate->days_until_expiry,
-                    $certificate->vendor,
-                    $certificate->purchase_cost,
-                    $certificate->renewal_cost,
-                    $certificate->auto_renewal ? 'Yes' : 'No',
-                    $certificate->created_at->format('Y-m-d H:i:s'),
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
     }
 }
