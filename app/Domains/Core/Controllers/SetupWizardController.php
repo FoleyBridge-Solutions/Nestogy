@@ -22,6 +22,8 @@ use Silber\Bouncer\BouncerFacade as Bouncer;
  */
 class SetupWizardController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING_255 = 'required|string|max:255';
+
     /**
      * Show the setup wizard welcome page.
      */
@@ -117,7 +119,7 @@ class SetupWizardController extends Controller
     {
         return Validator::make($request->all(), [
             // Company information
-            'company_name' => 'required|string|max:255',
+            'company_name' => self::VALIDATION_REQUIRED_STRING_255,
             'company_email' => 'required|email|max:255',
             'company_phone' => 'nullable|string|max:20',
             'company_address' => 'nullable|string|max:255',
@@ -129,7 +131,7 @@ class SetupWizardController extends Controller
             'currency' => 'required|string|size:3|in:'.implode(',', array_keys(Company::SUPPORTED_CURRENCIES)),
 
             // Admin user information
-            'admin_name' => 'required|string|max:255',
+            'admin_name' => self::VALIDATION_REQUIRED_STRING_255,
             'admin_email' => 'required|email|max:255|unique:users,email',
             'admin_password' => ['required', 'confirmed', Password::defaults()],
 
@@ -143,7 +145,7 @@ class SetupWizardController extends Controller
             'mail_from_name' => 'nullable|string|max:255',
 
             // System Preferences
-            'timezone' => 'required|string|max:255',
+            'timezone' => self::VALIDATION_REQUIRED_STRING_255,
             'date_format' => 'nullable|string|max:20',
             'theme' => 'nullable|string|in:'.implode(',', array_keys(\App\Models\Setting::getAvailableThemes())),
             'company_language' => 'nullable|string|size:2',
@@ -466,7 +468,7 @@ class SetupWizardController extends Controller
     {
         // Validate SMTP fields
         $validator = Validator::make($request->all(), [
-            'smtp_host' => 'required|string|max:255',
+            'smtp_host' => self::VALIDATION_REQUIRED_STRING_255,
             'smtp_port' => 'required|integer|min:1|max:65535',
             'smtp_encryption' => 'nullable|in:tls,ssl',
             'smtp_username' => 'nullable|string|max:255',
@@ -474,7 +476,7 @@ class SetupWizardController extends Controller
             'mail_from_email' => 'nullable|email|max:255',
             'mail_from_name' => 'nullable|string|max:255',
             'company_email' => 'required|email|max:255',
-            'company_name' => 'required|string|max:255',
+            'company_name' => self::VALIDATION_REQUIRED_STRING_255,
         ]);
 
         if ($validator->fails()) {
