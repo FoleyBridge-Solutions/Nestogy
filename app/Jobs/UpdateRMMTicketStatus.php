@@ -23,6 +23,8 @@ class UpdateRMMTicketStatus implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    private const DEFAULT_RESOLVED_BY = 'Nestogy System';
+
     protected Ticket $ticket;
 
     protected string $newStatus;
@@ -181,7 +183,7 @@ class UpdateRMMTicketStatus implements ShouldQueue
 
         $payload = [
             'Status' => $rmmStatus,
-            'ResolvedBy' => auth()->user()?->name ?? 'Nestogy System',
+            'ResolvedBy' => auth()->user()?->name ?? self::DEFAULT_RESOLVED_BY,
             'ResolvedDate' => now()->toISOString(),
         ];
 
@@ -224,7 +226,7 @@ class UpdateRMMTicketStatus implements ShouldQueue
 
         $payload = [
             'status' => $rmmStatus,
-            'resolved_by' => auth()->user()?->name ?? 'Nestogy System',
+            'resolved_by' => auth()->user()?->name ?? self::DEFAULT_RESOLVED_BY,
             'resolved_at' => now()->toISOString(),
         ];
 
@@ -267,7 +269,7 @@ class UpdateRMMTicketStatus implements ShouldQueue
 
         $payload = [
             'status' => $rmmStatus,
-            'resolvedBy' => auth()->user()?->name ?? 'Nestogy System',
+            'resolvedBy' => auth()->user()?->name ?? self::DEFAULT_RESOLVED_BY,
             'resolvedAt' => now()->toISOString(),
         ];
 
