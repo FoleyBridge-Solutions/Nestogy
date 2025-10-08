@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class BaseSubsidiaryRequest extends FormRequest
 {
+    protected const NULLABLE_STRING_100 = 'nullable|string|max:100';
+
     /**
      * Get common validation rules for subsidiary operations.
      */
@@ -26,10 +28,10 @@ abstract class BaseSubsidiaryRequest extends FormRequest
 
             // Address information
             'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
+            'city' => self::NULLABLE_STRING_100,
+            'state' => self::NULLABLE_STRING_100,
             'zip' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:100',
+            'country' => self::NULLABLE_STRING_100,
 
             // Subsidiary-specific settings
             'access_level' => 'required|in:full,limited,read_only',
@@ -43,8 +45,8 @@ abstract class BaseSubsidiaryRequest extends FormRequest
 
             // Subsidiary settings
             'subsidiary_settings' => 'array',
-            'subsidiary_settings.department' => 'nullable|string|max:100',
-            'subsidiary_settings.cost_center' => 'nullable|string|max:100',
+            'subsidiary_settings.department' => self::NULLABLE_STRING_100,
+            'subsidiary_settings.cost_center' => self::NULLABLE_STRING_100,
             'subsidiary_settings.budget_limit' => 'nullable|numeric|min:0',
             'subsidiary_settings.auto_approval_limit' => 'nullable|numeric|min:0',
         ];
