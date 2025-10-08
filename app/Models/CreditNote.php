@@ -417,7 +417,7 @@ class CreditNote extends Model
             ]);
 
             // Update approval records
-            $this->updateApprovalStatus('approved', $approver, $comments);
+            $this->updateApprovalStatus('approved', $comments);
 
             // Create audit trail
             $this->createAuditEntry('approved', $approver, $comments);
@@ -444,7 +444,7 @@ class CreditNote extends Model
             ]);
 
             // Update approval records
-            $this->updateApprovalStatus('rejected', $rejector, $reason);
+            $this->updateApprovalStatus('rejected', $reason);
 
             // Create audit trail
             $this->createAuditEntry('rejected', $rejector, $reason);
@@ -616,7 +616,7 @@ class CreditNote extends Model
         // Implementation would send void notifications
     }
 
-    private function updateApprovalStatus(string $status, User $user, ?string $comments = null): void
+    private function updateApprovalStatus(string $status, ?string $comments = null): void
     {
         // Implementation would update approval records
     }
