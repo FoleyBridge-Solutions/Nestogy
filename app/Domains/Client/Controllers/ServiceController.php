@@ -376,12 +376,36 @@ class ServiceController extends Controller
      */
     public function export(Request $request)
     {
+        $services = $this->getFilteredServicesForExport($request);
+
+        $filename = 'services_'.date('Y-m-d_H-i-s').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($services) {
+            $this->generateServicesCsv($services);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function getFilteredServicesForExport(Request $request)
+    {
         $query = ClientService::with(['client', 'technician'])
             ->whereHas('client', function ($q) {
                 $q->where('company_id', auth()->user()->company_id);
             });
 
-        // Apply same filters as index
+        $this->applyExportFilters($query, $request);
+
+        return $query->orderBy('name')->get();
+    }
+
+    private function applyExportFilters($query, Request $request)
+    {
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -404,60 +428,53 @@ class ServiceController extends Controller
         if ($clientId = $request->get('client_id')) {
             $query->where('client_id', $clientId);
         }
+    }
 
-        $services = $query->orderBy('name')->get();
+    private function generateServicesCsv($services)
+    {
+        $file = fopen('php://output', 'w');
 
-        $filename = 'services_'.date('Y-m-d_H-i-s').'.csv';
+        fputcsv($file, [
+            'Service Name',
+            'Client Name',
+            'Type',
+            'Category',
+            'Status',
+            'Start Date',
+            'End Date',
+            'Monthly Cost',
+            'Annual Revenue',
+            'Assigned Technician',
+            'Service Level',
+            'Priority',
+            'Last Review',
+            'Client Satisfaction',
+        ]);
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        foreach ($services as $service) {
+            fputcsv($file, $this->formatServiceForCsv($service));
+        }
+
+        fclose($file);
+    }
+
+    private function formatServiceForCsv($service)
+    {
+        return [
+            $service->name,
+            $service->client->display_name,
+            $service->service_type,
+            $service->category,
+            $service->status_label,
+            $service->start_date ? $service->start_date->format('Y-m-d') : '',
+            $service->end_date ? $service->end_date->format('Y-m-d') : '',
+            $service->monthly_cost,
+            $service->annual_revenue,
+            $service->technician ? $service->technician->name : '',
+            $service->service_level,
+            $service->priority_level,
+            $service->last_review_date ? $service->last_review_date->format('Y-m-d') : '',
+            $service->client_satisfaction,
         ];
-
-        $callback = function () use ($services) {
-            $file = fopen('php://output', 'w');
-
-            // CSV headers
-            fputcsv($file, [
-                'Service Name',
-                'Client Name',
-                'Type',
-                'Category',
-                'Status',
-                'Start Date',
-                'End Date',
-                'Monthly Cost',
-                'Annual Revenue',
-                'Assigned Technician',
-                'Service Level',
-                'Priority',
-                'Last Review',
-                'Client Satisfaction',
-            ]);
-
-            // CSV data
-            foreach ($services as $service) {
-                fputcsv($file, [
-                    $service->name,
-                    $service->client->display_name,
-                    $service->service_type,
-                    $service->category,
-                    $service->status_label,
-                    $service->start_date ? $service->start_date->format('Y-m-d') : '',
-                    $service->end_date ? $service->end_date->format('Y-m-d') : '',
-                    $service->monthly_cost,
-                    $service->annual_revenue,
-                    $service->technician ? $service->technician->name : '',
-                    $service->service_level,
-                    $service->priority_level,
-                    $service->last_review_date ? $service->last_review_date->format('Y-m-d') : '',
-                    $service->client_satisfaction,
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
     }
 }
