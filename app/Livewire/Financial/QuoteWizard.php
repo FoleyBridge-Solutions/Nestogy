@@ -245,36 +245,51 @@ class QuoteWizard extends Component
         $this->validationErrors = [];
 
         if ($step >= 1) {
-            if (empty($this->client_id)) {
-                $this->validationErrors['client_id'] = 'Please select a client';
-            }
-            if (empty($this->category_id)) {
-                $this->validationErrors['category_id'] = 'Please select a category';
-            }
-            if (empty($this->date)) {
-                $this->validationErrors['date'] = 'Please select a quote date';
-            }
+            $this->validateStepOne();
         }
 
         if ($step >= 2) {
-            if (empty($this->selectedItems)) {
-                $this->validationErrors['items'] = 'Please add at least one item';
-            }
-
-            foreach ($this->selectedItems as $index => $item) {
-                if (empty($item['name'])) {
-                    $this->validationErrors["item_{$index}_name"] = 'Item name is required';
-                }
-                if ($item['quantity'] <= 0) {
-                    $this->validationErrors["item_{$index}_quantity"] = 'Quantity must be greater than 0';
-                }
-                if ($item['unit_price'] < 0) {
-                    $this->validationErrors["item_{$index}_unit_price"] = 'Unit price cannot be negative';
-                }
-            }
+            $this->validateStepTwo();
         }
 
         return empty($this->validationErrors);
+    }
+
+    private function validateStepOne()
+    {
+        if (empty($this->client_id)) {
+            $this->validationErrors['client_id'] = 'Please select a client';
+        }
+        if (empty($this->category_id)) {
+            $this->validationErrors['category_id'] = 'Please select a category';
+        }
+        if (empty($this->date)) {
+            $this->validationErrors['date'] = 'Please select a quote date';
+        }
+    }
+
+    private function validateStepTwo()
+    {
+        if (empty($this->selectedItems)) {
+            $this->validationErrors['items'] = 'Please add at least one item';
+        }
+
+        $this->validateSelectedItems();
+    }
+
+    private function validateSelectedItems()
+    {
+        foreach ($this->selectedItems as $index => $item) {
+            if (empty($item['name'])) {
+                $this->validationErrors["item_{$index}_name"] = 'Item name is required';
+            }
+            if ($item['quantity'] <= 0) {
+                $this->validationErrors["item_{$index}_quantity"] = 'Quantity must be greater than 0';
+            }
+            if ($item['unit_price'] < 0) {
+                $this->validationErrors["item_{$index}_unit_price"] = 'Unit price cannot be negative';
+            }
+        }
     }
 
     public function validateField($field)
