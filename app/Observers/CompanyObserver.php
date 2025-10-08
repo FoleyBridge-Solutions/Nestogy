@@ -40,7 +40,7 @@ class CompanyObserver
     /**
      * Handle the Company "restored" event.
      */
-    public function restored(Company $company): void
+    public function restored(Company): void
     {
         //
     }
