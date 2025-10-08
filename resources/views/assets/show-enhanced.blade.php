@@ -773,7 +773,7 @@
 
                         {{-- History Timeline --}}
                         <div class="flow-root">
-                            <ul role="list" class="-mb-8">
+                            <ul class="-mb-8">
                                 @foreach(range(1, 5) as $index)
                                 <li>
                                     <div class="relative pb-8">
