@@ -11,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class QuoteController extends Controller
 {
+    private const NULLABLE_STRING_RULE = 'nullable|string';
+
     /**
      * Display a listing of all quotes (standalone view)
      */
@@ -111,7 +113,7 @@ class QuoteController extends Controller
                 }),
             ],
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING_RULE,
             'currency' => 'required|in:'.implode(',', array_keys(ClientQuote::getCurrencies())),
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
@@ -121,12 +123,12 @@ class QuoteController extends Controller
             'status' => 'required|in:'.implode(',', array_keys(ClientQuote::getStatuses())),
             'conversion_probability' => 'nullable|numeric|min:0|max:100',
             'follow_up_date' => 'nullable|date',
-            'terms_conditions' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'payment_terms' => 'nullable|string',
-            'delivery_timeframe' => 'nullable|string',
-            'project_scope' => 'nullable|string',
-            'line_items' => 'nullable|string',
+            'terms_conditions' => self::NULLABLE_STRING_RULE,
+            'notes' => self::NULLABLE_STRING_RULE,
+            'payment_terms' => self::NULLABLE_STRING_RULE,
+            'delivery_timeframe' => self::NULLABLE_STRING_RULE,
+            'project_scope' => self::NULLABLE_STRING_RULE,
+            'line_items' => self::NULLABLE_STRING_RULE,
         ]);
 
         if ($validator->fails()) {
@@ -241,7 +243,7 @@ class QuoteController extends Controller
                 }),
             ],
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING_RULE,
             'currency' => 'required|in:'.implode(',', array_keys(ClientQuote::getCurrencies())),
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
@@ -251,12 +253,12 @@ class QuoteController extends Controller
             'status' => 'required|in:'.implode(',', array_keys(ClientQuote::getStatuses())),
             'conversion_probability' => 'nullable|numeric|min:0|max:100',
             'follow_up_date' => 'nullable|date',
-            'terms_conditions' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'payment_terms' => 'nullable|string',
-            'delivery_timeframe' => 'nullable|string',
-            'project_scope' => 'nullable|string',
-            'line_items' => 'nullable|string',
+            'terms_conditions' => self::NULLABLE_STRING_RULE,
+            'notes' => self::NULLABLE_STRING_RULE,
+            'payment_terms' => self::NULLABLE_STRING_RULE,
+            'delivery_timeframe' => self::NULLABLE_STRING_RULE,
+            'project_scope' => self::NULLABLE_STRING_RULE,
+            'line_items' => self::NULLABLE_STRING_RULE,
         ]);
 
         if ($validator->fails()) {
