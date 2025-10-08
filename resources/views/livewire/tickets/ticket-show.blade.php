@@ -398,8 +398,7 @@
 
                         {{-- Priority --}}
                         <div>
-                            <label class="text-xs text-gray-500">Priority</label>
-                            <flux:select wire:model="priority" wire:change="updatePriority" size="sm">
+                            <flux:select wire:model="priority" wire:change="updatePriority" size="sm" label="Priority" class="text-xs text-gray-500">
                                 @foreach($priorities as $priorityOption)
                                     <option value="{{ $priorityOption }}">
                                         {{ ucfirst($priorityOption) }}
