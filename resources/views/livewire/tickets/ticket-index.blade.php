@@ -267,7 +267,7 @@
                         <span class="text-blue-600 font-semibold">
                             #{{ $ticket->number }}
                         </span>
-                        <div onclick="event.stopPropagation()">
+                        <div role="presentation" @click.stop>
                             <flux:dropdown>
                             <flux:button variant="ghost" size="sm" class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                 <flux:icon.ellipsis-vertical class="size-4" />
