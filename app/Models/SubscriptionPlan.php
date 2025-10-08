@@ -59,10 +59,10 @@ class SubscriptionPlan extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'price_monthly' => 'decimal:2',
-        'price_yearly' => 'decimal:2',
-        'price_per_user_monthly' => 'decimal:2',
-        'base_price' => 'decimal:2',
+        'price_monthly' => self::CAST_DECIMAL_2,
+        'price_yearly' => self::CAST_DECIMAL_2,
+        'price_per_user_monthly' => self::CAST_DECIMAL_2,
+        'base_price' => self::CAST_DECIMAL_2,
         'minimum_users' => 'integer',
         'user_limit' => 'integer',
         'max_clients' => 'integer',
@@ -72,6 +72,11 @@ class SubscriptionPlan extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Cast type constants
+     */
+    const CAST_DECIMAL_2 = 'decimal:2';
 
     /**
      * Default plan constants
