@@ -2,6 +2,7 @@
 
 namespace App\Domains\PhysicalMail\Services;
 
+use App\Domains\PhysicalMail\Exceptions\PhysicalMailTestOrderException;
 use App\Domains\PhysicalMail\Jobs\SendChequeJob;
 use App\Domains\PhysicalMail\Jobs\SendLetterJob;
 use App\Domains\PhysicalMail\Jobs\SendPostcardJob;
@@ -348,11 +349,11 @@ class PhysicalMailService
     public function progressTestOrder(PhysicalMailOrder $order): array
     {
         if (! $this->postgrid->isTestMode()) {
-            throw new \Exception('Can only progress test orders');
+            throw new PhysicalMailTestOrderException('Can only progress test orders');
         }
 
         if (! $order->postgrid_id) {
-            throw new \Exception('Order has not been sent to PostGrid yet');
+            throw new PhysicalMailTestOrderException('Order has not been sent to PostGrid yet');
         }
 
         $resource = Str::plural(strtolower(class_basename($order->mailable_type)));
