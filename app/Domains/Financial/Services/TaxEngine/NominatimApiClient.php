@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
+use App\Domains\Financial\Exceptions\TaxApiException;
 use App\Models\TaxApiQueryCache;
 use Exception;
 
@@ -88,7 +89,7 @@ class NominatimApiClient extends BaseApiClient
                     ->get("{$this->baseUrl}/search", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('Nominatim geocoding failed: '.$response->body());
+                    throw TaxApiException::requestFailed('Nominatim', 'geocoding', $response->body());
                 }
 
                 $data = $response->json();
@@ -148,7 +149,7 @@ class NominatimApiClient extends BaseApiClient
                     ->get("{$this->baseUrl}/reverse", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('Nominatim reverse geocoding failed: '.$response->body());
+                    throw TaxApiException::requestFailed('Nominatim', 'reverse geocoding', $response->body());
                 }
 
                 $data = $response->json();
@@ -395,7 +396,7 @@ class NominatimApiClient extends BaseApiClient
                     ->get("{$this->baseUrl}/search", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('Nominatim place search failed: '.$response->body());
+                    throw TaxApiException::requestFailed('Nominatim', 'place search', $response->body());
                 }
 
                 $data = $response->json();
