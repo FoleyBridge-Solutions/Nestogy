@@ -75,7 +75,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Contract Configuration Registry with company context
-        $this->app->bind('contract.config.registry', function ($app) {
+        $this->app->bind('contract.config.registry', function () {
             $companyId = Auth::check() && Auth::user()->company_id 
                 ? Auth::user()->company_id 
                 : 1;
