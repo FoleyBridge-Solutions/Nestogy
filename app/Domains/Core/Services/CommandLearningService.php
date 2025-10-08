@@ -428,6 +428,8 @@ class CommandLearningService
                 case 'popular':
                     $score += 0.05;
                     break;
+                default:
+                    break;
             }
 
             $suggestion['final_score'] = $score;
