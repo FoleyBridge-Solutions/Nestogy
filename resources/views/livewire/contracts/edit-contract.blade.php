@@ -215,8 +215,9 @@
 
                                 <!-- End Date -->
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+                                    <label for="end_date" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">End Date</label>
                                     <input type="date" 
+                                           id="end_date"
                                            wire:model.defer="end_date" 
                                            @if(!$canEdit) disabled @endif
                                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg
