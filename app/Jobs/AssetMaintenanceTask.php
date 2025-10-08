@@ -189,6 +189,9 @@ class AssetMaintenanceTask implements ShouldQueue
             case 'cleanup':
                 $summary['space_reclaimed'] = $result['results']['space_reclaimed']['total_space_freed'] ?? '0 MB';
                 break;
+
+            default:
+                break;
         }
 
         return $summary;
