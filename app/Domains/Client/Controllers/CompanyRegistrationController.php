@@ -29,6 +29,8 @@ use Illuminate\Validation\Rules\Password;
  */
 class CompanyRegistrationController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING_255 = 'required|string|max:255';
+
     protected StripeSubscriptionService $stripeService;
 
     protected SubscriptionService $subscriptionService;
@@ -242,7 +244,7 @@ class CompanyRegistrationController extends Controller
     {
         return Validator::make($request->all(), [
             // Company information
-            'company_name' => 'required|string|max:255',
+            'company_name' => self::VALIDATION_REQUIRED_STRING_255,
             'company_email' => 'required|email|max:255',
             'company_phone' => 'nullable|string|max:20',
             'company_address' => 'nullable|string|max:255',
@@ -253,7 +255,7 @@ class CompanyRegistrationController extends Controller
             'company_website' => 'nullable|url|max:255',
 
             // Admin user information
-            'admin_name' => 'required|string|max:255',
+            'admin_name' => self::VALIDATION_REQUIRED_STRING_255,
             'admin_email' => 'required|email|max:255|unique:users,email',
             'admin_password' => ['required', 'confirmed', Password::defaults()],
 
@@ -539,7 +541,7 @@ class CompanyRegistrationController extends Controller
             case 1:
                 // Company information
                 $validator = Validator::make($request->all(), [
-                    'company_name' => 'required|string|max:255',
+                    'company_name' => self::VALIDATION_REQUIRED_STRING_255,
                     'company_email' => 'required|email|max:255',
                     'company_phone' => 'nullable|string|max:20',
                 ]);
@@ -548,7 +550,7 @@ class CompanyRegistrationController extends Controller
             case 2:
                 // Admin user information
                 $validator = Validator::make($request->all(), [
-                    'admin_name' => 'required|string|max:255',
+                    'admin_name' => self::VALIDATION_REQUIRED_STRING_255,
                     'admin_email' => 'required|email|max:255|unique:users,email',
                     'admin_password' => ['required', 'confirmed', Password::defaults()],
                 ]);
