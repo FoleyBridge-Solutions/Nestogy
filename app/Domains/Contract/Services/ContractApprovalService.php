@@ -358,7 +358,7 @@ class ContractApprovalService
         ]);
 
         // Notify contract creator of rejection
-        $this->notifyContractCreator($contract, 'rejected', $comments);
+        $this->notifyContractCreator($contract, 'rejected');
 
         return true;
     }
@@ -391,7 +391,7 @@ class ContractApprovalService
         ]);
 
         // Notify contract creator of requested changes
-        $this->notifyContractCreator($contract, 'changes_requested', $comments);
+        $this->notifyContractCreator($contract, 'changes_requested');
 
         return true;
     }
@@ -594,7 +594,7 @@ class ContractApprovalService
         ]);
     }
 
-    protected function notifyContractCreator(Contract $contract, string $action, ?string $comments = null): void
+    protected function notifyContractCreator(Contract $contract, string $action): void
     {
         // Implementation would notify contract creator
         Log::info('Contract creator notified', [
