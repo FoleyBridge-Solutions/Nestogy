@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RmmMonitoringSettingsRequest extends FormRequest
 {
+    private const WARNING_THRESHOLD_ERROR = 'Warning threshold must be lower than critical threshold.';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -251,19 +253,19 @@ class RmmMonitoringSettingsRequest extends FormRequest
 
             if (isset($thresholds['cpu_usage_warning'], $thresholds['cpu_usage_critical'])) {
                 if ($thresholds['cpu_usage_warning'] >= $thresholds['cpu_usage_critical']) {
-                    $validator->errors()->add('monitoring_alert_thresholds.cpu_usage_warning', 'Warning threshold must be lower than critical threshold.');
+                    $validator->errors()->add('monitoring_alert_thresholds.cpu_usage_warning', self::WARNING_THRESHOLD_ERROR);
                 }
             }
 
             if (isset($thresholds['memory_usage_warning'], $thresholds['memory_usage_critical'])) {
                 if ($thresholds['memory_usage_warning'] >= $thresholds['memory_usage_critical']) {
-                    $validator->errors()->add('monitoring_alert_thresholds.memory_usage_warning', 'Warning threshold must be lower than critical threshold.');
+                    $validator->errors()->add('monitoring_alert_thresholds.memory_usage_warning', self::WARNING_THRESHOLD_ERROR);
                 }
             }
 
             if (isset($thresholds['disk_usage_warning'], $thresholds['disk_usage_critical'])) {
                 if ($thresholds['disk_usage_warning'] >= $thresholds['disk_usage_critical']) {
-                    $validator->errors()->add('monitoring_alert_thresholds.disk_usage_warning', 'Warning threshold must be lower than critical threshold.');
+                    $validator->errors()->add('monitoring_alert_thresholds.disk_usage_warning', self::WARNING_THRESHOLD_ERROR);
                 }
             }
 
