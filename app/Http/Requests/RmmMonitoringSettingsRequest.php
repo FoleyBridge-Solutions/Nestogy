@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RmmMonitoringSettingsRequest extends FormRequest
 {
+    private const NULLABLE_ARRAY = 'nullable|array';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -21,7 +23,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
     {
         return [
             // ConnectWise Automate Settings
-            'connectwise_automate_settings' => 'nullable|array',
+            'connectwise_automate_settings' => self::NULLABLE_ARRAY,
             'connectwise_automate_settings.enabled' => 'boolean',
             'connectwise_automate_settings.server_url' => 'nullable|url|max:255',
             'connectwise_automate_settings.username' => 'nullable|string|max:255',
@@ -34,7 +36,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'connectwise_automate_settings.monitor_connectivity' => 'boolean',
 
             // Datto RMM Settings
-            'datto_rmm_settings' => 'nullable|array',
+            'datto_rmm_settings' => self::NULLABLE_ARRAY,
             'datto_rmm_settings.enabled' => 'boolean',
             'datto_rmm_settings.api_url' => 'nullable|url|max:255',
             'datto_rmm_settings.api_key' => 'nullable|string|max:255',
@@ -47,7 +49,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'datto_rmm_settings.monitor_agent_status' => 'boolean',
 
             // NinjaOne Settings
-            'ninja_rmm_settings' => 'nullable|array',
+            'ninja_rmm_settings' => self::NULLABLE_ARRAY,
             'ninja_rmm_settings.enabled' => 'boolean',
             'ninja_rmm_settings.instance_url' => 'nullable|url|max:255',
             'ninja_rmm_settings.client_id' => 'nullable|string|max:255',
@@ -62,7 +64,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'ninja_rmm_settings.monitor_policy_compliance' => 'boolean',
 
             // Kaseya VSA Settings
-            'kaseya_vsa_settings' => 'nullable|array',
+            'kaseya_vsa_settings' => self::NULLABLE_ARRAY,
             'kaseya_vsa_settings.enabled' => 'boolean',
             'kaseya_vsa_settings.server_url' => 'nullable|url|max:255',
             'kaseya_vsa_settings.username' => 'nullable|string|max:255',
@@ -76,7 +78,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'kaseya_vsa_settings.monitor_agent_procedures' => 'boolean',
 
             // Auvik Settings
-            'auvik_settings' => 'nullable|array',
+            'auvik_settings' => self::NULLABLE_ARRAY,
             'auvik_settings.enabled' => 'boolean',
             'auvik_settings.api_url' => 'nullable|url|max:255',
             'auvik_settings.username' => 'nullable|string|max:255',
@@ -90,7 +92,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'auvik_settings.network_mapping_enabled' => 'boolean',
 
             // PRTG Settings
-            'prtg_settings' => 'nullable|array',
+            'prtg_settings' => self::NULLABLE_ARRAY,
             'prtg_settings.enabled' => 'boolean',
             'prtg_settings.server_url' => 'nullable|url|max:255',
             'prtg_settings.username' => 'nullable|string|max:255',
@@ -104,7 +106,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'prtg_settings.monitor_sensor_status' => 'boolean',
 
             // SolarWinds Settings
-            'solarwinds_settings' => 'nullable|array',
+            'solarwinds_settings' => self::NULLABLE_ARRAY,
             'solarwinds_settings.enabled' => 'boolean',
             'solarwinds_settings.server_url' => 'nullable|url|max:255',
             'solarwinds_settings.username' => 'nullable|string|max:255',
@@ -118,7 +120,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'solarwinds_settings.monitor_node_status' => 'boolean',
 
             // Monitoring Alert Thresholds
-            'monitoring_alert_thresholds' => 'nullable|array',
+            'monitoring_alert_thresholds' => self::NULLABLE_ARRAY,
             'monitoring_alert_thresholds.cpu_usage_critical' => 'integer|min:50|max:100',
             'monitoring_alert_thresholds.cpu_usage_warning' => 'integer|min:30|max:90',
             'monitoring_alert_thresholds.memory_usage_critical' => 'integer|min:50|max:100',
@@ -131,7 +133,7 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'monitoring_alert_thresholds.offline_duration_minutes' => 'integer|min:5|max:1440',
 
             // Escalation Rules
-            'escalation_rules' => 'nullable|array',
+            'escalation_rules' => self::NULLABLE_ARRAY,
             'escalation_rules.enabled' => 'boolean',
             'escalation_rules.first_escalation_minutes' => 'integer|min:5|max:1440',
             'escalation_rules.second_escalation_minutes' => 'integer|min:10|max:2880',
@@ -140,11 +142,11 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'escalation_rules.escalate_to_client' => 'boolean',
             'escalation_rules.escalate_weekends' => 'boolean',
             'escalation_rules.escalate_holidays' => 'boolean',
-            'escalation_rules.notification_channels' => 'nullable|array',
+            'escalation_rules.notification_channels' => self::NULLABLE_ARRAY,
             'escalation_rules.notification_channels.*' => 'string|in:email,sms,slack,teams,webhook',
 
             // Asset Discovery Settings
-            'asset_discovery_settings' => 'nullable|array',
+            'asset_discovery_settings' => self::NULLABLE_ARRAY,
             'asset_discovery_settings.enabled' => 'boolean',
             'asset_discovery_settings.auto_discovery_frequency_hours' => 'integer|min:1|max:168',
             'asset_discovery_settings.network_scan_enabled' => 'boolean',
@@ -154,25 +156,25 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'asset_discovery_settings.ssh_discovery' => 'boolean',
             'asset_discovery_settings.auto_add_discovered_assets' => 'boolean',
             'asset_discovery_settings.require_approval_for_new_assets' => 'boolean',
-            'asset_discovery_settings.discovery_ip_ranges' => 'nullable|array',
-            'asset_discovery_settings.excluded_ip_ranges' => 'nullable|array',
+            'asset_discovery_settings.discovery_ip_ranges' => self::NULLABLE_ARRAY,
+            'asset_discovery_settings.excluded_ip_ranges' => self::NULLABLE_ARRAY,
 
             // Patch Management Settings
-            'patch_management_settings' => 'nullable|array',
+            'patch_management_settings' => self::NULLABLE_ARRAY,
             'patch_management_settings.enabled' => 'boolean',
             'patch_management_settings.auto_approve_critical_patches' => 'boolean',
             'patch_management_settings.auto_approve_security_patches' => 'boolean',
             'patch_management_settings.patch_window_start' => 'nullable|date_format:H:i',
             'patch_management_settings.patch_window_end' => 'nullable|date_format:H:i',
-            'patch_management_settings.patch_window_days' => 'nullable|array',
+            'patch_management_settings.patch_window_days' => self::NULLABLE_ARRAY,
             'patch_management_settings.patch_window_days.*' => 'string|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'patch_management_settings.reboot_required_notification' => 'boolean',
             'patch_management_settings.auto_reboot_non_business_hours' => 'boolean',
-            'patch_management_settings.patch_groups' => 'nullable|array',
+            'patch_management_settings.patch_groups' => self::NULLABLE_ARRAY,
             'patch_management_settings.test_deployment_percentage' => 'integer|min:5|max:50',
 
             // Remote Access Settings
-            'remote_access_settings' => 'nullable|array',
+            'remote_access_settings' => self::NULLABLE_ARRAY,
             'remote_access_settings.enabled' => 'boolean',
             'remote_access_settings.require_user_consent' => 'boolean',
             'remote_access_settings.log_all_sessions' => 'boolean',
@@ -181,21 +183,21 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'remote_access_settings.clipboard_sync_enabled' => 'boolean',
             'remote_access_settings.multi_monitor_support' => 'boolean',
             'remote_access_settings.encryption_level' => 'string|in:low,medium,high',
-            'remote_access_settings.allowed_tools' => 'nullable|array',
+            'remote_access_settings.allowed_tools' => self::NULLABLE_ARRAY,
             'remote_access_settings.allowed_tools.*' => 'string|in:rdp,vnc,teamviewer,connectwise_control,splashtop,logmein',
 
             // Auto Ticket Creation
             'auto_create_tickets_from_alerts' => 'boolean',
-            'alert_to_ticket_mapping' => 'nullable|array',
-            'alert_to_ticket_mapping.critical_alerts' => 'nullable|array',
+            'alert_to_ticket_mapping' => self::NULLABLE_ARRAY,
+            'alert_to_ticket_mapping.critical_alerts' => self::NULLABLE_ARRAY,
             'alert_to_ticket_mapping.critical_alerts.priority' => 'string|in:low,medium,high,critical',
             'alert_to_ticket_mapping.critical_alerts.auto_assign' => 'boolean',
             'alert_to_ticket_mapping.critical_alerts.notify_client' => 'boolean',
-            'alert_to_ticket_mapping.warning_alerts' => 'nullable|array',
+            'alert_to_ticket_mapping.warning_alerts' => self::NULLABLE_ARRAY,
             'alert_to_ticket_mapping.warning_alerts.priority' => 'string|in:low,medium,high,critical',
             'alert_to_ticket_mapping.warning_alerts.auto_assign' => 'boolean',
             'alert_to_ticket_mapping.warning_alerts.notify_client' => 'boolean',
-            'alert_to_ticket_mapping.info_alerts' => 'nullable|array',
+            'alert_to_ticket_mapping.info_alerts' => self::NULLABLE_ARRAY,
             'alert_to_ticket_mapping.info_alerts.create_tickets' => 'boolean',
             'alert_to_ticket_mapping.info_alerts.priority' => 'string|in:low,medium,high,critical',
         ];
