@@ -108,6 +108,8 @@ class Setting extends Model
 {
     use HasFactory;
 
+    private const VALIDATION_NULLABLE_STRING_MAX_255 = 'nullable|string|max:255';
+
     /**
      * The table associated with the model.
      */
@@ -1190,9 +1192,9 @@ class Setting extends Model
             'start_page' => 'required|string|max:255',
 
             // General & Company
-            'company_logo' => 'nullable|string|max:255',
+            'company_logo' => self::VALIDATION_NULLABLE_STRING_MAX_255,
             'company_colors' => 'nullable|array',
-            'company_address' => 'nullable|string|max:255',
+            'company_address' => self::VALIDATION_NULLABLE_STRING_MAX_255,
             'company_city' => 'nullable|string|max:100',
             'company_state' => 'nullable|string|max:100',
             'company_zip' => 'nullable|string|max:20',
@@ -1226,23 +1228,23 @@ class Setting extends Model
             'audit_retention_days' => 'integer|min:90|max:2555',
 
             // Email & Communication
-            'smtp_host' => 'nullable|string|max:255',
+            'smtp_host' => self::VALIDATION_NULLABLE_STRING_MAX_255,
             'smtp_port' => 'nullable|integer|min:1|max:65535',
             'smtp_encryption' => 'nullable|in:tls,ssl,none',
-            'smtp_username' => 'nullable|string|max:255',
-            'smtp_password' => 'nullable|string|max:255',
+            'smtp_username' => self::VALIDATION_NULLABLE_STRING_MAX_255,
+            'smtp_password' => self::VALIDATION_NULLABLE_STRING_MAX_255,
             'smtp_auth_required' => 'boolean',
             'smtp_use_tls' => 'boolean',
             'smtp_timeout' => 'integer|min:10|max:120',
             'mail_from_email' => 'nullable|email|max:255',
-            'mail_from_name' => 'nullable|string|max:255',
+            'mail_from_name' => self::VALIDATION_NULLABLE_STRING_MAX_255,
             'email_retry_attempts' => 'integer|min:1|max:5',
             'email_tracking_enabled' => 'boolean',
-            'imap_host' => 'nullable|string|max:255',
+            'imap_host' => self::VALIDATION_NULLABLE_STRING_MAX_255,
             'imap_port' => 'nullable|integer|min:1|max:65535',
             'imap_encryption' => 'nullable|in:tls,ssl,none',
-            'imap_username' => 'nullable|string|max:255',
-            'imap_password' => 'nullable|string|max:255',
+            'imap_username' => self::VALIDATION_NULLABLE_STRING_MAX_255,
+            'imap_password' => self::VALIDATION_NULLABLE_STRING_MAX_255,
 
             // Financial
             'default_net_terms' => 'nullable|integer|min:0|max:365',
