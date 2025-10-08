@@ -28,7 +28,7 @@ class PhysicalMailContentAnalyzer
         if ($type === 'html') {
             $analysis = $this->analyzeHtml($content, $analysis);
         } elseif ($type === 'pdf') {
-            $analysis = $this->analyzePdf($content, $analysis);
+            $analysis = $this->analyzePdf($analysis);
         }
 
         return $analysis;
@@ -82,7 +82,7 @@ class PhysicalMailContentAnalyzer
     /**
      * Analyze PDF content (URL)
      */
-    private function analyzePdf(string $pdfUrl, array $analysis): array
+    private function analyzePdf(array $analysis): array
     {
         // For PDF URLs, we can't analyze content directly
         // Default to safe settings
