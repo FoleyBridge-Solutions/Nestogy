@@ -37,7 +37,7 @@ class RoutesDomainToggle extends Command
             return self::FAILURE;
         }
 
-        $config = require_once $configPath;
+        $config = require $configPath;
 
         if (! isset($config[$domain])) {
             $this->error("Domain '{$domain}' not found in configuration.");
