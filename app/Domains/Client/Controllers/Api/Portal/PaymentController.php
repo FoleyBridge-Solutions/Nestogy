@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class PaymentController extends PortalApiController
 {
+    private const VALIDATION_NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
     protected PortalPaymentService $paymentService;
 
     public function __construct(PortalPaymentService $paymentService, \App\Services\ClientPortalService $portalService, \App\Domains\Security\Services\PortalAuthService $authService)
@@ -354,8 +356,8 @@ class PaymentController extends PortalApiController
                 'trigger_type' => 'required|string|in:invoice_due,invoice_sent,scheduled',
                 'trigger_days_offset' => 'nullable|integer|between:-30,30',
                 'trigger_time' => 'nullable|date_format:H:i',
-                'minimum_amount' => 'nullable|numeric|min:0',
-                'maximum_amount' => 'nullable|numeric|min:0',
+                'minimum_amount' => self::VALIDATION_NULLABLE_NUMERIC_MIN_ZERO,
+                'maximum_amount' => self::VALIDATION_NULLABLE_NUMERIC_MIN_ZERO,
                 'retry_on_failure' => 'boolean',
                 'max_retry_attempts' => 'nullable|integer|between:1,5',
                 'send_success_notifications' => 'boolean',
@@ -452,8 +454,8 @@ class PaymentController extends PortalApiController
             $validator = Validator::make($request->all(), [
                 'name' => 'nullable|string|max:255',
                 'is_active' => 'boolean',
-                'minimum_amount' => 'nullable|numeric|min:0',
-                'maximum_amount' => 'nullable|numeric|min:0',
+                'minimum_amount' => self::VALIDATION_NULLABLE_NUMERIC_MIN_ZERO,
+                'maximum_amount' => self::VALIDATION_NULLABLE_NUMERIC_MIN_ZERO,
                 'send_success_notifications' => 'boolean',
                 'send_failure_notifications' => 'boolean',
             ]);
