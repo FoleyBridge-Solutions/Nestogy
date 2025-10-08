@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Log;
  */
 class AssetSyncService
 {
+    private const ERROR_NO_RMM_MAPPING = 'No RMM mapping found for this asset';
+
     protected RmmServiceFactory $rmmFactory;
 
     public function __construct(RmmServiceFactory $rmmFactory)
@@ -225,7 +227,7 @@ class AssetSyncService
         if (! $mapping) {
             return [
                 'success' => false,
-                'error' => 'No RMM mapping found for this asset',
+                'error' => self::ERROR_NO_RMM_MAPPING,
             ];
         }
 
@@ -268,7 +270,7 @@ class AssetSyncService
         if (! $mapping) {
             return [
                 'success' => false,
-                'error' => 'No RMM mapping found for this asset',
+                'error' => self::ERROR_NO_RMM_MAPPING,
             ];
         }
 
@@ -318,7 +320,7 @@ class AssetSyncService
         if (! $mapping) {
             return [
                 'success' => false,
-                'error' => 'No RMM mapping found for this asset',
+                'error' => self::ERROR_NO_RMM_MAPPING,
             ];
         }
 
@@ -360,7 +362,7 @@ class AssetSyncService
         if (! $mapping) {
             return [
                 'success' => false,
-                'error' => 'No RMM mapping found for this asset',
+                'error' => self::ERROR_NO_RMM_MAPPING,
             ];
         }
 
@@ -402,7 +404,7 @@ class AssetSyncService
         if (! $mapping) {
             return [
                 'success' => false,
-                'error' => 'No RMM mapping found for this asset',
+                'error' => self::ERROR_NO_RMM_MAPPING,
                 'data' => null,
             ];
         }
