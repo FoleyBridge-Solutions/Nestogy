@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
+use App\Domains\Financial\Exceptions\CensusBureauApiException;
 use App\Models\TaxApiQueryCache;
 use Exception;
 
@@ -84,7 +85,7 @@ class CensusBureauApiClient extends BaseApiClient
                     ->get("{$this->geocodingBaseUrl}/locations/address", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('Census geocoding failed: '.$response->body());
+                    throw CensusBureauApiException::geocodingFailed($response->body());
                 }
 
                 $data = $response->json();
@@ -170,7 +171,7 @@ class CensusBureauApiClient extends BaseApiClient
                     ->get("{$this->geocodingBaseUrl}/geographies/coordinates", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('Census geographic info failed: '.$response->body());
+                    throw CensusBureauApiException::geographicInfoFailed($response->body());
                 }
 
                 $data = $response->json();
