@@ -38,22 +38,45 @@ class LeadScoringService
     {
         $score = 0;
 
-        // Company size scoring (25 points max)
-        if ($lead->company_size) {
-            if ($lead->company_size >= 500) {
-                $score += 25; // Enterprise
-            } elseif ($lead->company_size >= 100) {
-                $score += 20; // Large business
-            } elseif ($lead->company_size >= 50) {
-                $score += 15; // Medium business
-            } elseif ($lead->company_size >= 10) {
-                $score += 10; // Small business
-            } else {
-                $score += 5; // Very small business
-            }
+        $score += $this->scoreCompanySize($lead->company_size);
+        $score += $this->scoreIndustry($lead->industry);
+        $score += $this->scoreGeography($lead->country);
+        $score += $this->scoreContactCompleteness($lead);
+
+        return min($score, 50); // Max 50 points for demographic
+    }
+
+    protected function scoreCompanySize(?int $companySize): int
+    {
+        if (!$companySize) {
+            return 0;
         }
 
-        // Industry scoring (10 points max)
+        if ($companySize >= 500) {
+            return 25; // Enterprise
+        }
+
+        if ($companySize >= 100) {
+            return 20; // Large business
+        }
+
+        if ($companySize >= 50) {
+            return 15; // Medium business
+        }
+
+        if ($companySize >= 10) {
+            return 10; // Small business
+        }
+
+        return 5; // Very small business
+    }
+
+    protected function scoreIndustry(?string $industry): int
+    {
+        if (!$industry) {
+            return 0;
+        }
+
         $highValueIndustries = [
             'healthcare',
             'finance',
@@ -65,39 +88,46 @@ class LeadScoringService
             'professional_services',
         ];
 
-        if ($lead->industry && in_array(strtolower($lead->industry), $highValueIndustries)) {
-            $score += 10;
-        } elseif ($lead->industry) {
-            $score += 5;
+        if (in_array(strtolower($industry), $highValueIndustries)) {
+            return 10;
         }
 
-        // Geographic scoring (5 points max)
-        // Higher scores for certain regions/countries
+        return 5;
+    }
+
+    protected function scoreGeography(?string $country): int
+    {
+        if (!$country) {
+            return 0;
+        }
+
         $highValueCountries = ['US', 'Canada', 'UK', 'Australia'];
-        if ($lead->country && in_array($lead->country, $highValueCountries)) {
-            $score += 5;
-        } elseif ($lead->country) {
+
+        if (in_array($country, $highValueCountries)) {
+            return 5;
+        }
+
+        return 2;
+    }
+
+    protected function scoreContactCompleteness(Lead $lead): int
+    {
+        $score = 0;
+
+        if ($lead->phone) {
             $score += 2;
         }
-
-        // Contact completeness (10 points max)
-        $completenessScore = 0;
-        if ($lead->phone) {
-            $completenessScore += 2;
-        }
         if ($lead->company_name) {
-            $completenessScore += 3;
+            $score += 3;
         }
         if ($lead->title) {
-            $completenessScore += 2;
+            $score += 2;
         }
         if ($lead->website) {
-            $completenessScore += 3;
+            $score += 3;
         }
 
-        $score += $completenessScore;
-
-        return min($score, 50); // Max 50 points for demographic
+        return $score;
     }
 
     /**
