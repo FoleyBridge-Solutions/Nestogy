@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RmmMonitoringSettingsRequest extends FormRequest
 {
+    private const PRIORITY_VALIDATION_RULE = 'string|in:low,medium,high,critical';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -188,16 +190,16 @@ class RmmMonitoringSettingsRequest extends FormRequest
             'auto_create_tickets_from_alerts' => 'boolean',
             'alert_to_ticket_mapping' => 'nullable|array',
             'alert_to_ticket_mapping.critical_alerts' => 'nullable|array',
-            'alert_to_ticket_mapping.critical_alerts.priority' => 'string|in:low,medium,high,critical',
+            'alert_to_ticket_mapping.critical_alerts.priority' => self::PRIORITY_VALIDATION_RULE,
             'alert_to_ticket_mapping.critical_alerts.auto_assign' => 'boolean',
             'alert_to_ticket_mapping.critical_alerts.notify_client' => 'boolean',
             'alert_to_ticket_mapping.warning_alerts' => 'nullable|array',
-            'alert_to_ticket_mapping.warning_alerts.priority' => 'string|in:low,medium,high,critical',
+            'alert_to_ticket_mapping.warning_alerts.priority' => self::PRIORITY_VALIDATION_RULE,
             'alert_to_ticket_mapping.warning_alerts.auto_assign' => 'boolean',
             'alert_to_ticket_mapping.warning_alerts.notify_client' => 'boolean',
             'alert_to_ticket_mapping.info_alerts' => 'nullable|array',
             'alert_to_ticket_mapping.info_alerts.create_tickets' => 'boolean',
-            'alert_to_ticket_mapping.info_alerts.priority' => 'string|in:low,medium,high,critical',
+            'alert_to_ticket_mapping.info_alerts.priority' => self::PRIORITY_VALIDATION_RULE,
         ];
     }
 
