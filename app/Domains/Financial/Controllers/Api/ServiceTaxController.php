@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class ServiceTaxController extends Controller
 {
+    private const VALIDATION_RULE_NULLABLE_INTEGER_MIN_1 = 'nullable|integer|min:1';
+
     protected ?ServiceTaxCalculator $taxCalculator = null;
 
     protected function getTaxCalculator(): ServiceTaxCalculator
@@ -31,7 +33,7 @@ class ServiceTaxController extends Controller
     {
         $request->validate([
             'price' => 'required|numeric|min:0',
-            'quantity' => 'nullable|integer|min:1',
+            'quantity' => self::VALIDATION_RULE_NULLABLE_INTEGER_MIN_1,
             'customer_id' => 'nullable|exists:clients,id',
             'address' => 'nullable|array',
             'address.state' => 'nullable|string|max:2',
@@ -141,12 +143,12 @@ class ServiceTaxController extends Controller
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string',
             'items.*.price' => 'required|numeric|min:0',
-            'items.*.quantity' => 'nullable|integer|min:1',
+            'items.*.quantity' => self::VALIDATION_RULE_NULLABLE_INTEGER_MIN_1,
             'items.*.service_type' => 'nullable|string|in:voip,telecom,cloud,saas,professional,general',
             'items.*.category_id' => 'nullable|exists:categories,id',
             'items.*.service_data' => 'nullable|array',
-            'items.*.service_data.line_count' => 'nullable|integer|min:1',
-            'items.*.service_data.extensions' => 'nullable|integer|min:1',
+            'items.*.service_data.line_count' => self::VALIDATION_RULE_NULLABLE_INTEGER_MIN_1,
+            'items.*.service_data.extensions' => self::VALIDATION_RULE_NULLABLE_INTEGER_MIN_1,
             'items.*.service_data.minutes' => 'nullable|integer|min:0',
             'customer_id' => 'nullable|exists:clients,id',
             'address' => 'nullable|array',
