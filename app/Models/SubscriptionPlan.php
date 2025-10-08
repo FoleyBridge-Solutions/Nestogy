@@ -206,27 +206,24 @@ class SubscriptionPlan extends Model
      */
     public function getUserLimitText(): string
     {
-        // Check if per-user pricing with minimum
         if ($this->pricing_model === self::PRICING_PER_USER && $this->minimum_users) {
-            if ($this->hasUnlimitedUsers()) {
-                return 'Unlimited users (minimum '.$this->minimum_users.')';
-            }
+            $text = $this->hasUnlimitedUsers()
+                ? 'Unlimited users (minimum '.$this->minimum_users.')'
+                : 'Pay per user (minimum '.$this->minimum_users.')';
 
-            return 'Pay per user (minimum '.$this->minimum_users.')';
+            return $text;
         }
 
         if ($this->hasUnlimitedUsers()) {
             return 'Unlimited users';
         }
 
-        // Use user_limit field
         $limit = $this->user_limit ?? 0;
+        $text = $limit > 0
+            ? $limit.' users included'
+            : 'Up to '.$limit.' users';
 
-        if ($limit > 0) {
-            return $limit.' users included';
-        }
-
-        return 'Up to '.$limit.' users';
+        return $text;
     }
 
     /**
