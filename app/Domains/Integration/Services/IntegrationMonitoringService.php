@@ -357,6 +357,9 @@ class IntegrationMonitoringService
                         ];
                     }
                     break;
+
+                default:
+                    break;
             }
         }
 
