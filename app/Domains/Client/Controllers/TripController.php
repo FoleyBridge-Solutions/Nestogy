@@ -14,6 +14,8 @@ class TripController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_REQUIRED_IN = 'required|in:';
+
     /**
      * Display a listing of trips for the selected client
      */
@@ -125,12 +127,12 @@ class TripController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'departure_time' => 'nullable|date',
             'return_time' => 'nullable|date|after:departure_time',
-            'status' => 'required|in:'.implode(',', array_keys(ClientTrip::getStatuses())),
-            'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
-            'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientTrip::getStatuses())),
+            'trip_type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientTrip::getTripTypes())),
+            'transportation_mode' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientTrip::getTransportationModes())),
             'accommodation_details' => 'nullable|string',
             'estimated_expenses' => 'nullable|numeric|min:0',
-            'currency' => 'required|in:'.implode(',', array_keys(ClientTrip::getCurrencies())),
+            'currency' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientTrip::getCurrencies())),
             'mileage' => 'nullable|numeric|min:0',
             'per_diem_amount' => 'nullable|numeric|min:0',
             'billable_to_client' => 'boolean',
@@ -275,13 +277,13 @@ class TripController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'departure_time' => 'nullable|date',
             'return_time' => 'nullable|date',
-            'status' => 'required|in:'.implode(',', array_keys(ClientTrip::getStatuses())),
-            'trip_type' => 'required|in:'.implode(',', array_keys(ClientTrip::getTripTypes())),
-            'transportation_mode' => 'required|in:'.implode(',', array_keys(ClientTrip::getTransportationModes())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientTrip::getStatuses())),
+            'trip_type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientTrip::getTripTypes())),
+            'transportation_mode' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientTrip::getTransportationModes())),
             'accommodation_details' => 'nullable|string',
             'estimated_expenses' => 'nullable|numeric|min:0',
             'actual_expenses' => 'nullable|numeric|min:0',
-            'currency' => 'required|in:'.implode(',', array_keys(ClientTrip::getCurrencies())),
+            'currency' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientTrip::getCurrencies())),
             'mileage' => 'nullable|numeric|min:0',
             'per_diem_amount' => 'nullable|numeric|min:0',
             'billable_to_client' => 'boolean',
