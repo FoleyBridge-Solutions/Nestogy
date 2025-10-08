@@ -508,7 +508,7 @@ class PortalPaymentService
         // This would typically return configured gateway objects
         return new class
         {
-            public function processPayment($payment, $paymentMethod)
+            public function processPayment($payment)
             {
                 // Mock implementation
                 return [
@@ -681,7 +681,7 @@ class PortalPaymentService
         $gateway = $this->gateways[$paymentMethod->provider] ?? $this->gateways[$this->config['default_gateway']];
 
         try {
-            return $gateway->processPayment($payment, $paymentMethod);
+            return $gateway->processPayment($payment);
         } catch (Exception $e) {
             return [
                 'success' => false,
