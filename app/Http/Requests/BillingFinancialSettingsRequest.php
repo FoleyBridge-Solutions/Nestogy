@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BillingFinancialSettingsRequest extends FormRequest
 {
+    private const PREFIX_VALIDATION_RULE = 'nullable|string|max:10';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -174,7 +176,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'purchase_order_settings.approval_required' => 'boolean',
             'purchase_order_settings.approval_threshold' => 'nullable|numeric|min:0',
             'purchase_order_settings.auto_numbering' => 'boolean',
-            'purchase_order_settings.number_prefix' => 'nullable|string|max:10',
+            'purchase_order_settings.number_prefix' => self::PREFIX_VALIDATION_RULE,
             'purchase_order_settings.next_number' => 'nullable|integer|min:1',
 
             // Expense Approval
@@ -186,7 +188,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'expense_approval_settings.approval_workflow' => 'nullable|array',
 
             // Invoice Settings
-            'invoice_prefix' => 'nullable|string|max:10',
+            'invoice_prefix' => self::PREFIX_VALIDATION_RULE,
             'invoice_next_number' => 'nullable|integer|min:1',
             'invoice_footer' => 'nullable|string|max:1000',
             'invoice_from_name' => 'nullable|string|max:255',
@@ -195,7 +197,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'invoice_late_fee_percent' => 'nullable|numeric|min:0|max:100',
 
             // Quote Settings
-            'quote_prefix' => 'nullable|string|max:10',
+            'quote_prefix' => self::PREFIX_VALIDATION_RULE,
             'quote_next_number' => 'nullable|integer|min:1',
             'quote_footer' => 'nullable|string|max:1000',
             'quote_from_name' => 'nullable|string|max:255',
