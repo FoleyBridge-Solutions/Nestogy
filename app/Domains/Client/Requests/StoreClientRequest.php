@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 
 class StoreClientRequest extends BaseFormRequest
 {
+    private const VALIDATION_PHONE_ZIP = 'nullable|string|max:20';
+
     protected function initializeRequest(): void
     {
         $this->modelClass = Client::class;
@@ -34,21 +36,21 @@ class StoreClientRequest extends BaseFormRequest
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:50',
-            'zip_code' => 'nullable|string|max:20',
+            'zip_code' => self::VALIDATION_PHONE_ZIP,
             'country' => 'nullable|string|max:100',
-            'location_phone' => 'nullable|string|max:20',
+            'location_phone' => self::VALIDATION_PHONE_ZIP,
             'location_address' => 'nullable|string|max:255',
             'location_city' => 'nullable|string|max:100',
             'location_state' => 'nullable|string|max:50',
-            'location_zip' => 'nullable|string|max:20',
+            'location_zip' => self::VALIDATION_PHONE_ZIP,
             'location_country' => 'nullable|string|max:100',
 
             // Primary contact information
             'contact_name' => 'nullable|string|max:255',
             'contact_title' => 'nullable|string|max:100',
-            'contact_phone' => 'nullable|string|max:20',
+            'contact_phone' => self::VALIDATION_PHONE_ZIP,
             'contact_extension' => 'nullable|string|max:10',
-            'contact_mobile' => 'nullable|string|max:20',
+            'contact_mobile' => self::VALIDATION_PHONE_ZIP,
             'contact_email' => 'nullable|email|max:255',
             'contact_technical' => 'boolean',
             'contact_billing' => 'boolean',
