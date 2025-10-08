@@ -162,13 +162,14 @@
                 @else
                     <div class="divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($availableAssets as $asset)
-                            <label class="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                            <div class="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800">
                                 <flux:checkbox 
                                     wire:model.live="selectedAssetIds" 
                                     value="{{ $asset['id'] }}"
+                                    id="asset-{{ $asset['id'] }}"
                                 />
                                 
-                                <div class="flex-1 min-w-0">
+                                <label for="asset-{{ $asset['id'] }}" class="flex-1 min-w-0 cursor-pointer">
                                     <div class="font-medium text-gray-900 dark:text-white">
                                         {{ $asset['name'] }}
                                     </div>
@@ -181,8 +182,8 @@
                                             • {{ $asset['ip'] }}
                                         @endif
                                     </div>
-                                </div>
-                            </label>
+                                </label>
+                            </div>
                         @endforeach
                     </div>
                 @endif
