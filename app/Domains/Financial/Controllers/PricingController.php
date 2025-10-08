@@ -8,6 +8,8 @@ use Illuminate\View\View;
 
 class PricingController extends Controller
 {
+    private const NULLABLE_ARRAY_RULE = 'nullable|array';
+
     public function index(Request $request): View
     {
         $pricingRules = collect(); // TODO: Load from pricing_rules table
@@ -31,9 +33,9 @@ class PricingController extends Controller
             'name' => 'required|string|max:255',
             'type' => 'required|in:volume,tiered,client-specific,promotional',
             'applies_to' => 'required|in:product,service,category,all',
-            'product_ids' => 'nullable|array',
-            'service_ids' => 'nullable|array',
-            'client_ids' => 'nullable|array',
+            'product_ids' => self::NULLABLE_ARRAY_RULE,
+            'service_ids' => self::NULLABLE_ARRAY_RULE,
+            'client_ids' => self::NULLABLE_ARRAY_RULE,
             'min_quantity' => 'nullable|integer|min:1',
             'max_quantity' => 'nullable|integer|min:1',
             'discount_type' => 'required|in:percentage,fixed',
@@ -76,9 +78,9 @@ class PricingController extends Controller
             'name' => 'required|string|max:255',
             'type' => 'required|in:volume,tiered,client-specific,promotional',
             'applies_to' => 'required|in:product,service,category,all',
-            'product_ids' => 'nullable|array',
-            'service_ids' => 'nullable|array',
-            'client_ids' => 'nullable|array',
+            'product_ids' => self::NULLABLE_ARRAY_RULE,
+            'service_ids' => self::NULLABLE_ARRAY_RULE,
+            'client_ids' => self::NULLABLE_ARRAY_RULE,
             'min_quantity' => 'nullable|integer|min:1',
             'max_quantity' => 'nullable|integer|min:1',
             'discount_type' => 'required|in:percentage,fixed',
