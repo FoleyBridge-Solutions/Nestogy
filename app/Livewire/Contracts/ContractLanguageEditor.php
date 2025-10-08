@@ -283,9 +283,11 @@ class ContractLanguageEditor extends Component
         }
         
         $content = $this->editorMode === 'raw' ? $this->content : $this->previewContent;
+        
+        $caseFlag = $this->caseSensitive ? '' : 'i';
         $pattern = $this->useRegex 
-            ? '/' . $this->searchQuery . '/' . ($this->caseSensitive ? '' : 'i')
-            : '/' . preg_quote($this->searchQuery, '/') . '/' . ($this->caseSensitive ? '' : 'i');
+            ? '/' . $this->searchQuery . '/' . $caseFlag
+            : '/' . preg_quote($this->searchQuery, '/') . '/' . $caseFlag;
         
         preg_match_all($pattern, $content, $matches, PREG_OFFSET_CAPTURE);
         
@@ -336,9 +338,10 @@ class ContractLanguageEditor extends Component
         
         $this->pushToUndoStack();
         
+        $caseFlag = $this->caseSensitive ? '' : 'i';
         $pattern = $this->useRegex 
-            ? '/' . $this->searchQuery . '/' . ($this->caseSensitive ? '' : 'i')
-            : '/' . preg_quote($this->searchQuery, '/') . '/' . ($this->caseSensitive ? '' : 'i');
+            ? '/' . $this->searchQuery . '/' . $caseFlag
+            : '/' . preg_quote($this->searchQuery, '/') . '/' . $caseFlag;
         
         $count = 0;
         $this->content = preg_replace($pattern, $this->replaceQuery, $this->content, -1, $count);
