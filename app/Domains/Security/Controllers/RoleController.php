@@ -18,6 +18,8 @@ use Silber\Bouncer\BouncerFacade as Bouncer;
  */
 class RoleController extends Controller
 {
+    private const ROLE_NAME_VALIDATION_RULE = 'required|string|max:255|unique:bouncer_roles,name';
+
     protected $roleService;
 
     public function __construct(RoleService $roleService)
@@ -78,7 +80,7 @@ class RoleController extends Controller
         $this->authorize('create', \App\Models\Role::class);
 
         $request->validate([
-            'name' => 'required|string|max:255|unique:bouncer_roles,name',
+            'name' => self::ROLE_NAME_VALIDATION_RULE,
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'abilities' => 'array',
@@ -360,7 +362,7 @@ class RoleController extends Controller
         $originalRole = Bouncer::role()->where('name', $roleName)->with('abilities')->firstOrFail();
 
         $request->validate([
-            'name' => 'required|string|max:255|unique:bouncer_roles,name',
+            'name' => self::ROLE_NAME_VALIDATION_RULE,
             'title' => 'required|string|max:255',
         ]);
 
@@ -431,7 +433,7 @@ class RoleController extends Controller
 
         $request->validate([
             'template' => 'required|string|in:help-desk,field-tech,network-admin,security-specialist,project-manager,client-manager,billing-admin',
-            'name' => 'required|string|max:255|unique:bouncer_roles,name',
+            'name' => self::ROLE_NAME_VALIDATION_RULE,
             'title' => 'required|string|max:255',
         ]);
 
