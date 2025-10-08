@@ -14,6 +14,8 @@ class TripController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     /**
      * Display a listing of trips for the selected client
      */
@@ -116,8 +118,8 @@ class TripController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'purpose' => 'nullable|string|max:255',
-            'destination_address' => 'nullable|string|max:255',
+            'purpose' => self::VALIDATION_NULLABLE_STRING_255,
+            'destination_address' => self::VALIDATION_NULLABLE_STRING_255,
             'destination_city' => 'required|string|max:100',
             'destination_state' => 'nullable|string|max:100',
             'destination_country' => 'nullable|string|max:100',
@@ -266,8 +268,8 @@ class TripController extends Controller
             ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'purpose' => 'nullable|string|max:255',
-            'destination_address' => 'nullable|string|max:255',
+            'purpose' => self::VALIDATION_NULLABLE_STRING_255,
+            'destination_address' => self::VALIDATION_NULLABLE_STRING_255,
             'destination_city' => 'required|string|max:100',
             'destination_state' => 'nullable|string|max:100',
             'destination_country' => 'nullable|string|max:100',
