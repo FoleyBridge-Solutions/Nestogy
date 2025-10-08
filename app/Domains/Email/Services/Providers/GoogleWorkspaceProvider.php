@@ -2,6 +2,7 @@
 
 namespace App\Domains\Email\Services\Providers;
 
+use App\Domains\Email\Exceptions\EmailOAuthException;
 use App\Models\Company;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -48,7 +49,14 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
                 'response' => $response->body(),
                 'status' => $response->status(),
             ]);
-            throw new \Exception('Failed to exchange authorization code for tokens');
+            throw new EmailOAuthException(
+                'Google Workspace',
+                'Failed to exchange authorization code for tokens',
+                [
+                    'response_status' => $response->status(),
+                    'response_body' => $response->body(),
+                ]
+            );
         }
 
         return $response->json();
