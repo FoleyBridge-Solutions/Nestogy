@@ -19,6 +19,8 @@ use Illuminate\View\View;
  */
 class KbArticleController extends Controller
 {
+    private const VALIDATION_REQUIRED_IN = 'required|in:';
+
     public function __construct(
         protected KnowledgeBaseService $knowledgeBaseService,
         protected ArticleSearchService $searchService
@@ -113,12 +115,12 @@ class KbArticleController extends Controller
             'content' => 'required|string',
             'excerpt' => 'nullable|string|max:500',
             'category_id' => 'required|exists:kb_categories,id',
-            'status' => 'required|in:'.implode(',', [
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', [
                 KbArticle::STATUS_DRAFT,
                 KbArticle::STATUS_PUBLISHED,
                 KbArticle::STATUS_UNDER_REVIEW,
             ]),
-            'visibility' => 'required|in:'.implode(',', [
+            'visibility' => self::VALIDATION_REQUIRED_IN.implode(',', [
                 KbArticle::VISIBILITY_PUBLIC,
                 KbArticle::VISIBILITY_INTERNAL,
                 KbArticle::VISIBILITY_CLIENT,
@@ -204,13 +206,13 @@ class KbArticleController extends Controller
             'content' => 'required|string',
             'excerpt' => 'nullable|string|max:500',
             'category_id' => 'required|exists:kb_categories,id',
-            'status' => 'required|in:'.implode(',', [
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', [
                 KbArticle::STATUS_DRAFT,
                 KbArticle::STATUS_PUBLISHED,
                 KbArticle::STATUS_ARCHIVED,
                 KbArticle::STATUS_UNDER_REVIEW,
             ]),
-            'visibility' => 'required|in:'.implode(',', [
+            'visibility' => self::VALIDATION_REQUIRED_IN.implode(',', [
                 KbArticle::VISIBILITY_PUBLIC,
                 KbArticle::VISIBILITY_INTERNAL,
                 KbArticle::VISIBILITY_CLIENT,
