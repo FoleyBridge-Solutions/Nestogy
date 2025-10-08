@@ -64,7 +64,7 @@ trait FiltersClientsByAssignment
             return \App\Models\Client::pluck('id')->toArray();
         }
 
-        // Admins see all clients in their company
+        // Admins and users without assignments see all clients in their company
         if ($user->isA('admin')) {
             return \App\Models\Client::where('company_id', $user->company_id)
                 ->pluck('id')
@@ -74,15 +74,11 @@ trait FiltersClientsByAssignment
         // For other users (technicians, etc.), check if they have client restrictions
         $assignedClientIds = $user->assignedClients()->pluck('client_id')->toArray();
 
-        if (empty($assignedClientIds)) {
-            // No assignments = access to all clients in their company
-            return \App\Models\Client::where('company_id', $user->company_id)
-                ->pluck('id')
-                ->toArray();
-        }
-
+        // No assignments = access to all clients in their company
         // Has assignments = restricted to only those clients
-        return $assignedClientIds;
+        return empty($assignedClientIds)
+            ? \App\Models\Client::where('company_id', $user->company_id)->pluck('id')->toArray()
+            : $assignedClientIds;
     }
 
     /**
