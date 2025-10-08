@@ -33,32 +33,44 @@ class AlertPanel extends Component
     {
         $this->loading = true;
         $companyId = Auth::user()->company_id;
-        $alerts = collect();
+        
+        $alerts = collect()
+            ->merge($this->getCriticalTicketAlerts($companyId))
+            ->merge($this->getOverdueInvoiceAlerts($companyId))
+            ->merge($this->getInactiveClientAlerts($companyId))
+            ->merge($this->getAssetMonitoringAlerts($companyId))
+            ->merge($this->getSystemAlerts($companyId));
 
-        // Critical tickets
+        $alerts = $this->applyFilter($alerts);
+        $this->alerts = $this->sortAndLimit($alerts);
+        $this->loading = false;
+    }
+
+    protected function getCriticalTicketAlerts(int $companyId): Collection
+    {
         $criticalTickets = Ticket::where('company_id', $companyId)
             ->where('priority', 'Critical')
             ->whereIn('status', ['Open', 'In Progress'])
             ->with('client')
             ->get();
 
-        foreach ($criticalTickets as $ticket) {
-            $alerts->push([
-                'id' => 'ticket_'.$ticket->id,
-                'type' => 'ticket',
-                'severity' => 'critical',
-                'title' => 'Critical Ticket',
-                'message' => "Ticket #{$ticket->id}: {$ticket->subject}",
-                'details' => "Client: {$ticket->client->name}",
-                'created_at' => $ticket->created_at,
-                'action_url' => $this->getSafeRoute('tickets.show', $ticket->id),
-                'action_text' => 'View Ticket',
-                'icon' => 'exclamation-triangle',
-                'dismissible' => false,
-            ]);
-        }
+        return $criticalTickets->map(fn ($ticket) => [
+            'id' => 'ticket_'.$ticket->id,
+            'type' => 'ticket',
+            'severity' => 'critical',
+            'title' => 'Critical Ticket',
+            'message' => "Ticket #{$ticket->id}: {$ticket->subject}",
+            'details' => "Client: {$ticket->client->name}",
+            'created_at' => $ticket->created_at,
+            'action_url' => $this->getSafeRoute('tickets.show', $ticket->id),
+            'action_text' => 'View Ticket',
+            'icon' => 'exclamation-triangle',
+            'dismissible' => false,
+        ]);
+    }
 
-        // Overdue invoices
+    protected function getOverdueInvoiceAlerts(int $companyId): Collection
+    {
         $overdueInvoices = Invoice::where('company_id', $companyId)
             ->where('status', 'Sent')
             ->where('due_date', '<', now())
@@ -67,11 +79,11 @@ class AlertPanel extends Component
             ->limit(5)
             ->get();
 
-        foreach ($overdueInvoices as $invoice) {
+        return $overdueInvoices->map(function ($invoice) {
             $daysOverdue = now()->diffInDays($invoice->due_date);
             $severity = $daysOverdue > 30 ? 'critical' : ($daysOverdue > 14 ? 'high' : 'medium');
 
-            $alerts->push([
+            return [
                 'id' => 'invoice_'.$invoice->id,
                 'type' => 'financial',
                 'severity' => $severity,
@@ -83,10 +95,12 @@ class AlertPanel extends Component
                 'action_text' => 'View Invoice',
                 'icon' => 'currency-dollar',
                 'dismissible' => true,
-            ]);
-        }
+            ];
+        });
+    }
 
-        // Inactive clients
+    protected function getInactiveClientAlerts(int $companyId): Collection
+    {
         $inactiveClients = Client::where('company_id', $companyId)
             ->where('status', true)
             ->whereDoesntHave('tickets', function ($query) {
@@ -98,125 +112,150 @@ class AlertPanel extends Component
             ->limit(3)
             ->get();
 
-        foreach ($inactiveClients as $client) {
-            $alerts->push([
-                'id' => 'client_inactive_'.$client->id,
-                'type' => 'client',
-                'severity' => 'medium',
-                'title' => 'Inactive Client',
-                'message' => "No activity from {$client->name} in 90+ days",
-                'details' => 'Consider reaching out to maintain engagement',
-                'created_at' => now()->subDays(90),
-                'action_url' => $this->getSafeRoute('clients.show', $client->id),
-                'action_text' => 'View Client',
-                'icon' => 'user-minus',
+        return $inactiveClients->map(fn ($client) => [
+            'id' => 'client_inactive_'.$client->id,
+            'type' => 'client',
+            'severity' => 'medium',
+            'title' => 'Inactive Client',
+            'message' => "No activity from {$client->name} in 90+ days",
+            'details' => 'Consider reaching out to maintain engagement',
+            'created_at' => now()->subDays(90),
+            'action_url' => $this->getSafeRoute('clients.show', $client->id),
+            'action_text' => 'View Client',
+            'icon' => 'user-minus',
+            'dismissible' => true,
+        ]);
+    }
+
+    protected function getAssetMonitoringAlerts(int $companyId): Collection
+    {
+        try {
+            if (! class_exists('\App\Models\Asset')) {
+                return collect();
+            }
+
+            $failedAssets = \App\Models\Asset::where('company_id', $companyId)
+                ->where(function ($query) {
+                    $query->where('status', 'offline')
+                        ->orWhere('last_check_at', '<', now()->subHours(24))
+                        ->orWhereNull('last_check_at');
+                })
+                ->limit(5)
+                ->get();
+
+            if ($failedAssets->isEmpty()) {
+                return collect();
+            }
+
+            return collect([[
+                'id' => 'asset_monitoring_issues',
+                'type' => 'asset',
+                'severity' => $failedAssets->where('status', 'offline')->count() > 0 ? 'high' : 'medium',
+                'title' => 'Asset Monitoring Alert',
+                'message' => $failedAssets->count().' asset(s) require attention',
+                'details' => 'Some assets are offline or haven\'t been checked recently',
+                'created_at' => now(),
+                'action_url' => $this->getSafeRoute('assets.index'),
+                'action_text' => 'View Assets',
+                'icon' => 'server',
                 'dismissible' => true,
-            ]);
-        }
-
-        // Check for assets with monitoring issues (only if Asset model has monitoring fields)
-        try {
-            if (class_exists('\App\Models\Asset')) {
-                // Look for assets that haven't been checked recently or have issues
-                $failedAssets = \App\Models\Asset::where('company_id', $companyId)
-                    ->where(function ($query) {
-                        $query->where('status', 'offline')
-                            ->orWhere('last_check_at', '<', now()->subHours(24))
-                            ->orWhereNull('last_check_at');
-                    })
-                    ->limit(5)
-                    ->get();
-
-                if ($failedAssets->count() > 0) {
-                    $alerts->push([
-                        'id' => 'asset_monitoring_issues',
-                        'type' => 'asset',
-                        'severity' => $failedAssets->where('status', 'offline')->count() > 0 ? 'high' : 'medium',
-                        'title' => 'Asset Monitoring Alert',
-                        'message' => $failedAssets->count().' asset(s) require attention',
-                        'details' => 'Some assets are offline or haven\'t been checked recently',
-                        'created_at' => now(),
-                        'action_url' => $this->getSafeRoute('assets.index'),
-                        'action_text' => 'View Assets',
-                        'icon' => 'server',
-                        'dismissible' => true,
-                    ]);
-                }
-            }
+            ]]);
         } catch (\Exception $e) {
-            // Asset monitoring not available or error occurred
+            return collect();
         }
+    }
 
-        // Check for actual system issues from logs or monitoring
+    protected function getSystemAlerts(int $companyId): Collection
+    {
+        $alerts = collect();
+
         try {
-            // Check if backup verification is needed (if we have a backup logs table)
-            if (\Schema::hasTable('backup_logs')) {
-                $lastBackup = \DB::table('backup_logs')
-                    ->where('company_id', $companyId)
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-
-                if (! $lastBackup || Carbon::parse($lastBackup->created_at)->lt(now()->subDay())) {
-                    $alerts->push([
-                        'id' => 'backup_overdue',
-                        'type' => 'system',
-                        'severity' => 'medium',
-                        'title' => 'Backup Overdue',
-                        'message' => 'No backup completed in the last 24 hours',
-                        'details' => $lastBackup ? 'Last backup: '.Carbon::parse($lastBackup->created_at)->diffForHumans() : 'No backup records found',
-                        'created_at' => now(),
-                        'action_url' => $this->getSafeRoute('system.backups'),
-                        'action_text' => 'Check Backups',
-                        'icon' => 'shield-exclamation',
-                        'dismissible' => true,
-                    ]);
-                }
-            }
-
-            // Check for disk space issues (if system monitoring is available)
-            if (\Schema::hasTable('system_metrics')) {
-                $diskUsage = \DB::table('system_metrics')
-                    ->where('metric_type', 'disk_usage')
-                    ->where('created_at', '>=', now()->subHour())
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-
-                if ($diskUsage && $diskUsage->value > 90) {
-                    $alerts->push([
-                        'id' => 'disk_space_warning',
-                        'type' => 'system',
-                        'severity' => $diskUsage->value > 95 ? 'critical' : 'high',
-                        'title' => 'Low Disk Space',
-                        'message' => 'Server disk usage at '.round($diskUsage->value).'%',
-                        'details' => 'Consider cleaning up old files or expanding storage',
-                        'created_at' => Carbon::parse($diskUsage->created_at),
-                        'action_url' => $this->getSafeRoute('system.metrics'),
-                        'action_text' => 'View Metrics',
-                        'icon' => 'database',
-                        'dismissible' => false,
-                    ]);
-                }
-            }
+            $alerts = $alerts->merge($this->getBackupAlerts($companyId));
+            $alerts = $alerts->merge($this->getDiskSpaceAlerts());
         } catch (\Exception $e) {
-            // System monitoring not available or error occurred
         }
 
-        // Filter by severity
-        if ($this->filter !== 'all') {
-            $alerts = $alerts->filter(function ($alert) {
-                return $alert['severity'] === $this->filter;
-            });
+        return $alerts;
+    }
+
+    protected function getBackupAlerts(int $companyId): Collection
+    {
+        if (! \Schema::hasTable('backup_logs')) {
+            return collect();
         }
 
-        // Sort by severity and date
+        $lastBackup = \DB::table('backup_logs')
+            ->where('company_id', $companyId)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($lastBackup && Carbon::parse($lastBackup->created_at)->gte(now()->subDay())) {
+            return collect();
+        }
+
+        return collect([[
+            'id' => 'backup_overdue',
+            'type' => 'system',
+            'severity' => 'medium',
+            'title' => 'Backup Overdue',
+            'message' => 'No backup completed in the last 24 hours',
+            'details' => $lastBackup ? 'Last backup: '.Carbon::parse($lastBackup->created_at)->diffForHumans() : 'No backup records found',
+            'created_at' => now(),
+            'action_url' => $this->getSafeRoute('system.backups'),
+            'action_text' => 'Check Backups',
+            'icon' => 'shield-exclamation',
+            'dismissible' => true,
+        ]]);
+    }
+
+    protected function getDiskSpaceAlerts(): Collection
+    {
+        if (! \Schema::hasTable('system_metrics')) {
+            return collect();
+        }
+
+        $diskUsage = \DB::table('system_metrics')
+            ->where('metric_type', 'disk_usage')
+            ->where('created_at', '>=', now()->subHour())
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (! $diskUsage || $diskUsage->value <= 90) {
+            return collect();
+        }
+
+        return collect([[
+            'id' => 'disk_space_warning',
+            'type' => 'system',
+            'severity' => $diskUsage->value > 95 ? 'critical' : 'high',
+            'title' => 'Low Disk Space',
+            'message' => 'Server disk usage at '.round($diskUsage->value).'%',
+            'details' => 'Consider cleaning up old files or expanding storage',
+            'created_at' => Carbon::parse($diskUsage->created_at),
+            'action_url' => $this->getSafeRoute('system.metrics'),
+            'action_text' => 'View Metrics',
+            'icon' => 'database',
+            'dismissible' => false,
+        ]]);
+    }
+
+    protected function applyFilter(Collection $alerts): Collection
+    {
+        if ($this->filter === 'all') {
+            return $alerts;
+        }
+
+        return $alerts->filter(fn ($alert) => $alert['severity'] === $this->filter);
+    }
+
+    protected function sortAndLimit(Collection $alerts): Collection
+    {
         $severityOrder = ['critical' => 1, 'high' => 2, 'medium' => 3, 'low' => 4];
 
-        $this->alerts = $alerts->sortBy([
+        return $alerts->sortBy([
             fn ($alert) => $severityOrder[$alert['severity']] ?? 99,
-            fn ($alert) => $alert['created_at']->timestamp * -1, // Newest first
+            fn ($alert) => $alert['created_at']->timestamp * -1,
         ])->take($this->limit);
-
-        $this->loading = false;
     }
 
     public function setFilter($filter)
