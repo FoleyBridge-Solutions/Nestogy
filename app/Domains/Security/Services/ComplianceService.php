@@ -259,7 +259,7 @@ class ComplianceService
 
         // Check wage garnishment limits
         if (isset($stateRules['wage_garnishment_limit'])) {
-            $garnishmentCheck = $this->checkGarnishmentCompliance($client, $stateRules['wage_garnishment_limit']);
+            $garnishmentCheck = $this->checkGarnishmentCompliance($stateRules['wage_garnishment_limit']);
             if ($garnishmentCheck['violation']) {
                 $compliance['violations'][] = $garnishmentCheck['details'];
             }
@@ -744,7 +744,7 @@ NESTOGY COLLECTIONS DEPARTMENT
         return ['violation' => false];
     }
 
-    protected function checkGarnishmentCompliance(Client $client, float $maxPercent): array
+    protected function checkGarnishmentCompliance(float $maxPercent): array
     {
         return ['violation' => false];
     }
