@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class ServiceTaxController extends Controller
 {
+    private const NULLABLE_ARRAY_VALIDATION = 'nullable|array';
+
     protected ?ServiceTaxCalculator $taxCalculator = null;
 
     protected function getTaxCalculator(): ServiceTaxCalculator
@@ -33,7 +35,7 @@ class ServiceTaxController extends Controller
             'price' => 'required|numeric|min:0',
             'quantity' => 'nullable|integer|min:1',
             'customer_id' => 'nullable|exists:clients,id',
-            'address' => 'nullable|array',
+            'address' => self::NULLABLE_ARRAY_VALIDATION,
             'address.state' => 'nullable|string|max:2',
             'address.city' => 'nullable|string|max:255',
             'address.zip' => 'nullable|string|max:10',
@@ -144,12 +146,12 @@ class ServiceTaxController extends Controller
             'items.*.quantity' => 'nullable|integer|min:1',
             'items.*.service_type' => 'nullable|string|in:voip,telecom,cloud,saas,professional,general',
             'items.*.category_id' => 'nullable|exists:categories,id',
-            'items.*.service_data' => 'nullable|array',
+            'items.*.service_data' => self::NULLABLE_ARRAY_VALIDATION,
             'items.*.service_data.line_count' => 'nullable|integer|min:1',
             'items.*.service_data.extensions' => 'nullable|integer|min:1',
             'items.*.service_data.minutes' => 'nullable|integer|min:0',
             'customer_id' => 'nullable|exists:clients,id',
-            'address' => 'nullable|array',
+            'address' => self::NULLABLE_ARRAY_VALIDATION,
             'address.state' => 'nullable|string|max:2',
             'address.city' => 'nullable|string|max:255',
             'address.zip' => 'nullable|string|max:10',
