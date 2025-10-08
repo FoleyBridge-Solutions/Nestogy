@@ -14,6 +14,8 @@ class LicenseController extends Controller
 {
     use UsesSelectedClient;
 
+    private const CURRENCY_VALIDATION_RULE = 'nullable|numeric|min:0|max:9999999.99';
+
     /**
      * Display a listing of licenses for the selected client
      */
@@ -120,8 +122,8 @@ class LicenseController extends Controller
             'purchase_date' => 'nullable|date|before_or_equal:today',
             'renewal_date' => 'nullable|date',
             'expiry_date' => 'nullable|date',
-            'purchase_cost' => 'nullable|numeric|min:0|max:9999999.99',
-            'renewal_cost' => 'nullable|numeric|min:0|max:9999999.99',
+            'purchase_cost' => self::CURRENCY_VALIDATION_RULE,
+            'renewal_cost' => self::CURRENCY_VALIDATION_RULE,
             'is_active' => 'boolean',
             'auto_renewal' => 'boolean',
             'support_level' => 'nullable|in:'.implode(',', array_keys(ClientLicense::getSupportLevels())),
@@ -197,8 +199,8 @@ class LicenseController extends Controller
             'purchase_date' => 'nullable|date|before_or_equal:today',
             'renewal_date' => 'nullable|date',
             'expiry_date' => 'nullable|date',
-            'purchase_cost' => 'nullable|numeric|min:0|max:9999999.99',
-            'renewal_cost' => 'nullable|numeric|min:0|max:9999999.99',
+            'purchase_cost' => self::CURRENCY_VALIDATION_RULE,
+            'renewal_cost' => self::CURRENCY_VALIDATION_RULE,
             'is_active' => 'boolean',
             'auto_renewal' => 'boolean',
             'support_level' => 'nullable|in:'.implode(',', array_keys(ClientLicense::getSupportLevels())),
