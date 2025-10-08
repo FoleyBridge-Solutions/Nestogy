@@ -94,16 +94,18 @@ class TaxCalculation extends Model
         'api_cost',
     ];
 
+    const CAST_DECIMAL_2 = 'decimal:2';
+
     protected $casts = [
         'company_id' => 'integer',
         'calculable_id' => 'integer',
-        'base_amount' => 'decimal:2',
+        'base_amount' => self::CAST_DECIMAL_2,
         'quantity' => 'integer',
         'input_parameters' => 'array',
         'customer_data' => 'array',
         'service_address' => 'array',
-        'total_tax_amount' => 'decimal:2',
-        'final_amount' => 'decimal:2',
+        'total_tax_amount' => self::CAST_DECIMAL_2,
+        'final_amount' => self::CAST_DECIMAL_2,
         'effective_tax_rate' => 'decimal:6',
         'tax_breakdown' => 'array',
         'api_enhancements' => 'array',
