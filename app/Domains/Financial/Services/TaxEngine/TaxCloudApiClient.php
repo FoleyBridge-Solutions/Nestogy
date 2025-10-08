@@ -16,6 +16,8 @@ use Exception;
  */
 class TaxCloudApiClient extends BaseApiClient
 {
+    protected const TIC_COMPUTER_SERVICES = '30070';
+
     protected string $baseUrl = 'https://api.taxcloud.com/1.0/TaxCloud';
 
     protected ?string $apiLoginId;
@@ -241,21 +243,21 @@ class TaxCloudApiClient extends BaseApiClient
      * @param  string  $tic  Tax Item Code for the service
      * @return array Tax calculation result
      */
-    public function calculateServiceTax(float $amount, string $serviceType, array $customerAddress, string $tic = '30070'): array
+    public function calculateServiceTax(float $amount, string $serviceType, array $customerAddress, string $tic = self::TIC_COMPUTER_SERVICES): array
     {
         // MSP services typically use TIC 30070 (Computer Services)
         $ticMap = [
-            'managed_services' => '30070', // Computer Services
-            'cloud_services' => '30070',   // Computer Services
-            'hosting' => '30070',          // Computer Services
+            'managed_services' => self::TIC_COMPUTER_SERVICES, // Computer Services
+            'cloud_services' => self::TIC_COMPUTER_SERVICES,   // Computer Services
+            'hosting' => self::TIC_COMPUTER_SERVICES,          // Computer Services
             'voip' => '10115',            // Telephone Services
-            'internet' => '30070',         // Computer Services
-            'security_services' => '30070', // Computer Services
-            'backup_services' => '30070',   // Computer Services
-            'monitoring' => '30070',        // Computer Services
-            'support' => '30070',          // Computer Services
-            'consultation' => '30070',     // Computer Services
-            'installation' => '30070',     // Computer Services
+            'internet' => self::TIC_COMPUTER_SERVICES,         // Computer Services
+            'security_services' => self::TIC_COMPUTER_SERVICES, // Computer Services
+            'backup_services' => self::TIC_COMPUTER_SERVICES,   // Computer Services
+            'monitoring' => self::TIC_COMPUTER_SERVICES,        // Computer Services
+            'support' => self::TIC_COMPUTER_SERVICES,          // Computer Services
+            'consultation' => self::TIC_COMPUTER_SERVICES,     // Computer Services
+            'installation' => self::TIC_COMPUTER_SERVICES,     // Computer Services
             'equipment' => '00000',        // General merchandise
             'software' => '30240',         // Prewritten Software
         ];
@@ -447,7 +449,7 @@ class TaxCloudApiClient extends BaseApiClient
 
         $ticDatabase = [
             // Computer and Digital Services
-            '30070' => [
+            self::TIC_COMPUTER_SERVICES => [
                 'description' => 'Computer Services',
                 'keywords' => ['managed', 'monitoring', 'support', 'maintenance', 'computer', 'it services', 'help desk'],
                 'examples' => ['Managed IT Services', 'Network Monitoring', 'Help Desk Support'],
@@ -457,7 +459,7 @@ class TaxCloudApiClient extends BaseApiClient
                 'keywords' => ['software', 'application', 'program', 'license'],
                 'examples' => ['Software Licenses', 'Application Subscriptions'],
             ],
-            '30070' => [
+            self::TIC_COMPUTER_SERVICES => [
                 'description' => 'Custom Computer Programming Services',
                 'keywords' => ['custom', 'development', 'programming', 'coding'],
                 'examples' => ['Custom Software Development', 'Programming Services'],
@@ -474,7 +476,7 @@ class TaxCloudApiClient extends BaseApiClient
                 'examples' => ['Internet Access', 'Broadband Services'],
             ],
             // Cloud and Hosting
-            '30070' => [
+            self::TIC_COMPUTER_SERVICES => [
                 'description' => 'Data Processing Services',
                 'keywords' => ['cloud', 'hosting', 'storage', 'backup', 'data'],
                 'examples' => ['Cloud Hosting', 'Data Storage', 'Backup Services'],
@@ -513,7 +515,7 @@ class TaxCloudApiClient extends BaseApiClient
         return [
             'service_description' => $serviceDescription,
             'recommendations' => array_slice($recommendations, 0, 3), // Top 3 recommendations
-            'default_tic' => $recommendations[0]['tic'] ?? '30070', // Default to Computer Services
+            'default_tic' => $recommendations[0]['tic'] ?? self::TIC_COMPUTER_SERVICES, // Default to Computer Services
             'source' => 'taxcloud_tic_database',
         ];
     }
