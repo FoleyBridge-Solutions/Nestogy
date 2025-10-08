@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Email;
 
+use App\Domains\Email\Exceptions\EmailAccountPermissionException;
 use App\Domains\Email\Models\EmailAccount;
 use App\Domains\Email\Services\OAuthTokenManager;
 use App\Domains\Email\Services\UnifiedEmailSyncService;
@@ -60,9 +61,8 @@ class EmailAccountsIndex extends Component
 
             $account = EmailAccount::findOrFail($accountId);
 
-            // Authorization check
             if ($account->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountPermissionException('sync', ['account_id' => $accountId]);
             }
 
             error_log("LIVEWIRE_DEBUG: Starting sync for account {$accountId}");
@@ -106,7 +106,7 @@ class EmailAccountsIndex extends Component
             $account = EmailAccount::findOrFail($accountId);
 
             if ($account->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountPermissionException('test connection', ['account_id' => $accountId]);
             }
 
             // Test based on connection type
@@ -148,7 +148,7 @@ class EmailAccountsIndex extends Component
             $account = EmailAccount::findOrFail($accountId);
 
             if ($account->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountPermissionException('set as default', ['account_id' => $accountId]);
             }
 
             // Remove default from all other accounts
@@ -197,7 +197,7 @@ class EmailAccountsIndex extends Component
             }
 
             if ($this->accountToDelete->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountPermissionException('delete', ['account_id' => $this->accountToDelete->id]);
             }
 
             $name = $this->accountToDelete->name;
