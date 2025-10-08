@@ -290,66 +290,98 @@ class CommandPaletteService
         $suggestions = [];
         $partial = strtolower(trim($partial));
 
-        // Define preferred verbs for each action type (first one is the preferred)
-        $preferredVerbs = [
-            'create' => 'create',
-            'show' => 'show',
-            'navigate' => 'go to',
-        ];
-
-        // MSP-specific verb categories
         $createVerbs = ['create', 'new', 'add', 'make', 'build', 'generate'];
-        $showVerbs = ['show', 'list', 'view', 'display', 'see'];
-        $navVerbs = ['go', 'open', 'visit', 'navigate'];
+        $preferredVerb = 'create';
 
-        // Generate suggestions based on entity and partial match
         foreach ($baseCommands as $entity => $config) {
-            // Check if the partial matches the entity name
-            $entityMatches = empty($partial) ||
-                           str_starts_with($entity, $partial) ||
-                           str_contains($entity, $partial);
+            $entitySuggestions = static::generateEntitySuggestions(
+                $entity,
+                $config,
+                $partial,
+                $createVerbs,
+                $preferredVerb
+            );
 
-            // Check if any create verb matches the partial
-            $verbMatches = false;
-            $matchedVerb = null;
+            $suggestions = array_merge($suggestions, $entitySuggestions);
+        }
 
-            foreach ($createVerbs as $verb) {
-                $command = "{$verb} {$entity}";
-                if (str_starts_with($command, $partial) || str_contains($command, $partial)) {
-                    $verbMatches = true;
-                    $matchedVerb = $verb;
-                    break;
-                }
+        return $suggestions;
+    }
+
+    protected static function generateEntitySuggestions(
+        string $entity,
+        array $config,
+        string $partial,
+        array $verbs,
+        string $preferredVerb
+    ): array {
+        $suggestions = [];
+
+        $entityMatches = static::checkEntityMatch($entity, $partial);
+        $matchedVerb = static::findMatchedVerb($entity, $partial, $verbs);
+
+        if ($entityMatches || $matchedVerb) {
+            $verb = $matchedVerb ?: $preferredVerb;
+            $command = "{$verb} {$entity}";
+
+            if (static::commandMatchesPartial($command, $partial)) {
+                $suggestions[$command] = static::buildSuggestion($config);
             }
+        }
 
-            // Add suggestion if there's a match
-            if ($entityMatches || $verbMatches) {
-                // Use the matched verb or the preferred verb
-                $verb = $matchedVerb ?: $preferredVerbs['create'];
-                $command = "{$verb} {$entity}";
+        if (! empty($partial)) {
+            $verbSuggestions = static::generateVerbOnlySuggestions($entity, $config, $partial, $verbs);
+            $suggestions = array_merge($suggestions, $verbSuggestions);
+        }
 
-                // Only add if this command matches the partial (or partial is empty)
-                if (empty($partial) || str_starts_with($command, $partial) || str_contains($command, $partial)) {
-                    $suggestions[$command] = [
-                        'icon' => $config['icon'],
-                        'description' => $config['description'],
-                        'route' => $config['route'] ?? null,
-                    ];
-                }
+        return $suggestions;
+    }
+
+    protected static function checkEntityMatch(string $entity, string $partial): bool
+    {
+        return empty($partial) ||
+               str_starts_with($entity, $partial) ||
+               str_contains($entity, $partial);
+    }
+
+    protected static function findMatchedVerb(string $entity, string $partial, array $verbs): ?string
+    {
+        foreach ($verbs as $verb) {
+            $command = "{$verb} {$entity}";
+            if (str_starts_with($command, $partial) || str_contains($command, $partial)) {
+                return $verb;
             }
+        }
 
-            // Special handling for typing just the verb
-            if (! empty($partial)) {
-                foreach ($createVerbs as $verb) {
-                    if (str_starts_with($verb, $partial) && strlen($partial) <= strlen($verb)) {
-                        $command = "{$verb} {$entity}";
-                        $suggestions[$command] = [
-                            'icon' => $config['icon'],
-                            'description' => $config['description'],
-                            'route' => $config['route'] ?? null,
-                        ];
-                    }
-                }
+        return null;
+    }
+
+    protected static function commandMatchesPartial(string $command, string $partial): bool
+    {
+        return empty($partial) || str_starts_with($command, $partial) || str_contains($command, $partial);
+    }
+
+    protected static function buildSuggestion(array $config): array
+    {
+        return [
+            'icon' => $config['icon'],
+            'description' => $config['description'],
+            'route' => $config['route'] ?? null,
+        ];
+    }
+
+    protected static function generateVerbOnlySuggestions(
+        string $entity,
+        array $config,
+        string $partial,
+        array $verbs
+    ): array {
+        $suggestions = [];
+
+        foreach ($verbs as $verb) {
+            if (str_starts_with($verb, $partial) && strlen($partial) <= strlen($verb)) {
+                $command = "{$verb} {$entity}";
+                $suggestions[$command] = static::buildSuggestion($config);
             }
         }
 
