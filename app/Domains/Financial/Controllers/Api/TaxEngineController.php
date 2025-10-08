@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 class TaxEngineController extends Controller
 {
+    private const ERROR_MESSAGE_GENERIC = 'An error occurred';
+
     protected TaxEngineRouter $taxEngine;
 
     protected TaxProfileService $profileService;
@@ -520,7 +522,7 @@ class TaxEngineController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to get tax profile',
-                'message' => config('app.debug') ? $e->getMessage() : 'An error occurred',
+                'message' => config('app.debug') ? $e->getMessage() : self::ERROR_MESSAGE_GENERIC,
             ], 500);
         }
     }
@@ -561,7 +563,7 @@ class TaxEngineController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to get required fields',
-                'message' => config('app.debug') ? $e->getMessage() : 'An error occurred',
+                'message' => config('app.debug') ? $e->getMessage() : self::ERROR_MESSAGE_GENERIC,
             ], 500);
         }
     }
@@ -618,7 +620,7 @@ class TaxEngineController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Validation failed',
-                'message' => config('app.debug') ? $e->getMessage() : 'An error occurred',
+                'message' => config('app.debug') ? $e->getMessage() : self::ERROR_MESSAGE_GENERIC,
             ], 500);
         }
     }
@@ -687,7 +689,7 @@ class TaxEngineController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to get tax profiles',
-                'message' => config('app.debug') ? $e->getMessage() : 'An error occurred',
+                'message' => config('app.debug') ? $e->getMessage() : self::ERROR_MESSAGE_GENERIC,
             ], 500);
         }
     }
@@ -829,7 +831,7 @@ class TaxEngineController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to get tax types',
-                'message' => config('app.debug') ? $e->getMessage() : 'An error occurred',
+                'message' => config('app.debug') ? $e->getMessage() : self::ERROR_MESSAGE_GENERIC,
             ], 500);
         }
     }
