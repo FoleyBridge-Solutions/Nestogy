@@ -2,6 +2,7 @@
 
 namespace App\Domains\PhysicalMail\Services;
 
+use App\Domains\PhysicalMail\Exceptions\PhysicalMailStatusException;
 use App\Domains\PhysicalMail\Jobs\SendChequeJob;
 use App\Domains\PhysicalMail\Jobs\SendLetterJob;
 use App\Domains\PhysicalMail\Jobs\SendPostcardJob;
@@ -248,7 +249,14 @@ class PhysicalMailService
     public function cancel(PhysicalMailOrder $order): bool
     {
         if (! $order->canBeCancelled()) {
-            throw new \Exception("Order cannot be cancelled in status: {$order->status}");
+            throw new PhysicalMailStatusException(
+                "Order cannot be cancelled in status: {$order->status}",
+                400,
+                null,
+                ['order_id' => $order->id, 'status' => $order->status],
+                "This mail order cannot be cancelled in its current status: {$order->status}",
+                400
+            );
         }
 
         try {
