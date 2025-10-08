@@ -52,10 +52,8 @@ class EmailProviderValidationService
         }
 
         // Validate tenant ID if provided
-        if (! empty($config['tenant_id']) && $config['tenant_id'] !== 'common') {
-            if (! preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $config['tenant_id'])) {
-                $errors[] = 'Tenant ID must be a valid UUID or "common"';
-            }
+        if (! empty($config['tenant_id']) && $config['tenant_id'] !== 'common' && ! preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $config['tenant_id'])) {
+            $errors[] = 'Tenant ID must be a valid UUID or "common"';
         }
 
         // Validate allowed domains
