@@ -871,139 +871,150 @@ class NavigationService
             return [];
         }
 
-        $breadcrumbs = [];
+        $selectedClient = static::getSelectedClient();
         $routeSegments = explode('.', $currentRouteName);
 
-        // Check if there's a selected client in the session
-        $selectedClient = static::getSelectedClient();
-
-        // Special handling for clients domain pages
-        if ($activeDomain === 'clients') {
-            // If we have a selected client on clients.index, just show the client name
-            if ($currentRouteName === 'clients.index' && $selectedClient) {
-                $breadcrumbs[] = [
-                    'name' => $selectedClient->name,
-                    'active' => true,
-                ];
-
-                return $breadcrumbs;
-            }
-
-            // For client creation/import pages (no specific client), show the action
-            if (in_array($currentRouteName, ['clients.create', 'clients.import.form'])) {
-                $pageTitle = static::getPageTitleFromRoute($currentRouteName, $activeDomain);
-                if ($pageTitle) {
-                    $breadcrumbs[] = [
-                        'name' => $pageTitle,
-                        'active' => true,
-                    ];
-                }
-
-                return $breadcrumbs;
-            }
-
-            // For clients.index without a selected client, don't show any breadcrumb
-            if ($currentRouteName === 'clients.index' && ! $selectedClient) {
-                return [];
-            }
-        }
-
-        // For other domain index pages with a selected client
-        // Show: Client Name > Domain (e.g., "Acme Corp > Tickets")
-        $isDomainIndex = $currentRouteName === static::getDomainIndexRoute($activeDomain);
-        if ($isDomainIndex && $selectedClient && $activeDomain !== 'clients') {
-            $breadcrumbs[] = [
-                'name' => $selectedClient->name,
-                'route' => 'clients.show',
-                'params' => ['client' => $selectedClient->id],
-            ];
-            $breadcrumbs[] = [
-                'name' => static::getDomainDisplayName($activeDomain),
-                'active' => true,
-            ];
-
+        $breadcrumbs = static::buildClientDomainBreadcrumbs($activeDomain, $currentRouteName, $selectedClient);
+        if ($breadcrumbs !== null) {
             return $breadcrumbs;
         }
 
-        // Only add client as root if we're not already on the client's page
-        // This prevents duplication like "Client Name > Client Name"
+        $breadcrumbs = static::buildDomainIndexBreadcrumbs($activeDomain, $currentRouteName, $selectedClient);
+        if ($breadcrumbs !== null) {
+            return $breadcrumbs;
+        }
+
+        $breadcrumbs = [];
+        static::addClientBreadcrumb($breadcrumbs, $activeDomain, $currentRouteName, $selectedClient);
+        static::addDomainBreadcrumb($breadcrumbs, $activeDomain, $currentRouteName, $selectedClient);
+        static::addSubsectionBreadcrumb($breadcrumbs, $activeDomain, $routeSegments);
+        static::addPageTitleBreadcrumb($breadcrumbs, $currentRouteName, $activeDomain);
+        static::markLastBreadcrumbAsActive($breadcrumbs);
+
+        return $breadcrumbs;
+    }
+
+    protected static function buildClientDomainBreadcrumbs(string $activeDomain, string $currentRouteName, $selectedClient): ?array
+    {
+        if ($activeDomain !== 'clients') {
+            return null;
+        }
+
+        if ($currentRouteName === 'clients.index' && $selectedClient) {
+            return [['name' => $selectedClient->name, 'active' => true]];
+        }
+
+        if (in_array($currentRouteName, ['clients.create', 'clients.import.form'])) {
+            $pageTitle = static::getPageTitleFromRoute($currentRouteName, $activeDomain);
+            return $pageTitle ? [['name' => $pageTitle, 'active' => true]] : [];
+        }
+
+        if ($currentRouteName === 'clients.index' && ! $selectedClient) {
+            return [];
+        }
+
+        return null;
+    }
+
+    protected static function buildDomainIndexBreadcrumbs(string $activeDomain, string $currentRouteName, $selectedClient): ?array
+    {
+        $isDomainIndex = $currentRouteName === static::getDomainIndexRoute($activeDomain);
+        
+        if ($isDomainIndex && $selectedClient && $activeDomain !== 'clients') {
+            return [
+                [
+                    'name' => $selectedClient->name,
+                    'route' => 'clients.show',
+                    'params' => ['client' => $selectedClient->id],
+                ],
+                [
+                    'name' => static::getDomainDisplayName($activeDomain),
+                    'active' => true,
+                ],
+            ];
+        }
+
+        return null;
+    }
+
+    protected static function addClientBreadcrumb(array &$breadcrumbs, string $activeDomain, string $currentRouteName, $selectedClient): void
+    {
         $isClientPage = $activeDomain === 'clients' && in_array($currentRouteName, ['clients.show', 'clients.edit']);
 
         if ($selectedClient && ! $isClientPage) {
-            // Add client as the root breadcrumb
             $breadcrumbs[] = [
                 'name' => $selectedClient->name,
                 'route' => 'clients.show',
                 'params' => ['client' => $selectedClient->id],
             ];
         }
+    }
 
-        // Add the domain breadcrumb (but never show "Clients" domain)
+    protected static function addDomainBreadcrumb(array &$breadcrumbs, string $activeDomain, string $currentRouteName, $selectedClient): void
+    {
         $isDomainIndex = $currentRouteName === static::getDomainIndexRoute($activeDomain);
-        $domainName = static::getDomainDisplayName($activeDomain);
-
-        // Don't add domain breadcrumb if:
-        // 1. It's the Clients domain (we never show this)
-        // 2. We're on the domain index page AND have a client selected
-        // 3. We're on the domain index page with no other breadcrumbs
         $skipDomainBreadcrumb = ($activeDomain === 'clients') ||
                                  ($isDomainIndex && ($selectedClient || empty($breadcrumbs)));
 
         if (! $skipDomainBreadcrumb) {
             $breadcrumbs[] = [
-                'name' => $domainName,
+                'name' => static::getDomainDisplayName($activeDomain),
                 'route' => static::getDomainIndexRoute($activeDomain),
             ];
         }
+    }
 
-        // Handle sub-sections within domains (e.g., financial.contracts, clients.contacts)
-        if (count($routeSegments) >= 3) {
-            $subsection = $routeSegments[1]; // e.g., 'contracts', 'invoices', 'contacts'
-            $subsectionName = static::getSubsectionDisplayName($subsection);
-
-            // Add subsection for financial domain
-            if ($activeDomain === 'financial') {
-                // Only add subsection breadcrumb if we're not on the subsection index page
-                if ($routeSegments[2] !== 'index' || count($routeSegments) > 3) {
-                    $breadcrumbs[] = [
-                        'name' => $subsectionName,
-                        'route' => $routeSegments[0].'.'.$subsection.'.index',
-                    ];
-                }
-            }
-
-            // For client sub-sections (contacts, locations, etc.), add them directly
-            // since we're not showing "Clients" as a breadcrumb
-            if ($activeDomain === 'clients' && in_array($subsection, ['contacts', 'locations', 'documents', 'notes'])) {
-                $breadcrumbs[] = [
-                    'name' => $subsectionName,
-                    'route' => $routeSegments[0].'.'.$subsection.'.index',
-                ];
-            }
+    protected static function addSubsectionBreadcrumb(array &$breadcrumbs, string $activeDomain, array $routeSegments): void
+    {
+        if (count($routeSegments) < 3) {
+            return;
         }
 
-        // Add specific page breadcrumb based on route
+        $subsection = $routeSegments[1];
+        $subsectionName = static::getSubsectionDisplayName($subsection);
+
+        if ($activeDomain === 'financial' && ($routeSegments[2] !== 'index' || count($routeSegments) > 3)) {
+            $breadcrumbs[] = [
+                'name' => $subsectionName,
+                'route' => $routeSegments[0].'.'.$subsection.'.index',
+            ];
+        }
+
+        if ($activeDomain === 'clients' && in_array($subsection, ['contacts', 'locations', 'documents', 'notes'])) {
+            $breadcrumbs[] = [
+                'name' => $subsectionName,
+                'route' => $routeSegments[0].'.'.$subsection.'.index',
+            ];
+        }
+    }
+
+    protected static function addPageTitleBreadcrumb(array &$breadcrumbs, string $currentRouteName, string $activeDomain): void
+    {
         $pageTitle = static::getPageTitleFromRoute($currentRouteName, $activeDomain);
-        if ($pageTitle && ! empty($pageTitle)) {
-            // Check if this is a different title than what we already have
-            $lastBreadcrumb = end($breadcrumbs);
-            if ($lastBreadcrumb === false || $pageTitle !== $lastBreadcrumb['name']) {
-                $breadcrumbs[] = [
-                    'name' => $pageTitle,
-                    'active' => true,
-                ];
-            }
+        
+        if (! $pageTitle || empty($pageTitle)) {
+            return;
         }
 
-        // Mark the last breadcrumb as active if no specific page title was added
-        if (! empty($breadcrumbs)) {
-            $lastKey = array_key_last($breadcrumbs);
-            if (! isset($breadcrumbs[$lastKey]['active'])) {
-                $breadcrumbs[$lastKey]['active'] = true;
-            }
+        $lastBreadcrumb = end($breadcrumbs);
+        if ($lastBreadcrumb === false || $pageTitle !== $lastBreadcrumb['name']) {
+            $breadcrumbs[] = [
+                'name' => $pageTitle,
+                'active' => true,
+            ];
+        }
+    }
+
+    protected static function markLastBreadcrumbAsActive(array &$breadcrumbs): void
+    {
+        if (empty($breadcrumbs)) {
+            return;
         }
 
-        return $breadcrumbs;
+        $lastKey = array_key_last($breadcrumbs);
+        if (! isset($breadcrumbs[$lastKey]['active'])) {
+            $breadcrumbs[$lastKey]['active'] = true;
+        }
     }
 
     /**
