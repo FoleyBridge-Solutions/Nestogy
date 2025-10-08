@@ -77,12 +77,7 @@ class LocationPolicy
      */
     public function restore(User $user, Location $location): bool
     {
-        // Admins can always restore locations from their company
-        if ($user->isAdmin() && $this->sameCompany($user, $location)) {
-            return true;
-        }
-
-        return $user->can('clients.locations.manage') && $this->sameCompany($user, $location);
+        return $user->isAdmin() && $this->sameCompany($user, $location);
     }
 
     /**
