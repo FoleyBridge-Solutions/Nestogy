@@ -117,8 +117,22 @@ class CollectionManagementService
             $analysis['payment_ratio'] = ($analysis['total_payments'] / $analysis['total_invoices']) * 100;
         }
 
-        // Calculate payment timing patterns
+        $paymentDelays = $this->calculatePaymentDelays($invoices, $payments, $analysis);
+
+        if (! empty($paymentDelays)) {
+            $analysis['average_days_to_pay'] = array_sum($paymentDelays) / count($paymentDelays);
+        }
+
+        $analysis['payment_consistency'] = $this->calculatePaymentConsistency($paymentDelays, $analysis['average_days_to_pay']);
+        $analysis['risk_score'] = $this->calculatePaymentHistoryRiskScore($analysis);
+
+        return $analysis;
+    }
+
+    protected function calculatePaymentDelays(Collection $invoices, Collection $payments, array &$analysis): array
+    {
         $paymentDelays = [];
+        
         foreach ($invoices as $invoice) {
             $payment = $payments->where('invoice_id', $invoice->id)->first();
             if ($payment) {
@@ -137,21 +151,27 @@ class CollectionManagementService
             }
         }
 
-        if (! empty($paymentDelays)) {
-            $analysis['average_days_to_pay'] = array_sum($paymentDelays) / count($paymentDelays);
+        return $paymentDelays;
+    }
+
+    protected function calculatePaymentConsistency(array $paymentDelays, float $averageDaysToPay): float
+    {
+        if (count($paymentDelays) <= 1) {
+            return 0;
         }
 
-        // Calculate payment consistency
-        if (count($paymentDelays) > 1) {
-            $mean = $analysis['average_days_to_pay'];
-            $variance = array_sum(array_map(function ($x) use ($mean) {
-                return pow($x - $mean, 2);
-            }, $paymentDelays)) / count($paymentDelays);
-            $analysis['payment_consistency'] = max(0, 100 - sqrt($variance));
-        }
+        $mean = $averageDaysToPay;
+        $variance = array_sum(array_map(function ($x) use ($mean) {
+            return pow($x - $mean, 2);
+        }, $paymentDelays)) / count($paymentDelays);
+        
+        return max(0, 100 - sqrt($variance));
+    }
 
-        // Calculate risk score
+    protected function calculatePaymentHistoryRiskScore(array $analysis): int
+    {
         $riskScore = 0;
+        
         if ($analysis['payment_ratio'] < 80) {
             $riskScore += 25;
         }
@@ -168,9 +188,7 @@ class CollectionManagementService
             $riskScore += 10;
         }
 
-        $analysis['risk_score'] = min(100, $riskScore);
-
-        return $analysis;
+        return min(100, $riskScore);
     }
 
     /**
