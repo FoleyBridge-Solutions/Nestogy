@@ -12,6 +12,8 @@ use Illuminate\View\View;
 
 class ContractTypeController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING_50 = 'nullable|string|max:50';
+
     protected ContractConfigurationRegistry $configRegistry;
 
     public function __construct()
@@ -53,8 +55,8 @@ class ContractTypeController extends Controller
                 'category' => 'required|string|max:100',
                 'description' => 'nullable|string|max:1000',
                 'icon' => 'nullable|string|max:100',
-                'color' => 'nullable|string|max:50',
-                'default_billing_model' => 'nullable|string|max:50',
+                'color' => self::VALIDATION_NULLABLE_STRING_50,
+                'default_billing_model' => self::VALIDATION_NULLABLE_STRING_50,
                 'default_term_length' => 'nullable|integer|min:1|max:120',
                 'requires_signature' => 'boolean',
                 'is_active' => 'boolean',
@@ -126,8 +128,8 @@ class ContractTypeController extends Controller
                 'category' => 'required|string|max:100',
                 'description' => 'nullable|string|max:1000',
                 'icon' => 'nullable|string|max:100',
-                'color' => 'nullable|string|max:50',
-                'default_billing_model' => 'nullable|string|max:50',
+                'color' => self::VALIDATION_NULLABLE_STRING_50,
+                'default_billing_model' => self::VALIDATION_NULLABLE_STRING_50,
                 'default_term_length' => 'nullable|integer|min:1|max:120',
                 'requires_signature' => 'boolean',
                 'is_active' => 'boolean',
