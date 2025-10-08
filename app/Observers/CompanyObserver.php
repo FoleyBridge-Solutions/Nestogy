@@ -48,7 +48,7 @@ class CompanyObserver
     /**
      * Handle the Company "force deleted" event.
      */
-    public function forceDeleted(Company $company): void
+    public function forceDeleted(): void
     {
         //
     }
