@@ -14,6 +14,8 @@ class CertificateController extends Controller
 {
     use UsesSelectedClient;
 
+    private const PATH_VALIDATION_RULE = 'nullable|string|max:500';
+
     /**
      * Display a listing of certificates for the selected client
      */
@@ -120,10 +122,10 @@ class CertificateController extends Controller
             'fingerprint_sha256' => 'nullable|string|max:255',
             'is_wildcard' => 'boolean',
             'domain_names' => 'nullable|string',
-            'certificate_path' => 'nullable|string|max:500',
-            'private_key_path' => 'nullable|string|max:500',
-            'intermediate_path' => 'nullable|string|max:500',
-            'root_ca_path' => 'nullable|string|max:500',
+            'certificate_path' => self::PATH_VALIDATION_RULE,
+            'private_key_path' => self::PATH_VALIDATION_RULE,
+            'intermediate_path' => self::PATH_VALIDATION_RULE,
+            'root_ca_path' => self::PATH_VALIDATION_RULE,
             'issued_at' => 'nullable|date|before_or_equal:today',
             'expires_at' => 'required|date|after:issued_at',
             'renewal_date' => 'nullable|date|before:expires_at',
@@ -248,10 +250,10 @@ class CertificateController extends Controller
             'fingerprint_sha256' => 'nullable|string|max:255',
             'is_wildcard' => 'boolean',
             'domain_names' => 'nullable|string',
-            'certificate_path' => 'nullable|string|max:500',
-            'private_key_path' => 'nullable|string|max:500',
-            'intermediate_path' => 'nullable|string|max:500',
-            'root_ca_path' => 'nullable|string|max:500',
+            'certificate_path' => self::PATH_VALIDATION_RULE,
+            'private_key_path' => self::PATH_VALIDATION_RULE,
+            'intermediate_path' => self::PATH_VALIDATION_RULE,
+            'root_ca_path' => self::PATH_VALIDATION_RULE,
             'issued_at' => 'nullable|date|before_or_equal:today',
             'expires_at' => 'required|date|after:issued_at',
             'renewal_date' => 'nullable|date|before:expires_at',
