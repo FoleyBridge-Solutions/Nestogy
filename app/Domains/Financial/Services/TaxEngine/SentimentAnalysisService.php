@@ -328,10 +328,18 @@ class SentimentAnalysisService extends BaseApiClient
             $color = '#ef4444'; // red-500
         }
 
+        if ($absScore > 0.7) {
+            $confidenceLevel = 'High';
+        } elseif ($absScore > 0.3) {
+            $confidenceLevel = 'Medium';
+        } else {
+            $confidenceLevel = 'Low';
+        }
+
         return [
             'interpretation' => $interpretation,
             'color' => $color,
-            'confidence_level' => $absScore > 0.7 ? 'High' : ($absScore > 0.3 ? 'Medium' : 'Low'),
+            'confidence_level' => $confidenceLevel,
         ];
     }
 }
