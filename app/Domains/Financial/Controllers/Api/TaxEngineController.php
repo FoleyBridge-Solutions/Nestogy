@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 class TaxEngineController extends Controller
 {
+    private const VALIDATION_REQUIRED_NUMERIC_MIN_ZERO = 'required|numeric|min:0';
+
     protected TaxEngineRouter $taxEngine;
 
     protected TaxProfileService $profileService;
@@ -40,7 +42,7 @@ class TaxEngineController extends Controller
         try {
             $validated = $request->validate([
                 // Base pricing
-                'base_price' => 'required|numeric|min:0',
+                'base_price' => self::VALIDATION_REQUIRED_NUMERIC_MIN_ZERO,
                 'quantity' => 'nullable|integer|min:1',
 
                 // Category identification
@@ -146,7 +148,7 @@ class TaxEngineController extends Controller
         try {
             $validated = $request->validate([
                 'items' => 'required|array|min:1|max:100', // Limit to 100 items per request
-                'items.*.base_price' => 'required|numeric|min:0',
+                'items.*.base_price' => self::VALIDATION_REQUIRED_NUMERIC_MIN_ZERO,
                 'items.*.quantity' => 'nullable|integer|min:1',
                 'items.*.name' => 'nullable|string|max:255',
                 'items.*.category_id' => 'nullable|exists:categories,id',
@@ -260,7 +262,7 @@ class TaxEngineController extends Controller
                 'quote_data.items' => 'required|array|min:1',
                 'quote_data.items.*.name' => 'required|string|max:255',
                 'quote_data.items.*.quantity' => 'required|numeric|min:0.01',
-                'quote_data.items.*.price' => 'required|numeric|min:0',
+                'quote_data.items.*.price' => self::VALIDATION_REQUIRED_NUMERIC_MIN_ZERO,
                 'quote_data.items.*.discount' => 'nullable|numeric|min:0',
                 'quote_data.items.*.category_id' => 'nullable|exists:categories,id',
                 'quote_data.items.*.product_id' => 'nullable|exists:products,id',
@@ -700,7 +702,7 @@ class TaxEngineController extends Controller
         try {
             $validated = $request->validate([
                 // Line item details
-                'base_price' => 'required|numeric|min:0',
+                'base_price' => self::VALIDATION_REQUIRED_NUMERIC_MIN_ZERO,
                 'quantity' => 'nullable|integer|min:1',
                 'product_id' => 'nullable|exists:products,id',
 
