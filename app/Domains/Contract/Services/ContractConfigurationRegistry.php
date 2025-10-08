@@ -582,36 +582,66 @@ class ContractConfigurationRegistry
     {
         $errors = [];
 
-        // Validate contract types
+        $errors = array_merge($errors, $this->validateContractTypes($config));
+        $errors = array_merge($errors, $this->validateStatuses($config));
+        $errors = array_merge($errors, $this->validateRequiredStatuses($config));
+        $errors = array_merge($errors, $this->validateStatusTransitions($config));
+
+        return $errors;
+    }
+
+    protected function validateContractTypes(array $config): array
+    {
         if (! isset($config['contract_types']) || empty($config['contract_types'])) {
-            $errors[] = 'At least one contract type must be defined';
+            return ['At least one contract type must be defined'];
         }
 
-        // Validate statuses
+        return [];
+    }
+
+    protected function validateStatuses(array $config): array
+    {
         if (! isset($config['statuses']) || empty($config['statuses'])) {
-            $errors[] = 'At least one status must be defined';
+            return ['At least one status must be defined'];
         }
 
-        // Check for required default status
-        if (isset($config['statuses'])) {
-            $statusKeys = array_keys($config['statuses']);
+        return [];
+    }
 
-            foreach (['draft', 'active'] as $requiredStatus) {
-                if (! in_array($requiredStatus, $statusKeys)) {
-                    $errors[] = "Required status '{$requiredStatus}' is missing";
-                }
+    protected function validateRequiredStatuses(array $config): array
+    {
+        if (! isset($config['statuses'])) {
+            return [];
+        }
+
+        $errors = [];
+        $statusKeys = array_keys($config['statuses']);
+
+        foreach (['draft', 'active'] as $requiredStatus) {
+            if (! in_array($requiredStatus, $statusKeys)) {
+                $errors[] = "Required status '{$requiredStatus}' is missing";
             }
         }
 
-        // Validate status transitions
-        if (isset($config['statuses'])) {
-            foreach ($config['statuses'] as $status => $statusConfig) {
-                if (isset($statusConfig['transitions'])) {
-                    foreach ($statusConfig['transitions'] as $transition) {
-                        if (! isset($config['statuses'][$transition])) {
-                            $errors[] = "Status '{$status}' has invalid transition to '{$transition}'";
-                        }
-                    }
+        return $errors;
+    }
+
+    protected function validateStatusTransitions(array $config): array
+    {
+        if (! isset($config['statuses'])) {
+            return [];
+        }
+
+        $errors = [];
+
+        foreach ($config['statuses'] as $status => $statusConfig) {
+            if (! isset($statusConfig['transitions'])) {
+                continue;
+            }
+
+            foreach ($statusConfig['transitions'] as $transition) {
+                if (! isset($config['statuses'][$transition])) {
+                    $errors[] = "Status '{$status}' has invalid transition to '{$transition}'";
                 }
             }
         }
