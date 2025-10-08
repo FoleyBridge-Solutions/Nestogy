@@ -31,13 +31,20 @@ class FinancialKpis extends Component
         $this->loading = true;
         $companyId = Auth::user()->company_id;
 
-        // Use cache for frequently accessed data
+        $kpiData = $this->fetchCachedKpiData($companyId);
+        $trends = $this->calculateAllTrends($companyId, $kpiData);
+
+        $this->kpis = $this->buildKpiArray($kpiData, $trends);
+        $this->loading = false;
+    }
+
+    protected function fetchCachedKpiData(int $companyId): array
+    {
         $cacheKey = "financial_kpis_{$companyId}_".Carbon::now()->format('Y-m-d-H');
 
-        $kpiData = cache()->remember($cacheKey, 60, function () use ($companyId) {
+        return cache()->remember($cacheKey, 60, function () use ($companyId) {
             $now = Carbon::now();
 
-            // Batch all invoice queries into one with conditional aggregates
             $invoiceStats = DB::selectOne("
                 SELECT 
                     SUM(CASE WHEN status IN ('Sent', 'Viewed', 'Partial') THEN amount ELSE 0 END) as outstanding,
@@ -53,7 +60,6 @@ class FinancialKpis extends Component
                 $companyId,
             ]);
 
-            // Batch client queries
             $clientStats = DB::selectOne("
                 SELECT 
                     COUNT(CASE WHEN status = 'active' THEN 1 END) as active_clients,
@@ -65,7 +71,6 @@ class FinancialKpis extends Component
                 $companyId,
             ]);
 
-            // Get churned clients count
             $churnedThisMonth = DB::table('clients')
                 ->where('company_id', $companyId)
                 ->whereNotNull('deleted_at')
@@ -73,7 +78,6 @@ class FinancialKpis extends Component
                 ->whereYear('deleted_at', $now->year)
                 ->count();
 
-            // Calculate MRR from recurring items
             $recurringItems = Recurring::where('company_id', $companyId)
                 ->where('status', true)
                 ->select('amount', 'frequency')
@@ -90,7 +94,6 @@ class FinancialKpis extends Component
                 };
             }, 0);
 
-            // Get payment stats
             $totalCollected = Payment::where('company_id', $companyId)
                 ->where('status', 'completed')
                 ->whereNotNull('payment_date')
@@ -110,70 +113,115 @@ class FinancialKpis extends Component
                 'churned_this_month' => $churnedThisMonth,
             ];
         });
+    }
 
-        // Calculate metrics from cached data
-        $mrr = $kpiData['mrr'];
-        $arr = $kpiData['arr'];
-        $outstanding = $kpiData['outstanding'];
-        $avgInvoice = $kpiData['avg_invoice'];
-        $activeClients = $kpiData['active_clients'];
-
-        $churnRate = $kpiData['clients_start_of_month'] > 0 ?
-            round(($kpiData['churned_this_month'] / $kpiData['clients_start_of_month']) * 100, 1) : 0;
-
-        $collectionRate = $kpiData['total_invoiced'] > 0 ?
-            ($kpiData['total_collected'] / $kpiData['total_invoiced']) * 100 : 0;
-
-        // Get revenue with optimized queries
+    protected function calculateAllTrends(int $companyId, array $kpiData): array
+    {
         [$monthlyRevenue, $previousRevenue] = $this->calculateMonthlyRevenue($companyId);
 
-        // Calculate trends by comparing with previous month
+        $churnRate = $this->calculateChurnRate($kpiData);
+        $collectionRate = $this->calculateCollectionRate($kpiData);
+
         $lastMonthMRR = $this->calculateLastMonthMRR($companyId);
-        $mrrTrend = $this->calculateTrend($mrr, $lastMonthMRR);
-
-        $revenueTrend = $this->calculateTrend($monthlyRevenue, $previousRevenue);
-
-        $lastMonthOutstanding = Invoice::where('company_id', $companyId)
-            ->whereIn('status', ['Sent', 'Viewed', 'Partial'])
-            ->whereMonth('created_at', Carbon::now()->subMonth()->month)
-            ->sum('amount') ?? 0;
-        $outstandingTrend = $this->calculateTrend($outstanding, $lastMonthOutstanding);
-
-        $lastMonthAvgInvoice = Invoice::where('company_id', $companyId)
-            ->whereMonth('created_at', Carbon::now()->subMonth()->month)
-            ->avg('amount') ?? 0;
-        $avgInvoiceTrend = $this->calculateTrend($avgInvoice, $lastMonthAvgInvoice);
+        $lastMonthOutstanding = $this->calculateLastMonthOutstanding($companyId);
+        $lastMonthAvgInvoice = $this->calculateLastMonthAvgInvoice($companyId);
+        $lastMonthChurnRate = $this->calculateLastMonthChurnRate($companyId);
+        $lastMonthCollectionRate = $this->calculateLastMonthCollectionRate($companyId);
 
         $newClientsThisMonth = Client::where('company_id', $companyId)
             ->whereMonth('created_at', Carbon::now()->month)
             ->count();
 
-        $lastMonthChurnRate = $this->calculateLastMonthChurnRate($companyId);
-        $churnTrend = $this->calculateTrend($churnRate, $lastMonthChurnRate);
-
-        $lastMonthCollectionRate = $this->calculateLastMonthCollectionRate($companyId);
-        $collectionTrend = $this->calculateTrend($collectionRate, $lastMonthCollectionRate);
-
-        $this->kpis = [
-            ['label' => 'MRR', 'value' => $mrr, 'format' => 'currency', 'icon' => 'chart-bar', 'color' => 'green',
-                'trend' => $mrrTrend >= 0 ? 'up' : 'down', 'trendValue' => ($mrrTrend >= 0 ? '+' : '').$mrrTrend.'%'],
-            ['label' => 'ARR', 'value' => $arr, 'format' => 'currency', 'icon' => 'arrow-trending-up', 'color' => 'blue',
-                'trend' => $mrrTrend >= 0 ? 'up' : 'down', 'trendValue' => ($mrrTrend >= 0 ? '+' : '').$mrrTrend.'%'],
-            ['label' => 'Monthly Revenue', 'value' => $monthlyRevenue, 'format' => 'currency', 'icon' => 'currency-dollar', 'color' => 'purple',
-                'trend' => $revenueTrend >= 0 ? 'up' : 'down', 'trendValue' => ($revenueTrend >= 0 ? '+' : '').$revenueTrend.'%', 'previousValue' => $previousRevenue],
-            ['label' => 'Outstanding', 'value' => $outstanding, 'format' => 'currency', 'icon' => 'clock', 'color' => 'orange',
-                'trend' => $outstandingTrend <= 0 ? 'down' : 'up', 'trendValue' => ($outstandingTrend >= 0 ? '+' : '').$outstandingTrend.'%'],
-            ['label' => 'Avg Invoice', 'value' => $avgInvoice, 'format' => 'currency', 'icon' => 'document-text', 'color' => 'indigo',
-                'trend' => $avgInvoiceTrend >= 0 ? 'up' : 'down', 'trendValue' => ($avgInvoiceTrend >= 0 ? '+' : '').$avgInvoiceTrend.'%'],
-            ['label' => 'Active Clients', 'value' => $activeClients, 'format' => 'number', 'icon' => 'user-group', 'color' => 'teal',
-                'trend' => $newClientsThisMonth > 0 ? 'up' : 'stable', 'trendValue' => $newClientsThisMonth > 0 ? '+'.$newClientsThisMonth : '0'],
-            ['label' => 'Churn Rate', 'value' => $churnRate, 'format' => 'percentage', 'icon' => 'arrow-trending-down', 'color' => 'red',
-                'trend' => $churnTrend <= 0 ? 'down' : 'up', 'trendValue' => ($churnTrend >= 0 ? '+' : '').$churnTrend.'%'],
-            ['label' => 'Collection Rate', 'value' => round($collectionRate, 1), 'format' => 'percentage', 'icon' => 'check-circle', 'color' => 'green',
-                'trend' => $collectionTrend >= 0 ? 'up' : 'down', 'trendValue' => ($collectionTrend >= 0 ? '+' : '').$collectionTrend.'%'],
+        return [
+            'monthly_revenue' => $monthlyRevenue,
+            'previous_revenue' => $previousRevenue,
+            'churn_rate' => $churnRate,
+            'collection_rate' => $collectionRate,
+            'new_clients' => $newClientsThisMonth,
+            'mrr_trend' => $this->calculateTrend($kpiData['mrr'], $lastMonthMRR),
+            'revenue_trend' => $this->calculateTrend($monthlyRevenue, $previousRevenue),
+            'outstanding_trend' => $this->calculateTrend($kpiData['outstanding'], $lastMonthOutstanding),
+            'avg_invoice_trend' => $this->calculateTrend($kpiData['avg_invoice'], $lastMonthAvgInvoice),
+            'churn_trend' => $this->calculateTrend($churnRate, $lastMonthChurnRate),
+            'collection_trend' => $this->calculateTrend($collectionRate, $lastMonthCollectionRate),
         ];
+    }
 
-        $this->loading = false;
+    protected function buildKpiArray(array $kpiData, array $trends): array
+    {
+        return [
+            $this->buildKpiItem('MRR', $kpiData['mrr'], 'currency', 'chart-bar', 'green', $trends['mrr_trend']),
+            $this->buildKpiItem('ARR', $kpiData['arr'], 'currency', 'arrow-trending-up', 'blue', $trends['mrr_trend']),
+            $this->buildKpiItemWithPrevious('Monthly Revenue', $trends['monthly_revenue'], 'currency', 'currency-dollar', 'purple', $trends['revenue_trend'], $trends['previous_revenue']),
+            $this->buildKpiItem('Outstanding', $kpiData['outstanding'], 'currency', 'clock', 'orange', $trends['outstanding_trend'], true),
+            $this->buildKpiItem('Avg Invoice', $kpiData['avg_invoice'], 'currency', 'document-text', 'indigo', $trends['avg_invoice_trend']),
+            $this->buildClientKpiItem($kpiData['active_clients'], $trends['new_clients']),
+            $this->buildKpiItem('Churn Rate', $trends['churn_rate'], 'percentage', 'arrow-trending-down', 'red', $trends['churn_trend'], true),
+            $this->buildKpiItem('Collection Rate', round($trends['collection_rate'], 1), 'percentage', 'check-circle', 'green', $trends['collection_trend']),
+        ];
+    }
+
+    protected function buildKpiItem(string $label, float $value, string $format, string $icon, string $color, float $trend, bool $invertTrend = false): array
+    {
+        $trendDirection = $invertTrend ? ($trend <= 0 ? 'down' : 'up') : ($trend >= 0 ? 'up' : 'down');
+        $trendValue = ($trend >= 0 ? '+' : '').$trend.'%';
+
+        return [
+            'label' => $label,
+            'value' => $value,
+            'format' => $format,
+            'icon' => $icon,
+            'color' => $color,
+            'trend' => $trendDirection,
+            'trendValue' => $trendValue,
+        ];
+    }
+
+    protected function buildKpiItemWithPrevious(string $label, float $value, string $format, string $icon, string $color, float $trend, float $previousValue): array
+    {
+        $kpi = $this->buildKpiItem($label, $value, $format, $icon, $color, $trend);
+        $kpi['previousValue'] = $previousValue;
+        return $kpi;
+    }
+
+    protected function buildClientKpiItem(int $activeClients, int $newClients): array
+    {
+        return [
+            'label' => 'Active Clients',
+            'value' => $activeClients,
+            'format' => 'number',
+            'icon' => 'user-group',
+            'color' => 'teal',
+            'trend' => $newClients > 0 ? 'up' : 'stable',
+            'trendValue' => $newClients > 0 ? '+'.$newClients : '0',
+        ];
+    }
+
+    protected function calculateChurnRate(array $kpiData): float
+    {
+        return $kpiData['clients_start_of_month'] > 0 ?
+            round(($kpiData['churned_this_month'] / $kpiData['clients_start_of_month']) * 100, 1) : 0;
+    }
+
+    protected function calculateCollectionRate(array $kpiData): float
+    {
+        return $kpiData['total_invoiced'] > 0 ?
+            ($kpiData['total_collected'] / $kpiData['total_invoiced']) * 100 : 0;
+    }
+
+    protected function calculateLastMonthOutstanding(int $companyId): float
+    {
+        return Invoice::where('company_id', $companyId)
+            ->whereIn('status', ['Sent', 'Viewed', 'Partial'])
+            ->whereMonth('created_at', Carbon::now()->subMonth()->month)
+            ->sum('amount') ?? 0;
+    }
+
+    protected function calculateLastMonthAvgInvoice(int $companyId): float
+    {
+        return Invoice::where('company_id', $companyId)
+            ->whereMonth('created_at', Carbon::now()->subMonth()->month)
+            ->avg('amount') ?? 0;
     }
 
     protected function calculateTrend($current, $previous)
