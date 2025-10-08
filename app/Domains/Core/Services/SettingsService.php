@@ -530,57 +530,11 @@ class SettingsService
                 'incoming_data' => $data,
             ]);
 
-            // Build payment gateway settings from individual form fields
-            $paypalSettings = null;
-            if (isset($data['paypal_enabled']) || isset($data['paypal_client_id']) || isset($data['paypal_client_secret'])) {
-                $paypalSettings = [
-                    'enabled' => filter_var($data['paypal_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'client_id' => $data['paypal_client_id'] ?? null,
-                ];
-                if (! empty($data['paypal_client_secret'])) {
-                    $paypalSettings['client_secret'] = $data['paypal_client_secret'];
-                }
-            }
-
-            $stripeSettings = null;
-            if (isset($data['stripe_enabled']) || isset($data['stripe_publishable_key']) || isset($data['stripe_secret_key'])) {
-                $stripeSettings = [
-                    'enabled' => filter_var($data['stripe_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'publishable_key' => $data['stripe_publishable_key'] ?? null,
-                ];
-                if (! empty($data['stripe_secret_key'])) {
-                    $stripeSettings['secret_key'] = $data['stripe_secret_key'];
-                }
-            }
-
-            $achSettings = null;
-            if (isset($data['ach_enabled']) || isset($data['ach_bank_name']) || isset($data['ach_routing_number']) || isset($data['ach_account_number'])) {
-                $achSettings = [
-                    'enabled' => filter_var($data['ach_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'bank_name' => $data['ach_bank_name'] ?? null,
-                    'routing_number' => $data['ach_routing_number'] ?? null,
-                    'account_number' => $data['ach_account_number'] ?? null,
-                ];
-            }
-
-            $wireSettings = null;
-            if (isset($data['wire_enabled']) || isset($data['wire_bank_name']) || isset($data['wire_swift_code']) || isset($data['wire_account_number'])) {
-                $wireSettings = [
-                    'enabled' => filter_var($data['wire_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'bank_name' => $data['wire_bank_name'] ?? null,
-                    'swift_code' => $data['wire_swift_code'] ?? null,
-                    'account_number' => $data['wire_account_number'] ?? null,
-                ];
-            }
-
-            $checkSettings = null;
-            if (isset($data['check_enabled']) || isset($data['check_payto_name']) || isset($data['check_mailing_address'])) {
-                $checkSettings = [
-                    'enabled' => filter_var($data['check_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'payto_name' => $data['check_payto_name'] ?? null,
-                    'mailing_address' => $data['check_mailing_address'] ?? null,
-                ];
-            }
+            $paypalSettings = $this->buildPaypalSettings($data);
+            $stripeSettings = $this->buildStripeSettings($data);
+            $achSettings = $this->buildAchSettings($data);
+            $wireSettings = $this->buildWireSettings($data);
+            $checkSettings = $this->buildCheckSettings($data);
 
             $updateData = [
                 'multi_currency_enabled' => $data['multi_currency_enabled'] ?? false,
@@ -1132,5 +1086,82 @@ class SettingsService
     public function getColorPresets(): array
     {
         return CompanyCustomization::getColorPresets();
+    }
+
+    private function buildPaypalSettings(array $data): ?array
+    {
+        if (! isset($data['paypal_enabled']) && ! isset($data['paypal_client_id']) && ! isset($data['paypal_client_secret'])) {
+            return null;
+        }
+
+        $settings = [
+            'enabled' => filter_var($data['paypal_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'client_id' => $data['paypal_client_id'] ?? null,
+        ];
+
+        if (! empty($data['paypal_client_secret'])) {
+            $settings['client_secret'] = $data['paypal_client_secret'];
+        }
+
+        return $settings;
+    }
+
+    private function buildStripeSettings(array $data): ?array
+    {
+        if (! isset($data['stripe_enabled']) && ! isset($data['stripe_publishable_key']) && ! isset($data['stripe_secret_key'])) {
+            return null;
+        }
+
+        $settings = [
+            'enabled' => filter_var($data['stripe_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'publishable_key' => $data['stripe_publishable_key'] ?? null,
+        ];
+
+        if (! empty($data['stripe_secret_key'])) {
+            $settings['secret_key'] = $data['stripe_secret_key'];
+        }
+
+        return $settings;
+    }
+
+    private function buildAchSettings(array $data): ?array
+    {
+        if (! isset($data['ach_enabled']) && ! isset($data['ach_bank_name']) && ! isset($data['ach_routing_number']) && ! isset($data['ach_account_number'])) {
+            return null;
+        }
+
+        return [
+            'enabled' => filter_var($data['ach_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'bank_name' => $data['ach_bank_name'] ?? null,
+            'routing_number' => $data['ach_routing_number'] ?? null,
+            'account_number' => $data['ach_account_number'] ?? null,
+        ];
+    }
+
+    private function buildWireSettings(array $data): ?array
+    {
+        if (! isset($data['wire_enabled']) && ! isset($data['wire_bank_name']) && ! isset($data['wire_swift_code']) && ! isset($data['wire_account_number'])) {
+            return null;
+        }
+
+        return [
+            'enabled' => filter_var($data['wire_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'bank_name' => $data['wire_bank_name'] ?? null,
+            'swift_code' => $data['wire_swift_code'] ?? null,
+            'account_number' => $data['wire_account_number'] ?? null,
+        ];
+    }
+
+    private function buildCheckSettings(array $data): ?array
+    {
+        if (! isset($data['check_enabled']) && ! isset($data['check_payto_name']) && ! isset($data['check_mailing_address'])) {
+            return null;
+        }
+
+        return [
+            'enabled' => filter_var($data['check_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'payto_name' => $data['check_payto_name'] ?? null,
+            'mailing_address' => $data['check_mailing_address'] ?? null,
+        ];
     }
 }
