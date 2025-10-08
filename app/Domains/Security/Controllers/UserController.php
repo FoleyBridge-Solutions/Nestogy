@@ -19,6 +19,8 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    private const NULLABLE_BOOLEAN = 'nullable|boolean';
+
     protected $userService;
 
     protected $roleService;
@@ -674,10 +676,10 @@ class UserController extends Controller
             'date_format' => 'nullable|string|max:20',
             'time_format' => 'nullable|string|max:20',
             'records_per_page' => 'nullable|integer|min:10|max:100',
-            'dashboard_financial_enable' => 'nullable|boolean',
-            'dashboard_technical_enable' => 'nullable|boolean',
-            'notifications_email' => 'nullable|boolean',
-            'notifications_browser' => 'nullable|boolean',
+            'dashboard_financial_enable' => self::NULLABLE_BOOLEAN,
+            'dashboard_technical_enable' => self::NULLABLE_BOOLEAN,
+            'notifications_email' => self::NULLABLE_BOOLEAN,
+            'notifications_browser' => self::NULLABLE_BOOLEAN,
             'theme' => 'nullable|in:light,dark,auto',
         ]);
 
@@ -743,7 +745,7 @@ class UserController extends Controller
         $request->validate([
             'current_password' => 'required|current_password',
             'password' => 'required|string|min:8|confirmed',
-            'force_mfa' => 'nullable|boolean',
+            'force_mfa' => self::NULLABLE_BOOLEAN,
         ]);
 
         try {
@@ -898,8 +900,8 @@ class UserController extends Controller
             'timezone' => 'nullable|timezone',
             'date_format' => 'nullable|string|max:20',
             'time_format' => 'nullable|in:12,24',
-            'email_notifications' => 'nullable|boolean',
-            'desktop_notifications' => 'nullable|boolean',
+            'email_notifications' => self::NULLABLE_BOOLEAN,
+            'desktop_notifications' => self::NULLABLE_BOOLEAN,
         ]);
 
         try {
