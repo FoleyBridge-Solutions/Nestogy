@@ -344,19 +344,39 @@ class ClientService extends BaseService
     public function getClientActivity(Client $client, int $limit = 50)
     {
         $activities = collect();
-        $perType = max(5, intval($limit / 6)); // Divide limit among activity types
+        $perType = max(5, intval($limit / 6));
 
-        // Recent tickets
-        $tickets = $client->tickets()
+        $tickets = $this->getTicketActivities($client, $perType);
+        $invoices = $this->getInvoiceActivities($client, $perType);
+        $projects = $this->getProjectActivities($client, $perType);
+        $assets = $this->getAssetActivities($client, $perType);
+        $contracts = $this->getContractActivities($client, $perType);
+        $interactions = collect();
+
+        return $activities
+            ->merge($tickets)
+            ->merge($invoices)
+            ->merge($projects)
+            ->merge($assets)
+            ->merge($contracts)
+            ->merge($interactions)
+            ->sortByDesc('date')
+            ->take($limit)
+            ->values();
+    }
+
+    private function getTicketActivities(Client $client, int $limit)
+    {
+        return $client->tickets()
             ->select('id', 'number', 'subject', 'status', 'priority', 'created_at', 'updated_at')
             ->orderBy('created_at', 'desc')
-            ->limit($perType)
+            ->limit($limit)
             ->get()
             ->map(function ($ticket) {
                 return [
                     'type' => 'ticket',
                     'icon' => 'ticket',
-                    'color' => $ticket->priority === 'high' ? 'red' : ($ticket->status === 'closed' ? 'green' : 'blue'),
+                    'color' => $this->getTicketColor($ticket),
                     'id' => $ticket->id,
                     'title' => "Ticket #{$ticket->number}",
                     'description' => $ticket->subject,
@@ -365,18 +385,20 @@ class ClientService extends BaseService
                     'url' => route('tickets.show', $ticket->id),
                 ];
             });
+    }
 
-        // Recent invoices
-        $invoices = $client->invoices()
+    private function getInvoiceActivities(Client $client, int $limit)
+    {
+        return $client->invoices()
             ->select('id', 'number', 'scope', 'status', 'amount', 'created_at')
             ->orderBy('created_at', 'desc')
-            ->limit($perType)
+            ->limit($limit)
             ->get()
             ->map(function ($invoice) {
                 return [
                     'type' => 'invoice',
                     'icon' => 'document-text',
-                    'color' => $invoice->status === 'paid' ? 'green' : ($invoice->status === 'overdue' ? 'red' : 'yellow'),
+                    'color' => $this->getInvoiceColor($invoice),
                     'id' => $invoice->id,
                     'title' => "Invoice #{$invoice->number}",
                     'description' => $invoice->scope.' - $'.number_format($invoice->amount, 2),
@@ -386,12 +408,14 @@ class ClientService extends BaseService
                     'url' => route('financial.invoices.show', $invoice->id),
                 ];
             });
+    }
 
-        // Recent projects
-        $projects = $client->projects()
+    private function getProjectActivities(Client $client, int $limit)
+    {
+        return $client->projects()
             ->select('id', 'name', 'status', 'progress', 'created_at', 'updated_at')
             ->orderBy('updated_at', 'desc')
-            ->limit($perType)
+            ->limit($limit)
             ->get()
             ->map(function ($project) {
                 return [
@@ -406,12 +430,14 @@ class ClientService extends BaseService
                     'url' => route('projects.show', $project->id),
                 ];
             });
+    }
 
-        // Recent asset changes
-        $assets = $client->assets()
+    private function getAssetActivities(Client $client, int $limit)
+    {
+        return $client->assets()
             ->select('id', 'name', 'type', 'status', 'created_at', 'updated_at')
             ->orderBy('updated_at', 'desc')
-            ->limit($perType)
+            ->limit($limit)
             ->get()
             ->map(function ($asset) {
                 return [
@@ -426,12 +452,14 @@ class ClientService extends BaseService
                     'url' => route('assets.show', $asset->id),
                 ];
             });
+    }
 
-        // Recent contract changes
-        $contracts = $client->contracts()
+    private function getContractActivities(Client $client, int $limit)
+    {
+        return $client->contracts()
             ->select('id', 'title', 'contract_number', 'status', 'start_date', 'end_date', 'created_at', 'updated_at')
             ->orderBy('updated_at', 'desc')
-            ->limit($perType)
+            ->limit($limit)
             ->get()
             ->map(function ($contract) {
                 $displayName = $contract->title ?: "Contract #{$contract->contract_number}";
@@ -448,21 +476,24 @@ class ClientService extends BaseService
                     'url' => route('contracts.show', $contract->id),
                 ];
             });
+    }
 
-        // Recent notes/interactions (if we have an interactions table)
-        // This is a placeholder - you can add more activity types as needed
-        $interactions = collect(); // Placeholder for future enhancement
+    private function getTicketColor($ticket): string
+    {
+        if ($ticket->priority === 'high') {
+            return 'red';
+        }
 
-        return $activities
-            ->merge($tickets)
-            ->merge($invoices)
-            ->merge($projects)
-            ->merge($assets)
-            ->merge($contracts)
-            ->merge($interactions)
-            ->sortByDesc('date')
-            ->take($limit)
-            ->values();
+        return $ticket->status === 'closed' ? 'green' : 'blue';
+    }
+
+    private function getInvoiceColor($invoice): string
+    {
+        if ($invoice->status === 'paid') {
+            return 'green';
+        }
+
+        return $invoice->status === 'overdue' ? 'red' : 'yellow';
     }
 
     /**
