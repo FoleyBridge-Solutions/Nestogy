@@ -14,6 +14,8 @@ class VendorController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_IN_RULE = 'nullable|in:';
+
     /**
      * Display a listing of vendors for the selected client
      */
@@ -140,7 +142,7 @@ class VendorController extends Controller
             'vendor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'vendor_type' => 'required|in:'.implode(',', array_keys(ClientVendor::getVendorTypes())),
-            'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
+            'category' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientVendor::getVendorCategories())),
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
@@ -153,14 +155,14 @@ class VendorController extends Controller
             'country' => 'nullable|string|max:100',
             'tax_id' => 'nullable|string|max:50',
             'account_number' => 'nullable|string|max:100',
-            'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
-            'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
+            'payment_terms' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientVendor::getPaymentTerms())),
+            'preferred_payment_method' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientVendor::getPaymentMethods())),
             'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
             'start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:start_date',
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
             'currency' => 'nullable|string|size:3',
-            'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
+            'billing_frequency' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
             'last_order_date' => 'nullable|date|before_or_equal:today',
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
@@ -284,7 +286,7 @@ class VendorController extends Controller
             'vendor_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'vendor_type' => 'required|in:'.implode(',', array_keys(ClientVendor::getVendorTypes())),
-            'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
+            'category' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientVendor::getVendorCategories())),
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
@@ -297,14 +299,14 @@ class VendorController extends Controller
             'country' => 'nullable|string|max:100',
             'tax_id' => 'nullable|string|max:50',
             'account_number' => 'nullable|string|max:100',
-            'payment_terms' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentTerms())),
-            'preferred_payment_method' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getPaymentMethods())),
+            'payment_terms' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientVendor::getPaymentTerms())),
+            'preferred_payment_method' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientVendor::getPaymentMethods())),
             'relationship_status' => 'required|in:'.implode(',', array_keys(ClientVendor::getRelationshipStatuses())),
             'start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:start_date',
             'contract_value' => 'nullable|numeric|min:0|max:99999999.99',
             'currency' => 'nullable|string|size:3',
-            'billing_frequency' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
+            'billing_frequency' => self::NULLABLE_IN_RULE.implode(',', array_keys(ClientVendor::getBillingFrequencies())),
             'last_order_date' => 'nullable|date|before_or_equal:today',
             'total_spent' => 'nullable|numeric|min:0|max:99999999.99',
             'average_response_time' => 'nullable|string|max:100',
