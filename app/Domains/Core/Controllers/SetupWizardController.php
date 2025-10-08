@@ -22,6 +22,8 @@ use Silber\Bouncer\BouncerFacade as Bouncer;
  */
 class SetupWizardController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING_20 = 'nullable|string|max:20';
+
     /**
      * Show the setup wizard welcome page.
      */
@@ -119,11 +121,11 @@ class SetupWizardController extends Controller
             // Company information
             'company_name' => 'required|string|max:255',
             'company_email' => 'required|email|max:255',
-            'company_phone' => 'nullable|string|max:20',
+            'company_phone' => self::VALIDATION_NULLABLE_STRING_20,
             'company_address' => 'nullable|string|max:255',
             'company_city' => 'nullable|string|max:100',
             'company_state' => 'nullable|string|max:100',
-            'company_zip' => 'nullable|string|max:20',
+            'company_zip' => self::VALIDATION_NULLABLE_STRING_20,
             'company_country' => 'nullable|string|max:100',
             'company_website' => 'nullable|url|max:255',
             'currency' => 'required|string|size:3|in:'.implode(',', array_keys(Company::SUPPORTED_CURRENCIES)),
@@ -144,7 +146,7 @@ class SetupWizardController extends Controller
 
             // System Preferences
             'timezone' => 'required|string|max:255',
-            'date_format' => 'nullable|string|max:20',
+            'date_format' => self::VALIDATION_NULLABLE_STRING_20,
             'theme' => 'nullable|string|in:'.implode(',', array_keys(\App\Models\Setting::getAvailableThemes())),
             'company_language' => 'nullable|string|size:2',
             'default_net_terms' => 'nullable|integer|min:0|max:365',
