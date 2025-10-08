@@ -148,68 +148,14 @@ class IntegrationMonitoringService
         ];
 
         try {
-            // Check 1: Integration is active
-            $health['checks']['integration_active'] = [
-                'status' => $integration->is_active ? 'pass' : 'fail',
-                'message' => $integration->is_active ? 'Integration is active' : 'Integration is inactive',
-            ];
+            $health['checks']['integration_active'] = $this->checkIntegrationActive($integration);
+            $health['checks']['recent_activity'] = $this->checkRecentActivity($integration);
+            $health['checks']['processing_success_rate'] = $this->checkProcessingSuccessRate($integration);
+            $health['checks']['device_mapping_health'] = $this->checkDeviceMappingHealth($integration);
+            $health['checks']['credentials'] = $this->checkCredentials($integration);
+            $health['checks']['webhook_endpoint'] = $this->checkWebhookEndpoint($integration);
 
-            // Check 2: Recent webhook activity
-            $recentAlerts = $integration->rmmAlerts()->recent(24)->count();
-            $health['checks']['recent_activity'] = [
-                'status' => $recentAlerts > 0 ? 'pass' : 'warn',
-                'message' => $recentAlerts > 0
-                    ? "Received {$recentAlerts} alerts in last 24 hours"
-                    : 'No recent webhook activity',
-                'value' => $recentAlerts,
-            ];
-
-            // Check 3: Processing success rate
-            $totalRecent = $integration->rmmAlerts()->recent(24 * 7)->count(); // Last 7 days
-            $processedRecent = $integration->rmmAlerts()->recent(24 * 7)->processed()->count();
-            $successRate = $totalRecent > 0 ? ($processedRecent / $totalRecent) * 100 : 100;
-
-            $health['checks']['processing_success_rate'] = [
-                'status' => $successRate >= 95 ? 'pass' : ($successRate >= 80 ? 'warn' : 'fail'),
-                'message' => "Processing success rate: {$successRate}%",
-                'value' => $successRate,
-            ];
-
-            // Check 4: Device mapping health
-            $totalDevices = $integration->deviceMappings()->count();
-            $staleDevices = $integration->deviceMappings()->stale(48)->count(); // 48 hours
-            $stalePercentage = $totalDevices > 0 ? ($staleDevices / $totalDevices) * 100 : 0;
-
-            $health['checks']['device_mapping_health'] = [
-                'status' => $stalePercentage < 20 ? 'pass' : ($stalePercentage < 50 ? 'warn' : 'fail'),
-                'message' => "{$staleDevices} of {$totalDevices} devices are stale",
-                'value' => $stalePercentage,
-            ];
-
-            // Check 5: Credential validity (simplified check)
-            $credentials = $integration->getCredentials();
-            $health['checks']['credentials'] = [
-                'status' => ! empty($credentials) ? 'pass' : 'fail',
-                'message' => ! empty($credentials) ? 'Credentials are configured' : 'Credentials are missing',
-            ];
-
-            // Check 6: Webhook endpoint accessibility
-            $webhookUrl = $integration->getWebhookEndpoint();
-            $health['checks']['webhook_endpoint'] = [
-                'status' => 'pass', // Simplified - would need actual HTTP check
-                'message' => "Webhook endpoint: {$webhookUrl}",
-                'url' => $webhookUrl,
-            ];
-
-            // Determine overall status
-            $failedChecks = collect($health['checks'])->where('status', 'fail')->count();
-            $warnChecks = collect($health['checks'])->where('status', 'warn')->count();
-
-            if ($failedChecks > 0) {
-                $health['overall_status'] = 'unhealthy';
-            } elseif ($warnChecks > 0) {
-                $health['overall_status'] = 'degraded';
-            }
+            $health['overall_status'] = $this->determineOverallStatus($health['checks']);
 
         } catch (\Exception $e) {
             Log::error('Health check failed for integration', [
@@ -222,6 +168,90 @@ class IntegrationMonitoringService
         }
 
         return $health;
+    }
+
+    private function checkIntegrationActive(Integration $integration): array
+    {
+        return [
+            'status' => $integration->is_active ? 'pass' : 'fail',
+            'message' => $integration->is_active ? 'Integration is active' : 'Integration is inactive',
+        ];
+    }
+
+    private function checkRecentActivity(Integration $integration): array
+    {
+        $recentAlerts = $integration->rmmAlerts()->recent(24)->count();
+
+        return [
+            'status' => $recentAlerts > 0 ? 'pass' : 'warn',
+            'message' => $recentAlerts > 0
+                ? "Received {$recentAlerts} alerts in last 24 hours"
+                : 'No recent webhook activity',
+            'value' => $recentAlerts,
+        ];
+    }
+
+    private function checkProcessingSuccessRate(Integration $integration): array
+    {
+        $totalRecent = $integration->rmmAlerts()->recent(24 * 7)->count();
+        $processedRecent = $integration->rmmAlerts()->recent(24 * 7)->processed()->count();
+        $successRate = $totalRecent > 0 ? ($processedRecent / $totalRecent) * 100 : 100;
+
+        return [
+            'status' => $successRate >= 95 ? 'pass' : ($successRate >= 80 ? 'warn' : 'fail'),
+            'message' => "Processing success rate: {$successRate}%",
+            'value' => $successRate,
+        ];
+    }
+
+    private function checkDeviceMappingHealth(Integration $integration): array
+    {
+        $totalDevices = $integration->deviceMappings()->count();
+        $staleDevices = $integration->deviceMappings()->stale(48)->count();
+        $stalePercentage = $totalDevices > 0 ? ($staleDevices / $totalDevices) * 100 : 0;
+
+        return [
+            'status' => $stalePercentage < 20 ? 'pass' : ($stalePercentage < 50 ? 'warn' : 'fail'),
+            'message' => "{$staleDevices} of {$totalDevices} devices are stale",
+            'value' => $stalePercentage,
+        ];
+    }
+
+    private function checkCredentials(Integration $integration): array
+    {
+        $credentials = $integration->getCredentials();
+
+        return [
+            'status' => ! empty($credentials) ? 'pass' : 'fail',
+            'message' => ! empty($credentials) ? 'Credentials are configured' : 'Credentials are missing',
+        ];
+    }
+
+    private function checkWebhookEndpoint(Integration $integration): array
+    {
+        $webhookUrl = $integration->getWebhookEndpoint();
+
+        return [
+            'status' => 'pass',
+            'message' => "Webhook endpoint: {$webhookUrl}",
+            'url' => $webhookUrl,
+        ];
+    }
+
+    private function determineOverallStatus(array $checks): string
+    {
+        $failedChecks = collect($checks)->where('status', 'fail')->count();
+        $warnChecks = collect($checks)->where('status', 'warn')->count();
+
+        if ($failedChecks > 0) {
+            return 'unhealthy';
+        }
+
+        if ($warnChecks > 0) {
+            return 'degraded';
+        }
+
+        return 'healthy';
     }
 
     /**
