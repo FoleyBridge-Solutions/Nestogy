@@ -14,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
+    private const LOGIN_ATTEMPTS_CACHE_KEY = 'login_attempts:';
+
     /*
     |--------------------------------------------------------------------------
     | Login Controller
@@ -352,7 +354,7 @@ class LoginController extends Controller
      */
     protected function checkRateLimit($request)
     {
-        $key = 'login_attempts:'.$request->ip();
+        $key = self::LOGIN_ATTEMPTS_CACHE_KEY.$request->ip();
         $attempts = cache()->get($key, 0);
 
         if ($attempts >= 10) { // 10 attempts per hour per IP
@@ -392,7 +394,7 @@ class LoginController extends Controller
      */
     protected function incrementFailedAttempts($request)
     {
-        $key = 'login_attempts:'.$request->ip();
+        $key = self::LOGIN_ATTEMPTS_CACHE_KEY.$request->ip();
         $attempts = cache()->get($key, 0) + 1;
 
         cache()->put($key, $attempts, now()->addHour());
@@ -410,7 +412,7 @@ class LoginController extends Controller
      */
     protected function clearFailedAttempts($request)
     {
-        $key = 'login_attempts:'.$request->ip();
+        $key = self::LOGIN_ATTEMPTS_CACHE_KEY.$request->ip();
         cache()->forget($key);
         cache()->forget($key.self::RATE_LIMIT_TIMER_SUFFIX);
     }
