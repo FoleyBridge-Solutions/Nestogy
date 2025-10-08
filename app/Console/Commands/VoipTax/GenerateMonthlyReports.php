@@ -13,6 +13,8 @@ use Illuminate\Console\Command;
  */
 class GenerateMonthlyReports extends Command
 {
+    private const COMPLIANCE_SCORE_LABEL = 'Compliance Score';
+
     /**
      * The name and signature of the console command.
      *
@@ -109,7 +111,7 @@ class GenerateMonthlyReports extends Command
                     'Status' => '✅ Success',
                     'Tax Collected' => '$'.number_format($result['report_summary']['total_tax_collected'], 2),
                     'Invoices' => $result['report_summary']['invoice_count'],
-                    'Compliance Score' => $result['report_summary']['compliance_score'].'%',
+                    self::COMPLIANCE_SCORE_LABEL => $result['report_summary']['compliance_score'].'%',
                     'Action Items' => $result['report_summary']['action_items_count'],
                     'File' => $result['filename'],
                 ];
@@ -119,7 +121,7 @@ class GenerateMonthlyReports extends Command
                     'Status' => '❌ Failed',
                     'Tax Collected' => 'N/A',
                     'Invoices' => 'N/A',
-                    'Compliance Score' => 'N/A',
+                    self::COMPLIANCE_SCORE_LABEL => 'N/A',
                     'Action Items' => 'N/A',
                     'File' => 'Error: '.($result['error'] ?? 'Unknown'),
                 ];
@@ -128,7 +130,7 @@ class GenerateMonthlyReports extends Command
 
         $this->table([
             'Company ID', 'Status', 'Tax Collected', 'Invoices',
-            'Compliance Score', 'Action Items', 'File',
+            self::COMPLIANCE_SCORE_LABEL, 'Action Items', 'File',
         ], $tableData);
     }
 }
