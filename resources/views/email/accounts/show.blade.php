@@ -176,7 +176,7 @@
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->sync_interval_minutes }} minutes</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Auto-create Tickets</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Auto-create Tickets</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->auto_create_tickets ? 'Enabled' : 'Disabled' }}</p>
                                     </div>
                                     <div>
