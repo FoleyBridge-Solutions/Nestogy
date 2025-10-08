@@ -180,7 +180,7 @@ class ContractAnalyticsService
             'client_retention_rate' => $clientRetention,
             'new_vs_existing_revenue' => $newVsExisting,
             'average_client_lifetime_value' => $lifetimeValue,
-            'client_acquisition_cost' => $this->getClientAcquisitionCost($companyId, $startDate, $endDate),
+            'client_acquisition_cost' => $this->getClientAcquisitionCost($companyId, $endDate),
         ];
     }
 
@@ -502,7 +502,7 @@ class ContractAnalyticsService
         return 0;
     }
 
-    protected function getClientAcquisitionCost(int $companyId, Carbon $startDate, Carbon $endDate): float
+    protected function getClientAcquisitionCost(int $companyId, Carbon $endDate): float
     {
         return 0;
     }
