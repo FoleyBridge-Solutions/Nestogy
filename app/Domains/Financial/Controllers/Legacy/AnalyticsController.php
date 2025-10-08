@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class AnalyticsController extends Controller
 {
+    private const END_DATE_VALIDATION = 'nullable|date|after_or_equal:start_date';
+
     protected FinancialAnalyticsService $analyticsService;
 
     protected DashboardDataService $dashboardService;
@@ -43,7 +45,7 @@ class AnalyticsController extends Controller
     {
         $request->validate([
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => self::END_DATE_VALIDATION,
             'refresh' => 'boolean',
         ]);
 
@@ -69,7 +71,7 @@ class AnalyticsController extends Controller
     {
         $request->validate([
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => self::END_DATE_VALIDATION,
             'refresh' => 'boolean',
         ]);
 
@@ -95,7 +97,7 @@ class AnalyticsController extends Controller
     {
         $request->validate([
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => self::END_DATE_VALIDATION,
             'refresh' => 'boolean',
         ]);
 
@@ -121,7 +123,7 @@ class AnalyticsController extends Controller
     {
         $request->validate([
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => self::END_DATE_VALIDATION,
             'refresh' => 'boolean',
         ]);
 
@@ -393,7 +395,7 @@ class AnalyticsController extends Controller
             'dashboard_type' => 'required|string|in:executive,revenue,customer,operations,forecasting',
             'format' => 'required|string|in:pdf,excel,csv,json',
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => self::END_DATE_VALIDATION,
         ]);
 
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : null;
