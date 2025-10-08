@@ -411,7 +411,7 @@ class SetupWizardController extends Controller
 
             // Security Settings
             'two_factor_enabled' => ! empty($data['enable_two_factor']),
-            'audit_logging_enabled' => ! empty($data['enable_audit_logging']) || true, // Default to enabled
+            'audit_logging_enabled' => $data['enable_audit_logging'] ?? true,
             'audit_retention_days' => 365,
             'password_min_length' => 8,
             'password_require_special' => true,
