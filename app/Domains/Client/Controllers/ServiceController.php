@@ -15,6 +15,8 @@ class ServiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_RULE_USER_EXISTS = 'exists:users,id';
+
     /**
      * Display a listing of services for the selected client
      */
@@ -163,14 +165,14 @@ class ServiceController extends Controller
             'priority_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getPriorityLevels())),
             'assigned_technician' => [
                 'nullable',
-                'exists:users,id',
+                self::VALIDATION_RULE_USER_EXISTS,
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'backup_technician' => [
                 'nullable',
-                'exists:users,id',
+                self::VALIDATION_RULE_USER_EXISTS,
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->where('company_id', auth()->user()->company_id);
                 }),
@@ -302,14 +304,14 @@ class ServiceController extends Controller
             'priority_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getPriorityLevels())),
             'assigned_technician' => [
                 'nullable',
-                'exists:users,id',
+                self::VALIDATION_RULE_USER_EXISTS,
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
             'backup_technician' => [
                 'nullable',
-                'exists:users,id',
+                self::VALIDATION_RULE_USER_EXISTS,
                 Rule::exists('users', 'id')->where(function ($query) {
                     $query->where('company_id', auth()->user()->company_id);
                 }),
