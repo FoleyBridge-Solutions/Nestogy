@@ -122,19 +122,19 @@
                             <div class="p-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Server</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Server</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->imap_host }}:{{ $account->imap_port }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Encryption</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Encryption</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ ucfirst($account->imap_encryption) }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->imap_username }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">SSL Validation</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">SSL Validation</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->imap_validate_cert ? 'Enabled' : 'Disabled' }}</p>
                                     </div>
                                 </div>
@@ -149,15 +149,15 @@
                             <div class="p-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Server</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Server</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->smtp_host }}:{{ $account->smtp_port }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Encryption</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Encryption</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ ucfirst($account->smtp_encryption) }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->smtp_username }}</p>
                                     </div>
                                 </div>
@@ -172,19 +172,19 @@
                             <div class="p-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sync Interval</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sync Interval</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->sync_interval_minutes }} minutes</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Auto-create Tickets</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Auto-create Tickets</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->auto_create_tickets ? 'Enabled' : 'Disabled' }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Auto-log Communications</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Auto-log Communications</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->auto_log_communications ? 'Enabled' : 'Disabled' }}</p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Created</label>
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Created</span>
                                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->created_at->format('M j, Y g:i A') }}</p>
                                     </div>
                                 </div>
