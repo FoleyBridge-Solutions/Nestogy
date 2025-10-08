@@ -15,6 +15,8 @@ class LeadController extends BaseResourceController
 {
     use HasClientRelation;
 
+    private const VALIDATION_NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     protected LeadScoringService $leadScoringService;
 
     public function __construct(LeadScoringService $leadScoringService)
@@ -126,8 +128,8 @@ class LeadController extends BaseResourceController
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:leads,email',
             'phone' => 'nullable|string|max:20',
-            'company_name' => 'nullable|string|max:255',
-            'title' => 'nullable|string|max:255',
+            'company_name' => self::VALIDATION_NULLABLE_STRING_255,
+            'title' => self::VALIDATION_NULLABLE_STRING_255,
             'website' => 'nullable|url',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
@@ -222,8 +224,8 @@ class LeadController extends BaseResourceController
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:leads,email,'.$lead->id,
             'phone' => 'nullable|string|max:20',
-            'company_name' => 'nullable|string|max:255',
-            'title' => 'nullable|string|max:255',
+            'company_name' => self::VALIDATION_NULLABLE_STRING_255,
+            'title' => self::VALIDATION_NULLABLE_STRING_255,
             'website' => 'nullable|url',
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
