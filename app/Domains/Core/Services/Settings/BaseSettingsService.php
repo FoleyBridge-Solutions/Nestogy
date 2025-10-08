@@ -2,6 +2,7 @@
 
 namespace App\Domains\Core\Services\Settings;
 
+use App\Domains\Core\Exceptions\SettingsAuthenticationException;
 use App\Models\SettingsConfiguration;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -27,7 +28,7 @@ abstract class BaseSettingsService
         if ($this->companyId === null) {
             $user = auth()->user();
             if (! $user) {
-                throw new \Exception('No authenticated user found');
+                throw new SettingsAuthenticationException();
             }
             $this->companyId = $user->company_id;
         }
