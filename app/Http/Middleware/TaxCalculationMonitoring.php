@@ -109,29 +109,51 @@ class TaxCalculationMonitoring
      */
     protected function checkResponseForErrors(Response $response, Request $request, string $monitoringId): void
     {
-        if ($response->headers->get('content-type') === 'application/json') {
-            $content = $response->getContent();
-            $data = json_decode($content, true);
+        if ($response->headers->get('content-type') !== 'application/json') {
+            return;
+        }
 
-            if (json_last_error() === JSON_ERROR_NONE) {
-                // Check for API error responses
-                if (isset($data['success']) && $data['success'] === false) {
-                    $this->logApplicationError($data, $request, $monitoringId);
-                }
+        $data = $this->parseJsonResponse($response);
+        if ($data === null) {
+            return;
+        }
 
-                // Check for calculation errors
-                if (isset($data['error']) || isset($data['calculation_error'])) {
-                    $this->logCalculationError($data, $request, $monitoringId);
-                }
+        $this->checkForApiErrors($data, $request, $monitoringId);
+        $this->checkForCalculationErrors($data, $request, $monitoringId);
+        $this->checkForPerformanceIssues($data, $request, $monitoringId);
+    }
 
-                // Check for performance warnings
-                if (isset($data['performance']) && isset($data['performance']['calculation_time_ms'])) {
-                    $calculationTime = $data['performance']['calculation_time_ms'];
-                    if ($calculationTime > 5000) { // 5 seconds
-                        $this->logPerformanceWarning($calculationTime, $request, $monitoringId);
-                    }
-                }
-            }
+    protected function parseJsonResponse(Response $response): ?array
+    {
+        $content = $response->getContent();
+        $data = json_decode($content, true);
+
+        return json_last_error() === JSON_ERROR_NONE ? $data : null;
+    }
+
+    protected function checkForApiErrors(array $data, Request $request, string $monitoringId): void
+    {
+        if (isset($data['success']) && $data['success'] === false) {
+            $this->logApplicationError($data, $request, $monitoringId);
+        }
+    }
+
+    protected function checkForCalculationErrors(array $data, Request $request, string $monitoringId): void
+    {
+        if (isset($data['error']) || isset($data['calculation_error'])) {
+            $this->logCalculationError($data, $request, $monitoringId);
+        }
+    }
+
+    protected function checkForPerformanceIssues(array $data, Request $request, string $monitoringId): void
+    {
+        if (!isset($data['performance']['calculation_time_ms'])) {
+            return;
+        }
+
+        $calculationTime = $data['performance']['calculation_time_ms'];
+        if ($calculationTime > 5000) {
+            $this->logPerformanceWarning($calculationTime, $request, $monitoringId);
         }
     }
 
