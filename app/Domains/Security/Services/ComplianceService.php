@@ -187,7 +187,7 @@ class ComplianceService
         }
 
         // Check call time restrictions
-        $timeRestrictions = $this->checkCallTimeRestrictions($client);
+        $timeRestrictions = $this->checkCallTimeRestrictions();
         if ($timeRestrictions['violations']) {
             $compliance['violations'][] = [
                 'type' => 'call_time_violation',
@@ -724,7 +724,7 @@ NESTOGY COLLECTIONS DEPARTMENT
         return ['valid' => $client->sms_consent ?? false];
     }
 
-    protected function checkCallTimeRestrictions(Client $client): array
+    protected function checkCallTimeRestrictions(): array
     {
         return ['violations' => false, 'details' => []];
     }
