@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UserManagementSettingsRequest extends FormRequest
 {
+    private const RETENTION_DAYS_VALIDATION = 'integer|min:30|max:365';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -53,7 +55,7 @@ class UserManagementSettingsRequest extends FormRequest
             'max_users' => $maxUsersRules,
             'user_invite_limit_per_month' => 'integer|min:0|max:100',
             'require_admin_approval_for_new_users' => 'boolean',
-            'auto_deactivate_unused_accounts_days' => 'nullable|integer|min:30|max:365',
+            'auto_deactivate_unused_accounts_days' => 'nullable|'.self::RETENTION_DAYS_VALIDATION,
 
             // User Onboarding
             'user_onboarding_settings' => 'nullable|array',
@@ -104,9 +106,9 @@ class UserManagementSettingsRequest extends FormRequest
             // User Activity and Monitoring
             'user_activity_settings' => 'nullable|array',
             'user_activity_settings.track_login_history' => 'boolean',
-            'user_activity_settings.login_history_retention_days' => 'integer|min:30|max:365',
+            'user_activity_settings.login_history_retention_days' => self::RETENTION_DAYS_VALIDATION,
             'user_activity_settings.track_user_actions' => 'boolean',
-            'user_activity_settings.activity_log_retention_days' => 'integer|min:30|max:365',
+            'user_activity_settings.activity_log_retention_days' => self::RETENTION_DAYS_VALIDATION,
             'user_activity_settings.notify_on_suspicious_activity' => 'boolean',
             'user_activity_settings.failed_login_threshold' => 'integer|min:3|max:10',
             'user_activity_settings.unusual_location_detection' => 'boolean',
@@ -135,7 +137,7 @@ class UserManagementSettingsRequest extends FormRequest
             'user_communication_settings.max_file_size_mb' => 'integer|min:1|max:100',
             'user_communication_settings.allowed_file_types' => 'nullable|array',
             'user_communication_settings.allowed_file_types.*' => 'string|in:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif,zip,rar',
-            'user_communication_settings.message_retention_days' => 'integer|min:30|max:365',
+            'user_communication_settings.message_retention_days' => self::RETENTION_DAYS_VALIDATION,
 
             // Skill and Competency Management
             'skill_management_settings' => 'nullable|array',
