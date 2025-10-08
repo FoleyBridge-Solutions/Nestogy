@@ -7,6 +7,8 @@ use Illuminate\Support\Str;
 
 class NavigationService
 {
+    protected const ENHANCED_PROJECT_MODEL = '\Foleybridge\Nestogy\Domains\Project\Models\Project';
+
     /**
      * Domain route mappings
      */
@@ -1818,8 +1820,8 @@ class NavigationService
     {
         try {
             // Try enhanced project model first, fallback to basic if needed
-            $projectClass = class_exists('\Foleybridge\Nestogy\Domains\Project\Models\Project')
-                ? '\Foleybridge\Nestogy\Domains\Project\Models\Project'
+            $projectClass = class_exists(self::ENHANCED_PROJECT_MODEL)
+                ? self::ENHANCED_PROJECT_MODEL
                 : '\App\Models\Project';
 
             $baseQuery = $projectClass::where('company_id', $companyId);
@@ -1837,7 +1839,7 @@ class NavigationService
             ];
 
             // Enhanced counts if using new project model
-            if ($projectClass === '\Foleybridge\Nestogy\Domains\Project\Models\Project') {
+            if ($projectClass === self::ENHANCED_PROJECT_MODEL) {
                 $counts['overdue'] = (clone $baseQuery)->overdue()->count();
                 $counts['due_soon'] = (clone $baseQuery)->dueSoon()->count();
                 $counts['critical_priority'] = (clone $baseQuery)->byPriority('critical')->active()->count();
