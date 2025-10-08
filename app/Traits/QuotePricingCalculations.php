@@ -110,6 +110,8 @@ trait QuotePricingCalculations
                     $monthly += $amount / 12;
                     $annual += $amount;
                     break;
+                default:
+                    break;
             }
         }
 
