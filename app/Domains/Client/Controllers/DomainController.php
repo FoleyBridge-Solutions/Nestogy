@@ -14,6 +14,8 @@ class DomainController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_INTEGER_MIN_ZERO = 'nullable|integer|min:0';
+
     /**
      * Display a listing of domains for the selected client
      */
@@ -141,9 +143,9 @@ class DomainController extends Controller
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
             'transfer_auth_code' => 'nullable|string|max:255',
-            'dns_records_count' => 'nullable|integer|min:0',
-            'subdomains_count' => 'nullable|integer|min:0',
-            'email_forwards_count' => 'nullable|integer|min:0',
+            'dns_records_count' => self::NULLABLE_INTEGER_MIN_ZERO,
+            'subdomains_count' => self::NULLABLE_INTEGER_MIN_ZERO,
+            'email_forwards_count' => self::NULLABLE_INTEGER_MIN_ZERO,
             'notes' => 'nullable|string',
         ]);
 
@@ -270,9 +272,9 @@ class DomainController extends Controller
             'purchase_cost' => 'nullable|numeric|min:0',
             'renewal_cost' => 'nullable|numeric|min:0',
             'transfer_auth_code' => 'nullable|string|max:255',
-            'dns_records_count' => 'nullable|integer|min:0',
-            'subdomains_count' => 'nullable|integer|min:0',
-            'email_forwards_count' => 'nullable|integer|min:0',
+            'dns_records_count' => self::NULLABLE_INTEGER_MIN_ZERO,
+            'subdomains_count' => self::NULLABLE_INTEGER_MIN_ZERO,
+            'email_forwards_count' => self::NULLABLE_INTEGER_MIN_ZERO,
             'notes' => 'nullable|string',
         ]);
 
