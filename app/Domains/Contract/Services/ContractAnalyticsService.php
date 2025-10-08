@@ -136,7 +136,7 @@ class ContractAnalyticsService
         $milestonePerformance = $this->getMilestonePerformance($companyId, $startDate, $endDate);
 
         // Payment performance
-        $paymentPerformance = $this->getPaymentPerformance($companyId, $startDate, $endDate);
+        $paymentPerformance = $this->getPaymentPerformance($startDate, $endDate);
 
         // Renewal rates
         $renewalRates = $this->getRenewalRates($companyId, $startDate, $endDate);
@@ -462,7 +462,7 @@ class ContractAnalyticsService
         return 0;
     }
 
-    protected function getPaymentPerformance(int $companyId, Carbon $startDate, Carbon $endDate): array
+    protected function getPaymentPerformance(Carbon $startDate, Carbon $endDate): array
     {
         return [];
     }
