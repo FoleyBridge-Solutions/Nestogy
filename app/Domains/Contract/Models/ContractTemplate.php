@@ -166,10 +166,10 @@ class ContractTemplate extends Model
         'asset_billing_rules' => 'array',
         'supported_asset_types' => 'array',
         'asset_service_matrix' => 'array',
-        'default_per_asset_rate' => 'decimal:2',
+        'default_per_asset_rate' => self::CAST_DECIMAL_2,
         'contact_billing_rules' => 'array',
         'contact_access_tiers' => 'array',
-        'default_per_contact_rate' => 'decimal:2',
+        'default_per_contact_rate' => self::CAST_DECIMAL_2,
         'calculation_formulas' => 'array',
         'auto_assignment_rules' => 'array',
         'billing_triggers' => 'array',
@@ -178,7 +178,7 @@ class ContractTemplate extends Model
         'integration_hooks' => 'array',
         'usage_count' => 'integer',
         'last_used_at' => 'datetime',
-        'success_rate' => 'decimal:2',
+        'success_rate' => self::CAST_DECIMAL_2,
         'requires_approval' => 'boolean',
         'approval_workflow' => 'array',
         'last_reviewed_at' => 'datetime',
@@ -193,6 +193,11 @@ class ContractTemplate extends Model
         'updated_at' => 'datetime',
         'archived_at' => 'datetime',
     ];
+
+    /**
+     * Decimal cast type with 2 decimal places.
+     */
+    const CAST_DECIMAL_2 = 'decimal:2';
 
     /**
      * The name of the "deleted at" column for soft deletes.
