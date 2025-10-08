@@ -167,7 +167,6 @@ class VoIPTaxReportingService
         // Generate filing summary if filing requirements exist
         if ($jurisdiction->filing_requirements) {
             $report['filing_summary'] = $this->generateFilingSummary(
-                $jurisdiction,
                 $collections,
                 $exemptions,
                 $startDate,
@@ -696,7 +695,7 @@ class VoIPTaxReportingService
         return [];
     }
 
-    protected function generateFilingSummary($jurisdiction, $collections, $exemptions, $startDate, $endDate)
+    protected function generateFilingSummary($collections, $exemptions, $startDate, $endDate)
     {
         return [];
     }
