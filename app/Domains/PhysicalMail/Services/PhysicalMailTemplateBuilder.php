@@ -64,6 +64,19 @@ class PhysicalMailTemplateBuilder
 
         return "
         <style>
+            {$this->getPageAndBodyStyles()}
+            {$this->getLayoutStyles($topMargin, $sideMargin)}
+            {$this->getTypographyStyles($primaryColor)}
+            {$this->getTableStyles()}
+            {$this->getComponentStyles($primaryColor)}
+            {$this->getUtilityStyles()}
+        </style>
+        ";
+    }
+
+    private function getPageAndBodyStyles(): string
+    {
+        return "
             @page {
                 size: letter;
                 margin: 0;
@@ -84,7 +97,14 @@ class PhysicalMailTemplateBuilder
                 margin: 0;
                 padding: 0;
             }
-            
+        ";
+    }
+
+    private function getLayoutStyles(int $topMargin, int $sideMargin): string
+    {
+        $bottomMargin = self::MARGIN_BOTTOM * self::INCH_TO_PX;
+
+        return "
             /* Address zone placeholder - keeps content below */
             .address-zone {
                 height: {$topMargin}px;
@@ -109,10 +129,15 @@ class PhysicalMailTemplateBuilder
             /* Main content area */
             .content-wrapper {
                 padding: 0 {$sideMargin}px;
-                padding-bottom: ".(self::MARGIN_BOTTOM * self::INCH_TO_PX)."px;
-                min-height: calc(11in - {$topMargin}px - ".(self::MARGIN_BOTTOM * self::INCH_TO_PX)."px);
+                padding-bottom: {$bottomMargin}px;
+                min-height: calc(11in - {$topMargin}px - {$bottomMargin}px);
             }
-            
+        ";
+    }
+
+    private function getTypographyStyles(string $primaryColor): string
+    {
+        return "
             /* Typography */
             h1 {
                 color: {$primaryColor};
@@ -150,7 +175,12 @@ class PhysicalMailTemplateBuilder
             li {
                 margin-bottom: 4pt;
             }
-            
+        ";
+    }
+
+    private function getTableStyles(): string
+    {
+        return "
             /* Tables */
             table {
                 width: 100%;
@@ -170,7 +200,12 @@ class PhysicalMailTemplateBuilder
                 padding: 8pt;
                 border-bottom: 1px solid #e5e7eb;
             }
-            
+        ";
+    }
+
+    private function getComponentStyles(string $primaryColor): string
+    {
+        return "
             /* Signature block */
             .signature {
                 margin-top: 30pt;
@@ -218,7 +253,12 @@ class PhysicalMailTemplateBuilder
                 color: #dc2626;
                 margin-top: 10pt;
             }
-            
+        ";
+    }
+
+    private function getUtilityStyles(): string
+    {
+        return "
             /* Utility classes */
             .text-center { text-align: center; }
             .text-right { text-align: right; }
@@ -233,7 +273,6 @@ class PhysicalMailTemplateBuilder
             /* Page break handling */
             .page-break { page-break-after: always; }
             .avoid-break { page-break-inside: avoid; }
-        </style>
         ";
     }
 
