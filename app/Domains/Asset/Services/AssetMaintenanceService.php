@@ -242,7 +242,7 @@ class AssetMaintenanceService
             $results['security_status'] = $securityResult;
 
             // 4. Network connectivity check
-            $networkResult = $this->checkNetworkConnectivity($asset);
+            $networkResult = $this->checkNetworkConnectivity();
             $results['network_connectivity'] = $networkResult;
 
             // 5. Critical services check
@@ -593,7 +593,7 @@ class AssetMaintenanceService
         return ['success' => true];
     }
 
-    protected function checkNetworkConnectivity(Asset $asset): array
+    protected function checkNetworkConnectivity(): array
     {
         return ['success' => true];
     }
