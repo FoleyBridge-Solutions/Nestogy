@@ -225,48 +225,63 @@ class UserManagementSettingsRequest extends FormRequest
             $subscription = $company->subscription;
             $isUnlimitedCompany = $company->id === 1;
 
-            // Company ID 1 bypasses all subscription restrictions
             if ($isUnlimitedCompany) {
                 return;
             }
 
-            // Check if user management features are available in the subscription
-            if ($subscription && ! $subscription->hasFeature('advanced_user_management')) {
-                $advancedFields = [
-                    'skill_management_settings',
-                    'performance_settings',
-                    'workspace_settings',
-                    'emergency_settings',
-                ];
-
-                foreach ($advancedFields as $field) {
-                    if ($this->filled($field)) {
-                        $validator->errors()->add($field, 'Advanced user management features require a higher subscription plan.');
-                    }
-                }
-            }
-
-            // Validate department limits based on subscription
-            if ($subscription && $this->filled('department_settings.max_department_levels')) {
-                $maxLevels = $subscription->max_department_levels ?? 2;
-                if ($this->input('department_settings.max_department_levels') > $maxLevels) {
-                    $validator->errors()->add(
-                        'department_settings.max_department_levels',
-                        "Your subscription allows a maximum of {$maxLevels} department levels."
-                    );
-                }
-            }
-
-            // Validate custom roles limit
-            if ($subscription && $this->filled('role_permission_settings.max_custom_roles')) {
-                $maxRoles = $subscription->max_custom_roles ?? 5;
-                if ($this->input('role_permission_settings.max_custom_roles') > $maxRoles) {
-                    $validator->errors()->add(
-                        'role_permission_settings.max_custom_roles',
-                        "Your subscription allows a maximum of {$maxRoles} custom roles."
-                    );
-                }
-            }
+            $this->validateAdvancedFeatures($validator, $subscription);
+            $this->validateDepartmentLimits($validator, $subscription);
+            $this->validateCustomRolesLimit($validator, $subscription);
         });
+    }
+
+    private function validateAdvancedFeatures($validator, $subscription): void
+    {
+        if (! $subscription || $subscription->hasFeature('advanced_user_management')) {
+            return;
+        }
+
+        $advancedFields = [
+            'skill_management_settings',
+            'performance_settings',
+            'workspace_settings',
+            'emergency_settings',
+        ];
+
+        foreach ($advancedFields as $field) {
+            if ($this->filled($field)) {
+                $validator->errors()->add($field, 'Advanced user management features require a higher subscription plan.');
+            }
+        }
+    }
+
+    private function validateDepartmentLimits($validator, $subscription): void
+    {
+        if (! $subscription || ! $this->filled('department_settings.max_department_levels')) {
+            return;
+        }
+
+        $maxLevels = $subscription->max_department_levels ?? 2;
+        if ($this->input('department_settings.max_department_levels') > $maxLevels) {
+            $validator->errors()->add(
+                'department_settings.max_department_levels',
+                "Your subscription allows a maximum of {$maxLevels} department levels."
+            );
+        }
+    }
+
+    private function validateCustomRolesLimit($validator, $subscription): void
+    {
+        if (! $subscription || ! $this->filled('role_permission_settings.max_custom_roles')) {
+            return;
+        }
+
+        $maxRoles = $subscription->max_custom_roles ?? 5;
+        if ($this->input('role_permission_settings.max_custom_roles') > $maxRoles) {
+            $validator->errors()->add(
+                'role_permission_settings.max_custom_roles',
+                "Your subscription allows a maximum of {$maxRoles} custom roles."
+            );
+        }
     }
 }
