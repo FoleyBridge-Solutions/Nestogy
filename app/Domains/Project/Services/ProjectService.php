@@ -298,7 +298,7 @@ class ProjectService
                 'quality' => $this->assessQualityHealth($project),
             ],
             'risks' => $risks,
-            'recommendations' => $this->generateRecommendations($project, $health, $risks),
+            'recommendations' => $this->generateRecommendations($health, $risks),
         ];
     }
 
@@ -746,7 +746,7 @@ class ProjectService
     /**
      * Generate recommendations
      */
-    protected function generateRecommendations(Project $project, array $health, array $risks): array
+    protected function generateRecommendations(array $health, array $risks): array
     {
         $recommendations = [];
 
