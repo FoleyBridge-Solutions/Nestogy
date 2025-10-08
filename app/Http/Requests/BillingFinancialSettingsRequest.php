@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BillingFinancialSettingsRequest extends FormRequest
 {
+    private const NULLABLE_BOOLEAN = 'nullable|boolean';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -43,25 +45,25 @@ class BillingFinancialSettingsRequest extends FormRequest
             'payment_gateway_settings.require_cvv' => 'boolean',
 
             // Payment Gateway Individual Fields (matching form fields)
-            'paypal_enabled' => 'nullable|boolean',
+            'paypal_enabled' => self::NULLABLE_BOOLEAN,
             'paypal_client_id' => 'nullable|string|max:255',
             'paypal_client_secret' => 'nullable|string|max:255',
 
-            'stripe_enabled' => 'nullable|boolean',
+            'stripe_enabled' => self::NULLABLE_BOOLEAN,
             'stripe_publishable_key' => 'nullable|string|max:255',
             'stripe_secret_key' => 'nullable|string|max:255',
 
-            'ach_enabled' => 'nullable|boolean',
+            'ach_enabled' => self::NULLABLE_BOOLEAN,
             'ach_bank_name' => 'nullable|string|max:255',
             'ach_routing_number' => 'nullable|string|max:9',
             'ach_account_number' => 'nullable|string|max:255',
 
-            'wire_enabled' => 'nullable|boolean',
+            'wire_enabled' => self::NULLABLE_BOOLEAN,
             'wire_bank_name' => 'nullable|string|max:255',
             'wire_swift_code' => 'nullable|string|max:11',
             'wire_account_number' => 'nullable|string|max:255',
 
-            'check_enabled' => 'nullable|boolean',
+            'check_enabled' => self::NULLABLE_BOOLEAN,
             'check_payto_name' => 'nullable|string|max:255',
             'check_mailing_address' => 'nullable|string',
 
