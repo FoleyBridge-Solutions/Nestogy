@@ -632,28 +632,7 @@ class ClientService extends BaseService
                 ->where('company_id', $user->company_id)
                 ->get();
 
-            $updated = 0;
-            foreach ($clients as $client) {
-                if (isset($data['status'])) {
-                    $client->status = $data['status'];
-                }
-                if (isset($data['type'])) {
-                    $client->type = $data['type'];
-                }
-                if (isset($data['rate'])) {
-                    $client->rate = $data['rate'];
-                }
-                if (isset($data['currency_code'])) {
-                    $client->currency_code = $data['currency_code'];
-                }
-                if (isset($data['net_terms'])) {
-                    $client->net_terms = $data['net_terms'];
-                }
-
-                if ($client->save()) {
-                    $updated++;
-                }
-            }
+            $updated = $this->applyBulkUpdates($clients, $data);
 
             Log::info('Bulk client update', [
                 'client_ids' => $clientIds,
@@ -663,5 +642,39 @@ class ClientService extends BaseService
 
             return $updated;
         });
+    }
+
+    protected function applyBulkUpdates($clients, array $data): int
+    {
+        $updated = 0;
+
+        foreach ($clients as $client) {
+            $this->updateClientFields($client, $data);
+
+            if ($client->save()) {
+                $updated++;
+            }
+        }
+
+        return $updated;
+    }
+
+    protected function updateClientFields(Client $client, array $data): void
+    {
+        if (isset($data['status'])) {
+            $client->status = $data['status'];
+        }
+        if (isset($data['type'])) {
+            $client->type = $data['type'];
+        }
+        if (isset($data['rate'])) {
+            $client->rate = $data['rate'];
+        }
+        if (isset($data['currency_code'])) {
+            $client->currency_code = $data['currency_code'];
+        }
+        if (isset($data['net_terms'])) {
+            $client->net_terms = $data['net_terms'];
+        }
     }
 }
