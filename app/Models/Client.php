@@ -15,6 +15,8 @@ class Client extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
+    private const DECIMAL_CAST = 'decimal:2';
+
     protected $fillable = [
         'company_id',
         'name',
@@ -74,7 +76,7 @@ class Client extends Model
 
     protected $casts = [
         'company_id' => 'integer',
-        'hourly_rate' => 'decimal:2',
+        'hourly_rate' => self::DECIMAL_CAST,
         'custom_fields' => 'array',
         'contract_start_date' => 'datetime',
         'contract_end_date' => 'datetime',
@@ -82,16 +84,16 @@ class Client extends Model
         'accessed_at' => 'datetime',
         'sla_id' => 'integer',
         // Custom rate field casts
-        'custom_standard_rate' => 'decimal:2',
-        'custom_after_hours_rate' => 'decimal:2',
-        'custom_emergency_rate' => 'decimal:2',
-        'custom_weekend_rate' => 'decimal:2',
-        'custom_holiday_rate' => 'decimal:2',
-        'custom_after_hours_multiplier' => 'decimal:2',
-        'custom_emergency_multiplier' => 'decimal:2',
-        'custom_weekend_multiplier' => 'decimal:2',
-        'custom_holiday_multiplier' => 'decimal:2',
-        'custom_minimum_billing_increment' => 'decimal:2',
+        'custom_standard_rate' => self::DECIMAL_CAST,
+        'custom_after_hours_rate' => self::DECIMAL_CAST,
+        'custom_emergency_rate' => self::DECIMAL_CAST,
+        'custom_weekend_rate' => self::DECIMAL_CAST,
+        'custom_holiday_rate' => self::DECIMAL_CAST,
+        'custom_after_hours_multiplier' => self::DECIMAL_CAST,
+        'custom_emergency_multiplier' => self::DECIMAL_CAST,
+        'custom_weekend_multiplier' => self::DECIMAL_CAST,
+        'custom_holiday_multiplier' => self::DECIMAL_CAST,
+        'custom_minimum_billing_increment' => self::DECIMAL_CAST,
         'use_custom_rates' => 'boolean',
         // Subscription field casts
         'company_link_id' => 'integer',
