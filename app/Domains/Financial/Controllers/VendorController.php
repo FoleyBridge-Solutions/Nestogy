@@ -8,6 +8,8 @@ use Illuminate\View\View;
 
 class VendorController extends Controller
 {
+    private const VALIDATION_NULLABLE_STRING = 'nullable|string';
+
     public function index(Request $request): View
     {
         $vendors = collect(); // TODO: Load from vendors table
@@ -35,11 +37,11 @@ class VendorController extends Controller
             'contact_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
+            'address' => self::VALIDATION_NULLABLE_STRING,
             'tax_id' => 'nullable|string|max:50',
             'payment_terms' => 'required|in:net_15,net_30,net_45,net_60,due_on_receipt',
             'bank_account' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
             'is_active' => 'boolean',
         ]);
 
@@ -79,11 +81,11 @@ class VendorController extends Controller
             'contact_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
+            'address' => self::VALIDATION_NULLABLE_STRING,
             'tax_id' => 'nullable|string|max:50',
             'payment_terms' => 'required|in:net_15,net_30,net_45,net_60,due_on_receipt',
             'bank_account' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+            'notes' => self::VALIDATION_NULLABLE_STRING,
             'is_active' => 'boolean',
         ]);
 
