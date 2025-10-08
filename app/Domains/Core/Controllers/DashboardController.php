@@ -1385,6 +1385,9 @@ class DashboardController extends Controller
                     ];
                 }
                 break;
+
+            default:
+                break;
         }
 
         return $alerts;
