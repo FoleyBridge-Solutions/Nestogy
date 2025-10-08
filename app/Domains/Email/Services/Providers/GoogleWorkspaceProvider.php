@@ -2,6 +2,7 @@
 
 namespace App\Domains\Email\Services\Providers;
 
+use App\Domains\Email\Exceptions\EmailProviderException;
 use App\Models\Company;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -48,7 +49,14 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
                 'response' => $response->body(),
                 'status' => $response->status(),
             ]);
-            throw new \Exception('Failed to exchange authorization code for tokens');
+            throw new EmailProviderException(
+                'Google Workspace',
+                'Failed to exchange authorization code for tokens',
+                [
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                ]
+            );
         }
 
         return $response->json();
@@ -68,7 +76,14 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
                 'response' => $response->body(),
                 'status' => $response->status(),
             ]);
-            throw new \Exception('Failed to refresh OAuth tokens');
+            throw new EmailProviderException(
+                'Google Workspace',
+                'Failed to refresh OAuth tokens',
+                [
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                ]
+            );
         }
 
         return $response->json();
@@ -136,7 +151,14 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
                 'response' => $response->body(),
                 'status' => $response->status(),
             ]);
-            throw new \Exception('Failed to retrieve Gmail labels');
+            throw new EmailProviderException(
+                'Google Workspace',
+                'Failed to retrieve Gmail labels',
+                [
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                ]
+            );
         }
 
         return $response->json()['labels'] ?? [];
@@ -164,7 +186,14 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
                 'response' => $response->body(),
                 'status' => $response->status(),
             ]);
-            throw new \Exception('Failed to retrieve Gmail messages');
+            throw new EmailProviderException(
+                'Google Workspace',
+                'Failed to retrieve Gmail messages',
+                [
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                ]
+            );
         }
 
         return $response->json();
@@ -184,7 +213,15 @@ class GoogleWorkspaceProvider implements EmailProviderInterface
                 'response' => $response->body(),
                 'status' => $response->status(),
             ]);
-            throw new \Exception("Failed to retrieve Gmail message: {$messageId}");
+            throw new EmailProviderException(
+                'Google Workspace',
+                "Failed to retrieve Gmail message: {$messageId}",
+                [
+                    'message_id' => $messageId,
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                ]
+            );
         }
 
         return $response->json();
