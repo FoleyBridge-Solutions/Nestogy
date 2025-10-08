@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 
 class StoreClientRequest extends BaseFormRequest
 {
+    private const NULLABLE_STRING_MAX_100 = 'nullable|string|max:100';
+
     protected function initializeRequest(): void
     {
         $this->modelClass = Client::class;
@@ -19,7 +21,7 @@ class StoreClientRequest extends BaseFormRequest
         return [
             // Client specific information
             'company_name' => 'nullable|string|max:255',
-            'type' => 'nullable|string|max:100',
+            'type' => self::NULLABLE_STRING_MAX_100,
             'referral' => 'nullable|string|max:255',
             'rate' => 'nullable|numeric|min:0|max:999999.99',
             'currency_code' => $this->getCurrencyValidationRule(),
@@ -32,20 +34,20 @@ class StoreClientRequest extends BaseFormRequest
             // Primary location information
             'location_name' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
+            'city' => self::NULLABLE_STRING_MAX_100,
             'state' => 'nullable|string|max:50',
             'zip_code' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:100',
+            'country' => self::NULLABLE_STRING_MAX_100,
             'location_phone' => 'nullable|string|max:20',
             'location_address' => 'nullable|string|max:255',
-            'location_city' => 'nullable|string|max:100',
+            'location_city' => self::NULLABLE_STRING_MAX_100,
             'location_state' => 'nullable|string|max:50',
             'location_zip' => 'nullable|string|max:20',
-            'location_country' => 'nullable|string|max:100',
+            'location_country' => self::NULLABLE_STRING_MAX_100,
 
             // Primary contact information
             'contact_name' => 'nullable|string|max:255',
-            'contact_title' => 'nullable|string|max:100',
+            'contact_title' => self::NULLABLE_STRING_MAX_100,
             'contact_phone' => 'nullable|string|max:20',
             'contact_extension' => 'nullable|string|max:10',
             'contact_mobile' => 'nullable|string|max:20',
