@@ -61,6 +61,8 @@ class NetworkController extends Controller
                 case 'vlan':
                     $query->withVlan();
                     break;
+                default:
+                    break;
             }
         }
 
@@ -340,6 +342,8 @@ class NetworkController extends Controller
                     break;
                 case 'monitored':
                     $query->monitored();
+                    break;
+                default:
                     break;
             }
         }
