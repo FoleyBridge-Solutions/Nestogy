@@ -18,6 +18,8 @@ use Illuminate\View\View;
  */
 class TaxApiSettingsController extends Controller
 {
+    private const VALIDATION_STRING_NULLABLE = 'string|nullable';
+
     /**
      * Display tax API settings dashboard
      */
@@ -222,14 +224,14 @@ class TaxApiSettingsController extends Controller
 
         $validator = Validator::make($request->all(), [
             'amount' => 'required|numeric|min:0',
-            'category_type' => 'string|nullable',
+            'category_type' => self::VALIDATION_STRING_NULLABLE,
             'customer_address' => 'array|nullable',
-            'customer_address.address1' => 'string|nullable',
-            'customer_address.city' => 'string|nullable',
-            'customer_address.state' => 'string|nullable',
-            'customer_address.zip' => 'string|nullable',
-            'vat_number' => 'string|nullable',
-            'customer_country' => 'string|nullable',
+            'customer_address.address1' => self::VALIDATION_STRING_NULLABLE,
+            'customer_address.city' => self::VALIDATION_STRING_NULLABLE,
+            'customer_address.state' => self::VALIDATION_STRING_NULLABLE,
+            'customer_address.zip' => self::VALIDATION_STRING_NULLABLE,
+            'vat_number' => self::VALIDATION_STRING_NULLABLE,
+            'customer_country' => self::VALIDATION_STRING_NULLABLE,
         ]);
 
         if ($validator->fails()) {
