@@ -140,6 +140,9 @@ class EntityResolverService
                     return $query->where('id', $matches[1])->first();
                 }
                 break;
+
+            default:
+                break;
         }
 
         return null;
