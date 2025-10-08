@@ -36,6 +36,11 @@ class Product extends Model
     use BelongsToCompany, HasFactory, SoftDeletes;
 
     /**
+     * Decimal cast with 2 decimal places.
+     */
+    private const DECIMAL_2 = 'decimal:2';
+
+    /**
      * The table associated with the model.
      */
     protected $table = 'products';
@@ -89,8 +94,8 @@ class Product extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'base_price' => 'decimal:2',
-        'cost' => 'decimal:2',
+        'base_price' => self::DECIMAL_2,
+        'cost' => self::DECIMAL_2,
         'tax_id' => 'integer',
         'tax_profile_id' => 'integer',
         'category_id' => 'integer',
@@ -107,7 +112,7 @@ class Product extends Model
         'reorder_level' => 'integer',
         'supplier_id' => 'integer',
         'lead_time_days' => 'integer',
-        'weight' => 'decimal:2',
+        'weight' => self::DECIMAL_2,
         'tags' => 'array',
         'is_active' => 'boolean',
         'sort_order' => 'integer',
