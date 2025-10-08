@@ -1845,94 +1845,154 @@ class NavigationService
     protected static function getProjectBadgeCounts(int $companyId): array
     {
         try {
-            // Try enhanced project model first, fallback to basic if needed
-            $projectClass = class_exists('\Foleybridge\Nestogy\Domains\Project\Models\Project')
-                ? '\Foleybridge\Nestogy\Domains\Project\Models\Project'
-                : '\App\Models\Project';
-
+            $projectClass = static::getProjectModelClass();
             $baseQuery = $projectClass::where('company_id', $companyId);
-
-            $counts = [
-                'total' => (clone $baseQuery)->count(),
-                'active' => (clone $baseQuery)->where('status', 'active')->count(),
-                'completed' => (clone $baseQuery)->where('status', 'completed')->count(),
-                'planning' => (clone $baseQuery)->where('status', 'planning')->count(),
-                'on_hold' => (clone $baseQuery)->where('status', 'on_hold')->count(),
-                'overdue' => 0,
-                'due_soon' => 0,
-                'my_projects' => 0,
-                'critical_priority' => 0,
-            ];
-
-            // Enhanced counts if using new project model
+            
+            $counts = static::getBasicProjectCounts($baseQuery);
+            
             if ($projectClass === '\Foleybridge\Nestogy\Domains\Project\Models\Project') {
-                $counts['overdue'] = (clone $baseQuery)->overdue()->count();
-                $counts['due_soon'] = (clone $baseQuery)->dueSoon()->count();
-                $counts['critical_priority'] = (clone $baseQuery)->byPriority('critical')->active()->count();
-
-                // My projects (where user is manager or team member)
-                $userId = auth()->id();
-                if ($userId) {
-                    $counts['my_projects'] = (clone $baseQuery)->where(function ($q) use ($userId) {
-                        $q->where('manager_id', $userId)
-                            ->orWhereHas('members', function ($memberQuery) use ($userId) {
-                                $memberQuery->where('user_id', $userId)->where('is_active', true);
-                            });
-                    })->count();
-                }
-
-                // Task counts
-                try {
-                    $taskClass = '\Foleybridge\Nestogy\Domains\Project\Models\Task';
-                    if (class_exists($taskClass)) {
-                        $taskQuery = $taskClass::whereHas('project', function ($q) use ($companyId) {
-                            $q->where('company_id', $companyId);
-                        });
-
-                        $counts['all_tasks'] = (clone $taskQuery)->count();
-                        $counts['my_tasks'] = $userId ? (clone $taskQuery)->assignedTo($userId)->count() : 0;
-                        $counts['overdue_tasks'] = (clone $taskQuery)->overdue()->count();
-                        $counts['tasks_due_soon'] = (clone $taskQuery)->dueSoon()->count();
-                        $counts['blocked_tasks'] = (clone $taskQuery)->byStatus('blocked')->count();
-                        $counts['unassigned_tasks'] = (clone $taskQuery)->whereNull('assigned_to')->count();
-                    }
-                } catch (\Exception $e) {
-                    // Task counts not available
-                }
-
-                // Milestone counts
-                try {
-                    $milestoneClass = '\Foleybridge\Nestogy\Domains\Project\Models\ProjectMilestone';
-                    if (class_exists($milestoneClass)) {
-                        $milestoneQuery = $milestoneClass::whereHas('project', function ($q) use ($companyId) {
-                            $q->where('company_id', $companyId);
-                        });
-
-                        $counts['total_milestones'] = (clone $milestoneQuery)->count();
-                        $counts['completed_milestones'] = (clone $milestoneQuery)->completed()->count();
-                        $counts['overdue_milestones'] = (clone $milestoneQuery)->overdue()->count();
-                        $counts['critical_milestones'] = (clone $milestoneQuery)->critical()->count();
-                    }
-                } catch (\Exception $e) {
-                    // Milestone counts not available
-                }
-
-                // Template counts
-                try {
-                    $templateClass = '\Foleybridge\Nestogy\Domains\Project\Models\ProjectTemplate';
-                    if (class_exists($templateClass)) {
-                        $counts['templates'] = $templateClass::where('company_id', $companyId)
-                            ->active()->count();
-                        $counts['public_templates'] = $templateClass::where('is_public', true)
-                            ->active()->count();
-                    }
-                } catch (\Exception $e) {
-                    // Template counts not available
-                }
-
+                $counts = array_merge($counts, static::getEnhancedProjectCounts($baseQuery, $companyId));
             }
 
             return $counts;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get project model class
+     */
+    protected static function getProjectModelClass(): string
+    {
+        return class_exists('\Foleybridge\Nestogy\Domains\Project\Models\Project')
+            ? '\Foleybridge\Nestogy\Domains\Project\Models\Project'
+            : '\App\Models\Project';
+    }
+
+    /**
+     * Get basic project counts
+     */
+    protected static function getBasicProjectCounts($baseQuery): array
+    {
+        return [
+            'total' => (clone $baseQuery)->count(),
+            'active' => (clone $baseQuery)->where('status', 'active')->count(),
+            'completed' => (clone $baseQuery)->where('status', 'completed')->count(),
+            'planning' => (clone $baseQuery)->where('status', 'planning')->count(),
+            'on_hold' => (clone $baseQuery)->where('status', 'on_hold')->count(),
+            'overdue' => 0,
+            'due_soon' => 0,
+            'my_projects' => 0,
+            'critical_priority' => 0,
+        ];
+    }
+
+    /**
+     * Get enhanced project counts for advanced model
+     */
+    protected static function getEnhancedProjectCounts($baseQuery, int $companyId): array
+    {
+        $counts = [
+            'overdue' => (clone $baseQuery)->overdue()->count(),
+            'due_soon' => (clone $baseQuery)->dueSoon()->count(),
+            'critical_priority' => (clone $baseQuery)->byPriority('critical')->active()->count(),
+        ];
+
+        $userId = auth()->id();
+        if ($userId) {
+            $counts['my_projects'] = static::getMyProjectsCount($baseQuery, $userId);
+        }
+
+        $counts = array_merge($counts, static::getProjectTaskCounts($companyId, $userId));
+        $counts = array_merge($counts, static::getProjectMilestoneCounts($companyId));
+        $counts = array_merge($counts, static::getProjectTemplateCounts($companyId));
+
+        return $counts;
+    }
+
+    /**
+     * Get count of projects where user is manager or member
+     */
+    protected static function getMyProjectsCount($baseQuery, int $userId): int
+    {
+        return (clone $baseQuery)->where(function ($q) use ($userId) {
+            $q->where('manager_id', $userId)
+                ->orWhereHas('members', function ($memberQuery) use ($userId) {
+                    $memberQuery->where('user_id', $userId)->where('is_active', true);
+                });
+        })->count();
+    }
+
+    /**
+     * Get project task counts
+     */
+    protected static function getProjectTaskCounts(int $companyId, ?int $userId): array
+    {
+        try {
+            $taskClass = '\Foleybridge\Nestogy\Domains\Project\Models\Task';
+            if (! class_exists($taskClass)) {
+                return [];
+            }
+
+            $taskQuery = $taskClass::whereHas('project', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            });
+
+            return [
+                'all_tasks' => (clone $taskQuery)->count(),
+                'my_tasks' => $userId ? (clone $taskQuery)->assignedTo($userId)->count() : 0,
+                'overdue_tasks' => (clone $taskQuery)->overdue()->count(),
+                'tasks_due_soon' => (clone $taskQuery)->dueSoon()->count(),
+                'blocked_tasks' => (clone $taskQuery)->byStatus('blocked')->count(),
+                'unassigned_tasks' => (clone $taskQuery)->whereNull('assigned_to')->count(),
+            ];
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get project milestone counts
+     */
+    protected static function getProjectMilestoneCounts(int $companyId): array
+    {
+        try {
+            $milestoneClass = '\Foleybridge\Nestogy\Domains\Project\Models\ProjectMilestone';
+            if (! class_exists($milestoneClass)) {
+                return [];
+            }
+
+            $milestoneQuery = $milestoneClass::whereHas('project', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            });
+
+            return [
+                'total_milestones' => (clone $milestoneQuery)->count(),
+                'completed_milestones' => (clone $milestoneQuery)->completed()->count(),
+                'overdue_milestones' => (clone $milestoneQuery)->overdue()->count(),
+                'critical_milestones' => (clone $milestoneQuery)->critical()->count(),
+            ];
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get project template counts
+     */
+    protected static function getProjectTemplateCounts(int $companyId): array
+    {
+        try {
+            $templateClass = '\Foleybridge\Nestogy\Domains\Project\Models\ProjectTemplate';
+            if (! class_exists($templateClass)) {
+                return [];
+            }
+
+            return [
+                'templates' => $templateClass::where('company_id', $companyId)->active()->count(),
+                'public_templates' => $templateClass::where('is_public', true)->active()->count(),
+            ];
         } catch (\Exception $e) {
             return [];
         }
