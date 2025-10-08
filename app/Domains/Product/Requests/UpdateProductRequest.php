@@ -7,6 +7,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateProductRequest extends FormRequest
 {
+    private const NULLABLE_JSON = 'nullable|json';
+
     public function authorize(): bool
     {
         return true;
@@ -51,16 +53,16 @@ class UpdateProductRequest extends FormRequest
             'allow_discounts' => 'boolean',
             'requires_approval' => 'boolean',
             'pricing_model' => 'required|in:fixed,tiered,volume,usage,value,custom',
-            'pricing_tiers' => 'nullable|json',
+            'pricing_tiers' => self::NULLABLE_JSON,
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'usage_rate' => 'nullable|numeric|min:0',
             'usage_included' => 'nullable|integer|min:0',
-            'features' => 'nullable|json',
-            'tags' => 'nullable|json',
-            'metadata' => 'nullable|json',
-            'custom_fields' => 'nullable|json',
+            'features' => self::NULLABLE_JSON,
+            'tags' => self::NULLABLE_JSON,
+            'metadata' => self::NULLABLE_JSON,
+            'custom_fields' => self::NULLABLE_JSON,
             'image_url' => 'nullable|url',
-            'gallery_urls' => 'nullable|json',
+            'gallery_urls' => self::NULLABLE_JSON,
             'sort_order' => 'integer|min:0',
             'short_description' => 'nullable|string|max:500',
         ];
