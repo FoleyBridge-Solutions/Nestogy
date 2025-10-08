@@ -133,13 +133,25 @@ class CommandPaletteService
         $partial = $partial ? strtolower(trim($partial)) : '';
 
         if (empty($partial)) {
-            // Return default suggestions
             return static::getDefaultSuggestions($context);
         }
 
-        // Base command templates (NLP will expand these automatically)
-        $baseCommands = [
-            // Create commands
+        $baseCommands = static::getBaseCommands();
+        $commands = static::generateSmartSuggestions($baseCommands, $partial);
+        $staticCommands = static::getStaticCommands();
+        $commands = array_merge($commands, $staticCommands);
+
+        $filteredCommands = static::filterAndDeduplicateCommands($commands, $partial);
+        $filteredCommands = static::sortCommandsByRelevance($filteredCommands, $partial);
+
+        $suggestions = static::appendContextualSuggestions($filteredCommands, $partial, $context);
+
+        return array_slice($suggestions, 0, 8);
+    }
+
+    protected static function getBaseCommands(): array
+    {
+        return [
             'ticket' => ['icon' => '🎫', 'description' => 'Create a new support ticket', 'type' => 'create', 'route' => 'tickets.create'],
             'invoice' => ['icon' => '💰', 'description' => 'Create a new invoice', 'type' => 'create', 'route' => 'financial.invoices.create'],
             'quote' => ['icon' => '📝', 'description' => 'Create a new quote', 'type' => 'create', 'route' => 'financial.quotes.create'],
@@ -156,13 +168,11 @@ class CommandPaletteService
             'bundle' => ['icon' => '🎁', 'description' => 'Create product bundle', 'type' => 'create', 'route' => 'bundles.create'],
             'pricing rule' => ['icon' => '💲', 'description' => 'Create pricing rule', 'type' => 'create', 'route' => 'pricing-rules.create'],
         ];
+    }
 
-        // Generate intelligent suggestions using NLP (with deduplication)
-        $commands = static::generateSmartSuggestions($baseCommands, $partial);
-
-        // Add show/navigation commands
-        $staticCommands = [
-            // Show commands
+    protected static function getStaticCommands(): array
+    {
+        return [
             'show urgent' => ['icon' => '🔥', 'description' => 'View urgent items', 'route' => 'dashboard.urgent'],
             'show today' => ['icon' => '📅', 'description' => "Today's schedule", 'route' => 'dashboard.today'],
             'show tickets' => ['icon' => '🎫', 'description' => 'View all tickets', 'route' => 'tickets.index'],
@@ -180,8 +190,6 @@ class CommandPaletteService
             'show services' => ['icon' => '🔧', 'description' => 'View all services', 'route' => 'services.index'],
             'show bundles' => ['icon' => '🎁', 'description' => 'View product bundles', 'route' => 'bundles.index'],
             'show pricing rules' => ['icon' => '💲', 'description' => 'View pricing rules', 'route' => 'pricing-rules.index'],
-
-            // Navigation commands
             'go to dashboard' => ['icon' => '🏠', 'description' => 'Navigate to dashboard', 'route' => 'dashboard'],
             'go to clients' => ['icon' => '👥', 'description' => 'Navigate to clients', 'route' => 'clients.index'],
             'go to tickets' => ['icon' => '🎫', 'description' => 'Navigate to tickets', 'route' => 'tickets.index'],
@@ -195,91 +203,104 @@ class CommandPaletteService
             'go to services' => ['icon' => '🔧', 'description' => 'Navigate to services', 'route' => 'services.index'],
             'go to bundles' => ['icon' => '🎁', 'description' => 'Navigate to bundles', 'route' => 'bundles.index'],
             'go to pricing rules' => ['icon' => '💲', 'description' => 'Navigate to pricing rules', 'route' => 'pricing-rules.index'],
-
-            // Workflow commands
             'start morning workflow' => ['icon' => '☀️', 'description' => 'Begin morning routine', 'route' => 'workflow.morning'],
             'start billing workflow' => ['icon' => '💰', 'description' => 'Begin billing tasks', 'route' => 'workflow.billing'],
             'start maintenance window' => ['icon' => '🔧', 'description' => 'Start maintenance mode', 'route' => 'workflow.maintenance'],
-
-            // Search commands
             'find' => ['icon' => '🔍', 'description' => 'Search for anything', 'route' => 'search'],
             'search tickets' => ['icon' => '🔍', 'description' => 'Search tickets', 'route' => 'search.tickets'],
             'search clients' => ['icon' => '🔍', 'description' => 'Search clients', 'route' => 'search.clients'],
             'search invoices' => ['icon' => '🔍', 'description' => 'Search invoices', 'route' => 'search.invoices'],
         ];
+    }
 
-        // Merge commands and deduplicate by route
-        $commands = array_merge($commands, $staticCommands);
-
-        // Filter and deduplicate commands that match the partial
+    protected static function filterAndDeduplicateCommands(array $commands, string $partial): array
+    {
         $seenRoutes = [];
         $filteredCommands = [];
 
         foreach ($commands as $cmd => $info) {
-            if (str_starts_with($cmd, $partial) || str_contains($cmd, $partial)) {
-                $route = $info['route'] ?? null;
+            if (! static::commandMatchesPartial($cmd, $partial)) {
+                continue;
+            }
 
-                // If we have a route, use it for deduplication
-                if ($route && ! isset($seenRoutes[$route])) {
-                    $filteredCommands[] = [
-                        'command' => $cmd,
-                        'icon' => $info['icon'],
-                        'description' => $info['description'],
-                        'type' => 'command',
-                    ];
+            $route = $info['route'] ?? null;
+
+            if (static::shouldIncludeCommand($route, $seenRoutes)) {
+                $filteredCommands[] = static::buildCommandItem($cmd, $info);
+                if ($route) {
                     $seenRoutes[$route] = true;
-                } elseif (! $route) {
-                    // Commands without routes (like special actions) are always included
-                    $filteredCommands[] = [
-                        'command' => $cmd,
-                        'icon' => $info['icon'],
-                        'description' => $info['description'],
-                        'type' => 'command',
-                    ];
                 }
             }
         }
 
-        // Sort filtered commands by relevance (exact match first, then starts with, then contains)
-        usort($filteredCommands, function ($a, $b) use ($partial) {
-            $cmdA = strtolower($a['command']);
-            $cmdB = strtolower($b['command']);
+        return $filteredCommands;
+    }
 
-            // Exact matches first
-            if ($cmdA === $partial) {
-                return -1;
-            }
-            if ($cmdB === $partial) {
-                return 1;
-            }
+    protected static function commandMatchesPartial(string $cmd, string $partial): bool
+    {
+        return str_starts_with($cmd, $partial) || str_contains($cmd, $partial);
+    }
 
-            // Then starts with
-            $aStarts = str_starts_with($cmdA, $partial);
-            $bStarts = str_starts_with($cmdB, $partial);
-            if ($aStarts && ! $bStarts) {
-                return -1;
-            }
-            if (! $aStarts && $bStarts) {
-                return 1;
-            }
+    protected static function shouldIncludeCommand(?string $route, array $seenRoutes): bool
+    {
+        return ! $route || ! isset($seenRoutes[$route]);
+    }
 
-            // Then by length (shorter commands first)
-            return strlen($cmdA) - strlen($cmdB);
+    protected static function buildCommandItem(string $cmd, array $info): array
+    {
+        return [
+            'command' => $cmd,
+            'icon' => $info['icon'],
+            'description' => $info['description'],
+            'type' => 'command',
+        ];
+    }
+
+    protected static function sortCommandsByRelevance(array $commands, string $partial): array
+    {
+        usort($commands, function ($a, $b) use ($partial) {
+            return static::compareCommandRelevance($a['command'], $b['command'], $partial);
         });
 
-        $suggestions = $filteredCommands;
+        return $commands;
+    }
 
-        // Add recent items if applicable
+    protected static function compareCommandRelevance(string $cmdA, string $cmdB, string $partial): int
+    {
+        $cmdA = strtolower($cmdA);
+        $cmdB = strtolower($cmdB);
+
+        if ($cmdA === $partial) {
+            return -1;
+        }
+        if ($cmdB === $partial) {
+            return 1;
+        }
+
+        $aStarts = str_starts_with($cmdA, $partial);
+        $bStarts = str_starts_with($cmdB, $partial);
+
+        if ($aStarts && ! $bStarts) {
+            return -1;
+        }
+        if (! $aStarts && $bStarts) {
+            return 1;
+        }
+
+        return strlen($cmdA) - strlen($cmdB);
+    }
+
+    protected static function appendContextualSuggestions(array $suggestions, string $partial, array $context): array
+    {
         if (str_starts_with('recent', $partial) || str_starts_with($partial, 'recent')) {
             $suggestions = array_merge($suggestions, static::getRecentItems($context));
         }
 
-        // Add client suggestions if searching for clients
         if (str_contains($partial, 'client')) {
             $suggestions = array_merge($suggestions, static::getClientSuggestions($partial, $context));
         }
 
-        return array_slice($suggestions, 0, 8); // Limit to 8 suggestions
+        return $suggestions;
     }
 
     /**
