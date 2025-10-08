@@ -149,8 +149,8 @@
                             <div class="p-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Server</label>
-                                        <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->smtp_host }}:{{ $account->smtp_port }}</p>
+                                        <label for="smtp-server-display" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Server</label>
+                                        <p id="smtp-server-display" class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $account->smtp_host }}:{{ $account->smtp_port }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Encryption</label>
