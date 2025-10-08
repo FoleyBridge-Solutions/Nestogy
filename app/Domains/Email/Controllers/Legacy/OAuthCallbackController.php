@@ -37,89 +37,16 @@ class OAuthCallbackController extends Controller
         ]);
 
         try {
-            // Validate required parameters
-            Log::info('About to validate OAuth parameters');
             $request->validate([
                 'code' => 'required|string',
                 'state' => 'required|string',
             ]);
             Log::info('OAuth parameter validation passed');
 
-            // Verify state from DATABASE instead of session
-            $oauthState = \DB::table('oauth_states')
-                ->where('state', $request->state)
-                ->where('expires_at', '>', now())
-                ->first();
-
-            Log::info('OAuth state lookup', [
-                'request_state' => $request->state,
-                'state_found' => ! empty($oauthState),
-                'state_data' => $oauthState,
-            ]);
-
-            if (! $oauthState) {
-                Log::warning('OAuth state not found in database - REDIRECTING WITH ERROR', [
-                    'request_state' => $request->state,
-                ]);
-
-                return redirect()->route('email.accounts.index')
-                    ->with('error', 'OAuth authentication failed: Invalid or expired state parameter');
-            }
-
-            // Get OAuth context from database record
-            $oauthContext = [
-                'company_id' => $oauthState->company_id,
-                'user_id' => $oauthState->user_id,
-                'email' => $oauthState->email,
-            ];
-
-            // Delete used state
-            \DB::table('oauth_states')->where('id', $oauthState->id)->delete();
-
-            // Clean up expired states
-            \DB::table('oauth_states')->where('expires_at', '<', now())->delete();
-
-            $companyId = $oauthContext['company_id'];
-            $userId = $oauthContext['user_id'];
-
-            // Get company
-            $company = \App\Models\Company::find($companyId);
-            if (! $company) {
-                return redirect()->route('email.accounts.index')
-                    ->with('error', 'OAuth authentication failed: Company not found');
-            }
-
-            // Exchange code for tokens
-            $tokens = $this->providerService->exchangeCodeForTokens($company, $request->code);
-
-            // Get user email from tokens (if available)
-            $email = $oauthContext['email'] ?? $this->getEmailFromTokens($company, $tokens);
-
-            if (! $email) {
-                return redirect()->route('email.accounts.index')
-                    ->with('error', 'OAuth authentication failed: Could not determine email address');
-            }
-
-            // Create email account
-            $account = $this->providerService->createAccountFromOAuth(
-                $company,
-                $tokens,
-                $email,
-                $userId
-            );
-
-            Log::info('OAuth email account created successfully', [
-                'account_id' => $account->id,
-                'company_id' => $company->id,
-                'user_id' => $userId,
-                'email' => $email,
-                'provider' => $company->email_provider_type,
-                'account_user_id' => $account->user_id,
-                'tokens_received' => ! empty($tokens),
-            ]);
+            $result = $this->processOAuthCallback($request);
 
             return redirect()->route('email.accounts.index')
-                ->with('success', 'Email account connected successfully!');
+                ->with($result['type'], $result['message']);
 
         } catch (\Exception $e) {
             Log::error('OAuth callback EXCEPTION - REDIRECTING WITH ERROR', [
@@ -133,6 +60,74 @@ class OAuthCallbackController extends Controller
             return redirect()->route('email.accounts.index')
                 ->with('error', 'OAuth authentication failed: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Process OAuth callback and create email account
+     */
+    protected function processOAuthCallback(Request $request): array
+    {
+        $oauthState = \DB::table('oauth_states')
+            ->where('state', $request->state)
+            ->where('expires_at', '>', now())
+            ->first();
+
+        Log::info('OAuth state lookup', [
+            'request_state' => $request->state,
+            'state_found' => ! empty($oauthState),
+            'state_data' => $oauthState,
+        ]);
+
+        if (! $oauthState) {
+            Log::warning('OAuth state not found in database', [
+                'request_state' => $request->state,
+            ]);
+
+            throw new \Exception('Invalid or expired state parameter');
+        }
+
+        $oauthContext = [
+            'company_id' => $oauthState->company_id,
+            'user_id' => $oauthState->user_id,
+            'email' => $oauthState->email,
+        ];
+
+        \DB::table('oauth_states')->where('id', $oauthState->id)->delete();
+        \DB::table('oauth_states')->where('expires_at', '<', now())->delete();
+
+        $company = \App\Models\Company::find($oauthContext['company_id']);
+        if (! $company) {
+            throw new \Exception('Company not found');
+        }
+
+        $tokens = $this->providerService->exchangeCodeForTokens($company, $request->code);
+        $email = $oauthContext['email'] ?? $this->getEmailFromTokens($company, $tokens);
+
+        if (! $email) {
+            throw new \Exception('Could not determine email address');
+        }
+
+        $account = $this->providerService->createAccountFromOAuth(
+            $company,
+            $tokens,
+            $email,
+            $oauthContext['user_id']
+        );
+
+        Log::info('OAuth email account created successfully', [
+            'account_id' => $account->id,
+            'company_id' => $company->id,
+            'user_id' => $oauthContext['user_id'],
+            'email' => $email,
+            'provider' => $company->email_provider_type,
+            'account_user_id' => $account->user_id,
+            'tokens_received' => ! empty($tokens),
+        ]);
+
+        return [
+            'type' => 'success',
+            'message' => 'Email account connected successfully!',
+        ];
     }
 
     /**
