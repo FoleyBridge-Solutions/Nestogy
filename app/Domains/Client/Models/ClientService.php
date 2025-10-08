@@ -11,6 +11,8 @@ class ClientService extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
+    private const DECIMAL_CAST = 'decimal:2';
+
     protected $fillable = [
         'company_id',
         'client_id',
@@ -58,9 +60,9 @@ class ClientService extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'renewal_date' => 'date',
-        'monthly_cost' => 'decimal:2',
-        'setup_cost' => 'decimal:2',
-        'total_contract_value' => 'decimal:2',
+        'monthly_cost' => self::DECIMAL_CAST,
+        'setup_cost' => self::DECIMAL_CAST,
+        'total_contract_value' => self::DECIMAL_CAST,
         'auto_renewal' => 'boolean',
         'monitoring_enabled' => 'boolean',
         'last_review_date' => 'date',
