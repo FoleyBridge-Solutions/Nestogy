@@ -186,67 +186,104 @@ class SentimentAnalyticsController extends Controller
         $days = $startDate->diffInDays($endDate);
         $groupBy = $days > 30 ? 'week' : 'day';
 
-        if ($groupBy === 'week') {
-            $period = \Carbon\CarbonPeriod::create($startDate->copy()->startOfWeek(), '1 week', $endDate);
-            $dateFormat = 'Y-\WW';
-        } else {
-            $period = \Carbon\CarbonPeriod::create($startDate, '1 day', $endDate);
-            $dateFormat = 'Y-m-d';
-        }
+        $periodConfig = $this->getPeriodConfiguration($groupBy, $startDate, $endDate);
 
         $trends = [];
-        foreach ($period as $date) {
-            if ($groupBy === 'week') {
-                $periodStart = $date->copy()->startOfWeek();
-                $periodEnd = $date->copy()->endOfWeek();
-                $label = 'Week of '.$date->format('M j');
-            } else {
-                $periodStart = $date->copy()->startOfDay();
-                $periodEnd = $date->copy()->endOfDay();
-                $label = $date->format('M j');
-            }
+        foreach ($periodConfig['period'] as $date) {
+            $periodBounds = $this->getPeriodBounds($groupBy, $date);
+            $stats = $this->fetchSentimentStatsForPeriod($companyId, $periodBounds['start'], $periodBounds['end']);
 
-            $stats = DB::select("
-                SELECT 
-                    AVG(sentiment_score) as avg_score,
-                    COUNT(*) as total_count,
-                    SUM(CASE WHEN sentiment_label IN ('POSITIVE', 'WEAK_POSITIVE') THEN 1 ELSE 0 END) as positive_count,
-                    SUM(CASE WHEN sentiment_label = 'NEUTRAL' THEN 1 ELSE 0 END) as neutral_count,
-                    SUM(CASE WHEN sentiment_label IN ('NEGATIVE', 'WEAK_NEGATIVE') THEN 1 ELSE 0 END) as negative_count
-                FROM (
-                    SELECT sentiment_label, sentiment_score
-                    FROM tickets 
-                    WHERE company_id = ? 
-                    AND sentiment_analyzed_at IS NOT NULL
-                    AND created_at BETWEEN ? AND ?
-                    
-                    UNION ALL
-                    
-                    SELECT sentiment_label, sentiment_score
-                    FROM ticket_replies 
-                    WHERE company_id = ? 
-                    AND sentiment_analyzed_at IS NOT NULL
-                    AND created_at BETWEEN ? AND ?
-                ) as combined_sentiment
-                WHERE sentiment_label IS NOT NULL
-            ", [$companyId, $periodStart, $periodEnd, $companyId, $periodStart, $periodEnd]);
-
-            $stat = $stats[0] ?? null;
-
-            $trends[] = [
-                'date' => $date->format($dateFormat),
-                'label' => $label,
-                'avg_sentiment_score' => $stat ? round($stat->avg_score, 2) : 0,
-                'total_interactions' => $stat ? $stat->total_count : 0,
-                'positive_count' => $stat ? $stat->positive_count : 0,
-                'neutral_count' => $stat ? $stat->neutral_count : 0,
-                'negative_count' => $stat ? $stat->negative_count : 0,
-                'positive_rate' => $stat && $stat->total_count > 0 ? round(($stat->positive_count / $stat->total_count) * 100, 1) : 0,
-                'negative_rate' => $stat && $stat->total_count > 0 ? round(($stat->negative_count / $stat->total_count) * 100, 1) : 0,
-            ];
+            $trends[] = $this->buildTrendDataPoint(
+                $date,
+                $periodConfig['dateFormat'],
+                $periodBounds['label'],
+                $stats[0] ?? null
+            );
         }
 
         return $trends;
+    }
+
+    private function getPeriodConfiguration(string $groupBy, Carbon $startDate, Carbon $endDate): array
+    {
+        if ($groupBy === 'week') {
+            return [
+                'period' => \Carbon\CarbonPeriod::create($startDate->copy()->startOfWeek(), '1 week', $endDate),
+                'dateFormat' => 'Y-\WW',
+            ];
+        }
+
+        return [
+            'period' => \Carbon\CarbonPeriod::create($startDate, '1 day', $endDate),
+            'dateFormat' => 'Y-m-d',
+        ];
+    }
+
+    private function getPeriodBounds(string $groupBy, Carbon $date): array
+    {
+        if ($groupBy === 'week') {
+            return [
+                'start' => $date->copy()->startOfWeek(),
+                'end' => $date->copy()->endOfWeek(),
+                'label' => 'Week of '.$date->format('M j'),
+            ];
+        }
+
+        return [
+            'start' => $date->copy()->startOfDay(),
+            'end' => $date->copy()->endOfDay(),
+            'label' => $date->format('M j'),
+        ];
+    }
+
+    private function fetchSentimentStatsForPeriod(int $companyId, Carbon $periodStart, Carbon $periodEnd): array
+    {
+        return DB::select("
+            SELECT 
+                AVG(sentiment_score) as avg_score,
+                COUNT(*) as total_count,
+                SUM(CASE WHEN sentiment_label IN ('POSITIVE', 'WEAK_POSITIVE') THEN 1 ELSE 0 END) as positive_count,
+                SUM(CASE WHEN sentiment_label = 'NEUTRAL' THEN 1 ELSE 0 END) as neutral_count,
+                SUM(CASE WHEN sentiment_label IN ('NEGATIVE', 'WEAK_NEGATIVE') THEN 1 ELSE 0 END) as negative_count
+            FROM (
+                SELECT sentiment_label, sentiment_score
+                FROM tickets 
+                WHERE company_id = ? 
+                AND sentiment_analyzed_at IS NOT NULL
+                AND created_at BETWEEN ? AND ?
+                
+                UNION ALL
+                
+                SELECT sentiment_label, sentiment_score
+                FROM ticket_replies 
+                WHERE company_id = ? 
+                AND sentiment_analyzed_at IS NOT NULL
+                AND created_at BETWEEN ? AND ?
+            ) as combined_sentiment
+            WHERE sentiment_label IS NOT NULL
+        ", [$companyId, $periodStart, $periodEnd, $companyId, $periodStart, $periodEnd]);
+    }
+
+    private function buildTrendDataPoint(Carbon $date, string $dateFormat, string $label, ?object $stat): array
+    {
+        $totalCount = $stat?->total_count ?? 0;
+
+        return [
+            'date' => $date->format($dateFormat),
+            'label' => $label,
+            'avg_sentiment_score' => $stat ? round($stat->avg_score, 2) : 0,
+            'total_interactions' => $totalCount,
+            'positive_count' => $stat?->positive_count ?? 0,
+            'neutral_count' => $stat?->neutral_count ?? 0,
+            'negative_count' => $stat?->negative_count ?? 0,
+            'positive_rate' => $this->calculateRate($stat?->positive_count ?? 0, $totalCount),
+            'negative_rate' => $this->calculateRate($stat?->negative_count ?? 0, $totalCount),
+        ];
+    }
+
+    private function calculateRate(int $count, int $total): float
+    {
+        return $total > 0 ? round(($count / $total) * 100, 1) : 0;
     }
 
     /**
