@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\Log;
  */
 class DashboardDataService
 {
+    private const COLOR_SLATE_500 = '#64748b';
+
     protected int $companyId;
 
     protected FinancialAnalyticsService $analyticsService;
@@ -1052,7 +1054,7 @@ class DashboardDataService
             'negative_sentiment_alerts' => [
                 'value' => $negativeTickets,
                 'label' => 'Need Attention',
-                'color' => $negativeTickets > 0 ? '#ef4444' : '#64748b',
+                'color' => $negativeTickets > 0 ? '#ef4444' : self::COLOR_SLATE_500,
                 'icon' => 'fas fa-exclamation-triangle',
                 'description' => 'High-confidence negative tickets requiring immediate attention',
                 'trend' => $negativeTrend,
@@ -1074,7 +1076,7 @@ class DashboardDataService
                 'neutral' => [
                     'count' => $neutralCount,
                     'percentage' => $totalInteractions > 0 ? round(($neutralCount / $totalInteractions) * 100, 1) : 0,
-                    'color' => '#64748b',
+                    'color' => self::COLOR_SLATE_500,
                 ],
                 'negative' => [
                     'count' => $negativeCount,
@@ -1179,7 +1181,7 @@ class DashboardDataService
             return '#84cc16';
         } // lime-500
         if ($score > -0.1) {
-            return '#64748b';
+            return self::COLOR_SLATE_500;
         } // slate-500
         if ($score > -0.5) {
             return '#f97316';
