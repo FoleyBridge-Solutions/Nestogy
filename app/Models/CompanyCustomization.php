@@ -46,6 +46,11 @@ class CompanyCustomization extends Model
     ];
 
     /**
+     * Validation rule for nullable array fields
+     */
+    private const VALIDATION_NULLABLE_ARRAY = 'nullable|array';
+
+    /**
      * Default color palette (blue theme)
      */
     const DEFAULT_COLORS = [
@@ -239,9 +244,9 @@ class CompanyCustomization extends Model
         return [
             'company_id' => 'required|integer|exists:companies,id',
             'customizations' => 'required|array',
-            'customizations.colors' => 'nullable|array',
-            'customizations.colors.primary' => 'nullable|array',
-            'customizations.colors.secondary' => 'nullable|array',
+            'customizations.colors' => self::VALIDATION_NULLABLE_ARRAY,
+            'customizations.colors.primary' => self::VALIDATION_NULLABLE_ARRAY,
+            'customizations.colors.secondary' => self::VALIDATION_NULLABLE_ARRAY,
             'customizations.colors.primary.*' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
             'customizations.colors.secondary.*' => 'nullable|string|regex:/^#[a-fA-F0-9]{6}$/',
         ];
