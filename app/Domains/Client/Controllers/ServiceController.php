@@ -15,6 +15,8 @@ class ServiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_STRING = 'nullable|string';
+
     /**
      * Display a listing of services for the selected client
      */
@@ -144,7 +146,7 @@ class ServiceController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
             'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
@@ -157,8 +159,8 @@ class ServiceController extends Controller
             'total_contract_value' => 'nullable|numeric|min:0|max:9999999.99',
             'currency' => 'nullable|string|size:3',
             'auto_renewal' => 'boolean',
-            'contract_terms' => 'nullable|string',
-            'sla_terms' => 'nullable|string',
+            'contract_terms' => self::NULLABLE_STRING,
+            'sla_terms' => self::NULLABLE_STRING,
             'service_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceLevels())),
             'priority_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getPriorityLevels())),
             'assigned_technician' => [
@@ -176,19 +178,19 @@ class ServiceController extends Controller
                 }),
             ],
             'escalation_contact' => 'nullable|string|max:255',
-            'service_hours' => 'nullable|string',
+            'service_hours' => self::NULLABLE_STRING,
             'response_time' => 'nullable|string|max:100',
             'resolution_time' => 'nullable|string|max:100',
             'availability_target' => 'nullable|string|max:100',
-            'performance_metrics' => 'nullable|string',
+            'performance_metrics' => self::NULLABLE_STRING,
             'monitoring_enabled' => 'boolean',
-            'backup_schedule' => 'nullable|string',
-            'maintenance_schedule' => 'nullable|string',
+            'backup_schedule' => self::NULLABLE_STRING,
+            'maintenance_schedule' => self::NULLABLE_STRING,
             'last_review_date' => 'nullable|date|before_or_equal:today',
             'next_review_date' => 'nullable|date',
             'client_satisfaction' => 'nullable|integer|min:1|max:10',
-            'notes' => 'nullable|string',
-            'tags' => 'nullable|string',
+            'notes' => self::NULLABLE_STRING,
+            'tags' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -283,7 +285,7 @@ class ServiceController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
             'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
@@ -296,8 +298,8 @@ class ServiceController extends Controller
             'total_contract_value' => 'nullable|numeric|min:0|max:9999999.99',
             'currency' => 'nullable|string|size:3',
             'auto_renewal' => 'boolean',
-            'contract_terms' => 'nullable|string',
-            'sla_terms' => 'nullable|string',
+            'contract_terms' => self::NULLABLE_STRING,
+            'sla_terms' => self::NULLABLE_STRING,
             'service_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceLevels())),
             'priority_level' => 'nullable|in:'.implode(',', array_keys(ClientService::getPriorityLevels())),
             'assigned_technician' => [
@@ -315,19 +317,19 @@ class ServiceController extends Controller
                 }),
             ],
             'escalation_contact' => 'nullable|string|max:255',
-            'service_hours' => 'nullable|string',
+            'service_hours' => self::NULLABLE_STRING,
             'response_time' => 'nullable|string|max:100',
             'resolution_time' => 'nullable|string|max:100',
             'availability_target' => 'nullable|string|max:100',
-            'performance_metrics' => 'nullable|string',
+            'performance_metrics' => self::NULLABLE_STRING,
             'monitoring_enabled' => 'boolean',
-            'backup_schedule' => 'nullable|string',
-            'maintenance_schedule' => 'nullable|string',
+            'backup_schedule' => self::NULLABLE_STRING,
+            'maintenance_schedule' => self::NULLABLE_STRING,
             'last_review_date' => 'nullable|date|before_or_equal:today',
             'next_review_date' => 'nullable|date',
             'client_satisfaction' => 'nullable|integer|min:1|max:10',
-            'notes' => 'nullable|string',
-            'tags' => 'nullable|string',
+            'notes' => self::NULLABLE_STRING,
+            'tags' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
