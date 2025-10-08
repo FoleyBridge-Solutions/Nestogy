@@ -14,6 +14,8 @@ class CertificateController extends Controller
 {
     use UsesSelectedClient;
 
+    private const COST_VALIDATION_RULE = 'nullable|numeric|min:0';
+
     /**
      * Display a listing of certificates for the selected client
      */
@@ -131,8 +133,8 @@ class CertificateController extends Controller
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
             'status' => 'required|in:'.implode(',', array_keys(ClientCertificate::getStatuses())),
             'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
-            'purchase_cost' => 'nullable|numeric|min:0',
-            'renewal_cost' => 'nullable|numeric|min:0',
+            'purchase_cost' => self::COST_VALIDATION_RULE,
+            'renewal_cost' => self::COST_VALIDATION_RULE,
             'notes' => 'nullable|string',
         ]);
 
@@ -259,8 +261,8 @@ class CertificateController extends Controller
             'days_before_expiry_alert' => 'nullable|integer|min:1|max:365',
             'status' => 'required|in:'.implode(',', array_keys(ClientCertificate::getStatuses())),
             'vendor' => 'nullable|in:'.implode(',', array_keys(ClientCertificate::getVendors())),
-            'purchase_cost' => 'nullable|numeric|min:0',
-            'renewal_cost' => 'nullable|numeric|min:0',
+            'purchase_cost' => self::COST_VALIDATION_RULE,
+            'renewal_cost' => self::COST_VALIDATION_RULE,
             'notes' => 'nullable|string',
         ]);
 
