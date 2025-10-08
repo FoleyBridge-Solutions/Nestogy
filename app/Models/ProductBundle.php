@@ -13,6 +13,8 @@ class ProductBundle extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
+    private const DECIMAL_CAST = 'decimal:2';
+
     protected $fillable = [
         'company_id',
         'name',
@@ -33,9 +35,9 @@ class ProductBundle extends Model
     ];
 
     protected $casts = [
-        'fixed_price' => 'decimal:2',
-        'discount_percentage' => 'decimal:2',
-        'min_value' => 'decimal:2',
+        'fixed_price' => self::DECIMAL_CAST,
+        'discount_percentage' => self::DECIMAL_CAST,
+        'min_value' => self::DECIMAL_CAST,
         'is_active' => 'boolean',
         'show_items_separately' => 'boolean',
         'available_from' => 'datetime',
