@@ -175,7 +175,7 @@ class ContractAnalyticsService
 
         return [
             'total_clients' => $clients->count(),
-            'active_clients' => $this->getActiveClientCount($companyId),
+            'active_clients' => $this->getActiveClientCount(),
             'top_clients_by_value' => $topClientsByValue,
             'client_retention_rate' => $clientRetention,
             'new_vs_existing_revenue' => $newVsExisting,
@@ -497,7 +497,7 @@ class ContractAnalyticsService
         return 0;
     }
 
-    protected function getActiveClientCount(int $companyId): int
+    protected function getActiveClientCount(): int
     {
         return 0;
     }
