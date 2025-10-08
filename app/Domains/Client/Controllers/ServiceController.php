@@ -15,6 +15,8 @@ class ServiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_REQUIRED_IN = 'required|in:';
+
     /**
      * Display a listing of services for the selected client
      */
@@ -145,9 +147,9 @@ class ServiceController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
+            'service_type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientService::getServiceTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
-            'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientService::getServiceStatuses())),
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'renewal_date' => 'nullable|date',
@@ -284,9 +286,9 @@ class ServiceController extends Controller
             ],
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'service_type' => 'required|in:'.implode(',', array_keys(ClientService::getServiceTypes())),
+            'service_type' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientService::getServiceTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientService::getServiceCategories())),
-            'status' => 'required|in:'.implode(',', array_keys(ClientService::getServiceStatuses())),
+            'status' => self::VALIDATION_REQUIRED_IN.implode(',', array_keys(ClientService::getServiceStatuses())),
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'renewal_date' => 'nullable|date',
