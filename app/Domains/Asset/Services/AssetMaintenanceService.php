@@ -300,7 +300,7 @@ class AssetMaintenanceService
             $results['old_files'] = $oldFilesResult;
 
             // 6. Calculate space reclaimed
-            $spaceReclaimed = $this->calculateSpaceReclaimed($results);
+            $spaceReclaimed = $this->calculateSpaceReclaimed();
             $results['space_reclaimed'] = $spaceReclaimed;
 
         } catch (\Exception $e) {
@@ -633,7 +633,7 @@ class AssetMaintenanceService
         return ['success' => true, 'space_freed' => '800 MB'];
     }
 
-    protected function calculateSpaceReclaimed(array $results): array
+    protected function calculateSpaceReclaimed(): array
     {
         return ['total_space_freed' => '4.5 GB'];
     }
