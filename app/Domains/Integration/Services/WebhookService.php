@@ -348,6 +348,12 @@ class WebhookService
                     throw new ValidationException('Missing required fields for generic webhook');
                 }
                 break;
+
+            default:
+                Log::warning('Validation skipped for unsupported provider', [
+                    'provider' => $provider,
+                ]);
+                break;
         }
     }
 
