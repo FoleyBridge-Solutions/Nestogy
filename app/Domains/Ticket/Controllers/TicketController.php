@@ -34,6 +34,8 @@ class TicketController extends Controller
 {
     use FiltersClientsByAssignment, UsesSelectedClient;
 
+    private const TICKET_PREFIX = 'Ticket #';
+
     /**
      * Display a listing of tickets
      */
@@ -300,7 +302,7 @@ class TicketController extends Controller
             }
 
             return redirect()->route('tickets.show', $ticket)
-                ->with('success', 'Ticket #'.$ticket->number.' created successfully.');
+                ->with('success', self::TICKET_PREFIX.$ticket->number.' created successfully.');
 
         } catch (\Exception $e) {
             Log::error('Ticket creation failed', [
@@ -605,7 +607,7 @@ class TicketController extends Controller
             }
 
             return redirect()->route('tickets.show', $ticket)
-                ->with('success', 'Ticket #'.$ticket->number.' updated successfully.');
+                ->with('success', self::TICKET_PREFIX.$ticket->number.' updated successfully.');
 
         } catch (\Exception $e) {
             Log::error('Ticket update failed', [
@@ -654,7 +656,7 @@ class TicketController extends Controller
             }
 
             return redirect()->route('tickets.index')
-                ->with('success', 'Ticket #'.$ticketNumber.' deleted successfully.');
+                ->with('success', self::TICKET_PREFIX.$ticketNumber.' deleted successfully.');
 
         } catch (\Exception $e) {
             Log::error('Ticket deletion failed', [
@@ -1326,7 +1328,7 @@ class TicketController extends Controller
 
             // CSV headers
             fputcsv($file, [
-                'Ticket #',
+                self::TICKET_PREFIX,
                 'Subject',
                 'Client',
                 'Status',
