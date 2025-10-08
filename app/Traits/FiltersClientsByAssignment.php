@@ -101,18 +101,12 @@ trait FiltersClientsByAssignment
             return true;
         }
 
-        // Admins can access all clients in their company
-        if ($user->isA('admin')) {
-            $client = \App\Models\Client::find($clientId);
+        // For admins and users without assignments, check company access
+        $assignedClientIds = $user->isA('admin') 
+            ? [] 
+            : $user->assignedClients()->pluck('client_id')->toArray();
 
-            return $client && $client->company_id === $user->company_id;
-        }
-
-        // For other users, check restrictions
-        $assignedClientIds = $user->assignedClients()->pluck('client_id')->toArray();
-
-        if (empty($assignedClientIds)) {
-            // No assignments = can access all clients in company
+        if ($user->isA('admin') || empty($assignedClientIds)) {
             $client = \App\Models\Client::find($clientId);
 
             return $client && $client->company_id === $user->company_id;
