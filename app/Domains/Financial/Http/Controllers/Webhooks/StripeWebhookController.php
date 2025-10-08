@@ -20,6 +20,8 @@ use Stripe\Webhook;
  */
 class StripeWebhookController extends Controller
 {
+    private const DATETIME_FORMAT = 'Y-m-d H:i:s';
+
     protected StripeSubscriptionService $stripeService;
 
     public function __construct(StripeSubscriptionService $stripeService)
@@ -172,9 +174,9 @@ class StripeWebhookController extends Controller
         $client->update([
             'stripe_subscription_id' => $subscription->id,
             'subscription_status' => $this->mapStripeSubscriptionStatus($subscription->status),
-            'trial_ends_at' => $subscription->trial_end ? date('Y-m-d H:i:s', $subscription->trial_end) : null,
-            'next_billing_date' => date('Y-m-d H:i:s', $subscription->current_period_end),
-            'subscription_started_at' => date('Y-m-d H:i:s', $subscription->created),
+            'trial_ends_at' => $subscription->trial_end ? date(self::DATETIME_FORMAT, $subscription->trial_end) : null,
+            'next_billing_date' => date(self::DATETIME_FORMAT, $subscription->current_period_end),
+            'subscription_started_at' => date(self::DATETIME_FORMAT, $subscription->created),
         ]);
 
         Log::info('Subscription created and synced', [
@@ -201,9 +203,9 @@ class StripeWebhookController extends Controller
 
         $client->update([
             'subscription_status' => $this->mapStripeSubscriptionStatus($subscription->status),
-            'trial_ends_at' => $subscription->trial_end ? date('Y-m-d H:i:s', $subscription->trial_end) : null,
-            'next_billing_date' => date('Y-m-d H:i:s', $subscription->current_period_end),
-            'subscription_canceled_at' => $subscription->canceled_at ? date('Y-m-d H:i:s', $subscription->canceled_at) : null,
+            'trial_ends_at' => $subscription->trial_end ? date(self::DATETIME_FORMAT, $subscription->trial_end) : null,
+            'next_billing_date' => date(self::DATETIME_FORMAT, $subscription->current_period_end),
+            'subscription_canceled_at' => $subscription->canceled_at ? date(self::DATETIME_FORMAT, $subscription->canceled_at) : null,
         ]);
 
         // Handle status changes
@@ -267,7 +269,7 @@ class StripeWebhookController extends Controller
         // You can implement email notification here
         Log::info('Trial will end notification', [
             'client_id' => $client->id,
-            'trial_end' => date('Y-m-d H:i:s', $subscription->trial_end),
+            'trial_end' => date(self::DATETIME_FORMAT, $subscription->trial_end),
         ]);
     }
 
