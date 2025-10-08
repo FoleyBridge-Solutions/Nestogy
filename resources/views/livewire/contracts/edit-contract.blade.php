@@ -174,8 +174,9 @@
 
                                 <!-- Client Selection -->
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Client *</label>
-                                    <select wire:model.defer="client_id" 
+                                    <label for="client_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Client *</label>
+                                    <select id="client_id" 
+                                            wire:model.defer="client_id" 
                                             @if(!$canEdit || $contract->status !== 'draft') disabled @endif
                                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg
                                                    {{ $canEdit && $contract->status === 'draft' ? 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500' : 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' }}">
