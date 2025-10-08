@@ -30,163 +30,222 @@ class SlaMonitor extends Component
     {
         $this->loading = true;
         $companyId = Auth::user()->company_id;
+        $startDate = $this->getStartDate();
 
-        // Get date range
-        $startDate = match ($this->period) {
+        $activeTickets = $this->getActiveTickets($companyId);
+        $periodTickets = $this->getPeriodTickets($companyId, $startDate);
+
+        $slaStatus = $this->checkActiveSlaStatus($activeTickets);
+        $metByPriority = $this->initializeMetByPriority();
+        
+        $resolvedInPeriod = $this->getResolvedTickets($companyId, $startDate);
+        $allRelevantTickets = $activeTickets->merge($resolvedInPeriod);
+
+        $metByPriority = $this->calculateSlaCompliance($allRelevantTickets, $metByPriority);
+        $avgResponseTimes = $this->calculateAverageResponseTimes($allRelevantTickets);
+        $overallCompliance = $this->calculateOverallCompliance($metByPriority);
+
+        $this->slaMetrics = [
+            'overall_compliance' => $overallCompliance,
+            'total_tickets' => $periodTickets->count(),
+            'breached_count' => $slaStatus['breachedCount'],
+            'warning_count' => $slaStatus['warningCount'],
+            'by_priority' => $metByPriority,
+            'avg_response_times' => $avgResponseTimes,
+        ];
+
+        $this->breachedTickets = $slaStatus['breached'];
+        $this->warningTickets = $slaStatus['warnings'];
+        $this->loading = false;
+    }
+
+    protected function getStartDate()
+    {
+        return match ($this->period) {
             'today' => Carbon::today(),
             'week' => Carbon::now()->startOfWeek(),
             'month' => Carbon::now()->startOfMonth(),
             default => Carbon::today()
         };
+    }
 
-        // Get ALL active tickets with priority queues to check for SLA breaches
-        $activeTickets = Ticket::where('company_id', $companyId)
+    protected function getActiveTickets($companyId)
+    {
+        return Ticket::where('company_id', $companyId)
             ->whereNotIn('status', ['resolved', 'closed'])
             ->with(['priorityQueue', 'client'])
             ->get();
+    }
 
-        // Get tickets created in the selected period for statistics
-        $periodTickets = Ticket::where('company_id', $companyId)
+    protected function getPeriodTickets($companyId, $startDate)
+    {
+        return Ticket::where('company_id', $companyId)
             ->where('created_at', '>=', $startDate)
             ->with(['priorityQueue', 'client'])
             ->get();
+    }
 
-        $totalTickets = $periodTickets->count();
-        $breachedCount = 0;
-        $warningCount = 0;
-        $metByPriority = [
+    protected function getResolvedTickets($companyId, $startDate)
+    {
+        return Ticket::where('company_id', $companyId)
+            ->whereIn('status', ['resolved', 'closed'])
+            ->where('updated_at', '>=', $startDate)
+            ->with(['priorityQueue'])
+            ->get();
+    }
+
+    protected function initializeMetByPriority()
+    {
+        return [
             'critical' => ['total' => 0, 'met' => 0, 'target' => 4],
             'high' => ['total' => 0, 'met' => 0, 'target' => 8],
             'medium' => ['total' => 0, 'met' => 0, 'target' => 24],
             'low' => ['total' => 0, 'met' => 0, 'target' => 48],
         ];
+    }
 
+    protected function checkActiveSlaStatus($activeTickets)
+    {
+        $breachedCount = 0;
+        $warningCount = 0;
         $breached = [];
         $warnings = [];
 
-        // Check ALL active tickets for current SLA breaches/warnings
         foreach ($activeTickets as $ticket) {
+            if (!$ticket->priorityQueue || !$ticket->priorityQueue->sla_deadline) {
+                continue;
+            }
+
             $priority = strtolower($ticket->priority ?? 'medium');
+            $deadline = $ticket->priorityQueue->sla_deadline;
+            $hoursRemaining = now()->diffInHours($deadline, false);
 
-            // Check if ticket has SLA breach via priority queue
-            if ($ticket->priorityQueue && $ticket->priorityQueue->sla_deadline) {
-                $deadline = $ticket->priorityQueue->sla_deadline;
-                $hoursRemaining = now()->diffInHours($deadline, false);
-
-                if ($hoursRemaining < 0) { // Breached
-                    $breachedCount++;
-                    if (count($breached) < 5) {
-                        $breached[] = [
-                            'id' => $ticket->id,
-                            'subject' => $ticket->subject,
-                            'priority' => $priority,
-                            'hours_overdue' => abs($hoursRemaining),
-                            'client' => $ticket->client?->company_name ?? 'Unknown',
-                        ];
-                    }
-                } elseif ($hoursRemaining <= 2) { // Warning zone (less than 2 hours)
-                    $warningCount++;
-                    if (count($warnings) < 5) {
-                        $warnings[] = [
-                            'id' => $ticket->id,
-                            'subject' => $ticket->subject,
-                            'priority' => $priority,
-                            'time_remaining' => $hoursRemaining,
-                            'client' => $ticket->client?->company_name ?? 'Unknown',
-                        ];
-                    }
+            if ($hoursRemaining < 0) {
+                $breachedCount++;
+                if (count($breached) < 5) {
+                    $breached[] = $this->formatTicketStatus($ticket, $priority, abs($hoursRemaining), 'overdue');
+                }
+            } elseif ($hoursRemaining <= 2) {
+                $warningCount++;
+                if (count($warnings) < 5) {
+                    $warnings[] = $this->formatTicketStatus($ticket, $priority, $hoursRemaining, 'remaining');
                 }
             }
         }
 
-        // Calculate compliance for ALL tickets (both resolved in period and currently active)
-        // First, get resolved tickets that were closed in the selected period
-        $resolvedInPeriod = Ticket::where('company_id', $companyId)
-            ->whereIn('status', ['resolved', 'closed'])
-            ->where('updated_at', '>=', $startDate)
-            ->with(['priorityQueue'])
-            ->get();
+        return compact('breachedCount', 'warningCount', 'breached', 'warnings');
+    }
 
-        // Combine with active tickets for complete picture
-        $allRelevantTickets = $activeTickets->merge($resolvedInPeriod);
+    protected function formatTicketStatus($ticket, $priority, $hours, $type)
+    {
+        $baseData = [
+            'id' => $ticket->id,
+            'subject' => $ticket->subject,
+            'priority' => $priority,
+            'client' => $ticket->client?->company_name ?? 'Unknown',
+        ];
 
+        if ($type === 'overdue') {
+            $baseData['hours_overdue'] = $hours;
+        } else {
+            $baseData['time_remaining'] = $hours;
+        }
+
+        return $baseData;
+    }
+
+    protected function calculateSlaCompliance($allRelevantTickets, $metByPriority)
+    {
         foreach ($allRelevantTickets as $ticket) {
             $priority = strtolower($ticket->priority ?? 'medium');
 
-            if (! isset($metByPriority[$priority])) {
+            if (!isset($metByPriority[$priority])) {
                 continue;
             }
 
             $slaHours = $metByPriority[$priority]['target'];
             $metByPriority[$priority]['total']++;
 
-            // Check if ticket met/is meeting SLA
-            if ($ticket->priorityQueue && $ticket->priorityQueue->sla_deadline) {
-                // Use the actual SLA deadline from priority queue
-                if (in_array($ticket->status, ['resolved', 'closed'])) {
-                    // For closed tickets, check if they were resolved before SLA deadline
-                    $metSla = $ticket->updated_at <= $ticket->priorityQueue->sla_deadline;
-                } else {
-                    // For open tickets, check if they're still within SLA
-                    $metSla = now() <= $ticket->priorityQueue->sla_deadline;
-                }
-
-                if ($metSla) {
-                    $metByPriority[$priority]['met']++;
-                }
-            } else {
-                // Fallback to simple time calculation if no priority queue
-                $responseTime = in_array($ticket->status, ['resolved', 'closed'])
-                    ? $ticket->created_at->diffInHours($ticket->updated_at)
-                    : $ticket->created_at->diffInHours(now());
-
-                if ($responseTime <= $slaHours) {
-                    $metByPriority[$priority]['met']++;
-                }
+            if ($this->ticketMetSla($ticket, $slaHours)) {
+                $metByPriority[$priority]['met']++;
             }
         }
 
-        // Calculate overall compliance
-        $totalMeasured = array_sum(array_column($metByPriority, 'total'));
-        $totalMet = array_sum(array_column($metByPriority, 'met'));
-        $overallCompliance = $totalMeasured > 0 ? round(($totalMet / $totalMeasured) * 100, 1) : 100;
+        return $metByPriority;
+    }
 
-        // Calculate average response times using all relevant tickets
+    protected function ticketMetSla($ticket, $slaHours)
+    {
+        if ($ticket->priorityQueue && $ticket->priorityQueue->sla_deadline) {
+            return $this->checkPriorityQueueSla($ticket);
+        }
+
+        return $this->checkFallbackSla($ticket, $slaHours);
+    }
+
+    protected function checkPriorityQueueSla($ticket)
+    {
+        if (in_array($ticket->status, ['resolved', 'closed'])) {
+            return $ticket->updated_at <= $ticket->priorityQueue->sla_deadline;
+        }
+
+        return now() <= $ticket->priorityQueue->sla_deadline;
+    }
+
+    protected function checkFallbackSla($ticket, $slaHours)
+    {
+        $responseTime = in_array($ticket->status, ['resolved', 'closed'])
+            ? $ticket->created_at->diffInHours($ticket->updated_at)
+            : $ticket->created_at->diffInHours(now());
+
+        return $responseTime <= $slaHours;
+    }
+
+    protected function calculateAverageResponseTimes($allRelevantTickets)
+    {
         $avgResponseTimes = [];
+
         foreach (['critical', 'high', 'medium', 'low'] as $priority) {
             $priorityTickets = $allRelevantTickets->where('priority', $priority);
+            
             if ($priorityTickets->count() > 0) {
-                $totalHours = 0;
-                $count = 0;
-                foreach ($priorityTickets as $ticket) {
-                    if (in_array($ticket->status, ['resolved', 'closed'])) {
-                        // For closed tickets, use actual resolution time
-                        $totalHours += $ticket->created_at->diffInHours($ticket->updated_at);
-                    } else {
-                        // For open tickets, use current elapsed time
-                        $totalHours += $ticket->created_at->diffInHours(now());
-                    }
-                    $count++;
-                }
-                $avgResponseTimes[$priority] = $count > 0 ? round($totalHours / $count, 1) : 0;
+                $avgResponseTimes[$priority] = $this->calculateAverageForPriority($priorityTickets);
             } else {
-                // If no tickets of this priority, show the target as a reference
                 $avgResponseTimes[$priority] = 0;
             }
         }
 
-        $this->slaMetrics = [
-            'overall_compliance' => $overallCompliance,
-            'total_tickets' => $totalTickets,
-            'breached_count' => $breachedCount,
-            'warning_count' => $warningCount,
-            'by_priority' => $metByPriority,
-            'avg_response_times' => $avgResponseTimes,
-        ];
+        return $avgResponseTimes;
+    }
 
-        $this->breachedTickets = $breached;
-        $this->warningTickets = $warnings;
-        $this->loading = false;
+    protected function calculateAverageForPriority($priorityTickets)
+    {
+        $totalHours = 0;
+        $count = 0;
+
+        foreach ($priorityTickets as $ticket) {
+            $totalHours += $this->getTicketResponseTime($ticket);
+            $count++;
+        }
+
+        return $count > 0 ? round($totalHours / $count, 1) : 0;
+    }
+
+    protected function getTicketResponseTime($ticket)
+    {
+        if (in_array($ticket->status, ['resolved', 'closed'])) {
+            return $ticket->created_at->diffInHours($ticket->updated_at);
+        }
+
+        return $ticket->created_at->diffInHours(now());
+    }
+
+    protected function calculateOverallCompliance($metByPriority)
+    {
+        $totalMeasured = array_sum(array_column($metByPriority, 'total'));
+        $totalMet = array_sum(array_column($metByPriority, 'met'));
+
+        return $totalMeasured > 0 ? round(($totalMet / $totalMeasured) * 100, 1) : 100;
     }
 
     /**
