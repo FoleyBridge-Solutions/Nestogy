@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class WarrantyController extends Controller
 {
+    private const NULLABLE_NUMERIC_MIN_ZERO = 'nullable|numeric|min:0';
+
     /**
      * Display a listing of all warranty records (standalone view)
      */
@@ -118,8 +120,8 @@ class WarrantyController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'cost' => 'nullable|numeric|min:0',
-            'renewal_cost' => 'nullable|numeric|min:0',
+            'cost' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'renewal_cost' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'auto_renewal' => 'boolean',
             'contact_email' => 'nullable|email',
             'contact_phone' => 'nullable|string|max:50',
@@ -200,8 +202,8 @@ class WarrantyController extends Controller
                     $query->where('company_id', auth()->user()->company_id);
                 }),
             ],
-            'cost' => 'nullable|numeric|min:0',
-            'renewal_cost' => 'nullable|numeric|min:0',
+            'cost' => self::NULLABLE_NUMERIC_MIN_ZERO,
+            'renewal_cost' => self::NULLABLE_NUMERIC_MIN_ZERO,
             'auto_renewal' => 'boolean',
             'contact_email' => 'nullable|email',
             'contact_phone' => 'nullable|string|max:50',
@@ -360,7 +362,7 @@ class WarrantyController extends Controller
 
         $request->validate([
             'new_end_date' => 'required|date|after:warranty_end_date',
-            'renewal_cost' => 'nullable|numeric|min:0',
+            'renewal_cost' => self::NULLABLE_NUMERIC_MIN_ZERO,
         ]);
 
         // Update current warranty
