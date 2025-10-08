@@ -35,6 +35,8 @@ use Illuminate\Support\Facades\Log;
  */
 class QuoteController extends Controller
 {
+    private const VALIDATION_REQUIRED_ARRAY = 'required|array';
+
     protected $quoteService;
 
     protected $emailService;
@@ -1215,7 +1217,7 @@ class QuoteController extends Controller
 
         $request->validate([
             'conversion_type' => 'required|string|in:contract_only,contract_with_invoice,contract_with_recurring',
-            'contract_data' => 'required|array',
+            'contract_data' => self::VALIDATION_REQUIRED_ARRAY,
             'invoice_data' => 'nullable|array',
             'recurring_data' => 'nullable|array',
         ]);
@@ -1296,7 +1298,7 @@ class QuoteController extends Controller
     {
         $request->validate([
             'quote_id' => 'nullable|exists:quotes,id',
-            'document' => 'required|array',
+            'document' => self::VALIDATION_REQUIRED_ARRAY,
         ]);
 
         try {
@@ -1319,7 +1321,7 @@ class QuoteController extends Controller
     public function previewPdf(Request $request)
     {
         $request->validate([
-            'document' => 'required|array',
+            'document' => self::VALIDATION_REQUIRED_ARRAY,
             'preview' => 'boolean',
         ]);
 
@@ -1361,7 +1363,7 @@ class QuoteController extends Controller
     public function emailPdf(Request $request)
     {
         $request->validate([
-            'document' => 'required|array',
+            'document' => self::VALIDATION_REQUIRED_ARRAY,
             'recipient_email' => 'required|email',
             'subject' => 'nullable|string|max:255',
             'message' => 'nullable|string',
