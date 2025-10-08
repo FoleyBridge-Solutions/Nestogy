@@ -136,7 +136,7 @@ class ClientShow extends Component
         if (! Auth::user()->can('delete', $this->client)) {
             session()->flash('error', 'You are not authorized to delete this client.');
 
-            return;
+            return redirect()->route('clients.show', $this->client);
         }
 
         $clientName = $this->client->name;
