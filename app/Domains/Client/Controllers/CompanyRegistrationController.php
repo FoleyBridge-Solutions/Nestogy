@@ -29,6 +29,8 @@ use Illuminate\Validation\Rules\Password;
  */
 class CompanyRegistrationController extends Controller
 {
+    protected const VALIDATION_PHONE_ZIP = 'nullable|string|max:20';
+
     protected StripeSubscriptionService $stripeService;
 
     protected SubscriptionService $subscriptionService;
@@ -244,11 +246,11 @@ class CompanyRegistrationController extends Controller
             // Company information
             'company_name' => 'required|string|max:255',
             'company_email' => 'required|email|max:255',
-            'company_phone' => 'nullable|string|max:20',
+            'company_phone' => self::VALIDATION_PHONE_ZIP,
             'company_address' => 'nullable|string|max:255',
             'company_city' => 'nullable|string|max:100',
             'company_state' => 'nullable|string|max:100',
-            'company_zip' => 'nullable|string|max:20',
+            'company_zip' => self::VALIDATION_PHONE_ZIP,
             'company_country' => 'nullable|string|max:100',
             'company_website' => 'nullable|url|max:255',
 
@@ -541,7 +543,7 @@ class CompanyRegistrationController extends Controller
                 $validator = Validator::make($request->all(), [
                     'company_name' => 'required|string|max:255',
                     'company_email' => 'required|email|max:255',
-                    'company_phone' => 'nullable|string|max:20',
+                    'company_phone' => self::VALIDATION_PHONE_ZIP,
                 ]);
                 break;
 
