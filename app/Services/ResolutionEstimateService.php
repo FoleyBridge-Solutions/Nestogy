@@ -38,7 +38,7 @@ class ResolutionEstimateService
         }
 
         $activeTickets = Ticket::where('assigned_to', $userId)
-            ->whereIn('status', ['Open', 'In Progress'])
+            ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
             ->count();
 
         if ($activeTickets <= 5) {
@@ -65,7 +65,7 @@ class ResolutionEstimateService
     protected function getQueueFactor(int $clientId): float
     {
         $pendingTickets = Ticket::where('client_id', $clientId)
-            ->whereIn('status', ['Open', 'In Progress'])
+            ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
             ->count();
 
         if ($pendingTickets <= 3) {
@@ -111,7 +111,7 @@ class ResolutionEstimateService
     public function recalculateForTechnician(int $userId): void
     {
         $tickets = Ticket::where('assigned_to', $userId)
-            ->whereIn('status', ['Open', 'In Progress'])
+            ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS])
             ->get();
 
         foreach ($tickets as $ticket) {
