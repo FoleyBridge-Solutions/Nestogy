@@ -57,10 +57,8 @@ class ForceHttpsMiddleware
         $mode = $mode ?? config('security.force_https.mode', 'selective');
 
         // Check if HTTPS should be enforced
-        if ($this->shouldEnforceHttps($request, $mode)) {
-            if (! $request->secure()) {
-                return $this->redirectToHttps($request);
-            }
+        if ($this->shouldEnforceHttps($request, $mode) && ! $request->secure()) {
+            return $this->redirectToHttps($request);
         }
 
         // Force secure URLs in the application
