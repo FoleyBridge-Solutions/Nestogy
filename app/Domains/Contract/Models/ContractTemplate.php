@@ -205,6 +205,11 @@ class ContractTemplate extends Model
     const DELETED_AT = 'archived_at';
 
     /**
+     * Validation rule for nullable array fields.
+     */
+    const VALIDATION_NULLABLE_ARRAY = 'nullable|array';
+
+    /**
      * Get the company's contract configuration registry
      */
     protected function getCompanyConfigRegistry(): ContractConfigurationRegistry
@@ -684,9 +689,9 @@ class ContractTemplate extends Model
             'template_content' => 'required|string',
             'status' => 'required|in:'.implode(',', $statuses ?: ['active']),
             'version' => 'required|string|max:20',
-            'variable_fields' => 'nullable|array',
-            'default_values' => 'nullable|array',
-            'required_fields' => 'nullable|array',
+            'variable_fields' => self::VALIDATION_NULLABLE_ARRAY,
+            'default_values' => self::VALIDATION_NULLABLE_ARRAY,
+            'required_fields' => self::VALIDATION_NULLABLE_ARRAY,
         ];
     }
 
