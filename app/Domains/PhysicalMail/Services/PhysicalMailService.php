@@ -206,17 +206,13 @@ class PhysicalMailService
         }
 
         if (is_string($template)) {
-            // Could be template ID or PostGrid ID
             $templateModel = PhysicalMailTemplate::where('id', $template)
                 ->orWhere('postgrid_id', $template)
                 ->first();
 
-            if ($templateModel) {
-                return $templateModel->id;
-            }
-
-            // Try to fetch from PostGrid
-            return $this->templateService->syncFromPostGrid($template)->id;
+            return $templateModel 
+                ? $templateModel->id 
+                : $this->templateService->syncFromPostGrid($template)->id;
         }
 
         if (is_array($template)) {
