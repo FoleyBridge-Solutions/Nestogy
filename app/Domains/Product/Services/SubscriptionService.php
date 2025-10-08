@@ -127,20 +127,14 @@ class SubscriptionService
     {
         $date = $fromDate ? Carbon::parse($fromDate) : now();
 
-        switch ($cycle) {
-            case 'weekly':
-                return $date->addWeek();
-            case 'monthly':
-                return $date->addMonth();
-            case 'quarterly':
-                return $date->addQuarters(1);
-            case 'semi_annually':
-                return $date->addMonths(6);
-            case 'annually':
-                return $date->addYear();
-            default:
-                return $date->addMonth();
-        }
+        return match ($cycle) {
+            'weekly' => $date->addWeek(),
+            'monthly' => $date->addMonth(),
+            'quarterly' => $date->addQuarters(1),
+            'semi_annually' => $date->addMonths(6),
+            'annually' => $date->addYear(),
+            default => $date->addMonth(),
+        };
     }
 
     public function suspendSubscription(Subscription $subscription): Subscription
