@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class GeneralSettingsRequest extends FormRequest
 {
+    private const NULLABLE_ARRAY = 'nullable|array';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -23,7 +25,7 @@ class GeneralSettingsRequest extends FormRequest
             // Company Information
             'company_name' => 'required|string|max:255',
             'company_logo' => 'nullable|string|max:255',
-            'company_colors' => 'nullable|array',
+            'company_colors' => self::NULLABLE_ARRAY,
             'company_colors.primary' => 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
             'company_colors.secondary' => 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
             'company_colors.accent' => 'nullable|string|regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/',
@@ -36,37 +38,37 @@ class GeneralSettingsRequest extends FormRequest
             'tax_id' => 'nullable|string|max:50',
 
             // Business Operations
-            'business_hours' => 'nullable|array',
-            'business_hours.monday' => 'nullable|array',
+            'business_hours' => self::NULLABLE_ARRAY,
+            'business_hours.monday' => self::NULLABLE_ARRAY,
             'business_hours.monday.start' => 'nullable|date_format:H:i',
             'business_hours.monday.end' => 'nullable|date_format:H:i|after:business_hours.monday.start',
             'business_hours.monday.enabled' => 'boolean',
-            'business_hours.tuesday' => 'nullable|array',
+            'business_hours.tuesday' => self::NULLABLE_ARRAY,
             'business_hours.tuesday.start' => 'nullable|date_format:H:i',
             'business_hours.tuesday.end' => 'nullable|date_format:H:i|after:business_hours.tuesday.start',
             'business_hours.tuesday.enabled' => 'boolean',
-            'business_hours.wednesday' => 'nullable|array',
+            'business_hours.wednesday' => self::NULLABLE_ARRAY,
             'business_hours.wednesday.start' => 'nullable|date_format:H:i',
             'business_hours.wednesday.end' => 'nullable|date_format:H:i|after:business_hours.wednesday.start',
             'business_hours.wednesday.enabled' => 'boolean',
-            'business_hours.thursday' => 'nullable|array',
+            'business_hours.thursday' => self::NULLABLE_ARRAY,
             'business_hours.thursday.start' => 'nullable|date_format:H:i',
             'business_hours.thursday.end' => 'nullable|date_format:H:i|after:business_hours.thursday.start',
             'business_hours.thursday.enabled' => 'boolean',
-            'business_hours.friday' => 'nullable|array',
+            'business_hours.friday' => self::NULLABLE_ARRAY,
             'business_hours.friday.start' => 'nullable|date_format:H:i',
             'business_hours.friday.end' => 'nullable|date_format:H:i|after:business_hours.friday.start',
             'business_hours.friday.enabled' => 'boolean',
-            'business_hours.saturday' => 'nullable|array',
+            'business_hours.saturday' => self::NULLABLE_ARRAY,
             'business_hours.saturday.start' => 'nullable|date_format:H:i',
             'business_hours.saturday.end' => 'nullable|date_format:H:i|after:business_hours.saturday.start',
             'business_hours.saturday.enabled' => 'boolean',
-            'business_hours.sunday' => 'nullable|array',
+            'business_hours.sunday' => self::NULLABLE_ARRAY,
             'business_hours.sunday.start' => 'nullable|date_format:H:i',
             'business_hours.sunday.end' => 'nullable|date_format:H:i|after:business_hours.sunday.start',
             'business_hours.sunday.enabled' => 'boolean',
 
-            'company_holidays' => 'nullable|array',
+            'company_holidays' => self::NULLABLE_ARRAY,
             'company_holidays.*' => 'date_format:Y-m-d',
 
             // Localization
@@ -76,11 +78,11 @@ class GeneralSettingsRequest extends FormRequest
             'date_format' => 'required|string|in:Y-m-d,m/d/Y,d/m/Y,M d\\, Y,d M Y,j F Y',
 
             // Custom Fields
-            'custom_fields' => 'nullable|array',
+            'custom_fields' => self::NULLABLE_ARRAY,
             'custom_fields.*.name' => 'string|max:100',
             'custom_fields.*.type' => 'string|in:text,number,email,date,boolean,select,textarea',
             'custom_fields.*.required' => 'boolean',
-            'custom_fields.*.options' => 'nullable|array',
+            'custom_fields.*.options' => self::NULLABLE_ARRAY,
 
             // Theme and Display
             'theme' => 'required|string|in:blue,green,red,purple,orange,dark,light,corporate',
