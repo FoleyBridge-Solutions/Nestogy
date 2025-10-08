@@ -52,13 +52,15 @@ class Expense extends Model
         'metadata',
     ];
 
+    const DECIMAL_CAST = 'decimal:2';
+
     protected $casts = [
-        'amount' => 'decimal:2',
-        'markup_percentage' => 'decimal:2',
-        'markup_amount' => 'decimal:2',
-        'total_billable_amount' => 'decimal:2',
-        'mileage' => 'decimal:2',
-        'mileage_rate' => 'decimal:2',
+        'amount' => self::DECIMAL_CAST,
+        'markup_percentage' => self::DECIMAL_CAST,
+        'markup_amount' => self::DECIMAL_CAST,
+        'total_billable_amount' => self::DECIMAL_CAST,
+        'mileage' => self::DECIMAL_CAST,
+        'mileage_rate' => self::DECIMAL_CAST,
         'expense_date' => 'date',
         'invoiced_at' => 'datetime',
         'recurring_until' => 'date',
