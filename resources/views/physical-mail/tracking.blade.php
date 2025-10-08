@@ -137,9 +137,9 @@
                         <flux:table.row>
                             <flux:table.cell>
                                 @if($order->tracking_number)
-                                    <a href="#" onclick="showTracking('{{ $order->id }}')" class="text-blue-500 hover:underline">
+                                    <button type="button" onclick="showTracking('{{ $order->id }}')" class="text-blue-500 hover:underline">
                                         {{ $order->tracking_number }}
-                                    </a>
+                                    </button>
                                 @else
                                     <flux:text size="sm" class="text-zinc-400">{{ Str::limit($order->postgrid_id ?? 'Pending', 12) }}</flux:text>
                                 @endif
