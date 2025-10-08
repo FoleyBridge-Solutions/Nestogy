@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Log;
  */
 class RecurringBillingService
 {
+    const SERVICE_TIER_HOSTED_PBX = 'Hosted PBX';
+
     protected $voipTaxService;
 
     protected $voipUsageService;
@@ -543,7 +545,7 @@ class RecurringBillingService
         $itemName = strtolower($item->name);
 
         if (str_contains($itemName, 'pbx') || str_contains($itemName, 'hosted')) {
-            return 'Hosted PBX';
+            return self::SERVICE_TIER_HOSTED_PBX;
         }
 
         if (str_contains($itemName, 'sip') || str_contains($itemName, 'trunk')) {
@@ -567,7 +569,7 @@ class RecurringBillingService
     protected function getDefaultAllowanceForTier(string $tierName): array
     {
         $defaults = [
-            'Hosted PBX' => ['minutes' => 1000, 'seats' => 10],
+            self::SERVICE_TIER_HOSTED_PBX => ['minutes' => 1000, 'seats' => 10],
             'SIP Trunking' => ['minutes' => 5000, 'channels' => 5],
             'VoIP Lines' => ['minutes' => 500, 'lines' => 1],
             'Unified Communications' => ['minutes' => 2000, 'users' => 25],
@@ -582,7 +584,7 @@ class RecurringBillingService
     protected function getDefaultOverageRate(string $tierName): float
     {
         $defaults = [
-            'Hosted PBX' => 0.05,
+            self::SERVICE_TIER_HOSTED_PBX => 0.05,
             'SIP Trunking' => 0.03,
             'VoIP Lines' => 0.08,
             'Unified Communications' => 0.04,
