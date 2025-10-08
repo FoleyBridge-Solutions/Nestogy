@@ -11,6 +11,8 @@ class ClientVendor extends Model
 {
     use BelongsToCompany, HasFactory, SoftDeletes;
 
+    private const CAST_DECIMAL_2 = 'decimal:2';
+
     protected $fillable = [
         'company_id',
         'client_id',
@@ -66,9 +68,9 @@ class ClientVendor extends Model
         'start_date' => 'date',
         'contract_end_date' => 'date',
         'last_order_date' => 'date',
-        'contract_value' => 'decimal:2',
-        'total_spent' => 'decimal:2',
-        'approval_limit' => 'decimal:2',
+        'contract_value' => self::CAST_DECIMAL_2,
+        'total_spent' => self::CAST_DECIMAL_2,
+        'approval_limit' => self::CAST_DECIMAL_2,
         'performance_rating' => 'integer',
         'reliability_rating' => 'integer',
         'cost_rating' => 'integer',
