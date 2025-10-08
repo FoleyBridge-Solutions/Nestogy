@@ -21,7 +21,8 @@ $classes = Flux::classes()
     ;
 @endphp
 
-<?php switch ((int) $level): case(1): ?>
+<?php switch ((int) $level):
+    case(1): ?>
         <h1 {{ $attributes->class($classes) }} data-flux-heading>{{ $slot }}</h1>
 
         @break
