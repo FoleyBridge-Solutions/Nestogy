@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
+use App\Domains\Financial\Exceptions\FccApiException;
 use App\Models\TaxApiQueryCache;
 use Carbon\Carbon;
 use Exception;
@@ -134,7 +135,7 @@ class FccApiClient extends BaseApiClient
                     ->get("{$this->areaApiUrl}/area", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('FCC Area API failed: '.$response->body());
+                    throw new FccApiException('FCC Area API failed: '.$response->body());
                 }
 
                 $data = $response->json();
@@ -182,7 +183,7 @@ class FccApiClient extends BaseApiClient
                     ->get("{$this->areaApiUrl}/block/find", $parameters);
 
                 if (! $response->successful()) {
-                    throw new Exception('FCC Census Block API failed: '.$response->body());
+                    throw new FccApiException('FCC Census Block API failed: '.$response->body());
                 }
 
                 $data = $response->json();
