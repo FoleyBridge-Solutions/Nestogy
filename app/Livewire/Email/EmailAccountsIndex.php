@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Email;
 
+use App\Domains\Email\Exceptions\EmailAccountNotFoundException;
+use App\Domains\Email\Exceptions\EmailAccountUnauthorizedException;
 use App\Domains\Email\Models\EmailAccount;
 use App\Domains\Email\Services\OAuthTokenManager;
 use App\Domains\Email\Services\UnifiedEmailSyncService;
@@ -62,7 +64,7 @@ class EmailAccountsIndex extends Component
 
             // Authorization check
             if ($account->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountUnauthorizedException('sync', 'email account');
             }
 
             error_log("LIVEWIRE_DEBUG: Starting sync for account {$accountId}");
@@ -106,7 +108,7 @@ class EmailAccountsIndex extends Component
             $account = EmailAccount::findOrFail($accountId);
 
             if ($account->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountUnauthorizedException('test', 'email account');
             }
 
             // Test based on connection type
@@ -148,7 +150,7 @@ class EmailAccountsIndex extends Component
             $account = EmailAccount::findOrFail($accountId);
 
             if ($account->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountUnauthorizedException('set as default', 'email account');
             }
 
             // Remove default from all other accounts
@@ -193,11 +195,11 @@ class EmailAccountsIndex extends Component
     {
         try {
             if (! $this->accountToDelete) {
-                throw new \Exception('No account selected for deletion');
+                throw new EmailAccountNotFoundException('No account selected for deletion');
             }
 
             if ($this->accountToDelete->user_id !== Auth::id()) {
-                throw new \Exception('Unauthorized');
+                throw new EmailAccountUnauthorizedException('delete', 'email account');
             }
 
             $name = $this->accountToDelete->name;
