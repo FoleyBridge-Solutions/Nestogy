@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class BillingFinancialSettingsRequest extends FormRequest
 {
+    private const PERCENTAGE_VALIDATION_RULE = 'nullable|numeric|min:0|max:100';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -30,7 +32,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             // Tax Configuration
             'tax_calculation_settings' => 'nullable|array',
             'tax_calculation_settings.enabled' => 'boolean',
-            'tax_calculation_settings.default_rate' => 'nullable|numeric|min:0|max:100',
+            'tax_calculation_settings.default_rate' => self::PERCENTAGE_VALIDATION_RULE,
             'tax_calculation_settings.compound_tax' => 'boolean',
             'tax_calculation_settings.tax_inclusive' => 'boolean',
             'tax_engine_provider' => 'nullable|string|in:avalara,taxjar,taxcloud,manual',
@@ -113,7 +115,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'late_fee_settings' => 'nullable|array',
             'late_fee_settings.enabled' => 'boolean',
             'late_fee_settings.type' => 'nullable|string|in:percentage,fixed',
-            'late_fee_settings.percentage' => 'nullable|numeric|min:0|max:100',
+            'late_fee_settings.percentage' => self::PERCENTAGE_VALIDATION_RULE,
             'late_fee_settings.fixed_amount' => 'nullable|numeric|min:0',
             'late_fee_settings.grace_period_days' => 'integer|min:0|max:30',
             'late_fee_settings.max_fees' => 'integer|min:0|max:10',
@@ -192,7 +194,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'invoice_from_name' => 'nullable|string|max:255',
             'invoice_from_email' => 'nullable|email|max:255',
             'invoice_late_fee_enable' => 'boolean',
-            'invoice_late_fee_percent' => 'nullable|numeric|min:0|max:100',
+            'invoice_late_fee_percent' => self::PERCENTAGE_VALIDATION_RULE,
 
             // Quote Settings
             'quote_prefix' => 'nullable|string|max:10',
@@ -211,7 +213,7 @@ class BillingFinancialSettingsRequest extends FormRequest
             'default_net_terms' => 'nullable|integer|min:0|max:365',
             'default_hourly_rate' => 'nullable|numeric|min:0|max:9999.99',
             'profitability_tracking_settings' => 'nullable|array',
-            'profitability_tracking_settings.goal_margin' => 'nullable|numeric|min:0|max:100',
+            'profitability_tracking_settings.goal_margin' => self::PERCENTAGE_VALIDATION_RULE,
 
             // Invoice Reminders
             'recurring_auto_send_invoice' => 'boolean',
