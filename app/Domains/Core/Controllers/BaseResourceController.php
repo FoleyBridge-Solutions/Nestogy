@@ -12,6 +12,8 @@ use Illuminate\View\View;
 
 abstract class BaseResourceController extends Controller
 {
+    protected const ROUTE_SHOW = '.show';
+
     protected BaseService $service;
 
     protected string $resourceName;
@@ -90,7 +92,7 @@ abstract class BaseResourceController extends Controller
             }
 
             return redirect()
-                ->route($this->routePrefix.'.show', $item)
+                ->route($this->routePrefix.self::ROUTE_SHOW, $item)
                 ->with('success', ucfirst($this->resourceName).' created successfully.');
 
         } catch (\Exception $e) {
@@ -153,7 +155,7 @@ abstract class BaseResourceController extends Controller
             }
 
             return redirect()
-                ->route($this->routePrefix.'.show', $item)
+                ->route($this->routePrefix.self::ROUTE_SHOW, $item)
                 ->with('success', ucfirst($this->resourceName).' updated successfully.');
 
         } catch (\Exception $e) {
@@ -249,7 +251,7 @@ abstract class BaseResourceController extends Controller
             }
 
             return redirect()
-                ->route($this->routePrefix.'.show', $item)
+                ->route($this->routePrefix.self::ROUTE_SHOW, $item)
                 ->with('success', ucfirst($this->resourceName).' restored successfully.');
 
         } catch (\Exception $e) {
