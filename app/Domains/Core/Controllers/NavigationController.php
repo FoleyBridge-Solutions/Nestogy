@@ -259,443 +259,418 @@ class NavigationController extends Controller
             return response()->json(['results' => []]);
         }
 
+        $smartResult = $this->handleSmartSearchPatterns($query);
+        if ($smartResult) {
+            return response()->json(['results' => $smartResult]);
+        }
+
+        $results = $this->performDomainSearch($query, $domain, $clientId);
+
+        return response()->json(['results' => $results]);
+    }
+
+    protected function performDomainSearch(string $query, string $domain, $clientId): array
+    {
         $results = [];
 
         try {
-            // Handle smart search patterns first
-            $smartResult = $this->handleSmartSearchPatterns($query);
-            if ($smartResult) {
-                return response()->json(['results' => $smartResult]);
-            }
-            // Search tickets
-            if ($domain === 'all' || $domain === 'tickets') {
-                $tickets = \App\Domains\Ticket\Models\Ticket::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('title', 'like', "%{$query}%")
-                            ->orWhere('description', 'like', "%{$query}%")
-                            ->orWhere('id', 'like', "%{$query}%");
-                    });
+            $searchMethods = [
+                'tickets' => 'searchTickets',
+                'clients' => 'searchClients',
+                'financial' => ['searchInvoices', 'searchQuotes', 'searchContracts', 'searchExpenses', 'searchPayments'],
+                'assets' => 'searchAssets',
+                'projects' => 'searchProjects',
+                'users' => 'searchUsers',
+                'products' => 'searchProducts',
+                'services' => 'searchServices',
+                'knowledge' => 'searchKnowledgeArticles',
+            ];
 
-                if ($clientId) {
-                    $tickets->where('client_id', $clientId);
+            foreach ($searchMethods as $searchDomain => $methods) {
+                if ($domain !== 'all' && $domain !== $searchDomain) {
+                    continue;
                 }
 
-                $tickets = $tickets->limit(5)->get();
-
-                foreach ($tickets as $ticket) {
-                    $results[] = [
-                        'type' => 'ticket',
-                        'icon' => '🎫',
-                        'title' => "#{$ticket->id} - {$ticket->title}",
-                        'subtitle' => $ticket->client->name ?? 'No Client',
-                        'url' => route('tickets.show', $ticket->id),
-                        'meta' => [
-                            'status' => $ticket->status,
-                            'priority' => $ticket->priority,
-                        ],
-                    ];
+                $methods = is_array($methods) ? $methods : [$methods];
+                foreach ($methods as $method) {
+                    $results = array_merge($results, $this->$method($query, $clientId));
                 }
             }
 
-            // Search clients
             if ($domain === 'all' || $domain === 'clients') {
-                $clients = \App\Models\Client::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('name', 'like', "%{$query}%")
-                            ->orWhere('email', 'like', "%{$query}%")
-                            ->orWhere('phone', 'like', "%{$query}%");
-                    })
-                    ->limit(5)
-                    ->get();
-
-                foreach ($clients as $client) {
-                    $results[] = [
-                        'type' => 'client',
-                        'icon' => '👥',
-                        'title' => $client->name,
-                        'subtitle' => $client->email,
-                        'url' => route('clients.index'),
-                        'meta' => [
-                            'status' => $client->status,
-                        ],
-                    ];
-                }
+                $results = array_merge(
+                    $results,
+                    $this->searchITDocumentation($query, $clientId),
+                    $this->searchClientContacts($query, $clientId)
+                );
             }
-
-            // Search invoices
-            if ($domain === 'all' || $domain === 'financial') {
-                $invoices = \App\Models\Invoice::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('invoice_number', 'like', "%{$query}%")
-                            ->orWhere('id', 'like', "%{$query}%");
-                    });
-
-                if ($clientId) {
-                    $invoices->where('client_id', $clientId);
-                }
-
-                $invoices = $invoices->limit(5)->get();
-
-                foreach ($invoices as $invoice) {
-                    $results[] = [
-                        'type' => 'invoice',
-                        'icon' => '💰',
-                        'title' => "Invoice #{$invoice->invoice_number}",
-                        'subtitle' => $invoice->client->name ?? 'No Client',
-                        'url' => route('financial.invoices.show', $invoice->id),
-                        'meta' => [
-                            'status' => $invoice->status,
-                            'amount' => '$'.number_format($invoice->total, 2),
-                        ],
-                    ];
-                }
-            }
-
-            // Search quotes
-            if ($domain === 'all' || $domain === 'financial') {
-                $quotes = \App\Models\Quote::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('quote_number', 'like', "%{$query}%")
-                            ->orWhere('id', 'like', "%{$query}%")
-                            ->orWhere('description', 'like', "%{$query}%");
-                    });
-
-                if ($clientId) {
-                    $quotes->where('client_id', $clientId);
-                }
-
-                $quotes = $quotes->limit(5)->get();
-
-                foreach ($quotes as $quote) {
-                    $results[] = [
-                        'type' => 'quote',
-                        'icon' => '📝',
-                        'title' => "Quote #{$quote->quote_number}",
-                        'subtitle' => $quote->client->name ?? 'No Client',
-                        'url' => route('financial.quotes.show', $quote->id),
-                        'meta' => [
-                            'status' => $quote->status,
-                            'amount' => '$'.number_format($quote->total, 2),
-                        ],
-                    ];
-                }
-            }
-
-            // Search assets
-            if ($domain === 'all' || $domain === 'assets') {
-                $assets = \App\Models\Asset::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('name', 'like', "%{$query}%")
-                            ->orWhere('asset_tag', 'like', "%{$query}%")
-                            ->orWhere('serial_number', 'like', "%{$query}%")
-                            ->orWhere('model', 'like', "%{$query}%");
-                    });
-
-                if ($clientId) {
-                    $assets->where('client_id', $clientId);
-                }
-
-                $assets = $assets->limit(5)->get();
-
-                foreach ($assets as $asset) {
-                    $results[] = [
-                        'type' => 'asset',
-                        'icon' => '🖥️',
-                        'title' => $asset->name,
-                        'subtitle' => "Tag: {$asset->asset_tag} | {$asset->model}",
-                        'url' => route('assets.show', $asset->id),
-                        'meta' => [
-                            'status' => $asset->status,
-                        ],
-                    ];
-                }
-            }
-
-            // Search projects
-            if ($domain === 'all' || $domain === 'projects') {
-                $projects = \App\Models\Project::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('name', 'like', "%{$query}%")
-                            ->orWhere('description', 'like', "%{$query}%")
-                            ->orWhere('project_code', 'like', "%{$query}%");
-                    });
-
-                if ($clientId) {
-                    $projects->where('client_id', $clientId);
-                }
-
-                $projects = $projects->limit(5)->get();
-
-                foreach ($projects as $project) {
-                    $results[] = [
-                        'type' => 'project',
-                        'icon' => '📊',
-                        'title' => $project->name,
-                        'subtitle' => $project->client->name ?? 'Internal Project',
-                        'url' => route('projects.show', $project->id),
-                        'meta' => [
-                            'status' => $project->status,
-                        ],
-                    ];
-                }
-            }
-
-            // Search contracts
-            if ($domain === 'all' || $domain === 'financial') {
-                $contracts = \App\Domains\Contract\Models\Contract::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('contract_number', 'like', "%{$query}%")
-                            ->orWhere('title', 'like', "%{$query}%")
-                            ->orWhere('description', 'like', "%{$query}%");
-                    });
-
-                if ($clientId) {
-                    $contracts->where('client_id', $clientId);
-                }
-
-                $contracts = $contracts->limit(5)->get();
-
-                foreach ($contracts as $contract) {
-                    $results[] = [
-                        'type' => 'contract',
-                        'icon' => '📄',
-                        'title' => $contract->title ?? "Contract #{$contract->contract_number}",
-                        'subtitle' => $contract->client->name ?? 'No Client',
-                        'url' => route('financial.contracts.show', $contract->id),
-                        'meta' => [
-                            'status' => $contract->status,
-                        ],
-                    ];
-                }
-            }
-
-            // Search expenses
-            if ($domain === 'all' || $domain === 'financial') {
-                $expenses = \App\Models\Expense::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('description', 'like', "%{$query}%")
-                            ->orWhere('vendor', 'like', "%{$query}%")
-                            ->orWhere('reference', 'like', "%{$query}%");
-                    })
-                    ->limit(5)
-                    ->get();
-
-                foreach ($expenses as $expense) {
-                    $results[] = [
-                        'type' => 'expense',
-                        'icon' => '💸',
-                        'title' => $expense->description,
-                        'subtitle' => $expense->vendor ?? 'No Vendor',
-                        'url' => route('financial.expenses.show', $expense->id),
-                        'meta' => [
-                            'status' => $expense->status,
-                            'amount' => '$'.number_format($expense->amount, 2),
-                        ],
-                    ];
-                }
-            }
-
-            // Search payments
-            if ($domain === 'all' || $domain === 'financial') {
-                $payments = \App\Models\Payment::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('reference', 'like', "%{$query}%")
-                            ->orWhere('notes', 'like', "%{$query}%");
-                    });
-
-                if ($clientId) {
-                    $payments->where('client_id', $clientId);
-                }
-
-                $payments = $payments->limit(5)->get();
-
-                foreach ($payments as $payment) {
-                    $results[] = [
-                        'type' => 'payment',
-                        'icon' => '💳',
-                        'title' => "Payment #{$payment->id}",
-                        'subtitle' => $payment->client->name ?? 'No Client',
-                        'url' => route('financial.payments.show', $payment->id),
-                        'meta' => [
-                            'status' => $payment->status,
-                            'amount' => '$'.number_format($payment->amount, 2),
-                        ],
-                    ];
-                }
-            }
-
-            // Search users
-            if ($domain === 'all' || $domain === 'users') {
-                $users = \App\Models\User::where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('name', 'like', "%{$query}%")
-                            ->orWhere('email', 'like', "%{$query}%");
-                    })
-                    ->limit(5)
-                    ->get();
-
-                foreach ($users as $user) {
-                    $results[] = [
-                        'type' => 'user',
-                        'icon' => '👤',
-                        'title' => $user->name,
-                        'subtitle' => $user->email,
-                        'url' => route('users.show', $user->id),
-                        'meta' => [
-                            'status' => $user->is_active ? 'active' : 'inactive',
-                        ],
-                    ];
-                }
-            }
-
-            // Search products
-            if ($domain === 'all' || $domain === 'products') {
-                $products = \App\Models\Product::products()
-                    ->where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('name', 'like', "%{$query}%")
-                            ->orWhere('description', 'like', "%{$query}%")
-                            ->orWhere('sku', 'like', "%{$query}%");
-                    })
-                    ->limit(5)
-                    ->get();
-
-                foreach ($products as $product) {
-                    $results[] = [
-                        'type' => 'product',
-                        'icon' => '📦',
-                        'title' => $product->name,
-                        'subtitle' => $product->description ?: 'Product - '.$product->getFormattedPrice(),
-                        'url' => route('products.show', $product->id),
-                        'meta' => [
-                            'status' => $product->is_active ? 'active' : 'inactive',
-                            'price' => $product->getFormattedPrice(),
-                        ],
-                    ];
-                }
-            }
-
-            // Search services
-            if ($domain === 'all' || $domain === 'services') {
-                $services = \App\Models\Product::services()
-                    ->where('company_id', auth()->user()->company_id)
-                    ->where(function ($q) use ($query) {
-                        $q->where('name', 'like', "%{$query}%")
-                            ->orWhere('description', 'like', "%{$query}%")
-                            ->orWhere('sku', 'like', "%{$query}%");
-                    })
-                    ->limit(5)
-                    ->get();
-
-                foreach ($services as $service) {
-                    $results[] = [
-                        'type' => 'service',
-                        'icon' => '🔧',
-                        'title' => $service->name,
-                        'subtitle' => $service->description ?: 'Service - '.$service->getFormattedPrice(),
-                        'url' => route('services.show', $service->id),
-                        'meta' => [
-                            'status' => $service->is_active ? 'active' : 'inactive',
-                            'price' => $service->getFormattedPrice(),
-                        ],
-                    ];
-                }
-            }
-
-            // Search knowledge base articles (if exists)
-            if ($domain === 'all' || $domain === 'knowledge') {
-                try {
-                    $articles = \App\Models\KbArticle::where('company_id', auth()->user()->company_id)
-                        ->where(function ($q) use ($query) {
-                            $q->where('title', 'like', "%{$query}%")
-                                ->orWhere('content', 'like', "%{$query}%")
-                                ->orWhere('tags', 'like', "%{$query}%");
-                        })
-                        ->limit(5)
-                        ->get();
-
-                    foreach ($articles as $article) {
-                        $results[] = [
-                            'type' => 'article',
-                            'icon' => '📚',
-                            'title' => $article->title,
-                            'subtitle' => Str::limit($article->content, 100),
-                            'url' => route('knowledge.articles.show', $article->id),
-                            'meta' => [
-                                'status' => $article->status,
-                            ],
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    // Model might not exist
-                }
-            }
-
-            // Search IT Documentation
-            if ($domain === 'all' || $domain === 'clients') {
-                try {
-                    $docs = \App\Domains\Client\Models\ClientITDocumentation::whereHas('client', function ($q) {
-                        $q->where('company_id', auth()->user()->company_id);
-                    })
-                        ->where(function ($q) use ($query) {
-                            $q->where('network_diagram', 'like', "%{$query}%")
-                                ->orWhere('server_info', 'like', "%{$query}%")
-                                ->orWhere('network_equipment', 'like', "%{$query}%");
-                        });
-
-                    if ($clientId) {
-                        $docs->where('client_id', $clientId);
-                    }
-
-                    $docs = $docs->limit(5)->get();
-
-                    foreach ($docs as $doc) {
-                        $results[] = [
-                            'type' => 'it-doc',
-                            'icon' => '🔧',
-                            'title' => "IT Documentation - {$doc->client->name}",
-                            'subtitle' => 'Network & Infrastructure Documentation',
-                            'url' => route('clients.it-documentation.show', [$doc->client_id, $doc->id]),
-                            'meta' => [],
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    // Model might not exist
-                }
-            }
-
-            // Search client contacts
-            if (($domain === 'all' || $domain === 'clients') && $clientId) {
-                try {
-                    $contacts = \App\Domains\Client\Models\ClientContact::where('client_id', $clientId)
-                        ->where(function ($q) use ($query) {
-                            $q->where('name', 'like', "%{$query}%")
-                                ->orWhere('email', 'like', "%{$query}%")
-                                ->orWhere('phone', 'like', "%{$query}%");
-                        })
-                        ->limit(5)
-                        ->get();
-
-                    foreach ($contacts as $contact) {
-                        $results[] = [
-                            'type' => 'contact',
-                            'icon' => '📧',
-                            'title' => $contact->name,
-                            'subtitle' => "{$contact->email} | {$contact->phone}",
-                            'url' => route('clients.contacts.show', [$contact->client_id, $contact->id]),
-                            'meta' => [],
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    // Model might not exist
-                }
-            }
-
         } catch (\Exception $e) {
             \Log::error('Search error: '.$e->getMessage());
         }
 
-        return response()->json(['results' => $results]);
+        return $results;
+    }
+
+    protected function searchTickets(string $query, $clientId): array
+    {
+        $tickets = \App\Domains\Ticket\Models\Ticket::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('title', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhere('id', 'like', "%{$query}%");
+            })
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->limit(5)
+            ->get();
+
+        return $tickets->map(fn($ticket) => [
+            'type' => 'ticket',
+            'icon' => '🎫',
+            'title' => "#{$ticket->id} - {$ticket->title}",
+            'subtitle' => $ticket->client->name ?? 'No Client',
+            'url' => route('tickets.show', $ticket->id),
+            'meta' => [
+                'status' => $ticket->status,
+                'priority' => $ticket->priority,
+            ],
+        ])->toArray();
+    }
+
+    protected function searchClients(string $query, $clientId): array
+    {
+        $clients = \App\Models\Client::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('email', 'like', "%{$query}%")
+                    ->orWhere('phone', 'like', "%{$query}%");
+            })
+            ->limit(5)
+            ->get();
+
+        return $clients->map(fn($client) => [
+            'type' => 'client',
+            'icon' => '👥',
+            'title' => $client->name,
+            'subtitle' => $client->email,
+            'url' => route('clients.index'),
+            'meta' => ['status' => $client->status],
+        ])->toArray();
+    }
+
+    protected function searchInvoices(string $query, $clientId): array
+    {
+        $invoices = \App\Models\Invoice::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('invoice_number', 'like', "%{$query}%")
+                    ->orWhere('id', 'like', "%{$query}%");
+            })
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->limit(5)
+            ->get();
+
+        return $invoices->map(fn($invoice) => [
+            'type' => 'invoice',
+            'icon' => '💰',
+            'title' => "Invoice #{$invoice->invoice_number}",
+            'subtitle' => $invoice->client->name ?? 'No Client',
+            'url' => route('financial.invoices.show', $invoice->id),
+            'meta' => [
+                'status' => $invoice->status,
+                'amount' => '$'.number_format($invoice->total, 2),
+            ],
+        ])->toArray();
+    }
+
+    protected function searchQuotes(string $query, $clientId): array
+    {
+        $quotes = \App\Models\Quote::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('quote_number', 'like', "%{$query}%")
+                    ->orWhere('id', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
+            })
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->limit(5)
+            ->get();
+
+        return $quotes->map(fn($quote) => [
+            'type' => 'quote',
+            'icon' => '📝',
+            'title' => "Quote #{$quote->quote_number}",
+            'subtitle' => $quote->client->name ?? 'No Client',
+            'url' => route('financial.quotes.show', $quote->id),
+            'meta' => [
+                'status' => $quote->status,
+                'amount' => '$'.number_format($quote->total, 2),
+            ],
+        ])->toArray();
+    }
+
+    protected function searchAssets(string $query, $clientId): array
+    {
+        $assets = \App\Models\Asset::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('asset_tag', 'like', "%{$query}%")
+                    ->orWhere('serial_number', 'like', "%{$query}%")
+                    ->orWhere('model', 'like', "%{$query}%");
+            })
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->limit(5)
+            ->get();
+
+        return $assets->map(fn($asset) => [
+            'type' => 'asset',
+            'icon' => '🖥️',
+            'title' => $asset->name,
+            'subtitle' => "Tag: {$asset->asset_tag} | {$asset->model}",
+            'url' => route('assets.show', $asset->id),
+            'meta' => ['status' => $asset->status],
+        ])->toArray();
+    }
+
+    protected function searchProjects(string $query, $clientId): array
+    {
+        $projects = \App\Models\Project::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhere('project_code', 'like', "%{$query}%");
+            })
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->limit(5)
+            ->get();
+
+        return $projects->map(fn($project) => [
+            'type' => 'project',
+            'icon' => '📊',
+            'title' => $project->name,
+            'subtitle' => $project->client->name ?? 'Internal Project',
+            'url' => route('projects.show', $project->id),
+            'meta' => ['status' => $project->status],
+        ])->toArray();
+    }
+
+    protected function searchContracts(string $query, $clientId): array
+    {
+        $contracts = \App\Domains\Contract\Models\Contract::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('contract_number', 'like', "%{$query}%")
+                    ->orWhere('title', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
+            })
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->limit(5)
+            ->get();
+
+        return $contracts->map(fn($contract) => [
+            'type' => 'contract',
+            'icon' => '📄',
+            'title' => $contract->title ?? "Contract #{$contract->contract_number}",
+            'subtitle' => $contract->client->name ?? 'No Client',
+            'url' => route('financial.contracts.show', $contract->id),
+            'meta' => ['status' => $contract->status],
+        ])->toArray();
+    }
+
+    protected function searchExpenses(string $query, $clientId): array
+    {
+        $expenses = \App\Models\Expense::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('description', 'like', "%{$query}%")
+                    ->orWhere('vendor', 'like', "%{$query}%")
+                    ->orWhere('reference', 'like', "%{$query}%");
+            })
+            ->limit(5)
+            ->get();
+
+        return $expenses->map(fn($expense) => [
+            'type' => 'expense',
+            'icon' => '💸',
+            'title' => $expense->description,
+            'subtitle' => $expense->vendor ?? 'No Vendor',
+            'url' => route('financial.expenses.show', $expense->id),
+            'meta' => [
+                'status' => $expense->status,
+                'amount' => '$'.number_format($expense->amount, 2),
+            ],
+        ])->toArray();
+    }
+
+    protected function searchPayments(string $query, $clientId): array
+    {
+        $payments = \App\Models\Payment::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('reference', 'like', "%{$query}%")
+                    ->orWhere('notes', 'like', "%{$query}%");
+            })
+            ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+            ->limit(5)
+            ->get();
+
+        return $payments->map(fn($payment) => [
+            'type' => 'payment',
+            'icon' => '💳',
+            'title' => "Payment #{$payment->id}",
+            'subtitle' => $payment->client->name ?? 'No Client',
+            'url' => route('financial.payments.show', $payment->id),
+            'meta' => [
+                'status' => $payment->status,
+                'amount' => '$'.number_format($payment->amount, 2),
+            ],
+        ])->toArray();
+    }
+
+    protected function searchUsers(string $query, $clientId): array
+    {
+        $users = \App\Models\User::where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('email', 'like', "%{$query}%");
+            })
+            ->limit(5)
+            ->get();
+
+        return $users->map(fn($user) => [
+            'type' => 'user',
+            'icon' => '👤',
+            'title' => $user->name,
+            'subtitle' => $user->email,
+            'url' => route('users.show', $user->id),
+            'meta' => ['status' => $user->is_active ? 'active' : 'inactive'],
+        ])->toArray();
+    }
+
+    protected function searchProducts(string $query, $clientId): array
+    {
+        $products = \App\Models\Product::products()
+            ->where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhere('sku', 'like', "%{$query}%");
+            })
+            ->limit(5)
+            ->get();
+
+        return $products->map(fn($product) => [
+            'type' => 'product',
+            'icon' => '📦',
+            'title' => $product->name,
+            'subtitle' => $product->description ?: 'Product - '.$product->getFormattedPrice(),
+            'url' => route('products.show', $product->id),
+            'meta' => [
+                'status' => $product->is_active ? 'active' : 'inactive',
+                'price' => $product->getFormattedPrice(),
+            ],
+        ])->toArray();
+    }
+
+    protected function searchServices(string $query, $clientId): array
+    {
+        $services = \App\Models\Product::services()
+            ->where('company_id', auth()->user()->company_id)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhere('sku', 'like', "%{$query}%");
+            })
+            ->limit(5)
+            ->get();
+
+        return $services->map(fn($service) => [
+            'type' => 'service',
+            'icon' => '🔧',
+            'title' => $service->name,
+            'subtitle' => $service->description ?: 'Service - '.$service->getFormattedPrice(),
+            'url' => route('services.show', $service->id),
+            'meta' => [
+                'status' => $service->is_active ? 'active' : 'inactive',
+                'price' => $service->getFormattedPrice(),
+            ],
+        ])->toArray();
+    }
+
+    protected function searchKnowledgeArticles(string $query, $clientId): array
+    {
+        try {
+            $articles = \App\Models\KbArticle::where('company_id', auth()->user()->company_id)
+                ->where(function ($q) use ($query) {
+                    $q->where('title', 'like', "%{$query}%")
+                        ->orWhere('content', 'like', "%{$query}%")
+                        ->orWhere('tags', 'like', "%{$query}%");
+                })
+                ->limit(5)
+                ->get();
+
+            return $articles->map(fn($article) => [
+                'type' => 'article',
+                'icon' => '📚',
+                'title' => $article->title,
+                'subtitle' => Str::limit($article->content, 100),
+                'url' => route('knowledge.articles.show', $article->id),
+                'meta' => ['status' => $article->status],
+            ])->toArray();
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    protected function searchITDocumentation(string $query, $clientId): array
+    {
+        try {
+            $docs = \App\Domains\Client\Models\ClientITDocumentation::whereHas('client', function ($q) {
+                $q->where('company_id', auth()->user()->company_id);
+            })
+                ->where(function ($q) use ($query) {
+                    $q->where('network_diagram', 'like', "%{$query}%")
+                        ->orWhere('server_info', 'like', "%{$query}%")
+                        ->orWhere('network_equipment', 'like', "%{$query}%");
+                })
+                ->when($clientId, fn($q) => $q->where('client_id', $clientId))
+                ->limit(5)
+                ->get();
+
+            return $docs->map(fn($doc) => [
+                'type' => 'it-doc',
+                'icon' => '🔧',
+                'title' => "IT Documentation - {$doc->client->name}",
+                'subtitle' => 'Network & Infrastructure Documentation',
+                'url' => route('clients.it-documentation.show', [$doc->client_id, $doc->id]),
+                'meta' => [],
+            ])->toArray();
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    protected function searchClientContacts(string $query, $clientId): array
+    {
+        if (!$clientId) {
+            return [];
+        }
+
+        try {
+            $contacts = \App\Domains\Client\Models\ClientContact::where('client_id', $clientId)
+                ->where(function ($q) use ($query) {
+                    $q->where('name', 'like', "%{$query}%")
+                        ->orWhere('email', 'like', "%{$query}%")
+                        ->orWhere('phone', 'like', "%{$query}%");
+                })
+                ->limit(5)
+                ->get();
+
+            return $contacts->map(fn($contact) => [
+                'type' => 'contact',
+                'icon' => '📧',
+                'title' => $contact->name,
+                'subtitle' => "{$contact->email} | {$contact->phone}",
+                'url' => route('clients.contacts.show', [$contact->client_id, $contact->id]),
+                'meta' => [],
+            ])->toArray();
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 
     /**
