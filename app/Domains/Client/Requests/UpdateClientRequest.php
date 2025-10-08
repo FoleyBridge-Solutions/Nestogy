@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateClientRequest extends FormRequest
 {
+    private const NULLABLE_STRING_MAX_50 = 'nullable|string|max:50';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -35,7 +37,7 @@ class UpdateClientRequest extends FormRequest
             'rate' => 'nullable|numeric|min:0|max:999999.99',
             'currency_code' => 'nullable|string|size:3',
             'net_terms' => 'nullable|integer|min:0|max:365',
-            'tax_id_number' => 'nullable|string|max:50',
+            'tax_id_number' => self::NULLABLE_STRING_MAX_50,
             'rmm_id' => 'nullable|integer',
             'lead' => 'boolean',
             'notes' => 'nullable|string|max:65535',
@@ -46,13 +48,13 @@ class UpdateClientRequest extends FormRequest
             'location_name' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:50',
+            'state' => self::NULLABLE_STRING_MAX_50,
             'zip_code' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:100',
             'location_phone' => 'nullable|string|max:20',
             'location_address' => 'nullable|string|max:255',
             'location_city' => 'nullable|string|max:100',
-            'location_state' => 'nullable|string|max:50',
+            'location_state' => self::NULLABLE_STRING_MAX_50,
             'location_zip' => 'nullable|string|max:20',
             'location_country' => 'nullable|string|max:100',
 
