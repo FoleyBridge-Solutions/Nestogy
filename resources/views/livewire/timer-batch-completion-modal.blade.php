@@ -109,12 +109,12 @@
                                             </flux:select>
 
                                             <div class="space-y-2">
-                                                <label class="flex items-center gap-1 text-xs">
-                                                    <flux:checkbox wire:model="individualSettings.{{ $timer['id'] }}.is_billable" />
+                                                <label for="billable_{{ $timer['id'] }}" class="flex items-center gap-1 text-xs">
+                                                    <flux:checkbox wire:model="individualSettings.{{ $timer['id'] }}.is_billable" id="billable_{{ $timer['id'] }}" />
                                                     <span>Billable</span>
                                                 </label>
-                                                <label class="flex items-center gap-1 text-xs">
-                                                    <flux:checkbox wire:model="individualSettings.{{ $timer['id'] }}.add_comment" />
+                                                <label for="add_comment_{{ $timer['id'] }}" class="flex items-center gap-1 text-xs">
+                                                    <flux:checkbox wire:model="individualSettings.{{ $timer['id'] }}.add_comment" id="add_comment_{{ $timer['id'] }}" />
                                                     <span>Add Comment</span>
                                                 </label>
                                             </div>
