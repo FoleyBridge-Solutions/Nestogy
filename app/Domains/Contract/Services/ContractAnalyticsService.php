@@ -203,7 +203,7 @@ class ContractAnalyticsService
         $stagesDistribution = $this->getContractStagesDistribution($companyId);
 
         // Bottleneck analysis
-        $bottlenecks = $this->identifyProcessBottlenecks($companyId, $startDate, $endDate);
+        $bottlenecks = $this->identifyProcessBottlenecks($companyId, $startDate);
 
         return [
             'average_time_to_signature' => $timeToSignature,
@@ -522,7 +522,7 @@ class ContractAnalyticsService
         return [];
     }
 
-    protected function identifyProcessBottlenecks(int $companyId, Carbon $startDate, Carbon $endDate): array
+    protected function identifyProcessBottlenecks(int $companyId, Carbon $startDate): array
     {
         return [];
     }
