@@ -18,6 +18,9 @@ use Illuminate\Validation\ValidationException;
  */
 class VoIPTaxReportController extends Controller
 {
+    private const VALIDATION_START_DATE = 'required|date|before_or_equal:end_date';
+    private const VALIDATION_END_DATE = 'required|date|after_or_equal:start_date';
+
     protected VoIPTaxReportingService $reportingService;
 
     public function __construct()
@@ -38,8 +41,8 @@ class VoIPTaxReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'start_date' => 'required|date|before_or_equal:end_date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+                'start_date' => self::VALIDATION_START_DATE,
+                'end_date' => self::VALIDATION_END_DATE,
                 'client_id' => 'nullable|integer|exists:clients,id',
                 'service_type' => 'nullable|string|in:local,long_distance,international,voip_fixed,voip_nomadic,data,equipment',
                 'jurisdiction_id' => 'nullable|integer|exists:tax_jurisdictions,id',
@@ -98,8 +101,8 @@ class VoIPTaxReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'start_date' => 'required|date|before_or_equal:end_date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+                'start_date' => self::VALIDATION_START_DATE,
+                'end_date' => self::VALIDATION_END_DATE,
             ]);
 
             // Verify jurisdiction exists and belongs to user's company
@@ -153,8 +156,8 @@ class VoIPTaxReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'start_date' => 'required|date|before_or_equal:end_date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+                'start_date' => self::VALIDATION_START_DATE,
+                'end_date' => self::VALIDATION_END_DATE,
             ]);
 
             $startDate = Carbon::parse($validated['start_date']);
@@ -195,8 +198,8 @@ class VoIPTaxReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'start_date' => 'required|date|before_or_equal:end_date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+                'start_date' => self::VALIDATION_START_DATE,
+                'end_date' => self::VALIDATION_END_DATE,
                 'exemption_type' => 'nullable|string|in:nonprofit,government,reseller,manufacturing,agriculture,export',
                 'client_id' => 'nullable|integer|exists:clients,id',
             ]);
@@ -252,8 +255,8 @@ class VoIPTaxReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'start_date' => 'required|date|before_or_equal:end_date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+                'start_date' => self::VALIDATION_START_DATE,
+                'end_date' => self::VALIDATION_END_DATE,
             ]);
 
             $startDate = Carbon::parse($validated['start_date']);
@@ -345,8 +348,8 @@ class VoIPTaxReportController extends Controller
             $validated = $request->validate([
                 'report_type' => 'required|string|in:tax_summary,jurisdiction,service_type,exemption,rate_effectiveness',
                 'format' => 'nullable|string|in:json,csv,xlsx',
-                'start_date' => 'required|date|before_or_equal:end_date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+                'start_date' => self::VALIDATION_START_DATE,
+                'end_date' => self::VALIDATION_END_DATE,
                 'jurisdiction_id' => 'nullable|integer|exists:tax_jurisdictions,id',
                 'filters' => 'nullable|array',
             ]);
