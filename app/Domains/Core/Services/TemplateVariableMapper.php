@@ -500,7 +500,31 @@ class TemplateVariableMapper
      */
     public function getClientAssetsForContract(Contract $contract, bool $includeTypeEligibleAlongsideAssignments = false)
     {
-        // Add detailed contract and client information logging
+        $this->logContractAssetRetrievalStart($contract, $includeTypeEligibleAlongsideAssignments);
+
+        $assetModel = app(\App\Models\Asset::class);
+        $directlyAssignedIds = $this->getDirectlyAssignedAssetIds($contract);
+        $explicitlyAssignedIds = $this->getExplicitlyAssignedAssetIds($contract);
+        $mergedIds = collect([$directlyAssignedIds, $explicitlyAssignedIds])->flatten()->unique()->filter();
+
+        Log::info("Total unique assigned assets for contract {$contract->id}: {$mergedIds->count()}");
+
+        $fallbackTypeIds = $this->getTypeEligibleAssetIds($contract, $assetModel);
+        $finalAssetIds = $this->determineFinalAssetIds($mergedIds, $fallbackTypeIds, $includeTypeEligibleAlongsideAssignments, $contract->id);
+
+        if ($finalAssetIds->isEmpty()) {
+            $this->logEmptyAssetResult($contract, $directlyAssignedIds, $explicitlyAssignedIds, $fallbackTypeIds);
+            return collect();
+        }
+
+        $assets = $this->retrieveAssets($assetModel, $finalAssetIds, $contract);
+        $this->validateAndLogAssetRetrieval($assets, $contract, $directlyAssignedIds, $explicitlyAssignedIds, $fallbackTypeIds);
+
+        return $assets;
+    }
+
+    protected function logContractAssetRetrievalStart(Contract $contract, bool $includeTypeEligibleAlongsideAssignments): void
+    {
         Log::info('TemplateVariableMapper getClientAssetsForContract started', [
             'contract_id' => $contract->id,
             'client_id' => $contract->client_id,
@@ -512,14 +536,10 @@ class TemplateVariableMapper
             'method_mode' => $includeTypeEligibleAlongsideAssignments ? 'union' : 'assignment_or_fallback',
             'debug_context' => 'asset_retrieval_debug',
         ]);
+    }
 
-        // Load the Asset model
-        $assetModel = app(\App\Models\Asset::class);
-
-        // Collect asset IDs from multiple sources
-        $assetIds = collect();
-
-        // Source 1: Use relationship query for direct assignments to avoid double filtering
+    protected function getDirectlyAssignedAssetIds(Contract $contract)
+    {
         Log::debug('Querying direct asset assignments', [
             'contract_id' => $contract->id,
             'relationship_method' => 'supportedAssets',
@@ -560,9 +580,11 @@ class TemplateVariableMapper
             ]);
         }
 
-        $assetIds = $assetIds->merge($directlyAssignedIds);
+        return $directlyAssignedIds;
+    }
 
-        // Source 2: Explicit assignment through ContractAssetAssignment with client validation
+    protected function getExplicitlyAssignedAssetIds(Contract $contract)
+    {
         $explicitQuery = $contract->activeAssetAssignments()
             ->whereHas('asset', function ($query) use ($contract) {
                 $query->where('client_id', $contract->client_id);
@@ -601,7 +623,6 @@ class TemplateVariableMapper
                 })->toArray(),
             ]);
         } else {
-            // Check if there are any ContractAssetAssignment records without client validation
             $allExplicitCount = $contract->activeAssetAssignments()->count();
             Log::debug('Explicit assignment debugging - no valid assignments', [
                 'contract_id' => $contract->id,
@@ -612,17 +633,23 @@ class TemplateVariableMapper
             ]);
         }
 
-        $assetIds = $assetIds->merge($explicitlyAssignedIds);
+        return $explicitlyAssignedIds;
+    }
 
-        // Merge and deduplicate asset IDs
-        $mergedIds = $assetIds->unique()->filter();
-        Log::info("Total unique assigned assets for contract {$contract->id}: {$mergedIds->count()}");
+    protected function getTypeEligibleAssetIds(Contract $contract, $assetModel)
+    {
+        $supportedTypes = $this->resolveSupportedAssetTypes($contract);
 
-        // Get fallback type ID set for union mode or fallback
-        $fallbackTypeIds = collect();
-        $supportedTypes = [];
+        if (empty($supportedTypes)) {
+            Log::debug("No supported asset types found for contract {$contract->id}, skipping type-based fallback");
+            return collect();
+        }
 
-        // Enhanced fallback logic debugging with detailed source tracking
+        return $this->queryTypeEligibleAssets($contract, $assetModel, $supportedTypes);
+    }
+
+    protected function resolveSupportedAssetTypes(Contract $contract): array
+    {
         $infraSchedule = $contract->infrastructureSchedules()->effective()->first();
         $typeSource = 'none';
 
@@ -632,39 +659,35 @@ class TemplateVariableMapper
             'infrastructure_schedule_id' => $infraSchedule ? $infraSchedule->id : null,
         ]);
 
-        if ($infraSchedule) {
-            // Try infraSchedule->supported_asset_types first
-            if (! empty($infraSchedule->supported_asset_types)) {
-                $supportedTypes = $infraSchedule->supported_asset_types;
-                $typeSource = 'infraSchedule.supported_asset_types';
-            }
-            // Fallback to schedule_data if supported_asset_types is empty
-            elseif (! empty($infraSchedule->schedule_data['supported_asset_types'])) {
-                $supportedTypes = $infraSchedule->schedule_data['supported_asset_types'];
-                $typeSource = 'infraSchedule.schedule_data.supported_asset_types';
-                Log::debug("Falling back to schedule_data supported_asset_types for contract {$contract->id}");
-            }
-            // Final fallback to payload if schedule_data is also empty (backward compatibility)
-            else {
-                $payloadTypes = data_get($infraSchedule, 'payload.supported_asset_types');
-                if (! empty($payloadTypes)) {
-                    $supportedTypes = $payloadTypes;
-                    $typeSource = 'infraSchedule.payload.supported_asset_types';
-                    Log::debug("Falling back to payload supported_asset_types for contract {$contract->id}");
-                }
-                // Last resort fallback to contract method
-                elseif (! empty($contract->getSupportedAssetTypes())) {
-                    $supportedTypes = $contract->getSupportedAssetTypes();
-                    $typeSource = 'contract.getSupportedAssetTypes()';
-                    Log::debug("Falling back to contract getSupportedAssetTypes() for contract {$contract->id}");
-                }
-            }
-        } else {
+        if (!$infraSchedule) {
             Log::warning('No infrastructure schedule found for fallback', [
                 'contract_id' => $contract->id,
                 'infrastructure_schedules_query' => $contract->infrastructureSchedules()->toSql(),
                 'effective_filter_applied' => true,
             ]);
+            return [];
+        }
+
+        $supportedTypes = [];
+
+        if (! empty($infraSchedule->supported_asset_types)) {
+            $supportedTypes = $infraSchedule->supported_asset_types;
+            $typeSource = 'infraSchedule.supported_asset_types';
+        } elseif (! empty($infraSchedule->schedule_data['supported_asset_types'])) {
+            $supportedTypes = $infraSchedule->schedule_data['supported_asset_types'];
+            $typeSource = 'infraSchedule.schedule_data.supported_asset_types';
+            Log::debug("Falling back to schedule_data supported_asset_types for contract {$contract->id}");
+        } else {
+            $payloadTypes = data_get($infraSchedule, 'payload.supported_asset_types');
+            if (! empty($payloadTypes)) {
+                $supportedTypes = $payloadTypes;
+                $typeSource = 'infraSchedule.payload.supported_asset_types';
+                Log::debug("Falling back to payload supported_asset_types for contract {$contract->id}");
+            } elseif (! empty($contract->getSupportedAssetTypes())) {
+                $supportedTypes = $contract->getSupportedAssetTypes();
+                $typeSource = 'contract.getSupportedAssetTypes()';
+                Log::debug("Falling back to contract getSupportedAssetTypes() for contract {$contract->id}");
+            }
         }
 
         Log::info('Supported asset types resolved', [
@@ -675,107 +698,104 @@ class TemplateVariableMapper
             'fallback_chain_used' => $typeSource !== 'none',
         ]);
 
-        // Comment 6: Guard against empty types early
-        if (empty($supportedTypes)) {
-            $fallbackTypeIds = collect();
-            Log::debug("No supported asset types found for contract {$contract->id}, skipping type-based fallback");
-        } else {
-            // Expand category-based types to actual asset types using helper
-            Log::debug('Expanding asset type categories', [
+        return $supportedTypes;
+    }
+
+    protected function queryTypeEligibleAssets(Contract $contract, $assetModel, array $supportedTypes)
+    {
+        Log::debug('Expanding asset type categories', [
+            'contract_id' => $contract->id,
+            'supported_types_input' => $supportedTypes,
+        ]);
+
+        $expanded = $this->expandAssetTypeCategories($supportedTypes);
+
+        Log::info('Asset type expansion completed', [
+            'contract_id' => $contract->id,
+            'original_types' => $supportedTypes,
+            'expanded_types' => $expanded->toArray(),
+            'expansion_successful' => ! $expanded->isEmpty(),
+        ]);
+
+        if ($expanded->isEmpty()) {
+            Log::warning('Asset type expansion resulted in empty list', [
                 'contract_id' => $contract->id,
-                'supported_types_input' => $supportedTypes,
+                'original_supported_types' => $supportedTypes,
+                'expansion_method' => 'expandAssetTypeCategories',
             ]);
-
-            $expanded = $this->expandAssetTypeCategories($supportedTypes);
-
-            Log::info('Asset type expansion completed', [
-                'contract_id' => $contract->id,
-                'original_types' => $supportedTypes,
-                'expanded_types' => $expanded->toArray(),
-                'expansion_successful' => ! $expanded->isEmpty(),
-            ]);
-
-            // Comment 6: Guard against empty expanded types
-            if ($expanded->isEmpty()) {
-                $fallbackTypeIds = collect();
-                Log::warning('Asset type expansion resulted in empty list', [
-                    'contract_id' => $contract->id,
-                    'original_supported_types' => $supportedTypes,
-                    'expansion_method' => 'expandAssetTypeCategories',
-                ]);
-            } else {
-                // Comment 2: Normalize asset type casing to handle legacy data mismatches
-                $upperTypes = $expanded->map('strtoupper')->toArray();
-
-                $typeEligibleQuery = $assetModel->where('company_id', $contract->company_id)
-                    ->where('client_id', $contract->client_id)
-                    ->whereNotIn('status', self::EXCLUDED_ASSET_STATUSES)
-                    ->whereIn(DB::raw('UPPER(type)'), $upperTypes);
-
-                Log::debug('Type-eligible asset query details', [
-                    'contract_id' => $contract->id,
-                    'query_conditions' => [
-                        'company_id' => $contract->company_id,
-                        'client_id' => $contract->client_id,
-                        'excluded_statuses' => self::EXCLUDED_ASSET_STATUSES,
-                        'upper_types' => $upperTypes,
-                    ],
-                    'raw_sql' => $typeEligibleQuery->toSql(),
-                    'bindings' => $typeEligibleQuery->getBindings(),
-                ]);
-
-                $fallbackTypeIds = $typeEligibleQuery->pluck('id');
-
-                if ($fallbackTypeIds->isEmpty() && ! empty($supportedTypes)) {
-                    // Enhanced debugging for empty results
-                    $totalClientAssets = $assetModel->where('company_id', $contract->company_id)
-                        ->where('client_id', $contract->client_id)
-                        ->count();
-
-                    $clientAssetTypes = $assetModel->where('company_id', $contract->company_id)
-                        ->where('client_id', $contract->client_id)
-                        ->distinct()
-                        ->pluck('type')
-                        ->toArray();
-
-                    Log::warning('Type-eligible assets query returned empty results', [
-                        'contract_id' => $contract->id,
-                        'supported_types' => $supportedTypes,
-                        'expanded_types' => $expanded->toArray(),
-                        'upper_types' => $upperTypes,
-                        'client_debugging' => [
-                            'total_client_assets' => $totalClientAssets,
-                            'available_asset_types' => $clientAssetTypes,
-                            'case_comparison' => array_map('strtoupper', $clientAssetTypes),
-                        ],
-                        'potential_issues' => [
-                            'no_assets_of_supported_types',
-                            'case_mismatch',
-                            'all_assets_excluded_by_status',
-                            'wrong_client_or_company',
-                        ],
-                    ]);
-                } else {
-                    Log::info('Type-eligible assets found successfully', [
-                        'contract_id' => $contract->id,
-                        'type_eligible_count' => $fallbackTypeIds->count(),
-                        'supported_types_matched' => $supportedTypes,
-                    ]);
-                }
-            }
+            return collect();
         }
 
-        // Determine final asset ID set based on mode with enhanced logging
-        $finalAssetIds = collect();
-        $selectionMode = '';
+        $upperTypes = $expanded->map('strtoupper')->toArray();
+        $typeEligibleQuery = $assetModel->where('company_id', $contract->company_id)
+            ->where('client_id', $contract->client_id)
+            ->whereNotIn('status', self::EXCLUDED_ASSET_STATUSES)
+            ->whereIn(DB::raw('UPPER(type)'), $upperTypes);
 
-        if ($includeTypeEligibleAlongsideAssignments && $mergedIds->isNotEmpty()) {
-            // Union mode: merge assigned assets with type-eligible assets
-            $finalAssetIds = $mergedIds->merge($fallbackTypeIds)->unique()->filter();
-            $selectionMode = 'union';
+        Log::debug('Type-eligible asset query details', [
+            'contract_id' => $contract->id,
+            'query_conditions' => [
+                'company_id' => $contract->company_id,
+                'client_id' => $contract->client_id,
+                'excluded_statuses' => self::EXCLUDED_ASSET_STATUSES,
+                'upper_types' => $upperTypes,
+            ],
+            'raw_sql' => $typeEligibleQuery->toSql(),
+            'bindings' => $typeEligibleQuery->getBindings(),
+        ]);
 
-            Log::info('Asset selection mode: Union', [
+        $fallbackTypeIds = $typeEligibleQuery->pluck('id');
+
+        if ($fallbackTypeIds->isEmpty()) {
+            $this->logEmptyTypeEligibleResult($contract, $assetModel, $supportedTypes, $expanded, $upperTypes);
+        } else {
+            Log::info('Type-eligible assets found successfully', [
                 'contract_id' => $contract->id,
+                'type_eligible_count' => $fallbackTypeIds->count(),
+                'supported_types_matched' => $supportedTypes,
+            ]);
+        }
+
+        return $fallbackTypeIds;
+    }
+
+    protected function logEmptyTypeEligibleResult(Contract $contract, $assetModel, array $supportedTypes, $expanded, array $upperTypes): void
+    {
+        $totalClientAssets = $assetModel->where('company_id', $contract->company_id)
+            ->where('client_id', $contract->client_id)
+            ->count();
+
+        $clientAssetTypes = $assetModel->where('company_id', $contract->company_id)
+            ->where('client_id', $contract->client_id)
+            ->distinct()
+            ->pluck('type')
+            ->toArray();
+
+        Log::warning('Type-eligible assets query returned empty results', [
+            'contract_id' => $contract->id,
+            'supported_types' => $supportedTypes,
+            'expanded_types' => $expanded->toArray(),
+            'upper_types' => $upperTypes,
+            'client_debugging' => [
+                'total_client_assets' => $totalClientAssets,
+                'available_asset_types' => $clientAssetTypes,
+                'case_comparison' => array_map('strtoupper', $clientAssetTypes),
+            ],
+            'potential_issues' => [
+                'no_assets_of_supported_types',
+                'case_mismatch',
+                'all_assets_excluded_by_status',
+                'wrong_client_or_company',
+            ],
+        ]);
+    }
+
+    protected function determineFinalAssetIds($mergedIds, $fallbackTypeIds, bool $includeTypeEligibleAlongsideAssignments, int $contractId)
+    {
+        if ($includeTypeEligibleAlongsideAssignments && $mergedIds->isNotEmpty()) {
+            $finalAssetIds = $mergedIds->merge($fallbackTypeIds)->unique()->filter();
+            Log::info('Asset selection mode: Union', [
+                'contract_id' => $contractId,
                 'assigned_asset_count' => $mergedIds->count(),
                 'type_eligible_count' => $fallbackTypeIds->count(),
                 'final_unique_count' => $finalAssetIds->count(),
@@ -784,60 +804,53 @@ class TemplateVariableMapper
                 'final_ids' => $finalAssetIds->toArray(),
                 'union_successful' => true,
             ]);
-        } elseif ($mergedIds->isNotEmpty()) {
-            // Assignment mode: use only assigned assets
-            $finalAssetIds = $mergedIds;
-            $selectionMode = 'assignment_only';
+            return $finalAssetIds;
+        }
 
+        if ($mergedIds->isNotEmpty()) {
             Log::info('Asset selection mode: Assignment only', [
-                'contract_id' => $contract->id,
+                'contract_id' => $contractId,
                 'assigned_asset_count' => $mergedIds->count(),
                 'assigned_ids' => $mergedIds->toArray(),
                 'type_eligible_available_but_not_used' => $fallbackTypeIds->count(),
                 'mode_reason' => 'assigned_assets_found_and_union_not_requested',
             ]);
-        } else {
-            // Fallback mode: use type-eligible assets (backward compatibility)
-            $finalAssetIds = $fallbackTypeIds;
-            $selectionMode = 'fallback_to_type_eligible';
-
-            Log::info('Asset selection mode: Fallback to type-eligible', [
-                'contract_id' => $contract->id,
-                'no_assigned_assets' => true,
-                'fallback_asset_count' => $fallbackTypeIds->count(),
-                'fallback_ids' => $fallbackTypeIds->toArray(),
-                'fallback_reason' => 'no_direct_or_explicit_assignments',
-            ]);
+            return $mergedIds;
         }
 
-        // Add debugging for empty results with detailed failure analysis
-        if ($finalAssetIds->isEmpty()) {
-            Log::warning('Final asset IDs collection is empty - comprehensive debugging', [
-                'contract_id' => $contract->id,
-                'selection_mode' => $selectionMode,
-                'assignment_details' => [
-                    'direct_assignments' => $directlyAssignedIds->count(),
-                    'explicit_assignments' => $explicitlyAssignedIds->count(),
-                    'merged_assignments' => $mergedIds->count(),
-                ],
-                'fallback_details' => [
-                    'supported_types_found' => ! empty($supportedTypes),
-                    'type_source' => $typeSource,
-                    'type_eligible_count' => $fallbackTypeIds->count(),
-                ],
-                'debugging_suggestions' => [
-                    'check_asset_assignment_in_contract_service',
-                    'verify_supporting_contract_id_field',
-                    'check_contractassetassignment_table',
-                    'verify_supported_asset_types_in_schedule_a',
-                    'check_client_and_company_ids_match',
-                ],
-            ]);
+        Log::info('Asset selection mode: Fallback to type-eligible', [
+            'contract_id' => $contractId,
+            'no_assigned_assets' => true,
+            'fallback_asset_count' => $fallbackTypeIds->count(),
+            'fallback_ids' => $fallbackTypeIds->toArray(),
+            'fallback_reason' => 'no_direct_or_explicit_assignments',
+        ]);
+        return $fallbackTypeIds;
+    }
 
-            return collect();
-        }
+    protected function logEmptyAssetResult(Contract $contract, $directlyAssignedIds, $explicitlyAssignedIds, $fallbackTypeIds): void
+    {
+        Log::warning('Final asset IDs collection is empty - comprehensive debugging', [
+            'contract_id' => $contract->id,
+            'assignment_details' => [
+                'direct_assignments' => $directlyAssignedIds->count(),
+                'explicit_assignments' => $explicitlyAssignedIds->count(),
+            ],
+            'fallback_details' => [
+                'type_eligible_count' => $fallbackTypeIds->count(),
+            ],
+            'debugging_suggestions' => [
+                'check_asset_assignment_in_contract_service',
+                'verify_supporting_contract_id_field',
+                'check_contractassetassignment_table',
+                'verify_supported_asset_types_in_schedule_a',
+                'check_client_and_company_ids_match',
+            ],
+        ]);
+    }
 
-        // Add comprehensive asset retrieval verification with enhanced logging
+    protected function retrieveAssets($assetModel, $finalAssetIds, Contract $contract)
+    {
         $assetQuery = $assetModel->whereIn('id', $finalAssetIds)
             ->where('company_id', $contract->company_id)
             ->where('client_id', $contract->client_id)
@@ -860,15 +873,14 @@ class TemplateVariableMapper
             'bindings' => $assetQuery->getBindings(),
         ]);
 
-        $assets = $assetQuery->get();
+        return $assetQuery->get();
+    }
 
-        // Add comprehensive asset retrieval verification
+    protected function validateAndLogAssetRetrieval($assets, Contract $contract, $directlyAssignedIds, $explicitlyAssignedIds, $fallbackTypeIds): void
+    {
         Log::info('Asset retrieval completed with verification', [
             'contract_id' => $contract->id,
-            'expected_asset_count' => $finalAssetIds->count(),
             'actual_retrieved_count' => $assets->count(),
-            'retrieval_successful' => $assets->count() === $finalAssetIds->count(),
-            'selection_mode_used' => $selectionMode,
             'asset_details' => $assets->map(function ($asset) {
                 return [
                     'id' => $asset->id,
@@ -883,7 +895,6 @@ class TemplateVariableMapper
             'asset_types_summary' => $assets->groupBy('type')->map->count()->toArray(),
         ]);
 
-        // Add verification that all retrieved assets belong to the correct client and company
         $clientMismatches = $assets->where('client_id', '!=', $contract->client_id)->count();
         $companyMismatches = $assets->where('company_id', '!=', $contract->company_id)->count();
 
@@ -897,7 +908,6 @@ class TemplateVariableMapper
             ]);
         }
 
-        // Add final method summary
         Log::info('TemplateVariableMapper getClientAssetsForContract completed', [
             'contract_id' => $contract->id,
             'final_asset_count' => $assets->count(),
@@ -906,12 +916,9 @@ class TemplateVariableMapper
                 'direct_assignments_found' => $directlyAssignedIds->count(),
                 'explicit_assignments_found' => $explicitlyAssignedIds->count(),
                 'type_eligible_found' => $fallbackTypeIds->count(),
-                'final_selection_mode' => $selectionMode,
                 'assets_successfully_retrieved' => $assets->count(),
             ],
         ]);
-
-        return $assets;
     }
 
     /**
