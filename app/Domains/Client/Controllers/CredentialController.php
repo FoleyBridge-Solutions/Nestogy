@@ -14,6 +14,8 @@ class CredentialController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_RULE_NULLABLE_STRING_1000 = 'nullable|string|max:1000';
+
     /**
      * Display a listing of credentials for the selected client
      */
@@ -120,18 +122,18 @@ class CredentialController extends Controller
             'credential_type' => 'required|in:'.implode(',', array_keys(ClientCredential::getCredentialTypes())),
             'service_name' => 'nullable|string|max:255',
             'username' => 'nullable|string|max:255',
-            'password' => 'nullable|string|max:1000',
+            'password' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
             'email' => 'nullable|email|max:255',
             'url' => 'nullable|url|max:500',
             'port' => 'nullable|integer|min:1|max:65535',
             'database_name' => 'nullable|string|max:255',
-            'connection_string' => 'nullable|string|max:1000',
-            'api_key' => 'nullable|string|max:1000',
-            'secret_key' => 'nullable|string|max:1000',
+            'connection_string' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
+            'api_key' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
+            'secret_key' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
             'certificate' => 'nullable|string',
             'private_key' => 'nullable|string',
             'public_key' => 'nullable|string',
-            'token' => 'nullable|string|max:1000',
+            'token' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
             'expires_at' => 'nullable|date|after:today',
             'is_active' => 'boolean',
             'is_shared' => 'boolean',
@@ -205,18 +207,18 @@ class CredentialController extends Controller
             'credential_type' => 'required|in:'.implode(',', array_keys(ClientCredential::getCredentialTypes())),
             'service_name' => 'nullable|string|max:255',
             'username' => 'nullable|string|max:255',
-            'password' => 'nullable|string|max:1000',
+            'password' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
             'email' => 'nullable|email|max:255',
             'url' => 'nullable|url|max:500',
             'port' => 'nullable|integer|min:1|max:65535',
             'database_name' => 'nullable|string|max:255',
-            'connection_string' => 'nullable|string|max:1000',
-            'api_key' => 'nullable|string|max:1000',
-            'secret_key' => 'nullable|string|max:1000',
+            'connection_string' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
+            'api_key' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
+            'secret_key' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
             'certificate' => 'nullable|string',
             'private_key' => 'nullable|string',
             'public_key' => 'nullable|string',
-            'token' => 'nullable|string|max:1000',
+            'token' => self::VALIDATION_RULE_NULLABLE_STRING_1000,
             'expires_at' => 'nullable|date|after:today',
             'is_active' => 'boolean',
             'is_shared' => 'boolean',
