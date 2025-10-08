@@ -2,17 +2,17 @@
 
 namespace App\Domains\Email\Models;
 
+use App\Domains\Email\Traits\HasEncryptedCredentials;
 use App\Models\User;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Crypt;
 
 class EmailAccount extends Model
 {
-    use BelongsToCompany, HasFactory;
+    use BelongsToCompany, HasFactory, HasEncryptedCredentials;
 
     protected $fillable = [
         'company_id',
@@ -106,58 +106,6 @@ class EmailAccount extends Model
                $this->oauth_expires_at &&
                $this->oauth_expires_at->isFuture();
     }
-
-    // Mutators for password encryption
-    public function setImapPasswordAttribute($value)
-    {
-        if ($value) {
-            $this->attributes['imap_password'] = Crypt::encryptString($value);
-        }
-    }
-
-    public function getImapPasswordAttribute($value)
-    {
-        return $value ? Crypt::decryptString($value) : null;
-    }
-
-    public function setSmtpPasswordAttribute($value)
-    {
-        if ($value) {
-            $this->attributes['smtp_password'] = Crypt::encryptString($value);
-        }
-    }
-
-    public function getSmtpPasswordAttribute($value)
-    {
-        return $value ? Crypt::decryptString($value) : null;
-    }
-
-    // OAuth token encryption
-    public function setOauthAccessTokenAttribute($value)
-    {
-        if ($value) {
-            $this->attributes['oauth_access_token'] = Crypt::encryptString($value);
-        }
-    }
-
-    public function getOauthAccessTokenAttribute($value)
-    {
-        return $value ? Crypt::decryptString($value) : null;
-    }
-
-    public function setOauthRefreshTokenAttribute($value)
-    {
-        if ($value) {
-            $this->attributes['oauth_refresh_token'] = Crypt::encryptString($value);
-        }
-    }
-
-    public function getOauthRefreshTokenAttribute($value)
-    {
-        return $value ? Crypt::decryptString($value) : null;
-    }
-
-    // Helper methods
 
     public function needsTokenRefresh(): bool
     {
