@@ -27,6 +27,8 @@ class InvoiceController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_REQUIRED_DATE = 'required|date';
+
     protected $invoiceService;
 
     protected $paymentService;
@@ -926,10 +928,10 @@ class InvoiceController extends Controller
         }
 
         $request->validate([
-            'billing_period_start' => 'required|date',
-            'billing_period_end' => 'required|date|after:billing_period_start',
-            'invoice_date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:invoice_date',
+            'billing_period_start' => self::VALIDATION_REQUIRED_DATE,
+            'billing_period_end' => self::VALIDATION_REQUIRED_DATE.'|after:billing_period_start',
+            'invoice_date' => self::VALIDATION_REQUIRED_DATE,
+            'due_date' => self::VALIDATION_REQUIRED_DATE.'|after_or_equal:invoice_date',
             'description_override' => 'nullable|string',
             'milestone_ids' => 'nullable|array',
             'milestone_ids.*' => 'exists:contract_milestones,id',
