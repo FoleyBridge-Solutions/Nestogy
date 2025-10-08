@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Validator;
  */
 class PaymentController extends PortalApiController
 {
+    private const PAYMENT_METHOD_NOT_FOUND = 'Payment method not found';
+
     protected PortalPaymentService $paymentService;
 
     public function __construct(PortalPaymentService $paymentService, \App\Services\ClientPortalService $portalService, \App\Domains\Security\Services\PortalAuthService $authService)
@@ -238,7 +240,7 @@ class PaymentController extends PortalApiController
                 ->first();
 
             if (! $paymentMethod) {
-                return $this->errorResponse('Payment method not found', 404);
+                return $this->errorResponse(self::PAYMENT_METHOD_NOT_FOUND, 404);
             }
 
             // Validate request
@@ -308,7 +310,7 @@ class PaymentController extends PortalApiController
                 ->first();
 
             if (! $paymentMethod) {
-                return $this->errorResponse('Payment method not found', 404);
+                return $this->errorResponse(self::PAYMENT_METHOD_NOT_FOUND, 404);
             }
 
             // Check if payment method is used in active auto-payments
@@ -372,7 +374,7 @@ class PaymentController extends PortalApiController
                 ->first();
 
             if (! $paymentMethod) {
-                return $this->errorResponse('Payment method not found', 404);
+                return $this->errorResponse(self::PAYMENT_METHOD_NOT_FOUND, 404);
             }
 
             $this->logActivity('setup_auto_payment', [
