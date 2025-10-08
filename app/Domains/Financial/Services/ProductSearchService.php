@@ -387,12 +387,12 @@ class ProductSearchService
         }
 
         // Filter by category
-        if (isset($filters['category']) && $filters['category'] !== '' && $filters['category'] !== null) {
+        if ($this->isValidFilterValue($filters['category'] ?? null)) {
             $query->where('category_id', $filters['category']);
         }
 
         // Filter by billing model
-        if (isset($filters['billing_model']) && $filters['billing_model'] !== '' && $filters['billing_model'] !== null) {
+        if ($this->isValidFilterValue($filters['billing_model'] ?? null)) {
             $query->where('billing_model', $filters['billing_model']);
         }
 
@@ -430,6 +430,22 @@ class ProductSearchService
         }
 
         // Sorting
+        $this->applySorting($query, $filters);
+    }
+
+    /**
+     * Check if filter value is valid (not empty or null)
+     */
+    protected function isValidFilterValue($value): bool
+    {
+        return $value !== '' && $value !== null;
+    }
+
+    /**
+     * Apply sorting to query
+     */
+    protected function applySorting(Builder $query, array $filters): void
+    {
         $sortBy = $filters['sort_by'] ?? 'name';
         $sortOrder = $filters['sort_order'] ?? 'asc';
 
@@ -441,7 +457,6 @@ class ProductSearchService
                 $query->orderBy('created_at', 'desc');
                 break;
             case 'popular':
-                // This would need a sales/usage tracking
                 $query->orderBy('sort_order', 'asc');
                 break;
             default:
