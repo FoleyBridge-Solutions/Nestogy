@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class LocationController extends Controller
 {
+    private const NULLABLE_STRING = 'nullable|string';
+
     /**
      * LocationController constructor.
      */
@@ -156,7 +158,7 @@ class LocationController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'address_line_1' => 'required|string|max:255',
             'address_line_2' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
@@ -164,9 +166,9 @@ class LocationController extends Controller
             'zip_code' => 'nullable|string|max:20',
             'country' => 'required|string|max:100',
             'phone' => 'nullable|string|max:50',
-            'hours' => 'nullable|string',
+            'hours' => self::NULLABLE_STRING,
             'primary' => 'boolean',
-            'notes' => 'nullable|string',
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
@@ -292,7 +294,7 @@ class LocationController extends Controller
                 }),
             ],
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING,
             'address_line_1' => 'required|string|max:255',
             'address_line_2' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
@@ -300,9 +302,9 @@ class LocationController extends Controller
             'zip_code' => 'nullable|string|max:20',
             'country' => 'required|string|max:100',
             'phone' => 'nullable|string|max:50',
-            'hours' => 'nullable|string',
+            'hours' => self::NULLABLE_STRING,
             'primary' => 'boolean',
-            'notes' => 'nullable|string',
+            'notes' => self::NULLABLE_STRING,
         ]);
 
         if ($validator->fails()) {
