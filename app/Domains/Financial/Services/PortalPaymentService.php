@@ -518,7 +518,7 @@ class PortalPaymentService
                 ];
             }
 
-            public function tokenizePaymentMethod($data)
+            public function tokenizePaymentMethod()
             {
                 return [
                     'success' => true,
