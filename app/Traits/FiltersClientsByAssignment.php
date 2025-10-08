@@ -38,14 +38,15 @@ trait FiltersClientsByAssignment
             ->pluck('client_id')
             ->toArray();
 
-        if (empty($assignedClientIds)) {
-            // No assignments = access to all clients in their company
-            return $query->where('company_id', $user->company_id);
+        // Apply company filter
+        $query->where('company_id', $user->company_id);
+
+        // If has assignments, restrict to only those clients
+        if (!empty($assignedClientIds)) {
+            $query->whereIn('id', $assignedClientIds);
         }
 
-        // Has assignments = restricted to only those clients
-        return $query->where('company_id', $user->company_id)
-            ->whereIn('id', $assignedClientIds);
+        return $query;
     }
 
     /**
