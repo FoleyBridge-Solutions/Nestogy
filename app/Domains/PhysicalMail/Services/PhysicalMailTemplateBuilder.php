@@ -47,7 +47,7 @@ class PhysicalMailTemplateBuilder
         array $options = []
     ): string {
         $styles = $this->getBaseStyles($type, $options);
-        $headerContent = $this->getHeaderContent($type, $options);
+        $headerContent = $this->getHeaderContent($options);
         $wrappedContent = $this->wrapContent($content, $type);
 
         return $this->assembleTemplate($styles, $headerContent, $wrappedContent, $options);
@@ -240,7 +240,7 @@ class PhysicalMailTemplateBuilder
     /**
      * Get header content for the safe zone
      */
-    private function getHeaderContent(string $type, array $options): string
+    private function getHeaderContent(array $options): string
     {
         $logoUrl = $options['logo_url'] ?? '';
         $headerHtml = '<div class="address-zone">';
