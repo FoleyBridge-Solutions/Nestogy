@@ -349,7 +349,34 @@ class DomainController extends Controller
                 $q->where('company_id', auth()->user()->company_id);
             });
 
-        // Apply same filters as index
+        $this->applyExportFilters($query, $request);
+
+        $domains = $query->orderBy('expires_at', 'asc')->get();
+
+        $filename = 'domains_'.date('Y-m-d_H-i-s').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($domains) {
+            $file = fopen('php://output', 'w');
+
+            fputcsv($file, $this->getCsvHeaders());
+
+            foreach ($domains as $domain) {
+                fputcsv($file, $this->getDomainCsvRow($domain));
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function applyExportFilters($query, Request $request)
+    {
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -373,70 +400,55 @@ class DomainController extends Controller
         if ($tld = $request->get('tld')) {
             $query->where('tld', $tld);
         }
+    }
 
-        $domains = $query->orderBy('expires_at', 'asc')->get();
-
-        $filename = 'domains_'.date('Y-m-d_H-i-s').'.csv';
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
+    private function getCsvHeaders()
+    {
+        return [
+            'Domain Name',
+            'Full Domain',
+            'Client Name',
+            'Status',
+            'Registrar',
+            'DNS Provider',
+            'Registered Date',
+            'Expiry Date',
+            'Days Until Expiry',
+            'Auto Renewal',
+            'Privacy Protection',
+            'Domain Lock',
+            'Transfer Lock',
+            'Purchase Cost',
+            'Renewal Cost',
+            'DNS Records',
+            'Subdomains',
+            'Email Forwards',
+            'Created At',
         ];
+    }
 
-        $callback = function () use ($domains) {
-            $file = fopen('php://output', 'w');
-
-            // CSV headers
-            fputcsv($file, [
-                'Domain Name',
-                'Full Domain',
-                'Client Name',
-                'Status',
-                'Registrar',
-                'DNS Provider',
-                'Registered Date',
-                'Expiry Date',
-                'Days Until Expiry',
-                'Auto Renewal',
-                'Privacy Protection',
-                'Domain Lock',
-                'Transfer Lock',
-                'Purchase Cost',
-                'Renewal Cost',
-                'DNS Records',
-                'Subdomains',
-                'Email Forwards',
-                'Created At',
-            ]);
-
-            // CSV data
-            foreach ($domains as $domain) {
-                fputcsv($file, [
-                    $domain->name,
-                    $domain->full_domain,
-                    $domain->client->display_name,
-                    $domain->status,
-                    $domain->registrar,
-                    $domain->dns_provider,
-                    $domain->registered_at ? $domain->registered_at->format('Y-m-d') : '',
-                    $domain->expires_at ? $domain->expires_at->format('Y-m-d') : '',
-                    $domain->days_until_expiry,
-                    $domain->auto_renewal ? 'Yes' : 'No',
-                    $domain->privacy_protection ? 'Yes' : 'No',
-                    $domain->lock_status ? 'Yes' : 'No',
-                    $domain->transfer_lock ? 'Yes' : 'No',
-                    $domain->purchase_cost,
-                    $domain->renewal_cost,
-                    $domain->dns_records_count,
-                    $domain->subdomains_count,
-                    $domain->email_forwards_count,
-                    $domain->created_at->format('Y-m-d H:i:s'),
-                ]);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+    private function getDomainCsvRow($domain)
+    {
+        return [
+            $domain->name,
+            $domain->full_domain,
+            $domain->client->display_name,
+            $domain->status,
+            $domain->registrar,
+            $domain->dns_provider,
+            $domain->registered_at ? $domain->registered_at->format('Y-m-d') : '',
+            $domain->expires_at ? $domain->expires_at->format('Y-m-d') : '',
+            $domain->days_until_expiry,
+            $domain->auto_renewal ? 'Yes' : 'No',
+            $domain->privacy_protection ? 'Yes' : 'No',
+            $domain->lock_status ? 'Yes' : 'No',
+            $domain->transfer_lock ? 'Yes' : 'No',
+            $domain->purchase_cost,
+            $domain->renewal_cost,
+            $domain->dns_records_count,
+            $domain->subdomains_count,
+            $domain->email_forwards_count,
+            $domain->created_at->format('Y-m-d H:i:s'),
+        ];
     }
 }
