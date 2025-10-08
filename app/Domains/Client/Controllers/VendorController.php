@@ -14,6 +14,8 @@ class VendorController extends Controller
 {
     use UsesSelectedClient;
 
+    private const NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     /**
      * Display a listing of vendors for the selected client
      */
@@ -141,12 +143,12 @@ class VendorController extends Controller
             'description' => 'nullable|string',
             'vendor_type' => 'required|in:'.implode(',', array_keys(ClientVendor::getVendorTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
-            'contact_person' => 'nullable|string|max:255',
+            'contact_person' => self::NULLABLE_STRING_255,
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'website' => 'nullable|url|max:255',
-            'address_line_1' => 'nullable|string|max:255',
-            'address_line_2' => 'nullable|string|max:255',
+            'address_line_1' => self::NULLABLE_STRING_255,
+            'address_line_2' => self::NULLABLE_STRING_255,
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'zip_code' => 'nullable|string|max:20',
@@ -285,12 +287,12 @@ class VendorController extends Controller
             'description' => 'nullable|string',
             'vendor_type' => 'required|in:'.implode(',', array_keys(ClientVendor::getVendorTypes())),
             'category' => 'nullable|in:'.implode(',', array_keys(ClientVendor::getVendorCategories())),
-            'contact_person' => 'nullable|string|max:255',
+            'contact_person' => self::NULLABLE_STRING_255,
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'website' => 'nullable|url|max:255',
-            'address_line_1' => 'nullable|string|max:255',
-            'address_line_2' => 'nullable|string|max:255',
+            'address_line_1' => self::NULLABLE_STRING_255,
+            'address_line_2' => self::NULLABLE_STRING_255,
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'zip_code' => 'nullable|string|max:20',
