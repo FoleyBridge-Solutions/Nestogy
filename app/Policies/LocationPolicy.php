@@ -64,7 +64,10 @@ class LocationPolicy
      */
     public function delete(User $user, Location $location): bool
     {
-        // Admins can always delete locations from their company
+        if ($location->primary) {
+            return false;
+        }
+
         if ($user->isAdmin() && $this->sameCompany($user, $location)) {
             return true;
         }
