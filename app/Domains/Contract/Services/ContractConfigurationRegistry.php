@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class ContractConfigurationRegistry
 {
+    const ICON_SIGNATURE = 'fas fa-signature';
+
     protected array $configCache = [];
 
     protected int $cacheTimeout = 3600; // 1 hour
@@ -126,7 +128,7 @@ class ContractConfigurationRegistry
             'pending_signature' => [
                 'label' => 'Pending Signature',
                 'color' => 'primary',
-                'icon' => 'fas fa-signature',
+                'icon' => self::ICON_SIGNATURE,
                 'description' => 'Contract is ready for signature',
                 'transitions' => ['signed', 'under_negotiation'],
             ],
@@ -196,12 +198,12 @@ class ContractConfigurationRegistry
             'client_signed' => [
                 'label' => 'Client Signed',
                 'color' => 'info',
-                'icon' => 'fas fa-signature',
+                'icon' => self::ICON_SIGNATURE,
             ],
             'company_signed' => [
                 'label' => 'Company Signed',
                 'color' => 'primary',
-                'icon' => 'fas fa-signature',
+                'icon' => self::ICON_SIGNATURE,
             ],
             'fully_executed' => [
                 'label' => 'Fully Executed',
