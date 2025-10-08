@@ -17,6 +17,8 @@ use Illuminate\View\View;
  */
 class QBRController extends Controller
 {
+    private const QUARTER_VALIDATION_RULE = 'required|integer|min:1|max:4';
+
     public function __construct(
         protected ExecutiveReportService $executiveService,
         protected ExportService $exportService
@@ -51,7 +53,7 @@ class QBRController extends Controller
     {
         $request->validate([
             'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
-            'quarter' => 'required|integer|min:1|max:4',
+            'quarter' => self::QUARTER_VALIDATION_RULE,
         ]);
 
         $companyId = auth()->user()->company_id;
@@ -85,7 +87,7 @@ class QBRController extends Controller
     {
         $request->validate([
             'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
-            'quarter' => 'required|integer|min:1|max:4',
+            'quarter' => self::QUARTER_VALIDATION_RULE,
         ]);
 
         try {
@@ -126,7 +128,7 @@ class QBRController extends Controller
     {
         $request->validate([
             'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
-            'quarter' => 'required|integer|min:1|max:4',
+            'quarter' => self::QUARTER_VALIDATION_RULE,
             'format' => 'required|string|in:pdf,excel,powerpoint',
             'template' => 'string|in:executive,client,detailed',
         ]);
@@ -175,7 +177,7 @@ class QBRController extends Controller
     {
         $request->validate([
             'year' => 'required|integer|min:2020|max:'.(now()->year + 1),
-            'quarter' => 'required|integer|min:1|max:4',
+            'quarter' => self::QUARTER_VALIDATION_RULE,
         ]);
 
         try {
