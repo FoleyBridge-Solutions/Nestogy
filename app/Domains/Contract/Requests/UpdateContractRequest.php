@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateContractRequest extends FormRequest
 {
+    private const NULLABLE_ARRAY = 'nullable|array';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -50,14 +52,14 @@ class UpdateContractRequest extends FormRequest
             'pricing_structure.recurring_monthly' => 'nullable|numeric|min:0',
             'pricing_structure.one_time' => 'nullable|numeric|min:0',
             'pricing_structure.setup_fee' => 'nullable|numeric|min:0',
-            'pricing_structure.renewal_adjustment' => 'nullable|array',
+            'pricing_structure.renewal_adjustment' => self::NULLABLE_ARRAY,
             'sla_terms' => 'sometimes|nullable|array',
             'sla_terms.response_time_hours' => 'nullable|numeric|min:0.1|max:72',
             'sla_terms.resolution_time_hours' => 'nullable|numeric|min:0.1|max:720',
             'sla_terms.uptime_percentage' => 'nullable|numeric|min:90|max:100',
             'voip_specifications' => 'sometimes|nullable|array',
-            'voip_specifications.services' => 'nullable|array',
-            'voip_specifications.equipment' => 'nullable|array',
+            'voip_specifications.services' => self::NULLABLE_ARRAY,
+            'voip_specifications.equipment' => self::NULLABLE_ARRAY,
             'voip_specifications.phone_numbers' => 'nullable|integer|min:0',
             'compliance_requirements' => 'sometimes|nullable|array',
             'terms_and_conditions' => 'sometimes|nullable|string',
