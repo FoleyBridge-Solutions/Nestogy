@@ -312,7 +312,7 @@ class ComplianceService
 
         // Check retention compliance
         foreach ($this->documentRetentionYears as $docType => $years) {
-            $retentionCheck = $this->checkRetentionCompliance($client, $docType, $years);
+            $retentionCheck = $this->checkRetentionCompliance($client, $docType);
             $compliance['retention_compliance'][$docType] = $retentionCheck;
 
             if (! $retentionCheck['compliant']) {
@@ -764,7 +764,7 @@ NESTOGY COLLECTIONS DEPARTMENT
         return CollectionNote::where('client_id', $client->id)->where('contains_dispute', true)->exists();
     }
 
-    protected function checkRetentionCompliance(Client $client, string $docType, int $years): array
+    protected function checkRetentionCompliance(Client $client, string $docType): array
     {
         return ['compliant' => true];
     }
