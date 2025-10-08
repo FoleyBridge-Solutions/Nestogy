@@ -14,6 +14,8 @@ class RackController extends Controller
 {
     use UsesSelectedClient;
 
+    private const VALIDATION_NULLABLE_STRING_255 = 'nullable|string|max:255';
+
     /**
      * Display a listing of racks for the selected client
      */
@@ -127,9 +129,9 @@ class RackController extends Controller
             'status' => 'required|in:'.implode(',', array_keys(ClientRack::getStatuses())),
             'temperature_celsius' => 'nullable|numeric|min:-50|max:100',
             'humidity_percent' => 'nullable|numeric|min:0|max:100',
-            'manufacturer' => 'nullable|string|max:255',
-            'model' => 'nullable|string|max:255',
-            'serial_number' => 'nullable|string|max:255',
+            'manufacturer' => self::VALIDATION_NULLABLE_STRING_255,
+            'model' => self::VALIDATION_NULLABLE_STRING_255,
+            'serial_number' => self::VALIDATION_NULLABLE_STRING_255,
             'purchase_date' => 'nullable|date|before_or_equal:today',
             'warranty_expiry' => 'nullable|date|after:purchase_date',
             'maintenance_schedule' => 'nullable|string',
@@ -213,9 +215,9 @@ class RackController extends Controller
             'status' => 'required|in:'.implode(',', array_keys(ClientRack::getStatuses())),
             'temperature_celsius' => 'nullable|numeric|min:-50|max:100',
             'humidity_percent' => 'nullable|numeric|min:0|max:100',
-            'manufacturer' => 'nullable|string|max:255',
-            'model' => 'nullable|string|max:255',
-            'serial_number' => 'nullable|string|max:255',
+            'manufacturer' => self::VALIDATION_NULLABLE_STRING_255,
+            'model' => self::VALIDATION_NULLABLE_STRING_255,
+            'serial_number' => self::VALIDATION_NULLABLE_STRING_255,
             'purchase_date' => 'nullable|date|before_or_equal:today',
             'warranty_expiry' => 'nullable|date|after:purchase_date',
             'maintenance_schedule' => 'nullable|string',
