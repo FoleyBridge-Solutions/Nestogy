@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ComplianceAuditSettingsRequest extends FormRequest
 {
+    private const NULLABLE_ARRAY = 'nullable|array';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -22,7 +24,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
         return [
             // SOC 2 Compliance
             'soc2_compliance_enabled' => 'boolean',
-            'soc2_settings' => 'nullable|array',
+            'soc2_settings' => self::NULLABLE_ARRAY,
             'soc2_settings.security_principle' => 'boolean',
             'soc2_settings.availability_principle' => 'boolean',
             'soc2_settings.processing_integrity_principle' => 'boolean',
@@ -39,7 +41,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
 
             // HIPAA Compliance
             'hipaa_compliance_enabled' => 'boolean',
-            'hipaa_settings' => 'nullable|array',
+            'hipaa_settings' => self::NULLABLE_ARRAY,
             'hipaa_settings.covered_entity' => 'boolean',
             'hipaa_settings.business_associate' => 'boolean',
             'hipaa_settings.phi_handling_enabled' => 'boolean',
@@ -56,7 +58,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
 
             // PCI DSS Compliance
             'pci_compliance_enabled' => 'boolean',
-            'pci_settings' => 'nullable|array',
+            'pci_settings' => self::NULLABLE_ARRAY,
             'pci_settings.merchant_level' => 'string|in:level_1,level_2,level_3,level_4',
             'pci_settings.cardholder_data_environment' => 'boolean',
             'pci_settings.network_segmentation_required' => 'boolean',
@@ -73,7 +75,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
 
             // GDPR Compliance
             'gdpr_compliance_enabled' => 'boolean',
-            'gdpr_settings' => 'nullable|array',
+            'gdpr_settings' => self::NULLABLE_ARRAY,
             'gdpr_settings.data_controller' => 'boolean',
             'gdpr_settings.data_processor' => 'boolean',
             'gdpr_settings.eu_operations' => 'boolean',
@@ -90,7 +92,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'gdpr_settings.cross_border_transfers' => 'boolean',
 
             // Industry-Specific Compliance
-            'industry_compliance_settings' => 'nullable|array',
+            'industry_compliance_settings' => self::NULLABLE_ARRAY,
             'industry_compliance_settings.iso_27001' => 'boolean',
             'industry_compliance_settings.iso_9001' => 'boolean',
             'industry_compliance_settings.cmmc' => 'boolean',
@@ -101,18 +103,18 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'industry_compliance_settings.sox' => 'boolean',
             'industry_compliance_settings.coso' => 'boolean',
             'industry_compliance_settings.cobit' => 'boolean',
-            'industry_compliance_settings.custom_frameworks' => 'nullable|array',
+            'industry_compliance_settings.custom_frameworks' => self::NULLABLE_ARRAY,
             'industry_compliance_settings.custom_frameworks.*.name' => 'string|max:100',
             'industry_compliance_settings.custom_frameworks.*.description' => 'nullable|string|max:500',
             'industry_compliance_settings.custom_frameworks.*.enabled' => 'boolean',
 
             // Data Retention Policies
-            'data_retention_policies' => 'nullable|array',
+            'data_retention_policies' => self::NULLABLE_ARRAY,
             'data_retention_policies.default_retention_years' => 'integer|min:1|max:50',
             'data_retention_policies.legal_hold_enabled' => 'boolean',
             'data_retention_policies.automated_deletion' => 'boolean',
             'data_retention_policies.deletion_approval_required' => 'boolean',
-            'data_retention_policies.retention_schedules' => 'nullable|array',
+            'data_retention_policies.retention_schedules' => self::NULLABLE_ARRAY,
             'data_retention_policies.retention_schedules.*.data_type' => 'string|max:100',
             'data_retention_policies.retention_schedules.*.retention_period_years' => 'integer|min:1|max:50',
             'data_retention_policies.retention_schedules.*.legal_requirement' => 'boolean',
@@ -120,7 +122,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'data_retention_policies.retention_schedules.*.enabled' => 'boolean',
 
             // Data Destruction Policies
-            'data_destruction_policies' => 'nullable|array',
+            'data_destruction_policies' => self::NULLABLE_ARRAY,
             'data_destruction_policies.secure_deletion_required' => 'boolean',
             'data_destruction_policies.destruction_method' => 'string|in:overwrite,crypto_erase,physical_destruction,degaussing',
             'data_destruction_policies.verification_required' => 'boolean',
@@ -131,12 +133,12 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'data_destruction_policies.emergency_destruction_procedures' => 'boolean',
 
             // Risk Assessment Settings
-            'risk_assessment_settings' => 'nullable|array',
+            'risk_assessment_settings' => self::NULLABLE_ARRAY,
             'risk_assessment_settings.enabled' => 'boolean',
             'risk_assessment_settings.assessment_frequency_months' => 'integer|min:3|max:24',
             'risk_assessment_settings.risk_scoring_method' => 'string|in:qualitative,quantitative,hybrid',
             'risk_assessment_settings.risk_appetite_defined' => 'boolean',
-            'risk_assessment_settings.risk_tolerance_levels' => 'nullable|array',
+            'risk_assessment_settings.risk_tolerance_levels' => self::NULLABLE_ARRAY,
             'risk_assessment_settings.risk_tolerance_levels.low' => 'integer|min:1|max:100',
             'risk_assessment_settings.risk_tolerance_levels.medium' => 'integer|min:1|max:100',
             'risk_assessment_settings.risk_tolerance_levels.high' => 'integer|min:1|max:100',
@@ -145,7 +147,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'risk_assessment_settings.risk_register_maintenance' => 'boolean',
 
             // Vendor Compliance Settings
-            'vendor_compliance_settings' => 'nullable|array',
+            'vendor_compliance_settings' => self::NULLABLE_ARRAY,
             'vendor_compliance_settings.due_diligence_required' => 'boolean',
             'vendor_compliance_settings.security_questionnaires' => 'boolean',
             'vendor_compliance_settings.soc2_reports_required' => 'boolean',
@@ -158,7 +160,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'vendor_compliance_settings.data_return_requirements' => 'boolean',
 
             // Incident Response Settings
-            'incident_response_settings' => 'nullable|array',
+            'incident_response_settings' => self::NULLABLE_ARRAY,
             'incident_response_settings.plan_enabled' => 'boolean',
             'incident_response_settings.response_team_defined' => 'boolean',
             'incident_response_settings.escalation_procedures' => 'boolean',
@@ -170,7 +172,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'incident_response_settings.lessons_learned_process' => 'boolean',
             'incident_response_settings.tabletop_exercises' => 'boolean',
             'incident_response_settings.exercise_frequency_months' => 'integer|min:3|max:12',
-            'incident_response_settings.incident_classification' => 'nullable|array',
+            'incident_response_settings.incident_classification' => self::NULLABLE_ARRAY,
             'incident_response_settings.incident_classification.*.severity' => 'string|in:low,medium,high,critical',
             'incident_response_settings.incident_classification.*.response_time_hours' => 'integer|min:1|max:168',
             'incident_response_settings.incident_classification.*.notification_required' => 'boolean',
@@ -178,7 +180,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             // Audit Logging Enhanced Settings
             'audit_logging_enabled' => 'boolean',
             'audit_retention_days' => 'integer|min:90|max:2555',
-            'audit_settings' => 'nullable|array',
+            'audit_settings' => self::NULLABLE_ARRAY,
             'audit_settings.log_user_access' => 'boolean',
             'audit_settings.log_data_access' => 'boolean',
             'audit_settings.log_configuration_changes' => 'boolean',
@@ -194,7 +196,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'audit_settings.log_integrity_monitoring' => 'boolean',
 
             // Training and Awareness
-            'training_settings' => 'nullable|array',
+            'training_settings' => self::NULLABLE_ARRAY,
             'training_settings.security_awareness_required' => 'boolean',
             'training_settings.compliance_training_required' => 'boolean',
             'training_settings.role_specific_training' => 'boolean',
@@ -206,7 +208,7 @@ class ComplianceAuditSettingsRequest extends FormRequest
             'training_settings.certification_requirements' => 'boolean',
 
             // Documentation and Policies
-            'documentation_settings' => 'nullable|array',
+            'documentation_settings' => self::NULLABLE_ARRAY,
             'documentation_settings.policy_management' => 'boolean',
             'documentation_settings.procedure_documentation' => 'boolean',
             'documentation_settings.version_control' => 'boolean',
