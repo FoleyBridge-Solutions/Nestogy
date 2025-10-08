@@ -198,6 +198,9 @@ class RmmServiceFactory
                         throw new InvalidArgumentException("API Key is required for {$integration->rmm_type}");
                     }
                     break;
+
+                default:
+                    throw new InvalidArgumentException("Unknown required field: {$field}");
             }
         }
     }
