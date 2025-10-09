@@ -711,76 +711,75 @@ class ContractClause extends Model
             return (string) $value;
         }
 
-        switch (strtolower($formatter)) {
-            case 'upper':
-                return strtoupper($value);
-            case 'lower':
-                return strtolower($value);
-            case 'title':
-                return ucwords($value);
-            case 'capitalize':
-                return ucfirst($value);
-            case 'currency':
-                return '$'.number_format((float) $value, 2);
-            case 'number':
-                return number_format((float) $value);
-            case 'percent':
-                return number_format((float) $value, 1).'%';
-            case 'date':
-                return date('F j, Y', strtotime($value));
-            case 'date_short':
-                return date('m/d/Y', strtotime($value));
-            case 'replace_underscore':
-                return str_replace('_', ' ', $value);
-            case 'replace_underscore_title':
-                return ucwords(str_replace('_', ' ', $value));
-            case 'list':
-                // Format arrays or comma-separated values as a proper list
-                if (is_array($value)) {
-                    return $this->formatList($value);
-                }
-                if (is_string($value) && strpos($value, ',') !== false) {
-                    return $this->formatList(array_map('trim', explode(',', $value)));
-                }
+        $formatter = strtolower($formatter);
 
-                return (string) $value;
-            case 'bullet_list':
-                // Format as bullet list
-                if (is_array($value)) {
-                    return '- '.implode("\n- ", $value);
-                }
-                if (is_string($value) && strpos($value, ',') !== false) {
-                    $items = array_map('trim', explode(',', $value));
+        $simpleFormatters = [
+            'upper' => fn($v) => strtoupper($v),
+            'lower' => fn($v) => strtolower($v),
+            'title' => fn($v) => ucwords($v),
+            'capitalize' => fn($v) => ucfirst($v),
+            'currency' => fn($v) => '$'.number_format((float) $v, 2),
+            'number' => fn($v) => number_format((float) $v),
+            'percent' => fn($v) => number_format((float) $v, 1).'%',
+            'date' => fn($v) => date('F j, Y', strtotime($v)),
+            'date_short' => fn($v) => date('m/d/Y', strtotime($v)),
+            'replace_underscore' => fn($v) => str_replace('_', ' ', $v),
+            'replace_underscore_title' => fn($v) => ucwords(str_replace('_', ' ', $v)),
+            'boolean_text' => fn($v) => $this->isTruthy($v) ? 'Yes' : 'No',
+            'boolean_enabled' => fn($v) => $this->isTruthy($v) ? 'Enabled' : 'Disabled',
+        ];
 
-                    return '- '.implode("\n- ", $items);
-                }
-
-                return '- '.$value;
-            case 'hours':
-                // Format numbers as hour descriptions
-                $hours = (int) $value;
-                if ($hours === 1) {
-                    return '1 hour';
-                }
-
-                return $hours.' hours';
-            case 'days':
-                // Format numbers as day descriptions
-                $days = (int) $value;
-                if ($days === 1) {
-                    return '1 day';
-                }
-
-                return $days.' days';
-            case 'boolean_text':
-                // Convert boolean to Yes/No text
-                return $this->isTruthy($value) ? 'Yes' : 'No';
-            case 'boolean_enabled':
-                // Convert boolean to Enabled/Disabled text
-                return $this->isTruthy($value) ? 'Enabled' : 'Disabled';
-            default:
-                return (string) $value;
+        if (isset($simpleFormatters[$formatter])) {
+            return $simpleFormatters[$formatter]($value);
         }
+
+        return match ($formatter) {
+            'list' => $this->formatAsList($value),
+            'bullet_list' => $this->formatAsBulletList($value),
+            'hours' => $this->formatAsHours($value),
+            'days' => $this->formatAsDays($value),
+            default => (string) $value,
+        };
+    }
+
+    protected function formatAsList($value): string
+    {
+        if (is_array($value)) {
+            return $this->formatList($value);
+        }
+        if (is_string($value) && strpos($value, ',') !== false) {
+            return $this->formatList(array_map('trim', explode(',', $value)));
+        }
+
+        return (string) $value;
+    }
+
+    protected function formatAsBulletList($value): string
+    {
+        if (is_array($value)) {
+            return '- '.implode("\n- ", $value);
+        }
+        if (is_string($value) && strpos($value, ',') !== false) {
+            $items = array_map('trim', explode(',', $value));
+
+            return '- '.implode("\n- ", $items);
+        }
+
+        return '- '.$value;
+    }
+
+    protected function formatAsHours($value): string
+    {
+        $hours = (int) $value;
+
+        return $hours === 1 ? '1 hour' : $hours.' hours';
+    }
+
+    protected function formatAsDays($value): string
+    {
+        $days = (int) $value;
+
+        return $days === 1 ? '1 day' : $days.' days';
     }
 
     /**
