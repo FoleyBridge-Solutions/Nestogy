@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 
 class CompanySettingsService extends BaseSettingsService
 {
+    private const VALIDATION_NULLABLE_URL = 'nullable|url';
+
     protected string $domain = SettingsConfiguration::DOMAIN_COMPANY;
 
     /**
@@ -146,7 +148,7 @@ class CompanySettingsService extends BaseSettingsService
                     'company_name' => 'required|string|max:255',
                     'legal_name' => 'nullable|string|max:255',
                     'tax_id' => 'nullable|string|max:50',
-                    'website' => 'nullable|url',
+                    'website' => self::VALIDATION_NULLABLE_URL,
                     'phone' => 'nullable|string|max:20',
                     'email' => 'nullable|email',
                     'address_line1' => 'nullable|string|max:255',
@@ -159,9 +161,9 @@ class CompanySettingsService extends BaseSettingsService
 
             case 'branding':
                 return [
-                    'logo_url' => 'nullable|url',
-                    'logo_dark_url' => 'nullable|url',
-                    'favicon_url' => 'nullable|url',
+                    'logo_url' => self::VALIDATION_NULLABLE_URL,
+                    'logo_dark_url' => self::VALIDATION_NULLABLE_URL,
+                    'favicon_url' => self::VALIDATION_NULLABLE_URL,
                     'accent_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
                     'accent_content_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
                     'accent_foreground_color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
