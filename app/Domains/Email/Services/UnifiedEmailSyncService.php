@@ -496,24 +496,9 @@ class UnifiedEmailSyncService
 
         // If no standard labels found, look for custom labels
         if (! $targetFolderType && ! empty($labelIds)) {
-            // Try to find a custom folder that matches a label
-            foreach ($labelIds as $labelId) {
-                if (! in_array($labelId, ['UNREAD', 'IMPORTANT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS', 'CATEGORY_PROMOTIONS'])) {
-                    $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
-                        ->where('remote_id', $labelId)
-                        ->first();
-
-                    if ($folder) {
-                        Log::debug('Found custom folder for Gmail message', [
-                            'account_id' => $account->id,
-                            'folder_id' => $folder->id,
-                            'folder_name' => $folder->name,
-                            'label_id' => $labelId,
-                        ]);
-
-                        return $folder->id;
-                    }
-                }
+            $customFolder = $this->findCustomGmailFolder($labelIds, $account);
+            if ($customFolder) {
+                return $customFolder->id;
             }
         }
 
@@ -560,6 +545,33 @@ class UnifiedEmailSyncService
         ]);
 
         return $folder->id;
+    }
+
+    /**
+     * Find a custom Gmail folder that matches one of the labels
+     */
+    protected function findCustomGmailFolder(array $labelIds, \App\Domains\Email\Models\EmailAccount $account): ?\App\Domains\Email\Models\EmailFolder
+    {
+        foreach ($labelIds as $labelId) {
+            if (! in_array($labelId, ['UNREAD', 'IMPORTANT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS', 'CATEGORY_PROMOTIONS'])) {
+                $folder = \App\Domains\Email\Models\EmailFolder::where('email_account_id', $account->id)
+                    ->where('remote_id', $labelId)
+                    ->first();
+
+                if ($folder) {
+                    Log::debug('Found custom folder for Gmail message', [
+                        'account_id' => $account->id,
+                        'folder_id' => $folder->id,
+                        'folder_name' => $folder->name,
+                        'label_id' => $labelId,
+                    ]);
+
+                    return $folder;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
