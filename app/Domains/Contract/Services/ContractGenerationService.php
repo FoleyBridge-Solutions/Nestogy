@@ -1197,8 +1197,54 @@ class ContractGenerationService
      */
     protected function convertPlainTextToHtml(string $content): string
     {
-        // Start with basic HTML structure
-        $html = '<!DOCTYPE html>
+        $html = $this->getHtmlDocumentTemplate();
+        $lines = explode("\n", $content);
+        $state = ['inSchedule' => false, 'inTable' => false];
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            $html .= $this->processPlainTextLine($line, $state);
+        }
+
+        $html .= $this->closeTableIfOpen($state['inTable']);
+        $html .= '</body></html>';
+
+        return $html;
+    }
+
+    protected function processPlainTextLine(string $line, array &$state): string
+    {
+        if (empty($line)) {
+            return '<br>';
+        }
+
+        if ($this->isMainTitle($line, $state['inSchedule'])) {
+            return '<h1>'.htmlspecialchars($line).'</h1>';
+        }
+
+        if ($this->isScheduleHeader($line)) {
+            $state['inSchedule'] = true;
+            return $this->closeTableIfOpen($state['inTable']).'<div class="page-break schedule"><h2>'.htmlspecialchars($line).'</h2>';
+        }
+
+        if ($this->isSectionHeader($line)) {
+            return '<h3>'.htmlspecialchars($line).'</h3>';
+        }
+
+        if ($this->isTableLine($line)) {
+            return $this->handleTableLine($line, $state);
+        }
+
+        if ($this->isSignatureLine($line)) {
+            return $this->formatSignatureLine($line);
+        }
+
+        return $this->formatRegularParagraph($line);
+    }
+
+    protected function getHtmlDocumentTemplate(): string
+    {
+        return '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1291,100 +1337,100 @@ class ContractGenerationService
     </style>
 </head>
 <body>';
+    }
 
-        // Split content into lines and process
-        $lines = explode("\n", $content);
-        $inSchedule = false;
-        $inTable = false;
-        $tableHeaders = [];
+    protected function isMainTitle(string $line, bool $inSchedule): bool
+    {
+        return preg_match('/^[A-Z\s]{10,}$/', $line) && ! $inSchedule;
+    }
 
-        foreach ($lines as $line) {
-            $line = trim($line);
+    protected function isScheduleHeader(string $line): bool
+    {
+        return preg_match('/^SCHEDULE [A-Z]/', $line);
+    }
 
-            // Skip empty lines but add spacing
-            if (empty($line)) {
-                $html .= '<br>';
+    protected function isSectionHeader(string $line): bool
+    {
+        return preg_match('/^(\d+\.|\([a-z]\)|\([0-9]+\)|[A-Z]\.)\s+[A-Z]/', $line);
+    }
 
-                continue;
-            }
+    protected function isTableLine(string $line): bool
+    {
+        return substr_count($line, '|') >= 2;
+    }
 
-            // Main title (all caps, first significant line)
-            if (preg_match('/^[A-Z\s]{10,}$/', $line) && ! $inSchedule) {
-                $html .= '<h1>'.htmlspecialchars($line).'</h1>';
-            }
-            // Schedule headers (SCHEDULE A, B, C, etc.)
-            elseif (preg_match('/^SCHEDULE [A-Z]/', $line)) {
-                if ($inTable) {
-                    $html .= '</table>';
-                    $inTable = false;
-                }
-                $html .= '<div class="page-break schedule"><h2>'.htmlspecialchars($line).'</h2>';
-                $inSchedule = true;
-            }
-            // Section headers (numbered or lettered sections)
-            elseif (preg_match('/^(\d+\.|\([a-z]\)|\([0-9]+\)|[A-Z]\.)\s+[A-Z]/', $line)) {
-                $html .= '<h3>'.htmlspecialchars($line).'</h3>';
-            }
-            // Detect table headers (lines with multiple | separators)
-            elseif (substr_count($line, '|') >= 2 && ! $inTable) {
-                $tableHeaders = array_map('trim', explode('|', $line));
-                $html .= '<table><thead><tr>';
-                foreach ($tableHeaders as $header) {
-                    if (! empty($header)) {
-                        $html .= '<th>'.htmlspecialchars($header).'</th>';
-                    }
-                }
-                $html .= '</tr></thead><tbody>';
-                $inTable = true;
-            }
-            // Table rows
-            elseif (substr_count($line, '|') >= 2 && $inTable) {
-                $cells = array_map('trim', explode('|', $line));
-                $html .= '<tr>';
-                foreach ($cells as $cell) {
-                    if (! empty($cell)) {
-                        $html .= '<td>'.htmlspecialchars($cell).'</td>';
-                    }
-                }
-                $html .= '</tr>';
-            }
-            // End of table (empty line or different content)
-            elseif ($inTable && (empty($line) || substr_count($line, '|') < 2)) {
-                $html .= '</tbody></table>';
-                $inTable = false;
-                if (! empty($line)) {
-                    $html .= '<p>'.htmlspecialchars($line).'</p>';
-                }
-            }
-            // Signature lines
-            elseif (preg_match('/^(CLIENT|COMPANY|SERVICE PROVIDER):\s*_+/', $line)) {
-                $html .= '<div class="signature-section">';
-                $html .= '<div class="signature-block">';
-                $html .= '<p><strong>'.htmlspecialchars($line).'</strong></p>';
-                $html .= '<div class="signature-line"></div>';
-                $html .= '<p>Date: _______________</p>';
-                $html .= '</div>';
-                $html .= '</div>';
-            }
-            // Regular paragraphs
-            else {
-                // Convert simple formatting
-                $line = htmlspecialchars($line);
-                $line = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $line);
-                $line = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $line);
+    protected function isSignatureLine(string $line): bool
+    {
+        return preg_match('/^(CLIENT|COMPANY|SERVICE PROVIDER):\s*_+/', $line);
+    }
 
-                $html .= '<p>'.$line.'</p>';
-            }
+    protected function handleTableLine(string $line, array &$state): string
+    {
+        if (! $state['inTable']) {
+            return $this->startTable($line, $state);
         }
 
-        // Close any open table
-        if ($inTable) {
-            $html .= '</tbody></table>';
-        }
+        return $this->addTableRow($line);
+    }
 
-        $html .= '</body></html>';
+    protected function startTable(string $line, array &$state): string
+    {
+        $state['inTable'] = true;
+        $tableHeaders = array_map('trim', explode('|', $line));
+        $html = '<table><thead><tr>';
+        foreach ($tableHeaders as $header) {
+            if (! empty($header)) {
+                $html .= '<th>'.htmlspecialchars($header).'</th>';
+            }
+        }
+        $html .= '</tr></thead><tbody>';
 
         return $html;
+    }
+
+    protected function addTableRow(string $line): string
+    {
+        $cells = array_map('trim', explode('|', $line));
+        $html = '<tr>';
+        foreach ($cells as $cell) {
+            if (! empty($cell)) {
+                $html .= '<td>'.htmlspecialchars($cell).'</td>';
+            }
+        }
+        $html .= '</tr>';
+
+        return $html;
+    }
+
+    protected function closeTableIfOpen(bool &$inTable): string
+    {
+        if ($inTable) {
+            $inTable = false;
+
+            return '</tbody></table>';
+        }
+
+        return '';
+    }
+
+    protected function formatSignatureLine(string $line): string
+    {
+        return '<div class="signature-section">'.
+               '<div class="signature-block">'.
+               '<p><strong>'.htmlspecialchars($line).'</strong></p>'.
+               '<div class="signature-line"></div>'.
+               '<p>Date: _______________</p>'.
+               '</div>'.
+               '</div>';
+    }
+
+    protected function formatRegularParagraph(string $line): string
+    {
+        $line = htmlspecialchars($line);
+        $line = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $line);
+        $line = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $line);
+
+        return '<p>'.$line.'</p>';
     }
 
     /**
