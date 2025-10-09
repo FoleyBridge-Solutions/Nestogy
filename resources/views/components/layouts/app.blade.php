@@ -139,7 +139,7 @@
                         class="dark:hidden" />
             <flux:brand href="{{ route('dashboard') }}" 
                         logo="{{ $logoDark }}" 
-                        name="{{ $companyName }}" 
+                        name="{{ $companyName }}"
                         class="hidden dark:flex" />
             
             <!-- Mobile Toggle -->
