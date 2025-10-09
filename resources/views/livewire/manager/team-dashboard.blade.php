@@ -148,7 +148,7 @@
 
             <div class="space-y-2 max-h-96 overflow-y-auto">
                 @forelse($overdueTickets as $ticket)
-                    <a href="{{ route('tickets.show', $ticket->id) }}" 
+                    <a href="{{ route('tickets.show', $ticket->id) }}"
                        class="block p-3 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-600 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition">
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
