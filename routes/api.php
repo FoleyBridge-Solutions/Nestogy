@@ -405,12 +405,12 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
             Route::delete($userParam, [App\Domains\Security\Controllers\UserController::class, 'destroy'])->name('destroy');
 
             // User Actions
-            Route::patch('{user}/role', [App\Domains\Security\Controllers\UserController::class, 'updateRole'])->name('role.update');
-            Route::patch('{user}/status', [App\Domains\Security\Controllers\UserController::class, 'updateStatus'])->name('status.update');
-            Route::patch('{user}/archive', [App\Domains\Security\Controllers\UserController::class, 'archive'])->name('archive');
-            Route::patch('{user}/restore', [App\Domains\Security\Controllers\UserController::class, 'restore'])->name('restore');
+            Route::patch("$userParam/role", [App\Domains\Security\Controllers\UserController::class, 'updateRole'])->name('role.update');
+            Route::patch("$userParam/status", [App\Domains\Security\Controllers\UserController::class, 'updateStatus'])->name('status.update');
+            Route::patch("$userParam/archive", [App\Domains\Security\Controllers\UserController::class, 'archive'])->name('archive');
+            Route::patch("$userParam/restore", [App\Domains\Security\Controllers\UserController::class, 'restore'])->name('restore');
 
-            Route::get('{user}/activity', [App\Domains\Security\Controllers\UserController::class, 'getActivityLog'])->name('activity');
+            Route::get("$userParam/activity", [App\Domains\Security\Controllers\UserController::class, 'getActivityLog'])->name('activity');
         });
 
         // Quick Access
