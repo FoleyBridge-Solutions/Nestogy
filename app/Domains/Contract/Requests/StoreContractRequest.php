@@ -426,17 +426,11 @@ class StoreContractRequest extends FormRequest
         return $validated;
     }
 
-    /**
-     * Calculate contract value from pricing schedule with edge case handling
-     */
     protected function calculateContractValue(array $data): float
     {
         try {
-            $totalValue = 0;
             $pricingSchedule = $data['pricing_schedule'] ?? [];
-            $warnings = [];
 
-            // Handle empty pricing schedule
             if (empty($pricingSchedule)) {
                 \Log::warning('Contract pricing schedule is empty', [
                     'contract_data' => array_keys($data),
@@ -445,149 +439,17 @@ class StoreContractRequest extends FormRequest
                 return 0;
             }
 
-            // Base pricing with validation
-            if (isset($pricingSchedule['basePricing'])) {
-                $basePricing = $pricingSchedule['basePricing'];
+            $warnings = [];
+            $totalValue = $this->calculateBasePricing($pricingSchedule, $warnings);
+            $totalValue += $this->calculateAssetTypePricing($pricingSchedule, $warnings);
+            $totalValue += $this->calculateTelecomPricing($pricingSchedule, $warnings);
+            $totalValue += $this->calculateHardwarePricing($pricingSchedule, $warnings);
+            $totalValue += $this->calculateCompliancePricing($pricingSchedule, $warnings);
+            $totalValue += $this->calculatePerUserPricing($pricingSchedule, $warnings);
 
-                $monthlyBase = $this->safeFloatConversion($basePricing['monthlyBase'] ?? 0);
-                $setupFee = $this->safeFloatConversion($basePricing['setupFee'] ?? 0);
+            $totalValue = $this->validateAndCleanTotalValue($totalValue, $pricingSchedule, $warnings);
 
-                // Validate reasonable ranges
-                if ($monthlyBase > 100000) {
-                    $warnings[] = 'Monthly base fee seems high: $'.number_format($monthlyBase, 2);
-                }
-                if ($setupFee > 50000) {
-                    $warnings[] = 'Setup fee seems high: $'.number_format($setupFee, 2);
-                }
-
-                $totalValue += $monthlyBase + $setupFee;
-            }
-
-            // Per-asset pricing with conflict detection
-            if (isset($pricingSchedule['assetTypePricing'])) {
-                $assetPricingTotal = 0;
-                $configuredTypes = [];
-
-                foreach ($pricingSchedule['assetTypePricing'] as $assetType => $config) {
-                    if (! empty($config['enabled']) && isset($config['price'])) {
-                        $price = $this->safeFloatConversion($config['price']);
-
-                        // Validate asset pricing
-                        if ($price < 0) {
-                            $warnings[] = "Negative pricing for {$assetType}: $".number_format($price, 2);
-
-                            continue;
-                        }
-
-                        if ($price > 10000) {
-                            $warnings[] = "High per-asset pricing for {$assetType}: $".number_format($price, 2);
-                        }
-
-                        $assetPricingTotal += $price;
-                        $configuredTypes[] = $assetType;
-                    }
-                }
-
-                // Check for pricing conflicts
-                if (count($configuredTypes) > 10) {
-                    $warnings[] = 'Large number of asset types configured ('.count($configuredTypes).')';
-                }
-
-                $totalValue += $assetPricingTotal;
-            }
-
-            // Template-specific pricing with type validation
-            if (isset($pricingSchedule['telecomPricing'])) {
-                $telecomTotal = 0;
-                $telecomPricing = $pricingSchedule['telecomPricing'];
-
-                foreach ($telecomPricing as $key => $price) {
-                    $safePrice = $this->safeFloatConversion($price);
-
-                    if ($safePrice < 0) {
-                        $warnings[] = "Negative telecom pricing for {$key}: $".number_format($safePrice, 2);
-
-                        continue;
-                    }
-
-                    $telecomTotal += $safePrice;
-                }
-
-                $totalValue += $telecomTotal;
-            }
-
-            if (isset($pricingSchedule['hardwarePricing'])) {
-                $hardwarePricing = $pricingSchedule['hardwarePricing'];
-                $installationRate = $this->safeFloatConversion($hardwarePricing['installationRate'] ?? 0);
-                $projectRate = $this->safeFloatConversion($hardwarePricing['projectManagementRate'] ?? 0);
-
-                // Validate hardware rates
-                if ($installationRate > 500) {
-                    $warnings[] = 'High installation rate: $'.number_format($installationRate, 2);
-                }
-                if ($projectRate > 300) {
-                    $warnings[] = 'High project management rate: $'.number_format($projectRate, 2);
-                }
-
-                $totalValue += $installationRate + $projectRate;
-            }
-
-            if (isset($pricingSchedule['compliancePricing'])) {
-                $complianceTotal = 0;
-
-                foreach ($pricingSchedule['compliancePricing'] as $key => $price) {
-                    if (is_array($price)) {
-                        foreach ($price as $subKey => $subPrice) {
-                            $safePr = $this->safeFloatConversion($subPrice);
-                            if ($safePr > 0) {
-                                $complianceTotal += $safePr;
-                            }
-                        }
-                    } else {
-                        $safePrice = $this->safeFloatConversion($price);
-                        if ($safePrice > 0) {
-                            $complianceTotal += $safePrice;
-                        }
-                    }
-                }
-
-                $totalValue += $complianceTotal;
-            }
-
-            // Per-user pricing with user count estimation
-            if (isset($pricingSchedule['perUnitPricing']['perUser'])) {
-                $perUserRate = $this->safeFloatConversion($pricingSchedule['perUnitPricing']['perUser']);
-
-                if ($perUserRate > 0) {
-                    // For initial calculation, assume 1 user (will be updated after contract creation)
-                    $totalValue += $perUserRate;
-
-                    if ($perUserRate > 500) {
-                        $warnings[] = 'High per-user rate: $'.number_format($perUserRate, 2);
-                    }
-                }
-            }
-
-            // Final validation
-            if ($totalValue < 0) {
-                \Log::error('Calculated negative contract value', [
-                    'calculated_value' => $totalValue,
-                    'pricing_schedule' => $pricingSchedule,
-                ]);
-                $totalValue = 0;
-            }
-
-            if ($totalValue > 1000000) {
-                $warnings[] = 'Very high total contract value: $'.number_format($totalValue, 2);
-            }
-
-            // Log warnings if any
-            if (! empty($warnings)) {
-                \Log::warning('Contract pricing calculation warnings', [
-                    'warnings' => $warnings,
-                    'total_value' => $totalValue,
-                ]);
-            }
+            $this->logWarningsIfPresent($warnings, $totalValue);
 
             return round($totalValue, 2);
 
@@ -597,8 +459,184 @@ class StoreContractRequest extends FormRequest
                 'pricing_data' => $pricingSchedule ?? null,
             ]);
 
-            // Return 0 on calculation error to prevent contract creation failure
             return 0;
+        }
+    }
+
+    protected function calculateBasePricing(array $pricingSchedule, array &$warnings): float
+    {
+        if (! isset($pricingSchedule['basePricing'])) {
+            return 0;
+        }
+
+        $basePricing = $pricingSchedule['basePricing'];
+        $monthlyBase = $this->safeFloatConversion($basePricing['monthlyBase'] ?? 0);
+        $setupFee = $this->safeFloatConversion($basePricing['setupFee'] ?? 0);
+
+        if ($monthlyBase > 100000) {
+            $warnings[] = 'Monthly base fee seems high: $'.number_format($monthlyBase, 2);
+        }
+        if ($setupFee > 50000) {
+            $warnings[] = 'Setup fee seems high: $'.number_format($setupFee, 2);
+        }
+
+        return $monthlyBase + $setupFee;
+    }
+
+    protected function calculateAssetTypePricing(array $pricingSchedule, array &$warnings): float
+    {
+        if (! isset($pricingSchedule['assetTypePricing'])) {
+            return 0;
+        }
+
+        $assetPricingTotal = 0;
+        $configuredTypes = [];
+
+        foreach ($pricingSchedule['assetTypePricing'] as $assetType => $config) {
+            if (empty($config['enabled']) || ! isset($config['price'])) {
+                continue;
+            }
+
+            $price = $this->safeFloatConversion($config['price']);
+
+            if ($price < 0) {
+                $warnings[] = "Negative pricing for {$assetType}: $".number_format($price, 2);
+                continue;
+            }
+
+            if ($price > 10000) {
+                $warnings[] = "High per-asset pricing for {$assetType}: $".number_format($price, 2);
+            }
+
+            $assetPricingTotal += $price;
+            $configuredTypes[] = $assetType;
+        }
+
+        if (count($configuredTypes) > 10) {
+            $warnings[] = 'Large number of asset types configured ('.count($configuredTypes).')';
+        }
+
+        return $assetPricingTotal;
+    }
+
+    protected function calculateTelecomPricing(array $pricingSchedule, array &$warnings): float
+    {
+        if (! isset($pricingSchedule['telecomPricing'])) {
+            return 0;
+        }
+
+        $telecomTotal = 0;
+        $telecomPricing = $pricingSchedule['telecomPricing'];
+
+        foreach ($telecomPricing as $key => $price) {
+            $safePrice = $this->safeFloatConversion($price);
+
+            if ($safePrice < 0) {
+                $warnings[] = "Negative telecom pricing for {$key}: $".number_format($safePrice, 2);
+                continue;
+            }
+
+            $telecomTotal += $safePrice;
+        }
+
+        return $telecomTotal;
+    }
+
+    protected function calculateHardwarePricing(array $pricingSchedule, array &$warnings): float
+    {
+        if (! isset($pricingSchedule['hardwarePricing'])) {
+            return 0;
+        }
+
+        $hardwarePricing = $pricingSchedule['hardwarePricing'];
+        $installationRate = $this->safeFloatConversion($hardwarePricing['installationRate'] ?? 0);
+        $projectRate = $this->safeFloatConversion($hardwarePricing['projectManagementRate'] ?? 0);
+
+        if ($installationRate > 500) {
+            $warnings[] = 'High installation rate: $'.number_format($installationRate, 2);
+        }
+        if ($projectRate > 300) {
+            $warnings[] = 'High project management rate: $'.number_format($projectRate, 2);
+        }
+
+        return $installationRate + $projectRate;
+    }
+
+    protected function calculateCompliancePricing(array $pricingSchedule, array &$warnings): float
+    {
+        if (! isset($pricingSchedule['compliancePricing'])) {
+            return 0;
+        }
+
+        $complianceTotal = 0;
+
+        foreach ($pricingSchedule['compliancePricing'] as $key => $price) {
+            $complianceTotal += $this->processCompliancePriceItem($price);
+        }
+
+        return $complianceTotal;
+    }
+
+    protected function processCompliancePriceItem($price): float
+    {
+        if (is_array($price)) {
+            $total = 0;
+            foreach ($price as $subKey => $subPrice) {
+                $safePr = $this->safeFloatConversion($subPrice);
+                if ($safePr > 0) {
+                    $total += $safePr;
+                }
+            }
+            return $total;
+        }
+
+        $safePrice = $this->safeFloatConversion($price);
+        return $safePrice > 0 ? $safePrice : 0;
+    }
+
+    protected function calculatePerUserPricing(array $pricingSchedule, array &$warnings): float
+    {
+        if (! isset($pricingSchedule['perUnitPricing']['perUser'])) {
+            return 0;
+        }
+
+        $perUserRate = $this->safeFloatConversion($pricingSchedule['perUnitPricing']['perUser']);
+
+        if ($perUserRate <= 0) {
+            return 0;
+        }
+
+        if ($perUserRate > 500) {
+            $warnings[] = 'High per-user rate: $'.number_format($perUserRate, 2);
+        }
+
+        return $perUserRate;
+    }
+
+    protected function validateAndCleanTotalValue(float $totalValue, array $pricingSchedule, array &$warnings): float
+    {
+        if ($totalValue < 0) {
+            \Log::error('Calculated negative contract value', [
+                'calculated_value' => $totalValue,
+                'pricing_schedule' => $pricingSchedule,
+            ]);
+            return 0;
+        }
+
+        if ($totalValue > 1000000) {
+            $warnings[] = 'Very high total contract value: $'.number_format($totalValue, 2);
+        }
+
+        return $totalValue;
+    }
+
+    protected function logWarningsIfPresent(array $warnings, float $totalValue): void
+    {
+        if (! empty($warnings)) {
+            \Log::warning('Contract pricing calculation warnings', [
+                'warnings' => $warnings,
+                'total_value' => $totalValue,
+            ]);
         }
     }
 
