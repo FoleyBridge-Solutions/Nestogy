@@ -278,37 +278,75 @@ class QuickActionService
         }
 
         // For custom actions with custom_ prefix
+        if (static::isCustomActionFavorited($actionIdentifier, $favorites)) {
+            return true;
+        }
+
+        // For system actions, check by route or action key
+        return static::isSystemActionFavorited($actionIdentifier, $user, $favorites);
+    }
+
+    /**
+     * Check if a custom action is favorited
+     */
+    protected static function isCustomActionFavorited(string $actionIdentifier, array $favorites): bool
+    {
         if (str_starts_with($actionIdentifier, 'custom_')) {
             $customId = str_replace('custom_', '', $actionIdentifier);
 
             return in_array('custom_'.$customId, $favorites);
         }
 
-        // For system actions, check by route or action key
-        $action = static::getActionsForUser($user)
+        return false;
+    }
+
+    /**
+     * Check if a system action is favorited
+     */
+    protected static function isSystemActionFavorited(string $actionIdentifier, User $user, array $favorites): bool
+    {
+        $action = static::findActionByIdentifier($actionIdentifier, $user);
+
+        if (!$action) {
+            return false;
+        }
+
+        $checkKeys = static::getActionCheckKeys($action);
+
+        foreach ($checkKeys as $key) {
+            if ($key && in_array($key, $favorites)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Find an action by its identifier
+     */
+    protected static function findActionByIdentifier(string $actionIdentifier, User $user): ?array
+    {
+        return static::getActionsForUser($user)
             ->first(function ($a) use ($actionIdentifier) {
                 return (isset($a['id']) && $a['id'] === $actionIdentifier) ||
                        (isset($a['route']) && $a['route'] === $actionIdentifier) ||
                        (isset($a['action']) && $a['action'] === $actionIdentifier) ||
                        (isset($a['custom_id']) && $a['custom_id'] == $actionIdentifier);
             });
+    }
 
-        if ($action) {
-            $checkKeys = [
-                $action['id'] ?? null,
-                $action['route'] ?? null,
-                $action['action'] ?? null,
-                isset($action['custom_id']) ? 'custom_'.$action['custom_id'] : null,
-            ];
-
-            foreach ($checkKeys as $key) {
-                if ($key && in_array($key, $favorites)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+    /**
+     * Get all possible check keys from an action
+     */
+    protected static function getActionCheckKeys(array $action): array
+    {
+        return [
+            $action['id'] ?? null,
+            $action['route'] ?? null,
+            $action['action'] ?? null,
+            isset($action['custom_id']) ? 'custom_'.$action['custom_id'] : null,
+        ];
     }
 
     /**
