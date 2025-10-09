@@ -21,7 +21,6 @@ class InboxController extends Controller
     {
         $user = Auth::user();
 
-        // Get user's email accounts
         $accounts = EmailAccount::forUser($user->id)
             ->active()
             ->with('folders')
@@ -33,16 +32,56 @@ class InboxController extends Controller
                 ->with('info', 'Please add an email account to get started.');
         }
 
-        // Get selected account (default to first active account)
+        $selectedAccount = $this->getSelectedAccount($request, $accounts);
+        $selectedFolder = $this->getSelectedFolder($request, $selectedAccount);
+        $messagesQuery = $selectedFolder ? $selectedFolder->messages() : $selectedAccount->messages();
+
+        $this->applyMessageFilters($request, $messagesQuery);
+
+        $messages = $messagesQuery
+            ->notDeleted()
+            ->with(['attachments'])
+            ->orderBy('sent_at', 'desc')
+            ->paginate(50)
+            ->withQueryString();
+
+        $selectedMessage = $this->getSelectedMessage($request, $messages);
+
+        $folderStats = $selectedAccount->folders->map(function ($folder) {
+            return [
+                'id' => $folder->id,
+                'name' => $folder->getDisplayName(),
+                'type' => $folder->type,
+                'unread_count' => $folder->unread_count,
+                'total_count' => $folder->message_count,
+                'icon' => $folder->getIcon(),
+            ];
+        });
+
+        return view('email.inbox.index', compact(
+            'accounts',
+            'selectedAccount',
+            'selectedFolder',
+            'messages',
+            'selectedMessage',
+            'folderStats'
+        ));
+    }
+
+    private function getSelectedAccount(Request $request, $accounts)
+    {
         $selectedAccountId = $request->get('account_id', $accounts->first()->id);
         $selectedAccount = $accounts->find($selectedAccountId);
 
         if (! $selectedAccount) {
             $selectedAccount = $accounts->first();
-            $selectedAccountId = $selectedAccount->id;
         }
 
-        // Get selected folder (default to inbox)
+        return $selectedAccount;
+    }
+
+    private function getSelectedFolder(Request $request, $selectedAccount)
+    {
         $selectedFolderId = $request->get('folder_id');
         $selectedFolder = null;
 
@@ -56,10 +95,11 @@ class InboxController extends Controller
                 ->first() ?: $selectedAccount->folders()->first();
         }
 
-        // Get messages with filters
-        $messagesQuery = $selectedFolder ? $selectedFolder->messages() : $selectedAccount->messages();
+        return $selectedFolder;
+    }
 
-        // Apply filters
+    private function applyMessageFilters(Request $request, $messagesQuery): void
+    {
         if ($request->filled('search')) {
             $messagesQuery->search($request->search);
         }
@@ -85,48 +125,23 @@ class InboxController extends Controller
         if ($request->filled('sender')) {
             $messagesQuery->fromSender($request->sender);
         }
+    }
 
-        // Get messages with pagination
-        $messages = $messagesQuery
-            ->notDeleted()
-            ->with(['attachments'])
-            ->orderBy('sent_at', 'desc')
-            ->paginate(50)
-            ->withQueryString();
-
-        // Get selected message for preview
-        $selectedMessage = null;
+    private function getSelectedMessage(Request $request, $messages)
+    {
         $selectedMessageId = $request->get('message_id');
 
-        if ($selectedMessageId) {
-            $selectedMessage = $messages->where('id', $selectedMessageId)->first();
-
-            // Mark as read if not already
-            if ($selectedMessage && ! $selectedMessage->is_read) {
-                $this->emailService->markAsRead($selectedMessage);
-            }
+        if (! $selectedMessageId) {
+            return null;
         }
 
-        // Get folder stats
-        $folderStats = $selectedAccount->folders->map(function ($folder) {
-            return [
-                'id' => $folder->id,
-                'name' => $folder->getDisplayName(),
-                'type' => $folder->type,
-                'unread_count' => $folder->unread_count,
-                'total_count' => $folder->message_count,
-                'icon' => $folder->getIcon(),
-            ];
-        });
+        $selectedMessage = $messages->where('id', $selectedMessageId)->first();
 
-        return view('email.inbox.index', compact(
-            'accounts',
-            'selectedAccount',
-            'selectedFolder',
-            'messages',
-            'selectedMessage',
-            'folderStats'
-        ));
+        if ($selectedMessage && ! $selectedMessage->is_read) {
+            $this->emailService->markAsRead($selectedMessage);
+        }
+
+        return $selectedMessage;
     }
 
     public function show(EmailMessage $message)
