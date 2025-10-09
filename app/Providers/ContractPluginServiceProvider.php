@@ -131,6 +131,23 @@ class ContractPluginServiceProvider extends ServiceProvider
     }
 
     /**
+     * Check if the current console command is contract-related
+     */
+    protected function isContractRelatedConsoleCommand(): bool
+    {
+        $command = $_SERVER['argv'][1] ?? '';
+        $contractCommands = ['contracts:', 'plugin:', 'migrate', 'seed', 'tinker'];
+
+        foreach ($contractCommands as $contractCommand) {
+            if (str_starts_with($command, $contractCommand)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Register core plugins
      */
     protected function registerCorePlugins(ContractPluginManager $pluginManager): void
