@@ -294,7 +294,6 @@ class StandardStatusTransition implements StatusTransitionInterface
 
     public function beforeTransition(Contract $contract, string $toStatus, User $user, array $context = []): void
     {
-        // Pre-transition logic
         switch ($toStatus) {
             case 'active':
                 // Set execution date
@@ -312,7 +311,11 @@ class StandardStatusTransition implements StatusTransitionInterface
                 $contract->terminated_at = now();
                 $contract->termination_reason = $context['termination_reason'] ?? null;
                 break;
+
+            default:
+                break;
         }
+    }
     }
 
     public function afterTransition(Contract $contract, string $fromStatus, string $toStatus, User $user, array $context = []): void
