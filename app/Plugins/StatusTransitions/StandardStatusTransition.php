@@ -381,6 +381,9 @@ class StandardStatusTransition implements StatusTransitionInterface
                     'template' => 'contract.terminated',
                 ];
                 break;
+
+            default:
+                break;
         }
 
         return $notifications;
