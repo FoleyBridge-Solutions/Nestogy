@@ -4,6 +4,8 @@
 
 use Illuminate\Support\Facades\Route;
 
+const CONTACT_ROUTE_PATTERN = 'contacts/{contact}';
+
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
     // ============================================================================
     // CRITICAL: All literal/specific client routes MUST be defined BEFORE any 
@@ -60,13 +62,13 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::get('contacts/create', [\App\Domains\Client\Controllers\ContactController::class, 'create'])->name('contacts.create');
         Route::post('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'store'])->name('contacts.store');
         Route::get('contacts/export', [\App\Domains\Client\Controllers\ContactController::class, 'export'])->name('contacts.export');
-        Route::get('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'show'])->name('contacts.show');
-        Route::get('contacts/{contact}/edit', [\App\Domains\Client\Controllers\ContactController::class, 'edit'])->name('contacts.edit');
-        Route::put('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'update'])->name('contacts.update');
-        Route::delete('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
+        Route::get(CONTACT_ROUTE_PATTERN, [\App\Domains\Client\Controllers\ContactController::class, 'show'])->name('contacts.show');
+        Route::get(CONTACT_ROUTE_PATTERN . '/edit', [\App\Domains\Client\Controllers\ContactController::class, 'edit'])->name('contacts.edit');
+        Route::put(CONTACT_ROUTE_PATTERN, [\App\Domains\Client\Controllers\ContactController::class, 'update'])->name('contacts.update');
+        Route::delete(CONTACT_ROUTE_PATTERN, [\App\Domains\Client\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
 
         // Contact API routes for modal functionality
-        Route::prefix('contacts/{contact}')->name('contacts.')->group(function () {
+        Route::prefix(CONTACT_ROUTE_PATTERN)->name('contacts.')->group(function () {
             Route::put('portal-access', [\App\Domains\Client\Controllers\ContactController::class, 'updatePortalAccess'])->name('portal-access.update');
             Route::put('security', [\App\Domains\Client\Controllers\ContactController::class, 'updateSecurity'])->name('security.update');
             Route::put('permissions', [\App\Domains\Client\Controllers\ContactController::class, 'updatePermissions'])->name('permissions.update');
