@@ -98,6 +98,21 @@ class DomainRouteManager
     {
         $routeFile = $config['route_file'] ?? app_path("Domains/{$domainName}/routes.php");
 
+        if (! $this->isValidRouteFile($routeFile, $domainName)) {
+            return;
+        }
+
+        $applyGrouping = ($config['apply_grouping'] ?? true);
+
+        if ($this->shouldApplyGrouping($applyGrouping, $config)) {
+            $this->registerWithGrouping($domainName, $config, $routeFile);
+        } else {
+            $this->registerWithoutGrouping($domainName, $config, $routeFile);
+        }
+    }
+
+    protected function isValidRouteFile(string $routeFile, string $domainName): bool
+    {
         if (! File::exists($routeFile) || filesize($routeFile) <= 10) {
             if (app()->environment('local')) {
                 logger()->info("Skipping domain '{$domainName}': route file missing or empty", [
@@ -107,70 +122,69 @@ class DomainRouteManager
                 ]);
             }
 
-            return;
+            return false;
         }
 
-        // Only apply middleware/prefix/name if they are explicitly set in config
-        // This prevents double application when routes define their own
-        $applyGrouping = ($config['apply_grouping'] ?? true);
+        return true;
+    }
 
-        if ($applyGrouping && (! empty($config['middleware']) || ! empty($config['prefix']) || ! empty($config['name']))) {
-            $middleware = $config['middleware'] ?? [];
-            $prefix = $config['prefix'] ?? null;
-            $name = $config['name'] ?? null;
+    protected function shouldApplyGrouping(bool $applyGrouping, array $config): bool
+    {
+        return $applyGrouping && (! empty($config['middleware']) || ! empty($config['prefix']) || ! empty($config['name']));
+    }
 
-            $route = Route::middleware($middleware);
+    protected function registerWithGrouping(string $domainName, array $config, string $routeFile): void
+    {
+        $middleware = $config['middleware'] ?? [];
+        $prefix = $config['prefix'] ?? null;
+        $name = $config['name'] ?? null;
 
-            if ($prefix) {
-                $route = $route->prefix($prefix);
-            }
+        $route = Route::middleware($middleware);
 
-            if ($name) {
-                $route = $route->name($name);
-            }
-
-            try {
-                $route->group($routeFile);
-                $this->registeredDomains[$domainName] = $config;
-            } catch (\Exception $e) {
-                if (app()->environment('local')) {
-                    throw new \RuntimeException(
-                        "Failed to register routes for domain '{$domainName}': {$e->getMessage()}",
-                        previous: $e
-                    );
-                }
-
-                // Log error but continue in production
-                logger()->error('Domain route registration failed', [
-                    'domain' => $domainName,
-                    'file' => $routeFile,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        } else {
-            // Routes define their own middleware/prefix/name, just include the file
-            // Use Route::group() instead of require_once to allow re-registration in tests
-            try {
-                Route::group([], function () use ($routeFile) {
-                    require_once $routeFile;
-                });
-                $this->registeredDomains[$domainName] = $config;
-            } catch (\Exception $e) {
-                if (app()->environment('local')) {
-                    throw new \RuntimeException(
-                        "Failed to register routes for domain '{$domainName}': {$e->getMessage()}",
-                        previous: $e
-                    );
-                }
-
-                // Log error but continue in production
-                logger()->error('Domain route registration failed', [
-                    'domain' => $domainName,
-                    'file' => $routeFile,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+        if ($prefix) {
+            $route = $route->prefix($prefix);
         }
+
+        if ($name) {
+            $route = $route->name($name);
+        }
+
+        $this->executeRouteRegistration($domainName, $config, $routeFile, fn() => $route->group($routeFile));
+    }
+
+    protected function registerWithoutGrouping(string $domainName, array $config, string $routeFile): void
+    {
+        $this->executeRouteRegistration($domainName, $config, $routeFile, function () use ($routeFile) {
+            Route::group([], function () use ($routeFile) {
+                require_once $routeFile;
+            });
+        });
+    }
+
+    protected function executeRouteRegistration(string $domainName, array $config, string $routeFile, callable $registrationCallback): void
+    {
+        try {
+            $registrationCallback();
+            $this->registeredDomains[$domainName] = $config;
+        } catch (\Exception $e) {
+            $this->handleRegistrationError($domainName, $routeFile, $e);
+        }
+    }
+
+    protected function handleRegistrationError(string $domainName, string $routeFile, \Exception $e): void
+    {
+        if (app()->environment('local')) {
+            throw new \RuntimeException(
+                "Failed to register routes for domain '{$domainName}': {$e->getMessage()}",
+                previous: $e
+            );
+        }
+
+        logger()->error('Domain route registration failed', [
+            'domain' => $domainName,
+            'file' => $routeFile,
+            'error' => $e->getMessage(),
+        ]);
     }
 
     /**
