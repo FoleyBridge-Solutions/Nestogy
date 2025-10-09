@@ -243,9 +243,9 @@
     @if($sidebarContext)
         <flux:sidebar collapsible="mobile" sticky class="lg:hidden bg-white dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
-            <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ $logoLight }}" 
-                        name="{{ $companyName }}" 
+            <flux:brand href="{{ route('dashboard') }}"
+                        logo="{{ $logoLight }}"
+                        name="{{ $companyName }}"
                         class="px-2 py-2 dark:hidden" />
             <flux:brand href="{{ route('dashboard') }}" 
                         logo="{{ $logoDark }}" 
