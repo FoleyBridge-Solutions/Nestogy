@@ -328,50 +328,82 @@ class DynamicContractRouteService
         $errors = [];
 
         foreach ($config as $index => $item) {
-            // Check required fields
-            if (empty($item['label'])) {
-                $errors[] = "Navigation item {$index}: Label is required";
-            }
-
-            if (! empty($item['route'])) {
-                // Validate route name format
-                if (! preg_match('/^[a-z0-9_.]+$/', $item['route'])) {
-                    $errors[] = "Navigation item {$index}: Invalid route name format";
-                }
-            }
-
-            if (! empty($item['route_path'])) {
-                // Validate route path format
-                if (! str_starts_with($item['route_path'], '/')) {
-                    $errors[] = "Navigation item {$index}: Route path must start with '/'";
-                }
-            }
-
-            // Validate controller action format
-            if (! empty($item['controller_action'])) {
-                if (! str_contains($item['controller_action'], '@')) {
-                    $errors[] = "Navigation item {$index}: Controller action must be in format 'Controller@method'";
-                }
-            }
-
-            // Validate permissions format
-            if (! empty($item['required_permissions'])) {
-                $permissions = json_decode($item['required_permissions'], true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    $errors[] = "Navigation item {$index}: Invalid permissions JSON format";
-                }
-            }
-
-            // Validate conditions format
-            if (! empty($item['conditions'])) {
-                $conditions = json_decode($item['conditions'], true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    $errors[] = "Navigation item {$index}: Invalid conditions JSON format";
-                }
-            }
+            $errors = array_merge(
+                $errors,
+                $this->validateRequiredFields($item, $index),
+                $this->validateRouteFormat($item, $index),
+                $this->validateRoutePathFormat($item, $index),
+                $this->validateControllerActionFormat($item, $index),
+                $this->validatePermissionsFormat($item, $index),
+                $this->validateConditionsFormat($item, $index)
+            );
         }
 
         return $errors;
+    }
+
+    private function validateRequiredFields(array $item, int $index): array
+    {
+        if (empty($item['label'])) {
+            return ["Navigation item {$index}: Label is required"];
+        }
+
+        return [];
+    }
+
+    private function validateRouteFormat(array $item, int $index): array
+    {
+        if (! empty($item['route']) && ! preg_match('/^[a-z0-9_.]+$/', $item['route'])) {
+            return ["Navigation item {$index}: Invalid route name format"];
+        }
+
+        return [];
+    }
+
+    private function validateRoutePathFormat(array $item, int $index): array
+    {
+        if (! empty($item['route_path']) && ! str_starts_with($item['route_path'], '/')) {
+            return ["Navigation item {$index}: Route path must start with '/'"];
+        }
+
+        return [];
+    }
+
+    private function validateControllerActionFormat(array $item, int $index): array
+    {
+        if (! empty($item['controller_action']) && ! str_contains($item['controller_action'], '@')) {
+            return ["Navigation item {$index}: Controller action must be in format 'Controller@method'"];
+        }
+
+        return [];
+    }
+
+    private function validatePermissionsFormat(array $item, int $index): array
+    {
+        if (empty($item['required_permissions'])) {
+            return [];
+        }
+
+        $permissions = json_decode($item['required_permissions'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return ["Navigation item {$index}: Invalid permissions JSON format"];
+        }
+
+        return [];
+    }
+
+    private function validateConditionsFormat(array $item, int $index): array
+    {
+        if (empty($item['conditions'])) {
+            return [];
+        }
+
+        $conditions = json_decode($item['conditions'], true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return ["Navigation item {$index}: Invalid conditions JSON format"];
+        }
+
+        return [];
     }
 
     /**
