@@ -411,32 +411,71 @@ class ContractClauseService
     protected function resolveDependencies(Collection $includedClauses, Collection $allClauses): Collection
     {
         $finalClauses = $includedClauses->keyBy('slug');
-        $added = true;
-
-        // Keep adding dependencies until no new ones are found
-        while ($added) {
-            $added = false;
-
-            foreach ($finalClauses as $clause) {
-                if ($clause->hasDependencies()) {
-                    $dependencies = $clause->getDependencies();
-
-                    foreach ($dependencies as $dependencySlug) {
-                        if (! $finalClauses->has($dependencySlug)) {
-                            // Find the dependency clause
-                            $dependencyClause = $allClauses->firstWhere('slug', $dependencySlug);
-
-                            if ($dependencyClause) {
-                                $finalClauses[$dependencySlug] = $dependencyClause;
-                                $added = true;
-                            }
-                        }
-                    }
-                }
-            }
+        
+        while ($this->addMissingDependencies($finalClauses, $allClauses)) {
+            // Continue until no new dependencies are added
         }
 
         return $finalClauses->values();
+    }
+
+    /**
+     * Add missing dependencies to the clauses collection.
+     * Returns true if any dependencies were added.
+     */
+    protected function addMissingDependencies(Collection &$finalClauses, Collection $allClauses): bool
+    {
+        $added = false;
+
+        foreach ($finalClauses as $clause) {
+            if ($this->addClauseDependencies($clause, $finalClauses, $allClauses)) {
+                $added = true;
+            }
+        }
+
+        return $added;
+    }
+
+    /**
+     * Add dependencies for a single clause.
+     * Returns true if any dependencies were added.
+     */
+    protected function addClauseDependencies(ContractClause $clause, Collection &$finalClauses, Collection $allClauses): bool
+    {
+        if (! $clause->hasDependencies()) {
+            return false;
+        }
+
+        $added = false;
+        $dependencies = $clause->getDependencies();
+
+        foreach ($dependencies as $dependencySlug) {
+            if ($this->addMissingDependency($dependencySlug, $finalClauses, $allClauses)) {
+                $added = true;
+            }
+        }
+
+        return $added;
+    }
+
+    /**
+     * Add a single missing dependency to the clauses collection.
+     * Returns true if the dependency was added.
+     */
+    protected function addMissingDependency(string $dependencySlug, Collection &$finalClauses, Collection $allClauses): bool
+    {
+        if ($finalClauses->has($dependencySlug)) {
+            return false;
+        }
+
+        $dependencyClause = $allClauses->firstWhere('slug', $dependencySlug);
+
+        if (! $dependencyClause) {
+            return false;
+        }
+
+        $finalClauses[$dependencySlug] = $dependencyClause;
+        return true;
     }
 
     /**
