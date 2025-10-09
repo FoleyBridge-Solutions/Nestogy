@@ -21,15 +21,15 @@ $classes = Flux::classes()
     ;
 @endphp
 
-<?php switch ((int) $level): case(1): ?>
+<?php switch ((int) $level): case 1: ?>
         <h1 {{ $attributes->class($classes) }} data-flux-heading>{{ $slot }}</h1>
         <?php break; ?>
         @break
-    <?php case(2): ?>
+    <?php case 2: ?>
         <h2 {{ $attributes->class($classes) }} data-flux-heading>{{ $slot }}</h2>
 
         @break
-    <?php case(3): ?>
+    <?php case 3: ?>
         <h3 {{ $attributes->class($classes) }} data-flux-heading>{{ $slot }}</h3>
 
         @break
