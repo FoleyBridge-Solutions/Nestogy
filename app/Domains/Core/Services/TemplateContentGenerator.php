@@ -187,13 +187,11 @@ class TemplateContentGenerator
         $content = "HARDWARE PROCUREMENT AND SERVICES:\n";
         $content .= "Service Provider shall provide the following hardware procurement and related services:\n\n";
 
-        // Product categories
         if (! empty($variables['hardware_categories'])) {
             $content .= "**Product Categories:**\n";
             $content .= "Authorized to procure and provide: {$variables['hardware_categories']}\n\n";
         }
 
-        // Procurement model
         if (! empty($variables['procurement_model'])) {
             $procurementDescription = match ($variables['procurement_model']) {
                 'direct_resale' => 'Direct resale model with manufacturer partnerships',
@@ -205,7 +203,32 @@ class TemplateContentGenerator
             $content .= "**Lead Time:** {$variables['lead_time_days']} {$variables['lead_time_type']}\n\n";
         }
 
-        // Installation services
+        $content .= $this->buildInstallationServicesSection($variables);
+
+        if (! empty($variables['installation_timeline'])) {
+            $content .= "**Service Level Agreements:**\n";
+            $content .= "- Installation Timeline: {$variables['installation_timeline']}\n";
+            $content .= "- Configuration Timeline: {$variables['configuration_timeline']}\n";
+            $content .= '- Support Response: '.str_replace('_', ' ', $variables['hardware_support_response'])."\n\n";
+        }
+
+        $content .= $this->buildWarrantyCoverageSection($variables);
+
+        if (! empty($variables['markup_model'])) {
+            $pricingDescription = match ($variables['markup_model']) {
+                'fixed_percentage' => 'Fixed percentage markup on manufacturer cost',
+                'tiered_discount' => 'Volume-based tiered discount structure',
+                'cost_plus' => 'Cost-plus pricing model',
+                default => 'Standard pricing model'
+            };
+            $content .= "**Pricing Model:** {$pricingDescription}\n\n";
+        }
+
+        return $content;
+    }
+
+    protected function buildInstallationServicesSection(array $variables): string
+    {
         $installationServices = [];
         if (! empty($variables['includes_installation'])) {
             $installationServices[] = 'Basic installation';
@@ -223,53 +246,39 @@ class TemplateContentGenerator
             $installationServices[] = 'Project management';
         }
 
-        if (! empty($installationServices)) {
-            $content .= "**Installation Services:**\n";
-            foreach ($installationServices as $service) {
-                $content .= "- {$service}\n";
-            }
-            $content .= "\n";
+        if (empty($installationServices)) {
+            return '';
         }
 
-        // Service Level Agreements
-        if (! empty($variables['installation_timeline'])) {
-            $content .= "**Service Level Agreements:**\n";
-            $content .= "- Installation Timeline: {$variables['installation_timeline']}\n";
-            $content .= "- Configuration Timeline: {$variables['configuration_timeline']}\n";
-            $content .= '- Support Response: '.str_replace('_', ' ', $variables['hardware_support_response'])."\n\n";
+        $content = "**Installation Services:**\n";
+        foreach ($installationServices as $service) {
+            $content .= "- {$service}\n";
         }
-
-        // Warranty terms
-        if (! empty($variables['hardware_warranty_period'])) {
-            $content .= "**Warranty Coverage:**\n";
-            $content .= '- Hardware Warranty: '.str_replace('_', ' ', $variables['hardware_warranty_period'])."\n";
-            $content .= '- Support Period: '.str_replace('_', ' ', $variables['support_warranty_period'])."\n";
-            if (! empty($variables['onsite_warranty_support'])) {
-                $content .= "- On-site warranty support included\n";
-            }
-            if (! empty($variables['advanced_replacement'])) {
-                $content .= "- Advanced replacement service included\n";
-            }
-            $content .= "\n";
-        }
-
-        // Pricing model
-        if (! empty($variables['markup_model'])) {
-            $pricingDescription = match ($variables['markup_model']) {
-                'fixed_percentage' => 'Fixed percentage markup on manufacturer cost',
-                'tiered_discount' => 'Volume-based tiered discount structure',
-                'cost_plus' => 'Cost-plus pricing model',
-                default => 'Standard pricing model'
-            };
-            $content .= "**Pricing Model:** {$pricingDescription}\n\n";
-        }
+        $content .= "\n";
 
         return $content;
     }
 
-    /**
-     * Generate Compliance-specific service content
-     */
+    protected function buildWarrantyCoverageSection(array $variables): string
+    {
+        if (empty($variables['hardware_warranty_period'])) {
+            return '';
+        }
+
+        $content = "**Warranty Coverage:**\n";
+        $content .= '- Hardware Warranty: '.str_replace('_', ' ', $variables['hardware_warranty_period'])."\n";
+        $content .= '- Support Period: '.str_replace('_', ' ', $variables['support_warranty_period'])."\n";
+        if (! empty($variables['onsite_warranty_support'])) {
+            $content .= "- On-site warranty support included\n";
+        }
+        if (! empty($variables['advanced_replacement'])) {
+            $content .= "- Advanced replacement service included\n";
+        }
+        $content .= "\n";
+
+        return $content;
+    }
+
     protected function generateComplianceServiceContent(Contract $contract, array $variables): string
     {
         $content = "COMPLIANCE SERVICES:\n";
