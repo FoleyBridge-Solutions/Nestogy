@@ -163,7 +163,7 @@
                                     wire:key="team-activity-ops" />
                                 @break
                             @case('tech-workload')
-                                <livewire:dashboard.widgets.tech-workload 
+                                <livewire:dashboard.widgets.tech-workload
                                     lazy
                                     wire:key="tech-workload-ops" />
                                 @break
