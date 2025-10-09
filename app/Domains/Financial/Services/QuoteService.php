@@ -813,34 +813,58 @@ class QuoteService
 
         $validator = Validator::make($data, $rules, $messages);
 
-        // Add custom validation
         $validator->after(function ($validator) use ($data) {
-            // Validate client belongs to user's company
-            if (! empty($data['client_id'])) {
-                $client = Client::find($data['client_id']);
-                if ($client && $client->company_id !== auth()->user()->company_id) {
-                    $validator->errors()->add('client_id', 'The selected client is invalid.');
-                }
-            }
-
-            // Validate category belongs to user's company
-            if (! empty($data['category_id'])) {
-                $category = Category::find($data['category_id']);
-                if ($category && $category->company_id !== auth()->user()->company_id) {
-                    $validator->errors()->add('category_id', 'The selected category is invalid.');
-                }
-            }
-
-            // Validate discount percentage
-            if (! empty($data['discount_type']) && $data['discount_type'] === Quote::DISCOUNT_PERCENTAGE) {
-                if (! empty($data['discount_amount']) && $data['discount_amount'] > 100) {
-                    $validator->errors()->add('discount_amount', 'Discount percentage cannot exceed 100%.');
-                }
-            }
+            $this->validateClientOwnership($validator, $data);
+            $this->validateCategoryOwnership($validator, $data);
+            $this->validateDiscountPercentage($validator, $data);
         });
 
         if ($validator->fails()) {
             throw new QuoteValidationException('Quote validation failed.', $validator->errors()->toArray());
+        }
+    }
+
+    /**
+     * Validate that the client belongs to the user's company
+     */
+    private function validateClientOwnership($validator, array $data): void
+    {
+        if (empty($data['client_id'])) {
+            return;
+        }
+
+        $client = Client::find($data['client_id']);
+        if ($client && $client->company_id !== auth()->user()->company_id) {
+            $validator->errors()->add('client_id', 'The selected client is invalid.');
+        }
+    }
+
+    /**
+     * Validate that the category belongs to the user's company
+     */
+    private function validateCategoryOwnership($validator, array $data): void
+    {
+        if (empty($data['category_id'])) {
+            return;
+        }
+
+        $category = Category::find($data['category_id']);
+        if ($category && $category->company_id !== auth()->user()->company_id) {
+            $validator->errors()->add('category_id', 'The selected category is invalid.');
+        }
+    }
+
+    /**
+     * Validate that discount percentage does not exceed 100%
+     */
+    private function validateDiscountPercentage($validator, array $data): void
+    {
+        if (empty($data['discount_type']) || $data['discount_type'] !== Quote::DISCOUNT_PERCENTAGE) {
+            return;
+        }
+
+        if (! empty($data['discount_amount']) && $data['discount_amount'] > 100) {
+            $validator->errors()->add('discount_amount', 'Discount percentage cannot exceed 100%.');
         }
     }
 
