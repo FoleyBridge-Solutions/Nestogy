@@ -141,14 +141,16 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
 
     // Roles & Permissions (MUST come before domain-based routes to avoid conflicts)
     Route::prefix('roles')->name('roles.')->group(function () {
+        const ROLE_PARAM = '/{role}';
+        
         Route::get('/', [RoleController::class, 'index'])->name('index');
         Route::get('/create', [RoleController::class, 'create'])->name('create');
         Route::post('/', [RoleController::class, 'store'])->name('store');
-        Route::get('/{role}', [RoleController::class, 'show'])->name('show');
-        Route::get('/{role}/edit', [RoleController::class, 'edit'])->name('edit');
-        Route::put('/{role}', [RoleController::class, 'update'])->name('update');
-        Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
-        Route::post('/{role}/duplicate', [RoleController::class, 'duplicate'])->name('duplicate');
+        Route::get(ROLE_PARAM, [RoleController::class, 'show'])->name('show');
+        Route::get(ROLE_PARAM . '/edit', [RoleController::class, 'edit'])->name('edit');
+        Route::put(ROLE_PARAM, [RoleController::class, 'update'])->name('update');
+        Route::delete(ROLE_PARAM, [RoleController::class, 'destroy'])->name('destroy');
+        Route::post(ROLE_PARAM . '/duplicate', [RoleController::class, 'duplicate'])->name('duplicate');
     });
 
     Route::prefix('permissions')->name('permissions.')->group(function () {
