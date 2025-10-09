@@ -62,7 +62,7 @@
         
         <flux:button 
             wire:click="setSortBy('overdue')" 
-            variant="{{ $sortBy === 'overdue' ? 'primary' : 'ghost' }}" 
+            variant="{{ $sortBy === 'overdue' ? 'primary' : 'ghost' }}"
             size="sm">
             Overdue
             @if($sortBy === 'overdue')
