@@ -436,6 +436,8 @@ class ContractPluginManager
             case 'field':
                 unset($this->fieldTypes[$identifier]);
                 break;
+            default:
+                break;
         }
 
         $this->clearPluginCache($type);
