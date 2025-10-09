@@ -80,8 +80,10 @@ class Asset extends Model
     ];
 
     // Asset statuses
+    const STATUS_READY_TO_DEPLOY = 'Ready To Deploy';
+
     const STATUSES = [
-        'Ready To Deploy',
+        self::STATUS_READY_TO_DEPLOY,
         'Deployed',
         'Archived',
         'Broken - Pending Repair',
