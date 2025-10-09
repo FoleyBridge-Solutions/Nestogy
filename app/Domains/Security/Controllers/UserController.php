@@ -21,6 +21,8 @@ class UserController extends Controller
 {
     private const NULLABLE_BOOLEAN = 'nullable|boolean';
 
+    private const DATETIME_FORMAT = 'Y-m-d H:i:s';
+
     protected $userService;
 
     protected $roleService;
@@ -131,7 +133,7 @@ class UserController extends Controller
                     $user->company->name ?? 'N/A',
                     $role['display_name'] ?? 'User',
                     $user->archived_at ? 'Archived' : 'Active',
-                    $user->created_at->format('Y-m-d H:i:s'),
+                    $user->created_at->format(self::DATETIME_FORMAT),
                 ]);
             }
 
@@ -871,8 +873,8 @@ class UserController extends Controller
                     $user->phone,
                     $role,
                     $user->status ? 'Active' : 'Inactive',
-                    $user->last_login_at ? $user->last_login_at->format('Y-m-d H:i:s') : '',
-                    $user->created_at->format('Y-m-d H:i:s'),
+                    $user->last_login_at ? $user->last_login_at->format(self::DATETIME_FORMAT) : '',
+                    $user->created_at->format(self::DATETIME_FORMAT),
                 ]);
             }
 
