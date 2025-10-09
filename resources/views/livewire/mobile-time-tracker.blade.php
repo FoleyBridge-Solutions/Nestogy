@@ -205,7 +205,7 @@
                                     @endif
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 wire:click="deleteEntry({{ $entry['id'] }})"
                                 wire:confirm="Delete this time entry?"
                                 class="ml-3 text-red-600 hover:text-red-700">
