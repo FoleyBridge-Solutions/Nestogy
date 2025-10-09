@@ -18,6 +18,8 @@ class TaxCloudApiClient extends BaseApiClient
 {
     protected const TIC_COMPUTER_SERVICES = '30070';
 
+    private const DEFAULT_ERROR_MESSAGE = 'Unknown error';
+
     protected string $baseUrl = 'https://api.taxcloud.com/1.0/TaxCloud';
 
     protected ?string $apiLoginId;
@@ -101,7 +103,7 @@ class TaxCloudApiClient extends BaseApiClient
                 $data = $response->json();
 
                 if (isset($data['ResponseType']) && $data['ResponseType'] === 'Error') {
-                    throw new Exception('TaxCloud API error: '.($data['Messages'][0] ?? 'Unknown error'));
+                    throw new Exception('TaxCloud API error: '.($data['Messages'][0] ?? self::DEFAULT_ERROR_MESSAGE));
                 }
 
                 return $this->formatLookupResponse($data, $cartItems, $address);
@@ -152,7 +154,7 @@ class TaxCloudApiClient extends BaseApiClient
                 $data = $response->json();
 
                 if (isset($data['ResponseType']) && $data['ResponseType'] === 'Error') {
-                    throw new Exception('TaxCloud verification error: '.($data['Messages'][0] ?? 'Unknown error'));
+                    throw new Exception('TaxCloud verification error: '.($data['Messages'][0] ?? self::DEFAULT_ERROR_MESSAGE));
                 }
 
                 return [
@@ -215,7 +217,7 @@ class TaxCloudApiClient extends BaseApiClient
                 $lookup = $this->lookupTax($address, $cartItems);
 
                 if (! $lookup['success']) {
-                    throw new Exception('Failed to get jurisdiction info: '.($lookup['error'] ?? 'Unknown error'));
+                    throw new Exception('Failed to get jurisdiction info: '.($lookup['error'] ?? self::DEFAULT_ERROR_MESSAGE));
                 }
 
                 return [
