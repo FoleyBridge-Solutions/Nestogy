@@ -299,30 +299,44 @@ class PermissionService
         $hierarchy = $this->getPermissionHierarchy();
 
         if ($wildcard === '*') {
-            // Full system access
-            $expanded = [];
-            foreach ($hierarchy as $module => $config) {
-                foreach ($config['permissions'] as $perm => $desc) {
-                    if (! str_contains($perm, '*')) {
-                        $expanded[] = $perm;
-                    }
-                }
-            }
-
-            return $expanded;
+            return $this->expandFullSystemAccess($hierarchy);
         }
 
         if (isset($hierarchy[$base])) {
-            $expanded = [];
-            foreach ($hierarchy[$base]['permissions'] as $perm => $desc) {
-                if (! str_contains($perm, '*')) {
-                    $expanded[] = $perm;
-                }
-            }
-
-            return $expanded;
+            return $this->extractNonWildcardPermissions($hierarchy[$base]['permissions']);
         }
 
         return [];
+    }
+
+    /**
+     * Expand full system access wildcard
+     */
+    private function expandFullSystemAccess(array $hierarchy): array
+    {
+        $expanded = [];
+        foreach ($hierarchy as $module => $config) {
+            $expanded = array_merge(
+                $expanded,
+                $this->extractNonWildcardPermissions($config['permissions'])
+            );
+        }
+
+        return $expanded;
+    }
+
+    /**
+     * Extract non-wildcard permissions from a permission list
+     */
+    private function extractNonWildcardPermissions(array $permissions): array
+    {
+        $expanded = [];
+        foreach ($permissions as $perm => $desc) {
+            if (! str_contains($perm, '*')) {
+                $expanded[] = $perm;
+            }
+        }
+
+        return $expanded;
     }
 }
