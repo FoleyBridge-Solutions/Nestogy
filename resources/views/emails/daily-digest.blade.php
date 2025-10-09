@@ -126,7 +126,7 @@
 
         <div class="footer-section">
             <p class="footer-text">
-                This is your automated daily digest. To change your notification preferences, 
+                This is your automated daily digest. To change your notification preferences,
                 visit your <a href="{{ route('settings.notifications') }}" style="color: #667eea;">notification settings</a>.
             </p>
             <p class="footer-text" style="margin-top: 15px;">
