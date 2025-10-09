@@ -98,6 +98,11 @@ class Invoice extends Model
     const DELETED_AT = 'archived_at';
 
     /**
+     * Date format for display
+     */
+    const DATE_FORMAT = 'F j, Y';
+
+    /**
      * Invoice status enumeration
      */
     const STATUS_DRAFT = 'Draft';
