@@ -21,7 +21,7 @@
                         type="file" 
                         id="camera-input" 
                         wire:model="photo" 
-                        accept="image/*" 
+                        accept="image/*"
                         capture="environment"
                         class="hidden">
                 </label>
