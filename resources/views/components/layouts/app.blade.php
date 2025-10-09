@@ -135,7 +135,7 @@
             @endphp
             <flux:brand href="{{ route('dashboard') }}" 
                         logo="{{ $logoLight }}" 
-                        name="{{ $companyName }}" 
+                        name="{{ $companyName }}"
                         class="dark:hidden" />
             <flux:brand href="{{ route('dashboard') }}" 
                         logo="{{ $logoDark }}" 
