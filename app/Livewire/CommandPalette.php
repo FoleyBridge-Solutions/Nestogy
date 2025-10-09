@@ -646,221 +646,236 @@ class CommandPalette extends Component
     {
         $user = Auth::user();
         $commands = [];
-
-        // Use the stored current route
         $currentRouteName = $this->currentRoute;
 
-        // Skip quick actions for Contact users (client portal)
         if ($user && ! $user instanceof \App\Models\Contact) {
-            // Get ALL favorite quick actions first - these should be the primary items shown
-            $allActions = QuickActionService::getActionsForUser($user);
-            $favoriteIds = QuickActionService::getFavoriteIdentifiers($user);
-
-            // Filter to get only favorites and format them for display
-            $favoriteActions = $allActions->filter(function ($action) use ($favoriteIds, $currentRouteName) {
-                // Skip if this action leads to the current page
-                if ($currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName) {
-                    logger()->info('Filtering out action because it matches current route', [
-                        'action_title' => $action['title'] ?? 'unknown',
-                        'action_route' => $action['route'],
-                        'current_route' => $currentRouteName,
-                    ]);
-
-                    return false;
-                }
-
-                // Check various identifiers to see if this action is favorited
-                $actionId = $action['id'] ?? null;
-                $route = $action['route'] ?? null;
-                $actionKey = $action['action'] ?? null;
-                $customId = isset($action['custom_id']) ? 'custom_'.$action['custom_id'] : null;
-
-                return in_array($actionId, $favoriteIds) ||
-                       in_array($route, $favoriteIds) ||
-                       in_array($actionKey, $favoriteIds) ||
-                       in_array($customId, $favoriteIds);
-            });
-
-            // Add all favorite actions with a star indicator
-            foreach ($favoriteActions as $action) {
-                $command = [
-                    'type' => 'quick_action',
-                    'id' => $action['id'] ?? null,
-                    'title' => $action['title'],
-                    'subtitle' => '⭐ Favorite • '.($action['description'] ?? 'Quick Action'),
-                    'icon' => $action['icon'] ?? 'star',
-                    'action_data' => $action, // This includes all settings including open_in
-                ];
-
-                // Add route information if available
-                if (isset($action['route'])) {
-                    $command['route_name'] = $action['route'];
-                    $command['route_params'] = $action['parameters'] ?? [];
-                }
-
-                // Add custom action ID if it's a custom action
-                if (isset($action['custom_id'])) {
-                    $command['custom_id'] = $action['custom_id'];
-                }
-
-                // Add action key for system actions
-                if (isset($action['action'])) {
-                    $command['action_key'] = $action['action'];
-                }
-
-                $commands[] = $command;
-            }
-
-            // If no favorites, show some popular quick actions
-            if (empty($commands)) {
-                $popularActions = QuickActionService::getPopularActions($user);
-
-                foreach ($popularActions as $action) {
-                    // Skip if this action leads to the current page
-                    if ($currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName) {
-                        continue;
-                    }
-
-                    $command = [
-                        'type' => 'quick_action',
-                        'id' => $action['id'] ?? null,
-                        'title' => $action['title'],
-                        'subtitle' => 'Quick Action • '.($action['description'] ?? ''),
-                        'icon' => $action['icon'] ?? 'bolt',
-                        'action_data' => $action, // This includes all settings including open_in
-                    ];
-
-                    // Add route information if available
-                    if (isset($action['route'])) {
-                        $command['route_name'] = $action['route'];
-                        $command['route_params'] = $action['parameters'] ?? [];
-                    }
-
-                    // Add custom action ID if it's a custom action
-                    if (isset($action['custom_id'])) {
-                        $command['custom_id'] = $action['custom_id'];
-                    }
-
-                    // Add action key for system actions
-                    if (isset($action['action'])) {
-                        $command['action_key'] = $action['action'];
-                    }
-
-                    $commands[] = $command;
-                }
-            }
+            $commands = $this->getQuickActionCommands($user, $currentRouteName);
         }
 
-        // Add standard navigation commands (but only if we don't have too many favorites)
-        $navigationCommands = [];
-
-        // Collect routes that are already in favorites to avoid duplicates
-        $existingRoutes = collect($commands)->pluck('route_name')->filter()->toArray();
-        $existingTitles = collect($commands)->pluck('title')->map(function ($title) {
-            return strtolower($title);
-        })->toArray();
-
-        // Only add navigation if we have less than 8 favorites
         if (count($commands) < 8) {
-            $allNavigationCommands = [
-                [
-                    'type' => 'navigation',
-                    'title' => 'Dashboard',
-                    'subtitle' => 'Navigation • Main',
-                    'route_name' => 'dashboard',
-                    'route_params' => [],
-                    'icon' => 'home',
-                ],
-                [
-                    'type' => 'navigation',
-                    'title' => 'Clients',
-                    'subtitle' => 'Navigation • View all clients',
-                    'route_name' => 'clients.index',
-                    'route_params' => [],
-                    'icon' => 'user-group',
-                ],
-                [
-                    'type' => 'navigation',
-                    'title' => 'Tickets',
-                    'subtitle' => 'Navigation • Support tickets',
-                    'route_name' => 'tickets.index',
-                    'route_params' => [],
-                    'icon' => 'ticket',
-                ],
-                [
-                    'type' => 'navigation',
-                    'title' => 'Invoices',
-                    'subtitle' => 'Navigation • Financial',
-                    'route_name' => 'financial.invoices.index',
-                    'route_params' => [],
-                    'icon' => 'document-text',
-                ],
-                [
-                    'type' => 'navigation',
-                    'title' => 'Projects',
-                    'subtitle' => 'Navigation • Project management',
-                    'route_name' => 'projects.index',
-                    'route_params' => [],
-                    'icon' => 'folder',
-                ],
-                [
-                    'type' => 'navigation',
-                    'title' => 'Assets',
-                    'subtitle' => 'Navigation • Equipment & inventory',
-                    'route_name' => 'assets.index',
-                    'route_params' => [],
-                    'icon' => 'computer-desktop',
-                ],
+            $navigationCommands = $this->getNavigationCommands($commands, $currentRouteName);
+            $commands = array_merge($commands, $navigationCommands);
+        }
+
+        return $commands;
+    }
+
+    private function getQuickActionCommands($user, $currentRouteName)
+    {
+        $allActions = QuickActionService::getActionsForUser($user);
+        $favoriteIds = QuickActionService::getFavoriteIdentifiers($user);
+
+        $favoriteActions = $this->filterFavoriteActions($allActions, $favoriteIds, $currentRouteName);
+        $commands = $this->formatQuickActions($favoriteActions, true);
+
+        if (empty($commands)) {
+            $popularActions = QuickActionService::getPopularActions($user);
+            $filteredActions = $this->filterActionsByRoute($popularActions, $currentRouteName);
+            $commands = $this->formatQuickActions($filteredActions, false);
+        }
+
+        return $commands;
+    }
+
+    private function filterFavoriteActions($allActions, $favoriteIds, $currentRouteName)
+    {
+        return $allActions->filter(function ($action) use ($favoriteIds, $currentRouteName) {
+            if ($this->isActionForCurrentRoute($action, $currentRouteName)) {
+                logger()->info('Filtering out action because it matches current route', [
+                    'action_title' => $action['title'] ?? 'unknown',
+                    'action_route' => $action['route'],
+                    'current_route' => $currentRouteName,
+                ]);
+                return false;
+            }
+
+            return $this->isActionFavorited($action, $favoriteIds);
+        });
+    }
+
+    private function isActionForCurrentRoute($action, $currentRouteName)
+    {
+        return $currentRouteName && isset($action['route']) && $action['route'] === $currentRouteName;
+    }
+
+    private function isActionFavorited($action, $favoriteIds)
+    {
+        $actionId = $action['id'] ?? null;
+        $route = $action['route'] ?? null;
+        $actionKey = $action['action'] ?? null;
+        $customId = isset($action['custom_id']) ? 'custom_'.$action['custom_id'] : null;
+
+        return in_array($actionId, $favoriteIds) ||
+               in_array($route, $favoriteIds) ||
+               in_array($actionKey, $favoriteIds) ||
+               in_array($customId, $favoriteIds);
+    }
+
+    private function filterActionsByRoute($actions, $currentRouteName)
+    {
+        return $actions->filter(function ($action) use ($currentRouteName) {
+            return !$this->isActionForCurrentRoute($action, $currentRouteName);
+        });
+    }
+
+    private function formatQuickActions($actions, $isFavorite)
+    {
+        $commands = [];
+        
+        foreach ($actions as $action) {
+            $subtitle = $isFavorite 
+                ? '⭐ Favorite • '.($action['description'] ?? 'Quick Action')
+                : 'Quick Action • '.($action['description'] ?? '');
+
+            $command = [
+                'type' => 'quick_action',
+                'id' => $action['id'] ?? null,
+                'title' => $action['title'],
+                'subtitle' => $subtitle,
+                'icon' => $action['icon'] ?? ($isFavorite ? 'star' : 'bolt'),
+                'action_data' => $action,
             ];
 
-            // Filter out navigation items that are already in favorites or lead to current page
-            foreach ($allNavigationCommands as $navCommand) {
-                $isDuplicate = false;
+            $command = $this->addActionRouteInfo($command, $action);
+            $command = $this->addActionIdentifiers($command, $action);
 
-                // Skip if this navigation item leads to the current page
-                if ($currentRouteName && isset($navCommand['route_name']) && $navCommand['route_name'] === $currentRouteName) {
-                    continue;
-                }
+            $commands[] = $command;
+        }
 
-                // Check if route already exists in favorites
-                if (isset($navCommand['route_name']) && in_array($navCommand['route_name'], $existingRoutes)) {
-                    $isDuplicate = true;
-                }
+        return $commands;
+    }
 
-                // Check if title is similar (to catch things like "View Tickets" vs "Tickets")
-                $navTitleLower = strtolower($navCommand['title']);
-                foreach ($existingTitles as $existingTitle) {
-                    if (str_contains($existingTitle, 'ticket') && str_contains($navTitleLower, 'ticket')) {
-                        $isDuplicate = true;
-                        break;
-                    }
-                    if (str_contains($existingTitle, 'client') && str_contains($navTitleLower, 'client')) {
-                        $isDuplicate = true;
-                        break;
-                    }
-                    if (str_contains($existingTitle, 'invoice') && str_contains($navTitleLower, 'invoice')) {
-                        $isDuplicate = true;
-                        break;
-                    }
-                    if ($existingTitle === $navTitleLower) {
-                        $isDuplicate = true;
-                        break;
-                    }
-                }
+    private function addActionRouteInfo($command, $action)
+    {
+        if (isset($action['route'])) {
+            $command['route_name'] = $action['route'];
+            $command['route_params'] = $action['parameters'] ?? [];
+        }
 
-                if (! $isDuplicate) {
-                    $navigationCommands[] = $navCommand;
-                }
+        return $command;
+    }
 
-                // Stop if we have enough commands
-                if (count($commands) + count($navigationCommands) >= 10) {
-                    break;
+    private function addActionIdentifiers($command, $action)
+    {
+        if (isset($action['custom_id'])) {
+            $command['custom_id'] = $action['custom_id'];
+        }
+
+        if (isset($action['action'])) {
+            $command['action_key'] = $action['action'];
+        }
+
+        return $command;
+    }
+
+    private function getNavigationCommands($existingCommands, $currentRouteName)
+    {
+        $existingRoutes = collect($existingCommands)->pluck('route_name')->filter()->toArray();
+        $existingTitles = collect($existingCommands)->pluck('title')->map(fn($title) => strtolower($title))->toArray();
+
+        $allNavigationCommands = $this->getDefaultNavigationCommands();
+        $navigationCommands = [];
+
+        foreach ($allNavigationCommands as $navCommand) {
+            if ($this->shouldSkipNavigationCommand($navCommand, $currentRouteName, $existingRoutes, $existingTitles)) {
+                continue;
+            }
+
+            $navigationCommands[] = $navCommand;
+
+            if (count($existingCommands) + count($navigationCommands) >= 10) {
+                break;
+            }
+        }
+
+        return $navigationCommands;
+    }
+
+    private function getDefaultNavigationCommands()
+    {
+        return [
+            [
+                'type' => 'navigation',
+                'title' => 'Dashboard',
+                'subtitle' => 'Navigation • Main',
+                'route_name' => 'dashboard',
+                'route_params' => [],
+                'icon' => 'home',
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Clients',
+                'subtitle' => 'Navigation • View all clients',
+                'route_name' => 'clients.index',
+                'route_params' => [],
+                'icon' => 'user-group',
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Tickets',
+                'subtitle' => 'Navigation • Support tickets',
+                'route_name' => 'tickets.index',
+                'route_params' => [],
+                'icon' => 'ticket',
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Invoices',
+                'subtitle' => 'Navigation • Financial',
+                'route_name' => 'financial.invoices.index',
+                'route_params' => [],
+                'icon' => 'document-text',
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Projects',
+                'subtitle' => 'Navigation • Project management',
+                'route_name' => 'projects.index',
+                'route_params' => [],
+                'icon' => 'folder',
+            ],
+            [
+                'type' => 'navigation',
+                'title' => 'Assets',
+                'subtitle' => 'Navigation • Equipment & inventory',
+                'route_name' => 'assets.index',
+                'route_params' => [],
+                'icon' => 'computer-desktop',
+            ],
+        ];
+    }
+
+    private function shouldSkipNavigationCommand($navCommand, $currentRouteName, $existingRoutes, $existingTitles)
+    {
+        if ($currentRouteName && isset($navCommand['route_name']) && $navCommand['route_name'] === $currentRouteName) {
+            return true;
+        }
+
+        if (isset($navCommand['route_name']) && in_array($navCommand['route_name'], $existingRoutes)) {
+            return true;
+        }
+
+        return $this->isTitleDuplicate($navCommand['title'], $existingTitles);
+    }
+
+    private function isTitleDuplicate($title, $existingTitles)
+    {
+        $navTitleLower = strtolower($title);
+        $duplicatePatterns = ['ticket', 'client', 'invoice'];
+
+        foreach ($existingTitles as $existingTitle) {
+            if ($existingTitle === $navTitleLower) {
+                return true;
+            }
+
+            foreach ($duplicatePatterns as $pattern) {
+                if (str_contains($existingTitle, $pattern) && str_contains($navTitleLower, $pattern)) {
+                    return true;
                 }
             }
         }
 
-        // Merge commands, favorites first
-        return array_merge($commands, $navigationCommands);
+        return false;
     }
 
     public function selectNext()
