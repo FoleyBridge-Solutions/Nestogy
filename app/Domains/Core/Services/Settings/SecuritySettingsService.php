@@ -10,54 +10,48 @@ class SecuritySettingsService extends BaseSettingsService
 
     protected function getValidationRules(string $category): array
     {
-        switch ($category) {
-            case 'authentication':
-                return [
-                    'two_factor_enabled' => 'boolean',
-                    'two_factor_required' => 'boolean',
-                    'password_min_length' => 'integer|min:8|max:128',
-                    'password_require_uppercase' => 'boolean',
-                    'password_require_lowercase' => 'boolean',
-                    'password_require_numbers' => 'boolean',
-                    'password_require_symbols' => 'boolean',
-                    'password_expires_days' => 'nullable|integer|min:0',
-                    'password_history_count' => 'integer|min:0|max:24',
-                    'session_lifetime' => 'integer|min:5|max:43200',
-                    'session_idle_timeout' => 'nullable|integer|min:5',
-                    'max_login_attempts' => 'integer|min:3|max:10',
-                    'lockout_duration' => 'integer|min:1|max:1440',
-                    'trusted_devices_enabled' => 'boolean',
-                    'trusted_devices_lifetime' => 'integer|min:1|max:365',
-                ];
+        $rules = [
+            'authentication' => [
+                'two_factor_enabled' => 'boolean',
+                'two_factor_required' => 'boolean',
+                'password_min_length' => 'integer|min:8|max:128',
+                'password_require_uppercase' => 'boolean',
+                'password_require_lowercase' => 'boolean',
+                'password_require_numbers' => 'boolean',
+                'password_require_symbols' => 'boolean',
+                'password_expires_days' => 'nullable|integer|min:0',
+                'password_history_count' => 'integer|min:0|max:24',
+                'session_lifetime' => 'integer|min:5|max:43200',
+                'session_idle_timeout' => 'nullable|integer|min:5',
+                'max_login_attempts' => 'integer|min:3|max:10',
+                'lockout_duration' => 'integer|min:1|max:1440',
+                'trusted_devices_enabled' => 'boolean',
+                'trusted_devices_lifetime' => 'integer|min:1|max:365',
+            ],
+            'access' => [
+                'ip_whitelist_enabled' => 'boolean',
+                'ip_whitelist' => 'nullable|array',
+                'ip_whitelist.*' => 'ip',
+                'allowed_countries' => 'nullable|array',
+                'allowed_countries.*' => 'string|size:2',
+                'block_tor_vpn' => 'boolean',
+                'api_rate_limit' => 'integer|min:10|max:10000',
+                'concurrent_sessions' => 'integer|min:1|max:10',
+            ],
+            'audit' => [
+                'audit_enabled' => 'boolean',
+                'audit_user_actions' => 'boolean',
+                'audit_api_requests' => 'boolean',
+                'audit_settings_changes' => 'boolean',
+                'audit_financial_changes' => 'boolean',
+                'audit_retention_days' => 'integer|min:30|max:2555',
+                'failed_login_alerts' => 'boolean',
+                'failed_login_threshold' => 'integer|min:3|max:20',
+                'suspicious_activity_alerts' => 'boolean',
+            ],
+        ];
 
-            case 'access':
-                return [
-                    'ip_whitelist_enabled' => 'boolean',
-                    'ip_whitelist' => 'nullable|array',
-                    'ip_whitelist.*' => 'ip',
-                    'allowed_countries' => 'nullable|array',
-                    'allowed_countries.*' => 'string|size:2',
-                    'block_tor_vpn' => 'boolean',
-                    'api_rate_limit' => 'integer|min:10|max:10000',
-                    'concurrent_sessions' => 'integer|min:1|max:10',
-                ];
-
-            case 'audit':
-                return [
-                    'audit_enabled' => 'boolean',
-                    'audit_user_actions' => 'boolean',
-                    'audit_api_requests' => 'boolean',
-                    'audit_settings_changes' => 'boolean',
-                    'audit_financial_changes' => 'boolean',
-                    'audit_retention_days' => 'integer|min:30|max:2555',
-                    'failed_login_alerts' => 'boolean',
-                    'failed_login_threshold' => 'integer|min:3|max:20',
-                    'suspicious_activity_alerts' => 'boolean',
-                ];
-
-            default:
-                return [];
-        }
+        return $rules[$category] ?? [];
     }
 
     public function getDefaultSettings(string $category): array
