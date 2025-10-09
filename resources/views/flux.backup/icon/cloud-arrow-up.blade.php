@@ -40,4 +40,8 @@ $classes = Flux::classes('shrink-0')
 </svg>
         <?php break; ?>
 
+    <?php default: ?>
+
+        <?php break; ?>
+
 <?php endswitch; ?>
