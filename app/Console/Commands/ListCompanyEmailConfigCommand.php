@@ -14,6 +14,8 @@ class ListCompanyEmailConfigCommand extends Command
 
     private const MSG_LIST_START = 'Listing company email configurations...';
 
+    private const VALUE_NOT_SET = 'Not Set';
+
     /**
      * The name and signature of the console command.
      *
@@ -66,8 +68,8 @@ class ListCompanyEmailConfigCommand extends Command
             }
 
             $status = $hasConfig ? '✅ Configured' : '❌ Not Configured';
-            $smtpHost = $setting?->smtp_host ?? 'Not Set';
-            $fromEmail = $setting?->mail_from_email ?? $setting?->smtp_username ?? 'Not Set';
+            $smtpHost = $setting?->smtp_host ?? self::VALUE_NOT_SET;
+            $fromEmail = $setting?->mail_from_email ?? $setting?->smtp_username ?? self::VALUE_NOT_SET;
 
             if ($detailed) {
                 $tableData[] = [
@@ -76,7 +78,7 @@ class ListCompanyEmailConfigCommand extends Command
                     $status,
                     $smtpHost,
                     $setting?->smtp_port ?? 'N/A',
-                    $setting?->smtp_username ?? 'Not Set',
+                    $setting?->smtp_username ?? self::VALUE_NOT_SET,
                     $fromEmail,
                 ];
             } else {
