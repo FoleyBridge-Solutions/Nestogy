@@ -21,6 +21,13 @@ use Illuminate\Support\Facades\DB;
  */
 class SentimentAnalyticsController extends Controller
 {
+    private const COLOR_RED = '#ef4444';
+    private const COLOR_ORANGE = '#f97316';
+    private const COLOR_AMBER = '#f59e0b';
+    private const COLOR_LIME = '#84cc16';
+    private const COLOR_EMERALD = '#10b981';
+    private const COLOR_SLATE = '#64748b';
+
     /**
      * Display sentiment analytics dashboard
      */
@@ -166,7 +173,7 @@ class SentimentAnalyticsController extends Controller
             ],
             'tickets_needing_attention' => [
                 'value' => $negativeTicketsNeedingAttention,
-                'color' => $negativeTicketsNeedingAttention > 0 ? '#ef4444' : '#10b981',
+                'color' => $negativeTicketsNeedingAttention > 0 ? self::COLOR_RED : self::COLOR_EMERALD,
             ],
             'sentiment_distribution' => [
                 'positive' => $sentimentCounts->get('POSITIVE')->count ?? 0,
@@ -369,35 +376,35 @@ class SentimentAnalyticsController extends Controller
             return [
                 'score' => round($score, 1),
                 'label' => 'Excellent',
-                'color' => '#10b981',
+                'color' => self::COLOR_EMERALD,
                 'risk_level' => 'Low',
             ];
         } elseif ($score >= 60) {
             return [
                 'score' => round($score, 1),
                 'label' => 'Good',
-                'color' => '#84cc16',
+                'color' => self::COLOR_LIME,
                 'risk_level' => 'Low',
             ];
         } elseif ($score >= 40) {
             return [
                 'score' => round($score, 1),
                 'label' => 'Fair',
-                'color' => '#f59e0b',
+                'color' => self::COLOR_AMBER,
                 'risk_level' => 'Medium',
             ];
         } elseif ($score >= 20) {
             return [
                 'score' => round($score, 1),
                 'label' => 'Poor',
-                'color' => '#f97316',
+                'color' => self::COLOR_ORANGE,
                 'risk_level' => 'High',
             ];
         } else {
             return [
                 'score' => round($score, 1),
                 'label' => 'Critical',
-                'color' => '#ef4444',
+                'color' => self::COLOR_RED,
                 'risk_level' => 'Critical',
             ];
         }
@@ -562,18 +569,18 @@ class SentimentAnalyticsController extends Controller
     private function getSentimentColor(float $score): string
     {
         if ($score > 0.5) {
-            return '#10b981';
+            return self::COLOR_EMERALD;
         }
         if ($score > 0.1) {
-            return '#84cc16';
+            return self::COLOR_LIME;
         }
         if ($score > -0.1) {
-            return '#64748b';
+            return self::COLOR_SLATE;
         }
         if ($score > -0.5) {
-            return '#f97316';
+            return self::COLOR_ORANGE;
         }
 
-        return '#ef4444';
+        return self::COLOR_RED;
     }
 }
