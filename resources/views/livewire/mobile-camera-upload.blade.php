@@ -19,7 +19,7 @@
                     </div>
                     <input 
                         type="file" 
-                        id="camera-input" 
+                        id="camera-input"
                         wire:model="photo" 
                         accept="image/*"
                         capture="environment"
