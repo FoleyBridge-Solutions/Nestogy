@@ -565,10 +565,25 @@ class ContractClauseService
      */
     protected function resolveConflicts(Collection $clauses): Collection
     {
+        $conflictMap = $this->buildConflictMap($clauses);
         $finalClauses = collect();
+
+        foreach ($clauses as $clause) {
+            if ($this->shouldIncludeClause($clause, $conflictMap, $finalClauses)) {
+                $finalClauses->push($clause);
+            }
+        }
+
+        return $finalClauses;
+    }
+
+    /**
+     * Build a map of clause slugs to their conflicting clause slugs.
+     */
+    protected function buildConflictMap(Collection $clauses): array
+    {
         $conflictMap = [];
 
-        // Build conflict map
         foreach ($clauses as $clause) {
             if ($clause->hasConflicts()) {
                 $conflicts = $clause->getConflicts();
@@ -578,37 +593,58 @@ class ContractClauseService
             }
         }
 
-        // Process clauses and resolve conflicts
-        foreach ($clauses as $clause) {
-            $hasConflict = false;
+        return $conflictMap;
+    }
 
-            if (isset($conflictMap[$clause->slug])) {
-                $conflicts = $conflictMap[$clause->slug];
+    /**
+     * Determine if a clause should be included based on conflicts.
+     */
+    protected function shouldIncludeClause(ContractClause $clause, array $conflictMap, Collection $finalClauses): bool
+    {
+        if (! isset($conflictMap[$clause->slug])) {
+            return true;
+        }
 
-                // Check if any conflicting clause is already included
-                foreach ($finalClauses as $existingClause) {
-                    if (in_array($existingClause->slug, $conflicts)) {
-                        // Resolve conflict based on priority (required > optional, system > user)
-                        if ($this->getClausePriority($clause) > $this->getClausePriority($existingClause)) {
-                            // Remove the existing clause and add this one
-                            $finalClauses = $finalClauses->reject(function ($c) use ($existingClause) {
-                                return $c->slug === $existingClause->slug;
-                            });
-                        } else {
-                            // Skip this clause
-                            $hasConflict = true;
-                            break;
-                        }
-                    }
-                }
-            }
+        $conflicts = $conflictMap[$clause->slug];
 
-            if (! $hasConflict) {
-                $finalClauses->push($clause);
+        foreach ($finalClauses as $existingClause) {
+            if ($this->hasConflictWith($existingClause, $conflicts)) {
+                return $this->resolveConflictBetween($clause, $existingClause, $finalClauses);
             }
         }
 
-        return $finalClauses;
+        return true;
+    }
+
+    /**
+     * Check if an existing clause conflicts with the given conflicts list.
+     */
+    protected function hasConflictWith(ContractClause $existingClause, array $conflicts): bool
+    {
+        return in_array($existingClause->slug, $conflicts);
+    }
+
+    /**
+     * Resolve conflict between two clauses based on priority.
+     */
+    protected function resolveConflictBetween(ContractClause $newClause, ContractClause $existingClause, Collection &$finalClauses): bool
+    {
+        if ($this->getClausePriority($newClause) > $this->getClausePriority($existingClause)) {
+            $this->removeClauseFromCollection($existingClause, $finalClauses);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Remove a clause from the collection.
+     */
+    protected function removeClauseFromCollection(ContractClause $clauseToRemove, Collection &$collection): void
+    {
+        $collection = $collection->reject(function ($c) use ($clauseToRemove) {
+            return $c->slug === $clauseToRemove->slug;
+        });
     }
 
     /**
