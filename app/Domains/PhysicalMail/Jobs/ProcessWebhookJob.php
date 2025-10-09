@@ -285,6 +285,13 @@ class ProcessWebhookJob implements ShouldQueue
             case 'returned_to_sender':
                 event(new \App\Domains\PhysicalMail\Events\MailOrderReturned($order));
                 break;
+
+            default:
+                Log::debug('No event fired for status', [
+                    'order_id' => $order->id,
+                    'status' => $newStatus,
+                ]);
+                break;
         }
     }
 }
