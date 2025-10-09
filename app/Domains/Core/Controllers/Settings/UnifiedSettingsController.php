@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Log;
 
 class UnifiedSettingsController extends Controller
 {
+    private const MESSAGE_SETTINGS_UPDATED = 'Settings updated successfully';
+
     protected array $services = [];
 
     public function __construct()
@@ -163,7 +165,7 @@ class UnifiedSettingsController extends Controller
 
             DB::commit();
 
-            Log::info('Settings updated successfully', [
+            Log::info(self::MESSAGE_SETTINGS_UPDATED, [
                 'domain' => $domain,
                 'category' => $category,
                 'company_id' => auth()->user()->company_id,
@@ -171,7 +173,7 @@ class UnifiedSettingsController extends Controller
                 'config_id' => $result->id,
             ]);
 
-            return redirect()->back()->with('success', 'Settings updated successfully');
+            return redirect()->back()->with('success', self::MESSAGE_SETTINGS_UPDATED);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
@@ -362,7 +364,7 @@ class UnifiedSettingsController extends Controller
     public function update(Request $request)
     {
         // Delegate to updateCategory based on the request data
-        return response()->json(['message' => 'Settings updated successfully']);
+        return response()->json(['message' => self::MESSAGE_SETTINGS_UPDATED]);
     }
 
     public function company()
