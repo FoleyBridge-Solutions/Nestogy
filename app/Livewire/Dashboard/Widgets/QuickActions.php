@@ -211,61 +211,80 @@ class QuickActions extends Component
     public function executeAction($actionKey, $customId = null)
     {
         try {
-            // Use the service to find and execute the action
             $actionIdentifier = $customId ?? $actionKey;
             $action = QuickActionService::executeAction($actionIdentifier, Auth::user());
 
-            // Handle custom action execution
             if (isset($action['custom_id'])) {
-                $customAction = CustomQuickAction::find($action['custom_id']);
-
-                if ($customAction) {
-                    if ($customAction->type === 'route') {
-                        return redirect()->route($customAction->target, $customAction->parameters ?? []);
-                    } elseif ($customAction->type === 'url') {
-                        $url = $customAction->target;
-                        if (! empty($customAction->parameters)) {
-                            $url .= '?'.http_build_query($customAction->parameters);
-                        }
-
-                        if ($customAction->open_in === 'new_tab') {
-                            $this->dispatch('open-url', ['url' => $url, 'target' => '_blank']);
-                        } else {
-                            return redirect()->away($url);
-                        }
-                    }
-                }
-
-                return;
+                return $this->handleCustomAction($action);
             }
 
-            // Handle system actions
-            if (isset($action['route'])) {
-                return redirect()->route($action['route'], $action['parameters'] ?? []);
-            } elseif (isset($action['action'])) {
-                switch ($action['action']) {
-                    case 'exportReports':
-                        $this->dispatch('export-reports');
-                        break;
-
-                    case 'remoteAccess':
-                        $this->dispatch('open-remote-access');
-                        break;
-
-                    case 'clientPortal':
-                        $this->dispatch('open-client-portal');
-                        break;
-
-                    default:
-                        $this->dispatch('quick-action-executed', ['action' => $action['action']]);
-                        break;
-                }
-            }
+            return $this->handleSystemAction($action);
         } catch (\Exception $e) {
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'Failed to execute action: '.$e->getMessage(),
             ]);
+        }
+    }
+
+    protected function handleCustomAction($action)
+    {
+        $customAction = CustomQuickAction::find($action['custom_id']);
+
+        if (! $customAction) {
+            return;
+        }
+
+        if ($customAction->type === 'route') {
+            return redirect()->route($customAction->target, $customAction->parameters ?? []);
+        }
+
+        if ($customAction->type === 'url') {
+            return $this->handleCustomUrlAction($customAction);
+        }
+    }
+
+    protected function handleCustomUrlAction($customAction)
+    {
+        $url = $customAction->target;
+
+        if (! empty($customAction->parameters)) {
+            $url .= '?'.http_build_query($customAction->parameters);
+        }
+
+        if ($customAction->open_in === 'new_tab') {
+            $this->dispatch('open-url', ['url' => $url, 'target' => '_blank']);
+            return;
+        }
+
+        return redirect()->away($url);
+    }
+
+    protected function handleSystemAction($action)
+    {
+        if (isset($action['route'])) {
+            return redirect()->route($action['route'], $action['parameters'] ?? []);
+        }
+
+        if (isset($action['action'])) {
+            $this->dispatchSystemAction($action['action']);
+        }
+    }
+
+    protected function dispatchSystemAction($actionName)
+    {
+        $actionMap = [
+            'exportReports' => 'export-reports',
+            'remoteAccess' => 'open-remote-access',
+            'clientPortal' => 'open-client-portal',
+        ];
+
+        $eventName = $actionMap[$actionName] ?? null;
+
+        if ($eventName) {
+            $this->dispatch($eventName);
+        } else {
+            $this->dispatch('quick-action-executed', ['action' => $actionName]);
         }
     }
 
