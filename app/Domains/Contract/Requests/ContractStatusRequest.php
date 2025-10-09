@@ -59,53 +59,83 @@ class ContractStatusRequest extends FormRequest
             $newStatus = $this->status;
             $currentStatus = $contract->status;
 
-            // Validate status transitions
             $this->validateStatusTransition($validator, $currentStatus, $newStatus);
-
-            // Validate required reason for certain transitions
-            $statusesRequiringReason = [
-                Contract::STATUS_TERMINATED,
-                Contract::STATUS_SUSPENDED,
-                Contract::STATUS_CANCELLED,
-            ];
-
-            if (in_array($newStatus, $statusesRequiringReason) && empty($this->reason)) {
-                $validator->errors()->add('reason', 'Reason is required when changing status to '.$newStatus.'.');
-            }
-
-            // Validate signature requirements for activation
-            if ($newStatus === Contract::STATUS_ACTIVE) {
-                if ($contract->signature_status !== Contract::SIGNATURE_FULLY_EXECUTED) {
-                    $validator->errors()->add('status', 'Contract must be fully signed before activation.');
-                }
-            }
-
-            // Validate that terminated contracts cannot be reactivated
-            if ($currentStatus === Contract::STATUS_TERMINATED && $newStatus === Contract::STATUS_ACTIVE) {
-                $validator->errors()->add('status', 'Terminated contracts cannot be reactivated.');
-            }
-
-            // Validate that cancelled contracts cannot be changed to active
-            if ($currentStatus === Contract::STATUS_CANCELLED &&
-                in_array($newStatus, [Contract::STATUS_ACTIVE, Contract::STATUS_SIGNED])) {
-                $validator->errors()->add('status', 'Cancelled contracts cannot be reactivated.');
-            }
-
-            // Validate effective date for future status changes
-            if ($this->has('effective_date') && $this->effective_date) {
-                $effectiveDate = \Carbon\Carbon::parse($this->effective_date);
-
-                // Some status changes should be immediate
-                $immediateStatuses = [
-                    Contract::STATUS_SUSPENDED,
-                    Contract::STATUS_CANCELLED,
-                ];
-
-                if (in_array($newStatus, $immediateStatuses) && $effectiveDate->isAfter(now())) {
-                    $validator->errors()->add('effective_date', "Status change to {$newStatus} must be effective immediately.");
-                }
-            }
+            $this->validateReasonRequirement($validator, $newStatus);
+            $this->validateSignatureRequirement($validator, $contract, $newStatus);
+            $this->validateTerminatedReactivation($validator, $currentStatus, $newStatus);
+            $this->validateCancelledReactivation($validator, $currentStatus, $newStatus);
+            $this->validateEffectiveDate($validator, $newStatus);
         });
+    }
+
+    /**
+     * Validate that reason is provided for certain status changes.
+     */
+    protected function validateReasonRequirement($validator, string $newStatus): void
+    {
+        $statusesRequiringReason = [
+            Contract::STATUS_TERMINATED,
+            Contract::STATUS_SUSPENDED,
+            Contract::STATUS_CANCELLED,
+        ];
+
+        if (in_array($newStatus, $statusesRequiringReason) && empty($this->reason)) {
+            $validator->errors()->add('reason', 'Reason is required when changing status to '.$newStatus.'.');
+        }
+    }
+
+    /**
+     * Validate signature requirements for contract activation.
+     */
+    protected function validateSignatureRequirement($validator, $contract, string $newStatus): void
+    {
+        if ($newStatus === Contract::STATUS_ACTIVE) {
+            if ($contract->signature_status !== Contract::SIGNATURE_FULLY_EXECUTED) {
+                $validator->errors()->add('status', 'Contract must be fully signed before activation.');
+            }
+        }
+    }
+
+    /**
+     * Validate that terminated contracts cannot be reactivated.
+     */
+    protected function validateTerminatedReactivation($validator, string $currentStatus, string $newStatus): void
+    {
+        if ($currentStatus === Contract::STATUS_TERMINATED && $newStatus === Contract::STATUS_ACTIVE) {
+            $validator->errors()->add('status', 'Terminated contracts cannot be reactivated.');
+        }
+    }
+
+    /**
+     * Validate that cancelled contracts cannot be reactivated.
+     */
+    protected function validateCancelledReactivation($validator, string $currentStatus, string $newStatus): void
+    {
+        if ($currentStatus === Contract::STATUS_CANCELLED &&
+            in_array($newStatus, [Contract::STATUS_ACTIVE, Contract::STATUS_SIGNED])) {
+            $validator->errors()->add('status', 'Cancelled contracts cannot be reactivated.');
+        }
+    }
+
+    /**
+     * Validate effective date requirements for status changes.
+     */
+    protected function validateEffectiveDate($validator, string $newStatus): void
+    {
+        if (! $this->has('effective_date') || ! $this->effective_date) {
+            return;
+        }
+
+        $effectiveDate = \Carbon\Carbon::parse($this->effective_date);
+
+        $immediateStatuses = [
+            Contract::STATUS_SUSPENDED,
+            Contract::STATUS_CANCELLED,
+        ];
+
+        if (in_array($newStatus, $immediateStatuses) && $effectiveDate->isAfter(now())) {
+            $validator->errors()->add('effective_date', "Status change to {$newStatus} must be effective immediately.");
+        }
     }
 
     /**
@@ -113,7 +143,10 @@ class ContractStatusRequest extends FormRequest
      */
     protected function validateStatusTransition($validator, string $currentStatus, string $newStatus): void
     {
-        // Define allowed transitions
+        if ($currentStatus === $newStatus) {
+            return;
+        }
+
         $allowedTransitions = [
             Contract::STATUS_DRAFT => [
                 Contract::STATUS_PENDING_REVIEW,
@@ -149,24 +182,13 @@ class ContractStatusRequest extends FormRequest
                 Contract::STATUS_ACTIVE,
                 Contract::STATUS_TERMINATED,
             ],
-            Contract::STATUS_TERMINATED => [
-                // Terminated is final - no transitions allowed
-            ],
+            Contract::STATUS_TERMINATED => [],
             Contract::STATUS_EXPIRED => [
                 Contract::STATUS_TERMINATED,
-                // Could allow renewal to active in future
             ],
-            Contract::STATUS_CANCELLED => [
-                // Cancelled is final - no transitions allowed
-            ],
+            Contract::STATUS_CANCELLED => [],
         ];
 
-        // Allow staying in same status (for updates with same status)
-        if ($currentStatus === $newStatus) {
-            return;
-        }
-
-        // Check if transition is allowed
         $allowed = $allowedTransitions[$currentStatus] ?? [];
 
         if (! in_array($newStatus, $allowed)) {
