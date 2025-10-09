@@ -57,7 +57,7 @@
             </div>
 
             <div class="text-sm text-zinc-600 dark:text-zinc-400 w-full sm:w-auto text-left sm:text-right">
-                <strong>{{ number_format($summary['total_hours'], 2) }}</strong> hours across 
+                <strong>{{ number_format($summary['total_hours'], 2) }}</strong> hours across
                 <strong>{{ $summary['total_entries'] }}</strong> entries
                 @if($summary['selected_count'] > 0)
                     <br class="sm:hidden" />
