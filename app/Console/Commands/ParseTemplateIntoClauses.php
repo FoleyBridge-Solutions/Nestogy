@@ -60,80 +60,25 @@ class ParseTemplateIntoClauses extends Command
     public function handle()
     {
         $templateIdentifier = $this->argument('template');
-        $companyId = $this->option('company-id') ?? 1; // Default to company 1
+        $companyId = $this->option('company-id') ?? 1;
         $isDryRun = $this->option('dry-run');
 
-        // Find template
-        if ($templateIdentifier) {
-            if (is_numeric($templateIdentifier)) {
-                $template = ContractTemplate::find($templateIdentifier);
-            } else {
-                $template = ContractTemplate::where('name', 'like', "%{$templateIdentifier}%")->first();
-            }
-        } else {
-            // Default to Recurring Support Services Agreement
-            $template = ContractTemplate::where('name', 'Recurring Support Services Agreement')->first();
-        }
-
+        $template = $this->findTemplate($templateIdentifier);
         if (! $template) {
-            $this->error('Template not found. Available templates:');
-            ContractTemplate::all()->each(function ($t) {
-                $this->line("  {$t->id}: {$t->name}");
-            });
-
             return 1;
         }
 
-        $this->info("Parsing template: {$template->name}");
-        $this->info("Company ID: {$companyId}");
+        $this->displayTemplateInfo($template, $companyId, $isDryRun);
 
-        if ($isDryRun) {
-            $this->warn('DRY RUN MODE - No changes will be made');
-        }
-
-        // Parse template into clauses
         try {
             DB::beginTransaction();
 
             $parsedClauses = $this->parseRecurringServicesTemplate($template, $companyId);
-
             $this->info("\nFound ".count($parsedClauses).' clauses to create:');
 
-            $createdClauses = [];
-            foreach ($parsedClauses as $index => $clauseData) {
-                $this->line(sprintf(
-                    '  %d. %s (%s) - %d variables',
-                    $index + 1,
-                    $clauseData['name'],
-                    $clauseData['category'],
-                    count($clauseData['variables'])
-                ));
-
-                if (! $isDryRun) {
-                    $clause = ContractClause::create($clauseData);
-                    $createdClauses[] = $clause;
-                    $this->info("    ✓ Created clause ID {$clause->id}");
-                }
-            }
-
-            // Link clauses to template
-            if (! $isDryRun && ! empty($createdClauses)) {
-                foreach ($createdClauses as $clause) {
-                    $template->clauses()->attach($clause->id, [
-                        'sort_order' => $clause->sort_order,
-                        'is_required' => $clause->is_required,
-                    ]);
-                }
-                $this->info("\n✓ Linked all clauses to template");
-            }
-
-            if ($isDryRun) {
-                DB::rollBack();
-                $this->warn("\nDRY RUN completed - no changes made");
-            } else {
-                DB::commit();
-                $this->info("\n✓ Successfully parsed template into ".count($createdClauses).' clauses');
-            }
+            $createdClauses = $this->createClausesFromParsed($parsedClauses, $isDryRun);
+            $this->linkClausesToTemplate($template, $createdClauses, $isDryRun);
+            $this->finalizeTransaction($isDryRun, count($createdClauses));
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -144,6 +89,101 @@ class ParseTemplateIntoClauses extends Command
         }
 
         return 0;
+    }
+
+    /**
+     * Find template by identifier or show available templates.
+     */
+    protected function findTemplate(?string $templateIdentifier): ?ContractTemplate
+    {
+        if ($templateIdentifier) {
+            $template = is_numeric($templateIdentifier)
+                ? ContractTemplate::find($templateIdentifier)
+                : ContractTemplate::where('name', 'like', "%{$templateIdentifier}%")->first();
+        } else {
+            $template = ContractTemplate::where('name', 'Recurring Support Services Agreement')->first();
+        }
+
+        if (! $template) {
+            $this->error('Template not found. Available templates:');
+            ContractTemplate::all()->each(function ($t) {
+                $this->line("  {$t->id}: {$t->name}");
+            });
+        }
+
+        return $template;
+    }
+
+    /**
+     * Display template information to the user.
+     */
+    protected function displayTemplateInfo(ContractTemplate $template, int $companyId, bool $isDryRun): void
+    {
+        $this->info("Parsing template: {$template->name}");
+        $this->info("Company ID: {$companyId}");
+
+        if ($isDryRun) {
+            $this->warn('DRY RUN MODE - No changes will be made');
+        }
+    }
+
+    /**
+     * Create clauses from parsed data.
+     */
+    protected function createClausesFromParsed(array $parsedClauses, bool $isDryRun): array
+    {
+        $createdClauses = [];
+        
+        foreach ($parsedClauses as $index => $clauseData) {
+            $this->line(sprintf(
+                '  %d. %s (%s) - %d variables',
+                $index + 1,
+                $clauseData['name'],
+                $clauseData['category'],
+                count($clauseData['variables'])
+            ));
+
+            if (! $isDryRun) {
+                $clause = ContractClause::create($clauseData);
+                $createdClauses[] = $clause;
+                $this->info("    ✓ Created clause ID {$clause->id}");
+            }
+        }
+
+        return $createdClauses;
+    }
+
+    /**
+     * Link created clauses to template.
+     */
+    protected function linkClausesToTemplate(ContractTemplate $template, array $createdClauses, bool $isDryRun): void
+    {
+        if ($isDryRun || empty($createdClauses)) {
+            return;
+        }
+
+        foreach ($createdClauses as $clause) {
+            $template->clauses()->attach($clause->id, [
+                'sort_order' => $clause->sort_order,
+                'is_required' => $clause->is_required,
+            ]);
+        }
+        
+        $this->info("\n✓ Linked all clauses to template");
+    }
+
+    /**
+     * Finalize the transaction based on dry-run mode.
+     */
+    protected function finalizeTransaction(bool $isDryRun, int $clausesCount): void
+    {
+        if ($isDryRun) {
+            DB::rollBack();
+            $this->warn("\nDRY RUN completed - no changes made");
+        } else {
+            DB::commit();
+            $this->info("\n✓ Successfully parsed template into ".$clausesCount.' clauses');
+        }
     }
 
     /**
