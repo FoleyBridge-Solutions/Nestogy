@@ -8,6 +8,8 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
+    private const MAINTENANCE_TIME = '03:00';
+
     /**
      * Define the application's command schedule.
      *
@@ -98,7 +100,7 @@ class Kernel extends ConsoleKernel
         // Database Backup - Backup database daily
         $schedule->command('backup:database')
             ->daily()
-            ->at('03:00')
+            ->at(self::MAINTENANCE_TIME)
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/database-backup.log'));
 
@@ -223,7 +225,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('storage:clean-orphaned')
             ->weekly()
             ->saturdays()
-            ->at('03:00')
+            ->at(self::MAINTENANCE_TIME)
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/orphaned-files.log'));
 
@@ -320,7 +322,7 @@ class Kernel extends ConsoleKernel
 
         // Check for new quarterly tax data monthly and update if available
         $schedule->command('nestogy:update-texas-tax-data --force')
-            ->monthlyOn(15, '03:00')
+            ->monthlyOn(15, self::MAINTENANCE_TIME)
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/texas-tax-data-monthly.log'));
 
