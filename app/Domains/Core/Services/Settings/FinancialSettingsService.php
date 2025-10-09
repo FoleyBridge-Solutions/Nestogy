@@ -9,6 +9,8 @@ class FinancialSettingsService extends BaseSettingsService
 {
     protected string $domain = SettingsConfiguration::DOMAIN_FINANCIAL;
 
+    private const LONG_TEXT_VALIDATION = 'nullable|string|max:1000';
+
     /**
      * Get validation rules for each category
      */
@@ -33,11 +35,11 @@ class FinancialSettingsService extends BaseSettingsService
 
             case 'invoicing':
                 return [
-                    'invoice_footer' => 'nullable|string|max:1000',
-                    'invoice_notes' => 'nullable|string|max:1000',
+                    'invoice_footer' => self::LONG_TEXT_VALIDATION,
+                    'invoice_notes' => self::LONG_TEXT_VALIDATION,
                     'show_tax_id' => 'boolean',
                     'show_payment_instructions' => 'boolean',
-                    'payment_instructions' => 'nullable|string|max:1000',
+                    'payment_instructions' => self::LONG_TEXT_VALIDATION,
                     'attach_pdf' => 'boolean',
                     'allow_partial_payments' => 'boolean',
                     'minimum_payment_amount' => 'nullable|numeric|min:0',
