@@ -34,15 +34,43 @@ class TestPhysicalMail extends Command
         $this->info('Mode: '.($postgrid->isTestMode() ? 'TEST' : 'LIVE'));
 
         $type = $this->option('type');
-
-        // Ask user which approach to use
         $approach = $this->choice(
             'Which approach would you like to test?',
             ['safe-template', 'raw-html', 'unsafe-html'],
             0
         );
 
-        // Test data
+        $data = $this->buildTestData($type, $approach, $templateBuilder);
+
+        try {
+            $this->info('Sending test '.$type.' using '.$approach.' approach...');
+
+            $order = $mailService->send($type, $data);
+
+            $this->displayOrderInfo($order);
+            $this->info('Waiting for job to process...');
+            sleep(3);
+
+            $order->refresh();
+
+            if ($order->postgrid_id) {
+                $this->handlePostGridOrder($order, $mailService, $postgrid);
+            } else {
+                $this->warn('PostGrid ID not yet available. Check queue processing.');
+            }
+
+            return Command::SUCCESS;
+
+        } catch (\Exception $e) {
+            $this->error('Failed to send mail: '.$e->getMessage());
+            $this->error('Trace: '.$e->getTraceAsString());
+
+            return Command::FAILURE;
+        }
+    }
+
+    private function buildTestData(string $type, string $approach, $templateBuilder): array
+    {
         $data = [
             'type' => $type,
             'to' => [
@@ -91,75 +119,63 @@ class TestPhysicalMail extends Command
             ],
         ];
 
-        // Override address_placement based on approach
         if ($approach === 'unsafe-html') {
             $data['address_placement'] = 'top_first_page';
             $this->warn('Using unsafe HTML - this may get cancelled by PostGrid!');
         }
 
-        try {
-            $this->info('Sending test '.$type.' using '.$approach.' approach...');
+        return $data;
+    }
 
-            $order = $mailService->send($type, $data);
+    private function displayOrderInfo($order): void
+    {
+        $this->info('✅ Mail queued successfully!');
+        $this->info('Order ID: '.$order->id);
+        $this->info('Status: '.$order->status);
+    }
 
-            $this->info('✅ Mail queued successfully!');
-            $this->info('Order ID: '.$order->id);
-            $this->info('Status: '.$order->status);
+    private function handlePostGridOrder($order, PhysicalMailService $mailService, PostGridClient $postgrid): void
+    {
+        $this->info('PostGrid ID: '.$order->postgrid_id);
+        $this->info('PDF URL: '.$order->pdf_url);
 
-            // Wait for job to process
-            $this->info('Waiting for job to process...');
-            sleep(3);
+        $tracking = $mailService->getTracking($order);
+        $this->info('Tracking Status: '.json_encode($tracking));
 
-            // Refresh order to get PostGrid ID
-            $order->refresh();
+        if ($tracking['status'] === 'cancelled') {
+            $this->displayCancellationInfo($order, $postgrid);
+        } else {
+            $this->info('✅ Letter accepted by PostGrid!');
+        }
 
-            if ($order->postgrid_id) {
-                $this->info('PostGrid ID: '.$order->postgrid_id);
-                $this->info('PDF URL: '.$order->pdf_url);
+        if ($postgrid->isTestMode() && $tracking['status'] !== 'cancelled') {
+            $this->progressTestOrder($order, $mailService);
+        }
+    }
 
-                // Get tracking info
-                $tracking = $mailService->getTracking($order);
-                $this->info('Tracking Status: '.json_encode($tracking));
+    private function displayCancellationInfo($order, PostGridClient $postgrid): void
+    {
+        $this->error('❌ Letter was cancelled by PostGrid!');
 
-                // Check for cancellation
-                if ($tracking['status'] === 'cancelled') {
-                    $this->error('❌ Letter was cancelled by PostGrid!');
+        $letter = $postgrid->getLetter($order->postgrid_id);
+        if (isset($letter['cancellation'])) {
+            $this->error('Cancellation reason: '.$letter['cancellation']['reason']);
+            $this->error('Cancellation note: '.$letter['cancellation']['note']);
+        }
+    }
 
-                    // Get detailed info
-                    $letter = $postgrid->getLetter($order->postgrid_id);
-                    if (isset($letter['cancellation'])) {
-                        $this->error('Cancellation reason: '.$letter['cancellation']['reason']);
-                        $this->error('Cancellation note: '.$letter['cancellation']['note']);
-                    }
-                } else {
-                    $this->info('✅ Letter accepted by PostGrid!');
-                }
+    private function progressTestOrder($order, PhysicalMailService $mailService): void
+    {
+        $this->info('Progressing test order through statuses...');
 
-                // In test mode, progress the order
-                if ($postgrid->isTestMode() && $tracking['status'] !== 'cancelled') {
-                    $this->info('Progressing test order through statuses...');
-
-                    for ($i = 0; $i < 3; $i++) {
-                        try {
-                            $response = $mailService->progressTestOrder($order);
-                            $order->refresh();
-                            $this->info('  → Status: '.$order->status);
-                        } catch (\Exception $e) {
-                            break;
-                        }
-                    }
-                }
-            } else {
-                $this->warn('PostGrid ID not yet available. Check queue processing.');
+        for ($i = 0; $i < 3; $i++) {
+            try {
+                $mailService->progressTestOrder($order);
+                $order->refresh();
+                $this->info('  → Status: '.$order->status);
+            } catch (\Exception $e) {
+                break;
             }
-
-            return Command::SUCCESS;
-
-        } catch (\Exception $e) {
-            $this->error('Failed to send mail: '.$e->getMessage());
-            $this->error('Trace: '.$e->getTraceAsString());
-
-            return Command::FAILURE;
         }
     }
 
