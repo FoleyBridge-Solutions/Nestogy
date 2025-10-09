@@ -70,7 +70,7 @@
             @endif
         </flux:button>
         
-        <flux:button 
+        <flux:button
             wire:click="setSortBy('name')" 
             variant="{{ $sortBy === 'name' ? 'primary' : 'ghost' }}"
             size="sm">
