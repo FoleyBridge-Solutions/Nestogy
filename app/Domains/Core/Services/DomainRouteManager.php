@@ -186,41 +186,42 @@ class DomainRouteManager
      */
     public function getRegisteredDomains(): array
     {
-        // Check which domains actually have routes registered
         $registered = [];
         $routes = Route::getRoutes();
         $domains = $this->getDomainConfig();
 
         foreach ($domains as $domain => $config) {
-            $prefix = $config['prefix'] ?? '';
-            $hasRoutes = false;
-
-            // Check if any routes match this domain's configuration
-            foreach ($routes as $route) {
-                $uri = $route->uri();
-
-                // Check if route matches domain's prefix
-                if ($prefix && str_starts_with($uri, $prefix.'/')) {
-                    $hasRoutes = true;
-                    break;
-                }
-
-                // For domains without prefix, check common patterns
-                if (! $prefix) {
-                    $domainLower = strtolower($domain);
-                    if (str_contains($uri, $domainLower)) {
-                        $hasRoutes = true;
-                        break;
-                    }
-                }
-            }
-
-            if ($hasRoutes) {
+            if ($this->domainHasRoutes($domain, $config, $routes)) {
                 $registered[$domain] = $config;
             }
         }
 
         return $registered;
+    }
+
+    /**
+     * Check if a domain has registered routes
+     */
+    protected function domainHasRoutes(string $domain, array $config, $routes): bool
+    {
+        $prefix = $config['prefix'] ?? '';
+
+        foreach ($routes as $route) {
+            $uri = $route->uri();
+
+            if ($prefix && str_starts_with($uri, $prefix.'/')) {
+                return true;
+            }
+
+            if (! $prefix) {
+                $domainLower = strtolower($domain);
+                if (str_contains($uri, $domainLower)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
