@@ -134,7 +134,7 @@
             <div class="mb-4">
                 <flux:field>
                     <flux:label for="description">What are you working on?</flux:label>
-                    <flux:textarea 
+                    <flux:textarea
                         wire:model="description" 
                         id="description"
                         rows="2"
