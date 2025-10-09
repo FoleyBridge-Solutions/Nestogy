@@ -21,7 +21,7 @@ class NotificationPreferences extends Component
 
     public $ticket_comment_added = true;
 
-    public $sla_breach_warning = true;
+    public $slaBreachWarning = true;
 
     public $sla_breached = true;
 
@@ -42,7 +42,7 @@ class NotificationPreferences extends Component
         $this->ticket_status_changed = $this->preferences->ticket_status_changed;
         $this->ticket_resolved = $this->preferences->ticket_resolved;
         $this->ticket_comment_added = $this->preferences->ticket_comment_added;
-        $this->sla_breach_warning = $this->preferences->sla_breach_warning;
+        $this->slaBreachWarning = $this->preferences->sla_breach_warning;
         $this->sla_breached = $this->preferences->sla_breached;
         $this->daily_digest = $this->preferences->daily_digest;
         $this->emailEnabled = $this->preferences->email_enabled;
@@ -58,7 +58,7 @@ class NotificationPreferences extends Component
             'ticket_status_changed' => $this->ticket_status_changed,
             'ticket_resolved' => $this->ticket_resolved,
             'ticket_comment_added' => $this->ticket_comment_added,
-            'sla_breach_warning' => $this->sla_breach_warning,
+            'sla_breach_warning' => $this->slaBreachWarning,
             'sla_breached' => $this->sla_breached,
             'daily_digest' => $this->daily_digest,
             'email_enabled' => $this->emailEnabled,
