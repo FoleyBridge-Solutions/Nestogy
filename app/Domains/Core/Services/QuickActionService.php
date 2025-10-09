@@ -473,56 +473,85 @@ class QuickActionService
         $favorites = static::getFavorites($user)->take(3);
         $allActions = static::getActionsForUser($user);
 
-        foreach ($favorites as $favorite) {
-            if ($favorite->custom_quick_action_id) {
-                $action = $allActions->first(function ($a) use ($favorite) {
-                    return isset($a['custom_id']) && $a['custom_id'] == $favorite->custom_quick_action_id;
-                });
-                if ($action) {
-                    $action['is_favorite'] = true;
-                    $actions->push($action);
-                }
-            } elseif ($favorite->system_action) {
-                $action = $allActions->first(function ($a) use ($favorite) {
-                    return (isset($a['route']) && $a['route'] === $favorite->system_action) ||
-                           (isset($a['action']) && $a['action'] === $favorite->system_action);
-                });
-                if ($action) {
-                    $action['is_favorite'] = true;
-                    $actions->push($action);
-                }
-            }
-        }
+        $actions = static::addFavoriteActions($favorites, $allActions, $actions);
 
         // Add some common actions if we have room
-        if ($actions->count() < 5) {
-            // Add create ticket if user has permission
-            if ($user->can('create-tickets')) {
-                $actions->push([
-                    'id' => 'sys_create_ticket',
-                    'type' => 'system',
-                    'title' => 'Create New Ticket',
-                    'description' => 'Create a support ticket',
-                    'icon' => 'plus-circle',
-                    'color' => 'blue',
-                    'route' => 'tickets.create',
-                ]);
-            }
+        $actions = static::addCommonActions($user, $actions);
 
-            // Add create invoice if user has permission
-            if ($user->can('create-invoices')) {
-                $actions->push([
-                    'id' => 'sys_create_invoice',
-                    'type' => 'system',
-                    'title' => 'Create Invoice',
-                    'description' => 'Create a new invoice',
-                    'icon' => 'plus-circle',
-                    'color' => 'green',
-                    'route' => 'financial.invoices.create',
-                ]);
+        return $actions->take(5);
+    }
+
+    /**
+     * Add favorite actions to the collection
+     */
+    protected static function addFavoriteActions($favorites, Collection $allActions, Collection $actions): Collection
+    {
+        foreach ($favorites as $favorite) {
+            $action = static::findFavoriteAction($favorite, $allActions);
+            
+            if ($action) {
+                $action['is_favorite'] = true;
+                $actions->push($action);
             }
         }
 
-        return $actions->take(5);
+        return $actions;
+    }
+
+    /**
+     * Find a favorite action in the collection
+     */
+    protected static function findFavoriteAction($favorite, Collection $allActions)
+    {
+        if ($favorite->custom_quick_action_id) {
+            return $allActions->first(function ($a) use ($favorite) {
+                return isset($a['custom_id']) && $a['custom_id'] == $favorite->custom_quick_action_id;
+            });
+        }
+
+        if ($favorite->system_action) {
+            return $allActions->first(function ($a) use ($favorite) {
+                return (isset($a['route']) && $a['route'] === $favorite->system_action) ||
+                       (isset($a['action']) && $a['action'] === $favorite->system_action);
+            });
+        }
+
+        return null;
+    }
+
+    /**
+     * Add common actions if there's room
+     */
+    protected static function addCommonActions(User $user, Collection $actions): Collection
+    {
+        if ($actions->count() >= 5) {
+            return $actions;
+        }
+
+        if ($user->can('create-tickets')) {
+            $actions->push([
+                'id' => 'sys_create_ticket',
+                'type' => 'system',
+                'title' => 'Create New Ticket',
+                'description' => 'Create a support ticket',
+                'icon' => 'plus-circle',
+                'color' => 'blue',
+                'route' => 'tickets.create',
+            ]);
+        }
+
+        if ($user->can('create-invoices')) {
+            $actions->push([
+                'id' => 'sys_create_invoice',
+                'type' => 'system',
+                'title' => 'Create Invoice',
+                'description' => 'Create a new invoice',
+                'icon' => 'plus-circle',
+                'color' => 'green',
+                'route' => 'financial.invoices.create',
+            ]);
+        }
+
+        return $actions;
     }
 }
