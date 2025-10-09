@@ -186,14 +186,24 @@ class CreateContact extends Component
             return redirect()->route('clients.contacts.index');
         }
 
-        // Validate all tabs at once for final save
         $this->activeTab = 'all';
         $this->validate();
 
+        $contactData = $this->buildContactData($client);
+        $contact = Contact::create($contactData);
+
+        $this->handlePortalInvitation($contact);
+        $this->updatePrimaryContact($contact, $client);
+        $this->setSuccessMessage();
+
+        return redirect()->route('clients.contacts.index');
+    }
+
+    protected function buildContactData($client): array
+    {
         $contactData = [
             'client_id' => $client->id,
             'company_id' => auth()->user()->company_id,
-            // Basic information
             'name' => $this->name,
             'title' => $this->title,
             'email' => $this->email,
@@ -203,19 +213,16 @@ class CreateContact extends Component
             'department' => $this->department,
             'role' => $this->role,
             'notes' => $this->notes,
-            // Contact type
             'primary' => $this->primary,
             'billing' => $this->billing,
             'technical' => $this->technical,
             'important' => $this->important,
-            // Communication preferences
             'preferred_contact_method' => $this->preferred_contact_method,
             'best_time_to_contact' => $this->best_time_to_contact,
             'timezone' => $this->timezone ?: null,
             'language' => $this->language,
             'do_not_disturb' => $this->do_not_disturb,
             'marketing_opt_in' => $this->marketing_opt_in,
-            // Professional details
             'linkedin_url' => $this->linkedin_url ?: null,
             'assistant_name' => $this->assistant_name ?: null,
             'assistant_email' => $this->assistant_email ?: null,
@@ -223,60 +230,78 @@ class CreateContact extends Component
             'reports_to_id' => $this->reports_to_id,
             'work_schedule' => $this->work_schedule ?: null,
             'professional_bio' => $this->professional_bio ?: null,
-            // Location & Availability
             'office_location_id' => $this->office_location_id,
             'is_emergency_contact' => $this->is_emergency_contact,
             'is_after_hours_contact' => $this->is_after_hours_contact,
             'out_of_office_start' => $this->out_of_office_start ?: null,
             'out_of_office_end' => $this->out_of_office_end ?: null,
-            // Social & Web presence
             'website' => $this->website ?: null,
             'twitter_handle' => $this->twitter_handle ?: null,
             'facebook_url' => $this->facebook_url ?: null,
             'instagram_handle' => $this->instagram_handle ?: null,
             'company_blog' => $this->company_blog ?: null,
-            // Portal access
             'has_portal_access' => $this->has_portal_access,
             'auth_method' => $this->has_portal_access ? $this->auth_method : null,
         ];
 
-        // Handle password if portal access is enabled
-        if ($this->has_portal_access) {
-            if ($this->portal_access_method === 'manual_password' && $this->password) {
-                $contactData['password_hash'] = bcrypt($this->password);
-                $contactData['password_changed_at'] = now();
-            } elseif ($this->portal_access_method === 'send_invitation') {
-                $this->send_invitation = true;
-            }
+        return $this->addPasswordData($contactData);
+    }
+
+    protected function addPasswordData(array $contactData): array
+    {
+        if (! $this->has_portal_access) {
+            return $contactData;
         }
 
-        $contact = Contact::create($contactData);
-
-        // Send invitation if requested
-        if ($this->send_invitation && $this->has_portal_access) {
-            $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
-            $result = $invitationService->sendInvitation($contact, auth()->user());
-
-            if (! $result['success']) {
-                session()->flash('warning', 'Contact created but invitation failed: '.$result['message']);
-            } else {
-                session()->flash('success', 'Contact created and invitation sent successfully.');
-            }
+        if ($this->portal_access_method === 'manual_password' && $this->password) {
+            $contactData['password_hash'] = bcrypt($this->password);
+            $contactData['password_changed_at'] = now();
+        } elseif ($this->portal_access_method === 'send_invitation') {
+            $this->send_invitation = true;
         }
 
-        // If this is set as primary, unset other primary contacts for this client
-        if ($contact->primary) {
-            Contact::where('client_id', $client->id)
-                ->where('id', '!=', $contact->id)
-                ->update(['primary' => false]);
+        return $contactData;
+    }
+
+    protected function handlePortalInvitation(Contact $contact): void
+    {
+        if (! $this->send_invitation || ! $this->has_portal_access) {
+            return;
         }
 
-        // Only show the default success message if we haven't already shown a more specific one
-        if (! session()->has('success') && ! session()->has('warning')) {
-            session()->flash('success', 'Contact created successfully.');
+        $invitationService = app(\App\Domains\Client\Services\PortalInvitationService::class);
+        $result = $invitationService->sendInvitation($contact, auth()->user());
+
+        $this->setInvitationMessage($result);
+    }
+
+    protected function setInvitationMessage(array $result): void
+    {
+        if (! $result['success']) {
+            session()->flash('warning', 'Contact created but invitation failed: '.$result['message']);
+        } else {
+            session()->flash('success', 'Contact created and invitation sent successfully.');
+        }
+    }
+
+    protected function updatePrimaryContact(Contact $contact, $client): void
+    {
+        if (! $contact->primary) {
+            return;
         }
 
-        return redirect()->route('clients.contacts.index');
+        Contact::where('client_id', $client->id)
+            ->where('id', '!=', $contact->id)
+            ->update(['primary' => false]);
+    }
+
+    protected function setSuccessMessage(): void
+    {
+        if (session()->has('success') || session()->has('warning')) {
+            return;
+        }
+
+        session()->flash('success', 'Contact created successfully.');
     }
 
     public function render()
