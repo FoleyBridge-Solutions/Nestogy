@@ -22,9 +22,21 @@ class TestIntelligentTaxSystem extends Command
         $this->info('Testing Intelligent Tax Discovery System');
         $this->info('=========================================');
 
-        // Test 1: Intelligent Pattern Discovery
-        $this->info("\n1. Testing Intelligent Pattern Discovery:");
         $discoveryService = new IntelligentJurisdictionDiscoveryService;
+
+        $this->testPatternDiscovery($discoveryService);
+        $this->testJurisdictionCodeDiscovery($discoveryService);
+        $this->testNationwideTaxDiscovery();
+        $this->testLocalTaxRateService();
+
+        $this->displaySummary();
+
+        return Command::SUCCESS;
+    }
+
+    private function testPatternDiscovery(IntelligentJurisdictionDiscoveryService $discoveryService): void
+    {
+        $this->info("\n1. Testing Intelligent Pattern Discovery:");
         $patterns = $discoveryService->discoverJurisdictionPatterns();
 
         if ($patterns['success']) {
@@ -40,8 +52,10 @@ class TestIntelligentTaxSystem extends Command
         } else {
             $this->error('✗ Pattern discovery failed: '.$patterns['error']);
         }
+    }
 
-        // Test 2: Jurisdiction Code Discovery (replacing hardcoded)
+    private function testJurisdictionCodeDiscovery(IntelligentJurisdictionDiscoveryService $discoveryService): void
+    {
         $this->info("\n2. Testing Dynamic Jurisdiction Code Discovery:");
         $testCases = [
             ['name' => 'BEXAR COUNTY ESD 4', 'id' => '5015682'],
@@ -58,8 +72,10 @@ class TestIntelligentTaxSystem extends Command
                 $this->warn("⚠ {$test['name']} -> No code found (will learn from this)");
             }
         }
+    }
 
-        // Test: Nationwide Tax Calculation
+    private function testNationwideTaxDiscovery(): void
+    {
         $this->info("\n3. Testing Nationwide Tax Discovery:");
         $nationwideService = new NationwideTaxDiscoveryService;
 
@@ -88,31 +104,51 @@ class TestIntelligentTaxSystem extends Command
         ];
 
         foreach ($testAddresses as $addr) {
-            $result = $nationwideService->calculateTaxForAddress(
-                $addr['amount'],
-                $addr['address'],
-                $addr['city'],
-                $addr['state'],
-                $addr['zip']
-            );
+            $this->processAddressTaxCalculation($nationwideService, $addr);
+        }
+    }
 
-            if ($result['success']) {
-                $this->info("✓ {$addr['city']}, {$addr['state']}: Tax Rate: {$result['tax_rate']}%, Tax: \${$result['tax_amount']}");
-                if (! empty($result['breakdown'])) {
-                    foreach ($result['breakdown'] as $item) {
-                        $this->line("  - {$item['jurisdiction']} ({$item['type']}): {$item['rate']}%");
-                    }
-                }
-            } else {
-                $this->error("✗ Failed for {$addr['city']}, {$addr['state']}");
-            }
+    private function processAddressTaxCalculation(NationwideTaxDiscoveryService $nationwideService, array $addr): void
+    {
+        $result = $nationwideService->calculateTaxForAddress(
+            $addr['amount'],
+            $addr['address'],
+            $addr['city'],
+            $addr['state'],
+            $addr['zip']
+        );
+
+        if ($result['success']) {
+            $this->info("✓ {$addr['city']}, {$addr['state']}: Tax Rate: {$result['tax_rate']}%, Tax: \${$result['tax_amount']}");
+            $this->displayTaxBreakdown($result['breakdown'] ?? []);
+        } else {
+            $this->error("✗ Failed for {$addr['city']}, {$addr['state']}");
+        }
+    }
+
+    private function displayTaxBreakdown(array $breakdown): void
+    {
+        if (empty($breakdown)) {
+            return;
         }
 
-        // Test 4: Local Tax Rate Service (Updated)
+        foreach ($breakdown as $item) {
+            $this->line("  - {$item['jurisdiction']} ({$item['type']}): {$item['rate']}%");
+        }
+    }
+
+    private function testLocalTaxRateService(): void
+    {
         $this->info("\n4. Testing Updated Local Tax Rate Service:");
         $localService = new LocalTaxRateService(1);
         $status = $localService->getConfigurationStatus();
 
+        $this->displayConfigurationStatus($status);
+        $this->testLocalCalculation($localService);
+    }
+
+    private function displayConfigurationStatus(array $status): void
+    {
         $this->info('Configuration Status:');
         $this->table(
             ['Property', 'Value'],
@@ -124,8 +160,10 @@ class TestIntelligentTaxSystem extends Command
                 ['Discovered Patterns', $status['discovered_patterns'] ?? 0],
             ]
         );
+    }
 
-        // Test a calculation with the local service
+    private function testLocalCalculation(LocalTaxRateService $localService): void
+    {
         $testCalc = $localService->calculateEquipmentTax(
             100.00,
             ['line1' => '123 Main St', 'city' => 'San Antonio', 'state' => 'TX', 'zip' => '78201']
@@ -136,13 +174,14 @@ class TestIntelligentTaxSystem extends Command
         } else {
             $this->warn('⚠ Local calculation returned no tax');
         }
+    }
 
+    private function displaySummary(): void
+    {
         $this->info("\n========================================");
         $this->info('Intelligent Tax System Test Complete!');
         $this->info('✓ No hardcoded patterns detected');
         $this->info('✓ Dynamic discovery is operational');
         $this->info('✓ Nationwide support is active');
-
-        return Command::SUCCESS;
     }
 }
