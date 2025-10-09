@@ -158,7 +158,7 @@
                                     wire:key="sla-monitor-ops" />
                                 @break
                             @case('team-activity')
-                                <livewire:dashboard.widgets.team-activity 
+                                <livewire:dashboard.widgets.team-activity
                                     lazy
                                     wire:key="team-activity-ops" />
                                 @break
