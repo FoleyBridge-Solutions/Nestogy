@@ -533,28 +533,62 @@ class TaxSystemHealthCheck extends Command
             return;
         }
 
-        if (! empty($issues)) {
-            $this->error('❌ Issues found:');
-            foreach ($issues as $issue) {
-                $severity = $issue['severity'] === 'critical' ? '🔴' : '🟡';
-                $fixable = ($issue['fixable'] ?? false) ? ' (fixable)' : '';
-                $this->line("  {$severity} {$issue['message']}{$fixable}");
+        $this->displayIssues($issues, $detailed);
+        $this->displayWarnings($warnings);
+        $this->displaySummary($issues, $warnings);
+    }
 
-                if ($detailed && isset($issue['details'])) {
-                    $this->line("     Details: {$issue['details']}");
-                }
-            }
-            $this->newLine();
+    /**
+     * Display issues found during health check
+     */
+    protected function displayIssues(array $issues, bool $detailed): void
+    {
+        if (empty($issues)) {
+            return;
         }
 
-        if (! empty($warnings)) {
-            $this->warn('⚠️  Warnings:');
-            foreach ($warnings as $warning) {
-                $this->line("  🟡 {$warning['message']}");
-            }
-            $this->newLine();
+        $this->error('❌ Issues found:');
+        foreach ($issues as $issue) {
+            $this->displayIssueItem($issue, $detailed);
+        }
+        $this->newLine();
+    }
+
+    /**
+     * Display a single issue item
+     */
+    protected function displayIssueItem(array $issue, bool $detailed): void
+    {
+        $severity = $issue['severity'] === 'critical' ? '🔴' : '🟡';
+        $fixable = ($issue['fixable'] ?? false) ? ' (fixable)' : '';
+        $this->line("  {$severity} {$issue['message']}{$fixable}");
+
+        if ($detailed && isset($issue['details'])) {
+            $this->line("     Details: {$issue['details']}");
+        }
+    }
+
+    /**
+     * Display warnings found during health check
+     */
+    protected function displayWarnings(array $warnings): void
+    {
+        if (empty($warnings)) {
+            return;
         }
 
+        $this->warn('⚠️  Warnings:');
+        foreach ($warnings as $warning) {
+            $this->line("  🟡 {$warning['message']}");
+        }
+        $this->newLine();
+    }
+
+    /**
+     * Display summary of health check results
+     */
+    protected function displaySummary(array $issues, array $warnings): void
+    {
         $totalIssues = count($issues);
         $totalWarnings = count($warnings);
         $this->info("Summary: {$totalIssues} issues, {$totalWarnings} warnings");
