@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ComposeController extends Controller
 {
+    private const VALIDATION_REQUIRED_STRING = 'required|string';
+
     public function __construct(
         private EmailService $emailService
     ) {}
@@ -60,11 +62,11 @@ class ComposeController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'account_id' => 'required|exists:email_accounts,id',
-            'to' => 'required|string',
+            'to' => self::VALIDATION_REQUIRED_STRING,
             'cc' => 'nullable|string',
             'bcc' => 'nullable|string',
-            'subject' => 'required|string|max:255',
-            'body' => 'required|string',
+            'subject' => self::VALIDATION_REQUIRED_STRING.'|max:255',
+            'body' => self::VALIDATION_REQUIRED_STRING,
             'signature_id' => 'nullable|exists:email_signatures,id',
             'save_as_draft' => 'boolean',
             'attachments' => 'nullable|array',
@@ -250,7 +252,7 @@ class ComposeController extends Controller
         $this->authorize('view', $message);
 
         $validator = Validator::make($request->all(), [
-            'body' => 'required|string',
+            'body' => self::VALIDATION_REQUIRED_STRING,
             'reply_all' => 'boolean',
             'signature_id' => 'nullable|exists:email_signatures,id',
             'attachments' => 'nullable|array',
@@ -303,7 +305,7 @@ class ComposeController extends Controller
         $this->authorize('view', $message);
 
         $validator = Validator::make($request->all(), [
-            'to' => 'required|string',
+            'to' => self::VALIDATION_REQUIRED_STRING,
             'cc' => 'nullable|string',
             'bcc' => 'nullable|string',
             'body' => 'nullable|string',
