@@ -396,11 +396,12 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 
         // User Management (Admin/Manager Only)
         Route::middleware('role:manager')->group(function () {
+            $userParam = '{user}';
             Route::get('/', [App\Domains\Security\Controllers\UserController::class, 'index'])->name('index');
             Route::post('/', [App\Domains\Security\Controllers\UserController::class, 'store'])->name('store')->middleware('subscription.limits');
-            Route::get('{user}', [App\Domains\Security\Controllers\UserController::class, 'show'])->name('show');
-            Route::put('{user}', [App\Domains\Security\Controllers\UserController::class, 'update'])->name('update');
-            Route::delete('{user}', [App\Domains\Security\Controllers\UserController::class, 'destroy'])->name('destroy');
+            Route::get($userParam, [App\Domains\Security\Controllers\UserController::class, 'show'])->name('show');
+            Route::put($userParam, [App\Domains\Security\Controllers\UserController::class, 'update'])->name('update');
+            Route::delete($userParam, [App\Domains\Security\Controllers\UserController::class, 'destroy'])->name('destroy');
 
             // User Actions
             Route::patch('{user}/role', [App\Domains\Security\Controllers\UserController::class, 'updateRole'])->name('role.update');
