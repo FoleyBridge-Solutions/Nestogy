@@ -7,7 +7,7 @@
     <!-- Client Avatar -->
     <div class="flex justify-center mb-3">
         @if($client->avatar)
-            <img 
+            <img
                 class="w-20 h-20 rounded-full object-cover ring-4 ring-white dark:ring-gray-800 shadow-lg" 
                 src="{{ Storage::url($client->avatar) }}" 
                 alt="{{ $client->name }}"
