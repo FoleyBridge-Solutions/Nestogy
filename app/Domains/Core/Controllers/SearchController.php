@@ -112,27 +112,28 @@ class SearchController extends Controller
         $query = $request->input('query', '');
         $companyId = Auth::user() ? Auth::user()->company_id : null;
 
-        // If user is not authenticated, return empty results
-        if (! $companyId) {
+        if (! $companyId || empty($query)) {
             return response()->json([
                 'suggestions' => $this->getDefaultCommands(),
                 'results' => [],
             ]);
         }
 
-        // If no query, return quick commands/suggestions
-        if (empty($query)) {
-            return response()->json([
-                'suggestions' => $this->getDefaultCommands(),
-                'results' => [],
-            ]);
-        }
+        $suggestions = $this->filterMatchingCommands($query);
+        $results = $this->searchAllEntities($query, $companyId);
 
-        $results = [];
+        return response()->json([
+            'suggestions' => $suggestions,
+            'results' => $results,
+            'query' => $query,
+        ]);
+    }
+
+    private function filterMatchingCommands(string $query): array
+    {
+        $commands = $this->getDefaultCommands();
         $suggestions = [];
 
-        // Search for matching commands first
-        $commands = $this->getDefaultCommands();
         foreach ($commands as $command) {
             if (stripos($command['command'], $query) !== false ||
                 stripos($command['description'], $query) !== false) {
@@ -140,10 +141,22 @@ class SearchController extends Controller
             }
         }
 
-        // Limit suggestions to top 3 matches
-        $suggestions = array_slice($suggestions, 0, 3);
+        return array_slice($suggestions, 0, 3);
+    }
 
-        // Search Clients
+    private function searchAllEntities(string $query, int $companyId): array
+    {
+        return array_merge(
+            $this->searchClients($query, $companyId),
+            $this->searchTickets($query, $companyId),
+            $this->searchAssets($query, $companyId),
+            $this->searchInvoices($query, $companyId),
+            $this->searchProjects($query, $companyId)
+        );
+    }
+
+    private function searchClients(string $query, int $companyId): array
+    {
         $clients = Client::where('company_id', $companyId)
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
@@ -154,6 +167,7 @@ class SearchController extends Controller
             ->limit(5)
             ->get(['id', 'name', 'email', 'company_name']);
 
+        $results = [];
         foreach ($clients as $client) {
             $results[] = [
                 'type' => 'client',
@@ -165,7 +179,11 @@ class SearchController extends Controller
             ];
         }
 
-        // Search Tickets
+        return $results;
+    }
+
+    private function searchTickets(string $query, int $companyId): array
+    {
         $tickets = Ticket::where('company_id', $companyId)
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
@@ -176,6 +194,7 @@ class SearchController extends Controller
             ->limit(5)
             ->get(['id', 'ticket_number', 'subject', 'status', 'priority', 'client_id']);
 
+        $results = [];
         foreach ($tickets as $ticket) {
             $results[] = [
                 'type' => 'ticket',
@@ -191,7 +210,11 @@ class SearchController extends Controller
             ];
         }
 
-        // Search Assets
+        return $results;
+    }
+
+    private function searchAssets(string $query, int $companyId): array
+    {
         $assets = Asset::where('company_id', $companyId)
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
@@ -203,6 +226,7 @@ class SearchController extends Controller
             ->limit(5)
             ->get(['id', 'name', 'serial_number', 'type', 'client_id']);
 
+        $results = [];
         foreach ($assets as $asset) {
             $results[] = [
                 'type' => 'asset',
@@ -214,7 +238,11 @@ class SearchController extends Controller
             ];
         }
 
-        // Search Invoices
+        return $results;
+    }
+
+    private function searchInvoices(string $query, int $companyId): array
+    {
         $invoices = Invoice::where('company_id', $companyId)
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
@@ -224,6 +252,7 @@ class SearchController extends Controller
             ->limit(3)
             ->get(['id', 'number', 'total', 'status', 'client_id']);
 
+        $results = [];
         foreach ($invoices as $invoice) {
             $results[] = [
                 'type' => 'invoice',
@@ -239,7 +268,11 @@ class SearchController extends Controller
             ];
         }
 
-        // Search Projects
+        return $results;
+    }
+
+    private function searchProjects(string $query, int $companyId): array
+    {
         $projects = Project::where('company_id', $companyId)
             ->whereNull('archived_at')
             ->where(function ($q) use ($query) {
@@ -249,6 +282,7 @@ class SearchController extends Controller
             ->limit(3)
             ->get(['id', 'name', 'status', 'client_id']);
 
+        $results = [];
         foreach ($projects as $project) {
             $results[] = [
                 'type' => 'project',
@@ -263,11 +297,7 @@ class SearchController extends Controller
             ];
         }
 
-        return response()->json([
-            'suggestions' => $suggestions,
-            'results' => $results,
-            'query' => $query,
-        ]);
+        return $results;
     }
 
     /**
