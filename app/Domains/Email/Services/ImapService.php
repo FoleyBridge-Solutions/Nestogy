@@ -145,6 +145,8 @@ class ImapService
                         $query->unseen();
                     }
                     break;
+                default:
+                    break;
             }
         }
 
