@@ -35,7 +35,7 @@ class PermissionsManagement extends Component
     public function boot()
     {
         // Boot runs on EVERY request before mount/hydrate, ensuring URL is read first
-        if (!Auth::user()->can('system.permissions.manage') && 
+        if (!Auth::user()->can('system.permissions.manage') &&
             !Auth::user()->can('settings.roles.view')) {
             abort(403, 'Unauthorized access to permissions management.');
         }
