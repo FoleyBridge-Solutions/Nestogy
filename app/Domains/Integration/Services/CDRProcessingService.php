@@ -431,13 +431,7 @@ class CDRProcessingService
             $errors[] = 'Duration seconds must be numeric';
         }
 
-        if (isset($cdrData['usage_start_time'])) {
-            try {
-                Carbon::parse($cdrData['usage_start_time']);
-            } catch (Exception $e) {
-                $errors[] = 'Invalid usage start time format';
-            }
-        }
+        $this->validateUsageStartTime($cdrData, $errors);
 
         // Business logic validation
         if (isset($cdrData['duration_seconds']) && $cdrData['duration_seconds'] < 0) {
@@ -453,6 +447,17 @@ class CDRProcessingService
             'errors' => $errors,
             'warnings' => $warnings,
         ];
+    }
+
+    protected function validateUsageStartTime(array $cdrData, array &$errors): void
+    {
+        if (isset($cdrData['usage_start_time'])) {
+            try {
+                Carbon::parse($cdrData['usage_start_time']);
+            } catch (Exception $e) {
+                $errors[] = 'Invalid usage start time format';
+            }
+        }
     }
 
     /**
