@@ -92,7 +92,7 @@
                             <flux:label>Digest Delivery Time</flux:label>
                             <flux:input 
                                 type="time" 
-                                wire:model="digest_time" 
+                                wire:model="digestTime" 
                                 placeholder="08:00" />
                             <flux:description>Choose when you want to receive your daily digest</flux:description>
                         </flux:field>
