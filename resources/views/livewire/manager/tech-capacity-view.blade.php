@@ -52,7 +52,7 @@
         
         <flux:button 
             wire:click="setSortBy('active')" 
-            variant="{{ $sortBy === 'active' ? 'primary' : 'ghost' }}" 
+            variant="{{ $sortBy === 'active' ? 'primary' : 'ghost' }}"
             size="sm">
             Active Tickets
             @if($sortBy === 'active')
