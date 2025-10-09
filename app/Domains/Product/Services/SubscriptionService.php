@@ -162,4 +162,26 @@ class SubscriptionService
 
         return $subscription;
     }
+
+    public function canAddUser($company): bool
+    {
+        $subscription = $company->subscription;
+
+        if (! $subscription) {
+            return true;
+        }
+
+        return $subscription->canAddUser();
+    }
+
+    public function isApproachingUserLimit($company): bool
+    {
+        $subscription = $company->subscription;
+
+        if (! $subscription) {
+            return false;
+        }
+
+        return $subscription->approachingUserLimit();
+    }
 }
