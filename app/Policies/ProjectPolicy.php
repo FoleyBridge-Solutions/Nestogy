@@ -7,6 +7,8 @@ use App\Models\User;
 
 class ProjectPolicy
 {
+    private const WILDCARD_PERMISSION = 'projects.*';
+
     /**
      * Wildcard permission for all project actions.
      */
