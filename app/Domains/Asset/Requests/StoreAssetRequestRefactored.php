@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class StoreAssetRequestRefactored extends BaseFormRequest
 {
+    private const MAX_STRING_LENGTH = 'max:255';
+
     protected function initializeRequest(): void
     {
         $this->modelClass = Asset::class;
@@ -18,20 +20,20 @@ class StoreAssetRequestRefactored extends BaseFormRequest
     {
         return [
             'type' => ['required', Rule::in(Asset::TYPES)],
-            'make' => ['nullable', 'string', 'max:255'],
-            'model' => ['nullable', 'string', 'max:255'],
-            'serial' => ['nullable', 'string', 'max:255'],
-            'os' => ['nullable', 'string', 'max:255'],
+            'make' => ['nullable', 'string', self::MAX_STRING_LENGTH],
+            'model' => ['nullable', 'string', self::MAX_STRING_LENGTH],
+            'serial' => ['nullable', 'string', self::MAX_STRING_LENGTH],
+            'os' => ['nullable', 'string', self::MAX_STRING_LENGTH],
             'ip' => ['nullable', 'ip'],
             'nat_ip' => ['nullable', 'ip'],
             'mac' => ['nullable', 'string', 'max:17'],
-            'uri' => ['nullable', 'url', 'max:255'],
-            'uri_2' => ['nullable', 'url', 'max:255'],
+            'uri' => ['nullable', 'url', self::MAX_STRING_LENGTH],
+            'uri_2' => ['nullable', 'url', self::MAX_STRING_LENGTH],
             'purchase_date' => ['nullable', 'date'],
             'warranty_expire' => ['nullable', 'date', 'after:today'],
             'next_maintenance_date' => ['nullable', 'date'],
             'install_date' => ['nullable', 'date'],
-            'rmm_id' => ['nullable', 'string', 'max:255'],
+            'rmm_id' => ['nullable', 'string', self::MAX_STRING_LENGTH],
         ];
     }
 
