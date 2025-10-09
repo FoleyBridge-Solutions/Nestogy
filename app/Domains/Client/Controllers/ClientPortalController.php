@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ClientPortalController extends Controller
 {
+    private const ERROR_NO_PERMISSION_VIEW_QUOTES = 'You do not have permission to view quotes.';
+
     protected DigitalSignatureService $signatureService;
 
     public function __construct(DigitalSignatureService $signatureService)
@@ -1221,7 +1223,7 @@ class ClientPortalController extends Controller
         $contact = auth('client')->user();
 
         if (! $this->canViewQuotes($contact)) {
-            abort(403, 'You do not have permission to view quotes.');
+            abort(403, self::ERROR_NO_PERMISSION_VIEW_QUOTES);
         }
 
         $quotes = $this->getQuotesForContact($contact);
@@ -1239,7 +1241,7 @@ class ClientPortalController extends Controller
         $contact = auth('client')->user();
 
         if (! $this->canViewQuotes($contact)) {
-            abort(403, 'You do not have permission to view quotes.');
+            abort(403, self::ERROR_NO_PERMISSION_VIEW_QUOTES);
         }
 
         if ($quote->client_id !== $contact->client_id) {
@@ -1259,7 +1261,7 @@ class ClientPortalController extends Controller
         $contact = auth('client')->user();
 
         if (! $this->canViewQuotes($contact)) {
-            abort(403, 'You do not have permission to view quotes.');
+            abort(403, self::ERROR_NO_PERMISSION_VIEW_QUOTES);
         }
 
         if ($quote->client_id !== $contact->client_id) {
