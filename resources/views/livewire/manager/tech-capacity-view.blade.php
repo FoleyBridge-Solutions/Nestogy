@@ -42,7 +42,7 @@
         
         <flux:button 
             wire:click="setSortBy('capacity')" 
-            variant="{{ $sortBy === 'capacity' ? 'primary' : 'ghost' }}" 
+            variant="{{ $sortBy === 'capacity' ? 'primary' : 'ghost' }}"
             size="sm">
             Capacity %
             @if($sortBy === 'capacity')
