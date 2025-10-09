@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Log;
 
 class UnifiedSettingsController extends Controller
 {
+    private const ERROR_DOMAIN_NOT_FOUND = 'Settings domain not found';
+
     protected array $services = [];
 
     public function __construct()
@@ -55,7 +57,7 @@ class UnifiedSettingsController extends Controller
         $domains = SettingsConfiguration::getDomains();
 
         if (! isset($domains[$domain])) {
-            abort(404, 'Settings domain not found');
+            abort(404, self::ERROR_DOMAIN_NOT_FOUND);
         }
 
         $domainInfo = $domains[$domain];
@@ -112,7 +114,7 @@ class UnifiedSettingsController extends Controller
         }
         
         if (! isset($this->services[$domain])) {
-            abort(404, 'Settings domain not found');
+            abort(404, self::ERROR_DOMAIN_NOT_FOUND);
         }
 
         $service = $this->services[$domain];
@@ -151,8 +153,8 @@ class UnifiedSettingsController extends Controller
         ]);
 
         if (! isset($this->services[$domain])) {
-            Log::error('Settings domain not found', ['domain' => $domain]);
-            return redirect()->back()->with('error', 'Settings domain not found');
+            Log::error(self::ERROR_DOMAIN_NOT_FOUND, ['domain' => $domain]);
+            return redirect()->back()->with('error', self::ERROR_DOMAIN_NOT_FOUND);
         }
 
         try {
@@ -205,7 +207,7 @@ class UnifiedSettingsController extends Controller
         if (! isset($this->services[$domain])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Settings domain not found',
+                'message' => self::ERROR_DOMAIN_NOT_FOUND,
             ], 404);
         }
 
@@ -312,7 +314,7 @@ class UnifiedSettingsController extends Controller
     public function resetToDefaults(string $domain, string $category)
     {
         if (! isset($this->services[$domain])) {
-            return back()->with('error', 'Settings domain not found');
+            return back()->with('error', self::ERROR_DOMAIN_NOT_FOUND);
         }
 
         try {
