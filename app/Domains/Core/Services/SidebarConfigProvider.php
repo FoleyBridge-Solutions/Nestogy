@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Cache;
 
 class SidebarConfigProvider
 {
+    private const PHYSICAL_MAIL_LABEL = 'Physical Mail';
+
     protected array $registeredSections = [];
 
     protected array $configCache = [];
@@ -194,7 +196,7 @@ class SidebarConfigProvider
                             'params' => [],
                         ],
                         [
-                            'name' => 'Physical Mail',
+                            'name' => self::PHYSICAL_MAIL_LABEL,
                             'route' => 'mail.index',
                             'icon' => 'envelope',
                             'key' => 'physical-mail',
@@ -814,7 +816,7 @@ class SidebarConfigProvider
         }
 
         return [
-            'title' => 'Physical Mail',
+            'title' => self::PHYSICAL_MAIL_LABEL,
             'icon' => 'paper-airplane',
             'sections' => [
                 [
@@ -1293,7 +1295,7 @@ class SidebarConfigProvider
                     'items' => [
                         ['name' => 'Email', 'route' => 'settings.category.show', 'params' => ['domain' => 'communication', 'category' => 'email'], 'icon' => 'envelope', 'key' => 'email'],
                         ['name' => 'Notification Preferences', 'route' => 'settings.notifications', 'icon' => 'bell', 'key' => 'notifications', 'description' => 'Configure email and in-app notification preferences'],
-                        ['name' => 'Physical Mail', 'route' => 'settings.category.show', 'params' => ['domain' => 'communication', 'category' => 'physical-mail'], 'icon' => 'paper-airplane', 'key' => 'physical-mail'],
+                        ['name' => self::PHYSICAL_MAIL_LABEL, 'route' => 'settings.category.show', 'params' => ['domain' => 'communication', 'category' => 'physical-mail'], 'icon' => 'paper-airplane', 'key' => 'physical-mail'],
                         ['name' => 'Templates', 'route' => 'settings.category.show', 'params' => ['domain' => 'communication', 'category' => 'templates'], 'icon' => 'document-duplicate', 'key' => 'templates'],
                     ],
                 ],
