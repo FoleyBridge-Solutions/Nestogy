@@ -16,14 +16,14 @@ $classes = Flux::classes('shrink-0')
     });
 @endphp
 
-<?php switch ($variant): case ('outline'): ?>
+<?php switch ($variant): case 'outline': ?>
 <svg {{ $attributes->class($classes) }} data-flux-icon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon">
   <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
 </svg>
 
         <?php break; ?>
 
-    <?php case ('solid'): ?>
+    <?php case 'solid': ?>
 <svg {{ $attributes->class($classes) }} data-flux-icon xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
   <path fill-rule="evenodd" d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd"/>
 </svg>
