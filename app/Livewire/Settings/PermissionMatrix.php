@@ -51,7 +51,7 @@ class PermissionMatrix extends Component
                 continue;
             }
             
-            if ($this->searchTerm && 
+            if ($this->searchTerm &&
                 !str_contains(strtolower($ability->name), strtolower($this->searchTerm)) &&
                 !str_contains(strtolower($ability->title ?? ''), strtolower($this->searchTerm))) {
                 continue;
