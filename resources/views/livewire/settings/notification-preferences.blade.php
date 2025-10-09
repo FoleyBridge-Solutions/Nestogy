@@ -35,7 +35,7 @@
                         description="Receive notifications when a new ticket is created" />
                     
                     <flux:checkbox 
-                        wire:model="ticket_assigned" 
+                        wire:model="ticketAssigned" 
                         label="Ticket Assigned to Me"
                         description="Receive notifications when a ticket is assigned to you" />
                     
