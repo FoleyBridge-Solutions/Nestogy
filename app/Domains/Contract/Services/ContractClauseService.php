@@ -600,6 +600,8 @@ class ContractClauseService
             case 'optional':
                 $priority += 10;
                 break;
+            default:
+                break;
         }
 
         return $priority;
