@@ -1,6 +1,6 @@
 <div class="relative" x-data="{ open: @entangle('showDropdown') }">
     <button 
-        @click="open = !open" 
+        @click="open = !open"
         class="relative p-2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition"
         aria-label="Notifications">
         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
