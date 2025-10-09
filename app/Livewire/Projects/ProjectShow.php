@@ -13,6 +13,8 @@ class ProjectShow extends Component
 {
     use WithFileUploads;
 
+    private const VALIDATION_REQUIRED_MIN_3 = 'required|min:3';
+
     public Project $project;
 
     public $activeTab = 'summary';
@@ -41,12 +43,12 @@ class ProjectShow extends Component
     protected $listeners = ['refreshProject' => '$refresh'];
 
     protected $rules = [
-        'taskName' => 'required|min:3',
+        'taskName' => self::VALIDATION_REQUIRED_MIN_3,
         'taskDescription' => 'nullable|string',
         'taskDueDate' => 'nullable|date',
         'taskAssignedTo' => 'nullable|exists:users,id',
         'taskPriority' => 'required|in:low,medium,high,urgent',
-        'noteContent' => 'required|min:3',
+        'noteContent' => self::VALIDATION_REQUIRED_MIN_3,
         'noteIsPrivate' => 'boolean',
     ];
 
@@ -75,7 +77,7 @@ class ProjectShow extends Component
     public function createTask()
     {
         $this->validate([
-            'taskName' => 'required|min:3',
+            'taskName' => self::VALIDATION_REQUIRED_MIN_3,
             'taskDescription' => 'nullable|string',
             'taskDueDate' => 'nullable|date',
             'taskAssignedTo' => 'nullable|exists:users,id',
@@ -131,7 +133,7 @@ class ProjectShow extends Component
     public function addNote()
     {
         $this->validate([
-            'noteContent' => 'required|min:3',
+            'noteContent' => self::VALIDATION_REQUIRED_MIN_3,
             'noteIsPrivate' => 'boolean',
         ]);
 
