@@ -30,7 +30,7 @@
     </div>
 
     <div class="mb-6 flex flex-wrap gap-2 sm:gap-3">
-        <flux:button 
+        <flux:button
             wire:click="setSortBy('workload')" 
             variant="{{ $sortBy === 'workload' ? 'primary' : 'ghost' }}"
             size="sm">
