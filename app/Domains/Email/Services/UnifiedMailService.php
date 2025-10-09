@@ -170,74 +170,88 @@ class UnifiedMailService
      */
     protected function sendEmail(MailQueue $mailQueue): void
     {
-        // Get company-specific mail settings
         $companyMailer = $this->getCompanyMailer($mailQueue->company_id);
 
         $companyMailer->send([], [], function (Message $message) use ($mailQueue) {
-            // Set recipients
-            $message->to($mailQueue->to_email, $mailQueue->to_name);
-
-            if ($mailQueue->cc) {
-                foreach ($mailQueue->cc as $cc) {
-                    $message->cc($cc['email'], $cc['name'] ?? null);
-                }
-            }
-
-            if ($mailQueue->bcc) {
-                foreach ($mailQueue->bcc as $bcc) {
-                    $message->bcc($bcc['email'], $bcc['name'] ?? null);
-                }
-            }
-
-            // Set from
-            $message->from($mailQueue->from_email, $mailQueue->from_name);
-
-            // Set reply-to
-            if ($mailQueue->reply_to) {
-                $message->replyTo($mailQueue->reply_to);
-            }
-
-            // Set subject
-            $message->subject($mailQueue->subject);
-
-            // Set body
-            if ($mailQueue->html_body) {
-                $message->html($mailQueue->html_body);
-            }
-
-            if ($mailQueue->text_body) {
-                $message->text($mailQueue->text_body);
-            }
-
-            // Add attachments
-            if ($mailQueue->attachments) {
-                foreach ($mailQueue->attachments as $attachment) {
-                    if (isset($attachment['path'])) {
-                        $message->attach($attachment['path'], [
-                            'as' => $attachment['name'] ?? null,
-                            'mime' => $attachment['mime'] ?? null,
-                        ]);
-                    } elseif (isset($attachment['data'])) {
-                        $message->attachData(
-                            $attachment['data'],
-                            $attachment['name'],
-                            ['mime' => $attachment['mime'] ?? 'application/octet-stream']
-                        );
-                    }
-                }
-            }
-
-            // Add custom headers
-            if ($mailQueue->headers) {
-                foreach ($mailQueue->headers as $key => $value) {
-                    $message->getHeaders()->addTextHeader($key, $value);
-                }
-            }
-
-            // Add tracking headers
-            $message->getHeaders()->addTextHeader('X-Mail-Queue-ID', $mailQueue->uuid);
-            $message->getHeaders()->addTextHeader('X-Tracking-Token', $mailQueue->tracking_token);
+            $this->configureRecipients($message, $mailQueue);
+            $this->configureSender($message, $mailQueue);
+            $this->configureSubjectAndBody($message, $mailQueue);
+            $this->configureAttachments($message, $mailQueue);
+            $this->configureHeaders($message, $mailQueue);
         });
+    }
+
+    protected function configureRecipients(Message $message, MailQueue $mailQueue): void
+    {
+        $message->to($mailQueue->to_email, $mailQueue->to_name);
+
+        if ($mailQueue->cc) {
+            foreach ($mailQueue->cc as $cc) {
+                $message->cc($cc['email'], $cc['name'] ?? null);
+            }
+        }
+
+        if ($mailQueue->bcc) {
+            foreach ($mailQueue->bcc as $bcc) {
+                $message->bcc($bcc['email'], $bcc['name'] ?? null);
+            }
+        }
+    }
+
+    protected function configureSender(Message $message, MailQueue $mailQueue): void
+    {
+        $message->from($mailQueue->from_email, $mailQueue->from_name);
+
+        if ($mailQueue->reply_to) {
+            $message->replyTo($mailQueue->reply_to);
+        }
+    }
+
+    protected function configureSubjectAndBody(Message $message, MailQueue $mailQueue): void
+    {
+        $message->subject($mailQueue->subject);
+
+        if ($mailQueue->html_body) {
+            $message->html($mailQueue->html_body);
+        }
+
+        if ($mailQueue->text_body) {
+            $message->text($mailQueue->text_body);
+        }
+    }
+
+    protected function configureAttachments(Message $message, MailQueue $mailQueue): void
+    {
+        if (!$mailQueue->attachments) {
+            return;
+        }
+
+        foreach ($mailQueue->attachments as $attachment) {
+            if (isset($attachment['path'])) {
+                $message->attach($attachment['path'], [
+                    'as' => $attachment['name'] ?? null,
+                    'mime' => $attachment['mime'] ?? null,
+                ]);
+            } elseif (isset($attachment['data'])) {
+                $message->attachData(
+                    $attachment['data'],
+                    $attachment['name'],
+                    ['mime' => $attachment['mime'] ?? 'application/octet-stream']
+                );
+            }
+        }
+    }
+
+    protected function configureHeaders(Message $message, MailQueue $mailQueue): void
+    {
+        if ($mailQueue->headers) {
+            foreach ($mailQueue->headers as $key => $value) {
+                $message->getHeaders()->addTextHeader($key, $value);
+            }
+        }
+
+        $message->getHeaders()->addTextHeader('X-Mail-Queue-ID', $mailQueue->uuid);
+        $message->getHeaders()->addTextHeader('X-Tracking-Token', $mailQueue->tracking_token);
     }
 
     /**
