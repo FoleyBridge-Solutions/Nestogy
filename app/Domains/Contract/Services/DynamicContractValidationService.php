@@ -256,65 +256,64 @@ class DynamicContractValidationService
      */
     protected function addCustomValidationRules($validator, ContractTypeDefinition $typeDefinition, array $data, string $mode): void
     {
-        // Add custom rule for contract number uniqueness
         $validator->addRules([
-            'contract_number' => [
-                function ($attribute, $value, $fail) use ($typeDefinition, $data, $mode) {
-                    if (empty($value)) {
-                        return; // Let required validation handle this
-                    }
-
-                    $query = \App\Domains\Contract\Models\Contract::where('company_id', $typeDefinition->company_id)
-                        ->where('contract_number', $value);
-
-                    // For updates, exclude current contract
-                    if ($mode === 'update' && ! empty($data['id'])) {
-                        $query->where('id', '!=', $data['id']);
-                    }
-
-                    if ($query->exists()) {
-                        $fail('The contract number has already been taken.');
-                    }
-                },
-            ],
+            'contract_number' => [$this->getContractNumberValidator($typeDefinition, $data, $mode)],
+            'end_date' => [$this->getEndDateValidator($data)],
+            'client_id' => [$this->getClientValidator($typeDefinition)],
         ]);
+    }
 
-        // Add date range validation
-        $validator->addRules([
-            'end_date' => [
-                function ($attribute, $value, $fail) use ($data) {
-                    if (empty($value) || empty($data['start_date'])) {
-                        return;
-                    }
+    private function getContractNumberValidator(ContractTypeDefinition $typeDefinition, array $data, string $mode): \Closure
+    {
+        return function ($attribute, $value, $fail) use ($typeDefinition, $data, $mode) {
+            if (empty($value)) {
+                return;
+            }
 
-                    $startDate = \Carbon\Carbon::parse($data['start_date']);
-                    $endDate = \Carbon\Carbon::parse($value);
+            $query = \App\Domains\Contract\Models\Contract::where('company_id', $typeDefinition->company_id)
+                ->where('contract_number', $value);
 
-                    if ($endDate->lte($startDate)) {
-                        $fail('The end date must be after the start date.');
-                    }
-                },
-            ],
-        ]);
+            if ($mode === 'update' && ! empty($data['id'])) {
+                $query->where('id', '!=', $data['id']);
+            }
 
-        // Add client relationship validation
-        $validator->addRules([
-            'client_id' => [
-                function ($attribute, $value, $fail) use ($typeDefinition) {
-                    if (empty($value)) {
-                        return;
-                    }
+            if ($query->exists()) {
+                $fail('The contract number has already been taken.');
+            }
+        };
+    }
 
-                    $client = \App\Models\Client::where('company_id', $typeDefinition->company_id)
-                        ->where('id', $value)
-                        ->first();
+    private function getEndDateValidator(array $data): \Closure
+    {
+        return function ($attribute, $value, $fail) use ($data) {
+            if (empty($value) || empty($data['start_date'])) {
+                return;
+            }
 
-                    if (! $client) {
-                        $fail('The selected client does not belong to your company.');
-                    }
-                },
-            ],
-        ]);
+            $startDate = \Carbon\Carbon::parse($data['start_date']);
+            $endDate = \Carbon\Carbon::parse($value);
+
+            if ($endDate->lte($startDate)) {
+                $fail('The end date must be after the start date.');
+            }
+        };
+    }
+
+    private function getClientValidator(ContractTypeDefinition $typeDefinition): \Closure
+    {
+        return function ($attribute, $value, $fail) use ($typeDefinition) {
+            if (empty($value)) {
+                return;
+            }
+
+            $client = \App\Models\Client::where('company_id', $typeDefinition->company_id)
+                ->where('id', $value)
+                ->first();
+
+            if (! $client) {
+                $fail('The selected client does not belong to your company.');
+            }
+        };
     }
 
     /**
