@@ -112,44 +112,34 @@ class SecuritySettingsService extends BaseSettingsService
 
     public function getCategoryMetadata(string $category): array
     {
-        switch ($category) {
-            case 'access':
-                return [
-                    'name' => 'Access Control',
-                    'description' => 'Manage IP restrictions, rate limiting, and access rules',
-                    'icon' => 'shield-exclamation',
-                ];
+        $metadata = [
+            'access' => [
+                'name' => 'Access Control',
+                'description' => 'Manage IP restrictions, rate limiting, and access rules',
+                'icon' => 'shield-exclamation',
+            ],
+            'authentication' => [
+                'name' => 'Authentication',
+                'description' => 'Configure password policies, 2FA, and session management',
+                'icon' => 'lock-closed',
+            ],
+            'compliance' => [
+                'name' => 'Compliance',
+                'description' => 'Compliance and regulatory settings',
+                'icon' => 'clipboard-document-check',
+            ],
+            'permissions' => [
+                'name' => 'Permissions',
+                'description' => 'Manage user permissions and access control',
+                'icon' => 'key',
+            ],
+            'roles' => [
+                'name' => 'Roles',
+                'description' => 'Manage user roles and role-based access',
+                'icon' => 'user-group',
+            ],
+        ];
 
-            case 'authentication':
-                return [
-                    'name' => 'Authentication',
-                    'description' => 'Configure password policies, 2FA, and session management',
-                    'icon' => 'lock-closed',
-                ];
-
-            case 'compliance':
-                return [
-                    'name' => 'Compliance',
-                    'description' => 'Compliance and regulatory settings',
-                    'icon' => 'clipboard-document-check',
-                ];
-
-            case 'permissions':
-                return [
-                    'name' => 'Permissions',
-                    'description' => 'Manage user permissions and access control',
-                    'icon' => 'key',
-                ];
-
-            case 'roles':
-                return [
-                    'name' => 'Roles',
-                    'description' => 'Manage user roles and role-based access',
-                    'icon' => 'user-group',
-                ];
-
-            default:
-                return [];
-        }
+        return $metadata[$category] ?? [];
     }
 }
