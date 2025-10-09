@@ -269,23 +269,52 @@ class EditClient extends Component
     {
         $this->validate();
 
-        // Handle avatar upload
+        $this->handleAvatarChanges();
+        $this->client->update($this->prepareUpdateData());
+
+        session()->flash('message', 'Client updated successfully!');
+
+        return redirect()->route('clients.show', $this->client);
+    }
+
+    private function handleAvatarChanges(): void
+    {
         if ($this->avatar) {
             $avatarPath = $this->avatar->store('avatars', 'public');
             $this->client->avatar = $avatarPath;
         }
 
-        // Handle avatar removal
         if ($this->remove_avatar && $this->client->avatar) {
-            // Delete old avatar file
-            if (file_exists(storage_path('app/public/'.$this->client->avatar))) {
-                unlink(storage_path('app/public/'.$this->client->avatar));
-            }
+            $this->deleteAvatarFile($this->client->avatar);
             $this->client->avatar = null;
         }
+    }
 
-        // Prepare data for update
-        $updateData = [
+    private function deleteAvatarFile(string $avatarPath): void
+    {
+        $fullPath = storage_path('app/public/'.$avatarPath);
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
+    }
+
+    private function prepareUpdateData(): array
+    {
+        return array_merge(
+            $this->getBasicData(),
+            $this->getAddressData(),
+            $this->getContactData(),
+            $this->getBillingData(),
+            $this->getCustomRateData(),
+            $this->getContractData(),
+            $this->getIntegrationData(),
+            $this->getAdditionalData()
+        );
+    }
+
+    private function getBasicData(): array
+    {
+        return [
             'name' => $this->name,
             'type' => $this->type ?: null,
             'company_name' => $this->company_name ?: null,
@@ -295,51 +324,102 @@ class EditClient extends Component
             'tax_id_number' => $this->tax_id_number ?: null,
             'referral' => $this->referral ?: null,
             'lead' => $this->lead,
+        ];
+    }
 
+    private function getAddressData(): array
+    {
+        return [
             'address' => $this->address ?: null,
             'city' => $this->city ?: null,
             'state' => $this->state ?: null,
             'zip_code' => $this->zip_code ?: null,
             'country' => $this->country ?: null,
+        ];
+    }
 
+    private function getContactData(): array
+    {
+        return [
             'billing_contact' => $this->billing_contact ?: null,
             'technical_contact' => $this->technical_contact ?: null,
+        ];
+    }
 
+    private function getBillingData(): array
+    {
+        return [
             'status' => $this->status,
             'hourly_rate' => $this->hourly_rate !== '' ? (float) $this->hourly_rate : null,
             'rate' => $this->rate !== '' ? (float) $this->rate : null,
             'currency_code' => $this->currency_code,
             'net_terms' => (int) $this->net_terms,
+        ];
+    }
 
-            'use_custom_rates' => $this->use_custom_rates,
-            'custom_rate_calculation_method' => $this->use_custom_rates ? $this->custom_rate_calculation_method : null,
-            'custom_standard_rate' => $this->use_custom_rates && $this->custom_standard_rate !== '' ? (float) $this->custom_standard_rate : null,
-            'custom_after_hours_rate' => $this->use_custom_rates && $this->custom_after_hours_rate !== '' ? (float) $this->custom_after_hours_rate : null,
-            'custom_emergency_rate' => $this->use_custom_rates && $this->custom_emergency_rate !== '' ? (float) $this->custom_emergency_rate : null,
-            'custom_weekend_rate' => $this->use_custom_rates && $this->custom_weekend_rate !== '' ? (float) $this->custom_weekend_rate : null,
-            'custom_holiday_rate' => $this->use_custom_rates && $this->custom_holiday_rate !== '' ? (float) $this->custom_holiday_rate : null,
-            'custom_after_hours_multiplier' => $this->use_custom_rates && $this->custom_after_hours_multiplier !== '' ? (float) $this->custom_after_hours_multiplier : null,
-            'custom_emergency_multiplier' => $this->use_custom_rates && $this->custom_emergency_multiplier !== '' ? (float) $this->custom_emergency_multiplier : null,
-            'custom_weekend_multiplier' => $this->use_custom_rates && $this->custom_weekend_multiplier !== '' ? (float) $this->custom_weekend_multiplier : null,
-            'custom_holiday_multiplier' => $this->use_custom_rates && $this->custom_holiday_multiplier !== '' ? (float) $this->custom_holiday_multiplier : null,
-            'custom_minimum_billing_increment' => $this->use_custom_rates && $this->custom_minimum_billing_increment !== '' ? (float) $this->custom_minimum_billing_increment : null,
-            'custom_time_rounding_method' => $this->use_custom_rates ? $this->custom_time_rounding_method : null,
+    private function getCustomRateData(): array
+    {
+        if (! $this->use_custom_rates) {
+            return [
+                'use_custom_rates' => false,
+                'custom_rate_calculation_method' => null,
+                'custom_standard_rate' => null,
+                'custom_after_hours_rate' => null,
+                'custom_emergency_rate' => null,
+                'custom_weekend_rate' => null,
+                'custom_holiday_rate' => null,
+                'custom_after_hours_multiplier' => null,
+                'custom_emergency_multiplier' => null,
+                'custom_weekend_multiplier' => null,
+                'custom_holiday_multiplier' => null,
+                'custom_minimum_billing_increment' => null,
+                'custom_time_rounding_method' => null,
+            ];
+        }
 
+        return [
+            'use_custom_rates' => true,
+            'custom_rate_calculation_method' => $this->custom_rate_calculation_method,
+            'custom_standard_rate' => $this->convertToFloatOrNull($this->custom_standard_rate),
+            'custom_after_hours_rate' => $this->convertToFloatOrNull($this->custom_after_hours_rate),
+            'custom_emergency_rate' => $this->convertToFloatOrNull($this->custom_emergency_rate),
+            'custom_weekend_rate' => $this->convertToFloatOrNull($this->custom_weekend_rate),
+            'custom_holiday_rate' => $this->convertToFloatOrNull($this->custom_holiday_rate),
+            'custom_after_hours_multiplier' => $this->convertToFloatOrNull($this->custom_after_hours_multiplier),
+            'custom_emergency_multiplier' => $this->convertToFloatOrNull($this->custom_emergency_multiplier),
+            'custom_weekend_multiplier' => $this->convertToFloatOrNull($this->custom_weekend_multiplier),
+            'custom_holiday_multiplier' => $this->convertToFloatOrNull($this->custom_holiday_multiplier),
+            'custom_minimum_billing_increment' => $this->convertToFloatOrNull($this->custom_minimum_billing_increment),
+            'custom_time_rounding_method' => $this->custom_time_rounding_method,
+        ];
+    }
+
+    private function getContractData(): array
+    {
+        return [
             'contract_start_date' => $this->contract_start_date ?: null,
             'contract_end_date' => $this->contract_end_date ?: null,
             'sla_id' => $this->sla_id,
+        ];
+    }
 
+    private function getIntegrationData(): array
+    {
+        return [
             'rmm_id' => $this->rmm_id ?: null,
+        ];
+    }
 
+    private function getAdditionalData(): array
+    {
+        return [
             'notes' => $this->notes ?: null,
         ];
+    }
 
-        // Update client
-        $this->client->update($updateData);
-
-        session()->flash('message', 'Client updated successfully!');
-
-        return redirect()->route('clients.show', $this->client);
+    private function convertToFloatOrNull(?string $value): ?float
+    {
+        return $value !== '' && $value !== null ? (float) $value : null;
     }
 
     public function render()
