@@ -103,7 +103,7 @@
                                        name="address_line_2" 
                                        id="address_line_2" 
                                        value="{{ old('address_line_2') }}"
-                                       class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md @error('address_line_2') border-red-300 @enderror" 
+                                       class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md @error('address_line_2') border-red-300 @enderror"
                                        placeholder="Apartment, suite, unit, building, floor, etc.">
                             </div>
                             @error('address_line_2')
