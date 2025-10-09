@@ -20,55 +20,14 @@ class ProductPricingService
         $appliedRules = collect();
         $breakdown = [];
 
-        // Get applicable pricing rules
         $rules = $this->getApplicablePricingRules($product, $client, $quantity);
 
-        // Apply rules in priority order
         foreach ($rules as $rule) {
-            if (! $rule->isValid()) {
-                continue;
-            }
-
-            // Check if rule can be combined with already applied rules
-            $canApply = true;
-            foreach ($appliedRules as $appliedRule) {
-                if (! $rule->canCombineWith($appliedRule)) {
-                    $canApply = false;
-                    break;
-                }
-            }
-
-            if (! $canApply) {
-                continue;
-            }
-
-            $rulePrice = $rule->calculatePrice($finalPrice, $quantity);
-
-            if ($rulePrice < $finalPrice) {
-                $finalPrice = $rulePrice;
-                $appliedRules->push($rule);
-
-                $breakdown[] = [
-                    'rule' => $rule->name ?? 'Pricing Rule #'.$rule->id,
-                    'type' => $rule->discount_type,
-                    'value' => $rule->discount_value,
-                    'savings' => $basePrice - $rulePrice,
-                ];
-            }
+            $this->applyPricingRule($rule, $appliedRules, $finalPrice, $basePrice, $quantity, $breakdown);
         }
 
-        // Apply product-specific discounts if no rules override
-        if ($appliedRules->isEmpty() && $product->discount_percentage) {
-            $finalPrice = $basePrice * (1 - $product->discount_percentage / 100);
-            $breakdown[] = [
-                'rule' => 'Product Discount',
-                'type' => 'percentage',
-                'value' => $product->discount_percentage,
-                'savings' => $basePrice - $finalPrice,
-            ];
-        }
+        $this->applyProductDiscount($product, $appliedRules, $finalPrice, $basePrice, $breakdown);
 
-        // Calculate totals
         $subtotal = $finalPrice * $quantity;
         $tax = $this->calculateTax($product, $subtotal, $client);
         $total = $subtotal + ($product->tax_inclusive ? 0 : $tax);
@@ -146,6 +105,55 @@ class ProductPricingService
             'items' => $itemDetails,
             'selected_products' => $selectedProductIds ?? [],
         ];
+    }
+
+    protected function applyPricingRule(PricingRule $rule, Collection $appliedRules, float &$finalPrice, float $basePrice, int $quantity, array &$breakdown): void
+    {
+        if (! $rule->isValid()) {
+            return;
+        }
+
+        if (! $this->canApplyRule($rule, $appliedRules)) {
+            return;
+        }
+
+        $rulePrice = $rule->calculatePrice($finalPrice, $quantity);
+
+        if ($rulePrice < $finalPrice) {
+            $finalPrice = $rulePrice;
+            $appliedRules->push($rule);
+
+            $breakdown[] = [
+                'rule' => $rule->name ?? 'Pricing Rule #'.$rule->id,
+                'type' => $rule->discount_type,
+                'value' => $rule->discount_value,
+                'savings' => $basePrice - $rulePrice,
+            ];
+        }
+    }
+
+    protected function canApplyRule(PricingRule $rule, Collection $appliedRules): bool
+    {
+        foreach ($appliedRules as $appliedRule) {
+            if (! $rule->canCombineWith($appliedRule)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected function applyProductDiscount(Product $product, Collection $appliedRules, float &$finalPrice, float $basePrice, array &$breakdown): void
+    {
+        if ($appliedRules->isEmpty() && $product->discount_percentage) {
+            $finalPrice = $basePrice * (1 - $product->discount_percentage / 100);
+            $breakdown[] = [
+                'rule' => 'Product Discount',
+                'type' => 'percentage',
+                'value' => $product->discount_percentage,
+                'savings' => $basePrice - $finalPrice,
+            ];
+        }
     }
 
     /**
