@@ -6,11 +6,28 @@ use App\Models\Company;
 
 class ManualProvider implements EmailProviderInterface
 {
+    private const OAUTH_NOT_SUPPORTED_MESSAGE = 'Manual provider does not support OAuth';
+
     protected Company $company;
 
     public function __construct(Company $company)
     {
         $this->company = $company;
+    }
+
+    public function getAuthorizationUrl(string $state): string
+    {
+        throw new \Exception(self::OAUTH_NOT_SUPPORTED_MESSAGE);
+    }
+
+    public function exchangeCodeForTokens(string $code): array
+    {
+        throw new \Exception(self::OAUTH_NOT_SUPPORTED_MESSAGE);
+    }
+
+    public function refreshTokens(string $refreshToken): array
+    {
+        throw new \Exception(self::OAUTH_NOT_SUPPORTED_MESSAGE);
     }
 
     public function getAuthorizationUrl(string $state): string
