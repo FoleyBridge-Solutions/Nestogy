@@ -35,47 +35,83 @@ class SendLetterJob extends BasePhysicalMailJob
             'size' => $this->mailable->size,
         ];
 
-        // Add content (template, HTML, or PDF)
+        $payload = array_merge($payload, $this->getContentPayload());
+        $payload = array_merge($payload, $this->getOptionalFieldsPayload());
+
+        return $payload;
+    }
+
+    private function getContentPayload(): array
+    {
         if ($this->mailable->template_id && $this->mailable->template) {
-            if ($this->mailable->template->postgrid_id) {
-                $payload['template'] = $this->mailable->template->postgrid_id;
-                // Only add merge variables when using PostGrid templates
-                if (! empty($this->mailable->merge_variables)) {
-                    $payload['mergeVariables'] = $this->mailable->merge_variables;
-                }
-            } else {
-                // Process HTML to replace merge variables
-                $html = $this->mailable->template->content;
-                if (! empty($this->mailable->merge_variables)) {
-                    $html = $this->replaceMergeVariables($html, $this->mailable->merge_variables);
-                }
-                $payload['html'] = $html;
-            }
-        } elseif ($this->mailable->content) {
-            // Determine if content is HTML or PDF URL
-            if (filter_var($this->mailable->content, FILTER_VALIDATE_URL)) {
-                $payload['pdf'] = $this->mailable->content;
-            } else {
-                // Process HTML to replace merge variables
-                $html = $this->mailable->content;
-                if (! empty($this->mailable->merge_variables)) {
-                    $html = $this->replaceMergeVariables($html, $this->mailable->merge_variables);
-                }
-                $payload['html'] = $html;
-            }
+            return $this->getTemplatePayload();
         }
 
-        // Add perforation
+        if ($this->mailable->content) {
+            return $this->getDirectContentPayload();
+        }
+
+        return [];
+    }
+
+    private function getTemplatePayload(): array
+    {
+        if ($this->mailable->template->postgrid_id) {
+            return $this->getPostGridTemplatePayload();
+        }
+
+        return $this->getHtmlTemplatePayload();
+    }
+
+    private function getPostGridTemplatePayload(): array
+    {
+        $payload = ['template' => $this->mailable->template->postgrid_id];
+
+        if (! empty($this->mailable->merge_variables)) {
+            $payload['mergeVariables'] = $this->mailable->merge_variables;
+        }
+
+        return $payload;
+    }
+
+    private function getHtmlTemplatePayload(): array
+    {
+        $html = $this->mailable->template->content;
+
+        if (! empty($this->mailable->merge_variables)) {
+            $html = $this->replaceMergeVariables($html, $this->mailable->merge_variables);
+        }
+
+        return ['html' => $html];
+    }
+
+    private function getDirectContentPayload(): array
+    {
+        if (filter_var($this->mailable->content, FILTER_VALIDATE_URL)) {
+            return ['pdf' => $this->mailable->content];
+        }
+
+        $html = $this->mailable->content;
+
+        if (! empty($this->mailable->merge_variables)) {
+            $html = $this->replaceMergeVariables($html, $this->mailable->merge_variables);
+        }
+
+        return ['html' => $html];
+    }
+
+    private function getOptionalFieldsPayload(): array
+    {
+        $payload = [];
+
         if ($this->mailable->perforated_page) {
             $payload['perforatedPage'] = $this->mailable->perforated_page;
         }
 
-        // Add extra service (certified, registered, etc.)
         if ($this->mailable->extra_service) {
             $payload['extraService'] = $this->mailable->extra_service;
         }
 
-        // Add return envelope
         if ($this->mailable->return_envelope_id && $this->mailable->returnEnvelope) {
             if ($this->mailable->returnEnvelope->postgrid_id) {
                 $payload['returnEnvelope'] = $this->mailable->returnEnvelope->postgrid_id;
