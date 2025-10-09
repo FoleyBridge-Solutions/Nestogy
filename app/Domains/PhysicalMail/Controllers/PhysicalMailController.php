@@ -31,7 +31,19 @@ class PhysicalMailController extends Controller
             'include_locations' => 'sometimes|boolean',
         ]);
 
-        // Get selected client from session if no explicit client_id provided
+        $validated = $this->ensureClientId($validated);
+
+        if ($request->boolean('include_locations')) {
+            return $this->getLocationData($validated);
+        }
+
+        $orders = $this->getOrders($validated);
+
+        return response()->json($orders);
+    }
+
+    private function ensureClientId(array $validated): array
+    {
         if (! isset($validated['client_id'])) {
             $selectedClient = NavigationService::getSelectedClient();
             if ($selectedClient) {
@@ -39,78 +51,86 @@ class PhysicalMailController extends Controller
             }
         }
 
-        // If requesting location data for map view
-        if ($request->boolean('include_locations')) {
-            $query = PhysicalMailOrder::with(['client', 'createdBy'])
-                ->whereNotNull('tracking_number')
-                ->whereNotIn('status', ['cancelled', 'failed']);
+        return $validated;
+    }
 
-            if (isset($validated['status'])) {
-                $query->where('status', $validated['status']);
-            }
+    private function getLocationData(array $validated): JsonResponse
+    {
+        $query = PhysicalMailOrder::with(['client', 'createdBy'])
+            ->whereNotNull('tracking_number')
+            ->whereNotIn('status', ['cancelled', 'failed']);
 
-            if (isset($validated['client_id'])) {
-                $query->where('client_id', $validated['client_id']);
-            }
+        $this->applyFilters($query, $validated);
 
-            if (isset($validated['date_from'])) {
-                $query->where('created_at', '>=', $validated['date_from']);
-            }
+        $orders = $query->limit(100)->get();
+        $mapData = $this->transformOrdersForMap($orders);
 
-            if (isset($validated['date_to'])) {
-                $query->where('created_at', '<=', $validated['date_to']);
-            }
+        return response()->json(['data' => $mapData]);
+    }
 
-            $orders = $query->limit(100)->get();
-
-            // Transform for map display
-            $mapData = $orders->map(function ($order) {
-                return [
-                    'id' => $order->id,
-                    'tracking_number' => $order->tracking_number,
-                    'status' => $order->status,
-                    'client' => [
-                        'name' => $order->client?->name ?? 'Unknown',
-                    ],
-                    'address' => $order->formatted_address ??
-                        ($order->to_city ? "{$order->to_address_line1}, {$order->to_city}, {$order->to_state}" : 'Unknown location'),
-                    'lat' => $order->latitude,
-                    'lng' => $order->longitude,
-                ];
-            });
-
-            return response()->json(['data' => $mapData]);
-        }
-
-        // Use provided client_id, or session client, or return all if none
+    private function getOrders(array $validated)
+    {
         $clientId = $validated['client_id'] ?? null;
 
         if ($clientId) {
-            $orders = $this->mailService->getByClient($clientId, $validated);
-        } else {
-            // Return all orders for the company if no specific client
-            $query = PhysicalMailOrder::where('company_id', Auth::user()->company_id);
-
-            if (isset($validated['status'])) {
-                $query->where('status', $validated['status']);
-            }
-
-            if (isset($validated['mailable_type'])) {
-                $query->where('mailable_type', $validated['mailable_type']);
-            }
-
-            if (isset($validated['date_from'])) {
-                $query->where('created_at', '>=', $validated['date_from']);
-            }
-
-            if (isset($validated['date_to'])) {
-                $query->where('created_at', '<=', $validated['date_to']);
-            }
-
-            $orders = $query->paginate($validated['per_page'] ?? 20);
+            return $this->mailService->getByClient($clientId, $validated);
         }
 
-        return response()->json($orders);
+        return $this->getCompanyOrders($validated);
+    }
+
+    private function getCompanyOrders(array $validated)
+    {
+        $query = PhysicalMailOrder::where('company_id', Auth::user()->company_id);
+
+        $this->applyFilters($query, $validated);
+        $this->applyMailableTypeFilter($query, $validated);
+
+        return $query->paginate($validated['per_page'] ?? 20);
+    }
+
+    private function applyFilters($query, array $validated): void
+    {
+        if (isset($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+
+        if (isset($validated['client_id'])) {
+            $query->where('client_id', $validated['client_id']);
+        }
+
+        if (isset($validated['date_from'])) {
+            $query->where('created_at', '>=', $validated['date_from']);
+        }
+
+        if (isset($validated['date_to'])) {
+            $query->where('created_at', '<=', $validated['date_to']);
+        }
+    }
+
+    private function applyMailableTypeFilter($query, array $validated): void
+    {
+        if (isset($validated['mailable_type'])) {
+            $query->where('mailable_type', $validated['mailable_type']);
+        }
+    }
+
+    private function transformOrdersForMap($orders)
+    {
+        return $orders->map(function ($order) {
+            return [
+                'id' => $order->id,
+                'tracking_number' => $order->tracking_number,
+                'status' => $order->status,
+                'client' => [
+                    'name' => $order->client?->name ?? 'Unknown',
+                ],
+                'address' => $order->formatted_address ??
+                    ($order->to_city ? "{$order->to_address_line1}, {$order->to_city}, {$order->to_state}" : 'Unknown location'),
+                'lat' => $order->latitude,
+                'lng' => $order->longitude,
+            ];
+        });
     }
 
     /**
