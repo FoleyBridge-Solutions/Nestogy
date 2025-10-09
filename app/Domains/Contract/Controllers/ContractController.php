@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class ContractController extends Controller
 {
+    private const VALIDATION_NULLABLE_ARRAY = 'nullable|array';
+
     protected $contractService;
 
     protected $contractGenerationService;
@@ -1023,13 +1025,13 @@ class ContractController extends Controller
             'description' => 'nullable|string',
             'template_type' => 'required|string',
             'billing_model' => 'required|string',
-            'variable_fields' => 'nullable|array',
-            'default_values' => 'nullable|array',
-            'required_fields' => 'nullable|array',
-            'asset_billing_rules' => 'nullable|array',
-            'contact_billing_rules' => 'nullable|array',
-            'calculation_formulas' => 'nullable|array',
-            'automation_settings' => 'nullable|array',
+            'variable_fields' => self::VALIDATION_NULLABLE_ARRAY,
+            'default_values' => self::VALIDATION_NULLABLE_ARRAY,
+            'required_fields' => self::VALIDATION_NULLABLE_ARRAY,
+            'asset_billing_rules' => self::VALIDATION_NULLABLE_ARRAY,
+            'contact_billing_rules' => self::VALIDATION_NULLABLE_ARRAY,
+            'calculation_formulas' => self::VALIDATION_NULLABLE_ARRAY,
+            'automation_settings' => self::VALIDATION_NULLABLE_ARRAY,
         ]);
 
         try {
@@ -1144,12 +1146,12 @@ class ContractController extends Controller
             'description' => 'nullable|string',
             'template_type' => 'required|string',
             'billing_model' => 'required|string',
-            'variable_fields' => 'nullable|array',
-            'default_values' => 'nullable|array',
-            'required_fields' => 'nullable|array',
-            'asset_billing_rules' => 'nullable|array',
-            'contact_billing_rules' => 'nullable|array',
-            'calculation_formulas' => 'nullable|array',
+            'variable_fields' => self::VALIDATION_NULLABLE_ARRAY,
+            'default_values' => self::VALIDATION_NULLABLE_ARRAY,
+            'required_fields' => self::VALIDATION_NULLABLE_ARRAY,
+            'asset_billing_rules' => self::VALIDATION_NULLABLE_ARRAY,
+            'contact_billing_rules' => self::VALIDATION_NULLABLE_ARRAY,
+            'calculation_formulas' => self::VALIDATION_NULLABLE_ARRAY,
         ]);
 
         try {
