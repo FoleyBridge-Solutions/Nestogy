@@ -10,6 +10,8 @@ use App\Domains\Integration\Http\Controllers\Webhooks\NinjaOneWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+const INVOICE_PARAM = '{invoice}';
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -226,9 +228,9 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
             // Standard CRUD
             Route::get('/', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'index'])->name('index');
             Route::post('/', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'store'])->name('store');
-            Route::get('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'show'])->name('show');
-            Route::put('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'update'])->name('update');
-            Route::delete('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'destroy'])->name('destroy');
+            Route::get(INVOICE_PARAM, [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'show'])->name('show');
+            Route::put(INVOICE_PARAM, [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'update'])->name('update');
+            Route::delete(INVOICE_PARAM, [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'destroy'])->name('destroy');
 
             // Invoice Items
             Route::post('{invoice}/items', [App\Domains\Financial\Controllers\InvoiceController::class, 'addItem'])->name('items.store');
