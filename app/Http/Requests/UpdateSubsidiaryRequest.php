@@ -99,92 +99,118 @@ class UpdateSubsidiaryRequest extends BaseSubsidiaryRequest
             $subsidiary = $this->route('subsidiary');
             $userCompany = Auth::user()->company;
 
-            // Validate hierarchy move
-            if ($this->move_to_parent) {
-                $newParentId = (int) $this->move_to_parent;
-
-                // Cannot move to itself
-                if ($newParentId === $subsidiary->id) {
-                    $validator->errors()->add('move_to_parent',
-                        'Cannot move company to itself.');
-                }
-
-                // Cannot move to a descendant (would create circular reference)
-                if (CompanyHierarchy::isDescendant($newParentId, $subsidiary->id)) {
-                    $validator->errors()->add('move_to_parent',
-                        'Cannot move company to one of its descendants.');
-                }
-
-                // New parent must be accessible by current user
-                if (! CompanyHierarchy::areRelated($userCompany->id, $newParentId) &&
-                    $newParentId !== $userCompany->id) {
-                    $validator->errors()->add('move_to_parent',
-                        'You do not have access to the selected parent company.');
-                }
-            }
-
-            // Validate max subsidiary depth changes
-            if ($this->max_subsidiary_depth !== null) {
-                $currentDepth = $subsidiary->organizational_level;
-                $requestedDepth = (int) $this->max_subsidiary_depth;
-
-                // Cannot reduce depth below current level
-                if ($requestedDepth < $currentDepth) {
-                    $validator->errors()->add('max_subsidiary_depth',
-                        'Cannot set maximum depth below current organizational level ('.
-                        $currentDepth.').');
-                }
-
-                // Check if subsidiary has children that would exceed new depth
-                $hasDeepChildren = CompanyHierarchy::getDescendants($subsidiary->id)
-                    ->where('depth', '>', ($requestedDepth - $currentDepth))
-                    ->exists();
-
-                if ($hasDeepChildren) {
-                    $validator->errors()->add('max_subsidiary_depth',
-                        'Cannot reduce maximum depth: existing subsidiaries exceed the new limit.');
-                }
-            }
-
-            // Validate currency compatibility with billing type
+            $this->validateHierarchyMove($validator, $subsidiary, $userCompany);
+            $this->validateMaxSubsidiaryDepth($validator, $subsidiary);
             $this->validateCurrencyBilling($validator, $userCompany->currency);
-
-            // Validate suspension
-            if ($this->boolean('is_active') === false) {
-                // Check if subsidiary has active children
-                $hasActiveChildren = $subsidiary->childCompanies()
-                    ->where('is_active', true)
-                    ->exists();
-
-                if ($hasActiveChildren) {
-                    $validator->errors()->add('is_active',
-                        'Cannot deactivate company with active subsidiaries.');
-                }
-
-                // Require suspension reason
-                if (empty($this->suspension_reason)) {
-                    $validator->errors()->add('suspension_reason',
-                        'A suspension reason is required when deactivating a subsidiary.');
-                }
-            }
-
-            // Validate access level downgrades
-            $currentLevel = $subsidiary->access_level;
-            $newLevel = $this->access_level;
-
-            if ($this->isAccessLevelDowngrade($currentLevel, $newLevel)) {
-                // Check if subsidiary has permissions that would be invalid
-                $hasHighLevelPermissions = $subsidiary->grantedPermissions()
-                    ->whereIn('permission_type', ['manage', 'delete'])
-                    ->active()
-                    ->exists();
-
-                if ($hasHighLevelPermissions && $newLevel === 'read_only') {
-                    $validator->errors()->add('access_level',
-                        'Cannot downgrade to read-only: subsidiary has active management permissions.');
-                }
-            }
+            $this->validateSuspension($validator, $subsidiary);
+            $this->validateAccessLevelDowngrade($validator, $subsidiary);
         });
+    }
+
+    /**
+     * Validate hierarchy move operation.
+     */
+    protected function validateHierarchyMove($validator, $subsidiary, $userCompany): void
+    {
+        if (! $this->move_to_parent) {
+            return;
+        }
+
+        $newParentId = (int) $this->move_to_parent;
+
+        if ($newParentId === $subsidiary->id) {
+            $validator->errors()->add('move_to_parent',
+                'Cannot move company to itself.');
+            return;
+        }
+
+        if (CompanyHierarchy::isDescendant($newParentId, $subsidiary->id)) {
+            $validator->errors()->add('move_to_parent',
+                'Cannot move company to one of its descendants.');
+            return;
+        }
+
+        if (! CompanyHierarchy::areRelated($userCompany->id, $newParentId) &&
+            $newParentId !== $userCompany->id) {
+            $validator->errors()->add('move_to_parent',
+                'You do not have access to the selected parent company.');
+        }
+    }
+
+    /**
+     * Validate max subsidiary depth changes.
+     */
+    protected function validateMaxSubsidiaryDepth($validator, $subsidiary): void
+    {
+        if ($this->max_subsidiary_depth === null) {
+            return;
+        }
+
+        $currentDepth = $subsidiary->organizational_level;
+        $requestedDepth = (int) $this->max_subsidiary_depth;
+
+        if ($requestedDepth < $currentDepth) {
+            $validator->errors()->add('max_subsidiary_depth',
+                'Cannot set maximum depth below current organizational level ('.
+                $currentDepth.').');
+            return;
+        }
+
+        $hasDeepChildren = CompanyHierarchy::getDescendants($subsidiary->id)
+            ->where('depth', '>', ($requestedDepth - $currentDepth))
+            ->exists();
+
+        if ($hasDeepChildren) {
+            $validator->errors()->add('max_subsidiary_depth',
+                'Cannot reduce maximum depth: existing subsidiaries exceed the new limit.');
+        }
+    }
+
+    /**
+     * Validate suspension operation.
+     */
+    protected function validateSuspension($validator, $subsidiary): void
+    {
+        if ($this->boolean('is_active') !== false) {
+            return;
+        }
+
+        $hasActiveChildren = $subsidiary->childCompanies()
+            ->where('is_active', true)
+            ->exists();
+
+        if ($hasActiveChildren) {
+            $validator->errors()->add('is_active',
+                'Cannot deactivate company with active subsidiaries.');
+        }
+
+        if (empty($this->suspension_reason)) {
+            $validator->errors()->add('suspension_reason',
+                'A suspension reason is required when deactivating a subsidiary.');
+        }
+    }
+
+    /**
+     * Validate access level downgrade.
+     */
+    protected function validateAccessLevelDowngrade($validator, $subsidiary): void
+    {
+        $currentLevel = $subsidiary->access_level;
+        $newLevel = $this->access_level;
+
+        if (! $this->isAccessLevelDowngrade($currentLevel, $newLevel)) {
+            return;
+        }
+
+        $hasHighLevelPermissions = $subsidiary->grantedPermissions()
+            ->whereIn('permission_type', ['manage', 'delete'])
+            ->active()
+            ->exists();
+
+        if ($hasHighLevelPermissions && $newLevel === 'read_only') {
+            $validator->errors()->add('access_level',
+                'Cannot downgrade to read-only: subsidiary has active management permissions.');
+        }
     }
 
     /**
