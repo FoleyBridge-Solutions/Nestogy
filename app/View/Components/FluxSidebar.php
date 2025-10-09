@@ -111,6 +111,8 @@ class FluxSidebar extends Component
                 case 'communications':
                     $count = $selectedClient->communicationLogs()->count();
                     break;
+                default:
+                    break;
             }
 
             // Apply badge type styling
