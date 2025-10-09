@@ -437,6 +437,8 @@ class UnifiedEmailSyncService
                 case 'date':
                     $date = $header['value'];
                     break;
+                default:
+                    break;
             }
         }
 
