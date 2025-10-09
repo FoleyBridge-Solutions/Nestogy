@@ -43,7 +43,7 @@
                         @forelse($matrix as $category => $abilities)
                             {{-- Category Header --}}
                             <div class="bg-zinc-100 dark:bg-zinc-800 border-b">
-                                <button 
+                                <button
                                     wire:click="toggleCategory('{{ $category }}')"
                                     class="w-full flex items-center justify-between px-4 py-2 text-left hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                                 >
