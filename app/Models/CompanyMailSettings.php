@@ -226,55 +226,72 @@ class CompanyMailSettings extends Model
      */
     public function getMailConfig(): array
     {
-        switch ($this->driver) {
-            case 'smtp':
-                return [
-                    'transport' => 'smtp',
-                    'host' => $this->smtp_host,
-                    'port' => $this->smtp_port,
-                    'encryption' => $this->smtp_encryption === 'none' ? null : $this->smtp_encryption,
-                    'username' => $this->smtp_username,
-                    'password' => $this->smtp_password_decrypted,
-                    'timeout' => $this->smtp_timeout,
-                ];
+        return match ($this->driver) {
+            'smtp' => $this->getSmtpConfig(),
+            'ses' => $this->getSesConfig(),
+            'mailgun' => $this->getMailgunConfig(),
+            'postmark' => $this->getPostmarkConfig(),
+            'sendgrid' => $this->getSendgridConfig(),
+            'log' => $this->getLogConfig(),
+            default => [],
+        };
+    }
 
-            case 'ses':
-                return [
-                    'transport' => 'ses',
-                    'key' => $this->ses_key ?: $this->api_key,
-                    'secret' => $this->ses_secret_decrypted ?: $this->getApiSecretDecryptedAttribute(),
-                    'region' => $this->ses_region ?: $this->api_domain ?: 'us-east-1',
-                ];
+    private function getSmtpConfig(): array
+    {
+        return [
+            'transport' => 'smtp',
+            'host' => $this->smtp_host,
+            'port' => $this->smtp_port,
+            'encryption' => $this->smtp_encryption === 'none' ? null : $this->smtp_encryption,
+            'username' => $this->smtp_username,
+            'password' => $this->smtp_password_decrypted,
+            'timeout' => $this->smtp_timeout,
+        ];
+    }
 
-            case 'mailgun':
-                return [
-                    'transport' => 'mailgun',
-                    'domain' => $this->mailgun_domain ?: $this->api_domain,
-                    'secret' => $this->mailgun_secret_decrypted ?: $this->getApiKeyDecryptedAttribute(),
-                    'endpoint' => $this->mailgun_endpoint,
-                ];
+    private function getSesConfig(): array
+    {
+        return [
+            'transport' => 'ses',
+            'key' => $this->ses_key ?: $this->api_key,
+            'secret' => $this->ses_secret_decrypted ?: $this->getApiSecretDecryptedAttribute(),
+            'region' => $this->ses_region ?: $this->api_domain ?: 'us-east-1',
+        ];
+    }
 
-            case 'postmark':
-                return [
-                    'transport' => 'postmark',
-                    'token' => $this->postmark_token_decrypted ?: $this->getApiKeyDecryptedAttribute(),
-                ];
+    private function getMailgunConfig(): array
+    {
+        return [
+            'transport' => 'mailgun',
+            'domain' => $this->mailgun_domain ?: $this->api_domain,
+            'secret' => $this->mailgun_secret_decrypted ?: $this->getApiKeyDecryptedAttribute(),
+            'endpoint' => $this->mailgun_endpoint,
+        ];
+    }
 
-            case 'sendgrid':
-                return [
-                    'transport' => 'sendgrid',
-                    'api_key' => $this->sendgrid_api_key_decrypted ?: $this->getApiKeyDecryptedAttribute(),
-                ];
+    private function getPostmarkConfig(): array
+    {
+        return [
+            'transport' => 'postmark',
+            'token' => $this->postmark_token_decrypted ?: $this->getApiKeyDecryptedAttribute(),
+        ];
+    }
 
-            case 'log':
-                return [
-                    'transport' => 'log',
-                    'channel' => 'mail',
-                ];
+    private function getSendgridConfig(): array
+    {
+        return [
+            'transport' => 'sendgrid',
+            'api_key' => $this->sendgrid_api_key_decrypted ?: $this->getApiKeyDecryptedAttribute(),
+        ];
+    }
 
-            default:
-                return [];
-        }
+    private function getLogConfig(): array
+    {
+        return [
+            'transport' => 'log',
+            'channel' => 'mail',
+        ];
     }
 
     /**
