@@ -37,6 +37,8 @@ class QuoteController extends Controller
 {
     private const VALIDATION_REQUIRED_ARRAY = 'required|array';
 
+    private const VALIDATION_NULLABLE_ARRAY = 'nullable|array';
+
     protected $quoteService;
 
     protected $emailService;
@@ -1002,7 +1004,7 @@ class QuoteController extends Controller
 
         $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'customizations' => 'nullable|array',
+            'customizations' => self::VALIDATION_NULLABLE_ARRAY,
         ]);
 
         try {
@@ -1218,8 +1220,8 @@ class QuoteController extends Controller
         $request->validate([
             'conversion_type' => 'required|string|in:contract_only,contract_with_invoice,contract_with_recurring',
             'contract_data' => self::VALIDATION_REQUIRED_ARRAY,
-            'invoice_data' => 'nullable|array',
-            'recurring_data' => 'nullable|array',
+            'invoice_data' => self::VALIDATION_NULLABLE_ARRAY,
+            'recurring_data' => self::VALIDATION_NULLABLE_ARRAY,
         ]);
 
         try {
