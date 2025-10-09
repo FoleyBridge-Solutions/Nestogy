@@ -8,11 +8,16 @@ use App\Models\User;
 class ProjectPolicy
 {
     /**
+     * Wildcard permission for all project actions.
+     */
+    private const WILDCARD_PERMISSION = 'projects.*';
+
+    /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('projects.view') || $user->can('projects.*');
+        return $user->can('projects.view') || $user->can(self::WILDCARD_PERMISSION);
     }
 
     /**
@@ -20,7 +25,7 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project): bool
     {
-        if (! $user->can('projects.view') && ! $user->can('projects.*')) {
+        if (! $user->can('projects.view') && ! $user->can(self::WILDCARD_PERMISSION)) {
             return false;
         }
 
@@ -40,7 +45,7 @@ class ProjectPolicy
         }
 
         // Users with manage permission can view all projects
-        return $user->can('projects.manage') || $user->can('projects.*');
+        return $user->can('projects.manage') || $user->can(self::WILDCARD_PERMISSION);
     }
 
     /**
@@ -48,7 +53,7 @@ class ProjectPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('projects.create') || $user->can('projects.*');
+        return $user->can('projects.create') || $user->can(self::WILDCARD_PERMISSION);
     }
 
     /**
@@ -56,7 +61,7 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        if (! $user->can('projects.edit') && ! $user->can('projects.*')) {
+        if (! $user->can('projects.edit') && ! $user->can(self::WILDCARD_PERMISSION)) {
             return false;
         }
 
@@ -78,7 +83,7 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        if (! $user->can('projects.delete') && ! $user->can('projects.*')) {
+        if (! $user->can('projects.delete') && ! $user->can(self::WILDCARD_PERMISSION)) {
             return false;
         }
 
@@ -304,7 +309,7 @@ class ProjectPolicy
     private function hasProjectPermission(User $user, string $permission): bool
     {
         // Check for specific permission or wildcard
-        return $user->can($permission) || $user->can('projects.*');
+        return $user->can($permission) || $user->can(self::WILDCARD_PERMISSION);
     }
 
     /**
