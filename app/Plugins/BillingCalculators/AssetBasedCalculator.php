@@ -316,6 +316,9 @@ class AssetBasedCalculator implements BillingCalculatorInterface
                         $adjustedAmount = $adjustedAmount->add(new Money($adjustment['value'] * 100, $currency));
                     }
                     break;
+
+                default:
+                    break;
             }
         }
 
