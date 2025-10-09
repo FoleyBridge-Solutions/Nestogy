@@ -684,6 +684,69 @@ class ContractClauseService
     }
 
     /**
+     * Check for conflicts between clause and existing clauses in template.
+     */
+    protected function checkClauseConflicts(ContractTemplate $template, ContractClause $clause): array
+    {
+        $errors = [];
+
+        if (! $clause->hasConflicts()) {
+            return $errors;
+        }
+
+        $conflicts = $clause->getConflicts();
+        $existingClauses = $template->clauses->pluck('slug')->toArray();
+
+        foreach ($conflicts as $conflictSlug) {
+            if (in_array($conflictSlug, $existingClauses)) {
+                $conflictingClause = $template->clauses->firstWhere('slug', $conflictSlug);
+                $errors[] = "Cannot add '{$clause->name}' - conflicts with existing clause '{$conflictingClause->name}'";
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Add dependencies for a clause to template.
+     */
+    protected function addClauseDependencies(ContractTemplate $template, ContractClause $clause): array
+    {
+        $addedClauses = [];
+        $errors = [];
+
+        if (! $clause->hasDependencies()) {
+            return ['added' => $addedClauses, 'errors' => $errors];
+        }
+
+        $dependencies = $clause->getDependencies();
+        $existingClauses = $template->clauses->pluck('slug')->toArray();
+
+        foreach ($dependencies as $dependencySlug) {
+            if (in_array($dependencySlug, $existingClauses)) {
+                continue;
+            }
+
+            $dependencyClause = ContractClause::where('company_id', $template->company_id)
+                ->where('slug', $dependencySlug)
+                ->where('status', 'active')
+                ->first();
+
+            if ($dependencyClause) {
+                $this->attachClauseToTemplate($template, $dependencyClause, [
+                    'auto_added' => true,
+                    'reason' => "Required dependency for '{$clause->name}'",
+                ]);
+                $addedClauses[] = $dependencyClause;
+            } else {
+                $errors[] = "Required dependency '{$dependencySlug}' not found for clause '{$clause->name}'";
+            }
+        }
+
+        return ['added' => $addedClauses, 'errors' => $errors];
+    }
+
+    /**
      * Add clause to template with automatic dependency resolution.
      */
     public function addClauseToTemplate(ContractTemplate $template, ContractClause $clause, array $options = []): array
@@ -691,7 +754,6 @@ class ContractClauseService
         $addedClauses = [];
         $errors = [];
 
-        // Check if clause is already in template
         if ($template->clauses()->where('contract_clauses.id', $clause->id)->exists()) {
             return [
                 'added' => [],
@@ -699,50 +761,15 @@ class ContractClauseService
             ];
         }
 
-        // Check for conflicts first
-        if ($clause->hasConflicts()) {
-            $conflicts = $clause->getConflicts();
-            $existingClauses = $template->clauses->pluck('slug')->toArray();
-
-            foreach ($conflicts as $conflictSlug) {
-                if (in_array($conflictSlug, $existingClauses)) {
-                    $conflictingClause = $template->clauses->firstWhere('slug', $conflictSlug);
-                    $errors[] = "Cannot add '{$clause->name}' - conflicts with existing clause '{$conflictingClause->name}'";
-                }
-            }
+        $conflictErrors = $this->checkClauseConflicts($template, $clause);
+        if (! empty($conflictErrors)) {
+            return ['added' => [], 'errors' => $conflictErrors];
         }
 
-        if (! empty($errors)) {
-            return ['added' => [], 'errors' => $errors];
-        }
+        $dependencyResult = $this->addClauseDependencies($template, $clause);
+        $addedClauses = $dependencyResult['added'];
+        $errors = $dependencyResult['errors'];
 
-        // Add dependencies first
-        if ($clause->hasDependencies()) {
-            $dependencies = $clause->getDependencies();
-            $existingClauses = $template->clauses->pluck('slug')->toArray();
-
-            foreach ($dependencies as $dependencySlug) {
-                if (! in_array($dependencySlug, $existingClauses)) {
-                    // Find and add the dependency
-                    $dependencyClause = ContractClause::where('company_id', $template->company_id)
-                        ->where('slug', $dependencySlug)
-                        ->where('status', 'active')
-                        ->first();
-
-                    if ($dependencyClause) {
-                        $this->attachClauseToTemplate($template, $dependencyClause, [
-                            'auto_added' => true,
-                            'reason' => "Required dependency for '{$clause->name}'",
-                        ]);
-                        $addedClauses[] = $dependencyClause;
-                    } else {
-                        $errors[] = "Required dependency '{$dependencySlug}' not found for clause '{$clause->name}'";
-                    }
-                }
-            }
-        }
-
-        // Add the main clause if no errors
         if (empty($errors)) {
             $this->attachClauseToTemplate($template, $clause, $options);
             $addedClauses[] = $clause;
