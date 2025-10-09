@@ -12,6 +12,8 @@ class EditContract extends Component
 {
     use AuthorizesRequests;
 
+    private const NULLABLE_STRING_RULE = 'nullable|string';
+
     public Contract $contract;
     
     // Form fields
@@ -43,15 +45,15 @@ class EditContract extends Component
             'title' => 'required|string|max:255',
             'contract_type' => 'required|string',
             'client_id' => 'required|exists:clients,id',
-            'description' => 'nullable|string',
+            'description' => self::NULLABLE_STRING_RULE,
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'contract_value' => 'nullable|numeric|min:0', // Changed to nullable since it's auto-calculated
             'status' => 'required|string',
-            'billing_model' => 'nullable|string',
+            'billing_model' => self::NULLABLE_STRING_RULE,
             'currency_code' => 'required|string|size:3',
-            'payment_terms' => 'nullable|string',
-            'content' => 'nullable|string',
+            'payment_terms' => self::NULLABLE_STRING_RULE,
+            'content' => self::NULLABLE_STRING_RULE,
             'variables' => 'nullable|array',
         ];
     }
