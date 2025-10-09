@@ -47,7 +47,6 @@ class SendManagerDigest extends Command
 
     protected function collectDigestData($companyId)
     {
-        $today = Carbon::today();
         $yesterday = Carbon::yesterday();
 
         return [
