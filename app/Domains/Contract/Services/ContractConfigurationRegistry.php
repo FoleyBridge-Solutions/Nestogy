@@ -715,7 +715,7 @@ class ContractConfigurationRegistry
             'fixed' => 'Fixed Price',
             'per_asset' => 'Per Asset/Device',
             'per_user' => 'Per User/Seat',
-            'per_contact' => 'Per Contact',
+            'per_contact' => 'Per Contact/Seat',
             'hourly' => 'Hourly Rate',
             'tiered' => 'Tiered Pricing',
             'hybrid' => 'Hybrid Model',
