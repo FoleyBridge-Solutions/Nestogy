@@ -150,6 +150,11 @@ class ContractClause extends Model
     const CATEGORY_CHANGE_MANAGEMENT = 'change_management';
 
     /**
+     * List separator for "and" conjunction
+     */
+    const LIST_SEPARATOR_AND = ' and ';
+
+    /**
      * Get the templates that use this clause.
      */
     public function templates(): BelongsToMany
@@ -609,8 +614,8 @@ class ContractClause extends Model
             }
 
             // Handle "and" separated lists
-            if (strpos($value, ' and ') !== false) {
-                return array_map('trim', explode(' and ', $value));
+            if (strpos($value, self::LIST_SEPARATOR_AND) !== false) {
+                return array_map('trim', explode(self::LIST_SEPARATOR_AND, $value));
             }
 
             // Single item
@@ -796,7 +801,7 @@ class ContractClause extends Model
         }
 
         if (count($items) === 2) {
-            return implode(' and ', $items);
+            return implode(self::LIST_SEPARATOR_AND, $items);
         }
 
         $last = array_pop($items);
