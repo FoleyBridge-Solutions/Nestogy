@@ -53,7 +53,7 @@
                                     class="w-full h-40 object-cover rounded-lg">
                                 
                                 <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded-lg">
-                                    <button 
+                                    <button
                                         wire:click="removePhoto({{ $index }})"
                                         wire:confirm="Remove this photo?"
                                         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
