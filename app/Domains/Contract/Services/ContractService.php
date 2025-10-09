@@ -1249,52 +1249,109 @@ class ContractService
      */
     protected function updateContractValueWithAssets(Contract $contract): void
     {
-        if (! $contract->pricing_structure || (! isset($contract->pricing_structure['assetTypePricing']) && ! isset($contract->pricing_structure['asset_pricing']))) {
+        if (! $this->hasValidPricingStructure($contract)) {
             return;
         }
 
         $pricing = $contract->pricing_structure;
-        $totalValue = 0;
+        $totalValue = $this->calculateTotalContractValue($contract, $pricing);
 
-        // Add base pricing (handle empty strings)
+        $this->updateContractValueAndLog($contract, $totalValue);
+    }
+
+    protected function hasValidPricingStructure(Contract $contract): bool
+    {
+        return $contract->pricing_structure 
+            && (isset($contract->pricing_structure['assetTypePricing']) 
+                || isset($contract->pricing_structure['asset_pricing']));
+    }
+
+    protected function calculateTotalContractValue(Contract $contract, array $pricing): float
+    {
+        $totalValue = 0;
+        
+        $totalValue += $this->calculateBasePricing($pricing);
+        $totalValue += $this->calculateAssetBasedPricing($contract, $pricing);
+        $totalValue += $this->calculateTelecomPricing($pricing);
+        $totalValue += $this->calculateCompliancePricing($pricing);
+
+        return $totalValue;
+    }
+
+    protected function calculateBasePricing(array $pricing): float
+    {
         $recurringMonthly = $pricing['recurring_monthly'] ?? '';
         $oneTime = $pricing['one_time'] ?? '';
 
-        $totalValue += $recurringMonthly !== '' ? (float) $recurringMonthly : 0;
-        $totalValue += $oneTime !== '' ? (float) $oneTime : 0;
+        $total = 0;
+        $total += $recurringMonthly !== '' ? (float) $recurringMonthly : 0;
+        $total += $oneTime !== '' ? (float) $oneTime : 0;
 
-        // Calculate asset-based pricing with actual counts
+        return $total;
+    }
+
+    protected function calculateAssetBasedPricing(Contract $contract, array $pricing): float
+    {
         $assetPricing = $pricing['assetTypePricing'] ?? $pricing['asset_pricing'] ?? [];
-        if (! empty($assetPricing)) {
-            foreach ($assetPricing as $assetType => $config) {
-                if (! empty($config['enabled']) && ! empty($config['price']) && $config['price'] !== '') {
-                    $assetCount = $contract->supportedAssets()->where('type', $assetType)->count();
-                    $totalValue += (float) $config['price'] * $assetCount;
-                }
+        
+        if (empty($assetPricing)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($assetPricing as $assetType => $config) {
+            if ($this->isValidAssetPricingConfig($config)) {
+                $assetCount = $contract->supportedAssets()->where('type', $assetType)->count();
+                $total += (float) $config['price'] * $assetCount;
             }
         }
 
-        // Add template-specific pricing (handle empty strings)
-        if (isset($pricing['telecom_pricing'])) {
-            foreach ($pricing['telecom_pricing'] as $key => $price) {
-                if ($price !== '') {
-                    $totalValue += (float) $price;
-                }
+        return $total;
+    }
+
+    protected function isValidAssetPricingConfig(array $config): bool
+    {
+        return ! empty($config['enabled']) 
+            && ! empty($config['price']) 
+            && $config['price'] !== '';
+    }
+
+    protected function calculateTelecomPricing(array $pricing): float
+    {
+        if (! isset($pricing['telecom_pricing'])) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($pricing['telecom_pricing'] as $key => $price) {
+            if ($price !== '') {
+                $total += (float) $price;
             }
         }
 
-        if (isset($pricing['compliance_pricing']['frameworkSetup'])) {
-            foreach ($pricing['compliance_pricing']['frameworkSetup'] as $framework => $setupFee) {
-                if ($setupFee !== '') {
-                    $totalValue += (float) $setupFee;
-                }
+        return $total;
+    }
+
+    protected function calculateCompliancePricing(array $pricing): float
+    {
+        if (! isset($pricing['compliance_pricing']['frameworkSetup'])) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($pricing['compliance_pricing']['frameworkSetup'] as $framework => $setupFee) {
+            if ($setupFee !== '') {
+                $total += (float) $setupFee;
             }
         }
 
-        // Update the contract value
+        return $total;
+    }
+
+    protected function updateContractValueAndLog(Contract $contract, float $totalValue): void
+    {
         $contract->update(['contract_value' => $totalValue]);
 
-        // Log the value update
         activity()
             ->performedOn($contract)
             ->causedBy(auth()->user())
