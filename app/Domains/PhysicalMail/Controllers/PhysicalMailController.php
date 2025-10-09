@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 
 class PhysicalMailController extends Controller
 {
+    private const SOMETIMES_BOOLEAN = 'sometimes|boolean';
+
     public function __construct(
         private PhysicalMailService $mailService
     ) {}
@@ -28,7 +30,7 @@ class PhysicalMailController extends Controller
             'date_from' => 'sometimes|date',
             'date_to' => 'sometimes|date',
             'per_page' => 'sometimes|integer|min:1|max:100',
-            'include_locations' => 'sometimes|boolean',
+            'include_locations' => self::SOMETIMES_BOOLEAN,
         ]);
 
         // Get selected client from session if no explicit client_id provided
@@ -134,8 +136,8 @@ class PhysicalMailController extends Controller
             'template' => 'sometimes|string',
             'content' => 'sometimes|string',
             'pdf' => 'sometimes|url',
-            'color' => 'sometimes|boolean',
-            'double_sided' => 'sometimes|boolean',
+            'color' => self::SOMETIMES_BOOLEAN,
+            'double_sided' => self::SOMETIMES_BOOLEAN,
             'address_placement' => 'sometimes|in:top_first_page,insert_blank_page',
             'size' => 'sometimes|string',
             'merge_variables' => 'sometimes|array',
@@ -292,8 +294,8 @@ class PhysicalMailController extends Controller
     {
         $validated = $request->validate([
             'invoice_id' => 'required|uuid|exists:invoices,id',
-            'color' => 'sometimes|boolean',
-            'double_sided' => 'sometimes|boolean',
+            'color' => self::SOMETIMES_BOOLEAN,
+            'double_sided' => self::SOMETIMES_BOOLEAN,
             'extra_service' => 'sometimes|in:certified,certified_return_receipt,registered',
         ]);
 
