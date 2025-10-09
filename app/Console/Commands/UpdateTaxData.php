@@ -203,19 +203,7 @@ class UpdateTaxData extends Command
     protected function processAddressData(string $quarter): array
     {
         try {
-            // Determine which jurisdictions to process
-            if ($this->option('all-jurisdictions')) {
-                $jurisdictions = $this->getAllJurisdictionsForState($stateCode);
-                $this->info("🏛️ FULL STATEWIDE IMPORT: Processing ALL jurisdictions for {$stateCode}");
-                $this->info('📊 Estimated records: Varies by state');
-                $this->info('⏱️ Estimated time: Varies by state');
-                $this->newLine();
-            } elseif ($this->option('jurisdictions')) {
-                $jurisdictions = explode(',', $this->option('jurisdictions'));
-            } else {
-                $jurisdictions = $this->getHighPriorityJurisdictionsForState($stateCode);
-            }
-
+            $jurisdictions = $this->determineJurisdictions();
             $totalJurisdictions = count($jurisdictions);
             $parallelLimit = (int) $this->option('parallel');
 
@@ -223,69 +211,24 @@ class UpdateTaxData extends Command
             $this->line("Parallel processing: {$parallelLimit} jurisdictions at a time");
             $this->newLine();
 
-            $processedJurisdictions = 0;
-            $totalAddresses = 0;
-            $errors = [];
             $startTime = microtime(true);
-
-            // Create progress bar for overall progress
             $progressBar = $this->output->createProgressBar($totalJurisdictions);
             $progressBar->setFormat('Jurisdiction Progress: %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%/%estimated:-6s% %memory:6s%');
             $progressBar->start();
 
-            // Process jurisdictions in parallel batches
-            $jurisdictionBatches = array_chunk($jurisdictions, $parallelLimit);
-
-            foreach ($jurisdictionBatches as $batchIndex => $batch) {
-                $batchResults = $this->processBatchParallel($quarter, $batch, $batchIndex + 1, count($jurisdictionBatches));
-
-                foreach ($batchResults as $jurisdictionCode => $result) {
-                    $progressBar->advance();
-
-                    if ($result['success']) {
-                        $processedJurisdictions++;
-                        $totalAddresses += $result['addresses'];
-                    } else {
-                        $errors[] = "{$jurisdictionCode}: ".$result['error'];
-                    }
-                }
-            }
+            $results = $this->processBatchedJurisdictions($quarter, $jurisdictions, $parallelLimit, $progressBar);
 
             $progressBar->finish();
             $this->newLine(2);
 
             $totalTime = microtime(true) - $startTime;
-            $averagePerJurisdiction = $totalTime / max($processedJurisdictions, 1);
-
-            $this->info('✅ Address Import Complete!');
-            $this->table(
-                ['Metric', 'Value'],
-                [
-                    ['Jurisdictions Processed', number_format($processedJurisdictions).'/'.number_format($totalJurisdictions)],
-                    ['Total Addresses', number_format($totalAddresses)],
-                    ['Processing Time', gmdate('H:i:s', $totalTime)],
-                    ['Average per Jurisdiction', number_format($averagePerJurisdiction, 2).'s'],
-                    ['Addresses per Second', number_format($totalAddresses / max($totalTime, 1), 0)],
-                    ['Errors', count($errors)],
-                ]
-            );
-
-            if (! empty($errors)) {
-                $this->newLine();
-                $this->warn('⚠️ Counties with errors:');
-                foreach (array_slice($errors, 0, 10) as $error) {
-                    $this->line("   • {$error}");
-                }
-                if (count($errors) > 10) {
-                    $this->line('   ... and '.(count($errors) - 10).' more');
-                }
-            }
+            $this->displayResults($results, $totalJurisdictions, $totalTime);
 
             return [
-                'success' => $processedJurisdictions > 0,
-                'jurisdictions' => $processedJurisdictions,
-                'addresses' => $totalAddresses,
-                'errors' => $errors,
+                'success' => $results['processed'] > 0,
+                'jurisdictions' => $results['processed'],
+                'addresses' => $results['total_addresses'],
+                'errors' => $results['errors'],
                 'processing_time' => $totalTime,
             ];
 
@@ -294,6 +237,89 @@ class UpdateTaxData extends Command
                 'success' => false,
                 'error' => $e->getMessage(),
             ];
+        }
+    }
+
+    protected function determineJurisdictions(): array
+    {
+        if ($this->option('all-jurisdictions')) {
+            $jurisdictions = $this->getAllJurisdictionsForState($stateCode);
+            $this->info("🏛️ FULL STATEWIDE IMPORT: Processing ALL jurisdictions for {$stateCode}");
+            $this->info('📊 Estimated records: Varies by state');
+            $this->info('⏱️ Estimated time: Varies by state');
+            $this->newLine();
+        } elseif ($this->option('jurisdictions')) {
+            $jurisdictions = explode(',', $this->option('jurisdictions'));
+        } else {
+            $jurisdictions = $this->getHighPriorityJurisdictionsForState($stateCode);
+        }
+
+        return $jurisdictions;
+    }
+
+    protected function processBatchedJurisdictions(string $quarter, array $jurisdictions, int $parallelLimit, $progressBar): array
+    {
+        $processedJurisdictions = 0;
+        $totalAddresses = 0;
+        $errors = [];
+
+        $jurisdictionBatches = array_chunk($jurisdictions, $parallelLimit);
+
+        foreach ($jurisdictionBatches as $batchIndex => $batch) {
+            $batchResults = $this->processBatchParallel($quarter, $batch, $batchIndex + 1, count($jurisdictionBatches));
+
+            foreach ($batchResults as $jurisdictionCode => $result) {
+                $progressBar->advance();
+
+                if ($result['success']) {
+                    $processedJurisdictions++;
+                    $totalAddresses += $result['addresses'];
+                } else {
+                    $errors[] = "{$jurisdictionCode}: ".$result['error'];
+                }
+            }
+        }
+
+        return [
+            'processed' => $processedJurisdictions,
+            'total_addresses' => $totalAddresses,
+            'errors' => $errors,
+        ];
+    }
+
+    protected function displayResults(array $results, int $totalJurisdictions, float $totalTime): void
+    {
+        $averagePerJurisdiction = $totalTime / max($results['processed'], 1);
+
+        $this->info('✅ Address Import Complete!');
+        $this->table(
+            ['Metric', 'Value'],
+            [
+                ['Jurisdictions Processed', number_format($results['processed']).'/'.number_format($totalJurisdictions)],
+                ['Total Addresses', number_format($results['total_addresses'])],
+                ['Processing Time', gmdate('H:i:s', $totalTime)],
+                ['Average per Jurisdiction', number_format($averagePerJurisdiction, 2).'s'],
+                ['Addresses per Second', number_format($results['total_addresses'] / max($totalTime, 1), 0)],
+                ['Errors', count($results['errors'])],
+            ]
+        );
+
+        $this->displayErrors($results['errors']);
+    }
+
+    protected function displayErrors(array $errors): void
+    {
+        if (empty($errors)) {
+            return;
+        }
+
+        $this->newLine();
+        $this->warn('⚠️ Counties with errors:');
+        foreach (array_slice($errors, 0, 10) as $error) {
+            $this->line("   • {$error}");
+        }
+        if (count($errors) > 10) {
+            $this->line('   ... and '.(count($errors) - 10).' more');
         }
     }
 
