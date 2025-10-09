@@ -11,6 +11,8 @@ use Livewire\Component;
 
 class SendMailModal extends Component
 {
+    private const DATE_FORMAT = 'F j, Y';
+
     public bool $show = false;
 
     public ?Invoice $invoice = null;
@@ -134,7 +136,7 @@ class SendMailModal extends Component
         }
 
         $this->coverLetterMessage = "Please find enclosed Invoice #{$this->invoice->invoice_number} ".
-            "for \${$this->invoice->total}. Payment is due by {$this->invoice->due_date->format('F j, Y')}. ".
+            "for \${$this->invoice->total}. Payment is due by {$this->invoice->due_date->format(self::DATE_FORMAT)}. ".
             'Thank you for your business!';
     }
 
@@ -268,10 +270,10 @@ class SendMailModal extends Component
             '{{client_name}}' => $this->client?->name ?? '',
             '{{contact_name}}' => $this->recipientName,
             '{{company_name}}' => config('nestogy.company_name'),
-            '{{date}}' => now()->format('F j, Y'),
+            '{{date}}' => now()->format(self::DATE_FORMAT),
             '{{invoice_number}}' => $this->invoice?->invoice_number ?? '',
             '{{invoice_amount}}' => $this->invoice ? '$'.number_format($this->invoice->total, 2) : '',
-            '{{due_date}}' => $this->invoice?->due_date->format('F j, Y') ?? '',
+            '{{due_date}}' => $this->invoice?->due_date->format(self::DATE_FORMAT) ?? '',
         ];
 
         return str_replace(array_keys($replacements), array_values($replacements), $templateContent);
