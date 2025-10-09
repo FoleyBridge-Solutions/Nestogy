@@ -957,17 +957,36 @@ class CommandPalette extends Component
     public function selectResult($index = null)
     {
         $index = $index ?? $this->selectedIndex;
+        $results = $this->getResultsForSelection();
 
-        // Get results - prefer manually set results in test environment
-        // The computed property searchResults() overwrites $this->results (line 131)
-        // so we need to check BEFORE calling it if results were manually set
-        if ($this->useManualResults) {
-            $results = $this->results;
-        } else {
-            $results = $this->searchResults;
+        $this->logSelectionDebugInfo($index, $results);
+
+        if (!$this->isValidIndex($index, $results)) {
+            return;
         }
 
-        // Add debug logging to track the issue
+        if (!isset($results[$index])) {
+            $this->logMissingResult($index);
+            return;
+        }
+
+        $result = $results[$index];
+        $this->close();
+
+        return $this->handleResultAction($result);
+    }
+
+    private function getResultsForSelection()
+    {
+        if ($this->useManualResults) {
+            return $this->results;
+        }
+        
+        return $this->searchResults;
+    }
+
+    private function logSelectionDebugInfo($index, $results)
+    {
         \Log::info('CommandPalette::selectResult called', [
             'index' => $index,
             'search' => $this->search,
@@ -980,165 +999,185 @@ class CommandPalette extends Component
             'using_manual_results' => $this->useManualResults,
             'manual_results_count' => count($this->results),
         ]);
+    }
 
-        // Validate index is within bounds
-        if (! is_numeric($index) || $index < 0 || $index >= count($results)) {
+    private function isValidIndex($index, $results)
+    {
+        if (!is_numeric($index) || $index < 0 || $index >= count($results)) {
             \Log::warning('CommandPalette::selectResult - Invalid index', [
                 'index' => $index,
                 'results_count' => count($results),
             ]);
-
-            return;
+            return false;
         }
 
-        if (isset($results[$index])) {
-            $result = $results[$index];
+        return true;
+    }
 
-            // Close the modal first
-            $this->close();
+    private function logMissingResult($index)
+    {
+        \Log::warning('CommandPalette::selectResult - No result at index', [
+            'index' => $index,
+            'results_count' => count($this->results),
+        ]);
+    }
 
-            // Handle quick actions
-            if ($result['type'] === 'quick_action' && isset($result['action_data'])) {
-                $action = $result['action_data'];
+    private function handleResultAction($result)
+    {
+        if ($result['type'] === 'quick_action' && isset($result['action_data'])) {
+            return $this->handleQuickAction($result);
+        }
 
-                // Handle custom actions - check both result level and action level for custom_id
-                if (isset($result['custom_id']) || isset($action['custom_id'])) {
-                    $customId = $result['custom_id'] ?? $action['custom_id'];
+        if (isset($result['route_name'])) {
+            return $this->handleRouteNavigation($result);
+        }
 
-                    // Get the custom action from database to ensure we have all data
-                    $customAction = CustomQuickAction::find($customId);
-                    if (! $customAction || ! $customAction->canBeExecutedBy(Auth::user())) {
-                        \Log::warning('CommandPalette: Custom action not found or no permission', [
-                            'custom_id' => $customId,
-                            'found' => $customAction ? 'yes' : 'no',
-                        ]);
+        if (isset($result['url'])) {
+            return $this->redirect($result['url'], navigate: true);
+        }
 
-                        return;
-                    }
+        return null;
+    }
 
-                    $customAction->recordUsage();
+    private function handleQuickAction($result)
+    {
+        $action = $result['action_data'];
 
-                    // Use values from database (most reliable source)
-                    $actionType = $customAction->type;
-                    $actionTarget = $customAction->target;
-                    $actionOpenIn = $customAction->open_in;
-                    $actionParameters = $customAction->parameters ?? [];
+        if (isset($result['custom_id']) || isset($action['custom_id'])) {
+            return $this->handleCustomAction($result, $action);
+        }
 
-                    // Now execute the action based on type
-                    if ($actionType === 'route') {
-                        // Respect the open_in setting for routes
-                        if ($actionOpenIn === 'new_tab') {
-                            $routeUrl = route($actionTarget, $actionParameters);
-                            $this->js("window.open('$routeUrl', '_blank')");
-                            $this->close();
+        if (isset($action['action'])) {
+            return $this->handleSystemActionDispatch($action);
+        }
 
-                            return;
-                        } else {
-                            $this->close();
+        if (isset($action['route'])) {
+            return $this->handleSystemActionRoute($action);
+        }
 
-                            return $this->redirectRoute(
-                                $actionTarget,
-                                $actionParameters,
-                                navigate: true
-                            );
-                        }
-                    } elseif ($actionType === 'url') {
-                        $url = $actionTarget;
-                        if (! empty($actionParameters)) {
-                            $url .= '?'.http_build_query($actionParameters);
-                        }
+        return null;
+    }
 
-                        if ($actionOpenIn === 'new_tab') {
-                            // For new tab, dispatch browser event and close modal after
-                            $this->js("window.open('$url', '_blank')");
-                            $this->close();
+    private function handleCustomAction($result, $action)
+    {
+        $customId = $result['custom_id'] ?? $action['custom_id'];
+        $customAction = CustomQuickAction::find($customId);
 
-                            return;
-                        } else {
-                            // For same tab, close modal first then redirect
-                            $this->close();
+        if (!$this->validateCustomAction($customAction, $customId)) {
+            return null;
+        }
 
-                            return $this->redirect($url, navigate: true);
-                        }
-                    }
+        $customAction->recordUsage();
 
-                    return; // End of custom action handling
-                }
-                // Handle system actions with special dispatch events
-                elseif (isset($action['action'])) {
-                    switch ($action['action']) {
-                        case 'remoteAccess':
-                            $this->dispatch('open-remote-access');
-                            break;
-                        case 'clientPortal':
-                            $this->dispatch('open-client-portal');
-                            break;
-                        default:
-                            $this->dispatch('quick-action-executed', ['action' => $action['action']]);
-                            break;
-                    }
-                    $this->close();
+        return $this->executeCustomAction($customAction);
+    }
 
-                    return;
-                }
-                // Handle route-based system actions
-                elseif (isset($action['route'])) {
-                    // Check if system action has open_in setting
-                    if (isset($action['open_in']) && $action['open_in'] === 'new_tab') {
-                        $routeUrl = route($action['route'], $action['parameters'] ?? []);
-                        $this->js("window.open('$routeUrl', '_blank')");
-                        $this->close();
-
-                        return;
-                    } else {
-                        $this->close();
-
-                        return $this->redirectRoute(
-                            $action['route'],
-                            $action['parameters'] ?? [],
-                            navigate: true
-                        );
-                    }
-                }
-            }
-
-            // Use redirectRoute with navigate for SPA-like behavior
-            if (isset($result['route_name'])) {
-
-                try {
-                    // Verify the route exists
-                    $routeUrl = route($result['route_name'], $result['route_params'] ?? []);
-
-                    // Close modal and navigate
-                    $this->close();
-
-                    return $this->redirectRoute(
-                        $result['route_name'],
-                        $result['route_params'] ?? [],
-                        navigate: true
-                    );
-                } catch (\Exception $e) {
-                    \Log::error('CommandPalette: Route generation failed', [
-                        'route_name' => $result['route_name'],
-                        'error' => $e->getMessage(),
-                    ]);
-                    $this->close();
-
-                    return;
-                }
-            }
-
-            // Fallback for any results that still have URL
-            if (isset($result['url'])) {
-                $this->close();
-
-                return $this->redirect($result['url'], navigate: true);
-            }
-        } else {
-            \Log::warning('CommandPalette::selectResult - No result at index', [
-                'index' => $index,
-                'results_count' => count($this->results),
+    private function validateCustomAction($customAction, $customId)
+    {
+        if (!$customAction || !$customAction->canBeExecutedBy(Auth::user())) {
+            \Log::warning('CommandPalette: Custom action not found or no permission', [
+                'custom_id' => $customId,
+                'found' => $customAction ? 'yes' : 'no',
             ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    private function executeCustomAction($customAction)
+    {
+        $actionType = $customAction->type;
+        $actionTarget = $customAction->target;
+        $actionOpenIn = $customAction->open_in;
+        $actionParameters = $customAction->parameters ?? [];
+
+        if ($actionType === 'route') {
+            return $this->executeCustomRouteAction($actionTarget, $actionParameters, $actionOpenIn);
+        }
+
+        if ($actionType === 'url') {
+            return $this->executeCustomUrlAction($actionTarget, $actionParameters, $actionOpenIn);
+        }
+
+        return null;
+    }
+
+    private function executeCustomRouteAction($target, $parameters, $openIn)
+    {
+        if ($openIn === 'new_tab') {
+            $routeUrl = route($target, $parameters);
+            $this->js("window.open('$routeUrl', '_blank')");
+            return null;
+        }
+
+        return $this->redirectRoute($target, $parameters, navigate: true);
+    }
+
+    private function executeCustomUrlAction($target, $parameters, $openIn)
+    {
+        $url = $target;
+        if (!empty($parameters)) {
+            $url .= '?' . http_build_query($parameters);
+        }
+
+        if ($openIn === 'new_tab') {
+            $this->js("window.open('$url', '_blank')");
+            return null;
+        }
+
+        return $this->redirect($url, navigate: true);
+    }
+
+    private function handleSystemActionDispatch($action)
+    {
+        switch ($action['action']) {
+            case 'remoteAccess':
+                $this->dispatch('open-remote-access');
+                break;
+            case 'clientPortal':
+                $this->dispatch('open-client-portal');
+                break;
+            default:
+                $this->dispatch('quick-action-executed', ['action' => $action['action']]);
+                break;
+        }
+
+        return null;
+    }
+
+    private function handleSystemActionRoute($action)
+    {
+        if (isset($action['open_in']) && $action['open_in'] === 'new_tab') {
+            $routeUrl = route($action['route'], $action['parameters'] ?? []);
+            $this->js("window.open('$routeUrl', '_blank')");
+            return null;
+        }
+
+        return $this->redirectRoute(
+            $action['route'],
+            $action['parameters'] ?? [],
+            navigate: true
+        );
+    }
+
+    private function handleRouteNavigation($result)
+    {
+        try {
+            route($result['route_name'], $result['route_params'] ?? []);
+
+            return $this->redirectRoute(
+                $result['route_name'],
+                $result['route_params'] ?? [],
+                navigate: true
+            );
+        } catch (\Exception $e) {
+            \Log::error('CommandPalette: Route generation failed', [
+                'route_name' => $result['route_name'],
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
         }
     }
 
