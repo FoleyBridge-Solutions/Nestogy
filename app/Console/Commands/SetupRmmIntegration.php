@@ -45,111 +45,32 @@ class SetupRmmIntegration extends Command
         $companyId = $this->argument('company_id');
         $rmmType = $this->option('type');
 
-        // Validate company exists
-        $company = Company::find($companyId);
+        $company = $this->validateCompany($companyId);
         if (! $company) {
-            $this->error("Company with ID {$companyId} not found.");
-
             return 1;
         }
 
         $this->info("Setting up RMM integration for company: {$company->name}");
 
-        // Check if integration already exists
-        $existingIntegration = RmmIntegration::where('company_id', $companyId)
-            ->where('rmm_type', $rmmType)
-            ->first();
-
-        if ($existingIntegration) {
-            if (! $this->confirm("An integration of type {$rmmType} already exists for this company. Do you want to update it?")) {
-                $this->info('Setup cancelled.');
-
-                return 0;
-            }
+        $existingIntegration = $this->findExistingIntegration($companyId, $rmmType);
+        if ($existingIntegration && ! $this->shouldUpdateExisting($rmmType)) {
+            return 0;
         }
 
-        // Get integration details
-        $name = $this->option('name') ?: $this->ask('Enter a name for this integration', 'Tactical RMM Integration');
-        $apiUrl = $this->option('api-url') ?: $this->ask('Enter the API URL for your RMM system');
-        $apiKey = $this->option('api-key') ?: $this->secret('Enter the API key for authentication');
-
-        // Validate inputs
-        if (! $apiUrl || ! $apiKey) {
-            $this->error('API URL and API key are required.');
-
-            return 1;
-        }
-
-        // Validate URL format
-        if (! filter_var($apiUrl, FILTER_VALIDATE_URL)) {
-            $this->error('Invalid API URL format.');
-
+        $credentials = $this->gatherCredentials();
+        if (! $this->validateCredentials($credentials)) {
             return 1;
         }
 
         try {
-            // Create or update integration
-            if ($existingIntegration) {
-                $integration = $existingIntegration;
-                $integration->name = $name;
-                $integration->api_url = $apiUrl;
-                $integration->api_key = $apiKey;
-                $integration->is_active = true;
-                $integration->save();
+            $integration = $this->saveIntegration($existingIntegration, $companyId, $rmmType, $credentials);
+            $this->displayIntegrationDetails($integration, $company, $companyId, $credentials['apiUrl']);
 
-                $this->info('Integration updated successfully!');
-            } else {
-                $integration = RmmIntegration::createWithCredentials([
-                    'company_id' => $companyId,
-                    'rmm_type' => $rmmType,
-                    'name' => $name,
-                    'api_url' => $apiUrl,
-                    'api_key' => $apiKey,
-                    'is_active' => true,
-                ]);
-
-                $this->info('Integration created successfully!');
+            if ($this->shouldTestConnection() && ! $this->testConnection($integration)) {
+                return 1;
             }
 
-            // Display integration details (without sensitive data)
-            $this->line('');
-            $this->line('<info>Integration Details:</info>');
-            $this->line("ID: {$integration->id}");
-            $this->line("Company: {$company->name} (ID: {$companyId})");
-            $this->line("Type: {$integration->getRmmTypeLabel()}");
-            $this->line("Name: {$integration->name}");
-            $this->line("API URL: {$apiUrl}");
-            $this->line('Status: '.($integration->is_active ? 'Active' : 'Inactive'));
-
-            // Test connection if requested
-            if ($this->option('test') || $this->confirm('Do you want to test the connection?', true)) {
-                $this->line('');
-                $this->info('Testing connection...');
-
-                $connectionTest = $integration->testConnection();
-
-                if ($connectionTest['success']) {
-                    $this->line('<info>✓ Connection test successful!</info>');
-                    if (isset($connectionTest['data']['version'])) {
-                        $this->line("Server version: {$connectionTest['data']['version']}");
-                    }
-                } else {
-                    $this->line('<error>✗ Connection test failed!</error>');
-                    $this->line("Error: {$connectionTest['message']}");
-
-                    return 1;
-                }
-            }
-
-            $this->line('');
-            $this->line('<info>Setup completed successfully!</info>');
-
-            // Show next steps
-            $this->line('');
-            $this->line('<comment>Next steps:</comment>');
-            $this->line('1. Run agent sync: php artisan rmm:sync-agents '.$integration->id);
-            $this->line('2. Run alert sync: php artisan rmm:sync-alerts '.$integration->id);
-            $this->line('3. Set up scheduled jobs for automatic synchronization');
+            $this->displaySuccess($integration);
 
             return 0;
 
@@ -158,5 +79,138 @@ class SetupRmmIntegration extends Command
 
             return 1;
         }
+    }
+
+    private function validateCompany(int $companyId): ?Company
+    {
+        $company = Company::find($companyId);
+        if (! $company) {
+            $this->error("Company with ID {$companyId} not found.");
+        }
+
+        return $company;
+    }
+
+    private function findExistingIntegration(int $companyId, string $rmmType): ?RmmIntegration
+    {
+        return RmmIntegration::where('company_id', $companyId)
+            ->where('rmm_type', $rmmType)
+            ->first();
+    }
+
+    private function shouldUpdateExisting(string $rmmType): bool
+    {
+        if (! $this->confirm("An integration of type {$rmmType} already exists for this company. Do you want to update it?")) {
+            $this->info('Setup cancelled.');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private function gatherCredentials(): array
+    {
+        return [
+            'name' => $this->option('name') ?: $this->ask('Enter a name for this integration', 'Tactical RMM Integration'),
+            'apiUrl' => $this->option('api-url') ?: $this->ask('Enter the API URL for your RMM system'),
+            'apiKey' => $this->option('api-key') ?: $this->secret('Enter the API key for authentication'),
+        ];
+    }
+
+    private function validateCredentials(array $credentials): bool
+    {
+        if (! $credentials['apiUrl'] || ! $credentials['apiKey']) {
+            $this->error('API URL and API key are required.');
+
+            return false;
+        }
+
+        if (! filter_var($credentials['apiUrl'], FILTER_VALIDATE_URL)) {
+            $this->error('Invalid API URL format.');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private function saveIntegration(?RmmIntegration $existing, int $companyId, string $rmmType, array $credentials): RmmIntegration
+    {
+        if ($existing) {
+            $existing->name = $credentials['name'];
+            $existing->api_url = $credentials['apiUrl'];
+            $existing->api_key = $credentials['apiKey'];
+            $existing->is_active = true;
+            $existing->save();
+
+            $this->info('Integration updated successfully!');
+
+            return $existing;
+        }
+
+        $integration = RmmIntegration::createWithCredentials([
+            'company_id' => $companyId,
+            'rmm_type' => $rmmType,
+            'name' => $credentials['name'],
+            'api_url' => $credentials['apiUrl'],
+            'api_key' => $credentials['apiKey'],
+            'is_active' => true,
+        ]);
+
+        $this->info('Integration created successfully!');
+
+        return $integration;
+    }
+
+    private function displayIntegrationDetails(RmmIntegration $integration, Company $company, int $companyId, string $apiUrl): void
+    {
+        $this->line('');
+        $this->line('<info>Integration Details:</info>');
+        $this->line("ID: {$integration->id}");
+        $this->line("Company: {$company->name} (ID: {$companyId})");
+        $this->line("Type: {$integration->getRmmTypeLabel()}");
+        $this->line("Name: {$integration->name}");
+        $this->line("API URL: {$apiUrl}");
+        $this->line('Status: '.($integration->is_active ? 'Active' : 'Inactive'));
+    }
+
+    private function shouldTestConnection(): bool
+    {
+        return $this->option('test') || $this->confirm('Do you want to test the connection?', true);
+    }
+
+    private function testConnection(RmmIntegration $integration): bool
+    {
+        $this->line('');
+        $this->info('Testing connection...');
+
+        $connectionTest = $integration->testConnection();
+
+        if ($connectionTest['success']) {
+            $this->line('<info>✓ Connection test successful!</info>');
+            if (isset($connectionTest['data']['version'])) {
+                $this->line("Server version: {$connectionTest['data']['version']}");
+            }
+
+            return true;
+        }
+
+        $this->line('<error>✗ Connection test failed!</error>');
+        $this->line("Error: {$connectionTest['message']}");
+
+        return false;
+    }
+
+    private function displaySuccess(RmmIntegration $integration): void
+    {
+        $this->line('');
+        $this->line('<info>Setup completed successfully!</info>');
+
+        $this->line('');
+        $this->line('<comment>Next steps:</comment>');
+        $this->line('1. Run agent sync: php artisan rmm:sync-agents '.$integration->id);
+        $this->line('2. Run alert sync: php artisan rmm:sync-alerts '.$integration->id);
+        $this->line('3. Set up scheduled jobs for automatic synchronization');
     }
 }
