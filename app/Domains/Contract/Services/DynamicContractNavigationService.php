@@ -161,6 +161,9 @@ class DynamicContractNavigationService
                     ];
                 }
                 break;
+
+            default:
+                break;
         }
 
         return $breadcrumbs;
