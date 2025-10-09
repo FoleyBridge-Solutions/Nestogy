@@ -578,7 +578,7 @@ class Recurring extends Model
         }
 
         // Calculate usage charges if applicable
-        if (\Schema::hasColumn('recurring', 'billing_type') && 
+        if (\Schema::hasColumn('recurring', 'billing_type') &&
             in_array($this->billing_type, [self::BILLING_TYPE_USAGE_BASED, self::BILLING_TYPE_HYBRID])) {
             $usageCharges = $this->calculateUsageCharges();
 
