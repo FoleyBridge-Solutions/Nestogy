@@ -45,7 +45,7 @@
                         description="Receive notifications when ticket status is updated" />
                     
                     <flux:checkbox 
-                        wire:model="ticket_resolved" 
+                        wire:model="ticketResolved" 
                         label="Ticket Resolved"
                         description="Receive notifications when a ticket is resolved" />
                     
