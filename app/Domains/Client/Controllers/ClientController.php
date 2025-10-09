@@ -20,6 +20,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ClientController extends BaseController
 {
+    private const PHP_OUTPUT_STREAM = 'php://output';
+
     protected $clientService;
 
     protected $metricsService;
@@ -667,7 +669,7 @@ class ClientController extends BaseController
         ];
 
         $callback = function () use ($clients) {
-            $file = fopen('php://output', 'w');
+            $file = fopen(self::PHP_OUTPUT_STREAM, 'w');
 
             // CSV headers
             fputcsv($file, [
@@ -942,7 +944,7 @@ class ClientController extends BaseController
         ];
 
         $callback = function () use ($columns) {
-            $file = fopen('php://output', 'w');
+            $file = fopen(self::PHP_OUTPUT_STREAM, 'w');
             fputcsv($file, $columns);
 
             // Add sample row
@@ -1590,7 +1592,7 @@ class ClientController extends BaseController
         ];
 
         return response()->streamDownload(function () use ($headers, $sampleData) {
-            $output = fopen('php://output', 'w');
+            $output = fopen(self::PHP_OUTPUT_STREAM, 'w');
             fputcsv($output, $headers);
             fputcsv($output, $sampleData);
             fclose($output);
