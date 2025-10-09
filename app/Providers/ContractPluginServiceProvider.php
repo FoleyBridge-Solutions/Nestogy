@@ -66,17 +66,7 @@ class ContractPluginServiceProvider extends ServiceProvider
 
         // For console commands, only load if it's a contract-related command
         if ($this->app->runningInConsole()) {
-            $command = $_SERVER['argv'][1] ?? '';
-            $contractCommands = ['contracts:', 'plugin:', 'migrate', 'seed', 'tinker'];
-
-            foreach ($contractCommands as $contractCommand) {
-                if (str_starts_with($command, $contractCommand)) {
-                    return true;
-                }
-            }
-
-            // Don't load for other console commands unless explicitly needed
-            return false;
+            return $this->isContractRelatedConsoleCommand();
         }
 
         // Get the current request
@@ -85,6 +75,31 @@ class ContractPluginServiceProvider extends ServiceProvider
             return false;
         }
 
+        return $this->isContractRelatedRequest($request);
+    }
+
+    /**
+     * Check if the current console command is contract-related
+     */
+    protected function isContractRelatedConsoleCommand(): bool
+    {
+        $command = $_SERVER['argv'][1] ?? '';
+        $contractCommands = ['contracts:', 'plugin:', 'migrate', 'seed', 'tinker'];
+
+        foreach ($contractCommands as $contractCommand) {
+            if (str_starts_with($command, $contractCommand)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the current request is contract-related
+     */
+    protected function isContractRelatedRequest($request): bool
+    {
         $path = $request->path();
 
         // Check if we're on a contract-related route
