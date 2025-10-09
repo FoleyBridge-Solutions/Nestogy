@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class StoreContractRequest extends FormRequest
 {
+    private const VALIDATION_NULLABLE_JSON = 'nullable|json';
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -122,11 +124,11 @@ class StoreContractRequest extends FormRequest
             'metadata' => 'nullable|array',
 
             // Schedule Configuration Data
-            'variable_values' => 'nullable|json',
-            'billing_config' => 'nullable|json',
-            'infrastructure_schedule' => 'nullable|json',
-            'pricing_schedule' => 'nullable|json',
-            'additional_terms' => 'nullable|json',
+            'variable_values' => self::VALIDATION_NULLABLE_JSON,
+            'billing_config' => self::VALIDATION_NULLABLE_JSON,
+            'infrastructure_schedule' => self::VALIDATION_NULLABLE_JSON,
+            'pricing_schedule' => self::VALIDATION_NULLABLE_JSON,
+            'additional_terms' => self::VALIDATION_NULLABLE_JSON,
         ];
     }
 
