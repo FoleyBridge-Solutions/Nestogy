@@ -8,6 +8,8 @@ use App\Domains\Financial\Controllers\QuoteController;
 use App\Domains\Financial\Controllers\RecurringInvoiceController;
 use Illuminate\Support\Facades\Route;
 
+const BUILDER_DRAFT_PATH = '/builder/draft';
+
 // IMPORTANT: Include 'web' middleware for session, CSRF, and other web-specific functionality
 Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('financial.')->group(function () {
 
@@ -88,9 +90,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
         Route::post('/builder/calculate-pricing', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'calculatePricing'])->name('builder.calculate');
         Route::get('/builder/template/{template}', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'loadTemplate'])->name('builder.template');
         Route::post('/builder/preview', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'preview'])->name('builder.preview');
-        Route::post('/builder/draft', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'saveDraft'])->name('builder.draft.save');
-        Route::get('/builder/draft', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'loadDraft'])->name('builder.draft.load');
-        Route::delete('/builder/draft', [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'clearDraft'])->name('builder.draft.clear');
+        Route::post(BUILDER_DRAFT_PATH, [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'saveDraft'])->name('builder.draft.save');
+        Route::get(BUILDER_DRAFT_PATH, [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'loadDraft'])->name('builder.draft.load');
+        Route::delete(BUILDER_DRAFT_PATH, [\App\Domains\Contract\Controllers\ContractBuilderController::class, 'clearDraft'])->name('builder.draft.clear');
     });
 
     // Contract routes (resource route comes after specific routes to avoid conflicts)
