@@ -14,6 +14,8 @@ class AssetController extends Controller
 {
     use UsesSelectedClient;
 
+    private const MESSAGE_ASSET_ARCHIVED = 'Asset archived successfully.';
+
     public function __construct(
         private AssetService $assetService
     ) {}
@@ -81,7 +83,7 @@ class AssetController extends Controller
         $this->assetService->archive($asset);
 
         return redirect()->route('assets.index')
-            ->with('success', 'Asset archived successfully.');
+            ->with('success', self::MESSAGE_ASSET_ARCHIVED);
     }
 
     // Client-scoped asset methods
@@ -214,7 +216,7 @@ class AssetController extends Controller
         $this->assetService->archive($asset);
 
         return redirect()->route('clients.assets.index', $client)
-            ->with('success', 'Asset archived successfully.');
+            ->with('success', self::MESSAGE_ASSET_ARCHIVED);
     }
 
     // Additional asset management methods
@@ -298,7 +300,7 @@ class AssetController extends Controller
         $this->assetService->archive($asset);
 
         return redirect()->route('assets.index')
-            ->with('success', 'Asset archived successfully.');
+            ->with('success', self::MESSAGE_ASSET_ARCHIVED);
     }
 
     public function checkInOut(Asset $asset, Request $request)
