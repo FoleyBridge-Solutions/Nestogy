@@ -94,13 +94,13 @@ class ProductSeeder extends Seeder
                 [
                     'category' => 'Software Licenses',
                     'products' => [
-                        ['name' => 'Microsoft 365 Business Basic', 'price' => 6, 'type' => 'license', 'recurring' => 'monthly'],
-                        ['name' => 'Microsoft 365 Business Standard', 'price' => 12.50, 'type' => 'license', 'recurring' => 'monthly'],
-                        ['name' => 'Microsoft 365 Business Premium', 'price' => 22, 'type' => 'license', 'recurring' => 'monthly'],
-                        ['name' => 'Adobe Creative Cloud', 'price' => 54.99, 'type' => 'license', 'recurring' => 'monthly'],
-                        ['name' => 'Antivirus Pro', 'price' => 4.99, 'type' => 'license', 'recurring' => 'monthly'],
-                        ['name' => 'Backup Software License', 'price' => 9.99, 'type' => 'license', 'recurring' => 'monthly'],
-                        ['name' => 'Remote Desktop License', 'price' => 14.99, 'type' => 'license', 'recurring' => 'monthly'],
+                        ['name' => 'Microsoft 365 Business Basic', 'price' => 6, 'type' => 'service', 'recurring' => 'monthly'],
+                        ['name' => 'Microsoft 365 Business Standard', 'price' => 12.50, 'type' => 'service', 'recurring' => 'monthly'],
+                        ['name' => 'Microsoft 365 Business Premium', 'price' => 22, 'type' => 'service', 'recurring' => 'monthly'],
+                        ['name' => 'Adobe Creative Cloud', 'price' => 54.99, 'type' => 'service', 'recurring' => 'monthly'],
+                        ['name' => 'Antivirus Pro', 'price' => 4.99, 'type' => 'service', 'recurring' => 'monthly'],
+                        ['name' => 'Backup Software License', 'price' => 9.99, 'type' => 'service', 'recurring' => 'monthly'],
+                        ['name' => 'Remote Desktop License', 'price' => 14.99, 'type' => 'service', 'recurring' => 'monthly'],
                     ],
                 ],
                 // Cloud Services
@@ -142,8 +142,8 @@ class ProductSeeder extends Seeder
                         'base_price' => $price,
                         'cost' => $price * fake()->randomFloat(2, 0.4, 0.7), // 40-70% of price
                         'currency_code' => 'USD',
-                        'billing_cycle' => $productData['recurring'],
-                        'billing_model' => $productData['recurring'] !== 'one_time' ? 'recurring' : 'one_time',
+                        'billing_cycle' => $productData['recurring'] ?? 'one_time',
+                        'billing_model' => $productData['recurring'] ? 'subscription' : 'one_time',
                         'is_taxable' => fake()->boolean(80),
                         'is_active' => fake()->boolean(90),
                         'current_stock' => $productData['type'] === 'product' ? fake()->numberBetween(0, 100) : 0,
