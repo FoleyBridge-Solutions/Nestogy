@@ -313,6 +313,8 @@ class ProcessContractRenewals extends Command
             case self::DEFAULT_TIMEOUT:
                 $results['notifications_30']++;
                 break;
+            default:
+                break;
         }
     }
 
