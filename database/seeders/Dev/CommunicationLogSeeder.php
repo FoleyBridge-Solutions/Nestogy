@@ -20,7 +20,9 @@ $companies = Company::where('id', '>', 1)->get();
             $clients = Client::where('company_id', $company->id)->get();
             $users = User::where('company_id', $company->id)->get();
             
-            if ($clients->isEmpty() || $users->isEmpty()) continue;
+            if ($clients->isEmpty() || $users->isEmpty()) {
+                continue;
+            }
             
             foreach ($clients as $client) {
                 $logCount = rand(10, 50);
