@@ -12,7 +12,7 @@ class PostGridClient
 
     private bool $testMode;
 
-    private string $apiKey;
+    private ?string $apiKey;
 
     public function __construct()
     {

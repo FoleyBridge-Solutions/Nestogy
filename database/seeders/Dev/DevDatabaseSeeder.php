@@ -116,6 +116,35 @@ class DevDatabaseSeeder extends Seeder
                 $this->callWithProgressBar('Notifications', NotificationSeeder::class);
             }
 
+            // Additional comprehensive seeders
+            $this->callWithProgressBar('Accounts', AccountSeeder::class);
+            $this->callWithProgressBar('Account Holds', AccountHoldSeeder::class);
+            $this->callWithProgressBar('Addresses', AddressSeeder::class);
+            $this->callWithProgressBar('Analytics Snapshots', AnalyticsSnapshotSeeder::class);
+            $this->callWithProgressBar('Audit Logs', AuditLogSeeder::class);
+            $this->callWithProgressBar('Auto Payments', AutoPaymentSeeder::class);
+            $this->callWithProgressBar('Client Documents', ClientDocumentSeeder::class);
+            $this->callWithProgressBar('Client Portal Users', ClientPortalUserSeeder::class);
+            $this->callWithProgressBar('Client Portal Sessions', ClientPortalSessionSeeder::class);
+            $this->callWithProgressBar('Communication Logs', CommunicationLogSeeder::class);
+            $this->callWithProgressBar('Company Customizations', CompanyCustomizationSeeder::class);
+            $this->callWithProgressBar('Company Mail Settings', CompanyMailSettingsSeeder::class);
+            $this->callWithProgressBar('Dashboard Widgets', DashboardWidgetSeeder::class);
+            $this->callWithProgressBar('Documents', DocumentSeeder::class);
+            $this->callWithProgressBar('Expense Categories', ExpenseCategorySeeder::class);
+            $this->callWithProgressBar('In-App Notifications', InAppNotificationSeeder::class);
+            $this->callWithProgressBar('Mail Templates', MailTemplateSeeder::class);
+            $this->callWithProgressBar('Networks', NetworkSeeder::class);
+            $this->callWithProgressBar('Notification Preferences', NotificationPreferenceSeeder::class);
+            $this->callWithProgressBar('Payment Methods', PaymentMethodSeeder::class);
+            $this->callWithProgressBar('Tags', TagSeeder::class);
+            $this->callWithProgressBar('Ticket Comments', TicketCommentSeeder::class);
+            $this->callWithProgressBar('Ticket Ratings', TicketRatingSeeder::class);
+            $this->callWithProgressBar('Ticket Time Entries', TicketTimeEntrySeeder::class);
+            $this->callWithProgressBar('Ticket Watchers', TicketWatcherSeeder::class);
+            $this->callWithProgressBar('Time Entries', TimeEntrySeeder::class);
+            $this->callWithProgressBar('User Settings', UserSettingSeeder::class);
+
             // Commit transaction
             // DB::commit();
 
@@ -156,22 +185,47 @@ class DevDatabaseSeeder extends Seeder
             [
                 ['Companies', \App\Models\Company::count()],
                 ['Users', \App\Models\User::count()],
+                ['User Settings', \App\Models\UserSetting::count()],
                 ['Clients', \App\Models\Client::count()],
                 ['Contacts', \App\Models\Contact::count()],
                 ['Locations', \App\Models\Location::count()],
+                ['Addresses', \App\Models\Address::count()],
                 ['Vendors', \App\Models\Vendor::count()],
                 ['Categories', \App\Models\Category::count()],
+                ['Expense Categories', \App\Models\ExpenseCategory::count()],
                 ['Assets', \App\Models\Asset::count()],
                 ['Tickets', \App\Models\Ticket::count()],
                 ['Ticket Replies', \App\Models\TicketReply::count()],
+                ['Ticket Comments', \App\Models\TicketComment::count()],
+                ['Ticket Time Entries', \App\Models\TicketTimeEntry::count()],
+                ['Ticket Watchers', \App\Models\TicketWatcher::count()],
+                ['Ticket Ratings', \App\Models\TicketRating::count()],
                 ['Projects', \App\Models\Project::count()],
+                ['Time Entries', \App\Models\TimeEntry::count()],
                 ['Invoices', \App\Models\Invoice::count()],
                 ['Payments', \App\Models\Payment::count()],
+                ['Payment Methods', \App\Models\PaymentMethod::count()],
+                ['Accounts', \App\Models\Account::count()],
+                ['Account Holds', \App\Models\AccountHold::count()],
                 ['Leads', \App\Models\Lead::count()],
                 ['Quotes', \App\Models\Quote::count()],
                 ['Expenses', \App\Models\Expense::count()],
-                ['Networks', \App\Models\Network::count() ?? 0],
-                ['Tax Jurisdictions', \App\Models\TaxJurisdiction::count() ?? 0],
+                ['Documents', \App\Models\Document::count()],
+                ['Client Documents', \App\Models\ClientDocument::count()],
+                ['Networks', \App\Models\Network::count()],
+                ['Tags', \App\Models\Tag::count()],
+                ['Communication Logs', \App\Models\CommunicationLog::count()],
+                ['Audit Logs', \App\Models\AuditLog::count()],
+                ['In-App Notifications', \App\Models\InAppNotification::count()],
+                ['Mail Templates', \App\Models\MailTemplate::count()],
+                ['Dashboard Widgets', \App\Models\DashboardWidget::count()],
+                ['Client Portal Users', \App\Models\ClientPortalUser::count()],
+                ['Client Portal Sessions', \App\Models\ClientPortalSession::count()],
+                ['Analytics Snapshots', \App\Models\AnalyticsSnapshot::count()],
+                ['Auto Payments', \App\Models\AutoPayment::count()],
+                ['Company Customizations', \App\Models\CompanyCustomization::count()],
+                ['Company Mail Settings', \App\Models\CompanyMailSettings::count()],
+                ['Notification Preferences', \App\Models\NotificationPreference::count()],
             ]
         );
 

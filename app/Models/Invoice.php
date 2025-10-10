@@ -116,11 +116,6 @@ class Invoice extends Model
     const STATUS_CANCELLED = 'Cancelled';
 
     /**
-     * Date format for display
-     */
-    const DATE_FORMAT = 'F j, Y';
-
-    /**
      * Get the client this invoice belongs to.
      */
     public function client(): BelongsTo

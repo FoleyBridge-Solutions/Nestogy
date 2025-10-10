@@ -237,18 +237,7 @@ class QuickActionService
         return $actionIdentifier;
     }
 
-    /**
-     * Find an action by its identifier
-     */
-    protected static function findActionByIdentifier($identifier, User $user)
-    {
-        return static::getActionsForUser($user)
-            ->first(function ($action) use ($identifier) {
-                return (isset($action['id']) && $action['id'] === $identifier) ||
-                       (isset($action['route']) && $action['route'] === $identifier) ||
-                       (isset($action['action']) && $action['action'] === $identifier);
-            });
-    }
+
 
     /**
      * Get favorite actions for a user

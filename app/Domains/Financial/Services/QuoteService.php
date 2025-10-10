@@ -859,49 +859,7 @@ class QuoteService
         }
     }
 
-    /**
-     * Validate that the client belongs to the user's company
-     */
-    private function validateClientOwnership($validator, array $data): void
-    {
-        if (empty($data['client_id'])) {
-            return;
-        }
 
-        $client = Client::find($data['client_id']);
-        if ($client && $client->company_id !== auth()->user()->company_id) {
-            $validator->errors()->add('client_id', 'The selected client is invalid.');
-        }
-    }
-
-    /**
-     * Validate that the category belongs to the user's company
-     */
-    private function validateCategoryOwnership($validator, array $data): void
-    {
-        if (empty($data['category_id'])) {
-            return;
-        }
-
-        $category = Category::find($data['category_id']);
-        if ($category && $category->company_id !== auth()->user()->company_id) {
-            $validator->errors()->add('category_id', 'The selected category is invalid.');
-        }
-    }
-
-    /**
-     * Validate that discount percentage does not exceed 100%
-     */
-    private function validateDiscountPercentage($validator, array $data): void
-    {
-        if (empty($data['discount_type']) || $data['discount_type'] !== Quote::DISCOUNT_PERCENTAGE) {
-            return;
-        }
-
-        if (! empty($data['discount_amount']) && $data['discount_amount'] > 100) {
-            $validator->errors()->add('discount_amount', 'Discount percentage cannot exceed 100%.');
-        }
-    }
 
     /**
      * Ensure user can view quote
