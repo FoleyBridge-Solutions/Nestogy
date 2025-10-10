@@ -7,6 +7,8 @@ use Illuminate\Support\Str;
 
 class NavigationService
 {
+    protected const NESTOGY_PROJECT_MODEL = '\Foleybridge\Nestogy\Domains\Project\Models\Project';
+
     /**
      * Domain route mappings
      */
@@ -1942,7 +1944,7 @@ class NavigationService
             
             $counts = static::getBasicProjectCounts($baseQuery);
             
-            if ($projectClass === '\Foleybridge\Nestogy\Domains\Project\Models\Project') {
+            if ($projectClass === self::NESTOGY_PROJECT_MODEL) {
                 $counts = array_merge($counts, static::getEnhancedProjectCounts($baseQuery, $companyId));
             }
 
@@ -1957,8 +1959,8 @@ class NavigationService
      */
     protected static function getProjectModelClass(): string
     {
-        return class_exists('\Foleybridge\Nestogy\Domains\Project\Models\Project')
-            ? '\Foleybridge\Nestogy\Domains\Project\Models\Project'
+        return class_exists(self::NESTOGY_PROJECT_MODEL)
+            ? self::NESTOGY_PROJECT_MODEL
             : '\App\Models\Project';
     }
 
