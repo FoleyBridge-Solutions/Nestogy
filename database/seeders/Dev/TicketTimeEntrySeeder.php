@@ -19,7 +19,9 @@ $tickets = Ticket::all();
             $entryCount = rand(1, 5);
             $users = User::where('company_id', $ticket->company_id)->get();
             
-            if ($users->isEmpty()) continue;
+            if ($users->isEmpty()) {
+                continue;
+            }
             
             for ($i = 0; $i < $entryCount; $i++) {
                 TicketTimeEntry::factory()->create([
