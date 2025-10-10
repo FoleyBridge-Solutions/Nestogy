@@ -130,24 +130,14 @@ class AssetWarrantySeeder extends Seeder
         AssetWarranty::create([
             'company_id' => $asset->company_id,
             'asset_id' => $asset->id,
-            'warranty_start_date' => $warrantyStartDate,
-            'warranty_end_date' => $warrantyEndDate,
+            'start_date' => $warrantyStartDate,
+            'end_date' => $warrantyEndDate,
             'warranty_provider' => $provider,
-            'warranty_type' => $warrantyType,
-            'terms' => $this->generateWarrantyTerms($warrantyType, $faker),
+            'warranty_number' => strtoupper($faker->bothify('WRT-####-??????')),
+            'type' => $warrantyType,
             'coverage_details' => $this->generateCoverageDetails($asset->type, $warrantyType, $faker),
-            'vendor_id' => ! empty($vendors) ? $faker->randomElement($vendors) : $asset->vendor_id,
             'cost' => $cost,
-            'renewal_cost' => $renewalCost,
-            'auto_renewal' => $faker->boolean(30), // 30% have auto-renewal
-            'contact_email' => $faker->companyEmail(),
-            'contact_phone' => $faker->phoneNumber(),
-            'reference_number' => strtoupper($faker->bothify('WRT-####-??????')),
-            'notes' => $faker->optional(0.2)->sentence(),
             'status' => $status,
-            'claim_count' => $claimCount,
-            'last_claim_date' => $lastClaimDate,
-            'renewal_reminder_sent' => ($status === 'active' && $warrantyEndDate->diffInDays(now()) <= 30) ? $faker->boolean(50) : false,
         ]);
     }
 
