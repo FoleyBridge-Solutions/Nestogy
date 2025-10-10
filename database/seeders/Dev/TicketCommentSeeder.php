@@ -19,7 +19,9 @@ $tickets = Ticket::all();
             $commentCount = rand(2, 8);
             $users = User::where('company_id', $ticket->company_id)->get();
             
-            if ($users->isEmpty()) continue;
+            if ($users->isEmpty()) {
+                continue;
+            }
             
             for ($i = 0; $i < $commentCount; $i++) {
                 TicketComment::factory()->create([
