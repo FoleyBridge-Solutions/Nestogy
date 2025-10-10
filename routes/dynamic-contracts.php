@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 const ID_PARAMETER = '/{id}';
+const PLUGINS_PREFIX = '/plugins';
 
 // Web Routes for Dynamic Contracts
 Route::middleware(['web', 'auth', 'company', DynamicRouteMiddleware::class])
@@ -119,10 +120,10 @@ Route::middleware(['web', 'auth', 'company', 'can:manage-contracts'])
         Route::put('/workflows' . ID_PARAMETER, [DynamicContractController::class, 'updateWorkflow'])->name('workflows.update');
 
         // Plugin management
-        Route::get('/plugins', [DynamicContractController::class, 'pluginsIndex'])->name('plugins.index');
-        Route::post('/plugins/install', [DynamicContractController::class, 'installPlugin'])->name('plugins.install');
-        Route::post('/plugins' . ID_PARAMETER . '/activate', [DynamicContractController::class, 'activatePlugin'])->name('plugins.activate');
-        Route::post('/plugins' . ID_PARAMETER . '/deactivate', [DynamicContractController::class, 'deactivatePlugin'])->name('plugins.deactivate');
+        Route::get(PLUGINS_PREFIX, [DynamicContractController::class, 'pluginsIndex'])->name('plugins.index');
+        Route::post(PLUGINS_PREFIX . '/install', [DynamicContractController::class, 'installPlugin'])->name('plugins.install');
+        Route::post(PLUGINS_PREFIX . ID_PARAMETER . '/activate', [DynamicContractController::class, 'activatePlugin'])->name('plugins.activate');
+        Route::post(PLUGINS_PREFIX . ID_PARAMETER . '/deactivate', [DynamicContractController::class, 'deactivatePlugin'])->name('plugins.deactivate');
 
         // System tools
         Route::post('/rebuild-routes', [DynamicContractController::class, 'rebuildRoutes'])->name('rebuild-routes');
