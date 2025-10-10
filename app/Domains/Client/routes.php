@@ -69,15 +69,16 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
 
         // Contact API routes for modal functionality
         Route::prefix(CONTACT_ROUTE_PATTERN)->name('contacts.')->group(function () {
-            Route::put('portal-access', [\App\Domains\Client\Controllers\ContactController::class, 'updatePortalAccess'])->name('portal-access.update');
-            Route::put('security', [\App\Domains\Client\Controllers\ContactController::class, 'updateSecurity'])->name('security.update');
-            Route::put('permissions', [\App\Domains\Client\Controllers\ContactController::class, 'updatePermissions'])->name('permissions.update');
-            Route::post('lock', [\App\Domains\Client\Controllers\ContactController::class, 'lockAccount'])->name('lock');
-            Route::post('unlock', [\App\Domains\Client\Controllers\ContactController::class, 'unlockAccount'])->name('unlock');
+            Route::put('portal-access', [\App\Domains\Client\Controllers\ContactPortalAccessController::class, 'updatePortalAccess'])->name('portal-access.update');
+            Route::put('security', [\App\Domains\Client\Controllers\ContactPortalAccessController::class, 'updateSecurity'])->name('security.update');
+            Route::put('permissions', [\App\Domains\Client\Controllers\ContactPortalAccessController::class, 'updatePermissions'])->name('permissions.update');
+            Route::post('lock', [\App\Domains\Client\Controllers\ContactPortalAccessController::class, 'lockAccount'])->name('lock');
+            Route::post('unlock', [\App\Domains\Client\Controllers\ContactPortalAccessController::class, 'unlockAccount'])->name('unlock');
+            Route::post('reset-failed-attempts', [\App\Domains\Client\Controllers\ContactPortalAccessController::class, 'resetFailedAttempts'])->name('reset-failed-attempts');
             // Portal invitation routes
-            Route::post('send-invitation', [\App\Domains\Client\Controllers\ContactController::class, 'sendInvitation'])->name('send-invitation');
-            Route::post('resend-invitation', [\App\Domains\Client\Controllers\ContactController::class, 'resendInvitation'])->name('resend-invitation');
-            Route::post('revoke-invitation', [\App\Domains\Client\Controllers\ContactController::class, 'revokeInvitation'])->name('revoke-invitation');
+            Route::post('send-invitation', [\App\Domains\Client\Controllers\ContactInvitationController::class, 'sendInvitation'])->name('send-invitation');
+            Route::post('resend-invitation', [\App\Domains\Client\Controllers\ContactInvitationController::class, 'resendInvitation'])->name('resend-invitation');
+            Route::post('revoke-invitation', [\App\Domains\Client\Controllers\ContactInvitationController::class, 'revokeInvitation'])->name('revoke-invitation');
         });
         // Locations routes (using session-based client context)
         Route::get('locations/export', [\App\Domains\Client\Controllers\LocationController::class, 'export'])->name('locations.export');
