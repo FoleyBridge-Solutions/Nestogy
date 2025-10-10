@@ -103,6 +103,9 @@ class SecuritySettingsService extends BaseSettingsService
                     'suspicious_activity_alerts' => true,
                 ];
                 break;
+
+            default:
+                return [];
         }
 
         return $defaults;
