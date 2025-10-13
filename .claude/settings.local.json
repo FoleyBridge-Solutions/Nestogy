@@ -82,7 +82,11 @@
       "Bash(PGPASSWORD=password psql:*)",
       "Bash(chmod:*)",
       "Bash(./check-migration-integrity.sh:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(do if ! ls database/migrations/*$table*)",
+      "Bash(then echo \"MISSING: $table\" fi done)",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": []
