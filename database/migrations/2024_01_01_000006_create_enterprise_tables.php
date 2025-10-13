@@ -103,6 +103,7 @@ return new class extends Migration
             $table->enum('status', ['not_started', 'in_progress', 'completed', 'on_hold', 'cancelled'])->default('not_started');
             $table->integer('completion_percentage')->default(0);
             $table->timestamps();
+            $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
 
             $table->index(['company_id', 'project_id']);
             $table->index(['company_id', 'milestone_id']);
@@ -122,6 +123,12 @@ return new class extends Migration
             $table->dateTime('joined_at');
             $table->dateTime('left_at')->nullable();
             $table->timestamps();
+            $table->boolean('can_edit')->default(false);
+            $table->boolean('can_manage_tasks')->default(false);
+            $table->boolean('can_manage_time')->default(false);
+            $table->boolean('can_view_reports')->default(false);
+            $table->boolean('is_active')->default(true);
+            $table->text('notes')->nullable();
 
             $table->index(['company_id', 'project_id']);
             $table->index(['company_id', 'user_id']);
@@ -139,6 +146,7 @@ return new class extends Migration
             $table->integer('estimated_duration_days')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->boolean('is_public')->default(false);
 
             $table->index(['company_id', 'category']);
             $table->index(['company_id', 'is_active']);

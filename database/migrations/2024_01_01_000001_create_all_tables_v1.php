@@ -31,12 +31,51 @@ return new class extends Migration
             $table->string('locale')->nullable();
             $table->string('currency', 3)->default('USD');
             $table->timestamps();
+            $table->json('hourly_rate_config')->nullable();
+            $table->decimal('default_standard_rate', 10, 2)->default(150.00);
+            $table->decimal('default_after_hours_rate', 10, 2)->default(225.00);
+            $table->decimal('default_emergency_rate', 10, 2)->default(300.00);
+            $table->decimal('default_weekend_rate', 10, 2)->default(200.00);
+            $table->decimal('default_holiday_rate', 10, 2)->default(250.00);
+            $table->decimal('after_hours_multiplier', 5, 2)->default(1.5);
+            $table->decimal('emergency_multiplier', 5, 2)->default(2.0);
+            $table->decimal('weekend_multiplier', 5, 2)->default(1.5);
+            $table->decimal('holiday_multiplier', 5, 2)->default(2.0);
+            $table->enum('rate_calculation_method', ['fixed_rates', 'multipliers'])->default('fixed_rates');
+            $table->decimal('minimum_billing_increment', 5, 2)->default(0.25);
+            $table->enum('time_rounding_method', ['none', 'up', 'down', 'nearest'])->default('nearest');
+            $table->unsignedBigInteger('parent_company_id')->nullable();
+            $table->enum('company_type', ['root', 'subsidiary', 'division'])->default('root');
+            $table->unsignedInteger('organizational_level')->default(0);
+            $table->json('subsidiary_settings')->nullable();
+            $table->enum('access_level', ['full', 'limited', 'read_only'])->default('full');
+            $table->enum('billing_type', ['independent', 'parent_billed', 'shared'])->default('independent');
+            $table->unsignedBigInteger('billing_parent_id')->nullable();
+            $table->boolean('can_create_subsidiaries')->default(false);
+            $table->unsignedInteger('max_subsidiary_depth')->default(3);
+            $table->json('inherited_permissions')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('suspended_at')->nullable();
+            $table->unsignedBigInteger('client_record_id')->nullable();
+            $table->string('suspension_reason')->nullable();
+            $table->enum('email_provider_type', ['manual', 'microsoft365', 'google_workspace', 'exchange', 'custom_oauth'])
+                ->default('manual')
+                ;
+            $table->json('email_provider_config')->nullable();
+            $table->string('size')->nullable()->comment('solo, small, medium, large, enterprise');
+            $table->integer('employee_count')->nullable();
+            $table->json('branding')->nullable();
+            $table->json('company_info')->nullable();
+            $table->json('social_links')->nullable();
 
             // Indexes
             $table->index('name');
             $table->index('email');
             $table->index('currency');
-        });
+        
+            $table->index(['parent_company_id', 'company_type'], 'companies_hierarchy_idx');
+            $table->index(['organizational_level'], 'companies_level_idx');
+            $table->index(['billing_parent_id'], 'companies_billing_idx');});
 
         Schema::create('users', function (Blueprint $table) {
             $table->id();
@@ -53,6 +92,9 @@ return new class extends Migration
             $table->string('extension_key', 18)->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->string('phone')->nullable();
+            $table->string('title')->nullable();
+            $table->string('department')->nullable();
             $table->timestamp('archived_at')->nullable();
 
             // Indexes
@@ -74,6 +116,8 @@ return new class extends Migration
             $table->boolean('dashboard_financial_enable')->default(false);
             $table->boolean('dashboard_technical_enable')->default(false);
             $table->timestamps();
+            $table->string('theme', 20)->default('light');
+            $table->json('preferences')->nullable();
 
             // Indexes
             $table->index('user_id');
@@ -132,10 +176,37 @@ return new class extends Migration
             $table->timestamp('contract_start_date')->nullable();
             $table->timestamp('contract_end_date')->nullable();
             $table->timestamps();
+            $table->unsignedBigInteger('sla_id')->nullable();
+            $table->decimal('custom_standard_rate', 10, 2)->nullable();
+            $table->decimal('custom_after_hours_rate', 10, 2)->nullable();
+            $table->decimal('custom_emergency_rate', 10, 2)->nullable();
+            $table->decimal('custom_weekend_rate', 10, 2)->nullable();
+            $table->decimal('custom_holiday_rate', 10, 2)->nullable();
+            $table->decimal('custom_after_hours_multiplier', 5, 2)->nullable();
+            $table->decimal('custom_emergency_multiplier', 5, 2)->nullable();
+            $table->decimal('custom_weekend_multiplier', 5, 2)->nullable();
+            $table->decimal('custom_holiday_multiplier', 5, 2)->nullable();
+            $table->enum('custom_rate_calculation_method', ['fixed_rates', 'multipliers'])->nullable();
+            $table->decimal('custom_minimum_billing_increment', 5, 2)->nullable();
+            $table->enum('custom_time_rounding_method', ['none', 'up', 'down', 'nearest'])->nullable();
+            $table->boolean('use_custom_rates')->default(false);
+            $table->unsignedBigInteger('company_link_id')->nullable();
+            $table->string('stripe_customer_id')->nullable();
+            $table->string('stripe_subscription_id')->nullable();
+            $table->string('subscription_status')->default('trialing');
+            $table->unsignedBigInteger('subscription_plan_id')->nullable();
+            $table->timestamp('trial_ends_at')->nullable();
+            $table->timestamp('next_billing_date')->nullable();
+            $table->timestamp('subscription_started_at')->nullable();
+            $table->timestamp('subscription_canceled_at')->nullable();
+            $table->integer('current_user_count')->default(0);
+            $table->string('industry')->nullable();
+            $table->integer('employee_count')->nullable();
             $table->softDeletes();
             $table->timestamp('archived_at')->nullable();
             $table->timestamp('accessed_at')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
+            $table->index(['company_id', 'sla_id']);
 
             $table->index(['status', 'created_at']);
             $table->index('company_name');
@@ -239,6 +310,47 @@ return new class extends Migration
 
             $table->string('department')->nullable();
             $table->timestamps();
+            $table->string('preferred_contact_method', 50)->nullable()->default('email');
+            $table->string('best_time_to_contact', 50)->nullable()->default('anytime');
+            $table->string('timezone', 100)->nullable();
+            $table->string('language', 50)->nullable()->default('en');
+            $table->boolean('do_not_disturb')->default(false);
+            $table->boolean('marketing_opt_in')->default(false);
+            $table->string('linkedin_url')->nullable();
+            $table->string('assistant_name')->nullable();
+            $table->string('assistant_email')->nullable();
+            $table->string('assistant_phone', 50)->nullable();
+            $table->unsignedBigInteger('reports_to_id')->nullable();
+            $table->text('work_schedule')->nullable();
+            $table->text('professional_bio')->nullable();
+            $table->unsignedBigInteger('office_location_id')->nullable();
+            $table->boolean('is_emergency_contact')->default(false);
+            $table->boolean('is_after_hours_contact')->default(false);
+            $table->date('out_of_office_start')->nullable();
+            $table->date('out_of_office_end')->nullable();
+            $table->string('website')->nullable();
+            $table->string('twitter_handle', 100)->nullable();
+            $table->string('facebook_url')->nullable();
+            $table->string('instagram_handle', 100)->nullable();
+            $table->string('company_blog')->nullable();
+            $table->string('role')->nullable();
+            $table->timestamp('invitation_sent_at')->nullable()
+                
+                ->comment('When the invitation was sent');
+            $table->timestamp('invitation_expires_at')->nullable()
+                
+                ->comment('When the invitation expires');
+            $table->timestamp('invitation_accepted_at')->nullable()
+                
+                ->comment('When the invitation was accepted');
+            $table->unsignedBigInteger('invitation_sent_by')->nullable()
+                
+                ->comment('User ID who sent the invitation');
+            $table->enum('invitation_status', ['pending', 'sent', 'accepted', 'expired', 'revoked'])
+                ->nullable()
+                ->default(null)
+                
+                ->comment('Current status of the invitation');
             $table->timestamp('archived_at')->nullable();
             $table->timestamp('accessed_at')->nullable();
             $table->unsignedBigInteger('client_id');
@@ -259,7 +371,18 @@ return new class extends Migration
             $table->index('archived_at');
             $table->index(['company_id', 'email', 'has_portal_access'], 'idx_portal_access');
             $table->index(['company_id', 'client_id', 'has_portal_access'], 'idx_client_portal');
-        });
+        
+            $table->index('preferred_contact_method');
+            $table->index('timezone');
+            $table->index('language');
+            $table->index('is_emergency_contact');
+            $table->index('is_after_hours_contact');
+            $table->string('invitation_token', 64)->nullable()->unique()
+                
+                ->comment('Unique token for portal invitation');
+            $table->index('invitation_token', 'idx_invitation_token');
+            $table->index(['invitation_status', 'invitation_expires_at'], 'idx_invitation_status_expires');
+            $table->index(['company_id', 'invitation_status'], 'idx_company_invitation_status');});
 
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
@@ -339,6 +462,39 @@ return new class extends Migration
             $table->date('install_date')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->date('next_maintenance_date')
+                ->nullable()
+                
+                ->comment('Date when the next scheduled maintenance is due for this asset');
+            $table->string('support_level', 50)
+                ->nullable()
+                
+                ->comment('Level of support: basic, standard, premium, enterprise, etc.');
+            $table->boolean('auto_assigned_support')
+                ->default(false)
+                
+                ->comment('Whether support was automatically assigned vs manually assigned');
+            $table->timestamp('support_assigned_at')
+                ->nullable()
+                
+                ->comment('When support was assigned to this asset');
+            $table->unsignedBigInteger('support_assigned_by')
+                ->nullable()
+                
+                ->comment('User who assigned support to this asset');
+            $table->timestamp('support_last_evaluated_at')
+                ->nullable()
+                
+                ->comment('When support status was last evaluated');
+            $table->json('support_evaluation_rules')
+                ->nullable()
+                
+                ->comment('Rules used to determine support status');
+            $table->text('support_notes')
+                ->nullable()
+                
+                ->comment('Notes about support assignment or exclusion reasons');
+            $table->string('asset_tag')->nullable();
             $table->timestamp('archived_at')->nullable();
             $table->timestamp('accessed_at')->nullable();
             $table->unsignedBigInteger('vendor_id')->nullable();
@@ -359,6 +515,28 @@ return new class extends Migration
             $table->index('serial');
             $table->index(['client_id', 'type']);
             $table->index(['client_id', 'status']);
+            $table->index('next_maintenance_date');
+            $table->enum('support_status', ['supported', 'unsupported', 'pending_assignment', 'excluded'])
+                ->default('unsupported')
+                
+                ->index()
+                ->comment('Whether this asset is covered by a support contract');
+            $table->unsignedBigInteger('supporting_contract_id')
+                ->nullable()
+                
+                ->index()
+                ->comment('Contract that provides support for this asset');
+            $table->unsignedBigInteger('supporting_schedule_id')
+                ->nullable()
+                
+                ->index()
+                ->comment('Contract schedule (Schedule A) that defines asset support');
+            $table->index(['company_id', 'support_status']);
+            $table->index(['client_id', 'support_status']);
+            $table->index(['supporting_contract_id', 'support_status']);
+            $table->index(['support_status', 'type']);
+            $table->index(['support_last_evaluated_at']);
+            $table->index(['auto_assigned_support']);
             $table->index(['company_id', 'client_id']);
             $table->index('warranty_expire');
             $table->index('archived_at');
@@ -374,6 +552,12 @@ return new class extends Migration
             $table->date('due')->nullable();
             $table->unsignedBigInteger('manager_id')->nullable();
             $table->timestamps();
+            $table->string('status')->default('pending');
+            $table->integer('progress')->default(0);
+            $table->string('priority')->default('medium');
+            $table->date('start_date')->nullable();
+            $table->decimal('budget', 10, 2)->nullable();
+            $table->decimal('actual_cost', 10, 2)->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('archived_at')->nullable();
             $table->unsignedBigInteger('client_id');
@@ -402,11 +586,25 @@ return new class extends Migration
             $table->string('priority')->nullable(); // Low, Normal, High, Critical
             $table->string('status'); // Open, In Progress, Resolved, Closed
             $table->boolean('billable')->default(false);
-            $table->timestamp('schedule')->nullable();
+            $table->timestamp('scheduled_at')->nullable();
             $table->boolean('onsite')->default(false);
             $table->string('vendor_ticket_number')->nullable();
             $table->string('feedback')->nullable();
             $table->timestamps();
+            $table->decimal('sentiment_score', 3, 2)->nullable()->comment('Sentiment score from -1.00 (negative) to 1.00 (positive)');
+            $table->enum('sentiment_label', ['POSITIVE', 'WEAK_POSITIVE', 'NEUTRAL', 'WEAK_NEGATIVE', 'NEGATIVE'])->nullable()->comment('Sentiment classification label');
+            $table->timestamp('sentiment_analyzed_at')->nullable()->comment('When sentiment analysis was performed');
+            $table->decimal('sentiment_confidence', 3, 2)->nullable()->comment('Confidence score for sentiment analysis (0.00 to 1.00)');
+            $table->boolean('is_resolved')->default(false);
+            $table->timestamp('resolved_at')->nullable();
+            $table->unsignedBigInteger('resolved_by')->nullable();
+            $table->text('resolution_summary')->nullable();
+            $table->boolean('client_can_reopen')->default(true);
+            $table->timestamp('reopened_at')->nullable();
+            $table->unsignedBigInteger('reopened_by')->nullable();
+            $table->integer('resolution_count')->default(0);
+            $table->string('type')->nullable();
+            $table->timestamp('estimated_resolution_at')->nullable();
             $table->timestamp('archived_at')->nullable();
             $table->timestamp('closed_at')->nullable();
             $table->unsignedBigInteger('created_by');
@@ -432,10 +630,23 @@ return new class extends Migration
             $table->index(['assigned_to', 'status']);
             $table->index(['company_id', 'client_id']);
             $table->index('billable');
-            $table->index('schedule');
+            $table->index('scheduled_at');
             $table->index('closed_at');
             $table->index('archived_at');
             $table->unique(['prefix', 'number']);
+            $table->index(['sentiment_label', 'created_at'], 'idx_tickets_sentiment_created');
+            $table->index(['sentiment_score', 'company_id'], 'idx_tickets_sentiment_company');
+            $table->index('is_resolved');
+            $table->index(['is_resolved', 'status']);
+            $table->index('resolved_at');
+            $table->index(['company_id', 'status'], 'idx_tickets_company_status');
+            $table->index(['company_id', 'assigned_to', 'status'], 'idx_tickets_company_assigned_status');
+            $table->index(['company_id', 'priority', 'status'], 'idx_tickets_company_priority_status');
+            $table->index(['company_id', 'created_at'], 'idx_tickets_company_created');
+            $table->index(['assigned_to', 'status'], 'idx_tickets_assigned_status');
+            $table->index(['client_id', 'status'], 'idx_tickets_client_status');
+            $table->index(['is_resolved', 'resolved_at'], 'idx_tickets_resolved');
+            $table->index(['created_at', 'status'], 'idx_tickets_created_status');
         });
 
         Schema::create('ticket_replies', function (Blueprint $table) {
@@ -445,6 +656,10 @@ return new class extends Migration
             $table->string('type', 10); // public, private, internal
             $table->time('time_worked')->nullable();
             $table->timestamps();
+            $table->decimal('sentiment_score', 3, 2)->nullable()->comment('Sentiment score from -1.00 (negative) to 1.00 (positive)');
+            $table->enum('sentiment_label', ['POSITIVE', 'WEAK_POSITIVE', 'NEUTRAL', 'WEAK_NEGATIVE', 'NEGATIVE'])->nullable()->comment('Sentiment classification label');
+            $table->timestamp('sentiment_analyzed_at')->nullable()->comment('When sentiment analysis was performed');
+            $table->decimal('sentiment_confidence', 3, 2)->nullable()->comment('Confidence score for sentiment analysis (0.00 to 1.00)');
             $table->timestamp('archived_at')->nullable();
             $table->unsignedBigInteger('replied_by');
             $table->unsignedBigInteger('ticket_id');
@@ -455,6 +670,8 @@ return new class extends Migration
             $table->index('replied_by');
             $table->index('type');
             $table->index(['ticket_id', 'type']);
+            $table->index(['sentiment_label', 'created_at'], 'idx_ticket_replies_sentiment_created');
+            $table->index(['sentiment_score', 'ticket_id'], 'idx_ticket_replies_sentiment_ticket');
             $table->index(['company_id', 'ticket_id']);
             $table->index('time_worked');
             $table->index('archived_at');
@@ -505,13 +722,19 @@ return new class extends Migration
             $table->string('scope')->nullable();
             $table->string('status'); // Draft, Sent, Paid, Overdue, Cancelled
             $table->date('date');
-            $table->date('due');
+            $table->date('due_date');
             $table->decimal('discount_amount', 15, 2)->default(0.00);
             $table->decimal('amount', 15, 2)->default(0.00);
             $table->string('currency_code', 3);
             $table->text('note')->nullable();
             $table->string('url_key')->nullable(); // For public access
             $table->timestamps();
+            $table->unsignedBigInteger('contract_id')->nullable();
+            $table->boolean('is_recurring')->default(false);
+            $table->unsignedBigInteger('recurring_invoice_id')->nullable();
+            $table->string('recurring_frequency')->nullable()
+                ->comment('monthly, quarterly, yearly, etc.');
+            $table->date('next_recurring_date')->nullable();
             $table->timestamp('archived_at')->nullable();
             $table->unsignedBigInteger('category_id');
             $table->unsignedBigInteger('client_id');
@@ -522,7 +745,10 @@ return new class extends Migration
             $table->index('client_id');
             $table->index('company_id');
             $table->index('date');
-            $table->index('due');
+            $table->index('due_date');
+            $table->index('contract_id');
+            $table->index('is_recurring');
+            $table->index('next_recurring_date');
             $table->index(['client_id', 'status']);
             $table->index(['company_id', 'client_id']);
             $table->index('url_key');
@@ -543,6 +769,11 @@ return new class extends Migration
             $table->decimal('total', 15, 2)->default(0.00);
             $table->integer('order')->default(0);
             $table->timestamps();
+            $table->json('tax_breakdown')->nullable();
+            $table->json('service_data')->nullable();
+            $table->decimal('tax_rate', 8, 4)->nullable();
+            $table->string('service_type', 50)->nullable();
+            $table->unsignedBigInteger('tax_jurisdiction_id')->nullable();
             $table->timestamp('archived_at')->nullable();
             $table->unsignedBigInteger('tax_id')->nullable();
             $table->unsignedBigInteger('quote_id')->nullable();
@@ -557,7 +788,9 @@ return new class extends Migration
             $table->index('order');
             $table->index(['company_id', 'invoice_id']);
             $table->index('archived_at');
-        });
+        
+            $table->index('service_type');
+            $table->index('tax_jurisdiction_id');});
 
         // Note: payments and expenses tables are created by separate comprehensive migrations
         // 2024_01_15_000003_create_payments_table.php
@@ -572,6 +805,8 @@ return new class extends Migration
             $table->integer('cost')->nullable();
             $table->string('currency_code', 3);
             $table->timestamps();
+            $table->unsignedBigInteger('tax_profile_id')->nullable();
+            $table->unsignedBigInteger('vendor_id')->nullable();
             $table->timestamp('archived_at')->nullable();
             $table->unsignedBigInteger('tax_id')->nullable();
             $table->unsignedBigInteger('category_id');
@@ -580,6 +815,7 @@ return new class extends Migration
             $table->index('name');
             $table->index('category_id');
             $table->index('company_id');
+            $table->index('tax_profile_id');
             $table->index('price');
             $table->index(['company_id', 'category_id']);
             $table->index('archived_at');
@@ -600,6 +836,15 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->string('url_key')->nullable(); // For public access
             $table->timestamps();
+            $table->enum('approval_status', [
+                'pending',
+                'manager_approved',
+                'executive_approved',
+                'rejected',
+                'not_required',
+            ])->default('not_required');
+            $table->timestamp('sent_at')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamp('archived_at')->nullable();
             $table->unsignedBigInteger('category_id');
             $table->unsignedBigInteger('client_id');
@@ -609,6 +854,8 @@ return new class extends Migration
             $table->index('status');
             $table->index('client_id');
             $table->index('company_id');
+            $table->index(['company_id', 'status'], 'quotes_company_status_idx');
+            $table->index('approval_status');
             $table->index('date');
             $table->index('expire');
             $table->index(['client_id', 'status']);
@@ -633,6 +880,7 @@ return new class extends Migration
             $table->string('currency_code', 3);
             $table->text('note')->nullable();
             $table->timestamps();
+            $table->boolean('auto_invoice_generation')->default(true);
             $table->timestamp('archived_at')->nullable();
             $table->unsignedBigInteger('category_id');
             $table->unsignedBigInteger('client_id');
@@ -771,6 +1019,115 @@ return new class extends Migration
             $table->string('login_key_secret')->nullable();
 
             $table->timestamps();
+            $table->string('date_format', 20)->default('Y-m-d');
+            $table->string('company_logo')->nullable();
+            $table->json('company_colors')->nullable();
+            $table->string('company_address')->nullable();
+            $table->string('company_city')->nullable();
+            $table->string('company_state')->nullable();
+            $table->string('company_zip')->nullable();
+            $table->string('company_country')->default('US');
+            $table->string('company_phone')->nullable();
+            $table->string('company_website')->nullable();
+            $table->string('company_tax_id')->nullable();
+            $table->json('business_hours')->nullable();
+            $table->json('company_holidays')->nullable();
+            $table->string('company_language')->default('en');
+            $table->string('company_currency')->default('USD');
+            $table->json('custom_fields')->nullable();
+            $table->json('localization_settings')->nullable();
+            $table->integer('password_min_length')->default(8);
+            $table->boolean('password_require_special')->default(true);
+            $table->boolean('password_require_numbers')->default(true);
+            $table->boolean('password_require_uppercase')->default(true);
+            $table->integer('password_expiry_days')->default(90);
+            $table->integer('password_history_count')->default(5);
+            $table->boolean('two_factor_enabled')->default(false);
+            $table->json('two_factor_methods')->nullable();
+            $table->integer('session_timeout_minutes')->default(480);
+            $table->boolean('force_single_session')->default(false);
+            $table->integer('max_login_attempts')->default(5);
+            $table->integer('lockout_duration_minutes')->default(15);
+            $table->json('allowed_ip_ranges')->nullable();
+            $table->json('blocked_ip_ranges')->nullable();
+            $table->boolean('geo_blocking_enabled')->default(false);
+            $table->json('allowed_countries')->nullable();
+            $table->json('sso_settings')->nullable();
+            $table->boolean('audit_logging_enabled')->default(true);
+            $table->integer('audit_retention_days')->default(365);
+            $table->boolean('smtp_auth_required')->default(true);
+            $table->boolean('smtp_use_tls')->default(true);
+            $table->integer('smtp_timeout')->default(30);
+            $table->integer('email_retry_attempts')->default(3);
+            $table->json('email_templates')->nullable();
+            $table->json('email_signatures')->nullable();
+            $table->boolean('email_tracking_enabled')->default(false);
+            $table->json('sms_settings')->nullable();
+            $table->json('voice_settings')->nullable();
+            $table->json('slack_settings')->nullable();
+            $table->json('teams_settings')->nullable();
+            $table->json('discord_settings')->nullable();
+            $table->json('video_conferencing_settings')->nullable();
+            $table->json('communication_preferences')->nullable();
+            $table->time('quiet_hours_start')->nullable();
+            $table->time('quiet_hours_end')->nullable();
+            $table->boolean('multi_currency_enabled')->default(false);
+            $table->json('supported_currencies')->nullable();
+            $table->string('exchange_rate_provider')->nullable();
+            $table->boolean('auto_update_exchange_rates')->default(true);
+            $table->json('tax_calculation_settings')->nullable();
+            $table->string('tax_engine_provider')->nullable();
+            $table->json('payment_gateway_settings')->nullable();
+            $table->json('stripe_settings')->nullable();
+            $table->json('square_settings')->nullable();
+            $table->json('paypal_settings')->nullable();
+            $table->json('authorize_net_settings')->nullable();
+            $table->json('ach_settings')->nullable();
+            $table->boolean('recurring_billing_enabled')->default(true);
+            $table->json('recurring_billing_settings')->nullable();
+            $table->json('late_fee_settings')->nullable();
+            $table->json('collection_settings')->nullable();
+            $table->json('accounting_integration_settings')->nullable();
+            $table->json('quickbooks_settings')->nullable();
+            $table->json('xero_settings')->nullable();
+            $table->json('sage_settings')->nullable();
+            $table->boolean('revenue_recognition_enabled')->default(false);
+            $table->json('revenue_recognition_settings')->nullable();
+            $table->json('purchase_order_settings')->nullable();
+            $table->json('expense_approval_settings')->nullable();
+            $table->json('connectwise_automate_settings')->nullable();
+            $table->json('datto_rmm_settings')->nullable();
+            $table->json('ninja_rmm_settings')->nullable();
+            $table->json('kaseya_vsa_settings')->nullable();
+            $table->json('auvik_settings')->nullable();
+            $table->json('prtg_settings')->nullable();
+            $table->json('solarwinds_settings')->nullable();
+            $table->json('monitoring_alert_thresholds')->nullable();
+            $table->json('escalation_rules')->nullable();
+            $table->json('asset_discovery_settings')->nullable();
+            $table->json('patch_management_settings')->nullable();
+            $table->json('remote_access_settings')->nullable();
+            $table->boolean('auto_create_tickets_from_alerts')->default(false);
+            $table->json('alert_to_ticket_mapping')->nullable();
+            $table->json('ticket_categorization_rules')->nullable();
+            $table->json('ticket_priority_rules')->nullable();
+            $table->json('sla_definitions')->nullable();
+            $table->json('sla_escalation_policies')->nullable();
+            $table->json('auto_assignment_rules')->nullable();
+            $table->json('routing_logic')->nullable();
+            $table->json('approval_workflows')->nullable();
+            $table->boolean('time_tracking_enabled')->default(true);
+            $table->json('time_tracking_settings')->nullable();
+            $table->boolean('customer_satisfaction_enabled')->default(false);
+            $table->json('csat_settings')->nullable();
+            $table->json('ticket_templates')->nullable();
+            $table->json('ticket_automation_rules')->nullable();
+            $table->json('multichannel_settings')->nullable();
+            $table->json('queue_management_settings')->nullable();
+            $table->boolean('remember_me_enabled')->default(true);
+            $table->json('wire_settings')->nullable();
+            $table->json('check_settings')->nullable();
+            $table->enum('imap_auth_method', ['password', 'oauth', 'token'])->nullable();
 
             // Indexes
             $table->index('company_id');

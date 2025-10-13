@@ -22,7 +22,17 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
             $table->timestamps();
+            $table->decimal('price_per_user_monthly', 10, 2)->nullable();
+            $table->enum('pricing_model', ['fixed', 'per_user', 'hybrid'])->default('per_user');
+            $table->integer('minimum_users')->default(1);
+            $table->decimal('base_price', 10, 2)->default(0);
+            $table->decimal('price_yearly', 10, 2)->nullable();
+            $table->string('stripe_price_id_yearly')->nullable();
+            $table->integer('max_users')->nullable();
+            $table->integer('max_clients')->nullable();
 
+            $table->index(['pricing_model', 'is_active']);
+            $table->string('slug', 50)->unique();
             $table->index('is_active');
             $table->index(['is_active', 'sort_order']);
         });

@@ -176,6 +176,7 @@ return new class extends Migration
             $table->string('color', 7)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->json('metadata')->nullable();
 
             $table->index(['company_id', 'is_active']);
             $table->unique(['company_id', 'name']);
@@ -442,7 +443,12 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
+            $table->unsignedBigInteger('applied_by')->nullable();
+            $table->date('application_date')->nullable();
             $table->softDeletes();
+
+            // Indexes from ALTER migrations
+            $table->string('application_number')->unique();
         });
 
         Schema::create('credit_note_approvals', function (Blueprint $table) {
@@ -450,6 +456,11 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('status')->default('active');
             $table->timestamps();
+            $table->timestamp('requested_at')->nullable();
+            $table->timestamp('reviewed_at')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->timestamp('rejected_at')->nullable();
+            $table->timestamp('expired_at')->nullable();
             $table->softDeletes();
         });
 
@@ -468,18 +479,20 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
+            $table->date('credit_date')->nullable();
+            $table->decimal('total_amount', 15, 2)->default(0);
             $table->softDeletes();
         });
 
         Schema::create('dunning_actions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('company_id');
             
-            // Foreign keys
-            $table->foreignId('campaign_id')->nullable()->constrained('dunning_campaigns')->onDelete('cascade');
-            $table->foreignId('sequence_id')->nullable()->constrained('dunning_sequences')->onDelete('cascade');
-            $table->foreignId('client_id')->constrained()->onDelete('cascade');
-            $table->foreignId('invoice_id')->nullable()->constrained()->onDelete('cascade');
+            // Foreign keys (constraints will be added after all tables exist)
+            $table->unsignedBigInteger('campaign_id')->nullable();
+            $table->unsignedBigInteger('sequence_id')->nullable();
+            $table->unsignedBigInteger('client_id');
+            $table->unsignedBigInteger('invoice_id')->nullable();
             
             // Reference and type
             $table->string('action_reference')->unique();
@@ -631,6 +644,9 @@ return new class extends Migration
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
             $table->softDeletes();
+
+            // Indexes from ALTER migrations
+            $table->string('plan_number')->unique();
         });
 
         Schema::create('quote_invoice_conversions', function (Blueprint $table) {
@@ -658,6 +674,7 @@ return new class extends Migration
             $table->string('status')->default('active');
             $table->decimal('amount', 15, 2)->default(0);
             $table->timestamps();
+            $table->string('request_number')->nullable();
             $table->softDeletes();
         });
 
@@ -691,6 +708,9 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
+            $table->integer('priority')->default(0);
+            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->softDeletes();
         });
 
@@ -715,7 +735,13 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->timestamps();
+            $table->date('cycle_start_date')->nullable();
+            $table->date('cycle_end_date')->nullable();
+            $table->date('next_reset_date')->nullable();
             $table->softDeletes();
+
+            // Indexes from ALTER migrations
+            $table->string('pool_code')->unique();
         });
 
         Schema::create('usage_records', function (Blueprint $table) {

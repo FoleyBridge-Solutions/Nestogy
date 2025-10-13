@@ -52,9 +52,14 @@ return new class extends Migration
             $table->json('filters')->nullable(); // JSON rules for processing
 
             $table->timestamps();
+            $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->enum('connection_type', ['manual', 'oauth'])->default('manual');
+            $table->string('oauth_provider')->nullable();
+            $table->timestamp('oauth_token_expires_at')->nullable();
             $table->index(['user_id', 'is_active']);
             $table->unique(['user_id', 'email_address']);
-        });
+        
+            $table->index(['company_id', 'user_id']);});
     }
 
     /**

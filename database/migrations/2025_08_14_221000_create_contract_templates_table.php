@@ -97,6 +97,7 @@ return new class extends Migration
 
             // Timestamps
             $table->timestamps();
+            $table->json('automation_settings')->nullable();
 
             // Soft deletes using archived_at (consistent with other models)
             $table->timestamp('archived_at')->nullable()->index();

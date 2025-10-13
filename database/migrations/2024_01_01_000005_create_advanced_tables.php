@@ -304,6 +304,15 @@ return new class extends Migration
             $table->enum('status', ['active', 'paused', 'completed'])->default('active');
             $table->json('configuration')->nullable();
             $table->timestamps();
+            $table->boolean('is_active')->default(true);
+            $table->date('next_run_date')->nullable();
+            $table->date('last_run_date')->nullable();
+            $table->string('name')->nullable();
+            $table->json('frequency_config')->nullable();
+            $table->date('end_date')->nullable();
+            $table->integer('max_occurrences')->nullable();
+            $table->integer('occurrences_count')->default(0);
+            $table->json('template_overrides')->nullable();
 
             $table->index(['company_id', 'client_id']);
             $table->index(['company_id', 'next_run']);
@@ -352,6 +361,8 @@ return new class extends Migration
             $table->boolean('is_billable')->default(true);
             $table->boolean('is_billed')->default(false);
             $table->timestamps();
+            $table->dateTime('started_at')->nullable();
+            $table->dateTime('ended_at')->nullable();
 
             $table->index(['company_id', 'ticket_id']);
             $table->index(['company_id', 'user_id']);
@@ -385,6 +396,12 @@ return new class extends Migration
             $table->json('attendees')->nullable();
             $table->string('location')->nullable();
             $table->timestamps();
+            $table->json('attendee_emails')->nullable();
+            $table->boolean('is_onsite')->default(false);
+            $table->boolean('is_all_day')->default(false);
+            $table->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled', 'rescheduled'])->default('scheduled');
+            $table->text('notes')->nullable();
+            $table->json('reminders')->nullable();
 
             $table->index(['company_id', 'ticket_id']);
             $table->index(['company_id', 'start_time']);

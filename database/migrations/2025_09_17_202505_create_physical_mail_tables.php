@@ -168,6 +168,9 @@ return new class extends Migration
             $table->string('imb_zip_code')->nullable();
 
             $table->string('tracking_number')->nullable(); // For certified/registered
+            $table->index(['company_id', 'status']);
+            $table->index(['company_id', 'created_at']);
+            $table->index(['latitude', 'longitude'], 'physical_mail_orders_location_index');
             $table->string('mailing_class')->default('first_class');
             $table->timestamp('send_date')->nullable();
             $table->decimal('cost', 8, 2)->nullable();
@@ -175,6 +178,10 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->timestamps();
+            $table->foreignId('company_id')->nullable()->constrained()->onDelete('cascade');
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->string('formatted_address')->nullable();
 
             $table->index(['mailable_type', 'mailable_id']);
             $table->index(['client_id', 'status']);

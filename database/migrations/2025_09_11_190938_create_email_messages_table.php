@@ -59,9 +59,11 @@ return new class extends Migration
             $table->json('flags')->nullable(); // IMAP flags
 
             $table->timestamps();
+            $table->string('remote_id')->nullable();
 
             $table->index(['email_account_id', 'email_folder_id']);
             $table->index(['message_id']);
+            $table->index(['email_account_id', 'remote_id']);
             $table->index(['uid', 'email_account_id']);
             $table->index(['thread_id']);
             $table->index(['is_read', 'received_at']);
