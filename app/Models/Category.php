@@ -40,9 +40,15 @@ class Category extends Model
         'company_id',
         'name',
         'type',
+        'code',
+        'slug',
+        'description',
         'color',
         'icon',
         'parent_id',
+        'sort_order',
+        'is_active',
+        'metadata',
     ];
 
     /**
@@ -50,6 +56,9 @@ class Category extends Model
      */
     protected $casts = [
         'parent_id' => 'integer',
+        'sort_order' => 'integer',
+        'is_active' => 'boolean',
+        'metadata' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'archived_at' => 'datetime',
@@ -79,6 +88,12 @@ class Category extends Model
 
     const TYPE_ASSET = 'asset';
 
+    const TYPE_EXPENSE_CATEGORY = 'expense_category';
+
+    const TYPE_REPORT = 'report';
+
+    const TYPE_KB = 'kb';
+
     /**
      * Type labels mapping
      */
@@ -91,6 +106,9 @@ class Category extends Model
         self::TYPE_QUOTE => 'Quote',
         self::TYPE_RECURRING => 'Recurring',
         self::TYPE_ASSET => 'Asset',
+        self::TYPE_EXPENSE_CATEGORY => 'Expense Category',
+        self::TYPE_REPORT => 'Report',
+        self::TYPE_KB => 'Knowledge Base',
     ];
 
     /**
@@ -105,6 +123,9 @@ class Category extends Model
         self::TYPE_QUOTE => '#20c997',
         self::TYPE_RECURRING => '#6c757d',
         self::TYPE_ASSET => '#17a2b8',
+        self::TYPE_EXPENSE_CATEGORY => '#ef4444',
+        self::TYPE_REPORT => '#8b5cf6',
+        self::TYPE_KB => '#10b981',
     ];
 
     /**
@@ -357,7 +378,39 @@ class Category extends Model
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('parent_id')->orderBy('name');
+        return $query->orderBy('sort_order')->orderBy('parent_id')->orderBy('name');
+    }
+
+    /**
+     * Scope to get active categories.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope to get expense categories.
+     */
+    public function scopeExpenseCategories($query)
+    {
+        return $query->where('type', self::TYPE_EXPENSE_CATEGORY);
+    }
+
+    /**
+     * Scope to get report categories.
+     */
+    public function scopeReportCategories($query)
+    {
+        return $query->where('type', self::TYPE_REPORT);
+    }
+
+    /**
+     * Scope to get KB categories.
+     */
+    public function scopeKbCategories($query)
+    {
+        return $query->where('type', self::TYPE_KB);
     }
 
     /**
@@ -413,6 +466,39 @@ class Category extends Model
     }
 
     /**
+     * Check if expense amount requires approval for this category (expense_category type only).
+     */
+    public function requiresApprovalForAmount(float $amount): bool
+    {
+        if ($this->type !== self::TYPE_EXPENSE_CATEGORY) {
+            return false;
+        }
+
+        $meta = $this->metadata ?? [];
+
+        return ($meta['requires_approval'] ?? false) && $amount > ($meta['approval_limit'] ?? 0);
+    }
+
+    /**
+     * Get expense category metadata attributes.
+     */
+    public function getExpenseSettings(): ?object
+    {
+        if ($this->type !== self::TYPE_EXPENSE_CATEGORY) {
+            return null;
+        }
+
+        $meta = $this->metadata ?? [];
+
+        return (object) [
+            'requires_approval' => $meta['requires_approval'] ?? false,
+            'approval_limit' => $meta['approval_limit'] ?? null,
+            'is_billable_default' => $meta['is_billable_default'] ?? false,
+            'markup_percentage_default' => $meta['markup_percentage_default'] ?? null,
+        ];
+    }
+
+    /**
      * Boot the model.
      */
     protected static function boot()
@@ -436,6 +522,7 @@ class Category extends Model
             $hasRecords = false;
             switch ($category->type) {
                 case self::TYPE_EXPENSE:
+                case self::TYPE_EXPENSE_CATEGORY:
                     $hasRecords = $category->expenses()->exists();
                     break;
                 case self::TYPE_PRODUCT:

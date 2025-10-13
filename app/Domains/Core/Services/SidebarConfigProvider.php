@@ -1366,6 +1366,7 @@ class SidebarConfigProvider
                         ['name' => 'Reports', 'route' => 'settings.category.show', 'params' => ['domain' => 'operations', 'category' => 'reports'], 'icon' => 'chart-bar', 'key' => 'reports'],
                         ['name' => 'Knowledge Base', 'route' => 'settings.category.show', 'params' => ['domain' => 'operations', 'category' => 'knowledge'], 'icon' => 'book-open', 'key' => 'knowledge'],
                         ['name' => 'Training', 'route' => 'settings.category.show', 'params' => ['domain' => 'operations', 'category' => 'training'], 'icon' => 'academic-cap', 'key' => 'training'],
+                        ['name' => 'Categories', 'route' => 'settings.categories.index', 'icon' => 'folder-open', 'key' => 'categories'],
                     ],
                 ],
                 [

@@ -104,6 +104,10 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
 
     Route::get('/notification-preferences', \App\Livewire\Settings\NotificationPreferences::class)->name('notification-preferences');
 
+    Route::get('/notifications', function () {
+        return redirect()->route('settings.category.show', ['domain' => 'communication', 'category' => 'notifications']);
+    })->name('notifications');
+
     Route::get('/payment-gateways', function () {
         return redirect()->route('settings.category.show', ['domain' => 'financial', 'category' => 'payments']);
     })->name('payment-gateways');
@@ -138,6 +142,9 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
     // Settings Import/Export
     Route::get('/export', [UnifiedSettingsController::class, 'export'])->name('export');
     Route::post('/import', [UnifiedSettingsController::class, 'import'])->name('import');
+
+    // Category Management (Livewire-powered)
+    Route::get('/categories', \App\Livewire\Settings\CategoryManager::class)->name('categories.index');
 
     // Roles & Permissions (MUST come before domain-based routes to avoid conflicts)
     Route::prefix('roles')->name('roles.')->group(function () {

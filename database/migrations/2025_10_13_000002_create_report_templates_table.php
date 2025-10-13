@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('report_templates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->foreignId('category_id')->constrained('report_categories')->onDelete('cascade');
+            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
             $table->json('configuration');

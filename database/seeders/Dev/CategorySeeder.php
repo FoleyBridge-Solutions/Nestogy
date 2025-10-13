@@ -57,7 +57,7 @@ class CategorySeeder extends Seeder
         $categories = [
             ['name' => 'Service', 'color' => '#3B82F6', 'icon' => 'wrench'],
             ['name' => 'Product', 'color' => '#10B981', 'icon' => 'cube'],
-            ['name' => 'Support', 'color' => '#8B5CF6', 'icon' => 'support'],
+            ['name' => 'Support', 'color' => '#8B5CF6', 'icon' => 'lifebuoy'],
             ['name' => 'Consulting', 'color' => '#F59E0B', 'icon' => 'academic-cap'],
             ['name' => 'Project', 'color' => '#EF4444', 'icon' => 'briefcase'],
             ['name' => 'Maintenance', 'color' => '#EC4899', 'icon' => 'cog'],
@@ -87,16 +87,16 @@ class CategorySeeder extends Seeder
     private function createExpenseCategories(int $companyId): void
     {
         $categories = [
-            ['name' => 'Hardware', 'color' => '#3B82F6', 'icon' => 'desktop-computer'],
-            ['name' => 'Software', 'color' => '#10B981', 'icon' => 'code'],
-            ['name' => 'Travel', 'color' => '#8B5CF6', 'icon' => 'globe'],
-            ['name' => 'Office Supplies', 'color' => '#F59E0B', 'icon' => 'pencil'],
-            ['name' => 'Utilities', 'color' => '#EF4444', 'icon' => 'lightning-bolt'],
-            ['name' => 'Rent', 'color' => '#EC4899', 'icon' => 'office-building'],
+            ['name' => 'Hardware', 'color' => '#3B82F6', 'icon' => 'computer-desktop'],
+            ['name' => 'Software', 'color' => '#10B981', 'icon' => 'code-bracket'],
+            ['name' => 'Travel', 'color' => '#8B5CF6', 'icon' => 'globe-alt'],
+            ['name' => 'Office Supplies', 'color' => '#F59E0B', 'icon' => 'pencil-square'],
+            ['name' => 'Utilities', 'color' => '#EF4444', 'icon' => 'bolt'],
+            ['name' => 'Rent', 'color' => '#EC4899', 'icon' => 'building-office'],
             ['name' => 'Insurance', 'color' => '#14B8A6', 'icon' => 'shield-check'],
-            ['name' => 'Marketing', 'color' => '#6366F1', 'icon' => 'speakerphone'],
+            ['name' => 'Marketing', 'color' => '#6366F1', 'icon' => 'megaphone'],
             ['name' => 'Training', 'color' => '#F97316', 'icon' => 'academic-cap'],
-            ['name' => 'Subscriptions', 'color' => '#84CC16', 'icon' => 'refresh'],
+            ['name' => 'Subscriptions', 'color' => '#84CC16', 'icon' => 'arrow-path'],
             ['name' => 'Professional Fees', 'color' => '#06B6D4', 'icon' => 'briefcase'],
             ['name' => 'Telecommunications', 'color' => '#A855F7', 'icon' => 'phone'],
         ];
@@ -126,11 +126,11 @@ class CategorySeeder extends Seeder
             ['name' => 'Managed Services', 'color' => '#3B82F6', 'icon' => 'server'],
             ['name' => 'Project Revenue', 'color' => '#10B981', 'icon' => 'chart-bar'],
             ['name' => 'Break-Fix Services', 'color' => '#8B5CF6', 'icon' => 'wrench'],
-            ['name' => 'Hardware Sales', 'color' => '#F59E0B', 'icon' => 'desktop-computer'],
-            ['name' => 'Software Sales', 'color' => '#EF4444', 'icon' => 'code'],
+            ['name' => 'Hardware Sales', 'color' => '#F59E0B', 'icon' => 'computer-desktop'],
+            ['name' => 'Software Sales', 'color' => '#EF4444', 'icon' => 'code-bracket'],
             ['name' => 'Consultation Fees', 'color' => '#EC4899', 'icon' => 'users'],
             ['name' => 'Training Revenue', 'color' => '#14B8A6', 'icon' => 'academic-cap'],
-            ['name' => 'Commission', 'color' => '#6366F1', 'icon' => 'cash'],
+            ['name' => 'Commission', 'color' => '#6366F1', 'icon' => 'banknotes'],
         ];
 
         foreach ($categories as $category) {
@@ -155,18 +155,18 @@ class CategorySeeder extends Seeder
     private function createTicketCategories(int $companyId): void
     {
         $categories = [
-            ['name' => 'Support Request', 'color' => '#3B82F6', 'icon' => 'support'],
-            ['name' => 'Incident', 'color' => '#EF4444', 'icon' => 'exclamation'],
-            ['name' => 'Service Request', 'color' => '#10B981', 'icon' => 'clipboard-list'],
+            ['name' => 'Support Request', 'color' => '#3B82F6', 'icon' => 'lifebuoy'],
+            ['name' => 'Incident', 'color' => '#EF4444', 'icon' => 'exclamation-triangle'],
+            ['name' => 'Service Request', 'color' => '#10B981', 'icon' => 'clipboard-document-list'],
             ['name' => 'Maintenance', 'color' => '#8B5CF6', 'icon' => 'cog'],
             ['name' => 'Emergency', 'color' => '#DC2626', 'icon' => 'fire'],
             ['name' => 'Project Task', 'color' => '#F59E0B', 'icon' => 'briefcase'],
-            ['name' => 'Change Request', 'color' => '#EC4899', 'icon' => 'refresh'],
-            ['name' => 'Problem', 'color' => '#14B8A6', 'icon' => 'puzzle'],
+            ['name' => 'Change Request', 'color' => '#EC4899', 'icon' => 'arrow-path'],
+            ['name' => 'Problem', 'color' => '#14B8A6', 'icon' => 'puzzle-piece'],
             ['name' => 'Security Issue', 'color' => '#991B1B', 'icon' => 'shield-exclamation'],
             ['name' => 'Network Issue', 'color' => '#6366F1', 'icon' => 'wifi'],
-            ['name' => 'Hardware Issue', 'color' => '#F97316', 'icon' => 'desktop-computer'],
-            ['name' => 'Software Issue', 'color' => '#84CC16', 'icon' => 'code'],
+            ['name' => 'Hardware Issue', 'color' => '#F97316', 'icon' => 'computer-desktop'],
+            ['name' => 'Software Issue', 'color' => '#84CC16', 'icon' => 'code-bracket'],
         ];
 
         foreach ($categories as $category) {
@@ -191,10 +191,10 @@ class CategorySeeder extends Seeder
     private function createProductCategories(int $companyId): void
     {
         $categories = [
-            ['name' => 'Computers', 'color' => '#3B82F6', 'icon' => 'desktop-computer'],
+            ['name' => 'Computers', 'color' => '#3B82F6', 'icon' => 'computer-desktop'],
             ['name' => 'Networking', 'color' => '#10B981', 'icon' => 'wifi'],
             ['name' => 'Servers', 'color' => '#8B5CF6', 'icon' => 'server'],
-            ['name' => 'Storage', 'color' => '#F59E0B', 'icon' => 'database'],
+            ['name' => 'Storage', 'color' => '#F59E0B', 'icon' => 'circle-stack'],
             ['name' => 'Security', 'color' => '#EF4444', 'icon' => 'shield-check'],
             ['name' => 'Software Licenses', 'color' => '#EC4899', 'icon' => 'key'],
             ['name' => 'Peripherals', 'color' => '#14B8A6', 'icon' => 'printer'],
@@ -223,17 +223,17 @@ class CategorySeeder extends Seeder
     private function createAssetCategories(int $companyId): void
     {
         $categories = [
-            ['name' => 'Desktop', 'color' => '#3B82F6', 'icon' => 'desktop-computer'],
-            ['name' => 'Laptop', 'color' => '#10B981', 'icon' => 'device-mobile'],
+            ['name' => 'Desktop', 'color' => '#3B82F6', 'icon' => 'computer-desktop'],
+            ['name' => 'Laptop', 'color' => '#10B981', 'icon' => 'device-phone-mobile'],
             ['name' => 'Server', 'color' => '#8B5CF6', 'icon' => 'server'],
             ['name' => 'Network Device', 'color' => '#F59E0B', 'icon' => 'wifi'],
             ['name' => 'Printer', 'color' => '#EF4444', 'icon' => 'printer'],
             ['name' => 'Firewall', 'color' => '#EC4899', 'icon' => 'shield-check'],
-            ['name' => 'Storage Device', 'color' => '#14B8A6', 'icon' => 'database'],
-            ['name' => 'UPS', 'color' => '#6366F1', 'icon' => 'lightning-bolt'],
+            ['name' => 'Storage Device', 'color' => '#14B8A6', 'icon' => 'circle-stack'],
+            ['name' => 'UPS', 'color' => '#6366F1', 'icon' => 'bolt'],
             ['name' => 'Phone System', 'color' => '#F97316', 'icon' => 'phone'],
             ['name' => 'Security Camera', 'color' => '#84CC16', 'icon' => 'camera'],
-            ['name' => 'Mobile Device', 'color' => '#06B6D4', 'icon' => 'device-mobile'],
+            ['name' => 'Mobile Device', 'color' => '#06B6D4', 'icon' => 'device-phone-mobile'],
             ['name' => 'Virtual Machine', 'color' => '#A855F7', 'icon' => 'cloud'],
         ];
 
@@ -260,11 +260,11 @@ class CategorySeeder extends Seeder
     {
         $categories = [
             ['name' => 'New Project', 'color' => '#3B82F6', 'icon' => 'sparkles'],
-            ['name' => 'Service Upgrade', 'color' => '#10B981', 'icon' => 'trending-up'],
+            ['name' => 'Service Upgrade', 'color' => '#10B981', 'icon' => 'arrow-trending-up'],
             ['name' => 'Hardware Purchase', 'color' => '#8B5CF6', 'icon' => 'shopping-cart'],
             ['name' => 'Software Licensing', 'color' => '#F59E0B', 'icon' => 'key'],
             ['name' => 'Managed Services', 'color' => '#EF4444', 'icon' => 'cog'],
-            ['name' => 'Consultation', 'color' => '#EC4899', 'icon' => 'chat'],
+            ['name' => 'Consultation', 'color' => '#EC4899', 'icon' => 'chat-bubble-left'],
         ];
 
         foreach ($categories as $category) {
@@ -292,8 +292,8 @@ class CategorySeeder extends Seeder
             ['name' => 'Monthly Services', 'color' => '#3B82F6', 'icon' => 'calendar'],
             ['name' => 'Quarterly Maintenance', 'color' => '#10B981', 'icon' => 'cog'],
             ['name' => 'Annual Licenses', 'color' => '#8B5CF6', 'icon' => 'key'],
-            ['name' => 'Weekly Backup', 'color' => '#F59E0B', 'icon' => 'database'],
-            ['name' => 'Bi-Annual Review', 'color' => '#EF4444', 'icon' => 'clipboard-check'],
+            ['name' => 'Weekly Backup', 'color' => '#F59E0B', 'icon' => 'circle-stack'],
+            ['name' => 'Bi-Annual Review', 'color' => '#EF4444', 'icon' => 'clipboard-document-check'],
         ];
 
         foreach ($categories as $category) {
