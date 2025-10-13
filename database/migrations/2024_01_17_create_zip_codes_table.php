@@ -11,23 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasTable('zip_codes')) {
-            Schema::create('zip_codes', function (Blueprint $table) {
-                $table->id();
-                $table->string('zip_code', 5);
-                $table->string('city');
-                $table->string('state_code', 2);
-                $table->string('county_name')->nullable();
-                $table->decimal('latitude', 10, 7)->nullable();
-                $table->decimal('longitude', 10, 7)->nullable();
-                $table->json('metadata')->nullable();
-                $table->timestamps();
+        Schema::create('zip_codes', function (Blueprint $table) {
+            $table->id();
+            $table->string('zip_code', 5);
+            $table->string('city');
+            $table->string('state_code', 2);
+            $table->string('county_name')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+            $table->json('metadata')->nullable();
+            $table->timestamps();
 
-                $table->index(['zip_code', 'state_code']);
-                $table->index('city');
-                $table->index('county_name');
-            });
-        }
+            $table->index(['zip_code', 'state_code']);
+            $table->index('city');
+            $table->index('county_name');
+        });
     }
 
     /**
