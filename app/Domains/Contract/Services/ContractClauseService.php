@@ -787,7 +787,7 @@ class ContractClauseService
     /**
      * Add dependencies for a clause to template.
      */
-    protected function addClauseDependencies(ContractTemplate $template, ContractClause $clause): array
+    protected function addClauseDependenciesToTemplate(ContractTemplate $template, ContractClause $clause): array
     {
         $addedClauses = [];
         $errors = [];
@@ -843,7 +843,7 @@ class ContractClauseService
             return ['added' => [], 'errors' => $conflictErrors];
         }
 
-        $dependencyResult = $this->addClauseDependencies($template, $clause);
+        $dependencyResult = $this->addClauseDependenciesToTemplate($template, $clause);
         $addedClauses = $dependencyResult['added'];
         $errors = $dependencyResult['errors'];
 

@@ -1,10 +1,6 @@
 <?php
 
-// Client routes
-
 use Illuminate\Support\Facades\Route;
-
-const CONTACT_ROUTE_PATTERN = 'contacts/{contact}';
 
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
     // ============================================================================
@@ -62,13 +58,13 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::get('contacts/create', [\App\Domains\Client\Controllers\ContactController::class, 'create'])->name('contacts.create');
         Route::post('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'store'])->name('contacts.store');
         Route::get('contacts/export', [\App\Domains\Client\Controllers\ContactController::class, 'export'])->name('contacts.export');
-        Route::get(CONTACT_ROUTE_PATTERN, [\App\Domains\Client\Controllers\ContactController::class, 'show'])->name('contacts.show');
-        Route::get(CONTACT_ROUTE_PATTERN . '/edit', [\App\Domains\Client\Controllers\ContactController::class, 'edit'])->name('contacts.edit');
-        Route::put(CONTACT_ROUTE_PATTERN, [\App\Domains\Client\Controllers\ContactController::class, 'update'])->name('contacts.update');
-        Route::delete(CONTACT_ROUTE_PATTERN, [\App\Domains\Client\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
+        Route::get('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'show'])->name('contacts.show');
+        Route::get('contacts/{contact}/edit', [\App\Domains\Client\Controllers\ContactController::class, 'edit'])->name('contacts.edit');
+        Route::put('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'update'])->name('contacts.update');
+        Route::delete('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
 
-        // Contact API routes for modal functionality
-        Route::prefix(CONTACT_ROUTE_PATTERN)->name('contacts.')->group(function () {
+        // Contact attachments/notes
+        Route::prefix('contacts/{contact}')->name('contacts.')->group(function () {
             Route::put('portal-access', [\App\Domains\Client\Controllers\ContactController::class, 'updatePortalAccess'])->name('portal-access.update');
             Route::put('security', [\App\Domains\Client\Controllers\ContactController::class, 'updateSecurity'])->name('security.update');
             Route::put('permissions', [\App\Domains\Client\Controllers\ContactController::class, 'updatePermissions'])->name('permissions.update');
@@ -91,14 +87,13 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::resource('services', \App\Domains\Client\Controllers\ServiceController::class);
 
         // Asset routes (using session-based client context)
-        const ASSET_ROUTE = 'assets/{asset}';
         Route::get('assets', [\App\Domains\Asset\Controllers\AssetController::class, 'clientIndex'])->name('assets.index');
         Route::get('assets/create', [\App\Domains\Asset\Controllers\AssetController::class, 'clientCreate'])->name('assets.create');
         Route::post('assets', [\App\Domains\Asset\Controllers\AssetController::class, 'clientStore'])->name('assets.store');
-        Route::get(ASSET_ROUTE, [\App\Domains\Asset\Controllers\AssetController::class, 'clientShow'])->name('assets.show');
-        Route::get(ASSET_ROUTE . '/edit', [\App\Domains\Asset\Controllers\AssetController::class, 'clientEdit'])->name('assets.edit');
-        Route::put(ASSET_ROUTE, [\App\Domains\Asset\Controllers\AssetController::class, 'clientUpdate'])->name('assets.update');
-        Route::delete(ASSET_ROUTE, [\App\Domains\Asset\Controllers\AssetController::class, 'clientDestroy'])->name('assets.destroy');
+        Route::get('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientShow'])->name('assets.show');
+        Route::get('assets/{asset}/edit', [\App\Domains\Asset\Controllers\AssetController::class, 'clientEdit'])->name('assets.edit');
+        Route::put('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientUpdate'])->name('assets.update');
+        Route::delete('assets/{asset}', [\App\Domains\Asset\Controllers\AssetController::class, 'clientDestroy'])->name('assets.destroy');
 
         // IT Documentation routes (using session-based client context)
         Route::get('it-documentation', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'clientIndex'])->name('it-documentation.client-index');
