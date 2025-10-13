@@ -11,6 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('dunning_campaigns')) {
+            Schema::create('dunning_campaigns', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
         Schema::table('dunning_campaigns', function (Blueprint $table) {
             // Add description
             $table->text('description')->nullable()->after('name');

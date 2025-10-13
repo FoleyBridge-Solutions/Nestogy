@@ -11,6 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('auto_payments')) {
+            Schema::create('auto_payments', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
         Schema::table('auto_payments', function (Blueprint $table) {
             // Drop 'name' and 'status' if they exist - we'll add more specific fields
             if (Schema::hasColumn('auto_payments', 'name')) {
