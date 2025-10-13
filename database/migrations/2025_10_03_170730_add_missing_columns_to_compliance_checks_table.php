@@ -11,6 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('compliance_checks')) {
+            Schema::create('compliance_checks', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->string('name');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
+        if (!Schema::hasTable('compliance_checks')) {
+            return;
+        }
+        
         Schema::table('compliance_checks', function (Blueprint $table) {
             // Foreign keys - contract_id and compliance_requirement_id are optional
             $table->foreignId('contract_id')->nullable()->after('company_id')->constrained()->onDelete('cascade');

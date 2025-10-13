@@ -11,6 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('collection_notes')) {
+            Schema::create('collection_notes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->text('notes')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
+        if (!Schema::hasTable('collection_notes')) {
+            return;
+        }
+        
         Schema::table('collection_notes', function (Blueprint $table) {
             // Foreign keys
             $table->foreignId('client_id')->after('company_id')->constrained()->onDelete('cascade');

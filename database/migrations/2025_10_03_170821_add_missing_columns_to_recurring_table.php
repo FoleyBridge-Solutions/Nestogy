@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('recurring')) {
+            return;
+        }
+        
         Schema::table('recurring', function (Blueprint $table) {
             // Add JSON columns for service tiers and usage
             $table->json('service_tiers')->nullable()->after('amount');
