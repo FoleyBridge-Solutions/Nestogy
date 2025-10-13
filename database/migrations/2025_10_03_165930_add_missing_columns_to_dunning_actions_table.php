@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('dunning_actions')) {
+            return;
+        }
+        
         Schema::table('dunning_actions', function (Blueprint $table) {
             // Drop name column if it exists (it was wrong)
             if (Schema::hasColumn('dunning_actions', 'name')) {
