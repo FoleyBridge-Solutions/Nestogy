@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First make the column nullable, then clear it, then drop it
-        Schema::table('contract_templates', function (Blueprint $table) {
-            $table->longText('template_content')->nullable()->change();
-        });
+        if (Schema::hasColumn('contract_templates', 'template_content')) {
+            // First make the column nullable, then clear it, then drop it
+            Schema::table('contract_templates', function (Blueprint $table) {
+                $table->longText('template_content')->nullable()->change();
+            });
 
-        // Clear any existing template_content
-        // All templates now use the modern clause-based system
-        \DB::table('contract_templates')->update(['template_content' => null]);
+            // Clear any existing template_content
+            // All templates now use the modern clause-based system
+            \DB::table('contract_templates')->update(['template_content' => null]);
 
-        Schema::table('contract_templates', function (Blueprint $table) {
-            // Remove the legacy template_content column
-            $table->dropColumn('template_content');
-        });
+            Schema::table('contract_templates', function (Blueprint $table) {
+                // Remove the legacy template_content column
+                $table->dropColumn('template_content');
+            });
+        }
     }
 
     /**

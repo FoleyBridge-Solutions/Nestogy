@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip migration if ticket_replies table is empty (fresh deployment)
+        if (DB::table('ticket_replies')->count() === 0) {
+            return;
+        }
+
         // Migrate all ticket_replies to ticket_comments
         DB::statement("
             INSERT INTO ticket_comments (
