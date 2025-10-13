@@ -11,17 +11,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // settings - add imap_auth_method
-        if (Schema::hasTable('settings')) {
-            Schema::table('settings', function (Blueprint $table) {
-                $table->enum('imap_auth_method', ['password', 'oauth', 'token'])->nullable()->after('company_id');
+        if (!Schema::hasTable('expense_categories')) {
+            Schema::create('expense_categories', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
             });
         }
         
-        // expense_categories - add code
+        if (Schema::hasTable('settings')) {
+            Schema::table('settings', function (Blueprint $table) {
+                if (!Schema::hasColumn('settings', 'imap_auth_method')) {
+                    $table->enum('imap_auth_method', ['password', 'oauth', 'token'])->nullable()->after('company_id');
+                }
+            });
+        }
+        
         if (Schema::hasTable('expense_categories')) {
             Schema::table('expense_categories', function (Blueprint $table) {
-                $table->string('code')->unique()->after('company_id');
+                if (!Schema::hasColumn('expense_categories', 'code')) {
+                    $table->string('code')->unique()->after('company_id');
+                }
             });
         }
     }

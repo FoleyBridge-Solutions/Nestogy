@@ -11,17 +11,37 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Add priority to tax_exemptions
-        if (Schema::hasTable('tax_exemptions')) {
-            Schema::table('tax_exemptions', function (Blueprint $table) {
-                $table->integer('priority')->default(0)->after('company_id');
+        if (!Schema::hasTable('tax_exemptions')) {
+            Schema::create('tax_exemptions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
             });
         }
         
-        // Add priority to tax_categories
+        if (!Schema::hasTable('tax_categories')) {
+            Schema::create('tax_categories', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
+        if (Schema::hasTable('tax_exemptions')) {
+            Schema::table('tax_exemptions', function (Blueprint $table) {
+                if (!Schema::hasColumn('tax_exemptions', 'priority')) {
+                    $table->integer('priority')->default(0)->after('company_id');
+                }
+            });
+        }
+        
         if (Schema::hasTable('tax_categories')) {
             Schema::table('tax_categories', function (Blueprint $table) {
-                $table->integer('priority')->default(0)->after('company_id');
+                if (!Schema::hasColumn('tax_categories', 'priority')) {
+                    $table->integer('priority')->default(0)->after('company_id');
+                }
             });
         }
     }

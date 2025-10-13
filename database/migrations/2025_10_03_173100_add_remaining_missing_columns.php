@@ -8,6 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('permission_groups')) {
+            Schema::create('permission_groups', function (Blueprint $table) {
+                $table->id();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
         if (Schema::hasTable('credit_note_items') && !Schema::hasColumn('credit_note_items', 'remaining_credit')) {
             Schema::table('credit_note_items', function (Blueprint $table) {
                 $table->decimal('remaining_credit', 15, 2)->default(0)->after('amount');

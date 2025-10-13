@@ -11,46 +11,91 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // payment_plans - add plan_number
+        if (!Schema::hasTable('payment_plans')) {
+            Schema::create('payment_plans', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
+        if (!Schema::hasTable('credit_note_items')) {
+            Schema::create('credit_note_items', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
+        if (!Schema::hasTable('credit_note_approvals')) {
+            Schema::create('credit_note_approvals', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamp('expired_at')->nullable();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
+        if (!Schema::hasTable('quote_invoice_conversions')) {
+            Schema::create('quote_invoice_conversions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
         if (Schema::hasTable('payment_plans')) {
             Schema::table('payment_plans', function (Blueprint $table) {
-                $table->string('plan_number')->unique()->after('company_id');
+                if (!Schema::hasColumn('payment_plans', 'plan_number')) {
+                    $table->string('plan_number')->unique()->after('company_id');
+                }
             });
         }
         
-        // credit_note_items - add line_total
         if (Schema::hasTable('credit_note_items')) {
             Schema::table('credit_note_items', function (Blueprint $table) {
-                $table->decimal('line_total', 15, 2)->default(0)->after('company_id');
+                if (!Schema::hasColumn('credit_note_items', 'line_total')) {
+                    $table->decimal('line_total', 15, 2)->default(0)->after('company_id');
+                }
             });
         }
         
-        // credit_note_approvals - add more columns
         if (Schema::hasTable('credit_note_approvals')) {
             Schema::table('credit_note_approvals', function (Blueprint $table) {
-                $table->integer('sla_hours')->nullable()->after('expired_at');
-                $table->timestamp('sla_deadline')->nullable()->after('sla_hours');
+                if (!Schema::hasColumn('credit_note_approvals', 'sla_hours')) {
+                    $table->integer('sla_hours')->nullable()->after('expired_at');
+                }
+                if (!Schema::hasColumn('credit_note_approvals', 'sla_deadline')) {
+                    $table->timestamp('sla_deadline')->nullable()->after('sla_hours');
+                }
             });
         }
         
-        // refund_requests - add name column
         if (Schema::hasTable('refund_requests')) {
             Schema::table('refund_requests', function (Blueprint $table) {
-                $table->string('name')->nullable()->after('number');
+                if (!Schema::hasColumn('refund_requests', 'name')) {
+                    $table->string('name')->nullable()->after('number');
+                }
             });
         }
         
-        // refund_transactions - add transaction_id
         if (Schema::hasTable('refund_transactions')) {
             Schema::table('refund_transactions', function (Blueprint $table) {
-                $table->string('transaction_id')->unique()->after('processed_by');
+                if (!Schema::hasColumn('refund_transactions', 'transaction_id')) {
+                    $table->string('transaction_id')->unique()->after('processed_by');
+                }
             });
         }
         
-        // quote_invoice_conversions - add status
         if (Schema::hasTable('quote_invoice_conversions')) {
             Schema::table('quote_invoice_conversions', function (Blueprint $table) {
-                $table->enum('status', ['pending', 'processing', 'completed', 'failed', 'cancelled'])->default('pending')->after('company_id');
+                if (!Schema::hasColumn('quote_invoice_conversions', 'status')) {
+                    $table->enum('status', ['pending', 'processing', 'completed', 'failed', 'cancelled'])->default('pending')->after('company_id');
+                }
             });
         }
     }

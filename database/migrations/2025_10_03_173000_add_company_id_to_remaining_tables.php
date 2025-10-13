@@ -8,6 +8,24 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $tablesToCreate = [
+            'subsidiary_permissions',
+            'notification_preferences',
+            'in_app_notifications',
+            'dashboard_widgets',
+            'communication_logs',
+        ];
+        
+        foreach ($tablesToCreate as $tableName) {
+            if (!Schema::hasTable($tableName)) {
+                Schema::create($tableName, function (Blueprint $table) {
+                    $table->id();
+                    $table->timestamps();
+                    $table->softDeletes();
+                });
+            }
+        }
+        
         $tables = [
             'subsidiary_permissions',
             'services',

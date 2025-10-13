@@ -11,18 +11,40 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Add columns to refund_requests
-        if (Schema::hasTable('refund_requests')) {
-            Schema::table('refund_requests', function (Blueprint $table) {
-                $table->string('request_number')->nullable()->after('company_id');
-                $table->string('number')->nullable()->after('request_number');
+        if (!Schema::hasTable('refund_requests')) {
+            Schema::create('refund_requests', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
             });
         }
         
-        // Add columns to refund_transactions
+        if (!Schema::hasTable('refund_transactions')) {
+            Schema::create('refund_transactions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
+        if (Schema::hasTable('refund_requests')) {
+            Schema::table('refund_requests', function (Blueprint $table) {
+                if (!Schema::hasColumn('refund_requests', 'request_number')) {
+                    $table->string('request_number')->nullable()->after('company_id');
+                }
+                if (!Schema::hasColumn('refund_requests', 'number')) {
+                    $table->string('number')->nullable()->after('request_number');
+                }
+            });
+        }
+        
         if (Schema::hasTable('refund_transactions')) {
             Schema::table('refund_transactions', function (Blueprint $table) {
-                $table->foreignId('processed_by')->nullable()->after('company_id')->constrained('users')->onDelete('set null');
+                if (!Schema::hasColumn('refund_transactions', 'processed_by')) {
+                    $table->foreignId('processed_by')->nullable()->after('company_id')->constrained('users')->onDelete('set null');
+                }
             });
         }
     }

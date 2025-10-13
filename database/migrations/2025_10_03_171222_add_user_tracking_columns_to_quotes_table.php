@@ -11,9 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('quotes')) {
+            Schema::create('quotes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
         Schema::table('quotes', function (Blueprint $table) {
-            $table->foreignId('created_by')->nullable()->after('declined_at')->constrained('users')->onDelete('set null');
-            $table->foreignId('approved_by')->nullable()->after('created_by')->constrained('users')->onDelete('set null');
+            if (!Schema::hasColumn('quotes', 'created_by')) {
+                $table->foreignId('created_by')->nullable()->after('declined_at')->constrained('users')->onDelete('set null');
+            }
+            if (!Schema::hasColumn('quotes', 'approved_by')) {
+                $table->foreignId('approved_by')->nullable()->after('created_by')->constrained('users')->onDelete('set null');
+            }
         });
     }
 

@@ -11,14 +11,30 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('quotes')) {
+            Schema::create('quotes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->onDelete('cascade');
+                $table->string('status')->default('draft');
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+        
         Schema::table('quotes', function (Blueprint $table) {
-            // Add missing timestamp columns
-            $table->timestamp('sent_at')->nullable()->after('updated_at');
-            $table->timestamp('viewed_at')->nullable()->after('sent_at');
-            $table->timestamp('accepted_at')->nullable()->after('viewed_at');
-            $table->timestamp('declined_at')->nullable()->after('accepted_at');
+            if (!Schema::hasColumn('quotes', 'sent_at')) {
+                $table->timestamp('sent_at')->nullable()->after('updated_at');
+            }
+            if (!Schema::hasColumn('quotes', 'viewed_at')) {
+                $table->timestamp('viewed_at')->nullable()->after('sent_at');
+            }
+            if (!Schema::hasColumn('quotes', 'accepted_at')) {
+                $table->timestamp('accepted_at')->nullable()->after('viewed_at');
+            }
+            if (!Schema::hasColumn('quotes', 'declined_at')) {
+                $table->timestamp('declined_at')->nullable()->after('accepted_at');
+            }
             
-            // Indexes
             $table->index(['sent_at']);
             $table->index(['status', 'sent_at']);
         });

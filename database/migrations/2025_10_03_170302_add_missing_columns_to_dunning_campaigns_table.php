@@ -82,7 +82,6 @@ return new class extends Migration
             // Indexes
             $table->index(['company_id', 'status']);
             $table->index(['trigger_days_overdue']);
-            $table->index(['is_active']);
         });
     }
 
