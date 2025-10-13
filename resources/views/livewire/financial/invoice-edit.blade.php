@@ -1,7 +1,7 @@
 <div>
     <div class="mb-6">
-        <flux:heading size="xl">Create Invoice</flux:heading>
-        <flux:text variant="muted">Create a new invoice for your client</flux:text>
+        <flux:heading size="xl">Edit Invoice #{{ $prefix }}-{{ $number }}</flux:heading>
+        <flux:text variant="muted">Update invoice details and line items</flux:text>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -36,7 +36,7 @@
                             value="{{ $prefix }}-{{ $number }}" 
                             readonly
                         />
-                        <flux:description>Auto-generated invoice number</flux:description>
+                        <flux:description>Cannot be changed</flux:description>
                     </flux:field>
 
                     <flux:field>
@@ -308,28 +308,26 @@
 
                     <div class="mt-6 space-y-2">
                         <flux:button 
-                            wire:click="createAndSend"
+                            wire:click="update"
                             variant="primary"
                             class="w-full"
                         >
-                            Create & Send Invoice
+                            Update Invoice
                         </flux:button>
                         <flux:button 
-                            wire:click="saveAsDraft"
+                            href="{{ route('financial.invoices.show', $invoice->id) }}"
                             variant="ghost"
                             class="w-full"
                         >
-                            Save as Draft
+                            Cancel
                         </flux:button>
                     </div>
                 </flux:card>
 
-                <flux:callout variant="info" icon="information-circle">
+                <flux:callout variant="warning" icon="exclamation-triangle">
                     <flux:text size="sm">
-                        <strong>Quick Tips:</strong><br>
-                        • Invoice number is auto-generated<br>
-                        • Due date updates with payment terms<br>
-                        • Save as draft to finish later
+                        <strong>Draft Invoice:</strong><br>
+                        Only draft invoices can be edited. Once sent, invoices cannot be modified.
                     </flux:text>
                 </flux:callout>
             </div>

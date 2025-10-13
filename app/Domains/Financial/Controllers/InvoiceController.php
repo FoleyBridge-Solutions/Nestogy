@@ -247,7 +247,13 @@ class InvoiceController extends Controller
 
         // Only allow editing of draft invoices
         if ($invoice->status !== 'Draft') {
-            return back()->with('error', 'Only draft invoices can be edited');
+            \Flux\Flux::toast(
+                heading: 'Cannot Edit Invoice',
+                text: 'Only draft invoices can be edited. This invoice has status: '.$invoice->status,
+                variant: 'danger'
+            );
+
+            return redirect()->route('financial.invoices.show', $invoice);
         }
 
         $user = Auth::user();

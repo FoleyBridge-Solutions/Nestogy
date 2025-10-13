@@ -79,9 +79,11 @@
                         @endcan
                         
                         @can('update', $invoice)
-                            <flux:menu.item icon="pencil" href="{{ route('financial.invoices.edit', $invoice) }}">
-                                Edit Invoice
-                            </flux:menu.item>
+                            @if($invoice->status === 'Draft')
+                                <flux:menu.item icon="pencil" href="{{ route('financial.invoices.edit', $invoice) }}">
+                                    Edit Invoice
+                                </flux:menu.item>
+                            @endif
                         @endcan
                         
                         <flux:menu.item icon="printer" wire:click="printInvoice">
@@ -267,9 +269,11 @@
                                 No items have been added to this invoice yet.
                             </flux:text>
                             @can('update', $invoice)
-                                <flux:button size="sm" variant="primary" href="{{ route('financial.invoices.edit', $invoice) }}" class="mt-4">
-                                    Add Items
-                                </flux:button>
+                                @if($invoice->status === 'Draft')
+                                    <flux:button size="sm" variant="primary" href="{{ route('financial.invoices.edit', $invoice) }}" class="mt-4">
+                                        Add Items
+                                    </flux:button>
+                                @endif
                             @endcan
                         </div>
                     @endif
@@ -530,11 +534,13 @@
                     </flux:button>
                     
                     @can('update', $invoice)
-                        <flux:separator />
-                        
-                        <flux:button size="sm" variant="ghost" class="w-full" href="{{ route('financial.invoices.edit', $invoice) }}" icon="pencil">
-                            Edit Invoice
-                        </flux:button>
+                        @if($invoice->status === 'Draft')
+                            <flux:separator />
+                            
+                            <flux:button size="sm" variant="ghost" class="w-full" href="{{ route('financial.invoices.edit', $invoice) }}" icon="pencil">
+                                Edit Invoice
+                            </flux:button>
+                        @endif
                     @endcan
                     
                     @can('create', App\Models\Invoice::class)

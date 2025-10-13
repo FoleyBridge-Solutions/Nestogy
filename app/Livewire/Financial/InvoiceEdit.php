@@ -2,8 +2,6 @@
 
 namespace App\Livewire\Financial;
 
-use App\Domains\Core\Services\NavigationService;
-use App\Domains\Financial\Services\InvoiceService;
 use App\Models\Category;
 use App\Models\Client;
 use App\Models\Invoice;
@@ -12,11 +10,12 @@ use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\On;
 use Livewire\Component;
 
-class InvoiceCreate extends Component
+class InvoiceEdit extends Component
 {
+    public Invoice $invoice;
+
     public $client_id = '';
 
     public $category_id = '';
@@ -81,42 +80,38 @@ class InvoiceCreate extends Component
         'items.min' => 'Invoice must have at least one item.',
     ];
 
-    public function mount($clientId = null)
+    public function mount(Invoice $invoice)
     {
-        $this->invoice_date = now()->format('Y-m-d');
-        $this->due_date = now()->addDays($this->payment_terms)->format('Y-m-d');
-
-        $this->generateInvoiceNumber();
-
-        $defaultCategory = Category::where('company_id', Auth::user()->company_id)
-            ->where('type', 'invoice')
-            ->where('archived_at', null)
-            ->first();
-        if ($defaultCategory) {
-            $this->category_id = $defaultCategory->id;
+        if ($invoice->status !== 'Draft') {
+            Flux::toast('Only draft invoices can be edited', variant: 'danger');
+            return redirect()->route('financial.invoices.show', $invoice->id);
         }
 
-        if ($clientId) {
-            $this->client_id = $clientId;
-        } else {
-            $selectedClient = app(NavigationService::class)->getSelectedClient();
-            if ($selectedClient) {
-                $this->client_id = is_object($selectedClient) ? $selectedClient->id : $selectedClient;
-            }
-        }
-    }
+        $this->invoice = $invoice;
+        $this->client_id = $invoice->client_id;
+        $this->category_id = $invoice->category_id;
+        $this->invoice_date = $invoice->date->format('Y-m-d');
+        $this->due_date = $invoice->due_date ? $invoice->due_date->format('Y-m-d') : now()->addDays(30)->format('Y-m-d');
+        $this->currency_code = $invoice->currency_code ?? 'USD';
+        $this->prefix = $invoice->prefix ?? 'INV';
+        $this->number = $invoice->number;
+        $this->scope = $invoice->scope ?? '';
+        $this->note = $invoice->note ?? '';
+        $this->discount_amount = $invoice->discount_amount ?? 0;
 
-    public function generateInvoiceNumber()
-    {
-        $lastInvoice = Invoice::where('company_id', Auth::user()->company_id)
-            ->orderBy('number', 'desc')
-            ->first();
+        $this->items = $invoice->items->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'description' => $item->description ?? '',
+                'quantity' => $item->quantity,
+                'price' => $item->price,
+            ];
+        })->toArray();
 
-        if ($lastInvoice && is_numeric($lastInvoice->number)) {
-            $this->number = str_pad((int) $lastInvoice->number + 1, 6, '0', STR_PAD_LEFT);
-        } else {
-            $this->number = '000001';
-        }
+        $invoiceDate = \Carbon\Carbon::parse($this->invoice_date);
+        $dueDate = \Carbon\Carbon::parse($this->due_date);
+        $this->payment_terms = $invoiceDate->diffInDays($dueDate);
     }
 
     public function updatedPaymentTerms()
@@ -281,17 +276,7 @@ class InvoiceCreate extends Component
         }
     }
 
-    public function saveAsDraft()
-    {
-        $this->save('Draft');
-    }
-
-    public function createAndSend()
-    {
-        $this->save('Sent');
-    }
-
-    protected function save($status = 'Draft')
+    public function update()
     {
         try {
             $this->validate();
@@ -303,24 +288,23 @@ class InvoiceCreate extends Component
 
         DB::beginTransaction();
         try {
-            $invoice = Invoice::create([
-                'company_id' => Auth::user()->company_id,
+            $this->invoice->update([
                 'client_id' => $this->client_id,
                 'category_id' => $this->category_id,
                 'prefix' => $this->prefix,
                 'number' => $this->number,
-                'status' => $status,
                 'date' => $this->invoice_date,
                 'due_date' => $this->due_date,
                 'currency_code' => $this->currency_code,
                 'scope' => $this->scope,
                 'note' => $this->note,
                 'discount_amount' => $this->discountAmount,
-                'amount' => 0,
             ]);
 
+            $this->invoice->items()->delete();
+
             foreach ($this->items as $index => $item) {
-                $invoice->items()->create([
+                $this->invoice->items()->create([
                     'company_id' => Auth::user()->company_id,
                     'name' => $item['name'],
                     'description' => $item['description'] ?? null,
@@ -331,30 +315,26 @@ class InvoiceCreate extends Component
                 ]);
             }
 
-            $invoice->calculateTotals();
+            $this->invoice->calculateTotals();
 
             DB::commit();
 
-            $message = $status === 'Draft'
-                ? 'Invoice saved as draft successfully'
-                : 'Invoice created and marked as sent successfully';
+            Flux::toast('Invoice updated successfully', variant: 'success');
 
-            Flux::toast($message, variant: 'success');
-
-            return redirect()->route('financial.invoices.show', $invoice->id);
+            return redirect()->route('financial.invoices.show', $this->invoice->id);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Failed to create invoice', [
+            \Log::error('Failed to update invoice', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            Flux::toast('Failed to create invoice: '.$e->getMessage(), variant: 'danger');
+            Flux::toast('Failed to update invoice: '.$e->getMessage(), variant: 'danger');
         }
     }
 
     public function render()
     {
-        return view('livewire.financial.invoice-create');
+        return view('livewire.financial.invoice-edit');
     }
 }
