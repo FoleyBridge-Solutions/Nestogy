@@ -81,7 +81,8 @@
       "Bash(rm:*)",
       "Bash(PGPASSWORD=password psql:*)",
       "Bash(chmod:*)",
-      "Bash(./check-migration-integrity.sh:*)"
+      "Bash(./check-migration-integrity.sh:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
