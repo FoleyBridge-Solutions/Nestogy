@@ -11,24 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('tax_exemptions')) {
-            Schema::create('tax_exemptions', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
-        if (!Schema::hasTable('tax_categories')) {
-            Schema::create('tax_categories', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         if (Schema::hasTable('tax_exemptions')) {
             Schema::table('tax_exemptions', function (Blueprint $table) {
                 if (!Schema::hasColumn('tax_exemptions', 'priority')) {

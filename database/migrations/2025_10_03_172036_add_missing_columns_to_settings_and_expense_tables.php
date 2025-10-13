@@ -11,15 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('expense_categories')) {
-            Schema::create('expense_categories', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         if (Schema::hasTable('settings')) {
             Schema::table('settings', function (Blueprint $table) {
                 if (!Schema::hasColumn('settings', 'imap_auth_method')) {

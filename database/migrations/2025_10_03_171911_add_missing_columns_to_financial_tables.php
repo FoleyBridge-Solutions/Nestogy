@@ -11,43 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('payment_plans')) {
-            Schema::create('payment_plans', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
-        if (!Schema::hasTable('credit_note_items')) {
-            Schema::create('credit_note_items', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
-        if (!Schema::hasTable('credit_note_approvals')) {
-            Schema::create('credit_note_approvals', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamp('expired_at')->nullable();
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
-        if (!Schema::hasTable('quote_invoice_conversions')) {
-            Schema::create('quote_invoice_conversions', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         if (Schema::hasTable('payment_plans')) {
             Schema::table('payment_plans', function (Blueprint $table) {
                 if (!Schema::hasColumn('payment_plans', 'plan_number')) {

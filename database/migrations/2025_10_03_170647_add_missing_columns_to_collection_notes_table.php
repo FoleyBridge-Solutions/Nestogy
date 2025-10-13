@@ -11,20 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('collection_notes')) {
-            Schema::create('collection_notes', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         Schema::table('collection_notes', function (Blueprint $table) {
             // Foreign keys
             $table->foreignId('client_id')->after('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('invoice_id')->nullable()->after('client_id')->constrained()->onDelete('cascade');
-            $table->foreignId('dunning_action_id')->nullable()->after('invoice_id')->constrained()->onDelete('set null');
+            $table->foreignId('dunning_action_id')->nullable()->after('invoice_id')->constrained('dunning_actions')->onDelete('set null');
             $table->foreignId('payment_plan_id')->nullable()->after('dunning_action_id')->constrained()->onDelete('set null');
             
             // Note details

@@ -11,33 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('usage_pools')) {
-            Schema::create('usage_pools', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
-        if (!Schema::hasTable('usage_buckets')) {
-            Schema::create('usage_buckets', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
-        if (!Schema::hasTable('usage_alerts')) {
-            Schema::create('usage_alerts', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         if (Schema::hasTable('usage_pools')) {
             Schema::table('usage_pools', function (Blueprint $table) {
                 if (!Schema::hasColumn('usage_pools', 'pool_code')) {

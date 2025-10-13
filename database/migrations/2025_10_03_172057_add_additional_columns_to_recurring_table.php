@@ -11,15 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('recurring')) {
-            Schema::create('recurring', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         Schema::table('recurring', function (Blueprint $table) {
             if (!Schema::hasColumn('recurring', 'auto_invoice_generation')) {
                 $table->boolean('auto_invoice_generation')->default(true)->after('overage_rates');

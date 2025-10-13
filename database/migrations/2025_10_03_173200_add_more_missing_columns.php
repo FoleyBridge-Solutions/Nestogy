@@ -8,24 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('credit_applications')) {
-            Schema::create('credit_applications', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
-        if (!Schema::hasTable('credit_notes')) {
-            Schema::create('credit_notes', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         if (Schema::hasTable('credit_applications') && !Schema::hasColumn('credit_applications', 'application_number')) {
             Schema::table('credit_applications', function (Blueprint $table) {
                 $table->string('application_number')->unique()->after('id');

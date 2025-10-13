@@ -11,15 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('dunning_sequences')) {
-            Schema::create('dunning_sequences', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         Schema::table('dunning_sequences', function (Blueprint $table) {
             // Foreign key to campaign
             $table->foreignId('campaign_id')->after('company_id')->constrained('dunning_campaigns')->onDelete('cascade');

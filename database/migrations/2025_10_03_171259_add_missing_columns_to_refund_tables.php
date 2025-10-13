@@ -11,24 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('refund_requests')) {
-            Schema::create('refund_requests', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
-        if (!Schema::hasTable('refund_transactions')) {
-            Schema::create('refund_transactions', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         if (Schema::hasTable('refund_requests')) {
             Schema::table('refund_requests', function (Blueprint $table) {
                 if (!Schema::hasColumn('refund_requests', 'request_number')) {

@@ -11,16 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('quotes')) {
-            Schema::create('quotes', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->string('status')->default('draft');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         Schema::table('quotes', function (Blueprint $table) {
             if (!Schema::hasColumn('quotes', 'sent_at')) {
                 $table->timestamp('sent_at')->nullable()->after('updated_at');

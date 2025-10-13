@@ -11,15 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('recurring')) {
-            Schema::create('recurring', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         Schema::table('recurring', function (Blueprint $table) {
             // Add JSON columns for service tiers and usage
             $table->json('service_tiers')->nullable()->after('amount');

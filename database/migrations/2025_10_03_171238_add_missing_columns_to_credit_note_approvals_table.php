@@ -11,15 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('credit_note_approvals')) {
-            Schema::create('credit_note_approvals', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->timestamps();
-                $table->softDeletes();
-            });
-        }
-        
         Schema::table('credit_note_approvals', function (Blueprint $table) {
             // Just add the most critical timestamp that's causing the error
             $table->timestamp('requested_at')->nullable()->after('company_id');
