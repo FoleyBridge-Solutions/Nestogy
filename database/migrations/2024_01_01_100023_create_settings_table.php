@@ -88,6 +88,18 @@ return new class extends Migration
             $table->boolean('module_enable_accounting')->default(true);
             $table->boolean('module_enable_ticketing')->default(true);
             $table->boolean('client_portal_enable')->default(true);
+            $table->json('portal_branding_settings')->nullable();
+            $table->json('portal_customization_settings')->nullable();
+            $table->json('portal_access_controls')->nullable();
+            $table->json('portal_feature_toggles')->nullable();
+            $table->boolean('portal_self_service_tickets')->default(true);
+            $table->boolean('portal_knowledge_base_access')->default(true);
+            $table->boolean('portal_invoice_access')->default(true);
+            $table->boolean('portal_payment_processing')->default(false);
+            $table->boolean('portal_asset_visibility')->default(false);
+            $table->json('portal_sso_settings')->nullable();
+            $table->json('portal_mobile_settings')->nullable();
+            $table->json('portal_dashboard_settings')->nullable();
 
             // Security Settings
             $table->text('login_message')->nullable();
