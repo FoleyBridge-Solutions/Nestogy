@@ -34,10 +34,7 @@ return new class extends Migration
             $table->index(['jurisdiction_type', 'state_code'], 'idx_type_state');
             $table->index(['parent_jurisdiction_id'], 'idx_parent_jurisdiction');
 
-        });
-
-        // Add foreign key constraint after table creation (PostgreSQL compatibility)
-        Schema::table('jurisdiction_master', function (Blueprint $table) {
+            // Self-referencing foreign key for hierarchical relationships
             $table->foreign('parent_jurisdiction_id')->references('id')->on('jurisdiction_master')->onDelete('set null');
         });
     }

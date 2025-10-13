@@ -101,10 +101,6 @@ return new class extends Migration
             }
         }
 
-        // Add column to track migration (for safety)
-        Schema::table('ticket_replies', function (Blueprint $table) {
-            $table->boolean('migrated_to_comments')->default(true);
-        });
     }
 
     /**
@@ -115,9 +111,7 @@ return new class extends Migration
         // Delete migrated comments
         DB::table('ticket_comments')->where('source', 'manual')->delete();
 
-        // Remove migration tracking column
-        Schema::table('ticket_replies', function (Blueprint $table) {
-            $table->dropColumn('migrated_to_comments');
-        });
+        // Note: Time entries are not deleted on rollback as they may have been modified
+        // Manual cleanup required if full rollback is needed
     }
 };

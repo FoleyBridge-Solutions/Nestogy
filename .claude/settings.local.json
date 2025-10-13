@@ -78,7 +78,10 @@
       "Bash(do if [ -f \"$file\" ])",
       "Bash(then echo \"=== $file ===\")",
       "Bash(fi)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(PGPASSWORD=password psql:*)",
+      "Bash(chmod:*)",
+      "Bash(./check-migration-integrity.sh:*)"
     ],
     "deny": [],
     "ask": []
