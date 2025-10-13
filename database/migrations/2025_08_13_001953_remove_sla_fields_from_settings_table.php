@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('settings', function (Blueprint $table) {
-            // Remove SLA-related fields that are now in the dedicated slas table
-            $table->dropColumn([
-                'sla_definitions',
-                'sla_escalation_policies',
-            ]);
-        });
+        if (Schema::hasColumn('settings', 'sla_definitions')) {
+            Schema::table('settings', function (Blueprint $table) {
+                // Remove SLA-related fields that are now in the dedicated slas table
+                $table->dropColumn([
+                    'sla_definitions',
+                    'sla_escalation_policies',
+                ]);
+            });
+        }
     }
 
     /**
