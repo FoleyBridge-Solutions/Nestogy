@@ -318,6 +318,9 @@ class InvoiceCreate extends Component
         }
 
         try {
+            // Enable query logging to debug
+            DB::connection()->enableQueryLog();
+            
             DB::beginTransaction();
             
             // Step 1: Create invoice
@@ -338,12 +341,28 @@ class InvoiceCreate extends Component
                     'amount' => 0,
                     'is_recurring' => false,
                 ]);
+                
+                // Check if transaction is still good
+                try {
+                    DB::select('SELECT 1');
+                } catch (\Exception $e) {
+                    throw new \Exception('Transaction aborted after invoice creation: ' . $e->getMessage());
+                }
+                
             } catch (\Exception $e) {
                 DB::rollBack();
                 $errorMsg = $e->getMessage();
                 if ($e->getPrevious()) {
                     $errorMsg .= ' | Cause: ' . $e->getPrevious()->getMessage();
                 }
+                
+                // Log the queries that ran
+                $queries = DB::getQueryLog();
+                \Log::error('Invoice creation failed', [
+                    'error' => $errorMsg,
+                    'queries' => $queries,
+                ]);
+                
                 Flux::toast('Failed creating invoice record: ' . $errorMsg, variant: 'danger');
                 return;
             }
