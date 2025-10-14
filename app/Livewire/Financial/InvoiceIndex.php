@@ -26,6 +26,10 @@ class InvoiceIndex extends Component
 
     public $sortDirection = 'desc';
 
+    public $selected = [];
+
+    public $selectAll = false;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => ''],
@@ -199,6 +203,80 @@ class InvoiceIndex extends Component
             $this->dispatch('invoice-deleted');
             Flux::toast('Invoice deleted successfully.', variant: 'danger');
         }
+    }
+
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            $this->selected = $this->invoices->pluck('id')->map(fn($id) => (string) $id)->toArray();
+        } else {
+            $this->selected = [];
+        }
+    }
+
+    public function bulkMarkAsSent()
+    {
+        $count = Invoice::whereIn('id', $this->selected)
+            ->where('company_id', Auth::user()->company_id)
+            ->where('status', 'Draft')
+            ->update([
+                'status' => 'Sent',
+                'sent_at' => now(),
+            ]);
+
+        $this->selected = [];
+        $this->selectAll = false;
+        
+        Flux::toast("{$count} invoice(s) marked as sent successfully.");
+        $this->dispatch('invoice-updated');
+    }
+
+    public function bulkMarkAsPaid()
+    {
+        $count = Invoice::whereIn('id', $this->selected)
+            ->where('company_id', Auth::user()->company_id)
+            ->where('status', 'Sent')
+            ->update([
+                'status' => 'Paid',
+                'paid_at' => now(),
+            ]);
+
+        $this->selected = [];
+        $this->selectAll = false;
+        
+        Flux::toast("{$count} invoice(s) marked as paid successfully.");
+        $this->dispatch('invoice-updated');
+    }
+
+    public function bulkCancel()
+    {
+        $count = Invoice::whereIn('id', $this->selected)
+            ->where('company_id', Auth::user()->company_id)
+            ->whereIn('status', ['Draft', 'Sent'])
+            ->update([
+                'status' => 'Cancelled',
+                'cancelled_at' => now(),
+            ]);
+
+        $this->selected = [];
+        $this->selectAll = false;
+        
+        Flux::toast("{$count} invoice(s) cancelled successfully.", variant: 'warning');
+        $this->dispatch('invoice-updated');
+    }
+
+    public function bulkDelete()
+    {
+        $count = Invoice::whereIn('id', $this->selected)
+            ->where('company_id', Auth::user()->company_id)
+            ->where('status', 'Draft')
+            ->delete();
+
+        $this->selected = [];
+        $this->selectAll = false;
+        
+        Flux::toast("{$count} invoice(s) deleted successfully.", variant: 'danger');
+        $this->dispatch('invoice-deleted');
     }
 
     public function getStatusColorProperty()

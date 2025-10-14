@@ -57,11 +57,44 @@
         </flux:select>
     </div>
 
+    {{-- Bulk Actions Bar --}}
+    @if(count($selected) > 0)
+    <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div class="flex items-center justify-between">
+            <flux:text>
+                <span class="font-semibold">{{ count($selected) }}</span> invoice(s) selected
+            </flux:text>
+            
+            <div class="flex items-center gap-2">
+                <flux:button wire:click="bulkMarkAsSent" size="sm" variant="ghost">
+                    Mark as Sent
+                </flux:button>
+                
+                <flux:button wire:click="bulkMarkAsPaid" size="sm" variant="ghost">
+                    Mark as Paid
+                </flux:button>
+                
+                <flux:button wire:click="bulkCancel" size="sm" variant="ghost">
+                    Cancel
+                </flux:button>
+                
+                <flux:button wire:click="bulkDelete" size="sm" variant="danger">
+                    Delete
+                </flux:button>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Invoices Table --}}
     <flux:card>
         @if($this->invoices->count() > 0)
             <flux:table :paginate="$this->invoices">
                 <flux:table.columns>
+                    <flux:table.column class="w-12">
+                        <flux:checkbox wire:model.live="selectAll" />
+                    </flux:table.column>
+                    
                     <flux:table.column 
                         sortable 
                         :sorted="$sortBy === 'number'" 
@@ -122,6 +155,10 @@
                 <flux:table.rows>
                     @foreach ($this->invoices as $invoice)
                         <flux:table.row :key="$invoice->id">
+                            <flux:table.cell>
+                                <flux:checkbox wire:model.live="selected" :value="$invoice->id" />
+                            </flux:table.cell>
+                            
                             <flux:table.cell>
                                 <div>
                                     <flux:text variant="strong">{{ $invoice->prefix }}{{ $invoice->number }}</flux:text>
