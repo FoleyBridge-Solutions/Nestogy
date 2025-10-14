@@ -33,11 +33,11 @@ class CategoryManager extends Component
     public function render()
     {
         $query = Category::where('company_id', auth()->user()->company_id)
-            ->with('parent');
+            ->with(['parent', 'children']);
 
         // Apply type filter
         if ($this->typeFilter !== 'all') {
-            $query->where('type', $this->typeFilter);
+            $query->whereJsonContains('type', $this->typeFilter);
         }
 
         // Apply search
@@ -49,7 +49,16 @@ class CategoryManager extends Component
             });
         }
 
-        $categories = $query->ordered()->get();
+        // Get all matching categories
+        $allCategories = $query->ordered()->get();
+
+        // Build hierarchical structure - only show root categories and their children
+        $categories = $allCategories->filter(fn($cat) => is_null($cat->parent_id));
+
+        // Attach children to their parents
+        foreach ($categories as $parent) {
+            $parent->hierarchicalChildren = $allCategories->filter(fn($cat) => $cat->parent_id === $parent->id);
+        }
         $types = Category::TYPE_LABELS;
         $parentOptions = Category::where('company_id', auth()->user()->company_id)
             ->when($this->editing, fn($q) => $q->where('id', '!=', $this->editing))
@@ -96,7 +105,8 @@ class CategoryManager extends Component
     {
         $this->validate([
             'form.name' => 'required|string|max:255',
-            'form.type' => 'required|in:' . implode(',', array_keys(Category::TYPE_LABELS)),
+            'form.type' => 'required|array',
+            'form.type.*' => 'required|in:' . implode(',', array_keys(Category::TYPE_LABELS)),
             'form.parent_id' => 'nullable|exists:categories,id',
             'form.description' => 'nullable|string',
             'form.color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
@@ -144,7 +154,7 @@ class CategoryManager extends Component
     {
         $this->form = [
             'name' => '',
-            'type' => '',
+            'type' => [],
             'parent_id' => null,
             'description' => '',
             'color' => '',

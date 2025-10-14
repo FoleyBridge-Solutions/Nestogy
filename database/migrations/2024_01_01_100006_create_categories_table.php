@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -15,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->string('name');
-            $table->string('type'); // expense, income, ticket, product, invoice, quote, recurring, asset, expense_category, report, kb
+            $table->json('type'); // array of: expense, income, ticket, product, invoice, quote, recurring, asset, expense_category, report, kb
             $table->string('code', 50)->nullable();
             $table->string('slug')->nullable();
             $table->text('description')->nullable();
@@ -30,23 +31,22 @@ return new class extends Migration
 
             // Indexes
             $table->index('name');
-            $table->index('type');
             $table->index('code');
             $table->index('slug');
             $table->index('parent_id');
             $table->index('company_id');
             $table->index('sort_order');
             $table->index('is_active');
-            $table->index(['type', 'parent_id']);
-            $table->index(['company_id', 'type']);
-            $table->index(['type', 'is_active']);
-            $table->index(['company_id', 'type', 'is_active']);
+            $table->index(['company_id', 'is_active']);
             $table->index('archived_at');
 
             // Foreign keys
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('parent_id')->references('id')->on('categories')->onDelete('cascade');
         });
+
+        // Add GIN index for JSON type column (PostgreSQL specific)
+        DB::statement('CREATE INDEX categories_type_gin_index ON categories USING GIN ((type::jsonb))');
     }
 
     /**

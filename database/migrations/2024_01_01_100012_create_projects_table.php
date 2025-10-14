@@ -29,6 +29,7 @@ return new class extends Migration
             $table->decimal('actual_cost', 10, 2)->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->softDeletes();
             $table->unsignedBigInteger('client_id');
 
             // Indexes

@@ -55,6 +55,7 @@ class Category extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
+        'type' => 'array',
         'parent_id' => 'integer',
         'sort_order' => 'integer',
         'is_active' => 'boolean',
@@ -209,19 +210,51 @@ class Category extends Model
     }
 
     /**
-     * Get the type label.
+     * Get the type label(s).
      */
     public function getTypeLabel(): string
     {
+        if (is_array($this->type)) {
+            $labels = array_map(fn($type) => self::TYPE_LABELS[$type] ?? 'Unknown', $this->type);
+            return implode(', ', $labels);
+        }
         return self::TYPE_LABELS[$this->type] ?? 'Unknown';
     }
 
     /**
      * Get the category color or default.
+     * Generates a consistent color based on the category name hash.
      */
     public function getColor(): string
     {
-        return $this->color ?: (self::DEFAULT_COLORS[$this->type] ?? '#6c757d');
+        if ($this->color) {
+            return $this->color;
+        }
+
+        // Generate color from hash of name
+        return $this->generateColorFromName($this->name);
+    }
+
+    /**
+     * Generate a consistent color from a string using its hash.
+     */
+    public static function generateColorFromName(string $name): string
+    {
+        // Create hash of the name
+        $hash = md5($name);
+
+        // Take first 6 characters as hex color
+        $color = '#' . substr($hash, 0, 6);
+
+        return $color;
+    }
+
+    /**
+     * Get color for a specific type.
+     */
+    public static function getColorForType(string $type): string
+    {
+        return self::DEFAULT_COLORS[$type] ?? '#6c757d';
     }
 
     /**
@@ -346,7 +379,7 @@ class Category extends Model
      */
     public function scopeByType($query, string $type)
     {
-        return $query->where('type', $type);
+        return $query->whereJsonContains('type', $type);
     }
 
     /**
@@ -394,7 +427,7 @@ class Category extends Model
      */
     public function scopeExpenseCategories($query)
     {
-        return $query->where('type', self::TYPE_EXPENSE_CATEGORY);
+        return $query->whereJsonContains('type', self::TYPE_EXPENSE_CATEGORY);
     }
 
     /**
@@ -402,7 +435,7 @@ class Category extends Model
      */
     public function scopeReportCategories($query)
     {
-        return $query->where('type', self::TYPE_REPORT);
+        return $query->whereJsonContains('type', self::TYPE_REPORT);
     }
 
     /**
@@ -410,7 +443,7 @@ class Category extends Model
      */
     public function scopeKbCategories($query)
     {
-        return $query->where('type', self::TYPE_KB);
+        return $query->whereJsonContains('type', self::TYPE_KB);
     }
 
     /**
@@ -466,11 +499,39 @@ class Category extends Model
     }
 
     /**
+     * Check if category has a specific type.
+     */
+    public function hasType(string $type): bool
+    {
+        if (is_array($this->type)) {
+            return in_array($type, $this->type);
+        }
+        return $this->type === $type;
+    }
+
+    /**
+     * Ensure invoice categories automatically have income and quote types.
+     * This enforces the business rule that anything that can be invoiced
+     * must also generate income and be quotable.
+     */
+    public static function normalizeTypes(array $types): array
+    {
+        if (in_array(self::TYPE_INVOICE, $types)) {
+            // Invoice categories must also be income and quote
+            $types = array_unique(array_merge($types, [
+                self::TYPE_INCOME,
+                self::TYPE_QUOTE,
+            ]));
+        }
+        return array_values($types); // Re-index array
+    }
+
+    /**
      * Check if expense amount requires approval for this category (expense_category type only).
      */
     public function requiresApprovalForAmount(float $amount): bool
     {
-        if ($this->type !== self::TYPE_EXPENSE_CATEGORY) {
+        if (!$this->hasType(self::TYPE_EXPENSE_CATEGORY)) {
             return false;
         }
 
@@ -484,7 +545,7 @@ class Category extends Model
      */
     public function getExpenseSettings(): ?object
     {
-        if ($this->type !== self::TYPE_EXPENSE_CATEGORY) {
+        if (!$this->hasType(self::TYPE_EXPENSE_CATEGORY)) {
             return null;
         }
 
@@ -505,10 +566,18 @@ class Category extends Model
     {
         parent::boot();
 
+        // Automatically normalize types (invoice → income + quote)
+        static::saving(function ($category) {
+            if (is_array($category->type)) {
+                $category->type = self::normalizeTypes($category->type);
+            }
+        });
+
         // Set default color if not provided
         static::creating(function ($category) {
             if (empty($category->color)) {
-                $category->color = self::DEFAULT_COLORS[$category->type] ?? '#6c757d';
+                $type = is_array($category->type) ? ($category->type[0] ?? null) : $category->type;
+                $category->color = self::DEFAULT_COLORS[$type] ?? '#6c757d';
             }
         });
 
@@ -520,23 +589,31 @@ class Category extends Model
 
             // Check for associated records based on type
             $hasRecords = false;
-            switch ($category->type) {
-                case self::TYPE_EXPENSE:
-                case self::TYPE_EXPENSE_CATEGORY:
-                    $hasRecords = $category->expenses()->exists();
+            $types = is_array($category->type) ? $category->type : [$category->type];
+
+            foreach ($types as $type) {
+                switch ($type) {
+                    case self::TYPE_EXPENSE:
+                    case self::TYPE_EXPENSE_CATEGORY:
+                        $hasRecords = $hasRecords || $category->expenses()->exists();
+                        break;
+                    case self::TYPE_PRODUCT:
+                        $hasRecords = $hasRecords || $category->products()->exists();
+                        break;
+                    case self::TYPE_INVOICE:
+                        $hasRecords = $hasRecords || $category->invoices()->exists();
+                        break;
+                    case self::TYPE_QUOTE:
+                        $hasRecords = $hasRecords || $category->quotes()->exists();
+                        break;
+                    case self::TYPE_RECURRING:
+                        $hasRecords = $hasRecords || $category->recurringInvoices()->exists();
+                        break;
+                }
+
+                if ($hasRecords) {
                     break;
-                case self::TYPE_PRODUCT:
-                    $hasRecords = $category->products()->exists();
-                    break;
-                case self::TYPE_INVOICE:
-                    $hasRecords = $category->invoices()->exists();
-                    break;
-                case self::TYPE_QUOTE:
-                    $hasRecords = $category->quotes()->exists();
-                    break;
-                case self::TYPE_RECURRING:
-                    $hasRecords = $category->recurringInvoices()->exists();
-                    break;
+                }
             }
 
             if ($hasRecords) {

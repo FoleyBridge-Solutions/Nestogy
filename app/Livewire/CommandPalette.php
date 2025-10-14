@@ -496,26 +496,44 @@ class CommandPalette extends Component
     }
 
     /**
-     * Get all navigation items from sidebar configurations as commands
+     * Get all navigation items from NavigationService as commands
      */
     private function getAllNavigationCommands()
     {
         $commands = [];
-        $sidebarProvider = app(\App\Domains\Core\Services\SidebarConfigProvider::class);
+        $user = Auth::user();
 
-        $contexts = ['clients', 'tickets', 'email', 'assets', 'financial', 'projects', 'reports', 'settings'];
+        // Get all navigation registry from NavigationService
+        // This includes products, services, bundles, pricing-rules, etc.
+        $registry = \App\Domains\Core\Services\NavigationService::getNavigationRegistry('all', $user);
 
-        foreach ($contexts as $context) {
-            $config = $sidebarProvider->getConfiguration($context);
+        foreach ($registry as $domain => $items) {
+            foreach ($items as $key => $item) {
+                // Extract all command keywords from the commands array
+                $keywords = [];
+                if (isset($item['commands'])) {
+                    foreach ($item['commands'] as $cmdType => $cmdTexts) {
+                        $keywords = array_merge($keywords, $cmdTexts);
+                    }
+                }
 
-            if (empty($config['sections'])) {
-                continue;
+                $commands[] = [
+                    'type' => 'navigation',
+                    'title' => $item['label'],
+                    'subtitle' => 'Navigation • ' . ($item['description'] ?? ucfirst($domain)),
+                    'route_name' => $item['route'],
+                    'route_params' => [],
+                    'icon' => $item['icon'] ?? 'arrow-right',
+                    'keywords' => array_merge(
+                        [strtolower($item['label'])],
+                        $keywords,
+                        explode(' ', strtolower($item['label']))
+                    ),
+                ];
             }
-
-            $contextCommands = $this->extractCommandsFromSections($config['sections'], $context);
-            $commands = array_merge($commands, $contextCommands);
         }
 
+        // Add dashboard as primary navigation
         $commands[] = [
             'type' => 'navigation',
             'title' => 'Dashboard',
@@ -529,58 +547,6 @@ class CommandPalette extends Component
         return $commands;
     }
 
-    /**
-     * Extract commands from sidebar sections
-     */
-    private function extractCommandsFromSections($sections, $context)
-    {
-        $commands = [];
-
-        foreach ($sections as $section) {
-            if (! isset($section['items'])) {
-                continue;
-            }
-
-            foreach ($section['items'] as $item) {
-                $command = $this->buildNavigationCommand($item, $context);
-                
-                if ($command !== null) {
-                    $commands[] = $command;
-                }
-            }
-        }
-
-        return $commands;
-    }
-
-    /**
-     * Build a navigation command from a sidebar item
-     */
-    private function buildNavigationCommand($item, $context)
-    {
-        if (! isset($item['route'])) {
-            return null;
-        }
-
-        $routeParams = $item['params'] ?? $item['route_params'] ?? [];
-        $processedParams = $this->processRouteParameters($routeParams);
-
-        $command = [
-            'type' => 'navigation',
-            'title' => $item['name'],
-            'subtitle' => 'Navigation • '.ucfirst($context),
-            'route_name' => $item['route'],
-            'route_params' => $processedParams,
-            'icon' => $item['icon'] ?? 'arrow-right',
-            'keywords' => $this->generateKeywords($item['name'], $context),
-        ];
-
-        if (isset($item['description'])) {
-            $command['subtitle'] .= ' • '.$item['description'];
-        }
-
-        return $command;
-    }
 
     /**
      * Process route parameters to handle special values
@@ -829,56 +795,45 @@ class CommandPalette extends Component
 
     private function getDefaultNavigationCommands()
     {
-        return [
-            [
-                'type' => 'navigation',
-                'title' => 'Dashboard',
-                'subtitle' => 'Navigation • Main',
-                'route_name' => 'dashboard',
-                'route_params' => [],
-                'icon' => 'home',
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Clients',
-                'subtitle' => 'Navigation • View all clients',
-                'route_name' => 'clients.index',
-                'route_params' => [],
-                'icon' => 'user-group',
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Tickets',
-                'subtitle' => 'Navigation • Support tickets',
-                'route_name' => 'tickets.index',
-                'route_params' => [],
-                'icon' => 'ticket',
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Invoices',
-                'subtitle' => 'Navigation • Financial',
-                'route_name' => 'financial.invoices.index',
-                'route_params' => [],
-                'icon' => 'document-text',
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Projects',
-                'subtitle' => 'Navigation • Project management',
-                'route_name' => 'projects.index',
-                'route_params' => [],
-                'icon' => 'folder',
-            ],
-            [
-                'type' => 'navigation',
-                'title' => 'Assets',
-                'subtitle' => 'Navigation • Equipment & inventory',
-                'route_name' => 'assets.index',
-                'route_params' => [],
-                'icon' => 'computer-desktop',
-            ],
+        $user = Auth::user();
+        $commands = [];
+
+        // Always add Dashboard first
+        $commands[] = [
+            'type' => 'navigation',
+            'title' => 'Dashboard',
+            'subtitle' => 'Navigation • Main',
+            'route_name' => 'dashboard',
+            'route_params' => [],
+            'icon' => 'home',
         ];
+
+        // Get popular navigation items from NavigationService registry
+        // This now includes products, services, bundles, etc.
+        $registry = \App\Domains\Core\Services\NavigationService::getNavigationRegistry('all', $user);
+
+        // Convert to command palette format and take first 6 items
+        $count = 0;
+        foreach ($registry as $domain => $items) {
+            foreach ($items as $key => $item) {
+                if ($count >= 6) {
+                    break 2; // Break out of both loops
+                }
+
+                $commands[] = [
+                    'type' => 'navigation',
+                    'title' => $item['label'],
+                    'subtitle' => 'Navigation • ' . ($item['description'] ?? ucfirst($domain)),
+                    'route_name' => $item['route'],
+                    'route_params' => [],
+                    'icon' => $item['icon'] ?? 'arrow-right',
+                ];
+
+                $count++;
+            }
+        }
+
+        return $commands;
     }
 
     private function shouldSkipNavigationCommand($navCommand, $currentRouteName, $existingRoutes, $existingTitles)

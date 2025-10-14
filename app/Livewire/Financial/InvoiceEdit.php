@@ -263,17 +263,30 @@ class InvoiceEdit extends Component
 
         $product = Product::where('company_id', Auth::user()->company_id)
             ->where('is_active', true)
+            ->with('category')
             ->find($productId);
 
-        if ($product) {
-            $this->items[] = [
-                'name' => $product->name,
-                'description' => $product->description ?? '',
-                'quantity' => 1,
-                'price' => $product->price ?? $product->base_price ?? 0,
-            ];
-            Flux::toast('Product added successfully', variant: 'success');
+        if (! $product) {
+            Flux::toast('Product not found', variant: 'danger');
+            return;
         }
+
+        // Validate product category has invoice type
+        if (! $product->category || ! $product->category->hasType(\App\Models\Category::TYPE_INVOICE)) {
+            Flux::toast('This product cannot be added to invoices. Its category does not support invoicing.', variant: 'danger');
+            return;
+        }
+
+        $this->items[] = [
+            'name' => $product->name,
+            'description' => $product->description ?? '',
+            'quantity' => 1,
+            'price' => $product->price ?? $product->base_price ?? 0,
+            'category_id' => $product->category_id,
+            'product_id' => $product->id,
+        ];
+
+        Flux::toast('Product added successfully', variant: 'success');
     }
 
     public function update()
