@@ -70,10 +70,6 @@
                     Mark as Sent
                 </flux:button>
                 
-                <flux:button wire:click="bulkMarkAsPaid" size="sm" variant="ghost">
-                    Mark as Paid
-                </flux:button>
-                
                 <flux:button wire:click="bulkCancel" size="sm" variant="ghost">
                     Cancel
                 </flux:button>
@@ -244,18 +240,6 @@
                                             icon="paper-airplane"
                                             class="text-blue-600 hover:text-blue-700"
                                             title="Mark as Sent"
-                                        />
-                                    @endif
-                                    
-                                    @if($invoice->status === 'Sent')
-                                        <flux:button 
-                                            wire:click="markAsPaid({{ $invoice->id }})"
-                                            wire:confirm="Mark this invoice as paid?"
-                                            size="sm"
-                                            variant="ghost"
-                                            icon="check"
-                                            class="text-green-600 hover:text-green-700"
-                                            title="Mark as Paid"
                                         />
                                     @endif
                                     

@@ -144,21 +144,6 @@ class InvoiceIndex extends Component
         ];
     }
 
-    public function markAsPaid($invoiceId)
-    {
-        $invoice = Invoice::where('company_id', Auth::user()->company_id)
-            ->findOrFail($invoiceId);
-
-        if ($invoice->status === 'Sent') {
-            $invoice->update([
-                'status' => 'Paid',
-            ]);
-
-            $this->dispatch('invoice-updated');
-            Flux::toast('Invoice marked as paid successfully.');
-        }
-    }
-
     public function markAsSent($invoiceId)
     {
         $invoice = Invoice::where('company_id', Auth::user()->company_id)
@@ -224,22 +209,6 @@ class InvoiceIndex extends Component
         $this->selectAll = false;
         
         Flux::toast("{$count} invoice(s) marked as sent successfully.");
-        $this->dispatch('invoice-updated');
-    }
-
-    public function bulkMarkAsPaid()
-    {
-        $count = Invoice::whereIn('id', $this->selected)
-            ->where('company_id', Auth::user()->company_id)
-            ->where('status', 'Sent')
-            ->update([
-                'status' => 'Paid',
-            ]);
-
-        $this->selected = [];
-        $this->selectAll = false;
-        
-        Flux::toast("{$count} invoice(s) marked as paid successfully.");
         $this->dispatch('invoice-updated');
     }
 
