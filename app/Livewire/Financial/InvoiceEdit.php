@@ -139,7 +139,7 @@ class InvoiceEdit extends Component
     public function categories()
     {
         return Category::where('company_id', Auth::user()->company_id)
-            ->where('type', 'invoice')
+            ->whereJsonContains('type', 'invoice')
             ->where('archived_at', null)
             ->orderBy('name')
             ->get();
@@ -150,6 +150,9 @@ class InvoiceEdit extends Component
     {
         return Product::where('company_id', Auth::user()->company_id)
             ->where('is_active', true)
+            ->whereHas('category', function ($query) {
+                $query->whereJsonContains('type', 'invoice');
+            })
             ->orderBy('name')
             ->get();
     }
