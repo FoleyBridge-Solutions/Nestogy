@@ -333,6 +333,7 @@ class InvoiceCreate extends Component
                 'note' => $this->note,
                 'discount_amount' => $this->discountAmount,
                 'amount' => 0,
+                'is_recurring' => false,
             ]);
 
             // Load the client relationship for tax calculations
