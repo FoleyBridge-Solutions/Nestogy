@@ -2,30 +2,22 @@
 
 @section('title', 'Asset Check-In/Out Management')
 
-
+@php
+$pageTitle = 'Asset Check-In/Out Management';
+$pageActions = [
+    [
+        'label' => 'View All Assets',
+        'href' => {{ route('assets.index') }},
+        'icon' => 'eye',
+        'variant' => 'primary',
+    ],
+];
+@endphp
 
 @section('content')
 <div class="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-6" x-data="assetCheckinout()">
     <!-- Page Header -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Asset Check-In/Out Management</h1>
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Manage asset assignments and track check-in/out operations</p>
-            </div>
-            <div class="flex items-center space-x-3">
-                <button @click="refreshData()" 
-                        class="inline-flex items-center px-6 py-2 bg-gray-600 dark:bg-gray-700 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-gray-700 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
-                    <i class="fas fa-refresh mr-2" :class="{ 'animate-spin': loading }"></i>
-                    Refresh
-                </button>
-                <a href="{{ route('assets.index') }}" 
-                   class="inline-flex items-center px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-blue-700 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                    <i class="fas fa-list mr-2"></i>
-                    View All Assets
-                </a>
-            </div>
-        </div>
+    
     </div>
 
     <!-- Status Overview Cards -->

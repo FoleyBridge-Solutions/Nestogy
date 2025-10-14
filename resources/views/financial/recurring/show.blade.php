@@ -2,12 +2,23 @@
 
 @section('title', $recurring->name)
 
+@php
+$pageTitle = $recurring->name;
+$pageActions = [
+    [
+        'label' => 'Edit',
+        'href' => {{ route('financial.recurring.edit', $recurring) }},
+        'icon' => 'pencil',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="container mx-auto mx-auto px-4 mx-auto px-4 mx-auto px-6 py-6">
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ $recurring->name }}</h1>
                 <p class="text-gray-600 mt-1">{{ $recurring->client->name ?? 'No Client' }}</p>
             </div>
             <div class="flex gap-3">

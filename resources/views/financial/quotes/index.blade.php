@@ -2,12 +2,24 @@
 
 @section('title', 'Quotes')
 
+@php
+$pageTitle = 'Quotes';
+$pageSubtitle = 'Manage client quotes and proposals';
+$pageActions = [
+    [
+        'label' => 'New Quote',
+        'href' => route('financial.quotes.create'),
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="w-full px-6 py-6">
     <!-- Page Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-1">Quotes</h1>
             <p class="text-gray-600">Manage client financial.quotes and proposals</p>
         </div>
         <div>

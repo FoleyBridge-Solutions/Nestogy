@@ -13,13 +13,16 @@ $breadcrumbs = [
 
 @section('title', 'Edit Template: ' . $template->name)
 
+@php
+$pageTitle = 'Edit Template: ' . $template->name;
+@endphp
+
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6" x-data="templateEditor(@json($template))">
     <!-- Header with Usage Impact Warning -->
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Edit Template: {{ $template->name }}</h1>
                 <p class="text-gray-600 mt-1">Modify this programmable contract template</p>
             </div>
             <div class="flex items-center gap-3">

@@ -2,6 +2,18 @@
 
 @section('title', 'Billing Schedules')
 
+@php
+$pageTitle = 'Billing Schedules';
+$pageActions = [
+    [
+        'label' => 'New Schedule',
+        'href' => {{ route('financial.billing.create-schedule') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <flux:main class="space-y-6">
     <flux:header>

@@ -2,6 +2,10 @@
 
 @section('title', $itDocumentation->name)
 
+@php
+$pageTitle = $itDocumentation->name;
+@endphp
+
 @section('content')
 <div class="space-y-6">
     <!-- Page Header -->
@@ -11,7 +15,6 @@
                 <div class="flex items-center space-x-4">
                     <span class="text-3xl">{{ $itDocumentation->category_icon }}</span>
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">{{ $itDocumentation->name }}</h1>
                         <div class="flex items-center space-x-4 mt-1">
                             <span class="text-sm text-gray-500">{{ $itDocumentation->client->name }}</span>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">

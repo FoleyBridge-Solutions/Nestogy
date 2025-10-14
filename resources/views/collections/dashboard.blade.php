@@ -2,13 +2,16 @@
 
 @section('title', 'Collection Dashboard')
 
+@php
+$pageTitle = 'Collection Dashboard';
+@endphp
+
 @section('content')
 <div class="collection-dashboard">
     <!-- Header with date range selector -->
     <div class="dashboard-header bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 mb-6">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Collection Dashboard</h1>
                 <p class="text-gray-600 dark:text-gray-400 mt-1">Real-time collection performance and analytics</p>
             </div>
             <div class="flex items-center space-x-4">

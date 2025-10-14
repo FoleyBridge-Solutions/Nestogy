@@ -2,6 +2,11 @@
 
 @section('title', 'Create IT Documentation')
 
+@php
+$pageTitle = 'Create IT Documentation';
+$pageSubtitle = 'Comprehensive technical documentation and procedures';
+@endphp
+
 @section('content')
 <div class="space-y-6" x-data="documentationForm()">
     <!-- Page Header -->
@@ -9,8 +14,7 @@
         <div class="px-6 py-8 sm:px-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Create IT Documentation</h1>
-                    <p class="mt-1 text-sm text-gray-500">Comprehensive technical documentation and procedures</p>
+                    
                 </div>
                 <div class="flex items-center space-x-3">
                     <!-- Documentation Completeness -->

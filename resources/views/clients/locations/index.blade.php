@@ -2,84 +2,15 @@
 
 @section('title', $client->name . ' - Locations')
 
+@php
+$pageTitle = $client->name . ' - Locations';
+$pageSubtitle = $locations->total() . ' total locations';
+@endphp
+
 @section('content')
 <div class="container-fluid h-full flex flex-col">
     <!-- Compact Header with Filters -->
-    <flux:card class="mb-3">
-        <div class="flex items-center justify-between mb-3">
-            <div>
-                <flux:heading>{{ $client->name }} - Locations</flux:heading>
-                <flux:text size="sm">{{ $locations->total() }} total locations</flux:text>
-            </div>
-            <div class="flex gap-2">
-                <flux:button variant="ghost" size="sm" href="{{ route('clients.index') }}">
-                    Back to Dashboard
-                </flux:button>
-                <flux:button 
-                    variant="subtle" 
-                    size="sm"
-                    icon="arrow-down-tray"
-                    href="{{ route('clients.locations.export', [$client] + request()->query()) }}"
-                >
-                    Export
-                </flux:button>
-                <flux:button 
-                    variant="primary" 
-                    size="sm"
-                    icon="plus"
-                    href="{{ route('clients.locations.create', $client) }}"
-                >
-                    Add Location
-                </flux:button>
-            </div>
-        </div>
-        
-        <!-- Inline Filters -->
-        <form method="GET" action="{{ route('clients.locations.index', $client) }}">
-            <div class="flex gap-2">
-                <flux:input 
-                    name="search" 
-                    placeholder="Search locations..." 
-                    icon="magnifying-glass"
-                    size="sm"
-                    class="flex-1 max-w-xs"
-                    value="{{ request('search') }}"
-                />
-                
-                <flux:select name="state" placeholder="All States" size="sm" class="w-32" value="{{ request('state') }}">
-                    <flux:select.option value="">All States</flux:select.option>
-                    @foreach($states as $state)
-                        <flux:select.option value="{{ $state }}">{{ $state }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-                
-                <flux:select name="country" placeholder="All Countries" size="sm" class="w-32" value="{{ request('country') }}">
-                    <flux:select.option value="">All Countries</flux:select.option>
-                    @foreach($countries as $country)
-                        <flux:select.option value="{{ $country }}">{{ $country }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-                
-                <flux:checkbox name="primary_only" 
-                              value="1"
-                              label="Primary only"
-                              :checked="request('primary_only')" />
-                
-                <flux:button type="submit" variant="primary" size="sm">
-                    Apply
-                </flux:button>
-                @if(request()->hasAny(['search', 'state', 'country', 'primary_only']))
-                    <flux:button 
-                        variant="ghost" 
-                        size="sm"
-                        href="{{ route('clients.locations.index', $client) }}"
-                    >
-                        Clear
-                    </flux:button>
-                @endif
-            </div>
-        </form>
-    </flux:card>
+    
 
     <!-- Locations Table -->
     <flux:card class="flex-1">

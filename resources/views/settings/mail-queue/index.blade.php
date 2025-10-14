@@ -2,6 +2,11 @@
 
 @section('title', 'Mail Queue')
 
+@php
+$pageTitle = 'Mail Queue';
+$pageSubtitle = 'Monitor and manage email delivery queue';
+@endphp
+
 @section('content')
 <flux:container>
     <div class="mb-6">

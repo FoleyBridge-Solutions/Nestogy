@@ -2,11 +2,15 @@
 
 @section('title', 'Recurring Billing')
 
+@php
+$pageTitle = 'Recurring Billing';
+$pageSubtitle = 'Get started by creating your first recurring billing service.';
+@endphp
+
 @section('content')
 <div class="container mx-auto mx-auto px-4 mx-auto px-4 mx-auto px-6 py-6">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Recurring Billing</h1>
             <p class="text-gray-600 mt-1">Manage VoIP recurring billing and automated invoicing</p>
         </div>
         <div class="flex space-x-3">

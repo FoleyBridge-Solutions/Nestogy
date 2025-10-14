@@ -2,13 +2,17 @@
 
 @section('title', 'Contract Templates')
 
+@php
+$pageTitle = 'Contract Templates';
+$pageSubtitle = 'Choose the type of templates to display';
+@endphp
+
 @section('content')
 <div class="min-h-screen bg-gray-50 py-6">
     <div class="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="sm:flex sm:items-center sm:justify-between mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Contract Templates</h1>
                 <p class="mt-2 text-sm text-gray-700">Manage contract templates for quick contract creation</p>
             </div>
             <div class="mt-6 sm:mt-0 sm:ml-16 sm:flex-none">

@@ -12,13 +12,16 @@ $breadcrumbs = [
 
 @section('title', 'Create Contract Template')
 
+@php
+$pageTitle = 'Create Contract Template';
+@endphp
+
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6" x-data="templateCreator()">
     <!-- Header -->
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Create Contract Template</h1>
                 <p class="text-gray-600 mt-1">Build a programmable contract template with automated billing</p>
             </div>
             <a href="{{ route('financial.contracts.templates.index') }}" 

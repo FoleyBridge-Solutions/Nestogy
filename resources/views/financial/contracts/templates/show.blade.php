@@ -12,13 +12,24 @@ $breadcrumbs = [
 
 @section('title', 'Template: ' . $template->name)
 
+@php
+$pageTitle = $template->name;
+$pageActions = [
+    [
+        'label' => 'Edit Template',
+        'href' => {{ route('financial.contracts.templates.edit', $template) }},
+        'icon' => 'pencil',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6" x-data="templateViewer(@json($template))">
     <!-- Header -->
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex flex-flex-1 px-6 lg:flex-flex flex-wrap -mx-4 lg:items-center lg:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ $template->name }}</h1>
                 <p class="text-gray-600 mt-1">{{ $template->description ?: 'No description provided' }}</p>
                 
                 <!-- Meta Info -->

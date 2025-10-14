@@ -2,12 +2,16 @@
 
 @section('title', 'Approve Quote #' . $quote->getFullNumber())
 
+@php
+$pageTitle = 'Approve Quote #' . $quote->getFullNumber();
+$pageSubtitle = '';
+@endphp
+
 @section('content')
 <div class="container mx-auto mx-auto px-4 mx-auto px-4 mx-auto px-6 py-6">
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Approve Quote #{{ $quote->getFullNumber() }}</h1>
                 <p class="text-gray-600 mt-1">{{ $quote->client->name }}</p>
             </div>
             <div class="flex gap-3">

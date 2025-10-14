@@ -1,11 +1,14 @@
 @extends('layouts.app')
 
+@php
+$pageTitle = 'Time & Billing';
+$pageSubtitle = 'Start tracking time on tickets to see entries here';
+@endphp
+
 @section('content')
 <div class="container-fluid px-6 py-4">
     <!-- Header with Statistics -->
     <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Time & Billing</h1>
-        
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">

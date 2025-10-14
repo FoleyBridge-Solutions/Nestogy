@@ -2,12 +2,15 @@
 
 @section('title', 'Create Payment')
 
+@php
+$pageTitle = 'Create Payment';
+@endphp
+
 @section('content')
 <div class="container mx-auto mx-auto px-4 mx-auto px-4 mx-auto px-6 py-6">
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Create Payment</h1>
                 <p class="text-gray-600 mt-1">Record a new payment transaction</p>
             </div>
             <a href="{{ route('financial.payments.index') }}" 

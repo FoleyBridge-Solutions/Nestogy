@@ -2,6 +2,10 @@
 
 @section('title', 'Physical Mail Dashboard')
 
+@php
+$pageTitle = 'Physical Mail Dashboard';
+@endphp
+
 @section('content')
 <div class="container-fluid">
     <!-- Header with Actions -->

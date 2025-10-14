@@ -2,13 +2,16 @@
 
 @section('title', 'Edit Invoice #' . $invoice->getFullNumber())
 
+@php
+$pageTitle = 'Invoice #' . $invoice->getFullNumber();
+@endphp
+
 @section('content')
 <div class="container mx-auto mx-auto px-4 mx-auto px-4 mx-auto px-6 py-6">
     <div class="max-w-6xl mx-auto">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Invoice #{{ $invoice->getFullNumber() }}</h1>
                 <div class="mt-1 flex items-center space-x-4 text-sm text-gray-600">
                     <span>{{ $invoice->client->name }}</span>
                     <span>•</span>

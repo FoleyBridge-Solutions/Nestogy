@@ -2,6 +2,11 @@
 
 @section('title', $categoryInfo['name'])
 
+@php
+$pageTitle = $categoryInfo['name'];
+$pageSubtitle = $categoryInfo['description'];
+@endphp
+
 @section('content')
 <div class="max-w-7xl mx-auto">
     <!-- Header -->
@@ -44,8 +49,7 @@
                         </svg>
                     </span>
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $categoryInfo['name'] }}</h1>
-                        <p class="mt-1 text-sm text-gray-500">{{ $categoryInfo['description'] }}</p>
+                        
                     </div>
                 </div>
                 <a href="{{ route('reports.index') }}" class="text-sm text-indigo-600 hover:text-indigo-500">

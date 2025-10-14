@@ -2,6 +2,21 @@
 
 @section('title', 'Clients')
 
+@php
+$pageTitle = $selectedClient ? 'Select Different Client' : 'Select Client';
+$pageSubtitle = $selectedClient 
+    ? 'Choose a different client to work with, or manage client relationships'
+    : 'Choose a client to access their contacts, locations, documents and other information';
+$pageActions = [
+    [
+        'label' => 'Add Client',
+        'href' => route('clients.create'),
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="space-y-6">
     <!-- Client Selection Status -->
@@ -49,20 +64,7 @@
         <div class="px-6 py-8 sm:px-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">
-                        @if($selectedClient)
-                            Select Different Client
-                        @else
-                            Select Client
-                        @endif
-                    </h1>
-                    <p class="mt-1 text-sm text-gray-500">
-                        @if($selectedClient)
-                            Choose a different client to work with, or manage client relationships
-                        @else
-                            Choose a client to access their contacts, locations, documents and other information
-                        @endif
-                    </p>
+                    
                 </div>
                 <div class="flex space-x-3">
                     <a href="{{ route('clients.import.form') }}" class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 bg-white dark:bg-gray-800 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:hover:bg-gray-700 dark:bg-gray-900">

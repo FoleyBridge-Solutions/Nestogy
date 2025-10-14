@@ -2,12 +2,15 @@
 
 @section('title', 'Create Expense')
 
+@php
+$pageTitle = 'Create Expense';
+@endphp
+
 @section('content')
 <div class="container mx-auto mx-auto px-4 mx-auto px-4 mx-auto px-6 py-6">
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Create Expense</h1>
                 <p class="text-gray-600 mt-1">Record a new expense for approval</p>
             </div>
             <a href="{{ route('financial.expenses.index') }}" 

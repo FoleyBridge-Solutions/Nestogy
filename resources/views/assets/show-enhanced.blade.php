@@ -2,6 +2,11 @@
 
 @section('title', $asset->name . ' - Asset Management')
 
+@php
+$pageTitle = $asset->name;
+$pageSubtitle = 'Operating System';
+@endphp
+
 @section('content')
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -22,7 +27,6 @@
                     {{-- Asset Info --}}
                     <div class="flex-1">
                         <div class="flex items-center space-x-3">
-                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $asset->name }}</h1>
                             <flux:badge color="blue">{{ $asset->type }}</flux:badge>
                             <flux:badge color="green">Online</flux:badge>
                         </div>

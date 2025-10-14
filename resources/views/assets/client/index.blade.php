@@ -2,6 +2,25 @@
 
 @section('title', $client->name . ' - Assets')
 
+@php
+$pageTitle = 'Assets for ' . $client->name;
+$pageActions = [
+    [
+        'label' => 'Add Asset',
+        'href' => route('clients.assets.create', $client),
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+    ],
+    [
+        'label' => 'Add First Asset',
+        'href' => {{ route('clients.assets.create', $client) }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="container mx-auto px-6">
     <!-- Header -->
@@ -15,7 +34,6 @@
         
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Assets for {{ $client->name }}</h1>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">Manage and track all assets for this client</p>
             </div>
             

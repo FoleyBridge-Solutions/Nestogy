@@ -2,30 +2,29 @@
 
 @section('title', 'Support Tickets')
 
+@php
+$pageTitle = 'Support Tickets';
+$pageSubtitle = 'Manage customer support requests and service tickets';
+$pageActions = [
+    [
+        'label' => 'Export CSV',
+        'href' => route('tickets.export.csv', request()->query()),
+        'icon' => 'arrow-down-tray',
+        'variant' => 'ghost',
+    ],
+    [
+        'label' => 'New Ticket',
+        'href' => route('tickets.create'),
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
-    <flux:card class="mb-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <flux:heading>Support Tickets</flux:heading>
-                <flux:text>Manage customer support requests and service tickets</flux:text>
-            </div>
-            
-            <div class="flex gap-2">
-                <flux:button href="{{ route('tickets.export.csv', request()->query()) }}" 
-                            variant="subtle" 
-                            icon="arrow-down-tray">
-                    Export CSV
-                </flux:button>
-                <flux:button href="{{ route('tickets.create') }}" 
-                            variant="primary" 
-                            icon="plus">
-                    New Ticket
-                </flux:button>
-            </div>
-        </div>
-    </flux:card>
+    
     <!-- Filters Card -->
     <flux:card class="mb-4">
         <form method="GET" action="{{ route('tickets.index') }}">

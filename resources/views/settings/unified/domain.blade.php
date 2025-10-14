@@ -2,6 +2,19 @@
 
 @section('title', ($domainInfo['name'] ?? ucfirst($domain)) . ' Settings')
 
+@php
+$pageTitle = ($domainInfo['name'] ?? ucfirst($domain)) . ' Settings';
+$pageSubtitle = $domainInfo['description'];
+$pageActions = [
+    [
+        'label' => 'Back to Settings',
+        'href' => route('settings.index'),
+        'icon' => 'arrow-left',
+        'variant' => 'ghost',
+    ],
+];
+@endphp
+
 @section('content')
 <flux:container>
     <!-- Breadcrumb -->

@@ -1,9 +1,12 @@
 @extends('layouts.app')
 
+@php
+$pageTitle = 'Export Financial Data';
+@endphp
+
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">Export Financial Data</h1>
         <p class="mt-2 text-zinc-600 dark:text-zinc-400">Export your financial data in various formats</p>
     </div>
 

@@ -2,6 +2,10 @@
 
 @section('title', 'Financial Reports')
 
+@php
+$pageTitle = 'Financial Reports';
+@endphp
+
 @section('page-actions')
 <div class="flex items-center space-x-4">
     <div class="flex items-center space-x-2">
@@ -78,7 +82,6 @@
 
 <!-- Page Header -->
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Financial Reports</h1>
     <p class="text-gray-600 dark:text-gray-400 mt-2">Revenue, expenses, profit analysis and financial performance metrics</p>
     
     <div id="last-updated" class="text-sm text-gray-500 mt-1"></div>

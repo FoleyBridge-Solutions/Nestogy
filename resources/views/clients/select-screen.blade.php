@@ -2,6 +2,25 @@
 
 @section('title', 'Select Client')
 
+@php
+$pageTitle = 'Select Client';
+$pageSubtitle = 'Choose a client to work with. You can access their contacts, locations, documents and other information.';
+$pageActions = [
+    [
+        'label' => 'Add Client',
+        'href' => {{ route('clients.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+    [
+        'label' => 'Add First Client',
+        'href' => {{ route('clients.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="space-y-6">
     <!-- Page Header -->
@@ -9,12 +28,7 @@
         <div class="px-6 py-8 sm:px-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                        Select Client
-                    </h1>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Choose a client to work with. You can access their contacts, locations, documents and other information.
-                    </p>
+                    
                 </div>
                 <div class="flex space-x-3">
                     <a href="{{ route('clients.import.form') }}" class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">

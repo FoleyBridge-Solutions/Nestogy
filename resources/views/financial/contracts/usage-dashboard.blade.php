@@ -7,13 +7,24 @@ $activeItem = 'contracts';
 
 @section('title', 'Usage Dashboard - ' . $contract->title)
 
+@php
+$pageTitle = 'Usage Tracking Dashboard';
+$pageSubtitle = 'Start tracking usage by running the first calculation.';
+$pageActions = [
+    [
+        'label' => 'Manage Assets',
+        'href' => {{ route('financial.contracts.asset-assignments', $contract) }},
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6" x-data="usageDashboard(@json($contract), @json($billingData))">
     <!-- Header -->
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Usage Tracking Dashboard</h1>
                 <p class="text-gray-600 mt-1">Monitor billing calculations and usage patterns for: <strong>{{ $contract->title }}</strong></p>
             </div>
             <div class="flex items-center gap-3">

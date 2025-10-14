@@ -2,6 +2,11 @@
 
 @section('title', 'Send Physical Mail')
 
+@php
+$pageTitle = 'Send Physical Mail';
+$pageSubtitle = 'Create and send physical letters to your clients';
+@endphp
+
 @section('content')
 <div class="container-fluid">
     <div class="mb-6">

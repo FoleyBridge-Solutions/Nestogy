@@ -2,6 +2,11 @@
 
 @section('title', $client->name . ' - Dashboard')
 
+@php
+$pageTitle = $client->name;
+$pageSubtitle = 'Client since ' . $client->created_at->format('M Y');
+@endphp
+
 @section('content')
 <div class="w-full px-6" x-data="clientDashboard()">
     <!-- Client Header -->

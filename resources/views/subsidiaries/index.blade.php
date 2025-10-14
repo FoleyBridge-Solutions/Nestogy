@@ -2,6 +2,19 @@
 
 @section('title', 'Subsidiary Management')
 
+@php
+$pageTitle = 'Subsidiaries';
+$pageSubtitle = 'Manage company subsidiaries and organizational units';
+$pageActions = [
+    [
+        'label' => 'Add Subsidiary',
+        'href' => route('subsidiaries.create'),
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <flux:container>
     <!-- Header -->

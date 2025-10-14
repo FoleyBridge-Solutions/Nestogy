@@ -2,6 +2,25 @@
 
 @section('title', 'IT Documentation')
 
+@php
+$pageTitle = 'IT Documentation';
+$pageSubtitle = 'Manage technical documentation and procedures';
+$pageActions = [
+    [
+        'label' => 'New Documentation',
+        'href' => {{ route('clients.it-documentation.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+    [
+        'label' => 'New Documentation',
+        'href' => {{ route('clients.it-documentation.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="space-y-6">
     <!-- Page Header -->
@@ -9,8 +28,7 @@
         <div class="px-6 py-8 sm:px-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">IT Documentation</h1>
-                    <p class="mt-1 text-sm text-gray-500">Manage technical documentation and procedures</p>
+                    
                 </div>
                 <div class="flex space-x-3">
                     <a href="{{ route('clients.it-documentation.export', request()->query()) }}" 

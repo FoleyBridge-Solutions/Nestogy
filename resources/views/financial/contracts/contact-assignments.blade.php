@@ -7,13 +7,17 @@ $activeItem = 'contracts';
 
 @section('title', 'Contact Assignments - ' . $contract->title)
 
+@php
+$pageTitle = 'Contact Assignments';
+$pageSubtitle = 'Create access tiers to manage contact portal permissions and billing.';
+@endphp
+
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6" x-data="contactAssignmentManager(@json($contract), @json($availableContacts), @json($assignedContacts), @json($accessTiers))">
     <!-- Header -->
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Contact Assignments</h1>
                 <p class="text-gray-600 mt-1">Manage portal access assignments for contract: <strong>{{ $contract->title }}</strong></p>
             </div>
             <div class="flex items-center gap-3">

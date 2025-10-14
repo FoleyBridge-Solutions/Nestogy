@@ -2,6 +2,11 @@
 
 @section('title', 'Reports Dashboard')
 
+@php
+$pageTitle = 'Reports Dashboard';
+$pageSubtitle = ${activity.description};
+@endphp
+
 @section('page-actions')
 <div class="flex items-center space-x-4">
     <div class="flex items-center space-x-2">
@@ -65,7 +70,6 @@
 
 <!-- Page Header -->
 <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 dark:text-white dark:text-white">Reports Dashboard</h1>
     <p class="text-gray-600 dark:text-gray-400 dark:text-gray-400 mt-2">Comprehensive business intelligence and analytics across all domains</p>
     
     <div id="last-updated" class="text-sm text-gray-500 mt-1"></div>

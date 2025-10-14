@@ -2,29 +2,31 @@
 
 @section('title', 'Edit Ticket #' . $ticket->ticket_number)
 
+@php
+$pageTitle = 'Edit Ticket #' . $ticket->ticket_number;
+$pageSubtitle = 'Update ticket information and status';
+$pageActions = [
+    [
+        'label' => 'View Ticket',
+        'href' => route('tickets.show', $ticket),
+        'icon' => 'eye',
+    ],
+    [
+        'label' => 'Back to Tickets',
+        'href' => route('tickets.index'),
+        'icon' => 'arrow-left',
+    ],
+    [
+        'label' => 'Cancel',
+        'href' => {{ route('tickets.show', $ticket) }},
+    ],
+];
+@endphp
+
 @section('content')
 <div class="container-fluid">
     <!-- Header -->
-    <flux:card class="mb-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <flux:heading>Edit Ticket #{{ $ticket->ticket_number }}</flux:heading>
-                <flux:text>Update ticket information and status</flux:text>
-            </div>
-            <div class="flex gap-2">
-                <flux:button href="{{ route('tickets.show', $ticket) }}" 
-                            variant="ghost"
-                            icon="eye">
-                    View Ticket
-                </flux:button>
-                <flux:button href="{{ route('tickets.index') }}" 
-                            variant="ghost"
-                            icon="arrow-left">
-                    Back to Tickets
-                </flux:button>
-            </div>
-        </div>
-    </flux:card>
+    
 
     <!-- Edit Form -->
     <form action="{{ route('tickets.update', $ticket) }}" method="POST">

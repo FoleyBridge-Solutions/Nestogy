@@ -2,6 +2,23 @@
 
 @section('title', 'Overdue Invoices')
 
+@php
+$pageTitle = 'Overdue Invoices';
+$pageActions = [
+    [
+        'label' => 'Manage Reminders',
+        'href' => {{ route('financial.collections.reminders') }},
+        'variant' => 'outline',
+    ],
+    [
+        'label' => 'New Invoice',
+        'href' => {{ route('financial.invoices.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <flux:main class="space-y-6">
     <flux:header>

@@ -2,6 +2,11 @@
 
 @section('title', 'Contract Analytics')
 
+@php
+$pageTitle = 'Contract Analytics';
+$pageSubtitle = 'Performance insights and contract metrics';
+@endphp
+
 @section('content')
 <div class="min-h-screen">
     <!-- Header Section -->

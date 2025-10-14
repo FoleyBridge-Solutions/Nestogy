@@ -1,12 +1,15 @@
 @extends('layouts.app')
 
+@php
+$pageTitle = 'Knowledge Base';
+@endphp
+
 @section('content')
 <div class="container-fluid px-6 py-4">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Knowledge Base</h1>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Solutions and articles for common issues</p>
             </div>
             <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">

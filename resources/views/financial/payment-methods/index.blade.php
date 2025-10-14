@@ -2,6 +2,18 @@
 
 @section('title', 'Payment Methods')
 
+@php
+$pageTitle = 'Payment Methods';
+$pageActions = [
+    [
+        'label' => 'Add Payment Method',
+        'href' => {{ route('financial.payment-methods.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <flux:main class="space-y-6">
     <flux:header>

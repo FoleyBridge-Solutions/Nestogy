@@ -2,6 +2,10 @@
 
 @section('title', 'Create Asset for ' . $client->name)
 
+@php
+$pageTitle = 'Create New Asset';
+@endphp
+
 @section('content')
 <div class="container mx-auto px-6">
     <!-- Header -->
@@ -13,7 +17,6 @@
             </a>
         </nav>
         
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Create New Asset</h1>
         <p class="text-gray-600 dark:text-gray-400 mt-2">Add a new asset for {{ $client->name }}</p>
     </div>
 

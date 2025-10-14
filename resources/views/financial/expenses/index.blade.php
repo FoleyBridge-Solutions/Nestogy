@@ -2,11 +2,15 @@
 
 @section('title', 'Expenses')
 
+@php
+$pageTitle = 'Expenses';
+$pageSubtitle = 'Get started by creating a new expense report.';
+@endphp
+
 @section('content')
 <div class="container mx-auto mx-auto px-4 mx-auto px-4 mx-auto px-6 py-6">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Expenses</h1>
             <p class="text-gray-600 mt-1">Manage expense reports and approvals</p>
         </div>
         <div class="flex space-x-3">

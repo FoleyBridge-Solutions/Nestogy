@@ -1,10 +1,13 @@
 @extends('layouts.app')
 
+@php
+$pageTitle = 'Ticket Analytics';
+@endphp
+
 @section('content')
 <div class="container-fluid px-6 py-4">
     <!-- Header -->
     <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Ticket Analytics</h1>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Performance metrics and insights</p>
     </div>
 

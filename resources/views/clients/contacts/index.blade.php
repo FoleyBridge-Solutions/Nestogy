@@ -2,73 +2,15 @@
 
 @section('title', $client->name . ' - Contacts')
 
+@php
+$pageTitle = $client->name . ' - Contacts';
+$pageSubtitle = $contacts->total() . ' total contacts';
+@endphp
+
 @section('content')
 <div class="container-fluid h-full flex flex-col">
     <!-- Compact Header with Filters -->
-    <flux:card class="mb-3">
-        <div class="flex items-center justify-between mb-3">
-            <div>
-                <flux:heading>{{ $client->name }} - Contacts</flux:heading>
-                <flux:text size="sm">{{ $contacts->total() }} total contacts</flux:text>
-            </div>
-            <div class="flex gap-2">
-                <flux:button variant="ghost" size="sm" href="{{ route('clients.index') }}">
-                    Back to Dashboard
-                </flux:button>
-                <flux:button 
-                    variant="subtle" 
-                    size="sm"
-                    icon="arrow-down-tray"
-                    href="{{ route('clients.contacts.export', request()->query()) }}"
-                >
-                    Export
-                </flux:button>
-                <flux:button 
-                    variant="primary" 
-                    size="sm"
-                    icon="plus"
-                    href="{{ route('clients.contacts.create') }}"
-                >
-                    Add Contact
-                </flux:button>
-            </div>
-        </div>
-        
-        <!-- Inline Filters -->
-        <form method="GET" action="{{ route('clients.contacts.index') }}">
-            <div class="flex gap-2">
-                <flux:input 
-                    name="search" 
-                    placeholder="Search..." 
-                    icon="magnifying-glass"
-                    size="sm"
-                    class="flex-1 max-w-xs"
-                    value="{{ request('search') }}"
-                />
-                
-                <flux:select name="type" placeholder="All Types" size="sm" class="w-40" value="{{ request('type') }}">
-                    <flux:select.option value="">All Types</flux:select.option>
-                    <flux:select.option value="primary">Primary</flux:select.option>
-                    <flux:select.option value="billing">Billing</flux:select.option>
-                    <flux:select.option value="technical">Technical</flux:select.option>
-                    <flux:select.option value="important">Important</flux:select.option>
-                </flux:select>
-                
-                <flux:button type="submit" variant="primary" size="sm">
-                    Apply
-                </flux:button>
-                @if(request()->hasAny(['search', 'type']))
-                    <flux:button 
-                        variant="ghost" 
-                        size="sm"
-                        href="{{ route('clients.contacts.index') }}"
-                    >
-                        Clear
-                    </flux:button>
-                @endif
-            </div>
-        </form>
-    </flux:card>
+    
 
     <!-- Dense Contacts Table -->
     <flux:card class="flex-1">

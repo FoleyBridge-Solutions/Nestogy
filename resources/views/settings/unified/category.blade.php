@@ -2,6 +2,11 @@
 
 @section('title', $metadata['name'] ?? 'Settings')
 
+@php
+$pageTitle = $metadata['name'];
+$pageSubtitle = $metadata['description'];
+@endphp
+
 @section('content')
 <flux:container>
     <!-- Breadcrumb -->

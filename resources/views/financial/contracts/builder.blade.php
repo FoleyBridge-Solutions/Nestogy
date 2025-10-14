@@ -2,9 +2,13 @@
 
 @section('title', 'Contract Builder')
 
+@php
+$pageTitle = 'Contract Builder';
+$pageSubtitle = 'Drag components from the library or click to add';
+@endphp
+
 @section('header')
     <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold text-gray-900">Contract Builder</h1>
         <div class="flex items-center space-x-4">
             <button type="button" id="save-draft" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600">
                 Save Draft

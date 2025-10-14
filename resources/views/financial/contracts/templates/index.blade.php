@@ -11,13 +11,30 @@ $breadcrumbs = [
 
 @section('title', 'Contract Templates')
 
+@php
+$pageTitle = 'Contract Templates';
+$pageActions = [
+    [
+        'label' => 'New Template',
+        'href' => {{ route('financial.contracts.templates.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+    [
+        'label' => 'Create Template',
+        'href' => {{ route('financial.contracts.templates.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="space-y-6" x-data="templateManager()">
     <!-- Header with Stats and Actions -->
     <div class="bg-white border border-gray-200 rounded-lg p-6">
         <div class="flex flex-flex-1 px-6 lg:flex-flex flex-wrap -mx-4 lg:items-center lg:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Contract Templates</h1>
                 <p class="text-gray-600 mt-1">Create and manage programmable contract templates</p>
             </div>
             

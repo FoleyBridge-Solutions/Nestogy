@@ -2,6 +2,11 @@
 
 @section('title', 'Mail Contacts')
 
+@php
+$pageTitle = 'Mail Contacts';
+$pageSubtitle = '';
+@endphp
+
 @section('content')
 <div class="container-fluid">
     <div class="mb-6">

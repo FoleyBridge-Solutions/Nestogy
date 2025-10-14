@@ -2,6 +2,11 @@
 
 @section('title', 'Import Clients')
 
+@php
+$pageTitle = 'Import Clients';
+$pageSubtitle = 'Upload a CSV file to import multiple clients at once';
+@endphp
+
 @section('content')
 <div class="space-y-6">
     <!-- Page Header -->
@@ -9,8 +14,7 @@
         <div class="px-6 py-8 sm:px-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Import Clients</h1>
-                    <p class="mt-1 text-sm text-gray-500">Upload a CSV file to import multiple clients at once</p>
+                    
                 </div>
                 <div>
                     <a href="{{ route('clients.index') }}" class="inline-flex items-center px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900">

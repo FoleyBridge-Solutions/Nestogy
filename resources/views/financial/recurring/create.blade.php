@@ -2,12 +2,15 @@
 
 @section('title', 'Create Recurring Billing')
 
+@php
+$pageTitle = 'Create Recurring Billing';
+@endphp
+
 @section('content')
 <div class="container mx-auto mx-auto px-4 mx-auto px-4 mx-auto px-6 py-6">
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Create Recurring Billing</h1>
                 <p class="text-gray-600 mt-1">Set up a new VoIP recurring billing service</p>
             </div>
             <a href="{{ route('financial.recurring.index') }}" 

@@ -2,11 +2,13 @@
 
 @section('title', 'Manage Client Tags')
 
+@php
+$pageTitle = 'Manage Tags for ' . $client->name;
+@endphp
+
 @section('content')
 <div class="container mx-auto px-4 py-6">
     <div class="bg-white rounded-lg shadow p-6">
-        <h1 class="text-2xl font-bold mb-6">Manage Tags for {{ $client->name }}</h1>
-
         <form method="POST" action="{{ route('clients.tags', $client) }}">
             @csrf
             

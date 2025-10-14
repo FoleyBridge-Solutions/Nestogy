@@ -2,14 +2,24 @@
 
 @section('title', $asset->name . ' - Asset Details')
 
-
+@php
+$pageTitle = $asset->name;
+$pageSubtitle = 'No assignment or location set';
+$pageActions = [
+    [
+        'label' => 'Edit Asset',
+        'href' => {{ route('assets.edit', $asset) }},
+        'icon' => 'pencil',
+        'variant' => 'primary',
+    ],
+];
+@endphp
 
 @section('content')
 <div class="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-6">
     <!-- Page Header -->
     <div class="mb-6 flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $asset->name }}</h1>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ $asset->type }} • {{ $asset->make }} {{ $asset->model }}</p>
         </div>
         

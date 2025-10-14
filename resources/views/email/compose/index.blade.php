@@ -2,6 +2,37 @@
 
 @section('title', 'Compose Email')
 
+@php
+$pageTitle = 'Compose Email';
+$pageSubtitle = 'Send a new email message';
+$pageActions = [
+    [
+        'label' => 'New Email',
+        'href' => {{ route('email.compose.index') }},
+        'icon' => 'plus',
+        'variant' => 'outline',
+    ],
+    [
+        'label' => 'Inbox',
+        'href' => {{ route('email.inbox.index') }},
+        'icon' => 'inbox',
+        'variant' => 'outline',
+    ],
+    [
+        'label' => 'Accounts',
+        'href' => {{ route('email.accounts.index') }},
+        'icon' => 'cog',
+        'variant' => 'outline',
+    ],
+    [
+        'label' => 'Signatures',
+        'href' => {{ route('email.signatures.index') }},
+        'icon' => 'pencil-square',
+        'variant' => 'outline',
+    ],
+];
+@endphp
+
 @section('content')
 @php
     $sidebarContext = 'email';
@@ -9,18 +40,7 @@
 
 <div class="container-fluid h-full flex flex-col">
     <!-- Header -->
-    <flux:card class="mb-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <flux:heading>Compose Email</flux:heading>
-                <flux:text size="sm">Send a new email message</flux:text>
-            </div>
-            <flux:button variant="ghost" size="sm" href="{{ route('email.inbox.index') }}">
-                <flux:icon.arrow-left class="w-4 h-4 mr-2" />
-                Back to Inbox
-            </flux:button>
-        </div>
-    </flux:card>
+    
 
     <!-- Form -->
     <div class="flex-1 overflow-y-auto">

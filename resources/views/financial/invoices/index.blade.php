@@ -2,6 +2,18 @@
 
 @section('title', isset($client) && $client ? $client->name . ' - Invoices' : 'Invoices')
 
+@php
+$pageTitle = $client->name;
+$pageActions = [
+    [
+        'label' => 'Create Invoice',
+        'href' => {{ route('financial.invoices.create', ['client_id' => $client->id]) }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="container mx-auto px-6">
     @if(isset($client) && $client)
@@ -16,7 +28,6 @@
             
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">{{ $client->name }}</h1>
                     <p class="text-gray-600 dark:text-gray-400 mt-1">Invoice Management</p>
                 </div>
                 

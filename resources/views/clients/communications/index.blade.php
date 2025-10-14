@@ -2,87 +2,15 @@
 
 @section('title', $client->name . ' - Communications')
 
+@php
+$pageTitle = $client->name . ' - Communications';
+$pageSubtitle = $communications->total() . ' total communications';
+@endphp
+
 @section('content')
 <div class="container-fluid h-full flex flex-col">
     <!-- Compact Header with Filters -->
-    <flux:card class="mb-3">
-        <div class="flex items-center justify-between mb-3">
-            <div>
-                <flux:heading>{{ $client->name }} - Communications</flux:heading>
-                <flux:text size="sm">{{ $communications->total() }} total communications</flux:text>
-            </div>
-            <div class="flex gap-2">
-                <flux:button variant="ghost" size="sm" href="{{ route('clients.index') }}">
-                    Back to Dashboard
-                </flux:button>
-                <flux:button 
-                    variant="subtle" 
-                    size="sm"
-                    icon="arrow-down-tray"
-                    href="{{ route('clients.communications.export', request()->query()) }}"
-                >
-                    Export
-                </flux:button>
-                <flux:button 
-                    variant="primary" 
-                    size="sm"
-                    icon="plus"
-                    href="{{ route('clients.communications.create') }}"
-                >
-                    Add Communication
-                </flux:button>
-            </div>
-        </div>
-        
-        <!-- Inline Filters -->
-        <form method="GET" action="{{ route('clients.communications.index') }}">
-            <div class="flex gap-2">
-                <flux:input 
-                    name="search" 
-                    placeholder="Search..." 
-                    icon="magnifying-glass"
-                    size="sm"
-                    class="flex-1 max-w-xs"
-                    value="{{ request('search') }}"
-                />
-                
-                <flux:select name="type" placeholder="All Types" size="sm" class="w-40" value="{{ request('type') }}">
-                    <flux:select.option value="">All Types</flux:select.option>
-                    @foreach($types as $key => $label)
-                        <flux:select.option value="{{ $key }}">{{ $label }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-                
-                <flux:select name="channel" placeholder="All Channels" size="sm" class="w-40" value="{{ request('channel') }}">
-                    <flux:select.option value="">All Channels</flux:select.option>
-                    @foreach($channels as $key => $label)
-                        <flux:select.option value="{{ $key }}">{{ $label }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-                
-                <flux:checkbox 
-                    name="include_automatic" 
-                    value="1"
-                    label="Include Auto"
-                    :checked="request('include_automatic', '1') == '1'"
-                    size="sm"
-                />
-                
-                <flux:button type="submit" variant="primary" size="sm">
-                    Apply
-                </flux:button>
-                @if(request()->hasAny(['search', 'type', 'channel']))
-                    <flux:button 
-                        variant="ghost" 
-                        size="sm"
-                        href="{{ route('clients.communications.index') }}?include_automatic=1"
-                    >
-                        Clear
-                    </flux:button>
-                @endif
-            </div>
-        </form>
-    </flux:card>
+    
 
     <!-- Communications Table -->
     <flux:card class="flex-1">

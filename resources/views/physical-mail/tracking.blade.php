@@ -2,6 +2,11 @@
 
 @section('title', 'Mail Tracking')
 
+@php
+$pageTitle = 'Mail Tracking';
+$pageSubtitle = 'Mail items with tracking will appear here once sent';
+@endphp
+
 @section('content')
 <div class="container-fluid">
     <div class="mb-6">

@@ -2,6 +2,11 @@
 
 @section('title', $reportInfo['name'])
 
+@php
+$pageTitle = $reportInfo['name'];
+$pageSubtitle = '';
+@endphp
+
 @section('content')
 <div class="max-w-7xl mx-auto">
     <!-- Report Header -->
@@ -9,13 +14,7 @@
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $reportInfo['name'] }}</h1>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Generated on {{ now()->format('F j, Y \a\t g:i A') }}
-                        @if(isset($params['start_date']) && isset($params['end_date']))
-                            | Period: {{ \Carbon\Carbon::parse($params['start_date'])->format('M j, Y') }} - {{ \Carbon\Carbon::parse($params['end_date'])->format('M j, Y') }}
-                        @endif
-                    </p>
+                    
                 </div>
                 <div class="flex items-center space-x-3">
                     <button onclick="window.print()" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

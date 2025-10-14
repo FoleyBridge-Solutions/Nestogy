@@ -2,6 +2,11 @@
 
 @section('title', 'Physical Mail Templates')
 
+@php
+$pageTitle = 'Mail Templates';
+$pageSubtitle = '';
+@endphp
+
 @section('content')
 <div class="container-fluid">
     <div class="mb-6">

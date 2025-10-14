@@ -2,31 +2,34 @@
 
 @section('title', 'Projects')
 
+@php
+$pageTitle = 'Projects';
+$pageSubtitle = 'Manage and track all your projects';
+$pageActions = [
+    [
+        'label' => 'Export',
+        'href' => {{ route('projects.export') }},
+        'icon' => 'arrow-down-tray',
+        'variant' => 'subtle',
+    ],
+    [
+        'label' => 'New Project',
+        'href' => {{ route('projects.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+    [
+        'label' => '',
+        'href' => {{ route('projects.show', $project) }},
+        'icon' => 'plus',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="container-fluid">
     <!-- Header -->
-    <flux:card class="mb-4">
-        <div class="flex items-center justify-between">
-            <div>
-                <flux:heading>Projects</flux:heading>
-                <flux:text>Manage and track all your projects</flux:text>
-            </div>
-            <div class="flex gap-2">
-                {{-- Export button commented until route is available
-                <flux:button href="{{ route('projects.export') }}" 
-                             variant="subtle"
-                             icon="arrow-down-tray">
-                    Export
-                </flux:button>
-                --}}
-                <flux:button href="{{ route('projects.create') }}" 
-                             variant="primary"
-                             icon="plus">
-                    New Project
-                </flux:button>
-            </div>
-        </div>
-    </flux:card>
+    
 
     <!-- Stats Cards -->
     @if(isset($statistics))

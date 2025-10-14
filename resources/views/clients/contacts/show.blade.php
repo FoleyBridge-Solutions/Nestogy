@@ -2,6 +2,11 @@
 
 @section('title', $contact->name . ' - Contact Details')
 
+@php
+$pageTitle = $contact->name;
+$pageSubtitle = $contact->title;
+@endphp
+
 @section('content')
 <div class="container-fluid px-4 lg:px-8">
     <!-- Header -->

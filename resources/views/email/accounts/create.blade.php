@@ -2,6 +2,11 @@
 
 @section('title', 'Add Email Account')
 
+@php
+$pageTitle = 'Add Email Account';
+$pageSubtitle = 'Configure a new email account for the integrated webmail system';
+@endphp
+
 @section('content')
 @php
     $sidebarContext = 'email';
@@ -11,18 +16,7 @@
 
 <div class="container-fluid h-full flex flex-col">
     <!-- Header -->
-    <flux:card class="mb-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <flux:heading>Add Email Account</flux:heading>
-                <flux:text size="sm">Configure a new email account for the integrated webmail system</flux:text>
-            </div>
-            <flux:button variant="ghost" size="sm" href="{{ route('email.accounts.index') }}">
-                <flux:icon.arrow-left class="w-4 h-4 mr-2" />
-                Back to Accounts
-            </flux:button>
-        </div>
-    </flux:card>
+    
 
     <!-- OAuth Connection Option -->
     @if(in_array($company->email_provider_type, ['microsoft365', 'google_workspace']))

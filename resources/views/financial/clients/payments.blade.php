@@ -2,6 +2,35 @@
 
 @section('title', $client->name . ' - Payments')
 
+@php
+$pageTitle = 'Payments for ' . $client->name;
+$pageSubtitle = 'Total Paid';
+$pageActions = [
+    [
+        'label' => 'Record Payment',
+        'href' => route('financial.payments.create', ['client_id' => $client->id]),
+        'variant' => 'primary',
+    ],
+    [
+        'label' => 'Clear',
+        'href' => {{ route('clients.payments.index', $client) }},
+    ],
+    [
+        'label' => '',
+        'href' => {{ route('financial.payments.show', $payment) }},
+    ],
+    [
+        'label' => '',
+        'href' => {{ route('financial.payments.edit', $payment) }},
+    ],
+    [
+        'label' => 'Record First Payment',
+        'href' => {{ route('financial.payments.create', ['client_id' => $client->id]) }},
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="container mx-auto px-6">
     <!-- Header -->
@@ -15,7 +44,6 @@
         
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Payments for {{ $client->name }}</h1>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">View and manage payment history</p>
             </div>
             

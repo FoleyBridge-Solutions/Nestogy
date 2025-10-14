@@ -2,6 +2,23 @@
 
 @section('title', 'Ticket #' . $ticket->number)
 
+@php
+$pageTitle = 'Ticket #' . $ticket->number;
+$pageSubtitle = $ticket->details ?: 'No details provided.';
+$pageActions = [
+    [
+        'label' => 'Edit',
+        'href' => route('tickets.edit', $ticket),
+        'icon' => 'pencil',
+    ],
+    [
+        'label' => 'View Time Entries',
+        'href' => route('tickets.time-tracking.index', ['ticket' => $ticket->id]),
+        'icon' => 'eye',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="w-full max-w-7xl mx-auto">
     <!-- Ticket Header -->

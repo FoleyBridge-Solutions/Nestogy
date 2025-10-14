@@ -2,6 +2,29 @@
 
 @section('title', 'Contract Management')
 
+@php
+$pageTitle = 'Contract Management';
+$pageSubtitle = 'Intelligent contract lifecycle management';
+$pageActions = [
+    [
+        'label' => 'Template Library',
+        'href' => /contracts/templates,
+    ],
+    [
+        'label' => 'New Contract',
+        'href' => /financial/contracts/create,
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+    [
+        'label' => 'Create Your First Contract',
+        'href' => /financial/contracts/create,
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="min-h-screen" x-data="contractDashboard()">
     <!-- Header Section -->
@@ -36,17 +59,7 @@
         <!-- Statistics Dashboard -->
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
             <!-- Total Contracts -->
-            <flux:card class="hover:shadow-md transition-shadow cursor-pointer" @click="filterByStatus('')">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <flux:heading size="2xl">{{ $statistics['total_contracts'] ?? 0 }}</flux:heading>
-                        <flux:text size="sm" class="text-gray-600 dark:text-gray-400">Total Contracts</flux:text>
-                    </div>
-                    <div class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                        <flux:icon name="document-text" class="w-6 h-6 text-gray-600 dark:text-gray-400" />
-                    </div>
-                </div>
-            </flux:card>
+            
             
             <!-- Active Contracts -->
             <flux:card class="hover:shadow-md transition-shadow cursor-pointer" @click="filterByStatus('active')">

@@ -2,30 +2,15 @@
 
 @section('title', 'Settings')
 
+@php
+$pageTitle = 'Settings';
+$pageSubtitle = 'Manage your company configuration and preferences';
+@endphp
+
 @section('content')
 <flux:container>
     <!-- Header Section -->
-    <flux:card class="mb-6">
-        <div class="flex items-start justify-between">
-            <div>
-                <flux:heading size="xl">Settings</flux:heading>
-                <flux:text class="mt-2">Manage your company configuration and preferences</flux:text>
-            </div>
-            <flux:button.group>
-                <flux:button icon="arrow-down-tray" onclick="exportSettings()">
-                    Export Settings
-                </flux:button>
-                <flux:button icon="arrow-up-tray" onclick="document.getElementById('import-file').click()">
-                    Import Settings
-                </flux:button>
-            </flux:button.group>
-        </div>
-        
-        <form id="import-form" action="{{ route('settings.import') }}" method="POST" enctype="multipart/form-data" class="hidden">
-            @csrf
-            <input type="file" id="import-file" name="file" accept=".json" onchange="this.form.submit()">
-        </form>
-    </flux:card>
+    
 
     <!-- Success/Error Messages -->
     @if(session('success'))

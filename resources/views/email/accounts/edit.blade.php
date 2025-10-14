@@ -2,6 +2,11 @@
 
 @section('title', 'Edit Email Account')
 
+@php
+$pageTitle = 'Edit Email Account';
+$pageSubtitle = 'Update your email account settings';
+@endphp
+
 @section('content')
 @php
     $sidebarContext = 'email';
@@ -9,18 +14,7 @@
 
 <div class="container-fluid h-full flex flex-col">
     <!-- Header -->
-    <flux:card class="mb-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <flux:heading>Edit Email Account</flux:heading>
-                <flux:text size="sm">Update your email account settings</flux:text>
-            </div>
-            <flux:button variant="ghost" size="sm" href="{{ route('email.accounts.index') }}">
-                <flux:icon.arrow-left class="w-4 h-4 mr-2" />
-                Back to Accounts
-            </flux:button>
-        </div>
-    </flux:card>
+    
 
     <!-- Form -->
     <div class="flex-1 overflow-y-auto">

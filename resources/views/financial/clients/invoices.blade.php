@@ -2,6 +2,25 @@
 
 @section('title', ($client ? $client->name . ' - ' : '') . 'Invoices')
 
+@php
+$pageTitle = 'Invoices for ' . $client->name;
+$pageSubtitle = 'Total Revenue';
+$pageActions = [
+    [
+        'label' => 'Create Invoice',
+        'href' => route('financial.invoices.create'),
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+    [
+        'label' => 'Create Invoice',
+        'href' => {{ route('financial.invoices.create') }},
+        'icon' => 'plus',
+        'variant' => 'primary',
+    ],
+];
+@endphp
+
 @section('content')
 <div class="container mx-auto px-6">
     @if($client)
@@ -16,7 +35,6 @@
             
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Invoices for {{ $client->name }}</h1>
                     <p class="text-gray-600 dark:text-gray-400 mt-2">Manage invoices and billing</p>
                 </div>
                 
@@ -30,20 +48,7 @@
         </div>
     @else
         <!-- Header without client context -->
-        <div class="mb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">All Invoices</h1>
-                    <p class="text-gray-600 dark:text-gray-400 mt-2">Manage all invoices across clients</p>
-                </div>
-                
-                <div class="flex gap-2">
-                    <flux:button href="{{ route('financial.invoices.create') }}" variant="primary">
-                        <i class="fas fa-plus mr-2"></i>
-                        Create Invoice
-                    </flux:button>
-                </div>
-            </div>
+        
         </div>
     @endif
 
