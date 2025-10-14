@@ -236,7 +236,7 @@
                     @foreach($types as $key => $label)
                         <flux:pillbox.option value="{{ $key }}">
                             <div class="flex items-center gap-2">
-                                <flux:icon.{{ $typeIcons[$key] ?? 'folder' }} variant="mini" class="text-zinc-400" />
+                                <flux:icon name="{{ $typeIcons[$key] ?? 'folder' }}" variant="mini" class="text-zinc-400" />
                                 {{ $label }}
                             </div>
                         </flux:pillbox.option>
