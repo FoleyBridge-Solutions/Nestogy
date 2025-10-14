@@ -1,4 +1,15 @@
 <div>
+    {{-- Header with Create Button --}}
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <flux:heading size="xl">Invoices</flux:heading>
+            <flux:text variant="muted">Manage billing and invoices</flux:text>
+        </div>
+        <flux:button href="{{ route('financial.invoices.create') }}" icon="plus">
+            Create Invoice
+        </flux:button>
+    </div>
+
     {{-- Only show stats if we have data --}}
     @if($this->invoices->total() > 0)
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
