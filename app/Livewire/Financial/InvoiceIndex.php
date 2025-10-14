@@ -152,7 +152,6 @@ class InvoiceIndex extends Component
         if ($invoice->status === 'Sent') {
             $invoice->update([
                 'status' => 'Paid',
-                'paid_at' => now(),
             ]);
 
             $this->dispatch('invoice-updated');
@@ -168,7 +167,6 @@ class InvoiceIndex extends Component
         if ($invoice->status === 'Draft') {
             $invoice->update([
                 'status' => 'Sent',
-                'sent_at' => now(),
             ]);
 
             $this->dispatch('invoice-updated');
@@ -184,7 +182,6 @@ class InvoiceIndex extends Component
         if (in_array($invoice->status, ['Draft', 'Sent'])) {
             $invoice->update([
                 'status' => 'Cancelled',
-                'cancelled_at' => now(),
             ]);
 
             $this->dispatch('invoice-updated');
@@ -221,7 +218,6 @@ class InvoiceIndex extends Component
             ->where('status', 'Draft')
             ->update([
                 'status' => 'Sent',
-                'sent_at' => now(),
             ]);
 
         $this->selected = [];
@@ -238,7 +234,6 @@ class InvoiceIndex extends Component
             ->where('status', 'Sent')
             ->update([
                 'status' => 'Paid',
-                'paid_at' => now(),
             ]);
 
         $this->selected = [];
@@ -255,7 +250,6 @@ class InvoiceIndex extends Component
             ->whereIn('status', ['Draft', 'Sent'])
             ->update([
                 'status' => 'Cancelled',
-                'cancelled_at' => now(),
             ]);
 
         $this->selected = [];
