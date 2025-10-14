@@ -2,6 +2,7 @@
 
 @php
 $pageTitle = 'Create Invoice';
+$pageSubtitle = 'Create a new invoice for your client';
 @endphp
 
 @section('content')

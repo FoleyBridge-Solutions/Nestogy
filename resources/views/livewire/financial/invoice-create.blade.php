@@ -1,9 +1,4 @@
 <div>
-    <div class="mb-6">
-        <flux:heading size="xl">Create Invoice</flux:heading>
-        <flux:text variant="muted">Create a new invoice for your client</flux:text>
-    </div>
-
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
             <flux:card>
