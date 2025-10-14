@@ -335,6 +335,9 @@ class InvoiceCreate extends Component
                 'amount' => 0,
             ]);
 
+            // Load the client relationship for tax calculations
+            $invoice->load('client');
+
             foreach ($this->items as $index => $item) {
                 $invoice->items()->create([
                     'company_id' => Auth::user()->company_id,
