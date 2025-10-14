@@ -49,6 +49,4 @@ $classes = Flux::classes('shrink-0')
   <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75 3 12m0 0 3.75-3.75M3 12h18"/>
 </svg>
 
-        <?php break; ?>
-
 <?php endswitch; ?>
