@@ -98,13 +98,10 @@ class AssetWarrantySeeder extends Seeder
                 'SquareTrade', 'Asurion', 'AllState Protection Plan',
                 'Best Buy Total Tech', 'Upsie', 'Worth Ave. Group',
             ],
-            'third_party' => [
-                'Service Master', 'Tech Support Plus', 'IT Warranty Services',
-                'Global Warranty Group', 'AmTrust Warranty',
-            ],
             'service_contract' => [
                 'Managed Services Agreement', 'Break-Fix Contract',
                 'Preventive Maintenance Agreement', 'On-Site Support Contract',
+                'Service Master', 'Tech Support Plus', 'IT Warranty Services',
             ],
         ];
 
@@ -154,24 +151,21 @@ class AssetWarrantySeeder extends Seeder
             $weights = [
                 'manufacturer' => 70,
                 'extended' => 20,
-                'third_party' => 5,
-                'service_contract' => 5,
+                'service_contract' => 10,
             ];
         } elseif ($ageInYears <= 3) {
             // Mid-age assets - mix of extended and manufacturer
             $weights = [
                 'manufacturer' => 30,
                 'extended' => 40,
-                'third_party' => 20,
-                'service_contract' => 10,
+                'service_contract' => 30,
             ];
         } else {
-            // Older assets - mostly third-party and service contracts
+            // Older assets - mostly service contracts
             $weights = [
-                'manufacturer' => 5,
-                'extended' => 15,
-                'third_party' => 40,
-                'service_contract' => 40,
+                'manufacturer' => 10,
+                'extended' => 20,
+                'service_contract' => 70,
             ];
         }
 
@@ -202,7 +196,6 @@ class AssetWarrantySeeder extends Seeder
         $multipliers = [
             'manufacturer' => 1.0,
             'extended' => 1.2,
-            'third_party' => 0.8,
             'service_contract' => 1.5,
         ];
 
@@ -231,19 +224,13 @@ class AssetWarrantySeeder extends Seeder
                 'No lemon policy - replacement after 3 repairs',
                 'Accidental damage not covered',
             ],
-            'third_party' => [
-                'Certified technician support',
-                'Parts covered up to original purchase price',
-                'Remote support included',
-                'On-site service available for additional fee',
-                'Pre-existing conditions not covered',
-            ],
             'service_contract' => [
                 'Unlimited service calls',
                 'Preventive maintenance included',
                 'Priority response time',
                 'Replacement parts included',
                 'Software support included',
+                'Certified technician support',
             ],
         ];
 

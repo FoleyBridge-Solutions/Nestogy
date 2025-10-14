@@ -73,6 +73,7 @@ class TemplateContentGenerator
         $descriptions = [
             'hypervisor_node' => "**Server & Hypervisor Support:** Support pertaining to the core server infrastructure and virtualization environment (\"Managed Server Infrastructure\"), encompassing physical servers, hypervisor hosts, management interfaces, cluster functionality, and directly connected storage infrastructure. Support includes monitoring, maintenance, performance optimization, and troubleshooting of server hardware and virtualization platforms as specified in Schedule A.\n\n",
             'server' => "**Server & Hypervisor Support:** Support pertaining to the core server infrastructure and virtualization environment (\"Managed Server Infrastructure\"), encompassing physical servers, hypervisor hosts, management interfaces, cluster functionality, and directly connected storage infrastructure. Support includes monitoring, maintenance, performance optimization, and troubleshooting of server hardware and virtualization platforms as specified in Schedule A.\n\n",
+            'hypervisor_server' => "**Server & Hypervisor Support:** Support pertaining to the core server infrastructure and virtualization environment (\"Managed Server Infrastructure\"), encompassing physical servers, hypervisor hosts, management interfaces, cluster functionality, and directly connected storage infrastructure. Support includes monitoring, maintenance, performance optimization, and troubleshooting of server hardware and virtualization platforms as specified in Schedule A.\n\n",
             'workstation' => "**Workstation Support:** Support pertaining to Client-owned physical and virtual workstations (\"Managed Workstations\") as specified in Schedule A, including their operating systems and standard installed business applications. Services include hardware troubleshooting coordination, software support, and direct end-user assistance for issues related to workstation functionality, connectivity, and productivity applications.\n\n",
             'network_device' => "**Network Infrastructure Support:** Support for network devices including routers, switches, firewalls, and wireless access points (\"Managed Network Infrastructure\"). Services encompass configuration management, performance monitoring, security policy implementation, and troubleshooting of network connectivity and performance issues.\n\n",
             'mobile_device' => "**Mobile Device Support:** Support for mobile endpoints including smartphones, tablets, and mobile workstations (\"Managed Mobile Devices\"). Services include device management, security policy enforcement, application support, and connectivity troubleshooting.\n\n",
@@ -83,11 +84,9 @@ class TemplateContentGenerator
 
         $content = '';
         foreach ($descriptions as $key => $description) {
-            if (is_array($key)) {
-                if (array_intersect($key, $assetTypes)) {
-                    $content .= $description;
-                }
-            } elseif (in_array($key, $assetTypes)) {
+            if (in_array($key, $assetTypes) || 
+                (in_array('hypervisor_node', $assetTypes) && $key === 'hypervisor_server') ||
+                (in_array('server', $assetTypes) && $key === 'hypervisor_server')) {
                 $content .= $description;
             }
         }

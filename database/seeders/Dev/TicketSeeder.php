@@ -2,10 +2,10 @@
 
 namespace Database\Seeders\Dev;
 
+use App\Domains\Ticket\Models\Ticket;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Contact;
-use App\Models\Ticket;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -82,13 +82,13 @@ class TicketSeeder extends Seeder
                     // Ticket status based on age
                     $daysOld = Carbon::parse($createdAt)->diffInDays(now());
                     if ($daysOld > 30) {
-                        $status = fake()->randomElement(['closed', 'closed', 'closed', 'resolved', 'cancelled']);
+                        $status = fake()->randomElement(['closed', 'closed', 'closed', 'resolved', 'resolved']);
                         $closedAt = fake()->dateTimeBetween($createdAt, Carbon::parse($createdAt)->addDays(rand(1, 14)));
                     } elseif ($daysOld > 7) {
                         $status = fake()->randomElement(['open', 'in_progress', 'resolved', 'closed']);
                         $closedAt = $status === 'closed' ? fake()->dateTimeBetween($createdAt, 'now') : null;
                     } else {
-                        $status = fake()->randomElement(['open', 'open', 'in_progress', 'waiting']);
+                        $status = fake()->randomElement(['open', 'open', 'in_progress', 'pending']);
                         $closedAt = null;
                     }
 
@@ -97,19 +97,19 @@ class TicketSeeder extends Seeder
                         'low', 'low', 'low',
                         'medium', 'medium', 'medium', 'medium',
                         'high', 'high',
-                        'critical',
+                        'urgent',
                     ]);
 
                     // Response and resolution times based on priority
                     $responseTime = match ($priority) {
-                        'critical' => rand(5, 30),      // minutes
+                        'urgent' => rand(5, 30),      // minutes
                         'high' => rand(30, 120),        // minutes
                         'medium' => rand(120, 480),     // 2-8 hours
                         'low' => rand(480, 1440),       // 8-24 hours
                     };
 
                     $resolutionTime = match ($priority) {
-                        'critical' => rand(60, 240),     // 1-4 hours
+                        'urgent' => rand(60, 240),     // 1-4 hours
                         'high' => rand(240, 480),        // 4-8 hours
                         'medium' => rand(480, 2880),     // 8-48 hours
                         'low' => rand(1440, 10080),      // 1-7 days
@@ -122,6 +122,9 @@ class TicketSeeder extends Seeder
                         'problem',
                         'change_request',
                     ]);
+
+                    $isResolved = in_array($status, ['resolved', 'closed']);
+                    $resolvedAt = $isResolved ? Carbon::parse($createdAt)->addMinutes($resolutionTime) : null;
 
                     $ticket = Ticket::factory()
                         ->state([
@@ -136,14 +139,16 @@ class TicketSeeder extends Seeder
                             'created_at' => $createdAt,
                             'updated_at' => fake()->dateTimeBetween($createdAt, 'now'),
                             'closed_at' => $closedAt,
+                            'closed_by' => $closedAt ? $technicians->random()->id : null,
                             'first_response_at' => fake()->boolean(80) ?
                                 Carbon::parse($createdAt)->addMinutes($responseTime) : null,
-                            'resolved_at' => in_array($status, ['resolved', 'closed']) ?
-                                Carbon::parse($createdAt)->addMinutes($resolutionTime) : null,
-                            'satisfaction_rating' => in_array($status, ['resolved', 'closed']) ?
+                            'is_resolved' => $isResolved,
+                            'resolved_at' => $resolvedAt,
+                            'resolved_by' => $resolvedAt ? $technicians->random()->id : null,
+                            'satisfaction_rating' => $isResolved ?
                                 fake()->optional(0.4)->numberBetween(1, 5) : null,
-                            'time_spent' => in_array($status, ['resolved', 'closed']) ?
-                                fake()->numberBetween(15, 480) : 0,  // minutes
+                            'time_spent' => $isResolved ?
+                                fake()->numberBetween(15, 480) : 0,
                             'billable' => fake()->boolean(70),
                             'tags' => json_encode(fake()->randomElements([
                                 'password-reset', 'email-issue', 'printer', 'network', 'software',

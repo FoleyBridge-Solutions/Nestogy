@@ -63,7 +63,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::put('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'update'])->name('contacts.update');
         Route::delete('contacts/{contact}', [\App\Domains\Client\Controllers\ContactController::class, 'destroy'])->name('contacts.destroy');
 
-        // Contact attachments/notes
+        // Contact API routes for modal functionality
         Route::prefix('contacts/{contact}')->name('contacts.')->group(function () {
             Route::put('portal-access', [\App\Domains\Client\Controllers\ContactController::class, 'updatePortalAccess'])->name('portal-access.update');
             Route::put('security', [\App\Domains\Client\Controllers\ContactController::class, 'updateSecurity'])->name('security.update');

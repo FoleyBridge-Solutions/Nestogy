@@ -473,7 +473,7 @@ class ClientService extends BaseService
                     'description' => 'Ends: '.($contract->end_date ? $contract->end_date->format('M d, Y') : 'No end date'),
                     'status' => $contract->status,
                     'date' => $contract->updated_at ?? $contract->created_at,
-                    'url' => route('contracts.show', $contract->id),
+                    'url' => route('financial.contracts.show', $contract->id),
                 ];
             });
     }
