@@ -217,4 +217,55 @@ class InvoiceService
             'balance' => round($invoice->getBalance(), 2),
         ];
     }
+
+    /**
+     * Duplicate an invoice
+     */
+    public function duplicateInvoice(Invoice $originalInvoice, array $overrides = []): Invoice
+    {
+        return DB::transaction(function () use ($originalInvoice, $overrides) {
+            try {
+                $invoiceData = $originalInvoice->toArray();
+
+                unset($invoiceData['id'], $invoiceData['number'], $invoiceData['created_at'],
+                    $invoiceData['updated_at'], $invoiceData['archived_at'], $invoiceData['sent_at'],
+                    $invoiceData['paid_at'], $invoiceData['viewed_at']);
+
+                $invoiceData = array_merge($invoiceData, $overrides);
+
+                $invoiceData['date'] = $overrides['date'] ?? now()->toDateString();
+                $invoiceData['due_date'] = $overrides['due_date'] ?? now()->addDays(30)->toDateString();
+                $invoiceData['due'] = $invoiceData['due_date'];
+                $invoiceData['status'] = 'Draft';
+                $invoiceData['number'] = $this->generateInvoiceNumber();
+
+                $newInvoice = Invoice::create($invoiceData);
+
+                $originalItems = $originalInvoice->items()->get();
+                foreach ($originalItems as $item) {
+                    $itemData = $item->toArray();
+                    unset($itemData['id'], $itemData['invoice_id'], $itemData['created_at'], $itemData['updated_at']);
+                    $newInvoice->items()->create($itemData);
+                }
+
+                $newInvoice->recalculateTotals();
+
+                Log::info('Invoice duplicated successfully', [
+                    'original_invoice_id' => $originalInvoice->id,
+                    'new_invoice_id' => $newInvoice->id,
+                    'user_id' => Auth::id(),
+                ]);
+
+                return $newInvoice->fresh(['client', 'category', 'items']);
+
+            } catch (\Exception $e) {
+                Log::error('Invoice duplication failed', [
+                    'original_invoice_id' => $originalInvoice->id,
+                    'error' => $e->getMessage(),
+                    'user_id' => Auth::id(),
+                ]);
+                throw new \Exception('Failed to duplicate invoice: '.$e->getMessage());
+            }
+        });
+    }
 }

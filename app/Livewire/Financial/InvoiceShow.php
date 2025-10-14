@@ -222,30 +222,31 @@ class InvoiceShow extends Component
         $this->authorize('create', Invoice::class);
 
         try {
-            // Create a duplicate invoice
-            $newInvoice = $this->invoice->replicate();
-            $newInvoice->status = 'Draft';
-            $newInvoice->created_at = now();
-            $newInvoice->updated_at = now();
-            $newInvoice->save();
+            $invoiceService = app(InvoiceService::class);
+            
+            $overrides = [
+                'date' => now()->format('Y-m-d'),
+                'due_date' => now()->addDays(30)->format('Y-m-d'),
+            ];
 
-            // Duplicate invoice items
-            foreach ($this->invoice->items as $item) {
-                $newItem = $item->replicate();
-                $newItem->invoice_id = $newInvoice->id;
-                $newItem->save();
-            }
+            $newInvoice = $invoiceService->duplicateInvoice($this->invoice, $overrides);
 
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => 'Invoice duplicated successfully',
+                'message' => "Invoice duplicated successfully as #{$newInvoice->number}",
             ]);
 
-            return redirect()->route('financial.invoices.edit', $newInvoice);
+            return redirect()->route('financial.invoices.show', $newInvoice);
         } catch (\Exception $e) {
+            Log::error('Invoice duplication failed in Livewire', [
+                'invoice_id' => $this->invoice->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
+
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Failed to duplicate invoice',
+                'message' => 'Failed to duplicate invoice: '.$e->getMessage(),
             ]);
         }
     }

@@ -1202,4 +1202,51 @@ class InvoiceController extends Controller
         // Redirect to the recurring invoices controller
         return redirect()->route('financial.recurring-invoices.index');
     }
+
+    /**
+     * Duplicate an invoice
+     */
+    public function duplicate(Request $request, Invoice $invoice)
+    {
+        try {
+            $this->authorize('create', Invoice::class);
+
+            $overrides = [
+                'date' => $request->get('date', now()->format('Y-m-d')),
+                'due_date' => $request->get('due_date', now()->addDays(30)->format('Y-m-d')),
+            ];
+
+            $newInvoice = $this->invoiceService->duplicateInvoice($invoice, $overrides);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice duplicated successfully',
+                    'invoice' => $newInvoice,
+                ]);
+            }
+
+            return redirect()
+                ->route('financial.invoices.show', $newInvoice)
+                ->with('success', "Invoice duplicated as #{$newInvoice->number}");
+
+        } catch (\Exception $e) {
+            Log::error('Invoice duplication failed', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to duplicate invoice: '.$e->getMessage(),
+                ], 500);
+            }
+
+            return redirect()
+                ->route('financial.invoices.show', $invoice)
+                ->with('error', 'Failed to duplicate invoice: '.$e->getMessage());
+        }
+    }
 }
