@@ -319,8 +319,9 @@ class InvoiceEdit extends Component
 
             $this->invoice->items()->delete();
 
+            $createdItems = [];
             foreach ($this->items as $index => $item) {
-                $this->invoice->items()->create([
+                $invoiceItem = $this->invoice->items()->create([
                     'company_id' => Auth::user()->company_id,
                     'name' => $item['name'],
                     'description' => $item['description'] ?? null,
@@ -328,12 +329,19 @@ class InvoiceEdit extends Component
                     'price' => $item['price'],
                     'discount' => 0,
                     'order' => $index,
+                    'subtotal' => $item['quantity'] * $item['price'],
+                    'tax' => 0,
+                    'total' => $item['quantity'] * $item['price'],
                 ]);
+                $createdItems[] = $invoiceItem;
             }
 
-            $this->invoice->calculateTotals();
-
             DB::commit();
+
+            // Calculate totals with tax after transaction
+            foreach ($createdItems as $item) {
+                $item->calculateAndSaveTotals();
+            }
 
             Flux::toast('Invoice updated successfully', variant: 'success');
 

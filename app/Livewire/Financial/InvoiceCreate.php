@@ -376,10 +376,11 @@ class InvoiceCreate extends Component
                 return;
             }
 
-            // Step 3: Create invoice items
+            // Step 3: Create invoice items (without tax calculation during transaction)
             try {
+                $createdItems = [];
                 foreach ($this->items as $index => $item) {
-                    $invoice->items()->create([
+                    $invoiceItem = $invoice->items()->create([
                         'company_id' => Auth::user()->company_id,
                         'name' => $item['name'],
                         'description' => $item['description'] ?? null,
@@ -387,7 +388,11 @@ class InvoiceCreate extends Component
                         'price' => $item['price'],
                         'discount' => 0,
                         'order' => $index,
+                        'subtotal' => $item['quantity'] * $item['price'],
+                        'tax' => 0,
+                        'total' => $item['quantity'] * $item['price'],
                     ]);
+                    $createdItems[] = $invoiceItem;
                 }
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -395,16 +400,16 @@ class InvoiceCreate extends Component
                 return;
             }
 
-            // Step 4: Calculate totals
-            try {
-                $invoice->calculateTotals();
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Flux::toast('Failed calculating totals: ' . $e->getMessage(), variant: 'danger');
-                return;
-            }
-
             DB::commit();
+
+            // Step 4: Calculate totals with tax AFTER transaction commits
+            try {
+                foreach ($createdItems as $item) {
+                    $item->calculateAndSaveTotals();
+                }
+            } catch (\Exception $e) {
+                Flux::toast('Invoice created but tax calculation failed: ' . $e->getMessage(), variant: 'warning');
+            }
 
             $message = $status === 'Draft'
                 ? 'Invoice saved as draft successfully'

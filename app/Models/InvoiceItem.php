@@ -526,58 +526,10 @@ class InvoiceItem extends Model
     {
         parent::boot();
 
-        // Calculate totals when creating or updating
-        static::saving(function ($item) {
-            // Calculate subtotal
-            $subtotal = $item->quantity * $item->price;
-
-            // Apply discount
-            $discountedSubtotal = $subtotal - $item->discount;
-
-            // Calculate tax
-            $taxAmount = 0;
-
-            // Use VoIP tax calculation if service type is specified
-            if ($item->service_type) {
-                try {
-                    $taxCalculation = $item->calculateVoIPTaxes();
-                    $taxAmount = $taxCalculation['total_tax_amount'] ?? 0;
-                } catch (\Exception $e) {
-                    // Log error but don't fail the save
-                    \Log::warning('VoIP tax calculation failed for item', [
-                        'item_id' => $item->id,
-                        'service_type' => $item->service_type,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            } elseif ($item->taxRate) {
-                // Fallback to legacy tax calculation
-                $taxAmount = $item->taxRate->calculateTaxAmount($discountedSubtotal);
-            } else {
-                // Use TaxJar for general sales tax
-                $taxAmount = $item->calculateSalesTax($discountedSubtotal);
-            }
-
-            // Calculate total
-            $total = $discountedSubtotal + $taxAmount;
-
-            $item->subtotal = $subtotal;
-            $item->tax = $taxAmount;
-            $item->total = $total;
-        });
-
-        // Update parent totals when item changes
-        static::saved(function ($item) {
-            if ($item->invoice) {
-                $item->invoice->calculateTotals();
-            }
-            if ($item->quote) {
-                $item->quote->calculateTotals();
-            }
-            if ($item->recurring) {
-                $item->recurring->calculateTotals();
-            }
-        });
+        // Note: Removed automatic saving event for tax calculation
+        // Tax calculation should be called explicitly after item creation
+        // to avoid database queries inside transactions.
+        // Use $item->calculateAndSaveTotals() after creating items.
 
         // Update parent totals when item is deleted
         static::deleted(function ($item) {
@@ -591,5 +543,26 @@ class InvoiceItem extends Model
                 $item->recurring->calculateTotals();
             }
         });
+    }
+    
+    /**
+     * Calculate and save item totals with tax calculation.
+     * This should be called explicitly after creating/updating items.
+     */
+    public function calculateAndSaveTotals(): void
+    {
+        $this->calculateTotals();
+        $this->saveQuietly(); // Save without firing events
+        
+        // Update parent totals
+        if ($this->invoice) {
+            $this->invoice->calculateTotals();
+        }
+        if ($this->quote) {
+            $this->quote->calculateTotals();
+        }
+        if ($this->recurring) {
+            $this->recurring->calculateTotals();
+        }
     }
 }
