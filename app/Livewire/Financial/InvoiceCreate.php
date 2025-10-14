@@ -317,55 +317,69 @@ class InvoiceCreate extends Component
             return;
         }
 
-        DB::beginTransaction();
         try {
-            \Log::info('Creating invoice', [
-                'company_id' => Auth::user()->company_id,
-                'client_id' => $this->client_id,
-                'category_id' => $this->category_id,
-            ]);
-
-            $invoice = Invoice::create([
-                'company_id' => Auth::user()->company_id,
-                'client_id' => $this->client_id,
-                'category_id' => $this->category_id,
-                'prefix' => $this->prefix,
-                'number' => $this->number,
-                'status' => $status,
-                'date' => $this->invoice_date,
-                'due_date' => $this->due_date,
-                'currency_code' => $this->currency_code,
-                'scope' => $this->scope,
-                'note' => $this->note,
-                'discount_amount' => $this->discountAmount,
-                'amount' => 0,
-                'is_recurring' => false,
-            ]);
-
-            \Log::info('Invoice created', ['invoice_id' => $invoice->id]);
-
-            // Load the client relationship for tax calculations
-            $invoice->load('client');
-
-            \Log::info('Creating invoice items', ['count' => count($this->items)]);
-
-            foreach ($this->items as $index => $item) {
-                $invoice->items()->create([
+            DB::beginTransaction();
+            
+            // Step 1: Create invoice
+            try {
+                $invoice = Invoice::create([
                     'company_id' => Auth::user()->company_id,
-                    'name' => $item['name'],
-                    'description' => $item['description'] ?? null,
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'discount' => 0,
-                    'order' => $index,
+                    'client_id' => $this->client_id,
+                    'category_id' => $this->category_id,
+                    'prefix' => $this->prefix,
+                    'number' => $this->number,
+                    'status' => $status,
+                    'date' => $this->invoice_date,
+                    'due_date' => $this->due_date,
+                    'currency_code' => $this->currency_code,
+                    'scope' => $this->scope,
+                    'note' => $this->note,
+                    'discount_amount' => $this->discountAmount,
+                    'amount' => 0,
+                    'is_recurring' => false,
                 ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Flux::toast('Failed creating invoice record: ' . $e->getMessage(), variant: 'danger');
+                return;
             }
 
-            \Log::info('Invoice items created');
+            // Step 2: Load client
+            try {
+                $invoice->load('client');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Flux::toast('Failed loading client: ' . $e->getMessage(), variant: 'danger');
+                return;
+            }
 
-            $invoice->calculateTotals();
+            // Step 3: Create invoice items
+            try {
+                foreach ($this->items as $index => $item) {
+                    $invoice->items()->create([
+                        'company_id' => Auth::user()->company_id,
+                        'name' => $item['name'],
+                        'description' => $item['description'] ?? null,
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'discount' => 0,
+                        'order' => $index,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Flux::toast('Failed creating invoice items: ' . $e->getMessage(), variant: 'danger');
+                return;
+            }
 
-            \Log::info('Totals calculated');
+            // Step 4: Calculate totals
+            try {
+                $invoice->calculateTotals();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Flux::toast('Failed calculating totals: ' . $e->getMessage(), variant: 'danger');
+                return;
+            }
 
             DB::commit();
 
@@ -379,18 +393,7 @@ class InvoiceCreate extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            // Get the previous exception if it exists (the real error)
-            $previousException = $e->getPrevious();
-            $actualError = $previousException ? $previousException->getMessage() : $e->getMessage();
-            
-            \Log::error('Failed to create invoice', [
-                'error' => $e->getMessage(),
-                'previous_error' => $previousException ? $previousException->getMessage() : null,
-                'trace' => $e->getTraceAsString(),
-            ]);
-            
-            Flux::toast('Failed to create invoice: '.$actualError, variant: 'danger');
+            Flux::toast('Unexpected error: ' . $e->getMessage(), variant: 'danger');
         }
     }
 
