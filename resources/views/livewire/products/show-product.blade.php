@@ -3,9 +3,10 @@
     <div class="lg:col-span-2 space-y-6">
         <!-- Product Details Card -->
         <flux:card>
-            <flux:card.header>
+            <div>
                 <flux:heading size="lg">Product Details</flux:heading>
-            </flux:card.header>
+                <flux:subheading>View product information and details</flux:subheading>
+            </div>
             
             <div class="p-6 space-y-6">
                 @if($product->description)
@@ -76,9 +77,10 @@
         <!-- Recent Sales Card -->
         @if(count($recentSales) > 0)
         <flux:card>
-            <flux:card.header>
+            <div>
                 <flux:heading size="lg">Recent Sales</flux:heading>
-            </flux:card.header>
+                <flux:subheading>Last 10 sales transactions</flux:subheading>
+            </div>
             
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -118,9 +120,10 @@
     <div class="space-y-6">
         <!-- Quick Stats Card -->
         <flux:card>
-            <flux:card.header>
+            <div>
                 <flux:heading size="lg">Quick Stats</flux:heading>
-            </flux:card.header>
+                <flux:subheading>Product performance metrics</flux:subheading>
+            </div>
             
             <div class="p-6 space-y-4">
                 <div>
@@ -155,9 +158,10 @@
 
         <!-- Metadata Card -->
         <flux:card>
-            <flux:card.header>
+            <div>
                 <flux:heading size="lg">Metadata</flux:heading>
-            </flux:card.header>
+                <flux:subheading>Timestamps and identifiers</flux:subheading>
+            </div>
             
             <div class="p-6 space-y-3">
                 <div>
