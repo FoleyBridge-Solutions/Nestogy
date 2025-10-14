@@ -319,6 +319,12 @@ class InvoiceCreate extends Component
 
         DB::beginTransaction();
         try {
+            \Log::info('Creating invoice', [
+                'company_id' => Auth::user()->company_id,
+                'client_id' => $this->client_id,
+                'category_id' => $this->category_id,
+            ]);
+
             $invoice = Invoice::create([
                 'company_id' => Auth::user()->company_id,
                 'client_id' => $this->client_id,
@@ -336,8 +342,12 @@ class InvoiceCreate extends Component
                 'is_recurring' => false,
             ]);
 
+            \Log::info('Invoice created', ['invoice_id' => $invoice->id]);
+
             // Load the client relationship for tax calculations
             $invoice->load('client');
+
+            \Log::info('Creating invoice items', ['count' => count($this->items)]);
 
             foreach ($this->items as $index => $item) {
                 $invoice->items()->create([
@@ -351,7 +361,11 @@ class InvoiceCreate extends Component
                 ]);
             }
 
+            \Log::info('Invoice items created');
+
             $invoice->calculateTotals();
+
+            \Log::info('Totals calculated');
 
             DB::commit();
 
