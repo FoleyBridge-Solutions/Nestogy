@@ -246,7 +246,7 @@ class InvoiceService
                     $newInvoice->items()->create($itemData);
                 }
 
-                $newInvoice->recalculateTotals();
+                $newInvoice->calculateTotals();
 
                 Log::info('Invoice duplicated successfully', [
                     'original_invoice_id' => $originalInvoice->id,
