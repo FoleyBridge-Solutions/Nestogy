@@ -135,10 +135,10 @@
             @endif
             <h2>{{ $company['name'] }}</h2>
             <p>
-                {{ $company['address'] }}<br>
-                Phone: {{ $company['phone'] }}<br>
-                Email: {{ $company['email'] }}<br>
-                Website: {{ $company['website'] }}
+                @if($company['address']){{ $company['address'] }}<br>@endif
+                @if($company['phone'])Phone: {{ $company['phone'] }}<br>@endif
+                @if($company['email'])Email: {{ $company['email'] }}<br>@endif
+                @if($company['website'])Website: {{ $company['website'] }}@endif
             </p>
         </div>
         <div class="invoice-info">
@@ -166,9 +166,9 @@
         <div class="billing-info">
             <h3>Service Period:</h3>
             <p>
-                <strong>From:</strong> {{ $invoice['service_from'] ?? 'N/A' }}<br>
-                <strong>To:</strong> {{ $invoice['service_to'] ?? 'N/A' }}<br>
-                <strong>Terms:</strong> {{ $invoice['payment_terms'] ?? 'Net 30' }}
+                @if($invoice['service_from'])<strong>From:</strong> {{ $invoice['service_from'] }}<br>@endif
+                @if($invoice['service_to'])<strong>To:</strong> {{ $invoice['service_to'] }}<br>@endif
+                @if($invoice['payment_terms'])<strong>Terms:</strong> {{ $invoice['payment_terms'] }}@endif
             </p>
         </div>
     </div>
@@ -186,27 +186,25 @@
             @foreach($items ?? [] as $item)
             <tr>
                 <td>
-                    <strong>{{ $item->description ?? 'N/A' }}</strong>
-                    @if($item->details ?? false)
-                        <br><small>{{ $item->details }}</small>
-                    @endif
+                    <strong>{{ $item->name ?? 'N/A' }}</strong>
                 </td>
                 <td class="text-right">{{ $item->quantity ?? 1 }}</td>
                 <td class="text-right">{{ $currency ?? '$' }}{{ number_format($item->price ?? 0, 2) }}</td>
                 <td class="text-right">{{ $currency ?? '$' }}{{ number_format($item->total ?? $item->subtotal ?? 0, 2) }}</td>
             </tr>
+            @if($item->description)
+            <tr>
+                <td colspan="4" style="padding-left: 20px; padding-top: 0; padding-bottom: 10px;">
+                    <small>{{ $item->description }}</small>
+                </td>
+            </tr>
+            @endif
             @endforeach
         </tbody>
     </table>
 
     <div class="totals-section">
         <table class="totals-table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th class="text-right">Amount</th>
-                </tr>
-            </thead>
             <tbody>
             <tr>
                 <td>Subtotal:</td>

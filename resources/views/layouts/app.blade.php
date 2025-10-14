@@ -307,32 +307,32 @@
         @endif
 
         <!-- Page Content -->
-        <div class="p-4 lg:p-6 h-full">
-        <!-- Standardized Page Header -->
-        @if(isset($pageTitle))
-            <div class="mb-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <flux:heading size="xl">{{ $pageTitle }}</flux:heading>
-                        @if(isset($pageSubtitle))
-                            <flux:subheading>{{ $pageSubtitle }}</flux:subheading>
+        <div class="pt-2 px-6 pb-6 lg:px-8 lg:pb-8 h-full">
+            <!-- Standardized Page Header -->
+            @if(isset($pageTitle))
+                <div class="mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <flux:heading size="xl">{{ $pageTitle }}</flux:heading>
+                            @if(isset($pageSubtitle))
+                                <flux:subheading>{{ $pageSubtitle }}</flux:subheading>
+                            @endif
+                        </div>
+                        @if(isset($pageActions) && count($pageActions) > 0)
+                            <div class="flex gap-3 shrink-0">
+                                @foreach($pageActions as $action)
+                                    <flux:button 
+                                        variant="{{ $action['variant'] ?? 'ghost' }}" 
+                                        :href="$action['href'] ?? '#'"
+                                        icon="{{ $action['icon'] ?? null }}">
+                                        {{ $action['label'] }}
+                                    </flux:button>
+                                @endforeach
+                            </div>
                         @endif
                     </div>
-                    @if(isset($pageActions) && count($pageActions) > 0)
-                        <div class="flex gap-3 shrink-0">
-                            @foreach($pageActions as $action)
-                                <flux:button 
-                                    variant="{{ $action['variant'] ?? 'ghost' }}" 
-                                    :href="$action['href'] ?? '#'"
-                                    icon="{{ $action['icon'] ?? null }}">
-                                    {{ $action['label'] }}
-                                </flux:button>
-                            @endforeach
-                        </div>
-                    @endif
                 </div>
-            </div>
-        @endif
+            @endif
             @yield('content')
         </div>
     </flux:main>

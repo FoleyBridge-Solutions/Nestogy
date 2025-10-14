@@ -76,18 +76,31 @@ class PdfServiceProvider extends ServiceProvider
     {
         // Register common PDF data
         view()->composer('pdf.*', function ($view) {
-            $view->with([
-                'company' => [
+            // Only set defaults if not already provided by controller
+            $data = [];
+            
+            if (! isset($view->getData()['company'])) {
+                $data['company'] = [
                     'name' => config('nestogy.company.name', 'Nestogy ERP'),
                     'address' => config('nestogy.company.address', ''),
                     'phone' => config('nestogy.company.phone', ''),
                     'email' => config('nestogy.company.email', ''),
                     'website' => config('nestogy.company.website', ''),
                     'logo' => config('nestogy.company.logo', ''),
-                ],
-                'generated_at' => now(),
-                'generated_by' => auth()->user()->name ?? 'System',
-            ]);
+                ];
+            }
+            
+            if (! isset($view->getData()['generated_at'])) {
+                $data['generated_at'] = now();
+            }
+            
+            if (! isset($view->getData()['generated_by'])) {
+                $data['generated_by'] = auth()->user()->name ?? 'System';
+            }
+            
+            if (! empty($data)) {
+                $view->with($data);
+            }
         });
 
         // Register invoice-specific data

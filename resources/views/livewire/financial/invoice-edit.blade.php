@@ -6,90 +6,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
-            <flux:card>
-                <flux:heading size="lg" class="mb-6">Invoice Details</flux:heading>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <flux:field>
-                        <flux:label badge="Required">Client</flux:label>
-                        <flux:select wire:model.live="client_id" placeholder="Select a client">
-                            @foreach($this->clients as $client)
-                                <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-                        <flux:error name="client_id" />
-                    </flux:field>
 
-                    <flux:field>
-                        <flux:label badge="Required">Category</flux:label>
-                        <flux:select wire:model="category_id" placeholder="Select a category">
-                            @foreach($this->categories as $category)
-                                <flux:select.option value="{{ $category->id }}">{{ $category->name }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-                        <flux:error name="category_id" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Invoice Number</flux:label>
-                        <flux:input 
-                            value="{{ $prefix }}-{{ $number }}" 
-                            readonly
-                        />
-                        <flux:description>Cannot be changed</flux:description>
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Currency</flux:label>
-                        <flux:select wire:model="currency_code">
-                            <flux:select.option value="USD">USD - US Dollar</flux:select.option>
-                            <flux:select.option value="EUR">EUR - Euro</flux:select.option>
-                            <flux:select.option value="GBP">GBP - British Pound</flux:select.option>
-                            <flux:select.option value="CAD">CAD - Canadian Dollar</flux:select.option>
-                        </flux:select>
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label badge="Required">Invoice Date</flux:label>
-                        <flux:input 
-                            type="date" 
-                            wire:model.live="invoice_date"
-                        />
-                        <flux:error name="invoice_date" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Payment Terms</flux:label>
-                        <flux:select wire:model.live="payment_terms">
-                            <flux:select.option value="0">Due on receipt</flux:select.option>
-                            <flux:select.option value="7">Net 7 days</flux:select.option>
-                            <flux:select.option value="14">Net 14 days</flux:select.option>
-                            <flux:select.option value="30">Net 30 days</flux:select.option>
-                            <flux:select.option value="45">Net 45 days</flux:select.option>
-                            <flux:select.option value="60">Net 60 days</flux:select.option>
-                            <flux:select.option value="90">Net 90 days</flux:select.option>
-                        </flux:select>
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label badge="Required">Due Date</flux:label>
-                        <flux:input 
-                            type="date" 
-                            wire:model="due_date"
-                        />
-                        <flux:error name="due_date" />
-                    </flux:field>
-
-                    <flux:field class="md:col-span-2">
-                        <flux:label>Description</flux:label>
-                        <flux:textarea 
-                            wire:model="scope" 
-                            rows="2"
-                            placeholder="Brief description of the invoice..."
-                        />
-                    </flux:field>
-                </div>
-            </flux:card>
 
             <flux:card>
                 <div class="flex justify-between items-center mb-6">
@@ -191,6 +108,15 @@
                 
                 <div class="space-y-6">
                     <flux:field>
+                        <flux:label>Description</flux:label>
+                        <flux:textarea 
+                            wire:model="scope" 
+                            rows="2"
+                            placeholder="Brief description of the invoice..."
+                        />
+                    </flux:field>
+
+                    <flux:field>
                         <flux:label>Internal Notes</flux:label>
                         <flux:textarea 
                             wire:model="note" 
@@ -213,91 +139,106 @@
 
         <div class="lg:col-span-1">
             <div class="sticky top-4 space-y-6">
-                @if($this->selectedClient)
-                    <flux:card>
-                        <flux:heading size="base" class="mb-4">Bill To</flux:heading>
-                        <div class="space-y-1">
-                            <flux:text variant="strong">{{ $this->selectedClient->name }}</flux:text>
-                            @if($this->selectedClient->company_name)
-                                <flux:text size="sm" variant="muted" class="block">
-                                    {{ $this->selectedClient->company_name }}
-                                </flux:text>
-                            @endif
-                            @if($this->selectedClient->email)
-                                <flux:text size="sm" variant="muted" class="block">
-                                    {{ $this->selectedClient->email }}
-                                </flux:text>
-                            @endif
-                            @if($this->selectedClient->phone)
-                                <flux:text size="sm" variant="muted" class="block">
-                                    {{ $this->selectedClient->phone }}
-                                </flux:text>
-                            @endif
+                <flux:card>
+                    <flux:heading size="base" class="mb-4">Invoice Information</flux:heading>
+                    
+                    <div class="space-y-4">
+                        <flux:field>
+                            <flux:label badge="Required">Client</flux:label>
+                            <flux:select wire:model.live="client_id" placeholder="Select a client">
+                                @foreach($this->clients as $client)
+                                    <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="client_id" />
+                        </flux:field>
+
+                        @if($this->selectedClient)
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg space-y-1">
+                                <flux:text variant="strong">{{ $this->selectedClient->name }}</flux:text>
+                                @if($this->selectedClient->company_name)
+                                    <flux:text size="sm" variant="muted" class="block">
+                                        {{ $this->selectedClient->company_name }}
+                                    </flux:text>
+                                @endif
+                                @if($this->selectedClient->email)
+                                    <flux:text size="sm" variant="muted" class="block">
+                                        {{ $this->selectedClient->email }}
+                                    </flux:text>
+                                @endif
+                                @if($this->selectedClient->phone)
+                                    <flux:text size="sm" variant="muted" class="block">
+                                        {{ $this->selectedClient->phone }}
+                                    </flux:text>
+                                @endif
+                            </div>
+                        @endif
+
+                        <flux:separator variant="subtle" />
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <flux:field>
+                                <flux:label badge="Required">Category</flux:label>
+                                <flux:select wire:model="category_id" placeholder="Select">
+                                    @foreach($this->categories as $category)
+                                        <flux:select.option value="{{ $category->id }}">{{ $category->name }}</flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                                <flux:error name="category_id" />
+                            </flux:field>
+
+                            <flux:field>
+                                <flux:label>Currency</flux:label>
+                                <flux:select wire:model="currency_code">
+                                    <flux:select.option value="USD">USD</flux:select.option>
+                                    <flux:select.option value="EUR">EUR</flux:select.option>
+                                    <flux:select.option value="GBP">GBP</flux:select.option>
+                                    <flux:select.option value="CAD">CAD</flux:select.option>
+                                </flux:select>
+                            </flux:field>
                         </div>
-                    </flux:card>
-                @endif
+
+                        <flux:separator variant="subtle" />
+
+                        <div class="grid grid-cols-3 gap-4">
+                            <flux:field>
+                                <flux:label badge="Required">Invoice Date</flux:label>
+                                <flux:input 
+                                    type="date" 
+                                    wire:model.live="invoice_date"
+                                />
+                                <flux:error name="invoice_date" />
+                            </flux:field>
+
+                            <flux:field>
+                                <flux:label>Payment Terms</flux:label>
+                                <flux:select wire:model.live="payment_terms">
+                                    <flux:select.option value="0">Due on receipt</flux:select.option>
+                                    <flux:select.option value="7">Net 7</flux:select.option>
+                                    <flux:select.option value="14">Net 14</flux:select.option>
+                                    <flux:select.option value="30">Net 30</flux:select.option>
+                                    <flux:select.option value="45">Net 45</flux:select.option>
+                                    <flux:select.option value="60">Net 60</flux:select.option>
+                                    <flux:select.option value="90">Net 90</flux:select.option>
+                                </flux:select>
+                            </flux:field>
+
+                            <flux:field>
+                                <flux:label badge="Required">Due Date</flux:label>
+                                <flux:input 
+                                    type="date" 
+                                    wire:model="due_date"
+                                />
+                                <flux:error name="due_date" />
+                            </flux:field>
+                        </div>
+                    </div>
+                </flux:card>
 
                 <flux:card>
                     <flux:heading size="base" class="mb-4">Summary</flux:heading>
                     
                     <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <flux:text>Subtotal</flux:text>
-                            <flux:text variant="strong">${{ number_format($this->subtotal, 2) }}</flux:text>
-                        </div>
-
-                        <flux:separator />
-
-                        <div class="space-y-2">
-                            <flux:field>
-                                <flux:label>Discount</flux:label>
-                                <div class="flex gap-2">
-                                    <flux:select wire:model.live="discount_type" class="w-20">
-                                        <flux:select.option value="fixed">$</flux:select.option>
-                                        <flux:select.option value="percentage">%</flux:select.option>
-                                    </flux:select>
-                                    <flux:input 
-                                        type="number" 
-                                        wire:model.live="discount_amount" 
-                                        step="0.01" 
-                                        min="0"
-                                        placeholder="0"
-                                        class="flex-1"
-                                    />
-                                </div>
-                            </flux:field>
-                            @if($this->discountAmount > 0)
-                                <div class="flex justify-between text-sm">
-                                    <flux:text variant="muted">Discount applied</flux:text>
-                                    <flux:text class="text-green-600">-${{ number_format($this->discountAmount, 2) }}</flux:text>
-                                </div>
-                            @endif
-                        </div>
-
-                        <flux:separator />
-
-                        <div class="space-y-2">
-                            <flux:field>
-                                <flux:label>Tax Rate (%)</flux:label>
-                                <flux:input 
-                                    type="number" 
-                                    wire:model.live="tax_rate" 
-                                    step="0.01" 
-                                    min="0" 
-                                    max="100"
-                                    placeholder="0"
-                                />
-                            </flux:field>
-                            @if($this->taxAmount > 0)
-                                <div class="flex justify-between text-sm">
-                                    <flux:text variant="muted">Tax</flux:text>
-                                    <flux:text variant="strong">${{ number_format($this->taxAmount, 2) }}</flux:text>
-                                </div>
-                            @endif
-                        </div>
-
-                        <flux:separator />
-
                         <div class="flex justify-between pt-2">
                             <flux:heading size="base">Total</flux:heading>
                             <flux:heading size="lg" class="text-blue-600">

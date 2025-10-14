@@ -604,9 +604,37 @@ class InvoiceController extends Controller
         $this->authorize('view', $invoice);
 
         try {
-            $invoice->load(['client', 'items', 'payments']);
+            $invoice->load(['client', 'items', 'payments', 'company']);
 
             $filename = $this->pdfService->generateFilename('invoice', $invoice->number);
+
+            // Get current user
+            $user = Auth::user();
+
+            // Prepare company data
+            $company = $invoice->company;
+
+            // COMPREHENSIVE DEBUG LOGGING
+            Log::info('PDF Generation - Company Debug', [
+                'invoice_id' => $invoice->id,
+                'invoice_company_id' => $invoice->company_id,
+                'company_object_type' => is_null($company) ? 'NULL' : get_class($company),
+                'company_name' => $company ? $company->name : 'NULL',
+                'company_phone' => $company ? $company->phone : 'NULL',
+                'company_email' => $company ? $company->email : 'NULL',
+                'config_app_name' => config('app.name'),
+            ]);
+
+            $companyData = [
+                'name' => $company ? $company->name : config('app.name'),
+                'logo' => $company ? $company->logo : null,
+                'address' => $company ? $company->address : '',
+                'phone' => $company ? $company->phone : '',
+                'email' => $company ? $company->email : '',
+                'website' => $company ? $company->website : '',
+            ];
+
+            Log::info('PDF Generation - Company Data Array', $companyData);
 
             Log::info('Invoice PDF generated', [
                 'invoice_id' => $invoice->id,
@@ -619,6 +647,10 @@ class InvoiceController extends Controller
                     'invoice' => $invoice,
                     'client' => $invoice->client,
                     'items' => $invoice->items,
+                    'company' => $companyData,
+                    'generated_at' => now(),
+                    'generated_by' => $user->name ?? 'System',
+                    'currency' => $invoice->getCurrencySymbol(),
                 ],
                 filename: $filename,
                 options: ['template' => 'invoice']
@@ -628,6 +660,7 @@ class InvoiceController extends Controller
             Log::error('Invoice PDF generation failed', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'user_id' => Auth::id(),
             ]);
 

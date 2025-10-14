@@ -673,7 +673,7 @@ class QuoteController extends Controller
         $this->authorize('view', $quote);
 
         try {
-            $quote->load(['client', 'items', 'category']);
+            $quote->load(['client', 'items', 'category', 'company']);
 
             $filename = $this->pdfService->generateFilename('quote', $quote->getFullNumber());
 
@@ -693,6 +693,7 @@ class QuoteController extends Controller
             Log::error('Quote PDF generation failed', [
                 'quote_id' => $quote->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'user_id' => Auth::id(),
             ]);
 
