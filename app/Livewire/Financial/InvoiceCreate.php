@@ -113,9 +113,9 @@ class InvoiceCreate extends Component
             ->first();
 
         if ($lastInvoice && is_numeric($lastInvoice->number)) {
-            $this->number = str_pad((int) $lastInvoice->number + 1, 6, '0', STR_PAD_LEFT);
+            $this->number = (int) $lastInvoice->number + 1;
         } else {
-            $this->number = '000001';
+            $this->number = 1;
         }
     }
 
@@ -322,12 +322,12 @@ class InvoiceCreate extends Component
             
             // Step 1: Create invoice
             try {
-                $invoiceData = [
+                $invoice = Invoice::create([
                     'company_id' => Auth::user()->company_id,
                     'client_id' => $this->client_id,
                     'category_id' => $this->category_id,
                     'prefix' => $this->prefix,
-                    'number' => $this->number,
+                    'number' => (int) $this->number,
                     'status' => $status,
                     'date' => $this->invoice_date,
                     'due_date' => $this->due_date,
@@ -337,17 +337,7 @@ class InvoiceCreate extends Component
                     'discount_amount' => $this->discountAmount,
                     'amount' => 0,
                     'is_recurring' => false,
-                ];
-                
-                $invoice = new Invoice($invoiceData);
-                
-                // Manually generate url_key to avoid boot method
-                if (! $invoice->url_key) {
-                    $invoice->url_key = bin2hex(random_bytes(16));
-                }
-                
-                $invoice->save();
-                
+                ]);
             } catch (\Exception $e) {
                 DB::rollBack();
                 $errorMsg = $e->getMessage();
