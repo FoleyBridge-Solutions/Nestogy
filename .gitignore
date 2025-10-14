@@ -37,3 +37,4 @@ server.log
 coverage.xml
 /storage/claude/
 /flux-repo/
+/AGENTS.md
