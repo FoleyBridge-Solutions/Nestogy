@@ -319,14 +319,12 @@
                         @endif
                     </div>
                     @if(isset($pageActions) && count($pageActions) > 0)
-                        <div class="flex gap-3">
+                        <div class="flex gap-3 shrink-0">
                             @foreach($pageActions as $action)
                                 <flux:button 
                                     variant="{{ $action['variant'] ?? 'ghost' }}" 
-                                    :href="$action['href'] ?? '#'">
-                                    @if(isset($action['icon']))
-                                        <flux:icon.{{ $action['icon'] }} class="size-4" />
-                                    @endif
+                                    :href="$action['href'] ?? '#'"
+                                    icon="{{ $action['icon'] ?? null }}">
                                     {{ $action['label'] }}
                                 </flux:button>
                             @endforeach
