@@ -24,8 +24,7 @@ class InvoiceService
                 'number' => $this->generateInvoiceNumber(),
                 'scope' => $data['scope'] ?? null,
                 'date' => $data['date'] ?? now()->toDateString(),
-                'due' => $data['due_date'] ?? now()->addDays(30)->toDateString(), // Required field
-                'due_date' => $data['due_date'] ?? now()->addDays(30)->toDateString(), // Optional field
+                'due_date' => $data['due_date'] ?? now()->addDays(30)->toDateString(),
                 'status' => $data['status'] ?? 'Draft',
                 'discount_amount' => $data['discount_amount'] ?? 0,
                 'amount' => 0, // Will be calculated when items are added
@@ -229,13 +228,12 @@ class InvoiceService
 
                 unset($invoiceData['id'], $invoiceData['number'], $invoiceData['created_at'],
                     $invoiceData['updated_at'], $invoiceData['archived_at'], $invoiceData['sent_at'],
-                    $invoiceData['paid_at'], $invoiceData['viewed_at']);
+                    $invoiceData['paid_at'], $invoiceData['viewed_at'], $invoiceData['due']);
 
                 $invoiceData = array_merge($invoiceData, $overrides);
 
                 $invoiceData['date'] = $overrides['date'] ?? now()->toDateString();
                 $invoiceData['due_date'] = $overrides['due_date'] ?? now()->addDays(30)->toDateString();
-                $invoiceData['due'] = $invoiceData['due_date'];
                 $invoiceData['status'] = 'Draft';
                 $invoiceData['number'] = $this->generateInvoiceNumber();
 

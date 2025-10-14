@@ -60,7 +60,6 @@ class Invoice extends Model
         'recurring_frequency',
         'next_recurring_date',
         'date',
-        'due',
         'due_date',
         'discount_amount',
         'amount',
