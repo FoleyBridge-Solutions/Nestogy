@@ -91,11 +91,81 @@
                         </flux:menu.item>
                     </flux:menu>
                 </flux:dropdown>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content (Left 2/3) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Client Information Card -->
+            <flux:card class="overflow-hidden">
+                <div class="p-6 ">
+                    <div class="flex items-center justify-between mb-6">
+                        <flux:heading size="lg" class="flex items-center gap-2 text-zinc-900 dark:text-white">
+                            <flux:icon.user-circle class="size-5 text-zinc-400 dark:text-zinc-500" />
+                            Client Information
+                        </flux:heading>
+                        <flux:button size="xs" variant="ghost" href="{{ route('clients.show', $invoice->client_id) }}" target="_blank">
+                            View Client
+                        </flux:button>
                     </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <flux:text size="xs" class="uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
+                                Company
+                            </flux:text>
+                            <flux:text class="font-medium text-zinc-900 dark:text-white">
+                                {{ $invoice->client->name ?? 'N/A' }}
+                            </flux:text>
+                        </div>
+                        
+                        <div>
+                            <flux:text size="xs" class="uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
+                                Primary Contact
+                            </flux:text>
+                            <flux:text class="font-medium text-zinc-900 dark:text-white">
+                                {{ $invoice->client->primary_contact ?? 'N/A' }}
+                            </flux:text>
+                        </div>
+                        
+                        <div>
+                            <flux:text size="xs" class="uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
+                                Email
+                            </flux:text>
+                            <flux:text class="font-medium text-zinc-900 dark:text-white">
+                                {{ $invoice->client->email ?? 'N/A' }}
+                            </flux:text>
+                        </div>
+                        
+                        <div>
+                            <flux:text size="xs" class="uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
+                                Phone
+                            </flux:text>
+                            <flux:text class="font-medium text-zinc-900 dark:text-white">
+                                {{ $invoice->client->phone ?? 'N/A' }}
+                            </flux:text>
+                        </div>
+                        
+                        @if($invoice->client->address)
+                            <div class="md:col-span-2">
+                                <flux:text size="xs" class="uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1">
+                                    Billing Address
+                                </flux:text>
+                                <flux:text class="font-medium text-zinc-900 dark:text-white">
+                                    {{ $invoice->client->address }}<br>
+                                    {{ $invoice->client->city }}, {{ $invoice->client->state }} {{ $invoice->client->zip }}
+                                </flux:text>
+                            </div>
+                        @endif
+                    </div>
+                </div>
             </flux:card>
 
             <!-- Invoice Items Card -->
-            <flux:card>
+            <flux:card class="overflow-hidden">
+                <div class="p-6 ">
                     <div class="flex items-center justify-between mb-6">
                         <flux:heading size="lg" class="flex items-center gap-2 text-zinc-900 dark:text-white">
                             <flux:icon.shopping-cart class="size-5 text-zinc-400 dark:text-zinc-500" />
@@ -154,9 +224,9 @@
                                 </flux:table.rows>
                             </flux:table>
                         </div>
-
+                        
                         <!-- Totals Row -->
-                        <div class="mt-6 p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-700 rounded-lg">
+                        <div class="p-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-700">
                             <div class="flex justify-end">
                                 <div class="w-full max-w-xs space-y-2">
                                     <div class="flex justify-between text-sm">
