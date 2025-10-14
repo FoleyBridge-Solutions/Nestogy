@@ -322,7 +322,7 @@ class InvoiceCreate extends Component
             
             // Step 1: Create invoice
             try {
-                $invoice = Invoice::create([
+                $invoiceData = [
                     'company_id' => Auth::user()->company_id,
                     'client_id' => $this->client_id,
                     'category_id' => $this->category_id,
@@ -337,10 +337,24 @@ class InvoiceCreate extends Component
                     'discount_amount' => $this->discountAmount,
                     'amount' => 0,
                     'is_recurring' => false,
-                ]);
+                ];
+                
+                $invoice = new Invoice($invoiceData);
+                
+                // Manually generate url_key to avoid boot method
+                if (! $invoice->url_key) {
+                    $invoice->url_key = bin2hex(random_bytes(16));
+                }
+                
+                $invoice->save();
+                
             } catch (\Exception $e) {
                 DB::rollBack();
-                Flux::toast('Failed creating invoice record: ' . $e->getMessage(), variant: 'danger');
+                $errorMsg = $e->getMessage();
+                if ($e->getPrevious()) {
+                    $errorMsg .= ' | Cause: ' . $e->getPrevious()->getMessage();
+                }
+                Flux::toast('Failed creating invoice record: ' . $errorMsg, variant: 'danger');
                 return;
             }
 
