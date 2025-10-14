@@ -163,6 +163,7 @@
                 @if($client['email'])Email: {{ $client['email'] }}@endif
             </p>
         </div>
+        @if($invoice['service_from'] || $invoice['service_to'] || $invoice['payment_terms'])
         <div class="billing-info">
             <h3>Service Period:</h3>
             <p>
@@ -171,6 +172,7 @@
                 @if($invoice['payment_terms'])<strong>Terms:</strong> {{ $invoice['payment_terms'] }}@endif
             </p>
         </div>
+        @endif
     </div>
 
     <table class="items-table">
