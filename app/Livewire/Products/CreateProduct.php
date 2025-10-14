@@ -20,8 +20,8 @@ class CreateProduct extends Component
     public $unit_type = 'units';
 
     // Pricing
-    public $base_price = '';
-    public $cost = '';
+    public $base_price = null;
+    public $cost = null;
     public $currency_code = 'USD';
     public $pricing_model = 'fixed';
 
@@ -99,6 +99,13 @@ class CreateProduct extends Component
 
         // Add company_id
         $validated['company_id'] = auth()->user()->company_id;
+
+        // Convert empty strings to null for numeric fields
+        foreach (['cost', 'base_price', 'current_stock', 'min_stock_level', 'reorder_level', 'max_quantity_per_order'] as $field) {
+            if (isset($validated[$field]) && $validated[$field] === '') {
+                $validated[$field] = null;
+            }
+        }
 
         // Use ProductService to create the product
         $productService = app(ProductService::class);
