@@ -55,137 +55,85 @@
         </div>
     </flux:card>
 
-    <!-- Products Table Card -->
+    <!-- Products Table -->
     <flux:card>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                        <th wire:click="sortByColumn('name')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <div class="flex items-center space-x-1">
-                                <span>Name</span>
-                                @if($sortBy === 'name')
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        @if($sortOrder === 'asc')
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-                                        @else
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                        @endif
-                                    </svg>
-                                @endif
-                            </div>
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            SKU
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Category
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Type
-                        </th>
-                        <th wire:click="sortByColumn('base_price')" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <div class="flex items-center space-x-1">
-                                <span>Price</span>
-                                @if($sortBy === 'base_price')
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        @if($sortOrder === 'asc')
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-                                        @else
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                        @endif
-                                    </svg>
-                                @endif
-                            </div>
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($products as $product)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center">
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                        {{ $product->name }}
+        <flux:table :paginate="$products">
+            <flux:table.columns>
+                <flux:table.column sortable :sorted="$sortBy === 'name'" :direction="$sortOrder" wire:click="sortByColumn('name')">Name</flux:table.column>
+                <flux:table.column>SKU</flux:table.column>
+                <flux:table.column>Category</flux:table.column>
+                <flux:table.column>Type</flux:table.column>
+                <flux:table.column sortable :sorted="$sortBy === 'base_price'" :direction="$sortOrder" wire:click="sortByColumn('base_price')">Price</flux:table.column>
+                <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Actions</flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @forelse($products as $product)
+                    <flux:table.row :key="$product->id">
+                        <flux:table.cell>
+                            <div>
+                                <div class="font-medium">{{ $product->name }}</div>
+                                @if($product->description)
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                                        {{ Str::limit($product->description, 50) }}
                                     </div>
-                                    @if($product->description)
-                                        <div class="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
-                                            {{ Str::limit($product->description, 50) }}
-                                        </div>
-                                    @endif
-                                </div>
+                                @endif
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 dark:text-white font-mono">
-                                {{ $product->sku ?: 'N/A' }}
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 dark:text-white">
-                                {{ $product->category->name ?? 'N/A' }}
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <flux:badge color="{{ $product->type === 'product' ? 'blue' : 'purple' }}">
+                        </flux:table.cell>
+
+                        <flux:table.cell class="font-mono text-sm">
+                            {{ $product->sku ?: 'N/A' }}
+                        </flux:table.cell>
+
+                        <flux:table.cell>
+                            {{ $product->category->name ?? 'N/A' }}
+                        </flux:table.cell>
+
+                        <flux:table.cell>
+                            <flux:badge size="sm" color="{{ $product->type === 'product' ? 'blue' : 'purple' }}" inset="top bottom">
                                 {{ ucfirst($product->type) }}
                             </flux:badge>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                {{ $product->currency_code }} {{ number_format($product->base_price, 2) }}
-                            </div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                        </flux:table.cell>
+
+                        <flux:table.cell variant="strong">
+                            <div>{{ $product->currency_code }} {{ number_format($product->base_price, 2) }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 font-normal">
                                 {{ ucfirst(str_replace('_', ' ', $product->billing_model)) }}
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <flux:badge color="{{ $product->is_active ? 'green' : 'red' }}">
+                        </flux:table.cell>
+
+                        <flux:table.cell>
+                            <flux:badge size="sm" color="{{ $product->is_active ? 'green' : 'red' }}" inset="top bottom">
                                 {{ $product->is_active ? 'Active' : 'Inactive' }}
                             </flux:badge>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex items-center justify-end space-x-2">
-                                <a href="{{ route('products.show', $product) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                                    View
-                                </a>
+                        </flux:table.cell>
+
+                        <flux:table.cell>
+                            <div class="flex items-center gap-3">
+                                <flux:button size="sm" variant="ghost" :href="route('products.show', $product)">View</flux:button>
                                 @can('update', $product)
-                                <a href="{{ route('products.edit', $product) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
-                                    Edit
-                                </a>
+                                    <flux:button size="sm" variant="ghost" :href="route('products.edit', $product)">Edit</flux:button>
                                 @endcan
                             </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
-                            <div class="text-gray-500 dark:text-gray-400">
+                        </flux:table.cell>
+                    </flux:table.row>
+                @empty
+                    <flux:table.row>
+                        <flux:table.cell colspan="7">
+                            <div class="text-center py-12">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                                 </svg>
-                                <p class="mt-2 text-sm">No products found</p>
+                                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No products found</p>
                                 @if($search || $categoryFilter || $typeFilter || $statusFilter || $billingModelFilter)
-                                    <p class="text-sm mt-1">Try adjusting your filters</p>
+                                    <p class="text-sm mt-1 text-gray-500 dark:text-gray-400">Try adjusting your filters</p>
                                 @endif
                             </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            {{ $products->links() }}
-        </div>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforelse
+            </flux:table.rows>
+        </flux:table>
     </flux:card>
 </div>

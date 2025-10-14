@@ -47,3 +47,47 @@ Commits are imperative and scoped (e.g., "Add varying company sizes to dev seede
 
 ## Security & Configuration Tips
 Do not commit `.env` files or production credentials; use `php artisan key:generate` after cloning and document secrets in your team vault. Configuration overrides belong in `.env` with matching keys already defined in `config/*.php`. Sanitize uploaded assets with the existing validation helpers, store files under `storage/app`, and confirm S3 credentials locally before enabling `league/flysystem-aws-s3-v3` drivers.
+
+## Standardized Page Headers
+All pages should use the standardized header system built into `resources/views/layouts/app.blade.php`. Instead of creating custom headers in views or Livewire components, pass these variables to the layout:
+
+### Required Variables
+- `$pageTitle` – Main heading text (string)
+
+### Optional Variables
+- `$pageSubtitle` – Subheading/description text (string)
+- `$pageActions` – Array of action buttons with structure:
+  ```php
+  [
+      ['label' => 'Edit', 'href' => route('...'), 'icon' => 'pencil', 'variant' => 'ghost'],
+      ['label' => 'Back', 'href' => route('...'), 'icon' => 'arrow-left', 'variant' => 'ghost']
+  ]
+  ```
+
+### Example Usage
+```blade
+@extends('layouts.app')
+
+@section('title', 'Page Title')
+
+@php
+$pageTitle = 'Product Name';
+$pageSubtitle = 'SKU: ABC123 • Category: Electronics';
+$pageActions = [
+    ['label' => 'Edit', 'href' => route('products.edit', $product), 'icon' => 'pencil', 'variant' => 'ghost'],
+    ['label' => 'Back', 'href' => route('products.index'), 'icon' => 'arrow-left', 'variant' => 'ghost']
+];
+@endphp
+
+@section('content')
+    <!-- Your content here -->
+@endsection
+```
+
+### Action Button Properties
+- `label` (required) – Button text
+- `href` (required) – Route/URL
+- `icon` (optional) – FluxUI icon name (without `flux:icon.` prefix)
+- `variant` (optional) – FluxUI button variant (default: 'ghost')
+
+**Do not create custom headers in individual views or Livewire components.** Use this standardized system for consistency across the application.

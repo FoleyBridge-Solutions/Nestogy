@@ -308,6 +308,33 @@
 
         <!-- Page Content -->
         <div class="p-4 lg:p-6 h-full">
+        <!-- Standardized Page Header -->
+        @if(isset($pageTitle))
+            <div class="mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <flux:heading size="xl">{{ $pageTitle }}</flux:heading>
+                        @if(isset($pageSubtitle))
+                            <flux:subheading>{{ $pageSubtitle }}</flux:subheading>
+                        @endif
+                    </div>
+                    @if(isset($pageActions) && count($pageActions) > 0)
+                        <div class="flex gap-3">
+                            @foreach($pageActions as $action)
+                                <flux:button 
+                                    variant="{{ $action['variant'] ?? 'ghost' }}" 
+                                    :href="$action['href'] ?? '#'">
+                                    @if(isset($action['icon']))
+                                        <flux:icon.{{ $action['icon'] }} class="size-4" />
+                                    @endif
+                                    {{ $action['label'] }}
+                                </flux:button>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
             @yield('content')
         </div>
     </flux:main>
