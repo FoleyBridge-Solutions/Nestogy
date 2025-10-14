@@ -80,18 +80,21 @@ class AlertPanel extends Component
             ->get();
 
         return $overdueInvoices->map(function ($invoice) {
-            $daysOverdue = now()->diffInDays($invoice->due_date);
+            $daysOverdue = (int) Carbon::parse($invoice->due_date)->diffInDays(now(), false);
             $severity = $daysOverdue > 30 ? 'critical' : ($daysOverdue > 14 ? 'high' : 'medium');
+            
+            $invoiceNumber = $invoice->prefix ? "{$invoice->prefix}{$invoice->number}" : $invoice->number;
+            $formattedAmount = number_format($invoice->amount, 2);
 
             return [
                 'id' => 'invoice_'.$invoice->id,
                 'type' => 'financial',
                 'severity' => $severity,
                 'title' => 'Overdue Invoice',
-                'message' => "Invoice #{$invoice->invoice_number} is {$daysOverdue} days overdue",
-                'details' => "Client: {$invoice->client->name} - Amount: \${$invoice->amount}",
+                'message' => "Invoice #{$invoiceNumber} is {$daysOverdue} days overdue",
+                'details' => "Client: {$invoice->client->name} - Amount: \${$formattedAmount}",
                 'created_at' => $invoice->due_date,
-                'action_url' => $this->getSafeRoute('invoices.show', $invoice->id),
+                'action_url' => $this->getSafeRoute('financial.invoices.show', $invoice->id),
                 'action_text' => 'View Invoice',
                 'icon' => 'currency-dollar',
                 'dismissible' => true,
