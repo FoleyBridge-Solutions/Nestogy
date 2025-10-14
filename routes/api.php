@@ -23,54 +23,7 @@ Route::middleware(['auth:sanctum'])->get('/clients/{client}/assets',
     [\App\Domains\Asset\Controllers\AssetController::class, 'clientAssetsApi']
 )->name('api.clients.assets');
 
-// VoIP Tax Management API Routes
-Route::middleware(['auth:sanctum'])->prefix('voip-tax')->name('api.voip-tax.')->group(function () {
-    // Tax calculation endpoints
-    Route::post('/calculate', [VoIPTaxController::class, 'calculateTaxes'])->name('calculate');
 
-    // Tax rates management
-    Route::get('/rates', [VoIPTaxController::class, 'getTaxRates'])->name('rates');
-    Route::post('/rates', [VoIPTaxController::class, 'createOrUpdateTaxRate'])->name('rates.store');
-    Route::post('/rates/initialize-defaults', [VoIPTaxController::class, 'initializeDefaultRates'])->name('rates.initialize');
-
-    // Jurisdictions
-    Route::get('/jurisdictions', [VoIPTaxController::class, 'getJurisdictions'])->name('jurisdictions');
-
-    // Tax categories
-    Route::get('/categories', [VoIPTaxController::class, 'getCategories'])->name('categories');
-
-    // Client exemptions
-    Route::get('/exemptions', [VoIPTaxController::class, 'getClientExemptions'])->name('exemptions');
-
-    // Compliance and reporting
-    Route::post('/compliance/report', [VoIPTaxController::class, 'generateComplianceReport'])->name('compliance.report');
-    Route::get('/compliance/status', [VoIPTaxController::class, 'checkComplianceStatus'])->name('compliance.status');
-    Route::post('/compliance/export', [VoIPTaxController::class, 'exportComplianceData'])->name('compliance.export');
-
-    // Utility endpoints
-    Route::get('/service-types', [VoIPTaxController::class, 'getServiceTypes'])->name('service-types');
-    Route::post('/cache/clear', [VoIPTaxController::class, 'clearCache'])->name('cache.clear');
-
-    // Tax Reporting endpoints
-    Route::prefix('reports')->name('reports.')->group(function () {
-        // Dashboard and summary reports
-        Route::get('/dashboard', [VoIPTaxReportController::class, 'dashboard'])->name('dashboard');
-        Route::get('/tax-summary', [VoIPTaxReportController::class, 'taxSummary'])->name('tax-summary');
-
-        // Specialized reports
-        Route::get('/jurisdiction/{jurisdictionId}', [VoIPTaxReportController::class, 'jurisdictionReport'])->name('jurisdiction');
-        Route::get('/service-type-analysis', [VoIPTaxReportController::class, 'serviceTypeAnalysis'])->name('service-type-analysis');
-        Route::get('/exemption-usage', [VoIPTaxReportController::class, 'exemptionReport'])->name('exemption-usage');
-        Route::get('/rate-effectiveness', [VoIPTaxReportController::class, 'rateEffectiveness'])->name('rate-effectiveness');
-
-        // Export functionality
-        Route::post('/export', [VoIPTaxReportController::class, 'exportReport'])->name('export');
-
-        // Metadata and configuration
-        Route::get('/jurisdictions', [VoIPTaxReportController::class, 'availableJurisdictions'])->name('jurisdictions');
-        Route::get('/metadata', [VoIPTaxReportController::class, 'reportMetadata'])->name('metadata');
-    });
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -649,7 +602,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 // Integration Webhooks (No Authentication Required)
 Route::prefix('webhooks')->name('api.webhooks.')->middleware('throttle:60,1')->group(function () {
     // Legacy webhooks
-    Route::post('stripe', [StripeWebhookController::class, 'handle'])->name('stripe');
+    // Route::post('stripe', [StripeWebhookController::class, 'handle'])->name('stripe'); // Removed - controller doesn't exist
     // Route::post('plaid', [App\Http\Controllers\Integration\Controllers\PlaidWebhookController::class, 'handle'])->name('plaid'); // TODO: Check if exists
     // Route::post('email', [App\Http\Controllers\Integration\Controllers\EmailWebhookController::class, 'handle'])->name('email'); // TODO: Check if exists
     // Route::post('sms', [App\Http\Controllers\Integration\Controllers\SmsWebhookController::class, 'handle'])->name('sms'); // TODO: Check if exists

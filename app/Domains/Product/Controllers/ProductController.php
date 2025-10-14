@@ -73,18 +73,7 @@ class ProductController extends Controller
     {
         $this->authorize('view', $product);
 
-        $product->load(['category']);
-
-        $recentSales = DB::table('invoice_items')
-            ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
-            ->where('invoice_items.product_id', $product->id)
-            ->where('invoices.company_id', auth()->user()->company_id)
-            ->select('invoices.created_at', 'invoice_items.quantity', 'invoice_items.price')
-            ->orderBy('invoices.created_at', 'desc')
-            ->limit(10)
-            ->get();
-
-        return view('products.show', compact('product', 'recentSales'));
+        return view('products.show', compact('product'));
     }
 
     public function create()

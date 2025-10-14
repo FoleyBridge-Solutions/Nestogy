@@ -425,9 +425,6 @@ Route::middleware(['auth', 'verified'])->prefix('products')->name('products.')->
     Route::post('/bulk-update', [\App\Domains\Product\Controllers\ProductController::class, 'bulkUpdate'])->name('bulk-update');
 
     Route::get('/export/csv', [\App\Domains\Product\Controllers\ProductController::class, 'export'])->name('export');
-
-    Route::get('/export/csv', [\App\Domains\Product\Controllers\ProductController::class, 'export'])->name('export');
-
     Route::get('/import/form', [\App\Domains\Product\Controllers\ProductController::class, 'import'])->name('import');
     Route::post('/import/process', [\App\Domains\Product\Controllers\ProductController::class, 'processImport'])->name('import.process');
 });
