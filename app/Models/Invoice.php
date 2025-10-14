@@ -397,6 +397,18 @@ class Invoice extends Model
     }
 
     /**
+     * Get the effective display status (shows Overdue if applicable).
+     */
+    public function getDisplayStatusAttribute(): string
+    {
+        if ($this->isOverdue() && $this->status === self::STATUS_SENT) {
+            return self::STATUS_OVERDUE;
+        }
+
+        return $this->status;
+    }
+
+    /**
      * Check if invoice is paid.
      */
     public function isPaid(): bool
@@ -674,13 +686,6 @@ class Invoice extends Model
             // Generate URL key
             if (! $invoice->url_key) {
                 $invoice->url_key = bin2hex(random_bytes(16));
-            }
-        });
-
-        // Update status based on due date
-        static::retrieved(function ($invoice) {
-            if ($invoice->isOverdue() && $invoice->status === self::STATUS_SENT) {
-                $invoice->update(['status' => self::STATUS_OVERDUE]);
             }
         });
     }
