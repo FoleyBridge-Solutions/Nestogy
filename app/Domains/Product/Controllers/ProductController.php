@@ -23,50 +23,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::products()
-            ->with(['category'])
-            ->where('company_id', auth()->user()->company_id);
-
-        // Apply filters
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->filled('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
-
-        if ($request->filled('billing_model')) {
-            $query->where('billing_model', $request->billing_model);
-        }
-
-        // Apply sorting
-        $sortBy = $request->get('sort_by', 'name');
-        $sortOrder = $request->get('sort_order', 'asc');
-        $query->orderBy($sortBy, $sortOrder);
-
-        $products = $query->paginate(20)->appends($request->query());
-
-        $categories = Category::where('company_id', auth()->user()->company_id)
-            ->orderBy('name')
-            ->get();
-
-        $setting = Auth::user()->company->setting;
-
-        return view('products.index', compact('products', 'categories', 'setting'));
+        return view('products.index');
     }
 
     public function show(Product $product)
