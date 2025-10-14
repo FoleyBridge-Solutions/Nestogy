@@ -228,14 +228,14 @@ class InvoiceService
 
                 unset($invoiceData['id'], $invoiceData['number'], $invoiceData['created_at'],
                     $invoiceData['updated_at'], $invoiceData['archived_at'], $invoiceData['sent_at'],
-                    $invoiceData['paid_at'], $invoiceData['viewed_at'], $invoiceData['due']);
+                    $invoiceData['paid_at'], $invoiceData['viewed_at'], $invoiceData['due'], $invoiceData['status']);
 
                 $invoiceData = array_merge($invoiceData, $overrides);
 
                 $invoiceData['date'] = $overrides['date'] ?? now()->toDateString();
                 $invoiceData['due_date'] = $overrides['due_date'] ?? now()->addDays(30)->toDateString();
-                $invoiceData['status'] = 'Draft';
                 $invoiceData['number'] = $this->generateInvoiceNumber();
+                $invoiceData['status'] = 'Draft';
 
                 $newInvoice = Invoice::create($invoiceData);
 
