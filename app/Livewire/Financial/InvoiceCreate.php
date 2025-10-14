@@ -379,11 +379,18 @@ class InvoiceCreate extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            // Get the previous exception if it exists (the real error)
+            $previousException = $e->getPrevious();
+            $actualError = $previousException ? $previousException->getMessage() : $e->getMessage();
+            
             \Log::error('Failed to create invoice', [
                 'error' => $e->getMessage(),
+                'previous_error' => $previousException ? $previousException->getMessage() : null,
                 'trace' => $e->getTraceAsString(),
             ]);
-            Flux::toast('Failed to create invoice: '.$e->getMessage(), variant: 'danger');
+            
+            Flux::toast('Failed to create invoice: '.$actualError, variant: 'danger');
         }
     }
 
