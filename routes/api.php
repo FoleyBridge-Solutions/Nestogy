@@ -1,16 +1,7 @@
 <?php
 
-use App\Domains\Financial\Controllers\Api\VoIPTaxController;
-use App\Domains\Financial\Controllers\Api\VoIPTaxReportController;
-use App\Domains\Financial\Http\Controllers\Webhooks\StripeWebhookController;
-use App\Domains\Integration\Http\Controllers\Webhooks\ConnectWiseWebhookController;
-use App\Domains\Integration\Http\Controllers\Webhooks\DattoWebhookController;
-use App\Domains\Integration\Http\Controllers\Webhooks\GenericRMMWebhookController;
-use App\Domains\Integration\Http\Controllers\Webhooks\NinjaOneWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-const INTEGRATION_HEALTH_ROUTE = '{integration}/health';
 
 /*
 |--------------------------------------------------------------------------
@@ -225,13 +216,11 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
 
         // Invoice API
         Route::prefix('invoices')->name('invoices.')->group(function () {
-            const INVOICE_ROUTE_PARAM = '{invoice}';
-
             Route::get('/', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'index'])->name('index');
             Route::post('/', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'store'])->name('store');
-            Route::get(INVOICE_ROUTE_PARAM, [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'show'])->name('show');
-            Route::put(INVOICE_ROUTE_PARAM, [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'update'])->name('update');
-            Route::delete(INVOICE_ROUTE_PARAM, [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'destroy'])->name('destroy');
+            Route::get('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'show'])->name('show');
+            Route::put('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'update'])->name('update');
+            Route::delete('{invoice}', [App\Domains\Financial\Controllers\Api\InvoicesController::class, 'destroy'])->name('destroy');
 
             // Invoice Items
             Route::post('{invoice}/items', [App\Domains\Financial\Controllers\InvoiceController::class, 'addItem'])->name('items.store');
@@ -670,28 +659,28 @@ Route::prefix('webhooks')->name('api.webhooks.')->middleware('throttle:60,1')->g
         // ConnectWise Automate webhooks
         Route::prefix('connectwise')->name('connectwise.')->group(function () {
             Route::post('{integration}', [ConnectWiseWebhookController::class, 'handle'])->name('webhook');
-            Route::get(INTEGRATION_HEALTH_ROUTE, [ConnectWiseWebhookController::class, 'health'])->name('health');
+            Route::get("{integration}/health", [ConnectWiseWebhookController::class, 'health'])->name('health');
             Route::post('{integration}/test', [ConnectWiseWebhookController::class, 'test'])->name('test');
         });
 
         // Datto RMM webhooks
         Route::prefix('datto')->name('datto.')->group(function () {
             Route::post('{integration}', [DattoWebhookController::class, 'handle'])->name('webhook');
-            Route::get(INTEGRATION_HEALTH_ROUTE, [DattoWebhookController::class, 'health'])->name('health');
+            Route::get("{integration}/health", [DattoWebhookController::class, 'health'])->name('health');
             Route::post('{integration}/test', [DattoWebhookController::class, 'test'])->name('test');
         });
 
         // NinjaOne webhooks
         Route::prefix('ninja')->name('ninja.')->group(function () {
             Route::post('{integration}', [NinjaOneWebhookController::class, 'handle'])->name('webhook');
-            Route::get(INTEGRATION_HEALTH_ROUTE, [NinjaOneWebhookController::class, 'health'])->name('health');
+            Route::get("{integration}/health", [NinjaOneWebhookController::class, 'health'])->name('health');
             Route::post('{integration}/test', [NinjaOneWebhookController::class, 'test'])->name('test');
         });
 
         // Generic RMM webhooks
         Route::prefix('generic')->name('generic.')->group(function () {
             Route::post('{integration}', [GenericRMMWebhookController::class, 'handle'])->name('webhook');
-            Route::get(INTEGRATION_HEALTH_ROUTE, [GenericRMMWebhookController::class, 'health'])->name('health');
+            Route::get("{integration}/health", [GenericRMMWebhookController::class, 'health'])->name('health');
             Route::post('{integration}/test', [GenericRMMWebhookController::class, 'test'])->name('test');
             Route::post('{integration}/suggest-mappings', [GenericRMMWebhookController::class, 'suggestFieldMappings'])->name('suggest-mappings');
         });

@@ -151,58 +151,74 @@ class CommandPaletteService
 
     protected static function getBaseCommands(): array
     {
-        return [
-            'ticket' => ['icon' => '🎫', 'description' => 'Create a new support ticket', 'type' => 'create', 'route' => 'tickets.create'],
-            'invoice' => ['icon' => '💰', 'description' => 'Create a new invoice', 'type' => 'create', 'route' => 'financial.invoices.create'],
-            'quote' => ['icon' => '📝', 'description' => 'Create a new quote', 'type' => 'create', 'route' => 'financial.quotes.create'],
-            'client' => ['icon' => '👥', 'description' => 'Add a new client', 'type' => 'create', 'route' => 'clients.create'],
-            'project' => ['icon' => '📊', 'description' => 'Create a new project', 'type' => 'create', 'route' => 'projects.create'],
-            'asset' => ['icon' => '🖥️', 'description' => 'Add a new asset', 'type' => 'create', 'route' => 'assets.create'],
-            'contract' => ['icon' => '📄', 'description' => 'Create a new contract', 'type' => 'create', 'route' => 'financial.contracts.create'],
-            'expense' => ['icon' => '💸', 'description' => 'Add a new expense', 'type' => 'create', 'route' => 'financial.expenses.create'],
-            'payment' => ['icon' => '💳', 'description' => 'Record a payment', 'type' => 'create', 'route' => 'financial.payments.create'],
-            'user' => ['icon' => '👤', 'description' => 'Add a new user', 'type' => 'create', 'route' => 'users.create'],
-            'article' => ['icon' => '📚', 'description' => 'Create knowledge base article', 'type' => 'create', 'route' => 'knowledge.articles.create'],
-            'product' => ['icon' => '📦', 'description' => 'Add a new product', 'type' => 'create', 'route' => 'products.create'],
-            'service' => ['icon' => '🔧', 'description' => 'Add a new service', 'type' => 'create', 'route' => 'services.create'],
-            'bundle' => ['icon' => '🎁', 'description' => 'Create product bundle', 'type' => 'create', 'route' => 'bundles.create'],
-            'pricing rule' => ['icon' => '💲', 'description' => 'Create pricing rule', 'type' => 'create', 'route' => 'pricing-rules.create'],
-        ];
+        // Dynamically generate from NavigationService registry
+        $commands = NavigationService::getCommandPaletteCommands('create');
+
+        // Transform to expected format (using first command variation as key)
+        $baseCommands = [];
+        $seenRoutes = [];
+
+        foreach ($commands as $commandText => $commandData) {
+            $route = $commandData['route'];
+
+            // Skip duplicates (same route)
+            if (isset($seenRoutes[$route])) {
+                continue;
+            }
+
+            $seenRoutes[$route] = true;
+
+            // Use entity key as base command key
+            $key = $commandData['key'];
+
+            $baseCommands[$key] = [
+                'icon' => $commandData['icon'],
+                'description' => $commandData['description'],
+                'type' => 'create',
+                'route' => $route,
+            ];
+        }
+
+        return $baseCommands;
     }
 
     protected static function getStaticCommands(): array
     {
-        return [
+        // Dynamically generate from NavigationService registry
+        $showCommands = NavigationService::getCommandPaletteCommands('show');
+        $gotoCommands = NavigationService::getCommandPaletteCommands('goto');
+
+        $staticCommands = [];
+
+        // Add all show commands
+        foreach ($showCommands as $commandText => $commandData) {
+            $staticCommands[$commandText] = [
+                'icon' => $commandData['icon'],
+                'description' => $commandData['description'],
+                'route' => $commandData['route'],
+            ];
+        }
+
+        // Add all goto commands
+        foreach ($gotoCommands as $commandText => $commandData) {
+            $staticCommands[$commandText] = [
+                'icon' => $commandData['icon'],
+                'description' => 'Navigate to '.strtolower($commandData['description']),
+                'route' => $commandData['route'],
+            ];
+        }
+
+        // Add special/workflow commands that aren't in registry
+        $staticCommands = array_merge($staticCommands, [
             'show urgent' => ['icon' => '🔥', 'description' => 'View urgent items', 'route' => 'dashboard.urgent'],
             'show today' => ['icon' => '📅', 'description' => "Today's schedule", 'route' => 'dashboard.today'],
-            'show tickets' => ['icon' => '🎫', 'description' => 'View all tickets', 'route' => 'tickets.index'],
-            'show invoices' => ['icon' => '💰', 'description' => 'View all invoices', 'route' => 'financial.invoices.index'],
-            'show quotes' => ['icon' => '📝', 'description' => 'View all quotes', 'route' => 'financial.quotes.index'],
-            'show projects' => ['icon' => '📊', 'description' => 'View all projects', 'route' => 'projects.index'],
-            'show assets' => ['icon' => '🖥️', 'description' => 'View all assets', 'route' => 'assets.index'],
-            'show contracts' => ['icon' => '📄', 'description' => 'View all contracts', 'route' => 'financial.contracts.index'],
-            'show expenses' => ['icon' => '💸', 'description' => 'View all expenses', 'route' => 'financial.expenses.index'],
-            'show payments' => ['icon' => '💳', 'description' => 'View all payments', 'route' => 'financial.payments.index'],
             'show overdue invoices' => ['icon' => '⚠️', 'description' => 'View overdue invoices', 'route' => 'financial.invoices.overdue'],
             'show pending quotes' => ['icon' => '⏳', 'description' => 'View pending quotes', 'route' => 'financial.quotes.pending'],
             'show active projects' => ['icon' => '🚀', 'description' => 'View active projects', 'route' => 'projects.active'],
-            'show products' => ['icon' => '📦', 'description' => 'View all products', 'route' => 'products.index'],
-            'show services' => ['icon' => '🔧', 'description' => 'View all services', 'route' => 'services.index'],
-            'show bundles' => ['icon' => '🎁', 'description' => 'View product bundles', 'route' => 'bundles.index'],
-            'show pricing rules' => ['icon' => '💲', 'description' => 'View pricing rules', 'route' => 'pricing-rules.index'],
             'go to dashboard' => ['icon' => '🏠', 'description' => 'Navigate to dashboard', 'route' => 'dashboard'],
-            'go to clients' => ['icon' => '👥', 'description' => 'Navigate to clients', 'route' => 'clients.index'],
-            'go to tickets' => ['icon' => '🎫', 'description' => 'Navigate to tickets', 'route' => 'tickets.index'],
-            'go to billing' => ['icon' => '💰', 'description' => 'Navigate to billing', 'route' => 'financial.invoices.index'],
-            'go to assets' => ['icon' => '🖥️', 'description' => 'Navigate to assets', 'route' => 'assets.index'],
-            'go to projects' => ['icon' => '📊', 'description' => 'Navigate to projects', 'route' => 'projects.index'],
             'go to reports' => ['icon' => '📈', 'description' => 'Navigate to reports', 'route' => 'reports.index'],
             'go to settings' => ['icon' => '⚙️', 'description' => 'Navigate to settings', 'route' => 'settings.index'],
             'go to knowledge base' => ['icon' => '📚', 'description' => 'Navigate to knowledge base', 'route' => 'knowledge.index'],
-            'go to products' => ['icon' => '📦', 'description' => 'Navigate to products', 'route' => 'products.index'],
-            'go to services' => ['icon' => '🔧', 'description' => 'Navigate to services', 'route' => 'services.index'],
-            'go to bundles' => ['icon' => '🎁', 'description' => 'Navigate to bundles', 'route' => 'bundles.index'],
-            'go to pricing rules' => ['icon' => '💲', 'description' => 'Navigate to pricing rules', 'route' => 'pricing-rules.index'],
             'start morning workflow' => ['icon' => '☀️', 'description' => 'Begin morning routine', 'route' => 'workflow.morning'],
             'start billing workflow' => ['icon' => '💰', 'description' => 'Begin billing tasks', 'route' => 'workflow.billing'],
             'start maintenance window' => ['icon' => '🔧', 'description' => 'Start maintenance mode', 'route' => 'workflow.maintenance'],
@@ -210,7 +226,9 @@ class CommandPaletteService
             'search tickets' => ['icon' => '🔍', 'description' => 'Search tickets', 'route' => 'search.tickets'],
             'search clients' => ['icon' => '🔍', 'description' => 'Search clients', 'route' => 'search.clients'],
             'search invoices' => ['icon' => '🔍', 'description' => 'Search invoices', 'route' => 'search.invoices'],
-        ];
+        ]);
+
+        return $staticCommands;
     }
 
     protected static function filterAndDeduplicateCommands(array $commands, string $partial): array
@@ -375,11 +393,6 @@ class CommandPaletteService
         }
 
         return null;
-    }
-
-    protected static function commandMatchesPartial(string $command, string $partial): bool
-    {
-        return empty($partial) || str_starts_with($command, $partial) || str_contains($command, $partial);
     }
 
     protected static function buildSuggestion(array $config): array
@@ -636,35 +649,34 @@ class CommandPaletteService
 
     /**
      * Handle navigation commands
+     * Now powered by NavigationService!
      */
     protected static function handleNavigateTo($matches, $context): array
     {
         $destination = strtolower(trim($matches[1]));
 
-        $routes = [
+        // Try to resolve from NavigationService
+        $routeInfo = NavigationService::resolveCommandRoute($destination, 'goto');
+
+        if ($routeInfo) {
+            return [
+                'action' => 'navigate',
+                'url' => route($routeInfo['route']),
+                'message' => "Navigating to {$routeInfo['label']}",
+            ];
+        }
+
+        // Fallback to special hardcoded routes not in registry
+        $specialRoutes = [
             'dashboard' => ['route' => 'dashboard', 'name' => 'Dashboard'],
-            'clients' => ['route' => 'clients.index', 'name' => 'Clients'],
-            'tickets' => ['route' => 'tickets.index', 'name' => 'Tickets'],
-            'invoices' => ['route' => 'financial.invoices.index', 'name' => 'Invoices'],
-            'quotes' => ['route' => 'financial.quotes.index', 'name' => 'Quotes'],
-            'billing' => ['route' => 'financial.invoices.index', 'name' => 'Billing'],
-            'assets' => ['route' => 'assets.index', 'name' => 'Assets'],
-            'projects' => ['route' => 'projects.index', 'name' => 'Projects'],
-            'contracts' => ['route' => 'financial.contracts.index', 'name' => 'Contracts'],
-            'expenses' => ['route' => 'financial.expenses.index', 'name' => 'Expenses'],
-            'payments' => ['route' => 'financial.payments.index', 'name' => 'Payments'],
             'reports' => ['route' => 'reports.index', 'name' => 'Reports'],
             'settings' => ['route' => 'settings.index', 'name' => 'Settings'],
             'knowledge' => ['route' => 'knowledge.index', 'name' => 'Knowledge Base'],
             'integrations' => ['route' => 'integrations.index', 'name' => 'Integrations'],
             'users' => ['route' => 'users.index', 'name' => 'Users'],
-            'products' => ['route' => 'products.index', 'name' => 'Products'],
-            'services' => ['route' => 'services.index', 'name' => 'Services'],
-            'bundles' => ['route' => 'bundles.index', 'name' => 'Product Bundles'],
-            'pricing rules' => ['route' => 'pricing-rules.index', 'name' => 'Pricing Rules'],
         ];
 
-        foreach ($routes as $key => $route) {
+        foreach ($specialRoutes as $key => $route) {
             if (str_contains($destination, $key)) {
                 return [
                     'action' => 'navigate',
@@ -682,14 +694,32 @@ class CommandPaletteService
 
     /**
      * Handle create commands
+     * Now powered by NavigationService!
      */
     protected static function handleCreateItem($matches, $context): array
     {
         $item = strtolower(trim($matches[1]));
 
-        // Order matters! More specific matches should come first
-        // Check for compound phrases before single words
-        $createRoutes = [
+        // Try to resolve from NavigationService
+        $routeInfo = NavigationService::resolveCommandRoute($item, 'create');
+
+        if ($routeInfo) {
+            $params = [];
+
+            // Add client context if available for relevant items
+            if (isset($context['client_id']) && in_array($routeInfo['key'], ['invoices', 'quotes', 'contracts', 'payments'])) {
+                $params['client_id'] = $context['client_id'];
+            }
+
+            return [
+                'action' => 'navigate',
+                'url' => route($routeInfo['route'], $params),
+                'message' => "Creating {$routeInfo['label']}",
+            ];
+        }
+
+        // Fallback to special hardcoded routes not in registry
+        $specialCreateRoutes = [
             'invoice for client' => ['route' => 'financial.invoices.create', 'name' => 'New Invoice', 'use_client_context' => true],
             'quote for client' => ['route' => 'financial.quotes.create', 'name' => 'New Quote', 'use_client_context' => true],
             'ticket for client' => ['route' => 'tickets.create', 'name' => 'New Ticket', 'use_client_context' => true],
@@ -697,29 +727,15 @@ class CommandPaletteService
             'documentation' => ['route' => 'clients.it-documentation.create', 'name' => 'New IT Documentation'],
             'contact' => ['route' => 'clients.contacts.create', 'name' => 'New Contact'],
             'article' => ['route' => 'knowledge.articles.create', 'name' => 'New Article'],
-            'invoice' => ['route' => 'financial.invoices.create', 'name' => 'New Invoice'],
-            'quote' => ['route' => 'financial.quotes.create', 'name' => 'New Quote'],
-            'ticket' => ['route' => 'tickets.create', 'name' => 'New Ticket'],
-            'project' => ['route' => 'projects.create', 'name' => 'New Project'],
-            'asset' => ['route' => 'assets.create', 'name' => 'New Asset'],
-            'contract' => ['route' => 'financial.contracts.create', 'name' => 'New Contract'],
-            'expense' => ['route' => 'financial.expenses.create', 'name' => 'New Expense'],
-            'payment' => ['route' => 'financial.payments.create', 'name' => 'New Payment'],
             'user' => ['route' => 'users.create', 'name' => 'New User'],
             'client' => ['route' => 'clients.create', 'name' => 'New Client'],
-            'product' => ['route' => 'products.create', 'name' => 'New Product'],
-            'service' => ['route' => 'services.create', 'name' => 'New Service'],
-            'bundle' => ['route' => 'bundles.create', 'name' => 'New Bundle'],
-            'pricing rule' => ['route' => 'pricing-rules.create', 'name' => 'New Pricing Rule'],
         ];
 
-        foreach ($createRoutes as $key => $route) {
+        foreach ($specialCreateRoutes as $key => $route) {
             if (str_contains($item, $key)) {
                 $params = [];
 
-                // Add client context if available and route uses it
-                if (isset($context['client_id']) &&
-                    (isset($route['use_client_context']) || in_array($key, ['ticket', 'invoice', 'project', 'quote']))) {
+                if (isset($context['client_id']) && isset($route['use_client_context'])) {
                     $params['client_id'] = $context['client_id'];
                 }
 
@@ -739,6 +755,7 @@ class CommandPaletteService
 
     /**
      * Handle show commands
+     * Now powered by NavigationService!
      */
     protected static function handleShowItems($matches, $context): array
     {
@@ -757,42 +774,41 @@ class CommandPaletteService
             return static::handleShowToday($matches, $context);
         }
 
-        // Handle entity-based show commands
-        $showRoutes = [
-            'tickets' => ['route' => 'tickets.index', 'name' => 'Tickets'],
-            'clients' => ['route' => 'clients.index', 'name' => 'Clients'],
-            'invoices' => ['route' => 'financial.invoices.index', 'name' => 'Invoices'],
-            'quotes' => ['route' => 'financial.quotes.index', 'name' => 'Quotes'],
-            'assets' => ['route' => 'assets.index', 'name' => 'Assets'],
-            'projects' => ['route' => 'projects.index', 'name' => 'Projects'],
-            'contracts' => ['route' => 'financial.contracts.index', 'name' => 'Contracts'],
-            'expenses' => ['route' => 'financial.expenses.index', 'name' => 'Expenses'],
-            'payments' => ['route' => 'financial.payments.index', 'name' => 'Payments'],
+        // Try to resolve from NavigationService
+        $routeInfo = NavigationService::resolveCommandRoute($item, 'show');
+
+        if ($routeInfo) {
+            $params = [];
+
+            // Add filters based on the command
+            if (str_contains($item, 'open')) {
+                $params['status'] = 'open';
+            }
+            if (str_contains($item, 'closed')) {
+                $params['status'] = 'closed';
+            }
+            if (str_contains($item, 'my')) {
+                $params['assignee'] = auth()->id();
+            }
+
+            return [
+                'action' => 'navigate',
+                'url' => route($routeInfo['route'], $params),
+                'message' => "Showing {$routeInfo['label']}",
+            ];
+        }
+
+        // Fallback to special routes not in registry
+        $specialShowRoutes = [
             'users' => ['route' => 'users.index', 'name' => 'Users'],
-            'products' => ['route' => 'products.index', 'name' => 'Products'],
-            'services' => ['route' => 'services.index', 'name' => 'Services'],
-            'bundles' => ['route' => 'bundles.index', 'name' => 'Product Bundles'],
             'articles' => ['route' => 'knowledge.articles.index', 'name' => 'Knowledge Base Articles'],
         ];
 
-        foreach ($showRoutes as $key => $route) {
+        foreach ($specialShowRoutes as $key => $route) {
             if (str_contains($item, $key)) {
-                $params = [];
-
-                // Add filters based on the command
-                if (str_contains($item, 'open')) {
-                    $params['status'] = 'open';
-                }
-                if (str_contains($item, 'closed')) {
-                    $params['status'] = 'closed';
-                }
-                if (str_contains($item, 'my')) {
-                    $params['assignee'] = auth()->id();
-                }
-
                 return [
                     'action' => 'navigate',
-                    'url' => route($route['route'], $params),
+                    'url' => route($route['route']),
                     'message' => "Showing {$route['name']}",
                 ];
             }

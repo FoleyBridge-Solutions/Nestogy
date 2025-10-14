@@ -78,7 +78,15 @@
       "Bash(do if [ -f \"$file\" ])",
       "Bash(then echo \"=== $file ===\")",
       "Bash(fi)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(PGPASSWORD=password psql:*)",
+      "Bash(chmod:*)",
+      "Bash(./check-migration-integrity.sh:*)",
+      "Bash(git log:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(do if ! ls database/migrations/*$table*)",
+      "Bash(then echo \"MISSING: $table\" fi done)",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": []

@@ -12,11 +12,11 @@ use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class InvoiceCreate extends Component
 {
-    // Core Invoice Fields
     public $client_id = '';
 
     public $category_id = '';
@@ -29,30 +29,25 @@ class InvoiceCreate extends Component
 
     public $payment_terms = 30;
 
-    // Invoice Number
-    public $prefix = 'INV-';
+    public $prefix = 'INV';
 
     public $number = '';
 
-    // Items
     public $items = [];
 
-    // Pricing
     public $discount_type = 'fixed';
 
     public $discount_amount = 0;
 
     public $tax_rate = 0;
 
-    // Additional Fields
-    public $description = '';
+    public $scope = '';
 
-    public $notes = '';
+    public $note = '';
 
     public $terms_conditions = '';
 
-    // UI State
-    public $showItemForm = false;
+    public $showItemModal = false;
 
     public $editingItemIndex = null;
 
@@ -60,8 +55,7 @@ class InvoiceCreate extends Component
         'name' => '',
         'description' => '',
         'quantity' => 1,
-        'unit_price' => 0,
-        'tax_rate' => 0,
+        'price' => 0,
     ];
 
     protected function rules()
@@ -74,7 +68,7 @@ class InvoiceCreate extends Component
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:255',
             'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.price' => 'required|numeric|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
         ];
@@ -89,14 +83,11 @@ class InvoiceCreate extends Component
 
     public function mount($clientId = null)
     {
-        // Set default dates
         $this->invoice_date = now()->format('Y-m-d');
         $this->due_date = now()->addDays($this->payment_terms)->format('Y-m-d');
 
-        // Generate invoice number
         $this->generateInvoiceNumber();
 
-        // Set default category
         $defaultCategory = Category::where('company_id', Auth::user()->company_id)
             ->where('type', 'invoice')
             ->where('archived_at', null)
@@ -105,7 +96,6 @@ class InvoiceCreate extends Component
             $this->category_id = $defaultCategory->id;
         }
 
-        // Pre-select client from parameter or session
         if ($clientId) {
             $this->client_id = $clientId;
         } else {
@@ -179,7 +169,7 @@ class InvoiceCreate extends Component
     public function subtotal()
     {
         return collect($this->items)->sum(function ($item) {
-            return ($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0);
+            return ($item['quantity'] ?? 0) * ($item['price'] ?? 0);
         });
     }
 
@@ -207,11 +197,11 @@ class InvoiceCreate extends Component
         return $this->subtotal - $this->discountAmount + $this->taxAmount;
     }
 
-    // Item Management
-    public function showAddItemForm()
+    public function openItemModal()
     {
         $this->resetItemForm();
-        $this->showItemForm = true;
+        $this->editingItemIndex = null;
+        $this->showItemModal = true;
     }
 
     public function editItem($index)
@@ -219,29 +209,28 @@ class InvoiceCreate extends Component
         if (isset($this->items[$index])) {
             $this->editingItemIndex = $index;
             $this->itemForm = $this->items[$index];
-            $this->showItemForm = true;
+            $this->showItemModal = true;
         }
     }
 
     public function saveItem()
     {
-        $validatedItem = $this->validate([
+        $validated = $this->validate([
             'itemForm.name' => 'required|string|max:255',
             'itemForm.description' => 'nullable|string',
             'itemForm.quantity' => 'required|numeric|min:0.01',
-            'itemForm.unit_price' => 'required|numeric|min:0',
-            'itemForm.tax_rate' => 'nullable|numeric|min:0|max:100',
-        ])['itemForm'];
+            'itemForm.price' => 'required|numeric|min:0',
+        ]);
 
         if ($this->editingItemIndex !== null) {
-            $this->items[$this->editingItemIndex] = $validatedItem;
-            Flux::toast('Item updated');
+            $this->items[$this->editingItemIndex] = $validated['itemForm'];
+            Flux::toast('Item updated successfully', variant: 'success');
         } else {
-            $this->items[] = $validatedItem;
-            Flux::toast('Item added');
+            $this->items[] = $validated['itemForm'];
+            Flux::toast('Item added successfully', variant: 'success');
         }
 
-        $this->cancelItemForm();
+        $this->closeItemModal();
     }
 
     public function removeItem($index)
@@ -249,15 +238,16 @@ class InvoiceCreate extends Component
         if (isset($this->items[$index])) {
             array_splice($this->items, $index, 1);
             $this->items = array_values($this->items);
-            Flux::toast('Item removed');
+            Flux::toast('Item removed', variant: 'success');
         }
     }
 
-    public function cancelItemForm()
+    public function closeItemModal()
     {
-        $this->showItemForm = false;
+        $this->showItemModal = false;
         $this->editingItemIndex = null;
         $this->resetItemForm();
+        $this->resetValidation();
     }
 
     private function resetItemForm()
@@ -266,8 +256,7 @@ class InvoiceCreate extends Component
             'name' => '',
             'description' => '',
             'quantity' => 1,
-            'unit_price' => 0,
-            'tax_rate' => 0,
+            'price' => 0,
         ];
     }
 
@@ -279,18 +268,30 @@ class InvoiceCreate extends Component
 
         $product = Product::where('company_id', Auth::user()->company_id)
             ->where('is_active', true)
+            ->with('category')
             ->find($productId);
 
-        if ($product) {
-            $this->items[] = [
-                'name' => $product->name,
-                'description' => $product->description,
-                'quantity' => 1,
-                'unit_price' => $product->price ?? $product->base_price ?? 0,
-                'tax_rate' => $product->tax_rate ?? 0,
-            ];
-            Flux::toast('Product added');
+        if (! $product) {
+            Flux::toast('Product not found', variant: 'danger');
+            return;
         }
+
+        // Validate product category has invoice type
+        if (! $product->category || ! $product->category->hasType(\App\Models\Category::TYPE_INVOICE)) {
+            Flux::toast('This product cannot be added to invoices. Its category does not support invoicing.', variant: 'danger');
+            return;
+        }
+
+        $this->items[] = [
+            'name' => $product->name,
+            'description' => $product->description ?? '',
+            'quantity' => 1,
+            'price' => $product->price ?? $product->base_price ?? 0,
+            'category_id' => $product->category_id,
+            'product_id' => $product->id,
+        ];
+
+        Flux::toast('Product added successfully', variant: 'success');
     }
 
     public function saveAsDraft()
@@ -298,7 +299,7 @@ class InvoiceCreate extends Component
         $this->save('Draft');
     }
 
-    public function createInvoice()
+    public function createAndSend()
     {
         $this->save('Sent');
     }
@@ -315,37 +316,41 @@ class InvoiceCreate extends Component
 
         DB::beginTransaction();
         try {
-            $invoiceService = app(InvoiceService::class);
-
-            $invoiceData = [
+            $invoice = Invoice::create([
+                'company_id' => Auth::user()->company_id,
+                'client_id' => $this->client_id,
+                'category_id' => $this->category_id,
                 'prefix' => $this->prefix,
                 'number' => $this->number,
-                'category_id' => $this->category_id,
                 'status' => $status,
                 'date' => $this->invoice_date,
                 'due_date' => $this->due_date,
                 'currency_code' => $this->currency_code,
-                'scope' => $this->description,
-                'note' => $this->notes,
-                'terms_conditions' => $this->terms_conditions,
-                'discount_type' => $this->discount_type,
-                'discount_amount' => $this->discount_amount,
-                'tax_rate' => $this->tax_rate,
-                'subtotal' => $this->subtotal,
-                'discount' => $this->discountAmount,
-                'tax' => $this->taxAmount,
-                'amount' => $this->total,
-                'items' => $this->items,
-            ];
+                'scope' => $this->scope,
+                'note' => $this->note,
+                'discount_amount' => $this->discountAmount,
+                'amount' => 0,
+            ]);
 
-            $client = Client::findOrFail($this->client_id);
-            $invoice = $invoiceService->createInvoice($client, $invoiceData);
+            foreach ($this->items as $index => $item) {
+                $invoice->items()->create([
+                    'company_id' => Auth::user()->company_id,
+                    'name' => $item['name'],
+                    'description' => $item['description'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'discount' => 0,
+                    'order' => $index,
+                ]);
+            }
+
+            $invoice->calculateTotals();
 
             DB::commit();
 
             $message = $status === 'Draft'
-                ? 'Invoice saved as draft'
-                : "Invoice #{$invoice->prefix}{$invoice->number} created successfully";
+                ? 'Invoice saved as draft successfully'
+                : 'Invoice created and marked as sent successfully';
 
             Flux::toast($message, variant: 'success');
 
@@ -353,6 +358,10 @@ class InvoiceCreate extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Failed to create invoice', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             Flux::toast('Failed to create invoice: '.$e->getMessage(), variant: 'danger');
         }
     }

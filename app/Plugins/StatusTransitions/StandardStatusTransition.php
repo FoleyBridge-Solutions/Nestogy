@@ -319,7 +319,6 @@ class StandardStatusTransition implements StatusTransitionInterface
                 break;
         }
     }
-    }
 
     public function afterTransition(Contract $contract, string $fromStatus, string $toStatus, User $user, array $context = []): void
     {

@@ -1,391 +1,412 @@
-<div class="max-w-6xl mx-auto">
-    {{-- Header --}}
+<div>
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Create Invoice</h1>
-        <p class="text-sm text-gray-600 mt-1">Fill in the details to create a new invoice</p>
+        <flux:heading size="xl">Create Invoice</flux:heading>
+        <flux:text variant="muted">Create a new invoice for your client</flux:text>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Main Form (Left Side) --}}
         <div class="lg:col-span-2 space-y-6">
-            {{-- Client & Basic Info --}}
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Invoice Details</h2>
+            <flux:card>
+                <flux:heading size="lg" class="mb-6">Invoice Details</flux:heading>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {{-- Client Selection --}}
-                    <div>
-                        <label for="client" class="block text-sm font-medium text-gray-700 mb-1">
-                            Client <span class="text-red-500">*</span>
-                        </label>
-                        <select wire:model.live="client_id" id="client" 
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">Select a client...</option>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <flux:field>
+                        <flux:label badge="Required">Client</flux:label>
+                        <flux:select wire:model.live="client_id" placeholder="Select a client">
                             @foreach($this->clients as $client)
-                                <option value="{{ $client->id }}">
-                                    {{ $client->name }}
-                                    @if($client->company_name)
-                                        ({{ $client->company_name }})
-                                    @endif
-                                </option>
+                                <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
                             @endforeach
-                        </select>
-                        @error('client_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                        </flux:select>
+                        <flux:error name="client_id" />
+                    </flux:field>
 
-                    {{-- Category --}}
-                    <div>
-                        <label for="category" class="block text-sm font-medium text-gray-700 mb-1">
-                            Category <span class="text-red-500">*</span>
-                        </label>
-                        <select wire:model="category_id" id="category"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="">Select a category...</option>
+                    <flux:field>
+                        <flux:label badge="Required">Category</flux:label>
+                        <flux:select wire:model="category_id" placeholder="Select a category">
                             @foreach($this->categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                <flux:select.option value="{{ $category->id }}">{{ $category->name }}</flux:select.option>
                             @endforeach
-                        </select>
-                        @error('category_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                        </flux:select>
+                        <flux:error name="category_id" />
+                    </flux:field>
 
-                    {{-- Invoice Number --}}
-                    <div>
-                        <label for="invoice_number" class="block text-sm font-medium text-gray-700 mb-1">
-                            Invoice Number
-                        </label>
-                        <div class="flex rounded-md shadow-sm">
-                            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                                {{ $prefix }}
-                            </span>
-                            <input type="text" wire:model="number" id="invoice_number" readonly
-                                class="flex-1 rounded-none rounded-r-md border-gray-300 bg-gray-50 focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                    </div>
+                    <flux:field>
+                        <flux:label>Invoice Number</flux:label>
+                        <flux:input 
+                            value="{{ $prefix }}-{{ $number }}" 
+                            readonly
+                        />
+                        <flux:description>Auto-generated invoice number</flux:description>
+                    </flux:field>
 
-                    {{-- Currency --}}
-                    <div>
-                        <label for="currency" class="block text-sm font-medium text-gray-700 mb-1">
-                            Currency
-                        </label>
-                        <select wire:model="currency_code" id="currency"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="USD">USD - US Dollar</option>
-                            <option value="EUR">EUR - Euro</option>
-                            <option value="GBP">GBP - British Pound</option>
-                            <option value="CAD">CAD - Canadian Dollar</option>
-                        </select>
-                    </div>
+                    <flux:field>
+                        <flux:label>Currency</flux:label>
+                        <flux:select wire:model="currency_code">
+                            <flux:select.option value="USD">USD - US Dollar</flux:select.option>
+                            <flux:select.option value="EUR">EUR - Euro</flux:select.option>
+                            <flux:select.option value="GBP">GBP - British Pound</flux:select.option>
+                            <flux:select.option value="CAD">CAD - Canadian Dollar</flux:select.option>
+                        </flux:select>
+                    </flux:field>
 
-                    {{-- Invoice Date --}}
-                    <div>
-                        <label for="invoice_date" class="block text-sm font-medium text-gray-700 mb-1">
-                            Invoice Date <span class="text-red-500">*</span>
-                        </label>
-                        <input type="date" wire:model.live="invoice_date" id="invoice_date"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        @error('invoice_date')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    <flux:field>
+                        <flux:label badge="Required">Invoice Date</flux:label>
+                        <flux:input 
+                            type="date" 
+                            wire:model.live="invoice_date"
+                        />
+                        <flux:error name="invoice_date" />
+                    </flux:field>
 
-                    {{-- Payment Terms --}}
-                    <div>
-                        <label for="payment_terms" class="block text-sm font-medium text-gray-700 mb-1">
-                            Payment Terms
-                        </label>
-                        <select wire:model.live="payment_terms" id="payment_terms"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="0">Due on receipt</option>
-                            <option value="7">Net 7 days</option>
-                            <option value="14">Net 14 days</option>
-                            <option value="30">Net 30 days</option>
-                            <option value="45">Net 45 days</option>
-                            <option value="60">Net 60 days</option>
-                            <option value="90">Net 90 days</option>
-                        </select>
-                    </div>
+                    <flux:field>
+                        <flux:label>Payment Terms</flux:label>
+                        <flux:select wire:model.live="payment_terms">
+                            <flux:select.option value="0">Due on receipt</flux:select.option>
+                            <flux:select.option value="7">Net 7 days</flux:select.option>
+                            <flux:select.option value="14">Net 14 days</flux:select.option>
+                            <flux:select.option value="30">Net 30 days</flux:select.option>
+                            <flux:select.option value="45">Net 45 days</flux:select.option>
+                            <flux:select.option value="60">Net 60 days</flux:select.option>
+                            <flux:select.option value="90">Net 90 days</flux:select.option>
+                        </flux:select>
+                    </flux:field>
 
-                    {{-- Due Date --}}
-                    <div>
-                        <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">
-                            Due Date <span class="text-red-500">*</span>
-                        </label>
-                        <input type="date" wire:model="due_date" id="due_date"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        @error('due_date')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    <flux:field>
+                        <flux:label badge="Required">Due Date</flux:label>
+                        <flux:input 
+                            type="date" 
+                            wire:model="due_date"
+                        />
+                        <flux:error name="due_date" />
+                    </flux:field>
 
-                    {{-- Description --}}
-                    <div class="md:col-span-2">
-                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
-                            Description
-                        </label>
-                        <textarea wire:model="description" id="description" rows="2"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            placeholder="Brief description of the invoice..."></textarea>
-                    </div>
+                    <flux:field class="md:col-span-2">
+                        <flux:label>Description</flux:label>
+                        <flux:textarea 
+                            wire:model="scope" 
+                            rows="2"
+                            placeholder="Brief description of the invoice..."
+                        />
+                    </flux:field>
                 </div>
-            </div>
+            </flux:card>
 
-            {{-- Line Items --}}
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">Line Items</h2>
+            <flux:card>
+                <div class="flex justify-between items-center mb-6">
+                    <flux:heading size="lg">Line Items</flux:heading>
                     <div class="flex gap-2">
                         @if(count($this->products) > 0)
-                            <select wire:change="addProductAsItem($event.target.value)" 
-                                class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                                <option value="">Add product...</option>
+                            <flux:select 
+                                wire:change="addProductAsItem($event.target.value)" 
+                                placeholder="Add product"
+                                class="w-48"
+                            >
                                 @foreach($this->products as $product)
-                                    <option value="{{ $product->id }}">
+                                    <flux:select.option value="{{ $product->id }}">
                                         {{ $product->name }} - ${{ number_format($product->price ?? 0, 2) }}
-                                    </option>
+                                    </flux:select.option>
                                 @endforeach
-                            </select>
+                            </flux:select>
                         @endif
-                        <button type="button" wire:click="showAddItemForm"
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Add Custom Item
-                        </button>
+                        <flux:button 
+                            wire:click="openItemModal" 
+                            icon="plus"
+                            variant="primary"
+                        >
+                            Add Item
+                        </flux:button>
                     </div>
                 </div>
-
-                @if($showItemForm)
-                    {{-- Inline Item Form --}}
-                    <div class="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                                <input type="text" wire:model="itemForm.name"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                    placeholder="Enter item name">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                                <input type="number" wire:model="itemForm.quantity" step="0.01" min="0.01"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price</label>
-                                <input type="number" wire:model="itemForm.unit_price" step="0.01" min="0"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
-                                <textarea wire:model="itemForm.description" rows="2"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                    placeholder="Item description..."></textarea>
-                            </div>
-                            <div class="md:col-span-2 flex justify-end gap-2">
-                                <button type="button" wire:click="cancelItemForm"
-                                    class="px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                    Cancel
-                                </button>
-                                <button type="button" wire:click="saveItem"
-                                    class="px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                                    {{ $editingItemIndex !== null ? 'Update' : 'Add' }} Item
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                @endif
 
                 @if(count($items) > 0)
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($items as $index => $item)
-                                    <tr>
-                                        <td class="px-4 py-3">
-                                            <div>
-                                                <div class="text-sm font-medium text-gray-900">{{ $item['name'] }}</div>
-                                                @if(isset($item['description']) && $item['description'])
-                                                    <div class="text-sm text-gray-500">{{ Str::limit($item['description'], 50) }}</div>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-3 text-center text-sm text-gray-900">
-                                            {{ $item['quantity'] }}
-                                        </td>
-                                        <td class="px-4 py-3 text-right text-sm text-gray-900">
-                                            ${{ number_format($item['unit_price'], 2) }}
-                                        </td>
-                                        <td class="px-4 py-3 text-right text-sm font-medium text-gray-900">
-                                            ${{ number_format($item['quantity'] * $item['unit_price'], 2) }}
-                                        </td>
-                                        <td class="px-4 py-3 text-center">
-                                            <button type="button" wire:click="editItem({{ $index }})"
-                                                class="text-blue-600 hover:text-blue-900 text-sm mr-2">Edit</button>
-                                            <button type="button" wire:click="removeItem({{ $index }})"
-                                                onclick="confirm('Remove this item?') || event.stopImmediatePropagation()"
-                                                class="text-red-600 hover:text-red-900 text-sm">Remove</button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                    <flux:table>
+                        <flux:table.columns>
+                            <flux:table.column>Item</flux:table.column>
+                            <flux:table.column class="text-center">Quantity</flux:table.column>
+                            <flux:table.column class="text-right">Price</flux:table.column>
+                            <flux:table.column class="text-right">Total</flux:table.column>
+                            <flux:table.column class="text-center">Actions</flux:table.column>
+                        </flux:table.columns>
+
+                        <flux:table.rows>
+                            @foreach($items as $index => $item)
+                                <flux:table.row :key="$index">
+                                    <flux:table.cell>
+                                        <div>
+                                            <flux:text variant="strong">{{ $item['name'] }}</flux:text>
+                                            @if(!empty($item['description']))
+                                                <flux:text size="sm" variant="muted" class="block">
+                                                    {{ Str::limit($item['description'], 50) }}
+                                                </flux:text>
+                                            @endif
+                                        </div>
+                                    </flux:table.cell>
+                                    <flux:table.cell class="text-center">
+                                        {{ $item['quantity'] }}
+                                    </flux:table.cell>
+                                    <flux:table.cell class="text-right">
+                                        ${{ number_format($item['price'], 2) }}
+                                    </flux:table.cell>
+                                    <flux:table.cell class="text-right">
+                                        <flux:text variant="strong">
+                                            ${{ number_format($item['quantity'] * $item['price'], 2) }}
+                                        </flux:text>
+                                    </flux:table.cell>
+                                    <flux:table.cell class="text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <flux:button 
+                                                wire:click="editItem({{ $index }})"
+                                                size="sm"
+                                                variant="ghost"
+                                                icon="pencil"
+                                            />
+                                            <flux:button 
+                                                wire:click="removeItem({{ $index }})"
+                                                wire:confirm="Remove this item?"
+                                                size="sm"
+                                                variant="ghost"
+                                                icon="trash"
+                                                class="text-red-600 hover:text-red-700"
+                                            />
+                                        </div>
+                                    </flux:table.cell>
+                                </flux:table.row>
+                            @endforeach
+                        </flux:table.rows>
+                    </flux:table>
                 @else
-                    <div class="text-center py-8">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                        <p class="mt-2 text-sm text-gray-600">No items added yet</p>
-                        <p class="text-xs text-gray-500">Add products or custom items to your invoice</p>
+                    <div class="text-center py-12">
+                        <flux:icon name="document-text" class="w-12 h-12 text-zinc-300 mx-auto mb-4" />
+                        <flux:text variant="muted">No items added yet</flux:text>
+                        <flux:text size="sm" variant="muted" class="block mt-1">
+                            Add products or custom items to your invoice
+                        </flux:text>
                     </div>
                 @endif
-                @error('items')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
+                <flux:error name="items" />
+            </flux:card>
 
-            {{-- Additional Info --}}
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Additional Information</h2>
+            <flux:card>
+                <flux:heading size="lg" class="mb-6">Additional Information</flux:heading>
                 
-                <div class="space-y-4">
-                    <div>
-                        <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">
-                            Internal Notes
-                        </label>
-                        <textarea wire:model="notes" id="notes" rows="3"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            placeholder="Notes for internal use (not shown to client)..."></textarea>
-                    </div>
+                <div class="space-y-6">
+                    <flux:field>
+                        <flux:label>Internal Notes</flux:label>
+                        <flux:textarea 
+                            wire:model="note" 
+                            rows="3"
+                            placeholder="Notes for internal use (not shown to client)..."
+                        />
+                    </flux:field>
 
-                    <div>
-                        <label for="terms" class="block text-sm font-medium text-gray-700 mb-1">
-                            Terms & Conditions
-                        </label>
-                        <textarea wire:model="terms_conditions" id="terms" rows="3"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            placeholder="Payment terms and conditions..."></textarea>
-                    </div>
+                    <flux:field>
+                        <flux:label>Terms & Conditions</flux:label>
+                        <flux:textarea 
+                            wire:model="terms_conditions" 
+                            rows="3"
+                            placeholder="Payment terms and conditions..."
+                        />
+                    </flux:field>
                 </div>
-            </div>
+            </flux:card>
         </div>
 
-        {{-- Summary Sidebar (Right Side) --}}
         <div class="lg:col-span-1">
             <div class="sticky top-4 space-y-6">
-                {{-- Client Info Card --}}
                 @if($this->selectedClient)
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-sm font-semibold text-gray-900 mb-3">Bill To</h3>
-                        <div class="text-sm text-gray-600">
-                            <p class="font-medium text-gray-900">{{ $this->selectedClient->name }}</p>
+                    <flux:card>
+                        <flux:heading size="base" class="mb-4">Bill To</flux:heading>
+                        <div class="space-y-1">
+                            <flux:text variant="strong">{{ $this->selectedClient->name }}</flux:text>
                             @if($this->selectedClient->company_name)
-                                <p>{{ $this->selectedClient->company_name }}</p>
+                                <flux:text size="sm" variant="muted" class="block">
+                                    {{ $this->selectedClient->company_name }}
+                                </flux:text>
                             @endif
                             @if($this->selectedClient->email)
-                                <p>{{ $this->selectedClient->email }}</p>
+                                <flux:text size="sm" variant="muted" class="block">
+                                    {{ $this->selectedClient->email }}
+                                </flux:text>
                             @endif
                             @if($this->selectedClient->phone)
-                                <p>{{ $this->selectedClient->phone }}</p>
+                                <flux:text size="sm" variant="muted" class="block">
+                                    {{ $this->selectedClient->phone }}
+                                </flux:text>
                             @endif
                         </div>
-                    </div>
+                    </flux:card>
                 @endif
 
-                {{-- Pricing Summary --}}
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 class="text-sm font-semibold text-gray-900 mb-4">Summary</h3>
+                <flux:card>
+                    <flux:heading size="base" class="mb-4">Summary</flux:heading>
                     
                     <div class="space-y-3">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Subtotal</span>
-                            <span class="font-medium text-gray-900">${{ number_format($this->subtotal, 2) }}</span>
+                        <div class="flex justify-between">
+                            <flux:text>Subtotal</flux:text>
+                            <flux:text variant="strong">${{ number_format($this->subtotal, 2) }}</flux:text>
                         </div>
 
-                        {{-- Discount --}}
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center flex-1">
-                                <span class="text-gray-600 mr-2">Discount</span>
-                                <select wire:model.live="discount_type" 
-                                    class="text-xs rounded border-gray-300 py-1 px-2">
-                                    <option value="fixed">$</option>
-                                    <option value="percentage">%</option>
-                                </select>
-                                <input type="number" wire:model.live="discount_amount" 
-                                    step="0.01" min="0"
-                                    class="ml-1 w-20 text-xs rounded border-gray-300 py-1 px-2"
-                                    placeholder="0">
-                            </div>
+                        <flux:separator />
+
+                        <div class="space-y-2">
+                            <flux:field>
+                                <flux:label>Discount</flux:label>
+                                <div class="flex gap-2">
+                                    <flux:select wire:model.live="discount_type" class="w-20">
+                                        <flux:select.option value="fixed">$</flux:select.option>
+                                        <flux:select.option value="percentage">%</flux:select.option>
+                                    </flux:select>
+                                    <flux:input 
+                                        type="number" 
+                                        wire:model.live="discount_amount" 
+                                        step="0.01" 
+                                        min="0"
+                                        placeholder="0"
+                                        class="flex-1"
+                                    />
+                                </div>
+                            </flux:field>
                             @if($this->discountAmount > 0)
-                                <span class="text-green-600">-${{ number_format($this->discountAmount, 2) }}</span>
-                            @else
-                                <span class="text-gray-500">$0.00</span>
+                                <div class="flex justify-between text-sm">
+                                    <flux:text variant="muted">Discount applied</flux:text>
+                                    <flux:text class="text-green-600">-${{ number_format($this->discountAmount, 2) }}</flux:text>
+                                </div>
                             @endif
                         </div>
 
-                        {{-- Tax --}}
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex items-center">
-                                <span class="text-gray-600 mr-2">Tax</span>
-                                <input type="number" wire:model.live="tax_rate" 
-                                    step="0.01" min="0" max="100"
-                                    class="w-16 text-xs rounded border-gray-300 py-1 px-2"
-                                    placeholder="0">
-                                <span class="ml-1 text-xs text-gray-500">%</span>
-                            </div>
+                        <flux:separator />
+
+                        <div class="space-y-2">
+                            <flux:field>
+                                <flux:label>Tax Rate (%)</flux:label>
+                                <flux:input 
+                                    type="number" 
+                                    wire:model.live="tax_rate" 
+                                    step="0.01" 
+                                    min="0" 
+                                    max="100"
+                                    placeholder="0"
+                                />
+                            </flux:field>
                             @if($this->taxAmount > 0)
-                                <span class="font-medium text-gray-900">${{ number_format($this->taxAmount, 2) }}</span>
-                            @else
-                                <span class="text-gray-500">$0.00</span>
+                                <div class="flex justify-between text-sm">
+                                    <flux:text variant="muted">Tax</flux:text>
+                                    <flux:text variant="strong">${{ number_format($this->taxAmount, 2) }}</flux:text>
+                                </div>
                             @endif
                         </div>
 
-                        <div class="pt-3 border-t border-gray-200">
-                            <div class="flex justify-between">
-                                <span class="text-base font-semibold text-gray-900">Total</span>
-                                <span class="text-xl font-bold text-blue-600">${{ number_format($this->total, 2) }}</span>
-                            </div>
+                        <flux:separator />
+
+                        <div class="flex justify-between pt-2">
+                            <flux:heading size="base">Total</flux:heading>
+                            <flux:heading size="lg" class="text-blue-600">
+                                ${{ number_format($this->total, 2) }}
+                            </flux:heading>
                         </div>
                     </div>
 
-                    {{-- Action Buttons --}}
                     <div class="mt-6 space-y-2">
-                        <button type="button" wire:click="createInvoice"
-                            class="w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Create Invoice
-                        </button>
-                        <button type="button" wire:click="saveAsDraft"
-                            class="w-full px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                        <flux:button 
+                            wire:click="createAndSend"
+                            variant="primary"
+                            class="w-full"
+                        >
+                            Create & Send Invoice
+                        </flux:button>
+                        <flux:button 
+                            wire:click="saveAsDraft"
+                            variant="ghost"
+                            class="w-full"
+                        >
                             Save as Draft
-                        </button>
+                        </flux:button>
                     </div>
-                </div>
+                </flux:card>
 
-                {{-- Quick Tips --}}
-                <div class="bg-blue-50 rounded-lg p-4">
-                    <h4 class="text-sm font-semibold text-blue-900 mb-2">Quick Tips</h4>
-                    <ul class="text-xs text-blue-700 space-y-1">
-                        <li>• Invoice number is auto-generated</li>
-                        <li>• Due date updates with payment terms</li>
-                        <li>• Add multiple items or products</li>
-                        <li>• Save as draft to finish later</li>
-                    </ul>
-                </div>
+                <flux:callout variant="info" icon="information-circle">
+                    <flux:text size="sm">
+                        <strong>Quick Tips:</strong><br>
+                        • Invoice number is auto-generated<br>
+                        • Due date updates with payment terms<br>
+                        • Save as draft to finish later
+                    </flux:text>
+                </flux:callout>
             </div>
         </div>
     </div>
+
+    <flux:modal wire:model="showItemModal" name="item-form" class="md:w-[600px]">
+        <form wire:submit="saveItem">
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">
+                        {{ $editingItemIndex !== null ? 'Edit Item' : 'Add Item' }}
+                    </flux:heading>
+                    <flux:text variant="muted" class="mt-2">
+                        {{ $editingItemIndex !== null ? 'Update item details' : 'Add a new line item to the invoice' }}
+                    </flux:text>
+                </div>
+
+                <flux:field>
+                    <flux:label badge="Required">Item Name</flux:label>
+                    <flux:input 
+                        wire:model="itemForm.name"
+                        placeholder="Enter item name"
+                        autofocus
+                    />
+                    <flux:error name="itemForm.name" />
+                </flux:field>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label badge="Required">Quantity</flux:label>
+                        <flux:input 
+                            type="number" 
+                            wire:model="itemForm.quantity" 
+                            step="0.01" 
+                            min="0.01"
+                        />
+                        <flux:error name="itemForm.quantity" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label badge="Required">Unit Price</flux:label>
+                        <flux:input 
+                            type="number" 
+                            wire:model="itemForm.price" 
+                            step="0.01" 
+                            min="0"
+                        />
+                        <flux:error name="itemForm.price" />
+                    </flux:field>
+                </div>
+
+                <flux:field>
+                    <flux:label>Description</flux:label>
+                    <flux:textarea 
+                        wire:model="itemForm.description" 
+                        rows="3"
+                        placeholder="Optional item description..."
+                    />
+                </flux:field>
+
+                <div class="flex justify-end gap-2">
+                    <flux:button 
+                        type="button" 
+                        wire:click="closeItemModal"
+                        variant="ghost"
+                    >
+                        Cancel
+                    </flux:button>
+                    <flux:button 
+                        type="submit"
+                        variant="primary"
+                    >
+                        {{ $editingItemIndex !== null ? 'Update Item' : 'Add Item' }}
+                    </flux:button>
+                </div>
+            </div>
+        </form>
+    </flux:modal>
 </div>

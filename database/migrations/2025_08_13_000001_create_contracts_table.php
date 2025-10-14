@@ -75,6 +75,48 @@ return new class extends Migration
 
             // Timestamps
             $table->timestamps();
+            $table->enum('billing_model', ['fixed', 'per_asset', 'per_contact', 'tiered', 'hybrid'])->default('fixed');
+            $table->json('pricing_structure')->nullable();
+            $table->json('asset_billing_rules')->nullable();
+            $table->json('supported_asset_types')->nullable();
+            $table->decimal('default_per_asset_rate', 10, 2)->nullable();
+            $table->json('contact_billing_rules')->nullable();
+            $table->json('contact_access_tiers')->nullable();
+            $table->string('signature_status')->default('pending')->index();
+            $table->boolean('is_programmable')->default(false)->index();
+            $table->unsignedBigInteger('contract_template_id')->nullable()->index();
+            $table->index(['billing_model'], 'contracts_billing_model_idx');
+            $table->index(['is_programmable', 'status'], 'contracts_programmable_status_idx');
+            $table->index(['auto_calculate_billing'], 'contracts_auto_calculate_idx');
+            $table->index(['next_billing_date'], 'contracts_next_billing_idx');
+            $table->index(['contract_template_id'], 'contracts_template_id_idx');
+            $table->index('template_id');
+            $table->decimal('default_per_contact_rate', 10, 2)->nullable();
+            $table->json('calculation_formulas')->nullable();
+            $table->json('auto_assignment_rules')->nullable();
+            $table->json('billing_triggers')->nullable();
+            $table->json('workflow_automation')->nullable();
+            $table->json('notification_triggers')->nullable();
+            $table->integer('total_assigned_assets')->default(0);
+            $table->integer('total_assigned_contacts')->default(0);
+            $table->decimal('monthly_usage_charges', 10, 2)->default(0.00);
+            $table->decimal('asset_billing_total', 10, 2)->default(0.00);
+            $table->decimal('contact_billing_total', 10, 2)->default(0.00);
+            $table->timestamp('last_billing_calculation')->nullable();
+            $table->date('next_billing_date')->nullable();
+            $table->boolean('auto_calculate_billing')->default(true);
+            $table->boolean('auto_generate_invoices')->default(false);
+            $table->json('automation_settings')->nullable();
+            $table->boolean('requires_manual_review')->default(false);
+            $table->json('calculation_cache')->nullable();
+            $table->timestamp('cache_expires_at')->nullable();
+            $table->string('template_version', 20)->nullable();
+            $table->unsignedBigInteger('template_id')->nullable();
+            $table->json('custom_clauses')->nullable();
+            $table->string('dispute_resolution')->nullable();
+            $table->string('governing_law')->nullable();
+            $table->longText('content')->nullable();
+            $table->json('variables')->nullable();
 
             // Soft deletes - Using archived_at as seen in ClientPortalController
             $table->timestamp('archived_at')->nullable()->index();

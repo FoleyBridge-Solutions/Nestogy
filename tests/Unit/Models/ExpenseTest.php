@@ -15,19 +15,18 @@ class ExpenseTest extends TestCase
     public function test_can_create_expense_with_factory(): void
     {
         $company = Company::factory()->create();
-        $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
-            'name' => 'Expense',
+        $category = Category::factory()->create([
             'company_id' => $company->id,
+            'name' => 'Expense',
+            'type' => Category::TYPE_EXPENSE_CATEGORY,
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $expense = Expense::factory()->create([
             'company_id' => $company->id,
-            'category_id' => $categoryId,
+            'category_id' => $category->id,
         ]);
 
         $this->assertInstanceOf(Expense::class, $expense);
@@ -37,19 +36,18 @@ class ExpenseTest extends TestCase
     public function test_expense_belongs_to_company(): void
     {
         $company = Company::factory()->create();
-        $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
-            'name' => 'Expense',
+        $category = Category::factory()->create([
             'company_id' => $company->id,
+            'name' => 'Expense',
+            'type' => Category::TYPE_EXPENSE_CATEGORY,
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $expense = Expense::factory()->create([
             'company_id' => $company->id,
-            'category_id' => $categoryId,
+            'category_id' => $category->id,
         ]);
 
         $this->assertInstanceOf(Company::class, $expense->company);
@@ -59,41 +57,39 @@ class ExpenseTest extends TestCase
     public function test_expense_belongs_to_category(): void
     {
         $company = Company::factory()->create();
-        $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
-            'name' => 'Expense',
+        $category = Category::factory()->create([
             'company_id' => $company->id,
+            'name' => 'Expense',
+            'type' => Category::TYPE_EXPENSE_CATEGORY,
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $expense = Expense::factory()->create([
             'company_id' => $company->id,
-            'category_id' => $categoryId,
+            'category_id' => $category->id,
         ]);
 
         $this->assertNotNull($expense->category);
-        $this->assertEquals($categoryId, $expense->category_id);
+        $this->assertEquals($category->id, $expense->category_id);
     }
 
     public function test_expense_has_amount_field(): void
     {
         $company = Company::factory()->create();
-        $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
-            'name' => 'Expense',
+        $category = Category::factory()->create([
             'company_id' => $company->id,
+            'name' => 'Expense',
+            'type' => Category::TYPE_EXPENSE_CATEGORY,
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $expense = Expense::factory()->create([
             'company_id' => $company->id,
-            'category_id' => $categoryId,
+            'category_id' => $category->id,
             'amount' => 250.50,
         ]);
 
@@ -103,19 +99,18 @@ class ExpenseTest extends TestCase
     public function test_expense_has_date_field(): void
     {
         $company = Company::factory()->create();
-        $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
-            'name' => 'Expense',
+        $category = Category::factory()->create([
             'company_id' => $company->id,
+            'name' => 'Expense',
+            'type' => Category::TYPE_EXPENSE_CATEGORY,
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $expense = Expense::factory()->create([
             'company_id' => $company->id,
-            'category_id' => $categoryId,
+            'category_id' => $category->id,
         ]);
 
         $this->assertNotNull($expense->expense_date);
@@ -135,19 +130,18 @@ class ExpenseTest extends TestCase
     public function test_expense_has_timestamps(): void
     {
         $company = Company::factory()->create();
-        $categoryId = \Illuminate\Support\Facades\DB::table('expense_categories')->insertGetId([
-            'name' => 'Expense',
+        $category = Category::factory()->create([
             'company_id' => $company->id,
+            'name' => 'Expense',
+            'type' => Category::TYPE_EXPENSE_CATEGORY,
             'code' => 'EXP001',
             'color' => '#dc3545',
             'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $expense = Expense::factory()->create([
             'company_id' => $company->id,
-            'category_id' => $categoryId,
+            'category_id' => $category->id,
         ]);
 
         $this->assertNotNull($expense->created_at);

@@ -51,7 +51,7 @@ class Expense extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(ExpenseCategory::class);
+        return $this->belongsTo(Category::class)->where('type', Category::TYPE_EXPENSE_CATEGORY);
     }
 
     public function account(): BelongsTo

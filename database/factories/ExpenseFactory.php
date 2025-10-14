@@ -18,7 +18,7 @@ class ExpenseFactory extends Factory
     {
         return [
             'company_id' => \App\Models\Company::factory(),
-            'category_id' => \App\Models\ExpenseCategory::factory(),
+            'category_id' => \App\Models\Category::factory()->expenseCategory(),
             'user_id' => \App\Models\User::factory(),
             'description' => fake()->sentence(),
             'amount' => fake()->randomFloat(2, 10, 500),

@@ -92,6 +92,7 @@ class ProductController extends Controller
         $this->authorize('create', Product::class);
 
         $categories = Category::where('company_id', auth()->user()->company_id)
+            ->whereJsonContains('type', 'product')
             ->orderBy('name')
             ->get();
 

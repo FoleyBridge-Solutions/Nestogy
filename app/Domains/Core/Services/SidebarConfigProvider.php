@@ -638,7 +638,7 @@ class SidebarConfigProvider
         $emailAccounts = $user ? \App\Domains\Email\Models\EmailAccount::forUser($user->id)->active()->with('folders')->get() : collect();
 
         $sections = $this->buildEmailPrimarySections($unreadCount);
-        
+
         if ($emailAccounts->isNotEmpty()) {
             $sections[] = $this->buildEmailAccountsSection($emailAccounts);
         }
@@ -655,7 +655,7 @@ class SidebarConfigProvider
 
     protected function getEmailUnreadCount($user): int
     {
-        if (!$user) {
+        if (! $user) {
             return 0;
         }
 
@@ -718,7 +718,7 @@ class SidebarConfigProvider
     protected function buildEmailFoldersSection(int $unreadCount, $emailAccounts): array
     {
         $folderItems = $this->buildDefaultFolderItems($unreadCount);
-        
+
         if ($emailAccounts->isNotEmpty()) {
             $dynamicFolders = $this->buildDynamicFolderItems($emailAccounts);
             $folderItems = array_merge($folderItems, $dynamicFolders);
@@ -768,7 +768,7 @@ class SidebarConfigProvider
     protected function buildDynamicFolderItems($emailAccounts): array
     {
         $folderItems = [];
-        
+
         foreach ($emailAccounts as $account) {
             foreach ($account->folders as $folder) {
                 $folderItems[] = $this->buildFolderItem($folder, $account);
@@ -783,7 +783,7 @@ class SidebarConfigProvider
         $folderUnreadCount = $folder->unread_count;
         $folderName = $folder->getDisplayName();
 
-        if (!in_array($folder->type, ['inbox', 'sent', 'drafts', 'trash'])) {
+        if (! in_array($folder->type, ['inbox', 'sent', 'drafts', 'trash'])) {
             $folderName .= ' ('.$account->name.')';
         }
 
@@ -990,7 +990,48 @@ class SidebarConfigProvider
     }
 
     /**
-     * Get financial sidebar configuration (truncated for brevity)
+     * Build a sidebar section from NavigationService registry
+     *
+     * @param  string  $domain  Domain name (e.g., 'financial')
+     * @param  string  $sectionKey  Section key from registry (e.g., 'billing', 'products')
+     * @param  string  $title  Section title to display
+     * @param  bool  $expandable  Whether section is expandable
+     * @param  bool  $defaultExpanded  Whether section is expanded by default
+     * @return array Sidebar section configuration
+     */
+    protected function buildSectionFromRegistry(
+        string $domain,
+        string $sectionKey,
+        string $title,
+        bool $expandable = true,
+        bool $defaultExpanded = false
+    ): array {
+        $user = auth()->user();
+        $items = NavigationService::getNavigationItemsBySection($domain, $sectionKey, $user);
+
+        $sidebarItems = [];
+        foreach ($items as $key => $item) {
+            $sidebarItems[] = [
+                'name' => $item['label'],
+                'route' => $item['route'],
+                'icon' => $item['icon'],
+                'key' => $key,
+                'description' => $item['description'],
+            ];
+        }
+
+        return [
+            'type' => 'section',
+            'title' => $title,
+            'expandable' => $expandable,
+            'default_expanded' => $defaultExpanded,
+            'items' => $sidebarItems,
+        ];
+    }
+
+    /**
+     * Get financial sidebar configuration
+     * Now powered by NavigationService registry!
      */
     protected function getFinancialConfig(): array
     {
@@ -1010,79 +1051,10 @@ class SidebarConfigProvider
                         ],
                     ],
                 ],
-                [
-                    'type' => 'section',
-                    'title' => 'BILLING & INVOICING',
-                    'expandable' => true,
-                    'default_expanded' => true,
-                    'items' => [
-                        [
-                            'name' => 'Invoices',
-                            'route' => 'financial.invoices.index',
-                            'icon' => 'document-text',
-                            'key' => 'invoices',
-                            'description' => 'Manage customer invoices',
-                        ],
-                        [
-                            'name' => 'Time Entry Approval',
-                            'route' => 'billing.time-entries',
-                            'icon' => 'clock',
-                            'key' => 'time-entries',
-                            'description' => 'Review and approve billable time for invoicing',
-                        ],
-                        [
-                            'name' => 'Payments',
-                            'route' => 'financial.payments.index',
-                            'icon' => 'credit-card',
-                            'key' => 'payments',
-                            'description' => 'Track payment history',
-                        ],
-                        [
-                            'name' => 'Recurring Billing',
-                            'route' => 'financial.recurring-invoices.index',
-                            'icon' => 'arrow-path',
-                            'key' => 'recurring',
-                            'description' => 'Manage subscriptions',
-                        ],
-                        [
-                            'name' => 'Rate Cards',
-                            'route' => 'financial.invoices.index',
-                            'params' => ['tab' => 'rate-cards'],
-                            'icon' => 'currency-dollar',
-                            'key' => 'rate-cards',
-                            'description' => 'Manage client-specific billing rates',
-                        ],
-                    ],
-                ],
-                [
-                    'type' => 'section',
-                    'title' => 'ACCOUNTING',
-                    'expandable' => true,
-                    'default_expanded' => false,
-                    'items' => [
-                        [
-                            'name' => 'Chart of Accounts',
-                            'route' => 'financial.accounts.index',
-                            'icon' => 'list-bullet',
-                            'key' => 'accounts',
-                            'description' => 'Manage GL accounts',
-                        ],
-                        [
-                            'name' => 'Journal Entries',
-                            'route' => 'financial.journal.index',
-                            'icon' => 'book-open',
-                            'key' => 'journal',
-                            'description' => 'View journal entries',
-                        ],
-                        [
-                            'name' => 'Tax Settings',
-                            'route' => 'financial.tax.index',
-                            'icon' => 'calculator',
-                            'key' => 'tax',
-                            'description' => 'Configure tax rates',
-                        ],
-                    ],
-                ],
+                // Dynamically built from NavigationService registry
+                $this->buildSectionFromRegistry('financial', 'billing', 'BILLING & INVOICING', true, true),
+                $this->buildSectionFromRegistry('financial', 'products', 'PRODUCTS & SERVICES', true, false),
+                $this->buildSectionFromRegistry('financial', 'accounting', 'ACCOUNTING', true, false),
             ],
         ];
     }
@@ -1174,7 +1146,7 @@ class SidebarConfigProvider
                     ->whereNotIn('status', ['closed', 'resolved'])
                     ->whereHas('priorityQueue', function ($q) {
                         $q->where('sla_deadline', '>', now())
-                          ->where('sla_deadline', '<=', now()->addHours(2));
+                            ->where('sla_deadline', '<=', now()->addHours(2));
                     })
                     ->count();
             } catch (\Exception $e) {
@@ -1366,6 +1338,7 @@ class SidebarConfigProvider
                         ['name' => 'Reports', 'route' => 'settings.category.show', 'params' => ['domain' => 'operations', 'category' => 'reports'], 'icon' => 'chart-bar', 'key' => 'reports'],
                         ['name' => 'Knowledge Base', 'route' => 'settings.category.show', 'params' => ['domain' => 'operations', 'category' => 'knowledge'], 'icon' => 'book-open', 'key' => 'knowledge'],
                         ['name' => 'Training', 'route' => 'settings.category.show', 'params' => ['domain' => 'operations', 'category' => 'training'], 'icon' => 'academic-cap', 'key' => 'training'],
+                        ['name' => 'Categories', 'route' => 'settings.categories.index', 'icon' => 'folder-open', 'key' => 'categories'],
                     ],
                 ],
                 [
@@ -1416,7 +1389,7 @@ class SidebarConfigProvider
 
         foreach ($config['sections'] as $sectionKey => $section) {
             $filteredSection = $this->filterSection($section, $user);
-            
+
             if ($filteredSection !== null) {
                 $filteredSections[] = $filteredSection;
             }
@@ -1451,6 +1424,7 @@ class SidebarConfigProvider
         }
 
         $section['items'] = $filteredItems;
+
         return $section;
     }
 
@@ -1460,7 +1434,7 @@ class SidebarConfigProvider
     protected function filterSectionItems(array $items, $user): array
     {
         $filteredItems = [];
-        
+
         foreach ($items as $item) {
             if (! isset($item['permission']) || $this->userHasPermission($user, $item['permission'])) {
                 $filteredItems[] = $item;

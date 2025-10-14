@@ -104,6 +104,10 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
 
     Route::get('/notification-preferences', \App\Livewire\Settings\NotificationPreferences::class)->name('notification-preferences');
 
+    Route::get('/notifications', function () {
+        return redirect()->route('settings.category.show', ['domain' => 'communication', 'category' => 'notifications']);
+    })->name('notifications');
+
     Route::get('/payment-gateways', function () {
         return redirect()->route('settings.category.show', ['domain' => 'financial', 'category' => 'payments']);
     })->name('payment-gateways');
@@ -139,18 +143,19 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified'])->
     Route::get('/export', [UnifiedSettingsController::class, 'export'])->name('export');
     Route::post('/import', [UnifiedSettingsController::class, 'import'])->name('import');
 
+    // Category Management (Livewire-powered)
+    Route::get('/categories', \App\Livewire\Settings\CategoryManager::class)->name('categories.index');
+
     // Roles & Permissions (MUST come before domain-based routes to avoid conflicts)
     Route::prefix('roles')->name('roles.')->group(function () {
-        const ROLE_PARAM = '/{role}';
-        
         Route::get('/', [RoleController::class, 'index'])->name('index');
         Route::get('/create', [RoleController::class, 'create'])->name('create');
         Route::post('/', [RoleController::class, 'store'])->name('store');
-        Route::get(ROLE_PARAM, [RoleController::class, 'show'])->name('show');
-        Route::get(ROLE_PARAM . '/edit', [RoleController::class, 'edit'])->name('edit');
-        Route::put(ROLE_PARAM, [RoleController::class, 'update'])->name('update');
-        Route::delete(ROLE_PARAM, [RoleController::class, 'destroy'])->name('destroy');
-        Route::post(ROLE_PARAM . '/duplicate', [RoleController::class, 'duplicate'])->name('duplicate');
+        Route::get('/{role}', [RoleController::class, 'show'])->name('show');
+        Route::get('/{role}/edit', [RoleController::class, 'edit'])->name('edit');
+        Route::put('/{role}', [RoleController::class, 'update'])->name('update');
+        Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
+        Route::post('/{role}/duplicate', [RoleController::class, 'duplicate'])->name('duplicate');
     });
 
     Route::prefix('permissions')->name('permissions.')->group(function () {

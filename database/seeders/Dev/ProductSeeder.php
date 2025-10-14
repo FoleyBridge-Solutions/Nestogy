@@ -147,8 +147,8 @@ class ProductSeeder extends Seeder
                         'is_taxable' => fake()->boolean(80),
                         'is_active' => fake()->boolean(90),
                         'current_stock' => $productData['type'] === 'product' ? fake()->numberBetween(0, 100) : 0,
-                        'track_inventory' => $productData['type'] === 'product',
                         'min_stock_level' => $productData['type'] === 'product' ? fake()->numberBetween(5, 20) : 0,
+                        'track_inventory' => $productData['type'] === 'product',
                         'created_at' => fake()->dateTimeBetween('-1 year', 'now'),
                         'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
                     ]);

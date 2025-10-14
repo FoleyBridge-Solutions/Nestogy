@@ -83,6 +83,325 @@ class NavigationService
     ];
 
     /**
+     * Master Navigation Registry Data
+     *
+     * This is the single source of truth for all navigation items across the application.
+     * Returns an array structure with metadata for sidebars, command palette, and API endpoints.
+     *
+     * Structure:
+     * - label: Display name
+     * - icon: Heroicon name (for sidebar)
+     * - emoji: Emoji icon (for command palette)
+     * - description: Human-readable description
+     * - route: Main index/list route
+     * - create_route: Creation route (optional)
+     * - permission: Required permission to view
+     * - create_permission: Required permission to create (optional)
+     * - badge_callback: Closure to calculate badge count (optional)
+     * - commands: Array of command variations for command palette
+     * - section: Section key for sidebar grouping
+     * - order: Display order within section
+     */
+    protected static function getNavigationRegistryData(): array
+    {
+        return [
+            'financial' => [
+                'invoices' => [
+                    'label' => 'Invoices',
+                    'icon' => 'document-text',
+                    'emoji' => '💰',
+                    'description' => 'Manage client invoices and billing',
+                    'route' => 'financial.invoices.index',
+                    'create_route' => 'financial.invoices.create',
+                    'permission' => 'financial.invoices.view',
+                    'create_permission' => 'financial.invoices.manage',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\Invoice::where('company_id', $companyId)->count();
+                    },
+                    'commands' => [
+                        'show' => ['show invoices', 'invoices', 'view invoices', 'list invoices'],
+                        'goto' => ['go to invoices', 'open invoices', 'go to billing'],
+                        'create' => ['create invoice', 'new invoice', 'add invoice', 'make invoice'],
+                    ],
+                    'section' => 'billing',
+                    'order' => 10,
+                ],
+                'quotes' => [
+                    'label' => 'Quotes',
+                    'icon' => 'document-duplicate',
+                    'emoji' => '📝',
+                    'description' => 'Create and manage client quotes',
+                    'route' => 'financial.quotes.index',
+                    'create_route' => 'financial.quotes.create',
+                    'permission' => 'financial.quotes.view',
+                    'create_permission' => 'financial.quotes.manage',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\Quote::where('company_id', $companyId)->count();
+                    },
+                    'commands' => [
+                        'show' => ['show quotes', 'quotes', 'view quotes', 'list quotes'],
+                        'goto' => ['go to quotes', 'open quotes'],
+                        'create' => ['create quote', 'new quote', 'add quote', 'make quote'],
+                    ],
+                    'section' => 'billing',
+                    'order' => 20,
+                ],
+                'contracts' => [
+                    'label' => 'Contracts',
+                    'icon' => 'document-check',
+                    'emoji' => '📄',
+                    'description' => 'Manage service contracts and SLAs',
+                    'route' => 'financial.contracts.index',
+                    'create_route' => 'financial.contracts.create',
+                    'permission' => 'contracts.view',
+                    'create_permission' => 'contracts.create',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Domains\Contract\Models\Contract::where('company_id', $companyId)->count();
+                    },
+                    'commands' => [
+                        'show' => ['show contracts', 'contracts', 'view contracts', 'list contracts'],
+                        'goto' => ['go to contracts', 'open contracts'],
+                        'create' => ['create contract', 'new contract', 'add contract'],
+                    ],
+                    'section' => 'billing',
+                    'order' => 30,
+                ],
+                'payments' => [
+                    'label' => 'Payments',
+                    'icon' => 'credit-card',
+                    'emoji' => '💳',
+                    'description' => 'Record and track client payments',
+                    'route' => 'financial.payments.index',
+                    'create_route' => 'financial.payments.create',
+                    'permission' => 'financial.payments.view',
+                    'create_permission' => 'financial.payments.manage',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\Payment::where('company_id', $companyId)->count();
+                    },
+                    'commands' => [
+                        'show' => ['show payments', 'payments', 'view payments', 'list payments'],
+                        'goto' => ['go to payments', 'open payments'],
+                        'create' => ['record payment', 'new payment', 'add payment', 'create payment'],
+                    ],
+                    'section' => 'billing',
+                    'order' => 40,
+                ],
+                'expenses' => [
+                    'label' => 'Expenses',
+                    'icon' => 'receipt-percent',
+                    'emoji' => '💸',
+                    'description' => 'Track business expenses and costs',
+                    'route' => 'financial.expenses.index',
+                    'create_route' => 'financial.expenses.create',
+                    'permission' => 'financial.expenses.view',
+                    'create_permission' => 'financial.expenses.manage',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\Expense::where('company_id', $companyId)->count();
+                    },
+                    'commands' => [
+                        'show' => ['show expenses', 'expenses', 'view expenses', 'list expenses'],
+                        'goto' => ['go to expenses', 'open expenses'],
+                        'create' => ['add expense', 'new expense', 'create expense'],
+                    ],
+                    'section' => 'billing',
+                    'order' => 50,
+                ],
+                'time-entries' => [
+                    'label' => 'Time Entry Approval',
+                    'icon' => 'clock',
+                    'emoji' => '⏱️',
+                    'description' => 'Approve and manage time entries',
+                    'route' => 'billing.time-entries',
+                    'permission' => 'financial.time-entries.approve',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\TimeEntry::where('company_id', $companyId)
+                            ->where('status', 'pending')
+                            ->count();
+                    },
+                    'commands' => [
+                        'show' => ['show time entries', 'time entries', 'approve time', 'time approval'],
+                        'goto' => ['go to time entries', 'open time approval'],
+                    ],
+                    'section' => 'billing',
+                    'order' => 60,
+                ],
+                // TODO: Uncomment when routes are created
+                // 'recurring-billing' => [
+                //     'label' => 'Recurring Billing',
+                //     'icon' => 'arrow-path',
+                //     'emoji' => '🔄',
+                //     'description' => 'Manage recurring billing schedules',
+                //     'route' => 'financial.recurring.index',
+                //     'permission' => 'financial.recurring.view',
+                //     'badge_callback' => function ($companyId) {
+                //         return \App\Models\RecurringInvoice::where('company_id', $companyId)
+                //             ->where('is_active', true)
+                //             ->count();
+                //     },
+                //     'commands' => [
+                //         'show' => ['show recurring billing', 'recurring billing', 'recurring invoices'],
+                //         'goto' => ['go to recurring billing', 'open recurring'],
+                //     ],
+                //     'section' => 'billing',
+                //     'order' => 70,
+                // ],
+                // 'rate-cards' => [
+                //     'label' => 'Rate Cards',
+                //     'icon' => 'currency-dollar',
+                //     'emoji' => '💲',
+                //     'description' => 'Manage client-specific billing rates',
+                //     'route' => 'financial.rate-cards.index',
+                //     'permission' => 'financial.rate-cards.view',
+                //     'badge_callback' => function ($companyId) {
+                //         return \App\Models\RateCard::where('company_id', $companyId)->count();
+                //     },
+                //     'commands' => [
+                //         'show' => ['show rate cards', 'rate cards', 'billing rates'],
+                //         'goto' => ['go to rate cards', 'open rates'],
+                //     ],
+                //     'section' => 'billing',
+                //     'order' => 80,
+                // ],
+                'products' => [
+                    'label' => 'Products',
+                    'icon' => 'cube',
+                    'emoji' => '📦',
+                    'description' => 'Manage products and inventory',
+                    'route' => 'products.index',
+                    'create_route' => 'products.create',
+                    'permission' => 'manage-products',
+                    'create_permission' => 'manage-products',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\Product::where('company_id', $companyId)
+                            ->where('is_active', true)
+                            ->count();
+                    },
+                    'commands' => [
+                        'show' => ['show products', 'products', 'view products', 'list products'],
+                        'goto' => ['go to products', 'open products'],
+                        'create' => ['create product', 'new product', 'add product'],
+                    ],
+                    'section' => 'products',
+                    'order' => 10,
+                ],
+                'services' => [
+                    'label' => 'Services',
+                    'icon' => 'wrench-screwdriver',
+                    'emoji' => '🔧',
+                    'description' => 'Manage service offerings',
+                    'route' => 'services.index',
+                    'create_route' => 'services.create',
+                    'permission' => 'manage-products',
+                    'create_permission' => 'manage-products',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\Product::where('company_id', $companyId)
+                            ->where('type', 'service')
+                            ->count();
+                    },
+                    'commands' => [
+                        'show' => ['show services', 'services', 'view services', 'list services'],
+                        'goto' => ['go to services', 'open services'],
+                        'create' => ['create service', 'new service', 'add service'],
+                    ],
+                    'section' => 'products',
+                    'order' => 20,
+                ],
+                'bundles' => [
+                    'label' => 'Bundles',
+                    'icon' => 'rectangle-stack',
+                    'emoji' => '🎁',
+                    'description' => 'Product and service bundles',
+                    'route' => 'bundles.index',
+                    'create_route' => 'bundles.create',
+                    'permission' => 'manage-bundles',
+                    'create_permission' => 'manage-bundles',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\ProductBundle::where('company_id', $companyId)->count();
+                    },
+                    'commands' => [
+                        'show' => ['show bundles', 'bundles', 'view bundles', 'product bundles'],
+                        'goto' => ['go to bundles', 'open bundles'],
+                        'create' => ['create bundle', 'new bundle', 'add bundle'],
+                    ],
+                    'section' => 'products',
+                    'order' => 30,
+                ],
+                'pricing-rules' => [
+                    'label' => 'Pricing Rules',
+                    'icon' => 'adjustments-vertical',
+                    'emoji' => '💲',
+                    'description' => 'Dynamic pricing configuration',
+                    'route' => 'pricing-rules.index',
+                    'create_route' => 'pricing-rules.create',
+                    'permission' => 'manage-pricing-rules',
+                    'create_permission' => 'manage-pricing-rules',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\PricingRule::where('company_id', $companyId)
+                            ->where('is_active', true)
+                            ->count();
+                    },
+                    'commands' => [
+                        'show' => ['show pricing rules', 'pricing rules', 'pricing', 'view pricing'],
+                        'goto' => ['go to pricing rules', 'open pricing'],
+                        'create' => ['create pricing rule', 'new pricing rule', 'add pricing rule'],
+                    ],
+                    'section' => 'products',
+                    'order' => 40,
+                ],
+                // TODO: Uncomment when routes are created
+                // 'accounts' => [
+                //     'label' => 'Chart of Accounts',
+                //     'icon' => 'list-bullet',
+                //     'emoji' => '📊',
+                //     'description' => 'Manage general ledger accounts',
+                //     'route' => 'financial.accounts.index',
+                //     'permission' => 'financial.accounts.view',
+                //     'badge_callback' => function ($companyId) {
+                //         return \App\Models\Account::where('company_id', $companyId)->count();
+                //     },
+                //     'commands' => [
+                //         'show' => ['show accounts', 'chart of accounts', 'accounts', 'view accounts'],
+                //         'goto' => ['go to accounts', 'open accounts', 'go to chart of accounts'],
+                //     ],
+                //     'section' => 'accounting',
+                //     'order' => 10,
+                // ],
+                // 'journal' => [
+                //     'label' => 'Journal Entries',
+                //     'icon' => 'book-open',
+                //     'emoji' => '📖',
+                //     'description' => 'View and manage journal entries',
+                //     'route' => 'financial.journal.index',
+                //     'permission' => 'financial.journal.view',
+                //     'badge_callback' => function ($companyId) {
+                //         return \App\Models\JournalEntry::where('company_id', $companyId)->count();
+                //     },
+                //     'commands' => [
+                //         'show' => ['show journal entries', 'journal entries', 'journal', 'view journal'],
+                //         'goto' => ['go to journal', 'open journal entries'],
+                //     ],
+                //     'section' => 'accounting',
+                //     'order' => 20,
+                // ],
+                // 'tax' => [
+                //     'label' => 'Tax Settings',
+                //     'icon' => 'calculator',
+                //     'emoji' => '🧮',
+                //     'description' => 'Configure tax rates and rules',
+                //     'route' => 'financial.tax.index',
+                //     'permission' => 'financial.tax.manage',
+                //     'commands' => [
+                //         'show' => ['show tax settings', 'tax settings', 'tax', 'configure tax'],
+                //         'goto' => ['go to tax settings', 'open tax'],
+                //     ],
+                //     'section' => 'accounting',
+                //     'order' => 30,
+                // ],
+            ],
+        ];
+    }
+
+    /**
      * Navigation item mappings for each domain
      */
     protected static $navigationMappings = [
@@ -906,6 +1225,7 @@ class NavigationService
 
         if (in_array($currentRouteName, ['clients.create', 'clients.import.form'])) {
             $pageTitle = static::getPageTitleFromRoute($currentRouteName, $activeDomain);
+
             return $pageTitle ? [['name' => $pageTitle, 'active' => true]] : [];
         }
 
@@ -919,7 +1239,7 @@ class NavigationService
     protected static function buildDomainIndexBreadcrumbs(string $activeDomain, string $currentRouteName, $selectedClient): ?array
     {
         $isDomainIndex = $currentRouteName === static::getDomainIndexRoute($activeDomain);
-        
+
         if ($isDomainIndex && $selectedClient && $activeDomain !== 'clients') {
             return [
                 [
@@ -991,7 +1311,7 @@ class NavigationService
     protected static function addPageTitleBreadcrumb(array &$breadcrumbs, string $currentRouteName, string $activeDomain): void
     {
         $pageTitle = static::getPageTitleFromRoute($currentRouteName, $activeDomain);
-        
+
         if (! $pageTitle || empty($pageTitle)) {
             return;
         }
@@ -1377,6 +1697,22 @@ class NavigationService
             $items['expenses'] = 'Expenses';
         }
 
+        if ($user->hasPermission('manage-products')) {
+            $items['products'] = 'Products';
+        }
+
+        if ($user->hasPermission('manage-products')) {
+            $items['services'] = 'Services';
+        }
+
+        if ($user->hasPermission('manage-bundles')) {
+            $items['bundles'] = 'Bundles';
+        }
+
+        if ($user->hasPermission('manage-pricing-rules')) {
+            $items['pricing-rules'] = 'Pricing Rules';
+        }
+
         if ($user->hasPermission('financial.invoices.manage')) {
             $items['create-invoice'] = 'Create Invoice';
         }
@@ -1395,6 +1731,14 @@ class NavigationService
 
         if ($user->hasPermission('financial.expenses.manage')) {
             $items['create-expense'] = 'Add Expense';
+        }
+
+        if ($user->hasPermission('manage-products')) {
+            $items['create-product'] = 'Create Product';
+        }
+
+        if ($user->hasPermission('manage-products')) {
+            $items['create-service'] = 'Create Service';
         }
 
         if ($user->hasPermission('contracts.analytics')) {
@@ -1914,7 +2258,7 @@ class NavigationService
     protected static function getFinancialBadgeCounts(int $companyId): array
     {
         try {
-            return [
+            $counts = [
                 'invoices' => \App\Models\Invoice::where('company_id', $companyId)->count(),
                 'quotes' => \App\Models\Quote::where('company_id', $companyId)->count(),
                 'contracts' => \App\Domains\Contract\Models\Contract::where('company_id', $companyId)->count(),
@@ -1926,6 +2270,35 @@ class NavigationService
                 'pending-expenses' => \App\Models\Expense::where('company_id', $companyId)->where('status', 'pending_approval')->count(),
                 'approved-expenses' => \App\Models\Expense::where('company_id', $companyId)->where('status', 'approved')->count(),
             ];
+
+            // Add product-related counts
+            try {
+                $counts['products'] = \App\Models\Product::where('company_id', $companyId)->count();
+                $counts['active-products'] = \App\Models\Product::where('company_id', $companyId)->where('is_active', true)->count();
+            } catch (\Exception $e) {
+                $counts['products'] = 0;
+                $counts['active-products'] = 0;
+            }
+
+            try {
+                $counts['services'] = \App\Models\Product::where('company_id', $companyId)->where('type', 'service')->count();
+            } catch (\Exception $e) {
+                $counts['services'] = 0;
+            }
+
+            try {
+                $counts['bundles'] = \App\Models\ProductBundle::where('company_id', $companyId)->count();
+            } catch (\Exception $e) {
+                $counts['bundles'] = 0;
+            }
+
+            try {
+                $counts['pricing-rules'] = \App\Models\PricingRule::where('company_id', $companyId)->where('is_active', true)->count();
+            } catch (\Exception $e) {
+                $counts['pricing-rules'] = 0;
+            }
+
+            return $counts;
         } catch (\Exception $e) {
             return [];
         }
@@ -1939,9 +2312,9 @@ class NavigationService
         try {
             $projectClass = static::getProjectModelClass();
             $baseQuery = $projectClass::where('company_id', $companyId);
-            
+
             $counts = static::getBasicProjectCounts($baseQuery);
-            
+
             if ($projectClass === '\Foleybridge\Nestogy\Domains\Project\Models\Project') {
                 $counts = array_merge($counts, static::getEnhancedProjectCounts($baseQuery, $companyId));
             }
@@ -3125,5 +3498,218 @@ class NavigationService
         } else {
             session(['selected_client_id' => $clientId]);
         }
+    }
+
+    /**
+     * Get navigation registry for a domain with permission filtering
+     *
+     * @param  string  $domain  The domain ('financial', 'tickets', etc.) or 'all' for everything
+     * @param  mixed  $user  User instance or null to use auth()->user()
+     * @return array Filtered registry items with metadata
+     */
+    public static function getNavigationRegistry(string $domain, $user = null): array
+    {
+        $user = $user ?? auth()->user();
+
+        if (! $user) {
+            return [];
+        }
+
+        // Get registry for requested domain(s)
+        $registryData = static::getNavigationRegistryData();
+        $registry = $domain === 'all'
+            ? $registryData
+            : ($registryData[$domain] ?? []);
+
+        // Filter by permissions
+        $filtered = [];
+
+        if ($domain === 'all') {
+            // Process all domains
+            foreach ($registry as $domainKey => $items) {
+                $filtered[$domainKey] = [];
+                foreach ($items as $key => $item) {
+                    if (static::userCanAccessItem($user, $item)) {
+                        $filtered[$domainKey][$key] = static::enrichItemMetadata($key, $item);
+                    }
+                }
+            }
+        } else {
+            // Process single domain
+            foreach ($registry as $key => $item) {
+                if (static::userCanAccessItem($user, $item)) {
+                    $filtered[$key] = static::enrichItemMetadata($key, $item);
+                }
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Get navigation items filtered by section for sidebar grouping
+     *
+     * @param  string  $domain  The domain name
+     * @param  string  $section  The section key ('billing', 'products', 'accounting', etc.)
+     * @param  mixed  $user  User instance or null to use auth()->user()
+     * @return array Items belonging to the section, sorted by order
+     */
+    public static function getNavigationItemsBySection(string $domain, string $section, $user = null): array
+    {
+        $registry = static::getNavigationRegistry($domain, $user);
+
+        $items = [];
+        foreach ($registry as $key => $item) {
+            if (($item['section'] ?? null) === $section) {
+                $items[$key] = $item;
+            }
+        }
+
+        // Sort by order
+        uasort($items, function ($a, $b) {
+            return ($a['order'] ?? 999) - ($b['order'] ?? 999);
+        });
+
+        return $items;
+    }
+
+    /**
+     * Get command palette commands from navigation registry
+     *
+     * @param  string|null  $type  Filter by command type: 'show', 'goto', 'create', or null for all
+     * @param  mixed  $user  User instance or null to use auth()->user()
+     * @return array Commands formatted for command palette
+     */
+    public static function getCommandPaletteCommands(?string $type = null, $user = null): array
+    {
+        $registry = static::getNavigationRegistry('all', $user);
+        $commands = [];
+
+        foreach ($registry as $domain => $items) {
+            foreach ($items as $key => $item) {
+                // Process each command type
+                $commandTypes = $type ? [$type] : ['show', 'goto', 'create'];
+
+                foreach ($commandTypes as $cmdType) {
+                    if (! isset($item['commands'][$cmdType])) {
+                        continue;
+                    }
+
+                    // Check create permission separately
+                    if ($cmdType === 'create' && isset($item['create_permission'])) {
+                        if (! $user->hasPermission($item['create_permission'])) {
+                            continue;
+                        }
+                    }
+
+                    // Add all command variations
+                    foreach ($item['commands'][$cmdType] as $commandText) {
+                        $commands[$commandText] = [
+                            'icon' => $item['emoji'] ?? '📄',
+                            'description' => $item['description'],
+                            'route' => $cmdType === 'create' ? ($item['create_route'] ?? $item['route']) : $item['route'],
+                            'type' => $cmdType,
+                            'domain' => $domain,
+                            'key' => $key,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $commands;
+    }
+
+    /**
+     * Resolve a command to its route information
+     *
+     * @param  string  $command  The command text to search for
+     * @param  string  $type  The command type ('goto', 'show', 'create')
+     * @return array|null Route information or null if not found
+     */
+    public static function resolveCommandRoute(string $command, string $type): ?array
+    {
+        $command = strtolower(trim($command));
+        $registry = static::getNavigationRegistry('all');
+
+        foreach ($registry as $domain => $items) {
+            foreach ($items as $key => $item) {
+                if (! isset($item['commands'][$type])) {
+                    continue;
+                }
+
+                // Check if command matches any of the defined commands
+                foreach ($item['commands'][$type] as $commandText) {
+                    if (str_contains(strtolower($commandText), $command) || str_contains($command, strtolower($key))) {
+                        return [
+                            'route' => $type === 'create' ? ($item['create_route'] ?? $item['route']) : $item['route'],
+                            'label' => $item['label'],
+                            'description' => $item['description'],
+                            'icon' => $item['emoji'] ?? '📄',
+                            'domain' => $domain,
+                            'key' => $key,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Calculate badge counts using registry callbacks
+     *
+     * @param  string  $domain  The domain name
+     * @param  int  $companyId  The company ID
+     * @return array Badge counts keyed by item key
+     */
+    public static function calculateBadgeCounts(string $domain, int $companyId): array
+    {
+        $registryData = static::getNavigationRegistryData();
+        $registry = $registryData[$domain] ?? [];
+        $counts = [];
+
+        foreach ($registry as $key => $item) {
+            if (isset($item['badge_callback']) && is_callable($item['badge_callback'])) {
+                try {
+                    $counts[$key] = call_user_func($item['badge_callback'], $companyId);
+                } catch (\Exception $e) {
+                    \Log::error("Badge callback error for {$domain}.{$key}: ".$e->getMessage());
+                    $counts[$key] = 0;
+                }
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Check if user can access a navigation item based on permissions
+     *
+     * @param  mixed  $user  User instance
+     * @param  array  $item  Navigation item
+     */
+    protected static function userCanAccessItem($user, array $item): bool
+    {
+        if (! isset($item['permission'])) {
+            return true;
+        }
+
+        return $user->hasPermission($item['permission']);
+    }
+
+    /**
+     * Enrich item metadata with computed values
+     *
+     * @param  string  $key  Item key
+     * @param  array  $item  Item data
+     * @return array Enriched item
+     */
+    protected static function enrichItemMetadata(string $key, array $item): array
+    {
+        $item['key'] = $key;
+
+        return $item;
     }
 }

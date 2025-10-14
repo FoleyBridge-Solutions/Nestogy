@@ -331,6 +331,7 @@
         <!-- Page Content -->
         <div class="p-4 lg:p-6">
             @yield('content')
+            {{ $slot ?? '' }}
         </div>
     </flux:main>
 

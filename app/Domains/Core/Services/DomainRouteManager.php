@@ -236,31 +236,6 @@ class DomainRouteManager
     }
 
     /**
-     * Check if a domain has registered routes
-     */
-    protected function domainHasRoutes(string $domain, array $config, $routes): bool
-    {
-        $prefix = $config['prefix'] ?? '';
-
-        foreach ($routes as $route) {
-            $uri = $route->uri();
-
-            if ($prefix && str_starts_with($uri, $prefix.'/')) {
-                return true;
-            }
-
-            if (! $prefix) {
-                $domainLower = strtolower($domain);
-                if (str_contains($uri, $domainLower)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Generate domain configuration file
      */
     public function generateConfig(bool $overwrite = false): bool

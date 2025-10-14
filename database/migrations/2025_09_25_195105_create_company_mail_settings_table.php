@@ -69,6 +69,10 @@ return new class extends Migration
             $table->json('fallback_config')->nullable();
 
             $table->timestamps();
+            $table->text('api_key')->nullable();
+            $table->text('api_secret')->nullable();
+            $table->string('api_domain')->nullable();
+            $table->string('reply_to')->nullable();
 
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->index('is_active');
