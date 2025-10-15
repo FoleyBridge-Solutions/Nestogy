@@ -73,7 +73,7 @@ class InvoiceIndex extends Component
     public function invoices()
     {
         $user = Auth::user();
-        $query = Invoice::with(['client', 'category'])
+        $query = Invoice::with(['client', 'category', 'activePaymentApplications', 'activeCreditApplications'])
             ->where('company_id', $user->company_id);
 
         // Apply status filter

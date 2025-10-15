@@ -118,6 +118,10 @@
                         Amount
                     </flux:table.column>
                     
+                    <flux:table.column>
+                        Balance
+                    </flux:table.column>
+                    
                     <flux:table.column 
                         sortable 
                         :sorted="$sortBy === 'status'" 
@@ -179,6 +183,16 @@
                             
                             <flux:table.cell>
                                 <flux:text variant="strong">${{ number_format($invoice->amount, 2) }}</flux:text>
+                            </flux:table.cell>
+                            
+                            <flux:table.cell>
+                                @php
+                                    $balance = $invoice->getBalance();
+                                    $balanceClass = $balance <= 0 ? 'text-green-600' : '';
+                                @endphp
+                                <flux:text variant="strong" class="{{ $balanceClass }}">
+                                    ${{ number_format($balance, 2) }}
+                                </flux:text>
                             </flux:table.cell>
                             
                             <flux:table.cell>
