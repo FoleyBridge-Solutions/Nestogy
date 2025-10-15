@@ -151,7 +151,10 @@ class Invoice extends Model
      */
     public function paymentApplications()
     {
-        return $this->morphMany(PaymentApplication::class, 'applicable');
+        return $this->morphMany(PaymentApplication::class, 'applicable')
+            ->whereHas('payment', function($query) {
+                $query->whereNull('deleted_at');
+            });
     }
 
     public function activePaymentApplications()
