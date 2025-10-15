@@ -84,7 +84,9 @@ class PaymentApplication extends Model
             'unapplication_reason' => $reason,
         ]);
 
-        $this->payment->recalculateApplicationAmounts();
+        if ($this->payment) {
+            $this->payment->recalculateApplicationAmounts();
+        }
 
         if ($this->applicable instanceof Invoice) {
             $this->applicable->updatePaymentStatus();
@@ -106,7 +108,9 @@ class PaymentApplication extends Model
             'unapplication_reason' => null,
         ]);
 
-        $this->payment->recalculateApplicationAmounts();
+        if ($this->payment) {
+            $this->payment->recalculateApplicationAmounts();
+        }
 
         if ($this->applicable instanceof Invoice) {
             $this->applicable->updatePaymentStatus();
@@ -142,7 +146,9 @@ class PaymentApplication extends Model
         });
 
         static::deleted(function ($application) {
-            $application->payment->recalculateApplicationAmounts();
+            if ($application->payment) {
+                $application->payment->recalculateApplicationAmounts();
+            }
             
             if ($application->applicable instanceof Invoice) {
                 $application->applicable->updatePaymentStatus();
