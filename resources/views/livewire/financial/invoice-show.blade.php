@@ -181,33 +181,33 @@
                             <flux:table>
                                 <flux:table.columns>
                                     <flux:table.column>Description</flux:table.column>
-                                    <flux:table.column class="text-center">Qty</flux:table.column>
-                                    <flux:table.column class="text-right">Rate</flux:table.column>
-                                    <flux:table.column class="text-right">Tax</flux:table.column>
-                                    <flux:table.column class="text-right">Amount</flux:table.column>
+                                    <flux:table.column align="center">Qty</flux:table.column>
+                                    <flux:table.column align="end">Rate</flux:table.column>
+                                    <flux:table.column align="end">Tax</flux:table.column>
+                                    <flux:table.column align="end">Amount</flux:table.column>
                                 </flux:table.columns>
                                 <flux:table.rows>
                                     @foreach($invoice->items as $item)
                                         <flux:table.row wire:key="item-{{ $item->id }}">
-                                            <flux:table.cell>
+                                            <flux:table.cell style="vertical-align: top;">
                                                 <div>
                                                     <flux:text class="font-medium text-zinc-900 dark:text-white">
-                                                        {{ $item->description }}
+                                                        {{ $item->name }}
                                                     </flux:text>
-                                                    @if($item->details || $item->notes)
-                                                        <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400 mt-1">
-                                                            {{ $item->details ?: $item->notes }}
+                                                    @if($item->description)
+                                                        <flux:text size="xs" class="text-zinc-500 dark:text-zinc-400 mt-1 block">
+                                                            {{ $item->description }}
                                                         </flux:text>
                                                     @endif
                                                 </div>
                                             </flux:table.cell>
-                                            <flux:table.cell class="text-center text-zinc-700 dark:text-zinc-300">
+                                            <flux:table.cell align="center" class="text-zinc-700 dark:text-zinc-300" style="vertical-align: top;">
                                                 {{ $item->quantity }}
                                             </flux:table.cell>
-                                            <flux:table.cell class="text-right text-zinc-700 dark:text-zinc-300">
+                                            <flux:table.cell align="end" class="text-zinc-700 dark:text-zinc-300" style="vertical-align: top;">
                                                 ${{ number_format($item->price ?? 0, 2) }}
                                             </flux:table.cell>
-                                            <flux:table.cell class="text-right text-zinc-700 dark:text-zinc-300">
+                                            <flux:table.cell align="end" class="text-zinc-700 dark:text-zinc-300" style="vertical-align: top;">
                                                 @if(($item->tax_rate ?? 0) > 0)
                                                     {{ number_format($item->tax_rate, 1) }}%
                                                 @elseif($item->tax > 0)
@@ -216,7 +216,7 @@
                                                     <span class="text-zinc-400 dark:text-zinc-600">—</span>
                                                 @endif
                                             </flux:table.cell>
-                                            <flux:table.cell class="text-right font-medium text-zinc-900 dark:text-white">
+                                            <flux:table.cell align="end" variant="strong" style="vertical-align: top;">
                                                 ${{ number_format($item->total ?? $item->subtotal ?? 0, 2) }}
                                             </flux:table.cell>
                                         </flux:table.row>
