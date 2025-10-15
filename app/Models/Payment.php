@@ -186,5 +186,9 @@ class Payment extends Model
                 $payment->application_status = 'unapplied';
             }
         });
+
+        static::deleting(function ($payment) {
+            $payment->applications->each->delete();
+        });
     }
 }
