@@ -178,6 +178,9 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
     Route::resource('credits', \App\Domains\Financial\Controllers\ClientCreditController::class);
     Route::post('credits/{credit}/apply', [\App\Domains\Financial\Controllers\ClientCreditController::class, 'apply'])->name('credits.apply');
     Route::post('credits/{credit}/void', [\App\Domains\Financial\Controllers\ClientCreditController::class, 'void'])->name('credits.void');
+    
+    // Statement Routes
+    Route::get('statements', [\App\Domains\Financial\Controllers\StatementController::class, 'index'])->name('statements.index');
 
     // Collections Routes
     Route::prefix('collections')->name('collections.')->group(function () {
