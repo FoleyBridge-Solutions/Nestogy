@@ -34,10 +34,15 @@ class DigitalSignatureService
     {
         $provider = $provider ?: $this->defaultProvider;
 
+        // Eager load signatures to prevent N+1 queries in provider-specific methods
+        $contract->load(['signatures' => function ($query) {
+            $query->orderBy('signing_order');
+        }]);
+
         Log::info('Sending contract for signature', [
             'contract_id' => $contract->id,
             'provider' => $provider,
-            'signatures_count' => $contract->signatures()->count(),
+            'signatures_count' => $contract->signatures->count(),
         ]);
 
         try {
@@ -188,9 +193,9 @@ class DigitalSignatureService
             'status' => 'sent',
         ];
 
-        // Add signers
+        // Add signers (using eager-loaded signatures)
         $signers = [];
-        foreach ($contract->signatures()->orderBy('signing_order')->get() as $index => $signature) {
+        foreach ($contract->signatures as $index => $signature) {
             $signers[] = [
                 'email' => $signature->signatory_email,
                 'name' => $signature->signatory_name,
@@ -253,9 +258,9 @@ class DigitalSignatureService
         $documentPath = app(ContractGenerationService::class)->generateContractDocument($contract);
         $documentContent = Storage::get($documentPath);
 
-        // Prepare signature request
+        // Prepare signature request (using eager-loaded signatures)
         $signers = [];
-        foreach ($contract->signatures()->orderBy('signing_order')->get() as $signature) {
+        foreach ($contract->signatures as $signature) {
             $signers[] = [
                 'email_address' => $signature->signatory_email,
                 'name' => $signature->signatory_name,
@@ -326,9 +331,9 @@ class DigitalSignatureService
 
         $transientDocumentId = $uploadResponse->json()['transientDocumentId'];
 
-        // Prepare agreement
+        // Prepare agreement (using eager-loaded signatures)
         $participantSets = [];
-        foreach ($contract->signatures()->orderBy('signing_order')->get() as $signature) {
+        foreach ($contract->signatures as $signature) {
             $participantSets[] = [
                 'memberInfos' => [
                     [
@@ -387,7 +392,8 @@ class DigitalSignatureService
      */
     protected function sendViaInternal(Contract $contract): array
     {
-        $signatures = $contract->signatures()->orderBy('signing_order')->get();
+        // Use eager-loaded signatures
+        $signatures = $contract->signatures;
 
         foreach ($signatures as $signature) {
             $signature->send();

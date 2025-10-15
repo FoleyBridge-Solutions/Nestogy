@@ -91,14 +91,19 @@ class CollectionManagementService
      */
     protected function analyzePaymentHistory(Client $client): array
     {
-        $payments = $client->payments()
-            ->where('created_at', '>=', Carbon::now()->subYear())
-            ->orderBy('created_at')
-            ->get();
+        // Use eager-loaded relationships if available, otherwise query
+        $payments = $client->relationLoaded('payments')
+            ? $client->payments
+            : $client->payments()
+                ->where('created_at', '>=', Carbon::now()->subYear())
+                ->orderBy('created_at')
+                ->get();
 
-        $invoices = $client->invoices()
-            ->where('created_at', '>=', Carbon::now()->subYear())
-            ->get();
+        $invoices = $client->relationLoaded('invoices')
+            ? $client->invoices
+            : $client->invoices()
+                ->where('created_at', '>=', Carbon::now()->subYear())
+                ->get();
 
         $analysis = [
             'total_payments' => $payments->count(),
@@ -196,7 +201,12 @@ class CollectionManagementService
      */
     protected function analyzeAccountAging(Client $client): array
     {
-        $overdueInvoices = $client->invoices()->overdue()->get();
+        // Use eager-loaded invoices if available, otherwise query
+        $overdueInvoices = $client->relationLoaded('invoices')
+            ? $client->invoices->filter(function ($invoice) {
+                return $invoice->status === 'overdue' || ($invoice->due_date && $invoice->due_date < now() && in_array($invoice->status, ['sent', 'partial']));
+            })
+            : $client->invoices()->overdue()->get();
         $totalBalance = $client->getBalance();
         $pastDueAmount = $client->getPastDueAmount();
 
@@ -266,9 +276,12 @@ class CollectionManagementService
      */
     protected function analyzeBehavioralPatterns(Client $client): array
     {
-        $collectionNotes = $client->collectionNotes()
-            ->where('created_at', '>=', Carbon::now()->subMonths(6))
-            ->get();
+        // Use eager-loaded collection notes if available, otherwise query
+        $collectionNotes = $client->relationLoaded('collectionNotes')
+            ? $client->collectionNotes
+            : $client->collectionNotes()
+                ->where('created_at', '>=', Carbon::now()->subMonths(6))
+                ->get();
 
         $patterns = [
             'communication_responsiveness' => 0,
@@ -692,6 +705,23 @@ class CollectionManagementService
      */
     public function batchAssessRisk(Collection $clients): array
     {
+        // Eager load all relationships needed for risk assessment to prevent N+1 queries
+        $clients->load([
+            'payments' => function ($query) {
+                $query->where('created_at', '>=', Carbon::now()->subYear())
+                    ->orderBy('created_at');
+            },
+            'invoices' => function ($query) {
+                $query->where('created_at', '>=', Carbon::now()->subYear());
+            },
+            'collectionNotes' => function ($query) {
+                $query->where('created_at', '>=', Carbon::now()->subMonths(6));
+            },
+            'tickets' => function ($query) {
+                $query->where('created_at', '>=', Carbon::now()->subMonths(6));
+            }
+        ]);
+
         $assessments = [];
 
         foreach ($clients as $client) {

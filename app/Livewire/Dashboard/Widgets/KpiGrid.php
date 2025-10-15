@@ -370,10 +370,11 @@ class KpiGrid extends Component
                 $endDate = now()->endOfMonth();
             }
 
-            // Get resolved tickets in the period
+            // Get resolved tickets in the period - only select needed fields to reduce memory usage
             $resolvedTickets = Ticket::where('company_id', $companyId)
                 ->whereIn('status', ['resolved', 'closed'])
                 ->whereBetween('updated_at', [$startDate, $endDate])
+                ->select(['id', 'created_at', 'updated_at', 'priority'])
                 ->get();
 
             if ($resolvedTickets->count() === 0) {

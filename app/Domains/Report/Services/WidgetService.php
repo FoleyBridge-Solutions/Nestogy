@@ -14,6 +14,55 @@ use Illuminate\Support\Facades\DB;
 class WidgetService
 {
     /**
+     * Validate SQL query to prevent SQL injection from user-editable configurations
+     *
+     * SECURITY: This provides basic protection but widget configs should NEVER be user-editable
+     * Only allow queries from trusted admin-configured widgets
+     *
+     * @throws \InvalidArgumentException if query contains dangerous patterns
+     */
+    protected function validateQuery(string $query): void
+    {
+        // Convert to lowercase for case-insensitive checking
+        $lowerQuery = strtolower($query);
+
+        // Disallow dangerous SQL operations
+        $dangerousPatterns = [
+            'drop ',
+            'truncate ',
+            'delete from',
+            'insert into',
+            'update ',
+            'alter ',
+            'create ',
+            'grant ',
+            'revoke ',
+            'exec ',
+            'execute ',
+            'sp_',
+            'xp_',
+            '--',
+            '/*',
+            'into outfile',
+            'into dumpfile',
+            'load_file',
+            'benchmark(',
+            'sleep(',
+        ];
+
+        foreach ($dangerousPatterns as $pattern) {
+            if (str_contains($lowerQuery, $pattern)) {
+                throw new \InvalidArgumentException("Query contains disallowed operation: {$pattern}");
+            }
+        }
+
+        // Only allow SELECT queries
+        if (!str_starts_with(trim($lowerQuery), 'select')) {
+            throw new \InvalidArgumentException('Only SELECT queries are allowed');
+        }
+    }
+
+    /**
      * Generate KPI widget data
      */
     public function getKPIWidget(array $config): array
@@ -92,9 +141,15 @@ class WidgetService
             $query = $config['query'];
             $params = $config['params'] ?? [];
 
-            // Add pagination if specified
+            // SECURITY: Validate query before execution
+            $this->validateQuery($query);
+
+            // SECURITY: Use parameterized queries for LIMIT/OFFSET to prevent SQL injection
             if (isset($config['paginate'])) {
-                $query .= ' LIMIT '.($config['paginate']['offset'] ?? 0).', '.$config['paginate']['limit'];
+                $offset = (int) ($config['paginate']['offset'] ?? 0);
+                $limit = (int) ($config['paginate']['limit'] ?? 10);
+                $query .= ' LIMIT ? OFFSET ?';
+                $params = array_merge($params, [$limit, $offset]);
             }
 
             $data = DB::select($query, $params);
@@ -247,6 +302,9 @@ class WidgetService
      */
     protected function executeQuery(string $query, array $params = [])
     {
+        // SECURITY: Validate query before execution
+        $this->validateQuery($query);
+
         $result = DB::select($query, $params);
 
         if (empty($result)) {

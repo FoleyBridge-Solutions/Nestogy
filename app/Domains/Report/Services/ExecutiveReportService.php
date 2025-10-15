@@ -91,8 +91,31 @@ class ExecutiveReportService
      */
     public function generateClientHealthScorecard(int $companyId): array
     {
+        // Eager load all relationships needed for health score calculation to prevent N+1 queries
         $clients = Client::where('company_id', $companyId)
-            ->with(['tickets', 'payments', 'contacts'])
+            ->with([
+                'tickets' => function ($query) {
+                    $query->select('id', 'client_id', 'created_at', 'escalated')
+                        ->where('created_at', '>=', now()->subMonth());
+                },
+                'tickets as all_tickets' => function ($query) {
+                    $query->latest();
+                },
+                'payments' => function ($query) {
+                    $query->select('id', 'client_id', 'amount', 'payment_date')
+                        ->where('payment_date', '>=', now()->subMonths(2));
+                },
+                'contacts'
+            ])
+            ->withCount([
+                'tickets as recent_tickets_count' => function ($query) {
+                    $query->where('created_at', '>=', now()->subMonth());
+                },
+                'tickets as escalated_tickets_count' => function ($query) {
+                    $query->where('escalated', true)
+                        ->where('created_at', '>=', now()->subMonth());
+                }
+            ])
             ->get();
 
         $healthScores = [];
@@ -222,9 +245,9 @@ class ExecutiveReportService
     {
         $scores = [];
 
-        // Ticket health (40% weight)
-        $recentTickets = $client->tickets()->where('created_at', '>=', now()->subMonth())->count();
-        $escalatedTickets = $client->tickets()->where('escalated', true)->where('created_at', '>=', now()->subMonth())->count();
+        // Ticket health (40% weight) - using eager-loaded counts
+        $recentTickets = $client->recent_tickets_count ?? 0;
+        $escalatedTickets = $client->escalated_tickets_count ?? 0;
         $scores['ticket_health'] = max(0, 100 - ($recentTickets * 5) - ($escalatedTickets * 15));
 
         // Payment health (30% weight)
@@ -235,14 +258,14 @@ class ExecutiveReportService
             ->count();
         $scores['payment_health'] = max(0, 100 - ($overdueInvoices * 20));
 
-        // Engagement health (20% weight)
-        $lastActivity = $client->tickets()->latest()->first()?->created_at ?? $client->updated_at;
+        // Engagement health (20% weight) - using eager-loaded tickets
+        $lastActivity = $client->all_tickets->first()?->created_at ?? $client->updated_at;
         $daysSinceActivity = now()->diffInDays($lastActivity);
         $scores['engagement_health'] = max(0, 100 - ($daysSinceActivity * 2));
 
-        // Growth health (10% weight)
-        $currentRevenue = $client->payments()->where('payment_date', '>=', now()->subMonth())->sum('amount');
-        $previousRevenue = $client->payments()->whereBetween('payment_date', [now()->subMonths(2), now()->subMonth()])->sum('amount');
+        // Growth health (10% weight) - using eager-loaded payments
+        $currentRevenue = $client->payments->where('payment_date', '>=', now()->subMonth())->sum('amount');
+        $previousRevenue = $client->payments->whereBetween('payment_date', [now()->subMonths(2), now()->subMonth()])->sum('amount');
         $growthRate = $previousRevenue > 0 ? (($currentRevenue - $previousRevenue) / $previousRevenue) * 100 : 0;
         $scores['growth_health'] = min(100, max(0, 50 + $growthRate));
 

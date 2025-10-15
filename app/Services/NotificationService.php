@@ -9,12 +9,45 @@ use App\Models\User;
 
 class NotificationService
 {
+    /**
+     * Pre-load notification preferences for multiple users to prevent N+1 queries
+     *
+     * @param array $users
+     * @return array Keyed by user_id
+     */
+    protected function preloadPreferences(array $users): array
+    {
+        $userIds = collect($users)->pluck('id')->filter()->unique()->toArray();
+
+        if (empty($userIds)) {
+            return [];
+        }
+
+        // Load existing preferences
+        $existingPrefs = NotificationPreference::whereIn('user_id', $userIds)
+            ->get()
+            ->keyBy('user_id');
+
+        $preferences = [];
+        foreach ($users as $user) {
+            if (isset($existingPrefs[$user->id])) {
+                $preferences[$user->id] = $existingPrefs[$user->id];
+            } else {
+                // Create missing preferences
+                $preferences[$user->id] = NotificationPreference::getOrCreateForUser($user);
+            }
+        }
+
+        return $preferences;
+    }
+
     public function notifyTicketCreated(Ticket $ticket): void
     {
         $recipients = $this->getRecipientsForEvent('ticket_created', $ticket);
+        $preferences = $this->preloadPreferences($recipients);
 
         foreach ($recipients as $user) {
-            $prefs = NotificationPreference::getOrCreateForUser($user);
+            $prefs = $preferences[$user->id] ?? NotificationPreference::getOrCreateForUser($user);
 
             if ($prefs->shouldSendInApp('ticket_created')) {
                 InAppNotification::create([
@@ -54,9 +87,10 @@ class NotificationService
     public function notifyTicketStatusChanged(Ticket $ticket, string $oldStatus, string $newStatus): void
     {
         $recipients = $this->getRecipientsForEvent('ticket_status_changed', $ticket);
+        $preferences = $this->preloadPreferences($recipients);
 
         foreach ($recipients as $user) {
-            $prefs = NotificationPreference::getOrCreateForUser($user);
+            $prefs = $preferences[$user->id] ?? NotificationPreference::getOrCreateForUser($user);
 
             if ($prefs->shouldSendInApp('ticket_status_changed')) {
                 InAppNotification::create([
@@ -77,9 +111,10 @@ class NotificationService
     public function notifyTicketResolved(Ticket $ticket): void
     {
         $recipients = $this->getRecipientsForEvent('ticket_resolved', $ticket);
+        $preferences = $this->preloadPreferences($recipients);
 
         foreach ($recipients as $user) {
-            $prefs = NotificationPreference::getOrCreateForUser($user);
+            $prefs = $preferences[$user->id] ?? NotificationPreference::getOrCreateForUser($user);
 
             if ($prefs->shouldSendInApp('ticket_resolved')) {
                 InAppNotification::create([
@@ -100,13 +135,14 @@ class NotificationService
     public function notifyTicketCommentAdded(Ticket $ticket, $comment): void
     {
         $recipients = $this->getRecipientsForEvent('ticket_comment_added', $ticket);
+        $preferences = $this->preloadPreferences($recipients);
 
         foreach ($recipients as $user) {
             if ($user->id === ($comment->author_id ?? null)) {
                 continue;
             }
 
-            $prefs = NotificationPreference::getOrCreateForUser($user);
+            $prefs = $preferences[$user->id] ?? NotificationPreference::getOrCreateForUser($user);
 
             if ($prefs->shouldSendInApp('ticket_comment_added')) {
                 InAppNotification::create([
@@ -127,9 +163,10 @@ class NotificationService
     public function notifySLABreachWarning(Ticket $ticket, int $hoursRemaining): void
     {
         $recipients = $this->getRecipientsForEvent('sla_breach_warning', $ticket);
+        $preferences = $this->preloadPreferences($recipients);
 
         foreach ($recipients as $user) {
-            $prefs = NotificationPreference::getOrCreateForUser($user);
+            $prefs = $preferences[$user->id] ?? NotificationPreference::getOrCreateForUser($user);
 
             if ($prefs->shouldSendInApp('sla_breach_warning')) {
                 InAppNotification::create([
@@ -150,9 +187,10 @@ class NotificationService
     public function notifySLABreached(Ticket $ticket, int $hoursOverdue): void
     {
         $recipients = $this->getRecipientsForEvent('sla_breached', $ticket);
+        $preferences = $this->preloadPreferences($recipients);
 
         foreach ($recipients as $user) {
-            $prefs = NotificationPreference::getOrCreateForUser($user);
+            $prefs = $preferences[$user->id] ?? NotificationPreference::getOrCreateForUser($user);
 
             if ($prefs->shouldSendInApp('sla_breached')) {
                 InAppNotification::create([

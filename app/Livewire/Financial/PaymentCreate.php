@@ -158,9 +158,21 @@ class PaymentCreate extends Component
     protected function loadInvoicesForClient()
     {
         if ($this->client_id) {
+            // Eager load payment and credit applications to prevent N+1 queries when calling getBalance()
             $this->invoices = Invoice::where('company_id', Auth::user()->company_id)
                 ->where('client_id', $this->client_id)
                 ->whereIn('status', ['Sent', 'Partial', 'Overdue', 'sent', 'partial', 'overdue'])
+                ->with([
+                    'paymentApplications' => function ($query) {
+                        $query->where('is_active', true)
+                            ->whereHas('payment', function($q) {
+                                $q->whereNull('deleted_at');
+                            });
+                    },
+                    'creditApplications' => function ($query) {
+                        $query->where('is_active', true);
+                    }
+                ])
                 ->get()
                 ->filter(function($invoice) {
                     return $invoice->getBalance() > 0;

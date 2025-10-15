@@ -114,22 +114,21 @@ class CustomerSatisfaction extends Component
             ->where('updated_at', '>=', now()->subDays(30))
             ->get();
 
+        // Calculate scores once and cache the results to prevent multiple iterations
         $totalScore = 0;
+        $satisfiedTickets = 0;
+
         foreach ($recentTickets as $ticket) {
-            $resolutionTime = $ticket->resolved_at ? $ticket->resolved_at->diffInHours($ticket->created_at) : 24;
-            $totalScore += $this->calculateTicketSatisfactionScore($ticket, $resolutionTime);
-        }
-
-        $averageScore = $recentTickets->count() > 0 ? $totalScore / $recentTickets->count() : 0;
-
-        // Calculate satisfaction rate (percentage of tickets with score >= 4.0)
-        $satisfiedTickets = $recentTickets->filter(function ($ticket) {
             $resolutionTime = $ticket->resolved_at ? $ticket->resolved_at->diffInHours($ticket->created_at) : 24;
             $score = $this->calculateTicketSatisfactionScore($ticket, $resolutionTime);
 
-            return $score >= 4.0;
-        })->count();
+            $totalScore += $score;
+            if ($score >= 4.0) {
+                $satisfiedTickets++;
+            }
+        }
 
+        $averageScore = $recentTickets->count() > 0 ? $totalScore / $recentTickets->count() : 0;
         $satisfactionRate = $recentTickets->count() > 0 ? ($satisfiedTickets / $recentTickets->count()) * 100 : 0;
 
         return [

@@ -314,7 +314,13 @@ class RecurringInvoiceService
         ];
 
         // Get contracts with active recurring billing
-        $activeContracts = Contract::with(['recurringInvoices', 'client'])
+        // Eager load active recurring invoices to prevent N+1 queries
+        $activeContracts = Contract::with([
+            'recurringInvoices' => function ($query) {
+                $query->where('status', 'active');
+            },
+            'client'
+        ])
             ->where('status', 'active')
             ->where('has_recurring_billing', true)
             ->get();
@@ -541,7 +547,8 @@ class RecurringInvoiceService
     {
         $results = ['invoices_generated' => 0, 'errors' => []];
 
-        foreach ($contract->recurringInvoices()->where('status', 'active')->get() as $recurring) {
+        // Use eager-loaded recurringInvoices (already filtered for 'active' status)
+        foreach ($contract->recurringInvoices as $recurring) {
             if ($recurring->next_invoice_date <= now()) {
                 try {
                     $invoice = $this->generateInvoiceFromRecurring($recurring);

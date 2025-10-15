@@ -19,6 +19,12 @@ class Client extends Model
 
     private const DECIMAL_CAST = 'decimal:2';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * SECURITY: Payment integration fields are protected via $guarded
+     * Use service layer for: stripe_customer_id, stripe_subscription_id, subscription_status
+     */
     protected $fillable = [
         'company_id',
         'name',
@@ -41,7 +47,6 @@ class Client extends Model
         'contract_end_date',
         'lead',
         'type',
-        'accessed_at',
         'sla_id',
         'referral',
         'rate',
@@ -63,17 +68,27 @@ class Client extends Model
         'custom_minimum_billing_increment',
         'custom_time_rounding_method',
         'use_custom_rates',
-        // Subscription fields
+        // Subscription fields (non-payment critical)
         'company_link_id',
+        'subscription_plan_id',
+        'trial_ends_at',
+        'current_user_count',
+    ];
+
+    /**
+     * The attributes that should be guarded from mass assignment.
+     *
+     * SECURITY: Payment/subscription fields must be managed through service layer only
+     */
+    protected $guarded = [
+        'id',
         'stripe_customer_id',
         'stripe_subscription_id',
         'subscription_status',
-        'subscription_plan_id',
-        'trial_ends_at',
         'next_billing_date',
         'subscription_started_at',
         'subscription_canceled_at',
-        'current_user_count',
+        'accessed_at',
     ];
 
     protected $casts = [

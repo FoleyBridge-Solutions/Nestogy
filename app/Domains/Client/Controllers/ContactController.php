@@ -136,7 +136,8 @@ class ContactController extends Controller
                 ->withInput();
         }
 
-        $contact = new Contact($request->all());
+        // SECURITY: Use validated data only to prevent mass assignment vulnerabilities
+        $contact = new Contact($request->validated());
         $contact->client_id = $client->id;
         $contact->company_id = auth()->user()->company_id;
         $contact->save();
@@ -286,7 +287,8 @@ class ContactController extends Controller
                 ->withInput();
         }
 
-        $contact->fill($request->all());
+        // SECURITY: Use validated data only to prevent mass assignment vulnerabilities
+        $contact->fill($request->validated());
         $contact->save();
 
         // If this is set as primary, unset other primary contacts for this client

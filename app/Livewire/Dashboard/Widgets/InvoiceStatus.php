@@ -88,7 +88,18 @@ class InvoiceStatus extends Component
             $query->where($condition[0], $condition[1], $condition[2]);
         }
 
-        return $query->get()->sum(function ($invoice) {
+        // Eager load payment and credit applications to prevent N+1 queries
+        return $query->with([
+            'paymentApplications' => function ($query) {
+                $query->where('is_active', true)
+                    ->whereHas('payment', function($q) {
+                        $q->whereNull('deleted_at');
+                    });
+            },
+            'creditApplications' => function ($query) {
+                $query->where('is_active', true);
+            }
+        ])->get()->sum(function ($invoice) {
             return $invoice->getBalance();
         });
     }

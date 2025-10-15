@@ -381,6 +381,27 @@ class Dashboard extends Component
             return [];
         }
 
+        $startDate = now()->subMonths(5)->startOfMonth();
+        $endDate = now()->endOfMonth();
+
+        // Use single aggregate query instead of 12 separate queries
+        $openTickets = $this->client->tickets()
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereIn('status', ['Open', 'In Progress', 'Waiting', 'On Hold'])
+            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, COUNT(*) as count')
+            ->groupBy('year', 'month')
+            ->get()
+            ->keyBy(fn($item) => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT));
+
+        $closedTickets = $this->client->tickets()
+            ->whereBetween('updated_at', [$startDate, $endDate])
+            ->whereIn('status', ['Resolved', 'Closed'])
+            ->selectRaw('YEAR(updated_at) as year, MONTH(updated_at) as month, COUNT(*) as count')
+            ->groupBy('year', 'month')
+            ->get()
+            ->keyBy(fn($item) => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT));
+
+        // Build arrays for chart
         $months = [];
         $open = [];
         $closed = [];
@@ -388,18 +409,10 @@ class Dashboard extends Component
         for ($i = 5; $i >= 0; $i--) {
             $month = now()->subMonths($i);
             $months[] = $month->format('M');
+            $key = $month->format('Y-m');
 
-            $open[] = $this->client->tickets()
-                ->whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->whereIn('status', ['Open', 'In Progress', 'Waiting', 'On Hold'])
-                ->count();
-
-            $closed[] = $this->client->tickets()
-                ->whereYear('updated_at', $month->year)
-                ->whereMonth('updated_at', $month->month)
-                ->whereIn('status', ['Resolved', 'Closed'])
-                ->count();
+            $open[] = $openTickets->get($key)?->count ?? 0;
+            $closed[] = $closedTickets->get($key)?->count ?? 0;
         }
 
         return [
@@ -415,17 +428,27 @@ class Dashboard extends Component
             return [];
         }
 
+        $startDate = now()->subMonths(5)->startOfMonth();
+        $endDate = now()->endOfMonth();
+
+        // Use single aggregate query instead of 6 separate queries
+        $invoiceData = $this->client->invoices()
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(amount) as total')
+            ->groupBy('year', 'month')
+            ->get()
+            ->keyBy(fn($item) => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT));
+
+        // Build arrays for chart
         $months = [];
         $amounts = [];
 
         for ($i = 5; $i >= 0; $i--) {
             $month = now()->subMonths($i);
             $months[] = $month->format('M Y');
+            $key = $month->format('Y-m');
 
-            $amounts[] = $this->client->invoices()
-                ->whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->sum('amount');
+            $amounts[] = (float) ($invoiceData->get($key)?->total ?? 0);
         }
 
         return [

@@ -56,6 +56,9 @@ class Contact extends Authenticatable
 
     /**
      * The attributes that are mass assignable.
+     *
+     * SECURITY: Sensitive authentication and security fields are protected via $guarded
+     * Use explicit setters for: password_hash, pin, invitation_token, failed_login_count, locked_until, remember_token
      */
     protected $fillable = [
         'name',
@@ -65,12 +68,8 @@ class Contact extends Authenticatable
         'extension',
         'mobile',
         'photo',
-        'pin',
         'notes',
         'auth_method',
-        'password_hash',
-        'password_reset_token',
-        'token_expire',
         'primary',
         'important',
         'billing',
@@ -80,23 +79,13 @@ class Contact extends Authenticatable
         'vendor_id',
         'client_id',
         'company_id',
-        'accessed_at',
-        // Portal access fields
+        // Portal access fields (non-security critical)
         'has_portal_access',
         'portal_permissions',
-        'last_login_at',
-        'last_login_ip',
-        'login_count',
-        'failed_login_count',
-        'locked_until',
-        'email_verified_at',
-        'remember_token',
-        'password_changed_at',
-        'must_change_password',
         'session_timeout_minutes',
         'allowed_ip_addresses',
-        // Portal invitation fields
-        'invitation_token',
+        'must_change_password',
+        // Portal invitation fields (non-security critical)
         'invitation_sent_at',
         'invitation_expires_at',
         'invitation_accepted_at',
@@ -130,6 +119,29 @@ class Contact extends Authenticatable
         'instagram_handle',
         'company_blog',
         'role',
+    ];
+
+    /**
+     * The attributes that should be guarded from mass assignment.
+     *
+     * SECURITY: These fields should NEVER be mass-assigned to prevent security vulnerabilities
+     */
+    protected $guarded = [
+        'id',
+        'password_hash',
+        'pin',
+        'password_reset_token',
+        'token_expire',
+        'failed_login_count',
+        'locked_until',
+        'email_verified_at',
+        'remember_token',
+        'password_changed_at',
+        'invitation_token',
+        'last_login_at',
+        'last_login_ip',
+        'login_count',
+        'accessed_at',
     ];
 
     /**

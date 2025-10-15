@@ -176,6 +176,12 @@ class AlertPanel extends Component
             $alerts = $alerts->merge($this->getBackupAlerts($companyId));
             $alerts = $alerts->merge($this->getDiskSpaceAlerts());
         } catch (\Exception $e) {
+            // SECURITY/MONITORING: Log backup/disk space alert generation failures
+            \Log::warning('Failed to generate backup/disk space alerts', [
+                'error' => $e->getMessage(),
+                'company_id' => $companyId,
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
         return $alerts;

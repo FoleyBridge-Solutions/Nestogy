@@ -255,44 +255,61 @@ class Inbox extends Component
 
     public function bulkMarkRead()
     {
-        $messages = EmailMessage::whereIn('id', $this->selected)->get();
-        foreach ($messages as $m) {
-            app(EmailService::class)->markAsRead($m);
-        }
+        // Use chunking to prevent memory issues with large selections
+        EmailMessage::whereIn('id', $this->selected)
+            ->chunk(100, function ($messages) {
+                foreach ($messages as $m) {
+                    app(EmailService::class)->markAsRead($m);
+                }
+            });
         $this->clearSelection();
         Flux::toast('Marked as read.');
     }
 
     public function bulkMarkUnread()
     {
-        $messages = EmailMessage::whereIn('id', $this->selected)->get();
-        foreach ($messages as $m) {
-            app(EmailService::class)->markAsUnread($m);
-        }
+        // Use chunking to prevent memory issues with large selections
+        EmailMessage::whereIn('id', $this->selected)
+            ->chunk(100, function ($messages) {
+                foreach ($messages as $m) {
+                    app(EmailService::class)->markAsUnread($m);
+                }
+            });
         $this->clearSelection();
         Flux::toast('Marked as unread.');
     }
 
     public function bulkFlag()
     {
-        EmailMessage::whereIn('id', $this->selected)->get()->each->flag();
+        // Use chunking to prevent memory issues with large selections
+        EmailMessage::whereIn('id', $this->selected)
+            ->chunk(100, function ($messages) {
+                $messages->each->flag();
+            });
         $this->clearSelection();
         Flux::toast('Flagged messages.');
     }
 
     public function bulkUnflag()
     {
-        EmailMessage::whereIn('id', $this->selected)->get()->each->unflag();
+        // Use chunking to prevent memory issues with large selections
+        EmailMessage::whereIn('id', $this->selected)
+            ->chunk(100, function ($messages) {
+                $messages->each->unflag();
+            });
         $this->clearSelection();
         Flux::toast('Unflagged messages.');
     }
 
     public function bulkDelete()
     {
-        $messages = EmailMessage::whereIn('id', $this->selected)->get();
-        foreach ($messages as $m) {
-            app(EmailService::class)->deleteEmail($m);
-        }
+        // Use chunking to prevent memory issues with large selections
+        EmailMessage::whereIn('id', $this->selected)
+            ->chunk(100, function ($messages) {
+                foreach ($messages as $m) {
+                    app(EmailService::class)->deleteEmail($m);
+                }
+            });
         $this->clearSelection();
         Flux::toast('Moved to trash.', variant: 'warning');
     }
