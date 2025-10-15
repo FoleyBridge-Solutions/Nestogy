@@ -168,6 +168,16 @@ Route::middleware(['web', 'auth', 'verified'])->prefix('financial')->name('finan
 
     // Payments Routes
     Route::resource('payments', \App\Domains\Financial\Controllers\PaymentController::class);
+    
+    // Payment Application Routes
+    Route::post('payments/{payment}/apply', [\App\Domains\Financial\Controllers\PaymentApplicationController::class, 'apply'])->name('payments.apply');
+    Route::delete('payment-applications/{application}', [\App\Domains\Financial\Controllers\PaymentApplicationController::class, 'destroy'])->name('payment-applications.destroy');
+    Route::post('payments/{payment}/reallocate', [\App\Domains\Financial\Controllers\PaymentApplicationController::class, 'reallocate'])->name('payments.reallocate');
+    
+    // Client Credit Routes
+    Route::resource('credits', \App\Domains\Financial\Controllers\ClientCreditController::class);
+    Route::post('credits/{credit}/apply', [\App\Domains\Financial\Controllers\ClientCreditController::class, 'apply'])->name('credits.apply');
+    Route::post('credits/{credit}/void', [\App\Domains\Financial\Controllers\ClientCreditController::class, 'void'])->name('credits.void');
 
     // Collections Routes
     Route::prefix('collections')->name('collections.')->group(function () {

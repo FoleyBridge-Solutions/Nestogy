@@ -6,6 +6,7 @@ use App\Domains\Ticket\Controllers\TicketController;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Domains\Ticket\Models\TicketWatcher;
+use App\Domains\Ticket\Services\TicketQueryService;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\User;
@@ -20,6 +21,8 @@ class TicketControllerTest extends TestCase
 
     protected TicketController $controller;
 
+    protected TicketQueryService $queryService;
+
     protected Company $company;
 
     protected User $user;
@@ -32,7 +35,8 @@ class TicketControllerTest extends TestCase
 
         $this->company = Company::factory()->create();
 
-        $this->controller = new TicketController;
+        $this->queryService = new TicketQueryService;
+        $this->controller = new TicketController($this->queryService);
         $this->user = User::factory()->create([
             'company_id' => $this->company->id,
             'status' => true,
@@ -58,7 +62,7 @@ class TicketControllerTest extends TestCase
         $method = $reflection->getMethod('generateTicketNumber');
         $method->setAccessible(true);
 
-        $number = $method->invoke($this->controller);
+        $number = $method->invoke($this->controller, $this->company->id);
 
         $this->assertIsInt($number);
         $this->assertGreaterThanOrEqual(1001, $number);
@@ -76,7 +80,7 @@ class TicketControllerTest extends TestCase
         $method = $reflection->getMethod('generateTicketNumber');
         $method->setAccessible(true);
 
-        $number = $method->invoke($this->controller);
+        $number = $method->invoke($this->controller, $this->company->id);
 
         $this->assertIsInt($number);
         $this->assertEquals(5001, $number);
@@ -84,11 +88,7 @@ class TicketControllerTest extends TestCase
 
     public function test_get_filter_options_returns_correct_structure(): void
     {
-        $reflection = new \ReflectionClass($this->controller);
-        $method = $reflection->getMethod('getFilterOptions');
-        $method->setAccessible(true);
-
-        $options = $method->invoke($this->controller);
+        $options = $this->queryService->getFilterOptions($this->company->id);
 
         $this->assertIsArray($options);
         $this->assertArrayHasKey('statuses', $options);
@@ -98,6 +98,16 @@ class TicketControllerTest extends TestCase
     }
 
     public function test_get_filter_options_includes_valid_statuses(): void
+    {
+        $options = $this->queryService->getFilterOptions($this->company->id);
+
+        $this->assertIsArray($options['statuses']);
+        $this->assertContains('new', $options['statuses']);
+        $this->assertContains('open', $options['statuses']);
+        $this->assertContains('closed', $options['statuses']);
+    }
+
+    public function test_get_filter_options_includes_valid_priorities_ORIGINAL(): void
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('getFilterOptions');

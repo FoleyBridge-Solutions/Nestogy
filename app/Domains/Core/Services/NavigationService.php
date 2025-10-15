@@ -186,6 +186,28 @@ class NavigationService
                     'section' => 'billing',
                     'order' => 40,
                 ],
+                'credits' => [
+                    'label' => 'Client Credits',
+                    'icon' => 'ticket',
+                    'emoji' => '🎫',
+                    'description' => 'Manage client credits and refunds',
+                    'route' => 'financial.credits.index',
+                    'create_route' => 'financial.credits.create',
+                    'permission' => 'financial.credits.view',
+                    'create_permission' => 'financial.credits.manage',
+                    'badge_callback' => function ($companyId) {
+                        return \App\Models\ClientCredit::where('company_id', $companyId)
+                            ->where('status', 'active')
+                            ->count();
+                    },
+                    'commands' => [
+                        'show' => ['show credits', 'client credits', 'view credits', 'list credits'],
+                        'goto' => ['go to credits', 'open credits'],
+                        'create' => ['create credit', 'new credit', 'add credit'],
+                    ],
+                    'section' => 'billing',
+                    'order' => 45,
+                ],
                 'expenses' => [
                     'label' => 'Expenses',
                     'icon' => 'receipt-percent',
@@ -659,6 +681,14 @@ class NavigationService
             'financial.payments.show' => 'payments',
             'financial.payments.edit' => 'payments',
             'financial.payments.destroy' => 'payments',
+            'financial.payments.apply' => 'payments',
+
+            // Client Credits
+            'financial.credits.index' => 'credits',
+            'financial.credits.create' => 'create-credit',
+            'financial.credits.show' => 'credits',
+            'financial.credits.apply' => 'credits',
+            'financial.credits.void' => 'credits',
 
             // Expenses
             'financial.expenses.index' => 'expenses',
@@ -1693,6 +1723,10 @@ class NavigationService
             $items['payments'] = 'Payments';
         }
 
+        if ($user->hasPermission('financial.credits.view')) {
+            $items['credits'] = 'Client Credits';
+        }
+
         if ($user->hasPermission('financial.expenses.view')) {
             $items['expenses'] = 'Expenses';
         }
@@ -1727,6 +1761,10 @@ class NavigationService
 
         if ($user->hasPermission('financial.payments.manage')) {
             $items['create-payment'] = 'Record Payment';
+        }
+
+        if ($user->hasPermission('financial.credits.manage')) {
+            $items['create-credit'] = 'Create Credit';
         }
 
         if ($user->hasPermission('financial.expenses.manage')) {

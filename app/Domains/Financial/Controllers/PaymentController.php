@@ -27,19 +27,17 @@ class PaymentController extends Controller
                 $query->where('payment_method', $method);
             })
             ->when($selectedClientId, function ($query, $clientId) {
-                $query->whereHas('invoice.client', function ($q) use ($clientId) {
-                    $q->where('id', $clientId);
-                });
+                $query->where('client_id', $clientId);
             })
             ->when($request->get('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('reference_number', 'like', "%{$search}%")
-                        ->orWhereHas('invoice', function ($invoice) use ($search) {
-                            $invoice->where('number', 'like', "%{$search}%");
+                    $q->where('payment_reference', 'like', "%{$search}%")
+                        ->orWhereHas('applications.applicable', function ($applicable) use ($search) {
+                            $applicable->where('number', 'like', "%{$search}%");
                         });
                 });
             })
-            ->with(['invoice', 'invoice.client'])
+            ->with(['client', 'applications.applicable'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -77,9 +75,7 @@ class PaymentController extends Controller
         // Calculate statistics (filtered by selected client if applicable)
         $baseQuery = Payment::where('company_id', $companyId);
         if ($selectedClientId) {
-            $baseQuery->whereHas('invoice.client', function ($q) use ($selectedClientId) {
-                $q->where('id', $selectedClientId);
-            });
+            $baseQuery->where('client_id', $selectedClientId);
         }
 
         $stats = [
@@ -105,40 +101,29 @@ class PaymentController extends Controller
 
     public function create()
     {
-        $invoices = Invoice::where('company_id', Auth::user()->company_id)
-            ->whereIn('status', ['sent', 'partial'])
-            ->with('client')
-            ->get();
-
-        return view('financial.payments.create', compact('invoices'));
+        return view('financial.payments.create');
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'invoice_id' => 'required|exists:invoices,id',
+            'client_id' => 'required|exists:clients,id',
+            'invoice_id' => 'nullable|exists:invoices,id',
             'amount' => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
             'payment_method' => 'required|string',
-            'reference_number' => 'nullable|string|max:255',
+            'payment_reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
+            'auto_apply' => 'nullable|boolean',
         ]);
 
         $validated['company_id'] = Auth::user()->company_id;
         $validated['status'] = 'completed';
+        $validated['processed_by'] = Auth::id();
+        $validated['currency'] = $validated['currency'] ?? 'USD';
 
-        $payment = Payment::create($validated);
-
-        // Update invoice status
-        $invoice = Invoice::find($validated['invoice_id']);
-        $totalPaid = $invoice->payments()->where('status', 'completed')->sum('amount');
-
-        if ($totalPaid >= $invoice->total) {
-            $invoice->status = 'paid';
-        } else {
-            $invoice->status = 'partial';
-        }
-        $invoice->save();
+        $paymentService = app(\App\Domains\Financial\Services\PaymentService::class);
+        $payment = $paymentService->createPayment($validated);
 
         return redirect()->route('financial.payments.show', $payment)
             ->with('success', 'Payment recorded successfully.');
@@ -148,7 +133,7 @@ class PaymentController extends Controller
     {
         $this->authorize('view', $payment);
 
-        $payment->load(['invoice', 'invoice.client']);
+        $payment->load(['client', 'applications.applicable', 'applications.appliedBy', 'processedBy']);
 
         return view('financial.payments.show', compact('payment'));
     }
@@ -186,17 +171,15 @@ class PaymentController extends Controller
     {
         $this->authorize('delete', $payment);
 
-        $invoice = $payment->invoice;
-        $payment->delete();
-
-        // Update invoice status
-        $totalPaid = $invoice->payments()->where('status', 'completed')->sum('amount');
-        if ($totalPaid == 0) {
-            $invoice->status = 'sent';
-        } elseif ($totalPaid < $invoice->total) {
-            $invoice->status = 'partial';
+        foreach ($payment->activeApplications as $application) {
+            $invoice = $application->applicable;
+            $application->delete();
+            if ($invoice instanceof Invoice) {
+                $invoice->updatePaymentStatus();
+            }
         }
-        $invoice->save();
+
+        $payment->delete();
 
         return redirect()->route('financial.payments.index')
             ->with('success', 'Payment deleted successfully.');

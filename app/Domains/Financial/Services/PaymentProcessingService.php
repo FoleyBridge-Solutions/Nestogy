@@ -431,55 +431,8 @@ class PaymentProcessingService
      */
     protected function applyPaymentToInvoices(Payment $payment): void
     {
-        $client = $payment->client;
-        $remainingAmount = $payment->amount;
-
-        // Get oldest unpaid invoices first
-        $unpaidInvoices = $client->invoices()
-            ->where('status', '!=', Invoice::STATUS_PAID)
-            ->where('amount', '>', 0)
-            ->orderBy('due_date')
-            ->get();
-
-        foreach ($unpaidInvoices as $invoice) {
-            if ($remainingAmount <= 0) {
-                break;
-            }
-
-            $invoiceBalance = $invoice->getBalance();
-            $paymentAmount = min($remainingAmount, $invoiceBalance);
-
-            // Create invoice payment record
-            DB::table('invoice_payments')->insert([
-                'invoice_id' => $invoice->id,
-                'payment_id' => $payment->id,
-                'amount' => $paymentAmount,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
-
-            // Update invoice if fully paid
-            if ($paymentAmount >= $invoiceBalance) {
-                $invoice->update([
-                    'status' => Invoice::STATUS_PAID,
-                    'paid_date' => Carbon::now(),
-                ]);
-            }
-
-            $remainingAmount -= $paymentAmount;
-        }
-
-        // If there's remaining amount, create credit
-        if ($remainingAmount > 0) {
-            DB::table('client_credits')->insert([
-                'client_id' => $client->id,
-                'payment_id' => $payment->id,
-                'amount' => $remainingAmount,
-                'reason' => 'Overpayment credit',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
-        }
+        $paymentApplicationService = app(PaymentApplicationService::class);
+        $paymentApplicationService->autoApplyPayment($payment, ['strategy' => 'oldest_first']);
     }
 
     /**

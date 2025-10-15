@@ -22,8 +22,9 @@ class Payment extends Model
     // Using standard soft delete column to match database schema
 
     protected $fillable = [
-        'company_id', 'client_id', 'invoice_id', 'processed_by',
+        'company_id', 'client_id', 'processed_by',
         'payment_method', 'payment_reference', 'amount', 'currency',
+        'applied_amount', 'available_amount', 'application_status', 'auto_apply',
         'gateway', 'gateway_transaction_id', 'gateway_fee', 'status',
         'payment_date', 'notes', 'metadata', 'refund_amount',
         'refund_reason', 'refunded_at', 'chargeback_amount',
@@ -33,9 +34,11 @@ class Payment extends Model
     protected $casts = [
         'company_id' => 'integer',
         'client_id' => 'integer',
-        'invoice_id' => 'integer',
         'processed_by' => 'integer',
         'amount' => 'decimal:2',
+        'applied_amount' => 'decimal:2',
+        'available_amount' => 'decimal:2',
+        'auto_apply' => 'boolean',
         'gateway_fee' => 'decimal:2',
         'refund_amount' => 'decimal:2',
         'chargeback_amount' => 'decimal:2',
@@ -65,14 +68,32 @@ class Payment extends Model
         return $this->belongsTo(Account::class);
     }
 
-    public function invoice(): BelongsTo
-    {
-        return $this->belongsTo(Invoice::class);
-    }
-
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function processedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processed_by');
+    }
+
+    public function applications()
+    {
+        return $this->hasMany(PaymentApplication::class);
+    }
+
+    public function activeApplications()
+    {
+        return $this->applications()->where('is_active', true);
+    }
+
+    public function appliedInvoices()
+    {
+        return $this->belongsToMany(Invoice::class, 'payment_applications', 'payment_id', 'applicable_id')
+            ->wherePivot('applicable_type', Invoice::class)
+            ->wherePivot('is_active', true)
+            ->withPivot(['amount', 'applied_date', 'notes']);
     }
 
     public function getFormattedAmount(): string
@@ -107,13 +128,62 @@ class Payment extends Model
         ];
     }
 
+    public function getAvailableAmount(): float
+    {
+        return round($this->amount - $this->activeApplications()->sum('amount'), 2);
+    }
+
+    public function isFullyApplied(): bool
+    {
+        return $this->getAvailableAmount() <= 0;
+    }
+
+    public function isPartiallyApplied(): bool
+    {
+        $availableAmount = $this->getAvailableAmount();
+        return $availableAmount > 0 && $availableAmount < $this->amount;
+    }
+
+    public function isUnapplied(): bool
+    {
+        return $this->activeApplications()->count() === 0;
+    }
+
+    public function canApply(float $amount): bool
+    {
+        return $this->getAvailableAmount() >= $amount && $this->status === 'completed';
+    }
+
+    public function recalculateApplicationAmounts(): void
+    {
+        $appliedAmount = $this->activeApplications()->sum('amount');
+        $availableAmount = $this->amount - $appliedAmount;
+
+        $status = 'unapplied';
+        if ($appliedAmount > 0) {
+            $status = $availableAmount <= 0 ? 'fully_applied' : 'partially_applied';
+        }
+
+        $this->update([
+            'applied_amount' => $appliedAmount,
+            'available_amount' => $availableAmount,
+            'application_status' => $status,
+        ]);
+    }
+
     protected static function boot()
     {
         parent::boot();
 
-        static::created(function ($payment) {
-            if ($payment->invoice && $payment->invoice->getBalance() <= 0) {
-                $payment->invoice->markAsPaid();
+        static::creating(function ($payment) {
+            if (! isset($payment->available_amount)) {
+                $payment->available_amount = $payment->amount;
+            }
+            if (! isset($payment->applied_amount)) {
+                $payment->applied_amount = 0;
+            }
+            if (! isset($payment->application_status)) {
+                $payment->application_status = 'unapplied';
             }
         });
     }

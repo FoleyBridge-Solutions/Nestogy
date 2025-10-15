@@ -147,7 +147,31 @@ class Invoice extends Model
     }
 
     /**
+     * Get payment applications for this invoice.
+     */
+    public function paymentApplications()
+    {
+        return $this->morphMany(PaymentApplication::class, 'applicable');
+    }
+
+    public function activePaymentApplications()
+    {
+        return $this->paymentApplications()->where('is_active', true);
+    }
+
+    public function creditApplications()
+    {
+        return $this->morphMany(ClientCreditApplication::class, 'applicable');
+    }
+
+    public function activeCreditApplications()
+    {
+        return $this->creditApplications()->where('is_active', true);
+    }
+
+    /**
      * Get payments for this invoice.
+     * @deprecated Use paymentApplications() instead
      */
     public function payments(): HasMany
     {
@@ -428,7 +452,9 @@ class Invoice extends Model
      */
     public function getTotalPaid(): float
     {
-        return round($this->payments()->sum('amount'), 2);
+        $paymentApplications = $this->activePaymentApplications()->sum('amount');
+        $creditApplications = $this->activeCreditApplications()->sum('amount');
+        return round($paymentApplications + $creditApplications, 2);
     }
 
     /**
@@ -541,6 +567,27 @@ class Invoice extends Model
     public function markAsPaid(): void
     {
         $this->update(['status' => self::STATUS_PAID]);
+    }
+
+    /**
+     * Update payment status based on paid amount.
+     */
+    public function updatePaymentStatus(): void
+    {
+        $balance = $this->getBalance();
+        
+        if ($balance <= 0) {
+            $this->update(['status' => self::STATUS_PAID]);
+        } elseif ($balance < $this->amount) {
+            if ($this->status === self::STATUS_DRAFT) {
+                return;
+            }
+            $this->update(['status' => 'Partial']);
+        } elseif ($this->isOverdue()) {
+            $this->update(['status' => self::STATUS_OVERDUE]);
+        } elseif ($this->status !== self::STATUS_DRAFT && $this->status !== self::STATUS_CANCELLED) {
+            $this->update(['status' => self::STATUS_SENT]);
+        }
     }
 
     /**

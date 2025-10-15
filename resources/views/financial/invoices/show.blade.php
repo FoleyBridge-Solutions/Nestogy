@@ -100,58 +100,145 @@
                     @endif
                 </flux:card>
 
-                <!-- Payments -->
-                @if($invoice->payments->count() > 0)
+                <!-- Payment & Credit Applications -->
+                @php
+                    $paymentApplications = $invoice->paymentApplications()->with('payment.client')->get();
+                    $creditApplications = $invoice->creditApplications()->with('credit')->get();
+                    $totalApplications = $paymentApplications->count() + $creditApplications->count();
+                @endphp
+                
+                @if($totalApplications > 0)
                 <flux:card>
                     <div class="flex items-center justify-between mb-4">
                         <flux:heading size="lg">Payment History</flux:heading>
-                        <flux:badge color="green">{{ $invoice->payments->count() }} {{ Str::plural('Payment', $invoice->payments->count()) }}</flux:badge>
+                        <flux:badge color="green">{{ $totalApplications }} {{ Str::plural('Application', $totalApplications) }}</flux:badge>
                     </div>
                     
                     <flux:table>
                         <flux:table.columns>
+                            <flux:table.column>Type</flux:table.column>
                             <flux:table.column>Date</flux:table.column>
-                            <flux:table.column>Method</flux:table.column>
-                            <flux:table.column>Amount</flux:table.column>
+                            <flux:table.column>Method/Source</flux:table.column>
+                            <flux:table.column>Applied Amount</flux:table.column>
                             <flux:table.column>Status</flux:table.column>
+                            <flux:table.column>Actions</flux:table.column>
                         </flux:table.columns>
                         <flux:table.rows>
-                            @foreach($invoice->payments as $payment)
-                            <flux:table.row :key="'payment-' . $payment->id">
+                            @foreach($paymentApplications as $application)
+                            <flux:table.row :key="'payment-app-' . $application->id">
                                 <flux:table.cell>
-                                    <flux:tooltip content="{{ $payment->payment_date->format('l, F j, Y \a\t g:i A') }}">
-                                        <div>{{ $payment->payment_date->format('M d, Y') }}</div>
+                                    <div class="flex items-center gap-2">
+                                        <flux:icon name="currency-dollar" class="size-4 text-green-500" />
+                                        <flux:text>Payment</flux:text>
+                                    </div>
+                                </flux:table.cell>
+                                
+                                <flux:table.cell>
+                                    <flux:tooltip content="{{ $application->applied_at->format('l, F j, Y \a\t g:i A') }}">
+                                        <div>{{ $application->applied_at->format('M d, Y') }}</div>
                                     </flux:tooltip>
                                 </flux:table.cell>
+                                
                                 <flux:table.cell>
                                     <div class="flex items-center gap-2">
                                         @php
-                                        $methodIcon = match(strtolower($payment->payment_method)) {
-                                            'credit card', 'card' => 'credit-card',
-                                            'bank transfer', 'wire' => 'banknotes',
+                                        $methodIcon = match(strtolower($application->payment->payment_method ?? 'other')) {
+                                            'credit card', 'card', 'credit_card' => 'credit-card',
+                                            'bank transfer', 'wire', 'bank_transfer' => 'banknotes',
                                             'check' => 'document-text',
                                             'cash' => 'currency-dollar',
                                             default => 'currency-dollar'
                                         };
                                         @endphp
                                         <flux:icon name="{{ $methodIcon }}" class="size-4 text-zinc-400" />
-                                        {{ $payment->payment_method }}
+                                        <div>
+                                            <flux:text>{{ ucfirst(str_replace('_', ' ', $application->payment->payment_method ?? 'Other')) }}</flux:text>
+                                            @if($application->payment->payment_reference)
+                                            <flux:text size="xs" variant="muted" class="block">Ref: {{ $application->payment->payment_reference }}</flux:text>
+                                            @endif
+                                        </div>
                                     </div>
                                 </flux:table.cell>
-                                <flux:table.cell variant="strong">${{ number_format($payment->amount, 2) }}</flux:table.cell>
+                                
+                                <flux:table.cell variant="strong">${{ number_format($application->amount, 2) }}</flux:table.cell>
+                                
                                 <flux:table.cell>
                                     <flux:badge 
-                                        color="{{ match($payment->status) {
+                                        color="{{ match($application->payment->status) {
                                             'completed' => 'green',
-                                            'pending' => 'yellow', 
+                                            'pending' => 'amber', 
                                             'failed' => 'red',
                                             default => 'zinc'
                                         } }}"
                                         size="sm" 
                                         inset="top bottom"
                                     >
-                                        {{ ucfirst($payment->status) }}
+                                        {{ ucfirst($application->payment->status) }}
                                     </flux:badge>
+                                </flux:table.cell>
+                                
+                                <flux:table.cell>
+                                    <flux:button 
+                                        href="{{ route('financial.payments.show', $application->payment) }}"
+                                        size="sm"
+                                        variant="ghost"
+                                        icon="eye"
+                                        title="View Payment"
+                                    />
+                                </flux:table.cell>
+                            </flux:table.row>
+                            @endforeach
+                            
+                            @foreach($creditApplications as $application)
+                            <flux:table.row :key="'credit-app-' . $application->id">
+                                <flux:table.cell>
+                                    <div class="flex items-center gap-2">
+                                        <flux:icon name="ticket" class="size-4 text-blue-500" />
+                                        <flux:text>Credit</flux:text>
+                                    </div>
+                                </flux:table.cell>
+                                
+                                <flux:table.cell>
+                                    <flux:tooltip content="{{ $application->applied_at->format('l, F j, Y \a\t g:i A') }}">
+                                        <div>{{ $application->applied_at->format('M d, Y') }}</div>
+                                    </flux:tooltip>
+                                </flux:table.cell>
+                                
+                                <flux:table.cell>
+                                    <div>
+                                        <flux:text>{{ ucfirst(str_replace('_', ' ', $application->credit->type ?? 'Credit')) }}</flux:text>
+                                        @if($application->credit->reason)
+                                        <flux:text size="xs" variant="muted" class="block">{{ Str::limit($application->credit->reason, 30) }}</flux:text>
+                                        @endif
+                                    </div>
+                                </flux:table.cell>
+                                
+                                <flux:table.cell variant="strong">${{ number_format($application->amount, 2) }}</flux:table.cell>
+                                
+                                <flux:table.cell>
+                                    <flux:badge 
+                                        color="{{ match($application->credit->status) {
+                                            'active' => 'green',
+                                            'depleted' => 'zinc',
+                                            'expired' => 'amber', 
+                                            'voided' => 'red',
+                                            default => 'zinc'
+                                        } }}"
+                                        size="sm" 
+                                        inset="top bottom"
+                                    >
+                                        {{ ucfirst($application->credit->status) }}
+                                    </flux:badge>
+                                </flux:table.cell>
+                                
+                                <flux:table.cell>
+                                    <flux:button 
+                                        href="{{ route('financial.credits.show', $application->credit) }}"
+                                        size="sm"
+                                        variant="ghost"
+                                        icon="eye"
+                                        title="View Credit"
+                                    />
                                 </flux:table.cell>
                             </flux:table.row>
                             @endforeach

@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentService
 {
+    public function __construct(
+        protected PaymentApplicationService $applicationService
+    ) {}
     /**
      * Create a new payment
      */
@@ -19,28 +22,35 @@ class PaymentService
         return DB::transaction(function () use ($data) {
             $payment = Payment::create([
                 'client_id' => $data['client_id'],
-                'invoice_id' => $data['invoice_id'] ?? null,
                 'company_id' => Auth::user()->company_id,
                 'amount' => $data['amount'],
-                'date' => $data['date'] ?? now()->toDateString(),
-                'method' => $data['method'] ?? 'check',
-                'reference' => $data['reference'] ?? '',
+                'payment_date' => $data['payment_date'] ?? now(),
+                'payment_method' => $data['payment_method'] ?? 'check',
+                'payment_reference' => $data['payment_reference'] ?? '',
                 'notes' => $data['notes'] ?? '',
                 'status' => $data['status'] ?? 'completed',
-                'gateway' => $data['gateway'] ?? null,
-                'gateway_id' => $data['gateway_id'] ?? null,
-                'created_by' => Auth::id(),
+                'gateway' => $data['gateway'] ?? 'manual',
+                'gateway_transaction_id' => $data['gateway_transaction_id'] ?? null,
+                'processed_by' => Auth::id(),
+                'currency' => $data['currency'] ?? 'USD',
+                'auto_apply' => $data['auto_apply'] ?? true,
             ]);
 
-            // If payment is for an invoice, update invoice status if fully paid
-            if ($payment->invoice_id) {
-                $this->updateInvoicePaymentStatus($payment->invoice);
+            if ($payment->auto_apply && $payment->status === 'completed') {
+                $this->applicationService->autoApplyPayment($payment);
+            } elseif (isset($data['invoice_id']) && $data['invoice_id']) {
+                $invoice = Invoice::find($data['invoice_id']);
+                if ($invoice) {
+                    $amountToApply = min($payment->amount, $invoice->getBalance());
+                    $this->applicationService->applyPaymentToInvoice($payment, $invoice, $amountToApply);
+                }
             }
 
             Log::info('Payment created', [
                 'payment_id' => $payment->id,
                 'client_id' => $payment->client_id,
                 'amount' => $payment->amount,
+                'auto_applied' => $payment->auto_apply,
                 'user_id' => Auth::id(),
             ]);
 
@@ -56,11 +66,6 @@ class PaymentService
         return DB::transaction(function () use ($payment, $data) {
             $payment->update($data);
 
-            // Recalculate invoice status if payment is linked to invoice
-            if ($payment->invoice_id) {
-                $this->updateInvoicePaymentStatus($payment->invoice);
-            }
-
             Log::info('Payment updated', [
                 'payment_id' => $payment->id,
                 'user_id' => Auth::id(),
@@ -68,30 +73,6 @@ class PaymentService
 
             return $payment;
         });
-    }
-
-    /**
-     * Update invoice payment status based on payments received
-     */
-    protected function updateInvoicePaymentStatus(Invoice $invoice): void
-    {
-        $totalPayments = $invoice->payments()
-            ->where('status', 'completed')
-            ->sum('amount');
-
-        if ($totalPayments >= $invoice->total) {
-            $invoice->update([
-                'status' => 'paid',
-                'paid_at' => now(),
-            ]);
-        } elseif ($totalPayments > 0) {
-            $invoice->update(['status' => 'partial']);
-        } else {
-            // Check if overdue
-            if ($invoice->due_date < now()->toDateString() && $invoice->status !== 'draft') {
-                $invoice->update(['status' => 'overdue']);
-            }
-        }
     }
 
     /**

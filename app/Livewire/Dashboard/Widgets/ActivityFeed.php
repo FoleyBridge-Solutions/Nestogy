@@ -153,7 +153,7 @@ class ActivityFeed extends Component
 
         // Recent payments
         $paymentQuery = Payment::where('company_id', $companyId)
-            ->with(['client', 'invoice'])
+            ->with(['client', 'applications.applicable'])
             ->orderByDesc('created_at')
             ->limit(6);
 
@@ -164,18 +164,21 @@ class ActivityFeed extends Component
         $payments = $paymentQuery->get();
 
         $activities = $activities->merge($payments->map(function ($payment) {
+            $firstInvoice = $payment->applications->first()?->applicable;
+            $invoiceCount = $payment->applications->count();
+            
             return [
                 'id' => 'payment_'.$payment->id,
                 'type' => 'financial',
                 'icon' => 'currency-dollar',
                 'color' => 'green',
                 'title' => 'Payment received',
-                'description' => '$'.number_format($payment->amount, 2).' for Invoice #'.$payment->invoice?->invoice_number,
+                'description' => '$'.number_format($payment->amount, 2).($firstInvoice ? ' for Invoice #'.$firstInvoice->getFullNumber() : '').($invoiceCount > 1 ? ' +'.($invoiceCount - 1).' more' : ''),
                 'user' => 'System',
                 'client' => $payment->client?->name,
                 'timestamp' => $payment->created_at,
                 'method' => $payment->payment_method,
-                'link' => $payment->invoice_id ? route('financial.invoices.show', $payment->invoice_id) : '#',
+                'link' => route('financial.payments.show', $payment),
             ];
         }));
 

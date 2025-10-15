@@ -4,12 +4,12 @@ namespace App\Livewire\Financial;
 
 use App\Domains\Core\Services\NavigationService;
 use App\Domains\Financial\Services\InvoiceService;
+use App\Livewire\Concerns\WithAuthenticatedUser;
 use App\Models\Category;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Product;
 use Flux\Flux;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -17,6 +17,7 @@ use Livewire\Component;
 
 class InvoiceCreate extends Component
 {
+    use WithAuthenticatedUser;
     public $client_id = '';
 
     public $category_id = '';
@@ -88,7 +89,7 @@ class InvoiceCreate extends Component
 
         $this->generateInvoiceNumber();
 
-        $defaultCategory = Category::where('company_id', Auth::user()->company_id)
+        $defaultCategory = Category::where('company_id', $this->companyId)
             ->whereJsonContains('type', 'invoice')
             ->where('archived_at', null)
             ->first();
@@ -108,7 +109,7 @@ class InvoiceCreate extends Component
 
     public function generateInvoiceNumber()
     {
-        $lastInvoice = Invoice::where('company_id', Auth::user()->company_id)
+        $lastInvoice = Invoice::where('company_id', $this->companyId)
             ->orderBy('number', 'desc')
             ->first();
 
@@ -134,7 +135,7 @@ class InvoiceCreate extends Component
     #[Computed]
     public function clients()
     {
-        return Client::where('company_id', Auth::user()->company_id)
+        return Client::where('company_id', $this->companyId)
             ->where('deleted_at', null)
             ->orderBy('name')
             ->get();
@@ -143,7 +144,7 @@ class InvoiceCreate extends Component
     #[Computed]
     public function categories()
     {
-        return Category::where('company_id', Auth::user()->company_id)
+        return Category::where('company_id', $this->companyId)
             ->whereJsonContains('type', 'invoice')
             ->where('archived_at', null)
             ->orderBy('name')
@@ -153,7 +154,7 @@ class InvoiceCreate extends Component
     #[Computed]
     public function products()
     {
-        return Product::where('company_id', Auth::user()->company_id)
+        return Product::where('company_id', $this->companyId)
             ->where('is_active', true)
             ->whereHas('category', function ($query) {
                 $query->whereJsonContains('type', 'invoice');
@@ -269,7 +270,7 @@ class InvoiceCreate extends Component
             return;
         }
 
-        $product = Product::where('company_id', Auth::user()->company_id)
+        $product = Product::where('company_id', $this->companyId)
             ->where('is_active', true)
             ->with('category')
             ->find($productId);
@@ -326,7 +327,7 @@ class InvoiceCreate extends Component
             // Step 1: Create invoice
             try {
                 $invoice = Invoice::create([
-                    'company_id' => Auth::user()->company_id,
+                    'company_id' => $this->companyId,
                     'client_id' => $this->client_id,
                     'category_id' => $this->category_id,
                     'prefix' => $this->prefix,
@@ -381,7 +382,7 @@ class InvoiceCreate extends Component
                 $createdItems = [];
                 foreach ($this->items as $index => $item) {
                     $invoiceItem = $invoice->items()->create([
-                        'company_id' => Auth::user()->company_id,
+                        'company_id' => $this->companyId,
                         'name' => $item['name'],
                         'description' => $item['description'] ?? null,
                         'quantity' => $item['quantity'],
