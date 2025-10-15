@@ -288,12 +288,12 @@ class RevenueChart extends Component
     {
         $monthConditions = [];
         foreach ($months as $month) {
-            $monthConditions[] = "(YEAR(payment_date) = {$month->year} AND MONTH(payment_date) = {$month->month})";
+            $monthConditions[] = "(EXTRACT(YEAR FROM payment_date) = {$month->year} AND EXTRACT(MONTH FROM payment_date) = {$month->month})";
         }
 
         $query = Payment::where('company_id', $companyId)
             ->whereRaw('('.implode(' OR ', $monthConditions).')')
-            ->selectRaw("CONCAT(YEAR(payment_date), '-', LPAD(MONTH(payment_date), 2, '0')) as month, SUM(amount) as total")
+            ->selectRaw("TO_CHAR(payment_date, 'YYYY-MM') as month, SUM(amount) as total")
             ->groupBy('month');
 
         if ($this->clientId) {
@@ -307,12 +307,12 @@ class RevenueChart extends Component
     {
         $monthConditions = [];
         foreach ($months as $month) {
-            $monthConditions[] = "(YEAR(date) = {$month->year} AND MONTH(date) = {$month->month})";
+            $monthConditions[] = "(EXTRACT(YEAR FROM date) = {$month->year} AND EXTRACT(MONTH FROM date) = {$month->month})";
         }
 
         $query = Invoice::where('company_id', $companyId)
             ->whereRaw('('.implode(' OR ', $monthConditions).')')
-            ->selectRaw("CONCAT(YEAR(date), '-', LPAD(MONTH(date), 2, '0')) as month, SUM(amount) as total")
+            ->selectRaw("TO_CHAR(date, 'YYYY-MM') as month, SUM(amount) as total")
             ->groupBy('month');
 
         if ($this->clientId) {
@@ -326,12 +326,12 @@ class RevenueChart extends Component
     {
         $monthConditions = [];
         foreach ($months as $month) {
-            $monthConditions[] = "(YEAR(payment_date) = {$month->year} AND MONTH(payment_date) = {$month->month})";
+            $monthConditions[] = "(EXTRACT(YEAR FROM payment_date) = {$month->year} AND EXTRACT(MONTH FROM payment_date) = {$month->month})";
         }
 
         $query = Payment::where('company_id', $companyId)
             ->whereRaw('('.implode(' OR ', $monthConditions).')')
-            ->selectRaw("CONCAT(YEAR(payment_date), '-', LPAD(MONTH(payment_date), 2, '0')) as month, COUNT(*) as count")
+            ->selectRaw("TO_CHAR(payment_date, 'YYYY-MM') as month, COUNT(*) as count")
             ->groupBy('month');
 
         if ($this->clientId) {
