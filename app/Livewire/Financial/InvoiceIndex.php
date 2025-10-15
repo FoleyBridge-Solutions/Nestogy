@@ -22,9 +22,9 @@ class InvoiceIndex extends Component
 
     public $dateTo = '';
 
-    public $sortBy = 'created_at';
+    public $sortBy = 'due_date';
 
-    public $sortDirection = 'desc';
+    public $sortDirection = 'asc';
 
     public $selected = [];
 
@@ -35,8 +35,8 @@ class InvoiceIndex extends Component
         'statusFilter' => ['except' => ''],
         'dateFrom' => ['except' => ''],
         'dateTo' => ['except' => ''],
-        'sortBy' => ['except' => 'created_at'],
-        'sortDirection' => ['except' => 'desc'],
+        'sortBy' => ['except' => 'due_date'],
+        'sortDirection' => ['except' => 'asc'],
     ];
 
     public function updatingSearch()
