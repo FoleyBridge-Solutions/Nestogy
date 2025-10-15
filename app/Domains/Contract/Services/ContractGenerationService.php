@@ -8,7 +8,7 @@ use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Core\Services\TemplateVariableMapper;
 use App\Exceptions\ContractStatusException;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Quote;
 use Carbon\Carbon;
 use Dompdf\Dompdf;

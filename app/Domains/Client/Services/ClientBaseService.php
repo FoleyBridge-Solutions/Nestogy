@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Services;
 
 use App\Domains\Core\Services\BaseService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Database\Eloquent\Builder;
 
 abstract class ClientBaseService extends BaseService

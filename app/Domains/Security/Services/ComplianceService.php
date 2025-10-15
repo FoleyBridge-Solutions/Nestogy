@@ -3,7 +3,7 @@
 namespace App\Domains\Security\Services;
 
 use App\Models\AccountHold;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\CollectionNote;
 use App\Models\DunningAction;
 use Carbon\Carbon;

@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\ClientNetwork;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;

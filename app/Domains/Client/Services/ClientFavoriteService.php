@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Services;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

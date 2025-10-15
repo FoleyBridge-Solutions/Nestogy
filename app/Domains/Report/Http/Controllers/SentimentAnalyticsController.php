@@ -6,7 +6,7 @@ use App\Domains\Core\Services\DashboardDataService;
 use App\Domains\Financial\Services\TaxEngine\SentimentAnalysisService;
 use App\Domains\Ticket\Models\Ticket;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\TicketReply;
 use Carbon\Carbon;
 use Illuminate\Http\Request;

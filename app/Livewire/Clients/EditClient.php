@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Clients;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Component;
 use Livewire\WithFileUploads;

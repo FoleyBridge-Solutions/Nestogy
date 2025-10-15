@@ -3,7 +3,7 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Contract\Models\Contract;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\Quote;

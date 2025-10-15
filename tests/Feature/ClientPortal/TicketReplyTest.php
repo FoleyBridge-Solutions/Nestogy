@@ -5,7 +5,7 @@ namespace Tests\Feature\ClientPortal;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketComment;
 use App\Mail\Tickets\TicketCommentAdded;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Contact;
 use App\Models\User;
 use Tests\RefreshesDatabase;

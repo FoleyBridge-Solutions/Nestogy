@@ -4,7 +4,7 @@ namespace Database\Seeders\Dev;
 
 use App\Models\Document;
 use App\Models\Company;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Database\Seeder;
 
 class DocumentSeeder extends Seeder

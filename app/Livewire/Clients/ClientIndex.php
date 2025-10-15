@@ -4,7 +4,7 @@ namespace App\Livewire\Clients;
 
 use App\Domains\Core\Services\NavigationService;
 use App\Exports\ClientsExport;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;

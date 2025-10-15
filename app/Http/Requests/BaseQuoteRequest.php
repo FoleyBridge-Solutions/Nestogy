@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Category;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Quote;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;

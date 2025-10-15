@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

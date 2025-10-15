@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\ClientPortalUser;
 use App\Models\Contact;
 use Illuminate\Database\Seeder;

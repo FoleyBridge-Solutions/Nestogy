@@ -7,7 +7,7 @@ use App\Domains\Contract\Models\ContractSchedule;
 use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Core\Services\TemplateVariableMapper;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;

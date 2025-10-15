@@ -3,7 +3,7 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Financial\Services\TaxEngine\TaxServiceFactory;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\TaxCategory;
 use App\Models\TaxExemption;
 use App\Models\TaxExemptionUsage;

@@ -7,7 +7,7 @@ use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
 use App\Domains\Contract\Services\ContractService;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\User;
 use Tests\RefreshesDatabase;

@@ -3,7 +3,7 @@
 namespace Tests\Unit\Models;
 
 use App\Models\Category;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

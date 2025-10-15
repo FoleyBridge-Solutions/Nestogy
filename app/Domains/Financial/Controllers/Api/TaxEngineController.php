@@ -6,7 +6,7 @@ use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
 use App\Domains\Financial\Services\TaxEngine\TaxProfileService;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

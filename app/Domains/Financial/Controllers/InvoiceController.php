@@ -15,7 +15,7 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Models\Category;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;

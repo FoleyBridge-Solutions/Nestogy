@@ -6,7 +6,7 @@ use App\Domains\Contract\Models\Contract;
 use App\Domains\Core\Services\NavigationService;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Invoice;

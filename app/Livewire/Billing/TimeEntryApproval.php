@@ -4,7 +4,7 @@ namespace App\Livewire\Billing;
 
 use App\Domains\Financial\Services\TimeEntryInvoiceService;
 use App\Domains\Ticket\Models\TicketTimeEntry;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\User;
 use Carbon\Carbon;
 use Flux\Flux;

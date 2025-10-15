@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Services;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Domains\Ticket\Models\Ticket;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;

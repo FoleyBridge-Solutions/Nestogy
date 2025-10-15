@@ -4,7 +4,7 @@ namespace App\Domains\Financial\Http\Controllers\Webhooks;
 
 use App\Domains\Core\Services\StripeSubscriptionService;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

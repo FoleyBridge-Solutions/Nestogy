@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Services\RmmServiceFactory;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Console\Command;
 
 class SyncRmmAgents extends Command

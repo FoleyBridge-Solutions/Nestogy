@@ -6,7 +6,7 @@ use App\Domains\Core\Services\NotificationService;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Services\SLAService;
 use App\Domains\Ticket\Services\TicketService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 

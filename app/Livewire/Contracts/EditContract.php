@@ -4,7 +4,7 @@ namespace App\Livewire\Contracts;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Services\ContractService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 

@@ -2,7 +2,7 @@
 
 namespace App\Domains\Lead\Models;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Contact;
 use App\Models\User;
 use App\Traits\BelongsToCompany;

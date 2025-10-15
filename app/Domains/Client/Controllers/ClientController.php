@@ -9,7 +9,7 @@ use App\Domains\Client\Services\ClientService;
 use App\Domains\Core\Controllers\BaseController;
 use App\Imports\ClientsImport;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Tag;
 use App\Domains\Ticket\Models\Ticket;

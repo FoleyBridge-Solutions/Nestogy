@@ -3,7 +3,7 @@
 namespace App\Domains\Ticket\Models;
 
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Contact;
 use App\Models\Invoice;
 use App\Models\Location;

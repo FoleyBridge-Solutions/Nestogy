@@ -2,7 +2,7 @@
 
 namespace App\Domains\Integration\Services;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\UsageRecord;
 use Carbon\Carbon;
 use Exception;

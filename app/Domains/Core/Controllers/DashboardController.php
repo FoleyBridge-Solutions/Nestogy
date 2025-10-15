@@ -7,7 +7,7 @@ use App\Domains\Core\Services\NavigationService;
 use App\Domains\Core\Services\RealtimeDashboardService;
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Project;

@@ -8,7 +8,7 @@ use App\Domains\Project\Models\Project;
 use App\Domains\Ticket\Models\Ticket;
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

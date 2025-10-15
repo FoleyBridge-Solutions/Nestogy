@@ -2,7 +2,7 @@
 
 namespace App\Domains\Security\Services;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\ClientPortalAccess;
 use App\Models\ClientPortalSession;
 use App\Models\PortalNotification;

@@ -5,7 +5,7 @@ namespace Tests\Unit\Controllers;
 use App\Domains\Client\Controllers\ClientController;
 use App\Domains\Client\Services\ClientMetricsService;
 use App\Domains\Client\Services\ClientService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\User;
 use Tests\RefreshesDatabase;

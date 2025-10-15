@@ -3,7 +3,7 @@
 namespace App\Domains\Financial\Services;
 
 use App\Models\AccountHold;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\CollectionNote;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;

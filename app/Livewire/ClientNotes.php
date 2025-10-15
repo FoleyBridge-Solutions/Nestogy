@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Livewire\Component;
 
 class ClientNotes extends Component

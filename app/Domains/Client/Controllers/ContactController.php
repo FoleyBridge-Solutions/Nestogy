@@ -5,7 +5,7 @@ namespace App\Domains\Client\Controllers;
 use App\Domains\Client\Services\PortalInvitationService;
 use App\Domains\Core\Services\NavigationService;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;

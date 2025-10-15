@@ -5,7 +5,7 @@ namespace App\Domains\Contract\Models;
 use App\Domains\Contract\Traits\HasCompanyConfiguration;
 use App\Domains\Contract\Traits\HasStatusWorkflow;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\ComplianceRecord;
 use App\Models\Invoice;
 use App\Models\Quote;

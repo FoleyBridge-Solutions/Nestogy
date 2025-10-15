@@ -2,7 +2,7 @@
 
 namespace App\Domains\Email\Services;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\CompanyMailSettings;
 use App\Models\MailQueue;
 use App\Models\MailTemplate;

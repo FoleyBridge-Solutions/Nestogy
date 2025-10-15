@@ -3,7 +3,7 @@
 namespace App\Livewire\Financial;
 
 use App\Models\Category;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Product;
 use Flux\Flux;

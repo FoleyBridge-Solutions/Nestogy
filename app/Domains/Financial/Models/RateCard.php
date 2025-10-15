@@ -2,7 +2,7 @@
 
 namespace App\Domains\Financial\Models;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

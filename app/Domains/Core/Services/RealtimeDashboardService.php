@@ -3,7 +3,7 @@
 namespace App\Domains\Core\Services;
 
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Project;

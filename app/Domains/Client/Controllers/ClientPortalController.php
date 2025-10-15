@@ -7,7 +7,7 @@ use App\Domains\Contract\Models\ContractMilestone;
 use App\Domains\Contract\Models\ContractSignature;
 use App\Domains\Security\Services\DigitalSignatureService;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Contact;
 use App\Models\Invoice;
 use App\Models\Payment;

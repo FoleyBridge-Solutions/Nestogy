@@ -3,7 +3,7 @@
 namespace Tests\Unit\Services;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\InAppNotification;
 use App\Models\NotificationPreference;

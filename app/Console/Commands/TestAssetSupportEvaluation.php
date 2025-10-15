@@ -6,7 +6,7 @@ use App\Domains\Asset\Services\AssetSupportService;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractSchedule;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Console\Command;
 
 class TestAssetSupportEvaluation extends Command

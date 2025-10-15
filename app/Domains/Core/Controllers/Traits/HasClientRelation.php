@@ -2,7 +2,7 @@
 
 namespace App\Domains\Core\Controllers\Traits;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 

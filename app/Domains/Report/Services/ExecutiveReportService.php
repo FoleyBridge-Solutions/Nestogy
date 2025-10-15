@@ -4,7 +4,7 @@ namespace App\Domains\Report\Services;
 
 use App\Domains\Financial\Models\Payment;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;

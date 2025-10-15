@@ -5,7 +5,7 @@ namespace Tests\Feature\Livewire;
 use App\Domains\Client\Services\ClientFavoriteService;
 use App\Domains\Core\Services\NavigationService;
 use App\Livewire\ClientSwitcher;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\User;
 use Livewire\Livewire;

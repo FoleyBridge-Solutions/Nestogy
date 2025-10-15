@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Financial;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentApplication;

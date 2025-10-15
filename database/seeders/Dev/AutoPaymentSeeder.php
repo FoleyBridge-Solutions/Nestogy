@@ -3,7 +3,7 @@
 namespace Database\Seeders\Dev;
 
 use App\Models\AutoPayment;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Database\Seeder;
 
 class AutoPaymentSeeder extends Seeder

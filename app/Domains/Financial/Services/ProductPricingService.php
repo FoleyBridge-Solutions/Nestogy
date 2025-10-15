@@ -2,7 +2,7 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\PricingRule;
 use App\Models\Product;
 use App\Models\ProductBundle;

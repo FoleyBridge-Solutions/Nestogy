@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;

@@ -3,7 +3,7 @@
 namespace Database\Factories\Financial;
 
 use App\Domains\Financial\Models\RateCard;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RateCardFactory extends Factory

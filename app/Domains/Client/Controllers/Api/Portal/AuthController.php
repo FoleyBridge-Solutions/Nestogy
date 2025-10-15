@@ -4,7 +4,7 @@ namespace App\Domains\Client\Controllers\Api\Portal;
 
 use App\Domains\Security\Services\PortalAuthService;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

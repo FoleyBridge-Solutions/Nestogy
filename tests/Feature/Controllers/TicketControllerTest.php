@@ -7,7 +7,7 @@ use App\Domains\Ticket\Models\TicketComment;
 use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Domains\Ticket\Models\TicketWatcher;
 use App\Domains\Ticket\Models\TicketWorkflow;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\User;

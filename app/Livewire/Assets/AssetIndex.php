@@ -3,7 +3,7 @@
 namespace App\Livewire\Assets;
 
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;

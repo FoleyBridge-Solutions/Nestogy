@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Services;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Support\Collection;
 
 class ClientInsightService

@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\RmmClientMapping;
 use App\Models\RmmIntegration;
 use App\Services\TacticalRmmService;

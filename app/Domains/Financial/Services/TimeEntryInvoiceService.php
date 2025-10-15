@@ -5,7 +5,7 @@ namespace App\Domains\Financial\Services;
 use App\Domains\Financial\Models\RateCard;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTimeEntry;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use Carbon\Carbon;

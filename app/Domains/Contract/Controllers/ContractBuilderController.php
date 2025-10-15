@@ -7,7 +7,7 @@ use App\Domains\Contract\Models\ContractComponent;
 use App\Domains\Contract\Requests\StoreBuiltContractRequest;
 use App\Domains\Contract\Services\ContractService;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

@@ -14,7 +14,7 @@ use App\Domains\Contract\Services\ContractGenerationService;
 use App\Domains\Contract\Services\ContractService;
 use App\Domains\Security\Services\DigitalSignatureService;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

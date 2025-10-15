@@ -3,7 +3,7 @@
 namespace App\Livewire\Tickets;
 
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;

@@ -4,7 +4,7 @@ namespace App\Domains\Core\Services;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Quote;

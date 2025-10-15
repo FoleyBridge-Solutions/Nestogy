@@ -3,7 +3,7 @@
 namespace App\Domains\Core\Services;
 
 use App\Domains\Financial\Services\FinancialAnalyticsService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\DashboardWidget;
 use App\Models\Invoice;
 use App\Models\Payment;

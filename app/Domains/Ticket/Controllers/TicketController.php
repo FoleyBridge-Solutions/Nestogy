@@ -10,7 +10,7 @@ use App\Domains\Ticket\Requests\UpdateTicketRequest;
 use App\Domains\Ticket\Services\TicketQueryService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketRequest;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\User;
 use App\Traits\FiltersClientsByAssignment;
 use Illuminate\Http\Request;

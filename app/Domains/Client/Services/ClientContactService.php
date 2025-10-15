@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Services;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Contact;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;

@@ -9,7 +9,7 @@ use App\Domains\Contract\Services\ContractConfigurationRegistry;
 use App\Domains\Contract\Services\ContractService;
 use App\Domains\Core\Services\TemplateVariableMapper;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\User;
 use Carbon\Carbon;

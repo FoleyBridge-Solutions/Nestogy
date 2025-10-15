@@ -4,7 +4,7 @@ namespace Tests\Feature\Controllers;
 
 use App\Domains\Client\Services\ClientService;
 use App\Imports\ClientsImport;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Location;

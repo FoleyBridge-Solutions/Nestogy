@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Clients;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Tag;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;

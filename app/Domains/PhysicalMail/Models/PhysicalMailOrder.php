@@ -2,7 +2,7 @@
 
 namespace App\Domains\PhysicalMail\Models;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Domains\Client\Models;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Ticket\Models\Ticket;

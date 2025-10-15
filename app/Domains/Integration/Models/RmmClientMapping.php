@@ -2,7 +2,7 @@
 
 namespace App\Domains\Integration\Models;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

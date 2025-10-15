@@ -2,7 +2,7 @@
 
 namespace App\Domains\Product\Services;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Recurring;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

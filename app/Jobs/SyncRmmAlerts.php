@@ -6,7 +6,7 @@ use App\Domains\Integration\Models\RMMAlert;
 use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Services\RmmServiceFactory;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;

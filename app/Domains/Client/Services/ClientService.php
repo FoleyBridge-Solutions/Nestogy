@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Services;
 
 use App\Domains\Core\Services\BaseService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Contact;
 use App\Models\Location;
 use Illuminate\Support\Facades\Auth;

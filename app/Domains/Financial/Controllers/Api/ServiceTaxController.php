@@ -4,7 +4,7 @@ namespace App\Domains\Financial\Controllers\Api;
 
 use App\Domains\Financial\Services\ServiceTaxCalculator;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\TaxJurisdiction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

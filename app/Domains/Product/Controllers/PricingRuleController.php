@@ -6,7 +6,7 @@ use App\Domains\Product\Requests\StorePricingRuleRequest;
 use App\Domains\Product\Requests\UpdatePricingRuleRequest;
 use App\Domains\Product\Services\PricingRuleService;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\PricingRule;
 use App\Models\Product;
 use Illuminate\Http\Request;

@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\User;
 
 class ClientPolicy

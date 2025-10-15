@@ -17,7 +17,7 @@ use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Financial\QuoteCollection;
 use App\Http\Resources\Financial\QuoteResource;
 use App\Models\Category;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\InvoiceItem;
 use App\Models\Product;
 use App\Models\Quote;

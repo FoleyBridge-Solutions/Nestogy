@@ -3,7 +3,7 @@
 namespace App\Domains\Email\Services;
 
 use App\Domains\Email\Models\EmailMessage;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\CommunicationLog;
 use Illuminate\Support\Facades\Log;
 

@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Domains\Core\Services\NotificationService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

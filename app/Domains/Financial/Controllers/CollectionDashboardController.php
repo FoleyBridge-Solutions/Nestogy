@@ -9,7 +9,7 @@ use App\Domains\Financial\Services\PaymentPlanService;
 use App\Domains\Security\Services\ComplianceService;
 use App\Http\Controllers\Controller;
 use App\Models\AccountHold;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\DunningCampaign;
 use App\Models\PaymentPlan;
 use Carbon\Carbon;

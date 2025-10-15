@@ -9,7 +9,7 @@ use App\Domains\Project\Models\ProjectTemplate;
 use App\Domains\Project\Repositories\ProjectRepository;
 use App\Domains\Project\Services\ProjectService;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

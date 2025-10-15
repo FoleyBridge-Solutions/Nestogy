@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Contact;
 use App\Models\Location;
 use Illuminate\Support\Collection;

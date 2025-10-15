@@ -6,7 +6,7 @@ use App\Domains\Financial\Models\Payment;
 use App\Domains\Knowledge\Models\KbArticleView;
 use App\Domains\Knowledge\Services\TicketDeflectionService;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;

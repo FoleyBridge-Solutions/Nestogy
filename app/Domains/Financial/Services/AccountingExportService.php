@@ -3,7 +3,7 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Ticket\Models\TicketTimeEntry;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;

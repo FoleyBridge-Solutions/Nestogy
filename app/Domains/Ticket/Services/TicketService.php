@@ -7,7 +7,7 @@ use App\Domains\Ticket\Models\SLA;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketAssignment;
 use App\Domains\Ticket\Models\TicketPriorityQueue;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;

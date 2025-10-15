@@ -4,7 +4,7 @@ namespace App\Livewire\Financial;
 
 use App\Domains\Core\Services\NavigationService;
 use App\Domains\Financial\Services\PaymentApplicationService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use Flux\Flux;

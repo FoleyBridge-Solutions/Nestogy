@@ -3,7 +3,7 @@
 namespace Tests\Feature\Controllers;
 
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\Payment;

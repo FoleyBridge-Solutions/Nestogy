@@ -4,7 +4,7 @@ namespace App\Domains\Contract\Services;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractMilestone;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\RecurringInvoice;
 use Carbon\Carbon;

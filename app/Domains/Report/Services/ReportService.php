@@ -3,7 +3,7 @@
 namespace App\Domains\Report\Services;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;

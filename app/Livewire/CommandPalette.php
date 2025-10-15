@@ -9,7 +9,7 @@ use App\Domains\Lead\Models\Lead;
 use App\Domains\Project\Models\Project;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\Asset;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\CustomQuickAction;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;

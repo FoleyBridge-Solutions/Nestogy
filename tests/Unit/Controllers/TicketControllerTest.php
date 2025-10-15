@@ -7,7 +7,7 @@ use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Domains\Ticket\Models\TicketWatcher;
 use App\Domains\Ticket\Services\TicketQueryService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Company;
 use App\Models\User;
 use Tests\RefreshesDatabase;

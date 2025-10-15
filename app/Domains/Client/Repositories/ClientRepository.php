@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Repositories;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;

@@ -4,7 +4,7 @@ namespace App\Domains\Client\Services;
 
 use App\Domains\Financial\Services\PortalPaymentService;
 use App\Domains\Security\Services\PortalAuthService;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\ClientDocument;
 use App\Models\Payment;
 use App\Models\PortalNotification;

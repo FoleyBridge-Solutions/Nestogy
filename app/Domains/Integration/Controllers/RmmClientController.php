@@ -8,7 +8,7 @@ use App\Domains\Integration\Services\RmmServiceFactory;
 use App\Http\Controllers\Controller;
 use App\Jobs\SyncRmmAgents;
 use App\Jobs\SyncRmmAlerts;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

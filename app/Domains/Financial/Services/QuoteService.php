@@ -7,7 +7,7 @@ use App\Domains\Financial\Exceptions\QuotePermissionException;
 use App\Domains\Financial\Exceptions\QuoteValidationException;
 use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
 use App\Models\Category;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Product;
 use App\Models\Quote;
 use Illuminate\Database\Eloquent\Collection;

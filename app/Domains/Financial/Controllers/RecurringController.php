@@ -13,7 +13,7 @@ use App\Http\Requests\ProcessUsageDataRequest;
 use App\Http\Requests\StoreRecurringRequest;
 use App\Http\Requests\UpdateRecurringRequest;
 use App\Models\Category;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Quote;
 use App\Models\Recurring;
 use Carbon\Carbon;

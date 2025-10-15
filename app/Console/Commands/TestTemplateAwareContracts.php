@@ -7,7 +7,7 @@ use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Core\Services\DefinitionRegistry;
 use App\Domains\Core\Services\TemplateContentGenerator;
 use App\Domains\Core\Services\TemplateVariableMapper;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Console\Command;
 
 /**

@@ -7,7 +7,7 @@ use App\Domains\Client\Services\ClientITDocumentationService;
 use App\Domains\Client\Services\ComplianceEngineService;
 use App\Domains\Client\Services\DocumentationTemplateService;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 

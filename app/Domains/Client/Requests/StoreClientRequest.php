@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Requests;
 
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use Illuminate\Support\Facades\Auth;
 
 class StoreClientRequest extends BaseFormRequest

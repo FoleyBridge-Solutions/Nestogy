@@ -8,6 +8,7 @@ return [
     App\Providers\PdfServiceProvider::class,
     App\Providers\RmmServiceProvider::class,
     App\Providers\ContractPluginServiceProvider::class,
+    App\Providers\NavigationServiceProvider::class,
     App\Providers\SidebarServiceProvider::class,
     App\Providers\PhysicalMailServiceProvider::class,
     App\Providers\Smtp2goServiceProvider::class,

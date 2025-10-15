@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\CommunicationLog;
 use App\Models\User;
 use Carbon\Carbon;

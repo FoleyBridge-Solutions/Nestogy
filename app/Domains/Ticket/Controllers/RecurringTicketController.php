@@ -5,7 +5,7 @@ namespace App\Domains\Ticket\Controllers;
 use App\Domains\Ticket\Models\RecurringTicket;
 use App\Domains\Ticket\Models\TicketTemplate;
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;

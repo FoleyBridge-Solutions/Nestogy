@@ -6,7 +6,7 @@ use App\Domains\Core\Services\NavigationService;
 use App\Domains\Financial\Services\InvoiceService;
 use App\Livewire\Concerns\WithAuthenticatedUser;
 use App\Models\Category;
-use App\Models\Client;
+use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Product;
 use Flux\Flux;
