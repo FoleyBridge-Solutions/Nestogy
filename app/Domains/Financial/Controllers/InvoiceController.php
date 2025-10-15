@@ -217,7 +217,7 @@ class InvoiceController extends Controller
             'items' => function ($query) {
                 $query->orderBy('order');
             },
-            'payments' => function ($query) {
+            'paymentApplications.payment' => function ($query) {
                 $query->orderBy('payment_date', 'desc');
             },
             'taxCalculations' => function ($query) {
@@ -604,7 +604,7 @@ class InvoiceController extends Controller
         $this->authorize('view', $invoice);
 
         try {
-            $invoice->load(['client', 'items', 'payments', 'company']);
+            $invoice->load(['client', 'items', 'paymentApplications.payment', 'company']);
 
             $filename = $this->pdfService->generateFilename('invoice', $invoice->number);
 

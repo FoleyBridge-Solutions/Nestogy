@@ -173,22 +173,21 @@ class Invoice extends Model
     }
 
     /**
-     * Get payments for this invoice through payment applications.
+     * Get the payments collection as an attribute accessor.
      * Returns a collection of unique Payment models that have been applied to this invoice.
      */
-    public function payments()
+    public function getPaymentsAttribute()
     {
-        return $this->hasManyThrough(
-            Payment::class,
-            PaymentApplication::class,
-            'applicable_id',
-            'id',
-            'id',
-            'payment_id'
-        )
-        ->where('payment_applications.applicable_type', self::class)
-        ->where('payment_applications.is_active', true)
-        ->distinct();
+        if (!$this->relationLoaded('paymentApplications')) {
+            $this->load('paymentApplications.payment');
+        }
+        
+        return $this->paymentApplications
+            ->where('is_active', true)
+            ->pluck('payment')
+            ->filter()
+            ->unique('id')
+            ->values();
     }
 
     /**

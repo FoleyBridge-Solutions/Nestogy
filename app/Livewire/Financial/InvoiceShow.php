@@ -96,19 +96,6 @@ class InvoiceShow extends Component
         }
     }
 
-    public function downloadPdf()
-    {
-        return redirect()->route('financial.invoices.pdf', $this->invoice);
-    }
-
-    public function printInvoice()
-    {
-        // Open PDF in a new tab/window for printing
-        $this->dispatch('print-invoice', [
-            'url' => route('financial.invoices.pdf', $this->invoice),
-        ]);
-    }
-
     public function sendEmail()
     {
         $this->showEmailModal = true;

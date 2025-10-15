@@ -36,7 +36,7 @@
                     <flux:button size="sm" variant="ghost" icon="ellipsis-vertical" />
                     
                     <flux:menu>
-                        <flux:menu.item icon="document-arrow-down" wire:click="downloadPdf">
+                        <flux:menu.item icon="document-arrow-down" href="{{ route('financial.invoices.pdf', $invoice) }}" download>
                             Download PDF
                         </flux:menu.item>
                         
@@ -86,7 +86,7 @@
                             @endif
                         @endcan
                         
-                        <flux:menu.item icon="printer" wire:click="printInvoice">
+                        <flux:menu.item icon="printer" href="{{ route('financial.invoices.pdf', $invoice) }}" target="_blank">
                             Print Invoice
                         </flux:menu.item>
                     </flux:menu>
@@ -517,7 +517,7 @@
                         @endif
                     @endcan
                     
-                    <flux:button size="sm" variant="ghost" class="w-full" wire:click="downloadPdf" icon="document-arrow-down">
+                    <flux:button size="sm" variant="ghost" class="w-full" href="{{ route('financial.invoices.pdf', $invoice) }}" icon="document-arrow-down" download>
                         Download PDF
                     </flux:button>
                     
@@ -529,7 +529,7 @@
                         Send by Physical Mail
                     </flux:button>
                     
-                    <flux:button size="sm" variant="ghost" class="w-full" wire:click="printInvoice" icon="printer">
+                    <flux:button size="sm" variant="ghost" class="w-full" href="{{ route('financial.invoices.pdf', $invoice) }}" icon="printer" target="_blank">
                         Print Invoice
                     </flux:button>
                     
