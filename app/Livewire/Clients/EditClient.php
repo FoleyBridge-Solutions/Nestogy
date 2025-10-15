@@ -426,13 +426,11 @@ class EditClient extends Component
 
     public function render()
     {
-        // Get available SLAs for dropdown
         $slas = \App\Domains\Ticket\Models\SLA::where('company_id', auth()->user()->company_id)
             ->where('is_active', true)
             ->get();
 
-        // Temporarily use simple view for debugging
-        return view('livewire.clients.edit-client-simple', [
+        return view('livewire.clients.edit-client', [
             'slas' => $slas,
         ])
             ->extends('layouts.app')

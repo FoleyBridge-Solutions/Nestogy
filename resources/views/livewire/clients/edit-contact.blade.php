@@ -1,5 +1,5 @@
 <div>
-    <form wire:submit="update">
+    <form wire:submit="update" autocomplete="off">
         <!-- Header with Tabs -->
         <div class="flex justify-between items-center mb-6">
             <flux:heading size="xl">Edit Contact: {{ $contact->name }}</flux:heading>
@@ -339,25 +339,58 @@
                                 </flux:field>
 
                                 @if($auth_method === 'password')
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <flux:field>
-                                            <flux:label>New Password</flux:label>
-                                            <flux:input type="password" wire:model="password" placeholder="••••••••" />
-                                            <flux:description>Leave blank to keep current password</flux:description>
-                                            @error('password')<flux:error>{{ $message }}</flux:error>@enderror
-                                        </flux:field>
+                                    <div class="space-y-4">
+                                        {{-- Honeypot fields to prevent autofill --}}
+                                        <input type="text" name="fakeusername" autocomplete="username" tabindex="-1" style="position: absolute; opacity: 0; height: 0; width: 0;" />
+                                        <input type="password" name="fakepassword" autocomplete="current-password" tabindex="-1" style="position: absolute; opacity: 0; height: 0; width: 0;" />
+                                        
+                                        @if($contact->password_hash)
+                                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <div class="flex items-start">
+                                                    <svg class="h-5 w-5 text-blue-400 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                                    </svg>
+                                                    <div class="flex-1">
+                                                        <h4 class="text-sm font-medium text-blue-900">Password Already Set</h4>
+                                                        <p class="mt-1 text-sm text-blue-700">
+                                                            This contact already has a password. Only fill out the fields below if you want to change it.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
 
-                                        <flux:field>
-                                            <flux:label>Confirm Password</flux:label>
-                                            <flux:input type="password" wire:model="password_confirmation" placeholder="••••••••" />
-                                            @error('password_confirmation')<flux:error>{{ $message }}</flux:error>@enderror
-                                        </flux:field>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <flux:field>
+                                                <flux:label>New Password</flux:label>
+                                                <flux:input 
+                                                    type="password" 
+                                                    wire:model="password" 
+                                                    placeholder="••••••••"
+                                                    autocomplete="new-password"
+                                                    data-form-type="other"
+                                                    data-lpignore="true"
+                                                    data-1p-ignore="true"
+                                                />
+                                                <flux:description>{{ $contact->password_hash ? 'Leave blank to keep current' : 'Minimum 8 characters' }}</flux:description>
+                                                @error('password')<flux:error>{{ $message }}</flux:error>@enderror
+                                            </flux:field>
+
+                                            <flux:field>
+                                                <flux:label>Confirm Password</flux:label>
+                                                <flux:input 
+                                                    type="password" 
+                                                    wire:model="password_confirmation" 
+                                                    placeholder="••••••••"
+                                                    autocomplete="new-password"
+                                                    data-form-type="other"
+                                                    data-lpignore="true"
+                                                    data-1p-ignore="true"
+                                                />
+                                                @error('password_confirmation')<flux:error>{{ $message }}</flux:error>@enderror
+                                            </flux:field>
+                                        </div>
                                     </div>
-                                    @if($contact->password_hash)
-                                        <p class="text-sm text-gray-600">
-                                            <strong>Note:</strong> Contact already has a password set. Enter new password to change it.
-                                        </p>
-                                    @endif
                                 @endif
 
                                 {{-- Portal Permissions --}}

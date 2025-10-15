@@ -1,83 +1,37 @@
-<div class="container-fluid px-4 lg:px-8">
-    <!-- Header -->
-    <flux:card class="mb-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <flux:heading>Edit {{ $client->lead ? 'Lead' : 'Client' }}</flux:heading>
-                <flux:text>Update {{ $client->name }}'s information</flux:text>
-            </div>
-            <div class="flex items-center gap-3">
-                <flux:button variant="ghost" icon="eye" href="{{ route('clients.show', $client) }}">
-                    View
-                </flux:button>
-                <flux:button variant="ghost" icon="arrow-left" href="{{ $client->lead ? route('clients.leads') : route('clients.index') }}">
-                    Back to {{ $client->lead ? 'Leads' : 'Clients' }}
-                </flux:button>
-            </div>
-        </div>
-    </flux:card>
+@php
+    $pageTitle = 'Edit ' . ($client->lead ? 'Lead' : 'Client');
+    $pageSubtitle = $client->name;
+    $pageActions = [
+        [
+            'label' => 'View Profile',
+            'href' => route('clients.show', $client),
+            'icon' => 'eye',
+            'variant' => 'ghost'
+        ],
+    ];
+@endphp
 
-    <!-- Flash Messages -->
+<div>
     @if (session()->has('message'))
         <flux:card class="mb-6 border-green-200 bg-green-50">
-            <flux:text class="text-green-800">{{ session('message') }}</flux:text>
+            <div class="flex items-center">
+                <svg class="h-5 w-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <flux:text class="text-green-800">{{ session('message') }}</flux:text>
+            </div>
         </flux:card>
     @endif
 
-    <!-- Tab Navigation -->
-    <div class="border-b border-gray-200 mb-6">
-        <nav class="-mb-px flex space-x-8 overflow-x-auto">
-            <button 
-                wire:click="setActiveTab('basic')" 
-                type="button"
-                class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'basic' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
-            >
-                Basic Information
-            </button>
-            <button 
-                wire:click="setActiveTab('address')" 
-                type="button"
-                class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'address' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
-            >
-                Address
-            </button>
-            <button 
-                wire:click="setActiveTab('contacts')" 
-                type="button"
-                class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'contacts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
-            >
-                Contacts
-            </button>
-            <button 
-                wire:click="setActiveTab('billing')" 
-                type="button"
-                class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'billing' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
-            >
-                Billing
-            </button>
-            <button 
-                wire:click="setActiveTab('rates')" 
-                type="button"
-                class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'rates' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
-            >
-                Custom Rates
-            </button>
-            <button 
-                wire:click="setActiveTab('contract')" 
-                type="button"
-                class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'contract' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
-            >
-                Contract & SLA
-            </button>
-            <button 
-                wire:click="setActiveTab('additional')" 
-                type="button"
-                class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $activeTab === 'additional' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}"
-            >
-                Additional
-            </button>
-        </nav>
-    </div>
+    <flux:tabs wire:model="activeTab" class="mb-6">
+        <flux:tab name="basic">Basic Information</flux:tab>
+        <flux:tab name="address">Address</flux:tab>
+        <flux:tab name="contacts">Contacts</flux:tab>
+        <flux:tab name="billing">Billing</flux:tab>
+        <flux:tab name="rates">Custom Rates</flux:tab>
+        <flux:tab name="contract">Contract & SLA</flux:tab>
+        <flux:tab name="additional">Additional</flux:tab>
+    </flux:tabs>
 
     <!-- Form -->
     <form wire:submit="save">
@@ -508,15 +462,25 @@
             </flux:card>
         @endif
 
-        <!-- Form Actions -->
-        <div class="flex gap-4 justify-end mt-6">
-            <flux:button variant="ghost" href="{{ route('clients.show', $client) }}">
+        <flux:separator class="my-6" />
+
+        <div class="flex gap-4 justify-between items-center">
+            <flux:button variant="ghost" href="{{ route('clients.show', $client) }}" icon="x-mark">
                 Cancel
             </flux:button>
-            <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-                <span wire:loading.remove>Update {{ $client->lead ? 'Lead' : 'Client' }}</span>
-                <span wire:loading>Updating...</span>
-            </flux:button>
+            
+            <div class="flex gap-3">
+                <flux:button 
+                    type="submit" 
+                    variant="primary" 
+                    icon="check"
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50"
+                >
+                    <span wire:loading.remove wire:target="save">Update {{ $client->lead ? 'Lead' : 'Client' }}</span>
+                    <span wire:loading wire:target="save">Saving Changes...</span>
+                </flux:button>
+            </div>
         </div>
     </form>
 </div>

@@ -61,7 +61,7 @@
         </div>
 
         <!-- Form -->
-        <form wire:submit="save">
+        <form wire:submit="save" autocomplete="off">
             @if($activeTab === 'essential')
                 <!-- Essential Information Tab -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -294,17 +294,37 @@
                                     </flux:field>
 
                                     @if($auth_method === 'password')
+                                        {{-- Honeypot fields to prevent autofill --}}
+                                        <input type="text" name="fakeusername" autocomplete="username" tabindex="-1" style="position: absolute; opacity: 0; height: 0; width: 0;" />
+                                        <input type="password" name="fakepassword" autocomplete="current-password" tabindex="-1" style="position: absolute; opacity: 0; height: 0; width: 0;" />
+                                        
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <flux:field>
                                                 <flux:label>Password</flux:label>
-                                                <flux:input type="password" wire:model="password" placeholder="••••••••" />
+                                                <flux:input 
+                                                    type="password" 
+                                                    wire:model="password" 
+                                                    placeholder="••••••••"
+                                                    autocomplete="new-password"
+                                                    data-form-type="other"
+                                                    data-lpignore="true"
+                                                    data-1p-ignore="true"
+                                                />
                                                 <flux:description>Minimum 8 characters</flux:description>
                                                 @error('password')<flux:error>{{ $message }}</flux:error>@enderror
                                             </flux:field>
 
                                             <flux:field>
                                                 <flux:label>Confirm Password</flux:label>
-                                                <flux:input type="password" wire:model="password_confirmation" placeholder="••••••••" />
+                                                <flux:input 
+                                                    type="password" 
+                                                    wire:model="password_confirmation" 
+                                                    placeholder="••••••••"
+                                                    autocomplete="new-password"
+                                                    data-form-type="other"
+                                                    data-lpignore="true"
+                                                    data-1p-ignore="true"
+                                                />
                                                 @error('password_confirmation')<flux:error>{{ $message }}</flux:error>@enderror
                                             </flux:field>
                                         </div>
