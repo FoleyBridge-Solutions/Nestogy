@@ -160,7 +160,7 @@ class PaymentCreate extends Component
         if ($this->client_id) {
             $this->invoices = Invoice::where('company_id', Auth::user()->company_id)
                 ->where('client_id', $this->client_id)
-                ->whereIn('status', ['Sent', 'Partial', 'sent', 'partial'])
+                ->whereIn('status', ['Sent', 'Partial', 'Overdue', 'sent', 'partial', 'overdue'])
                 ->get()
                 ->filter(function($invoice) {
                     return $invoice->getBalance() > 0;
