@@ -173,12 +173,22 @@ class Invoice extends Model
     }
 
     /**
-     * Get payments for this invoice.
-     * @deprecated Use paymentApplications() instead
+     * Get payments for this invoice through payment applications.
+     * Returns a collection of unique Payment models that have been applied to this invoice.
      */
-    public function payments(): HasMany
+    public function payments()
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasManyThrough(
+            Payment::class,
+            PaymentApplication::class,
+            'applicable_id',
+            'id',
+            'id',
+            'payment_id'
+        )
+        ->where('payment_applications.applicable_type', self::class)
+        ->where('payment_applications.is_active', true)
+        ->distinct();
     }
 
     /**

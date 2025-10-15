@@ -24,7 +24,7 @@ class InvoiceIndex extends Component
 
     public $sortBy = 'due_date';
 
-    public $sortDirection = 'asc';
+    public $sortDirection = 'desc';
 
     public $selected = [];
 
@@ -36,7 +36,7 @@ class InvoiceIndex extends Component
         'dateFrom' => ['except' => ''],
         'dateTo' => ['except' => ''],
         'sortBy' => ['except' => 'due_date'],
-        'sortDirection' => ['except' => 'asc'],
+        'sortDirection' => ['except' => 'desc'],
     ];
 
     public function updatingSearch()
@@ -240,6 +240,25 @@ class InvoiceIndex extends Component
         
         Flux::toast("{$count} invoice(s) deleted successfully.", variant: 'danger');
         $this->dispatch('invoice-deleted');
+    }
+
+    public function bulkDownloadPdf()
+    {
+        if (empty($this->selected)) {
+            Flux::toast('Please select at least one invoice to download.', variant: 'warning');
+            return;
+        }
+
+        $invoices = Invoice::whereIn('id', $this->selected)
+            ->where('company_id', Auth::user()->company_id)
+            ->get();
+
+        if ($invoices->count() === 1) {
+            return redirect()->route('financial.invoices.pdf', $invoices->first());
+        }
+
+        $this->dispatch('bulk-download-pdf', invoiceIds: $this->selected);
+        Flux::toast("Preparing {$invoices->count()} PDF(s) for download...");
     }
 
     public function getStatusColorProperty()

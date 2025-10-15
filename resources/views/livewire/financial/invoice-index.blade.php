@@ -66,6 +66,10 @@
             </flux:text>
             
             <div class="flex items-center gap-2">
+                <flux:button wire:click="bulkDownloadPdf" size="sm" variant="primary" icon="arrow-down-tray">
+                    Download PDFs
+                </flux:button>
+                
                 <flux:button wire:click="bulkMarkAsSent" size="sm" variant="ghost">
                     Mark as Sent
                 </flux:button>
@@ -237,6 +241,14 @@
                                         title="View"
                                     />
                                     
+                                    <flux:button 
+                                        href="{{ route('financial.invoices.pdf', $invoice) }}"
+                                        size="sm"
+                                        variant="ghost"
+                                        icon="arrow-down-tray"
+                                        title="Download PDF"
+                                    />
+                                    
                                     @if($invoice->status === 'Draft')
                                         <flux:button 
                                             href="{{ route('financial.invoices.edit', $invoice) }}"
@@ -284,17 +296,10 @@
                                                 >
                                                     Cancel Invoice
                                                 </flux:menu.item>
-                                                
-                                <flux:menu.separator />
-                                
-                                <flux:menu.item 
-                                    href="{{ route('financial.invoices.pdf', $invoice) }}"
-                                    icon="arrow-down-tray"
-                                >
-                                    Download PDF
-                                </flux:menu.item>
                                 
                                 @if($invoice->status !== 'Draft')
+                                    <flux:menu.separator />
+                                    
                                     <flux:menu.item 
                                         href="{{ route('financial.invoices.send', $invoice) }}"
                                         icon="envelope"
@@ -332,4 +337,26 @@
             </div>
         @endif
     </flux:card>
+
+    {{-- Bulk PDF Download Script --}}
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('bulk-download-pdf', (event) => {
+                const invoiceIds = event.invoiceIds;
+                
+                // Download each invoice PDF in sequence
+                invoiceIds.forEach((invoiceId, index) => {
+                    setTimeout(() => {
+                        const url = `/financial/invoices/${invoiceId}/pdf`;
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `invoice-${invoiceId}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }, index * 500); // Stagger downloads by 500ms to avoid browser blocking
+                });
+            });
+        });
+    </script>
 </div>
