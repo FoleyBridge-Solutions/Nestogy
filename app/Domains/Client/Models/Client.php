@@ -3,6 +3,8 @@
 namespace App\Domains\Client\Models;
 
 use App\Domains\Contract\Models\Contract;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Models\PaymentMethod;
 use App\Domains\Ticket\Models\Ticket;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,8 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
-use AppDomainsFinancialModelsPayment;
-use AppDomainsFinancialModelsPaymentMethod;
 
 class Client extends Model
 {
