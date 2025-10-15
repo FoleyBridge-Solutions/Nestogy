@@ -90,28 +90,28 @@ class RevenueChart extends Component
                 break;
 
             case 'quarter':
-                // Get all data in bulk for 3 months
-                $months = [];
-                for ($i = 2; $i >= 0; $i--) {
-                    $months[] = Carbon::now()->subMonths($i);
+                // Get all data in bulk for 13 weeks (quarter)
+                $weeks = [];
+                for ($i = 12; $i >= 0; $i--) {
+                    $weeks[] = Carbon::now()->subWeeks($i);
                 }
 
-                $currentRevenues = $this->getBulkMonthlyRevenue($months, $companyId);
-                $lastYearMonths = array_map(fn ($m) => $m->copy()->subYear(), $months);
-                $lastYearRevenues = $this->getBulkMonthlyRevenue($lastYearMonths, $companyId);
-                $currentInvoices = $this->getBulkMonthlyInvoices($months, $companyId);
-                $currentPayments = $this->getBulkMonthlyPayments($months, $companyId);
+                $currentRevenues = $this->getBulkWeeklyRevenue($weeks, $companyId);
+                $lastYearWeeks = array_map(fn ($w) => $w->copy()->subYear(), $weeks);
+                $lastYearRevenues = $this->getBulkWeeklyRevenue($lastYearWeeks, $companyId);
+                $currentInvoices = $this->getBulkWeeklyInvoices($weeks, $companyId);
+                $currentPayments = $this->getBulkWeeklyPayments($weeks, $companyId);
 
-                foreach ($months as $month) {
-                    $monthKey = $month->format('Y-m');
-                    $lastYearKey = $month->copy()->subYear()->format('Y-m');
+                foreach ($weeks as $week) {
+                    $weekKey = $week->format('Y-W');
+                    $lastYearKey = $week->copy()->subYear()->format('Y-W');
 
                     $data[] = [
-                        'date' => $monthKey,
-                        'revenue' => $currentRevenues[$monthKey] ?? 0,
+                        'date' => $weekKey,
+                        'revenue' => $currentRevenues[$weekKey] ?? 0,
                         'lastYear' => $lastYearRevenues[$lastYearKey] ?? 0,
-                        'invoices' => $currentInvoices[$monthKey] ?? 0,
-                        'payments' => $currentPayments[$monthKey] ?? 0,
+                        'invoices' => $currentInvoices[$weekKey] ?? 0,
+                        'payments' => $currentPayments[$weekKey] ?? 0,
                     ];
                 }
                 break;
@@ -339,6 +339,69 @@ class RevenueChart extends Component
         }
 
         return $query->pluck('count', 'month')->toArray();
+    }
+
+    protected function getBulkWeeklyRevenue($weeks, $companyId)
+    {
+        $weekConditions = [];
+        foreach ($weeks as $week) {
+            $startOfWeek = $week->copy()->startOfWeek();
+            $endOfWeek = $week->copy()->endOfWeek();
+            $weekConditions[] = "(payment_date >= '{$startOfWeek->toDateString()}' AND payment_date <= '{$endOfWeek->toDateString()}')";
+        }
+
+        $query = Payment::where('company_id', $companyId)
+            ->whereRaw('('.implode(' OR ', $weekConditions).')')
+            ->selectRaw("TO_CHAR(payment_date, 'IYYY-IW') as week, SUM(amount) as total")
+            ->groupBy('week');
+
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+
+        return $query->pluck('total', 'week')->toArray();
+    }
+
+    protected function getBulkWeeklyInvoices($weeks, $companyId)
+    {
+        $weekConditions = [];
+        foreach ($weeks as $week) {
+            $startOfWeek = $week->copy()->startOfWeek();
+            $endOfWeek = $week->copy()->endOfWeek();
+            $weekConditions[] = "(date >= '{$startOfWeek->toDateString()}' AND date <= '{$endOfWeek->toDateString()}')";
+        }
+
+        $query = Invoice::where('company_id', $companyId)
+            ->whereRaw('('.implode(' OR ', $weekConditions).')')
+            ->selectRaw("TO_CHAR(date, 'IYYY-IW') as week, SUM(amount) as total")
+            ->groupBy('week');
+
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+
+        return $query->pluck('total', 'week')->toArray();
+    }
+
+    protected function getBulkWeeklyPayments($weeks, $companyId)
+    {
+        $weekConditions = [];
+        foreach ($weeks as $week) {
+            $startOfWeek = $week->copy()->startOfWeek();
+            $endOfWeek = $week->copy()->endOfWeek();
+            $weekConditions[] = "(payment_date >= '{$startOfWeek->toDateString()}' AND payment_date <= '{$endOfWeek->toDateString()}')";
+        }
+
+        $query = Payment::where('company_id', $companyId)
+            ->whereRaw('('.implode(' OR ', $weekConditions).')')
+            ->selectRaw("TO_CHAR(payment_date, 'IYYY-IW') as week, COUNT(*) as count")
+            ->groupBy('week');
+
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+
+        return $query->pluck('count', 'week')->toArray();
     }
 
     public function exportChart()
