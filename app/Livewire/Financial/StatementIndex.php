@@ -59,6 +59,7 @@ class StatementIndex extends Component
         $query = PaymentApplication::where('company_id', $companyId)
             ->where('is_active', true)
             ->with(['payment.client', 'applicable'])
+            ->whereHas('payment')
             ->whereBetween('applied_date', [$this->start_date, $this->end_date]);
 
         if ($this->client_id) {
