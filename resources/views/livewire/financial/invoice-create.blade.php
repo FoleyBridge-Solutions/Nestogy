@@ -195,18 +195,18 @@
 
                         <flux:separator variant="subtle" />
 
-                        <div class="grid grid-cols-3 gap-4">
-                            <flux:field>
+                        <div class="flex gap-4">
+                            <flux:field class="flex-1">
                                 <flux:label badge="Required">Invoice Date</flux:label>
-                                <flux:input 
-                                    type="date" 
+                                <flux:input
+                                    type="date"
                                     wire:model.live="invoice_date"
                                 />
                                 <flux:error name="invoice_date" />
                             </flux:field>
 
-                            <flux:field>
-                                <flux:label>Payment Terms</flux:label>
+                            <flux:field class="flex-1">
+                                <flux:label badge="Required">Payment Terms</flux:label>
                                 <flux:select wire:model.live="payment_terms">
                                     <flux:select.option value="0">Due on receipt</flux:select.option>
                                     <flux:select.option value="7">Net 7</flux:select.option>
@@ -218,10 +218,10 @@
                                 </flux:select>
                             </flux:field>
 
-                            <flux:field>
+                            <flux:field class="flex-1">
                                 <flux:label badge="Required">Due Date</flux:label>
-                                <flux:input 
-                                    type="date" 
+                                <flux:input
+                                    type="date"
                                     wire:model="due_date"
                                 />
                                 <flux:error name="due_date" />

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Core\Services;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class SidebarConfigProvider
@@ -336,7 +337,7 @@ class SidebarConfigProvider
      */
     protected function getTicketsConfig(): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Get real-time statistics for badges
         $activeTimersCount = 0;
@@ -632,7 +633,7 @@ class SidebarConfigProvider
      */
     protected function getEmailConfig(): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $accountsCount = $user ? \App\Domains\Email\Models\EmailAccount::forUser($user->id)->active()->count() : 0;
         $unreadCount = $this->getEmailUnreadCount($user);
         $emailAccounts = $user ? \App\Domains\Email\Models\EmailAccount::forUser($user->id)->active()->with('folders')->get() : collect();
@@ -830,7 +831,7 @@ class SidebarConfigProvider
      */
     protected function getPhysicalMailConfig(): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $selectedClient = NavigationService::getSelectedClient();
 
         // Get physical mail statistics (with safe fallback)
@@ -1006,7 +1007,7 @@ class SidebarConfigProvider
         bool $expandable = true,
         bool $defaultExpanded = false
     ): array {
-        $user = auth()->user();
+        $user = Auth::user();
         $items = NavigationService::getNavigationItemsBySection($domain, $sectionKey, $user);
 
         $sidebarItems = [];
@@ -1118,7 +1119,7 @@ class SidebarConfigProvider
      */
     protected function getManagerConfig(): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         // Real-time statistics for badges
         $overdueTicketsCount = 0;
@@ -1380,7 +1381,7 @@ class SidebarConfigProvider
             return $config;
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
         if (! $user) {
             return [];
         }

@@ -86,7 +86,8 @@
       "Bash(git ls-tree:*)",
       "Bash(do if ! ls database/migrations/*$table*)",
       "Bash(then echo \"MISSING: $table\" fi done)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
