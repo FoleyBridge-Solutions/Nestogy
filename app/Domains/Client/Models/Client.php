@@ -8,6 +8,7 @@ use App\Domains\Client\Models\Address;
 use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\CommunicationLog;
 use App\Domains\Client\Models\Contact;
+use App\Domains\Core\Models\Tag;
 use App\Domains\Financial\Models\Invoice;
 use App\Domains\Client\Models\Location;
 use App\Domains\Project\Models\Project;
