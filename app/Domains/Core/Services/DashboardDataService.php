@@ -2,7 +2,6 @@
 
 namespace App\Domains\Core\Services;
 
-use App\Domains\Financial\Services\FinancialAnalyticsService;
 use App\Domains\Client\Models\Client;
 use App\Models\DashboardWidget;
 use App\Models\Invoice;
@@ -25,8 +24,6 @@ class DashboardDataService
 {
     protected int $companyId;
 
-    protected FinancialAnalyticsService $analyticsService;
-
     protected int $cacheTimeout = 300; // 5 minutes default cache
 
     protected string $cachePrefix = 'dashboard_data';
@@ -36,7 +33,6 @@ class DashboardDataService
     public function __construct(int $companyId)
     {
         $this->companyId = $companyId;
-        $this->analyticsService = new FinancialAnalyticsService($companyId);
     }
 
     /**
@@ -457,18 +453,7 @@ class DashboardDataService
     private function getCurrentMRR(): array
     {
         try {
-            $mrrData = $this->analyticsService->calculateMRR();
-
-            return [
-                'value' => $mrrData['current_mrr']['total'],
-                'growth_percentage' => $mrrData['growth']['percentage'],
-                'growth_amount' => $mrrData['growth']['absolute'],
-                'format' => 'currency',
-            ];
-        } catch (\Exception $e) {
-            Log::warning('MRR calculation failed, using fallback: '.$e->getMessage());
-
-            // Fallback: estimate MRR from recent invoices
+            // Estimate MRR from recent invoices
             $recentInvoices = Invoice::where('company_id', $this->companyId)
                 ->where('status', Invoice::STATUS_PAID)
                 ->whereBetween('date', [now()->subMonth(), now()])
