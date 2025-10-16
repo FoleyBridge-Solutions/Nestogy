@@ -1,5 +1,0 @@
-Is admin: YES
-Has clients.manage: YES
-Client company: 1
-User company: 1
-Same company: YES
