@@ -54,7 +54,7 @@
                                          <flux:menu.item 
                                              wire:click="{{ $action['wire:click'] }}"
                                              wire:confirm="{{ $confirm }}"
-                                             variant="{{ $action['variant'] ?? 'ghost' }}"
+                                             variant="{{ $action['variant'] ?? 'default' }}"
                                          >
                                              @if(isset($action['icon']))
                                                  <flux:icon.{{ $action['icon'] }} class="size-4" />
@@ -64,7 +64,7 @@
                                      @else
                                          <flux:menu.item 
                                              wire:click="{{ $action['wire:click'] }}"
-                                             variant="{{ $action['variant'] ?? 'ghost' }}"
+                                             variant="{{ $action['variant'] ?? 'default' }}"
                                          >
                                              @if(isset($action['icon']))
                                                  <flux:icon.{{ $action['icon'] }} class="size-4" />
