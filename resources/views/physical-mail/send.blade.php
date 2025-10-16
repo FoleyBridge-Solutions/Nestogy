@@ -73,7 +73,7 @@ $pageSubtitle = 'Create and send physical letters to your clients';
                             @else
                                 <flux:select name="client_id" onchange="loadClientAddress(this.value)">
                                     <flux:select.option value="">Choose a client...</flux:select.option>
-                                    @foreach(\App\Models\Client::orderBy('name')->get() as $client)
+                                    @foreach(\App\Domains\Client\Models\Client::orderBy('name')->get() as $client)
                                         <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
                                     @endforeach
                                 </flux:select>

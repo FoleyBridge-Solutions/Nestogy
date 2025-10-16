@@ -4,13 +4,14 @@ namespace App\Livewire\Dashboard\Widgets;
 
 use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Models\User;
-use Carbon\Carbon;
 use Livewire\Component;
 
 class TeamActivity extends Component
 {
     public $teamMembers = [];
+
     public $activeTimers = [];
+
     public $unassignedTickets = 0;
 
     public function mount()
@@ -31,7 +32,7 @@ class TeamActivity extends Component
                 ->withCount([
                     'assignedTickets as active_count' => function ($q) {
                         $q->whereIn('status', ['Open', 'In Progress', 'Awaiting Customer']);
-                    }
+                    },
                 ])
                 ->get()
                 ->map(function ($user) {

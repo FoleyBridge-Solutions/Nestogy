@@ -9,14 +9,15 @@ use Livewire\Component;
 class ShowProduct extends Component
 {
     public Product $product;
+
     public $recentSales = [];
-    
+
     public function mount(Product $product)
     {
         $this->product = $product->load(['category']);
         $this->loadRecentSales();
     }
-    
+
     protected function loadRecentSales()
     {
         $this->recentSales = DB::table('invoice_items')

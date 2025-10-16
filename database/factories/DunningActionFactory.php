@@ -15,7 +15,7 @@ class DunningActionFactory extends Factory
         
         return [
             'company_id' => \App\Models\Company::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'action_type' => $this->faker->randomElement(['email', 'sms', 'phone_call', 'letter', 'service_suspension', 'legal_notice']),
             'status' => $this->faker->randomElement(['pending', 'scheduled', 'processing', 'sent', 'delivered', 'failed', 'bounced', 'opened', 'clicked', 'responded', 'completed', 'cancelled', 'escalated']),
             'scheduled_at' => $scheduledAt,

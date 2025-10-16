@@ -4,8 +4,8 @@ namespace App\Livewire\Contracts;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractSchedule;
-use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Component;
 
 class ScheduleManager extends Component
 {
@@ -14,34 +14,48 @@ class ScheduleManager extends Component
     private const VALIDATION_NULLABLE_STRING = 'nullable|string';
 
     public Contract $contract;
+
     public $schedules = [];
+
     public $selectedScheduleId = null;
+
     public $editingSchedule = null;
+
     public $showCreateModal = false;
+
     public $showEditModal = false;
-    
+
     // Form fields for new/edit schedule
     public $schedule_type;
+
     public $title;
+
     public $description;
+
     public $content;
+
     public $status;
+
     public $effective_date;
+
     public $expiration_date;
-    
+
     // Advanced fields
     public $supported_asset_types = [];
+
     public $service_levels = [];
+
     public $pricing_structure = [];
+
     public $auto_assign_assets = false;
-    
+
     public function mount(Contract $contract)
     {
         $this->authorize('update', $contract);
         $this->contract = $contract;
         $this->loadSchedules();
     }
-    
+
     public function loadSchedules()
     {
         $this->schedules = $this->contract->schedules()
@@ -50,22 +64,22 @@ class ScheduleManager extends Component
             ->get()
             ->toArray();
     }
-    
+
     public function openCreateModal($type = null)
     {
         $this->resetForm();
         $this->schedule_type = $type;
         $this->showCreateModal = true;
     }
-    
+
     public function openEditModal($scheduleId)
     {
         $schedule = ContractSchedule::findOrFail($scheduleId);
         $this->authorize('update', $schedule);
-        
+
         $this->editingSchedule = $schedule;
         $this->selectedScheduleId = $scheduleId;
-        
+
         // Populate form
         $this->schedule_type = $schedule->schedule_type;
         $this->title = $schedule->title;
@@ -78,10 +92,10 @@ class ScheduleManager extends Component
         $this->service_levels = $schedule->service_levels ?? [];
         $this->pricing_structure = $schedule->pricing_structure ?? [];
         $this->auto_assign_assets = $schedule->auto_assign_assets;
-        
+
         $this->showEditModal = true;
     }
-    
+
     public function createSchedule()
     {
         $this->validate([
@@ -93,7 +107,7 @@ class ScheduleManager extends Component
             'effective_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after:effective_date',
         ]);
-        
+
         try {
             $schedule = $this->contract->schedules()->create([
                 'company_id' => $this->contract->company_id,
@@ -112,29 +126,29 @@ class ScheduleManager extends Component
                 'auto_assign_assets' => $this->auto_assign_assets,
                 'version' => '1.0',
             ]);
-            
+
             $this->loadSchedules();
             $this->showCreateModal = false;
             $this->resetForm();
-            
+
             session()->flash('success', "Schedule {$this->schedule_type} created successfully!");
-            
+
         } catch (\Exception $e) {
             \Log::error('Failed to create schedule', [
                 'contract_id' => $this->contract->id,
                 'error' => $e->getMessage(),
             ]);
-            
-            session()->flash('error', 'Failed to create schedule: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to create schedule: '.$e->getMessage());
         }
     }
-    
+
     public function updateSchedule()
     {
-        if (!$this->editingSchedule) {
+        if (! $this->editingSchedule) {
             return;
         }
-        
+
         $this->validate([
             'title' => 'required|string|max:255',
             'description' => self::VALIDATION_NULLABLE_STRING,
@@ -143,7 +157,7 @@ class ScheduleManager extends Component
             'effective_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after:effective_date',
         ]);
-        
+
         try {
             $this->editingSchedule->update([
                 'title' => $this->title,
@@ -157,88 +171,88 @@ class ScheduleManager extends Component
                 'pricing_structure' => $this->pricing_structure,
                 'auto_assign_assets' => $this->auto_assign_assets,
             ]);
-            
+
             $this->loadSchedules();
             $this->showEditModal = false;
             $this->resetForm();
-            
+
             session()->flash('success', 'Schedule updated successfully!');
-            
+
         } catch (\Exception $e) {
             \Log::error('Failed to update schedule', [
                 'schedule_id' => $this->editingSchedule->id,
                 'error' => $e->getMessage(),
             ]);
-            
-            session()->flash('error', 'Failed to update schedule: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to update schedule: '.$e->getMessage());
         }
     }
-    
+
     public function deleteSchedule($scheduleId)
     {
         $schedule = ContractSchedule::findOrFail($scheduleId);
         $this->authorize('delete', $schedule);
-        
+
         try {
             $scheduleType = $schedule->schedule_type;
             $schedule->delete();
-            
+
             $this->loadSchedules();
-            
+
             session()->flash('success', "Schedule {$scheduleType} deleted successfully!");
-            
+
         } catch (\Exception $e) {
             \Log::error('Failed to delete schedule', [
                 'schedule_id' => $scheduleId,
                 'error' => $e->getMessage(),
             ]);
-            
-            session()->flash('error', 'Failed to delete schedule: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to delete schedule: '.$e->getMessage());
         }
     }
-    
+
     public function activateSchedule($scheduleId)
     {
         $schedule = ContractSchedule::findOrFail($scheduleId);
         $this->authorize('update', $schedule);
-        
+
         try {
             $schedule->activate();
             $this->loadSchedules();
-            
+
             session()->flash('success', 'Schedule activated successfully!');
-            
+
         } catch (\Exception $e) {
             \Log::error('Failed to activate schedule', [
                 'schedule_id' => $scheduleId,
                 'error' => $e->getMessage(),
             ]);
-            
-            session()->flash('error', 'Failed to activate schedule: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to activate schedule: '.$e->getMessage());
         }
     }
-    
+
     public function approveSchedule($scheduleId)
     {
         $schedule = ContractSchedule::findOrFail($scheduleId);
         $this->authorize('update', $schedule);
-        
+
         try {
             $schedule->approve();
             $this->loadSchedules();
-            
+
             session()->flash('success', 'Schedule approved successfully!');
-            
+
         } catch (\Exception $e) {
             \Log::error('Failed to approve schedule', [
                 'schedule_id' => $scheduleId,
                 'error' => $e->getMessage(),
             ]);
-            
-            session()->flash('error', 'Failed to approve schedule: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to approve schedule: '.$e->getMessage());
         }
     }
-    
+
     protected function resetForm()
     {
         $this->schedule_type = null;
@@ -255,7 +269,7 @@ class ScheduleManager extends Component
         $this->editingSchedule = null;
         $this->selectedScheduleId = null;
     }
-    
+
     public function render()
     {
         return view('livewire.contracts.schedule-manager');

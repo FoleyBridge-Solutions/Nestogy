@@ -1092,7 +1092,7 @@ class CommandPaletteService
         $suggestions = [];
 
         try {
-            $clients = \App\Models\Client::where('company_id', auth()->user()->company_id)
+            $clients = \App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)
                 ->where(function ($query) use ($partial) {
                     $query->where('name', 'like', "%{$partial}%")
                         ->orWhere('email', 'like', "%{$partial}%");

@@ -21,7 +21,7 @@
                         <x-forms.client-search-field 
                             name="client_id" 
                             :required="true"
-                            :selected="old('client_id', $selectedClientId ?? null) ? \App\Models\Client::where('company_id', auth()->user()->company_id)->find(old('client_id', $selectedClientId ?? null)) : null"
+                            :selected="old('client_id', $selectedClientId ?? null) ? \App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)->find(old('client_id', $selectedClientId ?? null)) : null"
                             label="Client"
                             placeholder="Search for client..."
                             class="mb-6" />

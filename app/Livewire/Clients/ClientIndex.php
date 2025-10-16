@@ -2,31 +2,20 @@
 
 namespace App\Livewire\Clients;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Core\Services\NavigationService;
 use App\Exports\ClientsExport;
-use App\Domains\Client\Models\Client;
+use App\Livewire\BaseIndexComponent;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
-use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
-class ClientIndex extends Component
+class ClientIndex extends BaseIndexComponent
 {
-    use WithPagination;
-
-    public $search = '';
-
     public $type = '';
 
-    public $status = 'active'; // Default to active clients only
+    public $status = 'active';
 
     public $showLeads = false;
-
-    public $perPage = 25;
-
-    public $sortField = 'name';
-
-    public $sortDirection = 'asc';
 
     public $selectedClient;
 
@@ -40,54 +29,71 @@ class ClientIndex extends Component
 
     public $returnUrl = null;
 
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'type' => ['except' => ''],
-        'status' => ['except' => 'active'], // Default is active, don't show in URL when it's the default
-        'showLeads' => ['except' => false],
-        'perPage' => ['except' => 25],
-    ];
-
     public function mount()
     {
+        parent::mount();
         $this->selectedClient = NavigationService::getSelectedClient();
         $this->showLeads = request()->has('lead');
         $this->returnUrl = session('client_selection_return_url');
 
-        // Preserve the default status if not in the request
         if (! request()->has('status')) {
             $this->status = 'active';
         }
     }
 
-    public function updatingSearch()
+    protected function getDefaultSort(): array
     {
-        $this->resetPage();
+        return [
+            'field' => 'name',
+            'direction' => 'asc',
+        ];
     }
 
-    public function updatingType()
+    protected function getSearchFields(): array
     {
-        $this->resetPage();
+        return [
+            'name',
+            'email',
+            'phone',
+            'type',
+            'primaryContact.name',
+            'primaryContact.email',
+        ];
     }
 
-    public function updatingStatus()
+    protected function getQueryStringProperties(): array
     {
-        $this->resetPage();
+        return [
+            'search' => ['except' => ''],
+            'type' => ['except' => ''],
+            'status' => ['except' => 'active'],
+            'showLeads' => ['except' => false],
+            'perPage' => ['except' => 25],
+        ];
     }
 
-    public function updatingShowLeads()
+    protected function getBaseQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $this->resetPage();
+        return Client::with(['primaryContact', 'primaryLocation', 'tags'])
+            ->where('lead', $this->showLeads);
     }
 
-    public function sortBy($field)
+    protected function applyCustomFilters($query)
     {
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortField = $field;
-            $this->sortDirection = 'asc';
+        if ($this->type) {
+            $query->where('type', $this->type);
         }
+
+        if ($this->status && $this->status !== 'all') {
+            $query->where('status', $this->status);
+        }
+
+        return $query;
+    }
+
+    protected function getItems()
+    {
+        return $this->buildQuery()->paginate($this->perPage);
     }
 
     public function selectClient($clientId)
@@ -188,41 +194,7 @@ class ClientIndex extends Component
 
     public function render()
     {
-        $user = Auth::user();
-
-        $query = Client::with(['primaryContact', 'primaryLocation', 'tags'])
-            ->where('company_id', $user->company_id)
-            ->whereNull('archived_at')
-            ->where('lead', $this->showLeads);
-
-        // Apply search
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('email', 'like', "%{$this->search}%")
-                    ->orWhere('phone', 'like', "%{$this->search}%")
-                    ->orWhere('type', 'like', "%{$this->search}%")
-                    ->orWhereHas('primaryContact', function ($q) {
-                        $q->where('name', 'like', "%{$this->search}%")
-                            ->orWhere('email', 'like', "%{$this->search}%");
-                    });
-            });
-        }
-
-        // Apply type filter
-        if ($this->type) {
-            $query->where('type', $this->type);
-        }
-
-        // Apply status filter
-        if ($this->status && $this->status !== 'all') {
-            $query->where('status', $this->status);
-        }
-
-        // Apply sorting
-        $query->orderBy($this->sortField, $this->sortDirection);
-
-        $clients = $query->paginate($this->perPage);
+        $clients = $this->getItems();
 
         return view('livewire.clients.client-index', [
             'clients' => $clients,

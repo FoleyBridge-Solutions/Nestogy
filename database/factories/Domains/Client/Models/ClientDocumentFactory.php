@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Domains\Client\Models;
 
-use App\Domains\Client\Models\ClientDocument;
+use App\Models\ClientDocument;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ClientDocumentFactory extends Factory
@@ -13,7 +13,7 @@ class ClientDocumentFactory extends Factory
     {
         return [
             'company_id' => \App\Models\Company::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'name' => $this->faker->words(3, true),
             'type' => $this->faker->randomElement(['contract', 'invoice', 'receipt', 'agreement']),
             'file_path' => $this->faker->filePath(),

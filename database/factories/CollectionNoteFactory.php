@@ -13,7 +13,7 @@ class CollectionNoteFactory extends Factory
     {
         return [
             'company_id' => \App\Models\Company::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'note_type' => 'general',
             'priority' => 'normal',
             'visibility' => 'internal',

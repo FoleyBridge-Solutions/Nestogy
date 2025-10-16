@@ -27,7 +27,7 @@ $pageSubtitle = '';
 
     <!-- Contact List -->
     @php
-        $query = \App\Models\Client::whereNotNull('address');
+        $query = \App\Domains\Client\Models\Client::whereNotNull('address');
         
         // Filter by selected client if present
         if (isset($selectedClient) && $selectedClient) {

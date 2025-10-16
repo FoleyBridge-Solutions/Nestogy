@@ -2,66 +2,74 @@
 
 namespace App\Livewire\Products;
 
+use App\Livewire\BaseIndexComponent;
 use App\Models\Category;
 use App\Models\Product;
-use Livewire\Component;
-use Livewire\WithPagination;
 
-class ProductIndex extends Component
+class ProductIndex extends BaseIndexComponent
 {
-    use WithPagination;
-
-    public $search = '';
     public $categoryFilter = '';
+
     public $typeFilter = '';
+
     public $statusFilter = '';
+
     public $billingModelFilter = '';
-    public $sortBy = 'name';
-    public $sortOrder = 'asc';
 
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'categoryFilter' => ['except' => ''],
-        'typeFilter' => ['except' => ''],
-        'statusFilter' => ['except' => ''],
-        'billingModelFilter' => ['except' => ''],
-        'sortBy' => ['except' => 'name'],
-        'sortOrder' => ['except' => 'asc'],
-    ];
-
-    public function updatingSearch()
+    protected function getDefaultSort(): array
     {
-        $this->resetPage();
+        return [
+            'field' => 'name',
+            'direction' => 'asc',
+        ];
     }
 
-    public function updatingCategoryFilter()
+    protected function getSearchFields(): array
     {
-        $this->resetPage();
+        return [
+            'name',
+            'sku',
+            'description',
+        ];
     }
 
-    public function updatingTypeFilter()
+    protected function getQueryStringProperties(): array
     {
-        $this->resetPage();
+        return [
+            'search' => ['except' => ''],
+            'categoryFilter' => ['except' => ''],
+            'typeFilter' => ['except' => ''],
+            'statusFilter' => ['except' => ''],
+            'billingModelFilter' => ['except' => ''],
+            'sortField' => ['except' => 'name'],
+            'sortDirection' => ['except' => 'asc'],
+        ];
     }
 
-    public function updatingStatusFilter()
+    protected function getBaseQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $this->resetPage();
+        return Product::products()->with(['category']);
     }
 
-    public function updatingBillingModelFilter()
+    protected function applyCustomFilters($query)
     {
-        $this->resetPage();
-    }
-
-    public function sortByColumn($column)
-    {
-        if ($this->sortBy === $column) {
-            $this->sortOrder = $this->sortOrder === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortBy = $column;
-            $this->sortOrder = 'asc';
+        if ($this->categoryFilter) {
+            $query->where('category_id', $this->categoryFilter);
         }
+
+        if ($this->typeFilter) {
+            $query->where('type', $this->typeFilter);
+        }
+
+        if ($this->statusFilter !== '') {
+            $query->where('is_active', $this->statusFilter === 'active');
+        }
+
+        if ($this->billingModelFilter) {
+            $query->where('billing_model', $this->billingModelFilter);
+        }
+
+        return $query;
     }
 
     public function clearFilters()
@@ -72,43 +80,7 @@ class ProductIndex extends Component
 
     public function render()
     {
-        $query = Product::products()
-            ->with(['category'])
-            ->where('company_id', auth()->user()->company_id);
-
-        // Apply search filter
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('sku', 'like', "%{$this->search}%")
-                    ->orWhere('description', 'like', "%{$this->search}%");
-            });
-        }
-
-        // Apply category filter
-        if ($this->categoryFilter) {
-            $query->where('category_id', $this->categoryFilter);
-        }
-
-        // Apply type filter
-        if ($this->typeFilter) {
-            $query->where('type', $this->typeFilter);
-        }
-
-        // Apply status filter
-        if ($this->statusFilter !== '') {
-            $query->where('is_active', $this->statusFilter === 'active');
-        }
-
-        // Apply billing model filter
-        if ($this->billingModelFilter) {
-            $query->where('billing_model', $this->billingModelFilter);
-        }
-
-        // Apply sorting
-        $query->orderBy($this->sortBy, $this->sortOrder);
-
-        $products = $query->paginate(20);
+        $products = $this->getItems();
 
         $categories = Category::where('company_id', auth()->user()->company_id)
             ->whereJsonContains('type', 'product')

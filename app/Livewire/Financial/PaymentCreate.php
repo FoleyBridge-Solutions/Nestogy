@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Financial;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Core\Services\NavigationService;
 use App\Domains\Financial\Services\PaymentApplicationService;
-use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use Flux\Flux;
@@ -15,24 +15,39 @@ use Livewire\Component;
 class PaymentCreate extends Component
 {
     public $client_id = '';
+
     public $invoice_id = '';
+
     public $amount = '';
+
     public $currency = 'USD';
+
     public $payment_method = '';
+
     public $gateway = 'manual';
+
     public $payment_date;
+
     public $payment_reference = '';
+
     public $gateway_transaction_id = '';
+
     public $gateway_fee = '';
+
     public $notes = '';
+
     public $auto_apply = false;
 
     public $invoices = [];
-    
+
     public $allocations = [];
+
     public $selectedInvoices = [];
+
     public $allocationMode = 'manual';
+
     public $totalAllocated = 0;
+
     public $remainingAmount = 0;
 
     protected function rules()
@@ -58,32 +73,32 @@ class PaymentCreate extends Component
     public function validateAllocations()
     {
         $hasAllocations = false;
-        
+
         foreach ($this->allocations as $invoiceId => $amount) {
             $allocatedAmount = floatval($amount);
-            
+
             if ($allocatedAmount <= 0) {
                 continue;
             }
-            
+
             $hasAllocations = true;
             $invoice = $this->invoices->firstWhere('id', $invoiceId);
-            
-            if (!$invoice) {
-                return "Invalid invoice selected.";
+
+            if (! $invoice) {
+                return 'Invalid invoice selected.';
             }
-            
+
             $balance = $invoice->getBalance();
-            
+
             if ($allocatedAmount > $balance) {
-                return "Amount allocated to invoice {$invoice->getFullNumber()} exceeds its balance of \$" . number_format($balance, 2);
+                return "Amount allocated to invoice {$invoice->getFullNumber()} exceeds its balance of \$".number_format($balance, 2);
             }
         }
-        
+
         if ($this->totalAllocated > $this->amount) {
-            return "Total allocation (\$" . number_format($this->totalAllocated, 2) . ") exceeds payment amount (\$" . number_format($this->amount, 2) . ")";
+            return 'Total allocation ($'.number_format($this->totalAllocated, 2).') exceeds payment amount ($'.number_format($this->amount, 2).')';
         }
-        
+
         return null;
     }
 
@@ -174,7 +189,7 @@ class PaymentCreate extends Component
                     }
                 ])
                 ->get()
-                ->filter(function($invoice) {
+                ->filter(function ($invoice) {
                     return $invoice->getBalance() > 0;
                 })
                 ->sortBy('due_date')
@@ -186,8 +201,9 @@ class PaymentCreate extends Component
 
     public function payAllInvoices()
     {
-        if (!$this->amount || $this->amount <= 0) {
+        if (! $this->amount || $this->amount <= 0) {
             Flux::toast('Please enter a payment amount first.', variant: 'warning');
+
             return;
         }
 
@@ -198,8 +214,9 @@ class PaymentCreate extends Component
 
     public function payOldestFirst()
     {
-        if (!$this->amount || $this->amount <= 0) {
+        if (! $this->amount || $this->amount <= 0) {
             Flux::toast('Please enter a payment amount first.', variant: 'warning');
+
             return;
         }
 
@@ -251,19 +268,19 @@ class PaymentCreate extends Component
     public function getAllocationStatus($invoiceId, $balance)
     {
         $allocated = floatval($this->allocations[$invoiceId] ?? 0);
-        
+
         if ($allocated <= 0) {
             return ['color' => 'zinc', 'label' => 'Not Applied'];
         }
-        
+
         if ($allocated > $balance) {
             return ['color' => 'red', 'label' => 'Over-allocated'];
         }
-        
+
         if ($allocated >= $balance) {
             return ['color' => 'green', 'label' => 'Full Payment'];
         }
-        
+
         return ['color' => 'amber', 'label' => 'Partial Payment'];
     }
 
@@ -334,6 +351,7 @@ class PaymentCreate extends Component
         $validationError = $this->validateAllocations();
         if ($validationError) {
             Flux::toast($validationError, variant: 'danger');
+
             return;
         }
 
@@ -357,7 +375,7 @@ class PaymentCreate extends Component
         // Apply allocations if any
         if (count($this->allocations) > 0) {
             $paymentApplicationService = app(PaymentApplicationService::class);
-            
+
             foreach ($this->allocations as $invoiceId => $amount) {
                 $allocatedAmount = floatval($amount);
                 if ($allocatedAmount > 0) {
@@ -380,6 +398,7 @@ class PaymentCreate extends Component
         }
 
         Flux::toast('Payment recorded successfully.');
+
         return redirect()->route('financial.payments.show', $payment);
     }
 
@@ -396,7 +415,7 @@ class PaymentCreate extends Component
             $nextNumber = 1;
         }
 
-        return 'PAY-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+        return 'PAY-'.str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
     public function render()

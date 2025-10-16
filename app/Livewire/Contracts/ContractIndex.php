@@ -51,13 +51,7 @@ class ContractIndex extends BaseIndexComponent
                 'sortable' => false,
                 'filterable' => true,
                 'type' => 'select',
-                'options' => [
-                    'service' => 'Service',
-                    'maintenance' => 'Maintenance',
-                    'support' => 'Support',
-                    'license' => 'License',
-                    'msa' => 'MSA',
-                ],
+                'dynamic_options' => true,
                 'component' => 'contracts.cells.type',
             ],
             'contract_value' => [
@@ -84,13 +78,7 @@ class ContractIndex extends BaseIndexComponent
                 'sortable' => true,
                 'filterable' => true,
                 'type' => 'select',
-                'options' => [
-                    'draft' => 'Draft',
-                    'active' => 'Active',
-                    'expired' => 'Expired',
-                    'terminated' => 'Terminated',
-                    'pending_approval' => 'Pending Approval',
-                ],
+                'dynamic_options' => true,
                 'component' => 'contracts.cells.status',
             ],
         ];

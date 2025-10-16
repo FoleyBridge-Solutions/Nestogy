@@ -4,12 +4,13 @@ namespace App\Livewire\Manager;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\User;
-use Livewire\Component;
 use App\Traits\HasFluxToasts;
+use Livewire\Component;
 
 class TechCapacityView extends Component
 {
     use HasFluxToasts;
+
     public $technicians = [];
 
     public $viewMode = 'grid';
@@ -120,7 +121,7 @@ class TechCapacityView extends Component
     protected function calculateWorkloadScore(array $metrics): float
     {
         $score = 0;
-        
+
         $score += $metrics['total_active'] * 1;
         $score += $metrics['overdue_count'] * 3;
         $score += $metrics['critical_count'] * 2;

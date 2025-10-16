@@ -12,8 +12,8 @@ class NavigationContext
         'clients' => ['clients.*'],
         'tickets' => ['tickets.*'],
         'assets' => ['assets.*'],
-        'financial' => ['financial.*', 'billing.*', 'products.*', 'services.*', 'bundles.*'],
         'projects' => ['projects.*'],
+        'financial' => ['financial.*', 'billing.*', 'products.*', 'services.*', 'bundles.*'],
         'reports' => ['reports.*'],
         'settings' => ['settings.*', 'users.*', 'admin.*'],
         'email' => ['email.*'],
@@ -33,6 +33,10 @@ class NavigationContext
             return null;
         }
 
+        if (static::hasSelectedClient()) {
+            return 'clients';
+        }
+
         foreach (static::$domainMappings as $domain => $patterns) {
             foreach ($patterns as $pattern) {
                 if (Str::is($pattern, $route)) {
@@ -46,11 +50,23 @@ class NavigationContext
 
     protected static function shouldHideSidebar(string $route): bool
     {
-        if ($route === 'clients.index' && !static::getSelectedClient()) {
+        $alwaysHidden = [
+            'clients.create',
+            'clients.store',
+        ];
+        
+        if (in_array($route, $alwaysHidden)) {
             return true;
         }
-
-        if (in_array($route, ['clients.create', 'clients.store'])) {
+        
+        $hiddenWithoutClient = [
+            'clients.index',
+            'tickets.index',
+            'assets.index',
+            'projects.index',
+        ];
+        
+        if (in_array($route, $hiddenWithoutClient) && !static::hasSelectedClient()) {
             return true;
         }
 

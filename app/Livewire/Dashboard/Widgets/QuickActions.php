@@ -254,6 +254,7 @@ class QuickActions extends Component
 
         if ($customAction->open_in === 'new_tab') {
             $this->dispatch('open-url', ['url' => $url, 'target' => '_blank']);
+
             return;
         }
 

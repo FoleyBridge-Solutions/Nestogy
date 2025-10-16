@@ -2,25 +2,20 @@
 
 namespace App\Livewire\Tickets;
 
-use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Client\Models\Client;
+use App\Domains\Ticket\Models\Ticket;
+use App\Livewire\BaseIndexComponent;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
-use Livewire\WithPagination;
 
-class TicketIndex extends Component
+class TicketIndex extends BaseIndexComponent
 {
-    use WithPagination;
-
     protected $casts = [
         'selectedStatuses' => 'array',
         'selectedPriorities' => 'array',
         'selectedAssignees' => 'array',
         'selectedClients' => 'array',
     ];
-
-    public $search = '';
 
     public $selectedStatuses = [];
 
@@ -34,53 +29,22 @@ class TicketIndex extends Component
 
     public $dateTo = '';
 
-    public $sortField = 'created_at';
+    public $viewMode = 'cards';
 
-    public $sortDirection = 'desc';
-
-    public $perPage = 25;
-
-    public $viewMode = 'cards'; // New property for view mode
-
-    public $filter = ''; // Special filter mode
+    public $filter = '';
 
     public $selectedTickets = [];
 
-    public $selectAll = false;
-
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'selectedStatuses' => ['except' => []],
-        'selectedPriorities' => ['except' => []],
-        'selectedAssignees' => ['except' => []],
-        'selectedClients' => ['except' => []],
-        'dateFrom' => ['except' => ''],
-        'dateTo' => ['except' => ''],
-        'sortField' => ['except' => 'created_at'],
-        'sortDirection' => ['except' => 'desc'],
-        'perPage' => ['except' => 25],
-        'viewMode' => ['except' => 'cards'],
-        'filter' => ['except' => ''],
-    ];
-
     public function mount()
     {
-        // Get client from session if available
-        $selectedClient = app(\App\Domains\Core\Services\NavigationService::class)->getSelectedClient();
-        if ($selectedClient) {
-            // Extract the ID if it's an object, otherwise use the value directly
-            $this->selectedClients = [is_object($selectedClient) ? $selectedClient->id : $selectedClient];
-        }
+        parent::mount();
 
-        // Load saved view mode preference from session
         $this->viewMode = session('ticket_view_mode', 'cards');
 
-        // Handle special filter parameter from route
         if (request()->has('filter')) {
             $this->filter = request()->get('filter');
         }
 
-        // Initialize with active statuses selected by default (unless overridden by filter)
         if (! $this->filter) {
             $this->selectedStatuses = $this->selectedStatuses ?: ['open', 'in_progress', 'waiting', 'on_hold'];
             $this->selectedPriorities = $this->selectedPriorities ?: [];
@@ -89,42 +53,66 @@ class TicketIndex extends Component
         }
     }
 
-    public function updatingSearch()
+    protected function getDefaultSort(): array
     {
-        $this->resetPage();
+        return [
+            'field' => 'created_at',
+            'direction' => 'desc',
+        ];
     }
 
-    public function updatingStatus()
+    protected function getSearchFields(): array
     {
-        $this->resetPage();
+        return [
+            'subject',
+            'details',
+        ];
     }
 
-    public function updatingPriority()
+    protected function getQueryStringProperties(): array
     {
-        $this->resetPage();
+        return [
+            'search' => ['except' => ''],
+            'selectedStatuses' => ['except' => []],
+            'selectedPriorities' => ['except' => []],
+            'selectedAssignees' => ['except' => []],
+            'selectedClients' => ['except' => []],
+            'dateFrom' => ['except' => ''],
+            'dateTo' => ['except' => ''],
+            'sortField' => ['except' => 'created_at'],
+            'sortDirection' => ['except' => 'desc'],
+            'perPage' => ['except' => 25],
+            'viewMode' => ['except' => 'cards'],
+            'filter' => ['except' => ''],
+        ];
     }
 
-    public function updatingClientId()
+    protected function getBaseQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $this->resetPage();
+        return Ticket::with(['client', 'assignedTo', 'requester']);
     }
 
-    public function sortBy($field)
+    protected function applySearch($query)
     {
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortField = $field;
-            $this->sortDirection = 'asc';
+        if (! $this->search) {
+            return $query;
         }
+
+        return $query->where(function ($q) {
+            $q->whereRaw('CAST(number AS TEXT) LIKE ?', ['%'.$this->search.'%'])
+                ->orWhere('subject', 'like', '%'.$this->search.'%')
+                ->orWhere('details', 'like', '%'.$this->search.'%');
+        });
     }
 
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selectedTickets = $this->getTickets()->pluck('id')->toArray();
+            $this->selectedTickets = $this->getItems()->pluck('id')->toArray();
+            $this->selected = $this->selectedTickets;
         } else {
             $this->selectedTickets = [];
+            $this->selected = [];
         }
     }
 
@@ -168,11 +156,9 @@ class TicketIndex extends Component
         }
     }
 
-    public function getTickets()
+    protected function applyCustomFilters($query)
     {
         $user = Auth::user();
-        $query = Ticket::query()
-            ->where('company_id', $user->company_id);
 
         // Apply special filters
         switch ($this->filter) {
@@ -245,54 +231,49 @@ class TicketIndex extends Component
                 break;
         }
 
-        // Apply standard filters
-        $query->when(! empty($this->selectedStatuses), function ($query) {
-            // Filter by selected statuses
+        if (! empty($this->selectedStatuses)) {
             $query->whereIn('status', $this->selectedStatuses);
-        })
-            ->when(empty($this->selectedStatuses) && ! $this->filter, function ($query) {
-                // This shouldn't happen since we initialize with active statuses, but just in case
-                $query->whereIn('status', Ticket::ACTIVE_STATUSES);
-            })
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->whereRaw("CAST(number AS TEXT) LIKE ?", ['%'.$this->search.'%'])
-                        ->orWhere('subject', 'like', '%'.$this->search.'%')
-                        ->orWhere('details', 'like', '%'.$this->search.'%');
-                });
-            })
-            ->when(! empty($this->selectedPriorities), function ($query) {
-                $query->whereIn('priority', $this->selectedPriorities);
-            })
-            ->when(! empty($this->selectedAssignees), function ($query) {
-                $query->whereIn('assigned_to', $this->selectedAssignees);
-            })
-            ->when(! empty($this->selectedClients), function ($query) {
-                $query->whereIn('client_id', $this->selectedClients);
-            })
-            ->when($this->dateFrom, function ($query) {
-                $query->whereDate('created_at', '>=', $this->dateFrom);
-            })
-            ->when($this->dateTo, function ($query) {
-                $query->whereDate('created_at', '<=', $this->dateTo);
-            })
-            ->with(['client', 'assignedTo', 'requester']);
-
-        // Special sorting for certain filters
-        if ($this->filter === 'sla_violation' || $this->filter === 'sla_warning') {
-            $query->orderBy('priority', 'desc')->orderBy('created_at', 'asc');
-        } elseif ($this->filter === 'due_today') {
-            $query->orderBy('due_date', 'asc')->orderBy('priority', 'desc');
-        } else {
-            $query->orderBy($this->sortField, $this->sortDirection);
+        } elseif (! $this->filter) {
+            $query->whereIn('status', Ticket::ACTIVE_STATUSES);
         }
 
-        return $query->paginate($this->perPage);
+        if (! empty($this->selectedPriorities)) {
+            $query->whereIn('priority', $this->selectedPriorities);
+        }
+
+        if (! empty($this->selectedAssignees)) {
+            $query->whereIn('assigned_to', $this->selectedAssignees);
+        }
+
+        if (! empty($this->selectedClients)) {
+            $query->whereIn('client_id', $this->selectedClients);
+        }
+
+        if ($this->dateFrom) {
+            $query->whereDate('created_at', '>=', $this->dateFrom);
+        }
+
+        if ($this->dateTo) {
+            $query->whereDate('created_at', '<=', $this->dateTo);
+        }
+
+        return $query;
+    }
+
+    protected function applySorting($query)
+    {
+        if ($this->filter === 'sla_violation' || $this->filter === 'sla_warning') {
+            return $query->orderBy('priority', 'desc')->orderBy('created_at', 'asc');
+        } elseif ($this->filter === 'due_today') {
+            return $query->orderBy('due_date', 'asc')->orderBy('priority', 'desc');
+        }
+
+        return parent::applySorting($query);
     }
 
     public function render()
     {
-        $tickets = $this->getTickets();
+        $tickets = $this->getItems();
 
         $clients = Client::where('company_id', Auth::user()->company_id)
             ->whereNull('deleted_at')

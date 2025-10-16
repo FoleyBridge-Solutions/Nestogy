@@ -9,7 +9,7 @@ trait HandlesComments
         if (empty($this->newComment)) {
             return;
         }
-        
+
         $comment = [
             'id' => uniqid(),
             'section' => $section,
@@ -18,14 +18,14 @@ trait HandlesComments
             'created_at' => now()->toISOString(),
             'resolved' => false,
         ];
-        
+
         array_push($this->comments, $comment);
         $this->newComment = '';
         $this->hasChanges = true;
-        
+
         session()->flash('success', 'Comment added.');
     }
-    
+
     public function resolveComment($commentId)
     {
         foreach ($this->comments as &$comment) {
@@ -37,15 +37,15 @@ trait HandlesComments
                 break;
             }
         }
-        
+
         session()->flash('success', 'Comment resolved.');
     }
-    
+
     public function deleteComment($commentId)
     {
-        $this->comments = array_filter($this->comments, fn($c) => $c['id'] !== $commentId);
+        $this->comments = array_filter($this->comments, fn ($c) => $c['id'] !== $commentId);
         $this->hasChanges = true;
-        
+
         session()->flash('success', 'Comment deleted.');
     }
 }

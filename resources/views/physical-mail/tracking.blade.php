@@ -37,7 +37,7 @@ $pageSubtitle = 'Mail items with tracking will appear here once sent';
                 @if(!isset($selectedClient) || !$selectedClient)
                     <flux:select name="client">
                         <flux:select.option value="">All Clients</flux:select.option>
-                        @foreach(\App\Models\Client::orderBy('name')->get() as $client)
+                        @foreach(\App\Domains\Client\Models\Client::orderBy('name')->get() as $client)
                             <flux:select.option value="{{ $client->id }}">{{ $client->name }}</flux:select.option>
                         @endforeach
                     </flux:select>

@@ -248,7 +248,7 @@ class User extends Authenticatable
      */
     public function favoriteClients(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\Client::class, 'user_favorite_clients', 'user_id', 'client_id')
+        return $this->belongsToMany(\App\Domains\Client\Models\Client::class, 'user_favorite_clients', 'user_id', 'client_id')
             ->wherePivot('user_id', $this->id)
             ->where('clients.status', 'active')
             ->withTimestamps()

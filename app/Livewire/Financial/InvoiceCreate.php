@@ -2,22 +2,21 @@
 
 namespace App\Livewire\Financial;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Core\Services\NavigationService;
-use App\Domains\Financial\Services\InvoiceService;
 use App\Livewire\Concerns\WithAuthenticatedUser;
 use App\Models\Category;
-use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Product;
 use Flux\Flux;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\On;
 use Livewire\Component;
 
 class InvoiceCreate extends Component
 {
     use WithAuthenticatedUser;
+
     public $client_id = '';
 
     public $category_id = '';
@@ -277,12 +276,14 @@ class InvoiceCreate extends Component
 
         if (! $product) {
             Flux::toast('Product not found', variant: 'danger');
+
             return;
         }
 
         // Validate product category has invoice type
         if (! $product->category || ! $product->category->hasType(\App\Models\Category::TYPE_INVOICE)) {
             Flux::toast('This product cannot be added to invoices. Its category does not support invoicing.', variant: 'danger');
+
             return;
         }
 
@@ -321,9 +322,9 @@ class InvoiceCreate extends Component
         try {
             // Enable query logging to debug
             DB::connection()->enableQueryLog();
-            
+
             DB::beginTransaction();
-            
+
             // Step 1: Create invoice
             try {
                 $invoice = Invoice::create([
@@ -342,29 +343,30 @@ class InvoiceCreate extends Component
                     'amount' => 0,
                     'is_recurring' => false,
                 ]);
-                
+
                 // Check if transaction is still good
                 try {
                     DB::select('SELECT 1');
                 } catch (\Exception $e) {
-                    throw new \Exception('Transaction aborted after invoice creation: ' . $e->getMessage());
+                    throw new \Exception('Transaction aborted after invoice creation: '.$e->getMessage());
                 }
-                
+
             } catch (\Exception $e) {
                 DB::rollBack();
                 $errorMsg = $e->getMessage();
                 if ($e->getPrevious()) {
-                    $errorMsg .= ' | Cause: ' . $e->getPrevious()->getMessage();
+                    $errorMsg .= ' | Cause: '.$e->getPrevious()->getMessage();
                 }
-                
+
                 // Log the queries that ran
                 $queries = DB::getQueryLog();
                 \Log::error('Invoice creation failed', [
                     'error' => $errorMsg,
                     'queries' => $queries,
                 ]);
-                
-                Flux::toast('Failed creating invoice record: ' . $errorMsg, variant: 'danger');
+
+                Flux::toast('Failed creating invoice record: '.$errorMsg, variant: 'danger');
+
                 return;
             }
 
@@ -373,7 +375,8 @@ class InvoiceCreate extends Component
                 $invoice->load('client');
             } catch (\Exception $e) {
                 DB::rollBack();
-                Flux::toast('Failed loading client: ' . $e->getMessage(), variant: 'danger');
+                Flux::toast('Failed loading client: '.$e->getMessage(), variant: 'danger');
+
                 return;
             }
 
@@ -397,7 +400,8 @@ class InvoiceCreate extends Component
                 }
             } catch (\Exception $e) {
                 DB::rollBack();
-                Flux::toast('Failed creating invoice items: ' . $e->getMessage(), variant: 'danger');
+                Flux::toast('Failed creating invoice items: '.$e->getMessage(), variant: 'danger');
+
                 return;
             }
 
@@ -409,7 +413,7 @@ class InvoiceCreate extends Component
                     $item->calculateAndSaveTotals();
                 }
             } catch (\Exception $e) {
-                Flux::toast('Invoice created but tax calculation failed: ' . $e->getMessage(), variant: 'warning');
+                Flux::toast('Invoice created but tax calculation failed: '.$e->getMessage(), variant: 'warning');
             }
 
             $message = $status === 'Draft'
@@ -422,7 +426,7 @@ class InvoiceCreate extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Flux::toast('Unexpected error: ' . $e->getMessage(), variant: 'danger');
+            Flux::toast('Unexpected error: '.$e->getMessage(), variant: 'danger');
         }
     }
 

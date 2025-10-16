@@ -139,7 +139,7 @@ class ClientCreditIndex extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selected = $this->credits->pluck('id')->map(fn($id) => (string) $id)->toArray();
+            $this->selected = $this->credits->pluck('id')->map(fn ($id) => (string) $id)->toArray();
         } else {
             $this->selected = [];
         }
@@ -148,7 +148,7 @@ class ClientCreditIndex extends Component
     public function bulkVoid()
     {
         $creditService = app(\App\Domains\Financial\Services\ClientCreditService::class);
-        
+
         $count = 0;
         foreach (ClientCredit::whereIn('id', $this->selected)
             ->where('company_id', Auth::user()->company_id)
@@ -160,7 +160,7 @@ class ClientCreditIndex extends Component
 
         $this->selected = [];
         $this->selectAll = false;
-        
+
         Flux::toast("{$count} credit(s) voided successfully.", variant: 'warning');
         $this->dispatch('credit-voided');
     }

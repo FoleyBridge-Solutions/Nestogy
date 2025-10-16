@@ -2,9 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Client\Services\ClientFavoriteService;
 use App\Domains\Core\Services\NavigationService;
-use App\Domains\Client\Models\Client;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
@@ -32,10 +32,10 @@ class ClientSwitcher extends Component
      */
     protected function getUser()
     {
-        if (!isset($this->user) || !$this->user) {
+        if (! isset($this->user) || ! $this->user) {
             $this->user = Auth::user();
         }
-        
+
         return $this->user;
     }
 
@@ -44,10 +44,10 @@ class ClientSwitcher extends Component
      */
     protected function getFavoriteService()
     {
-        if (!isset($this->favoriteService)) {
+        if (! isset($this->favoriteService)) {
             $this->favoriteService = app(ClientFavoriteService::class);
         }
-        
+
         return $this->favoriteService;
     }
 
@@ -223,7 +223,6 @@ class ClientSwitcher extends Component
 
         // Mark as accessed for recent tracking
         $this->getFavoriteService()->markAsAccessed($client);
-        NavigationService::addToRecentClients($client->id);
 
         // Clear search
         $this->reset('searchQuery', 'selectedIndex');
@@ -428,10 +427,10 @@ class ClientSwitcher extends Component
         }
 
         $client = Client::find($clientId);
-        $isFavorite = $client 
+        $isFavorite = $client
             ? $this->getFavoriteService()->isFavorite($this->getUser(), $client)
             : false;
-        
+
         $favoriteCache[$cacheKey] = $isFavorite;
 
         return $isFavorite;

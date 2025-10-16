@@ -3,18 +3,21 @@
 namespace App\Domains\Core\Services\Navigation;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 class SidebarBuilder
 {
     protected string $context;
     protected $user;
     protected $selectedClient;
+    protected string $currentRoute;
 
     public function __construct(string $context)
     {
         $this->context = $context;
         $this->user = Auth::user();
         $this->selectedClient = NavigationContext::getSelectedClient();
+        $this->currentRoute = Route::currentRouteName() ?? '';
     }
 
     public function build(): array
@@ -49,63 +52,38 @@ class SidebarBuilder
             'title' => 'Ticket Management',
             'icon' => 'ticket',
             'sections' => [
-                [
-                    'type' => 'primary',
-                    'items' => [
-                        [
-                            'name' => 'Overview',
-                            'route' => 'tickets.index',
-                            'icon' => 'home',
-                            'key' => 'overview',
-                        ],
-                    ],
-                ],
-                [
-                    'type' => 'section',
-                    'title' => 'MY WORK',
-                    'expandable' => false,
-                    'items' => [
-                        [
-                            'name' => 'My Tickets',
-                            'route' => 'tickets.index',
-                            'icon' => 'user',
-                            'key' => 'my-tickets',
-                            'params' => ['filter' => 'my'],
-                        ],
-                        [
-                            'name' => 'Active Timers',
-                            'route' => 'tickets.active-timers',
-                            'icon' => 'clock',
-                            'key' => 'active-timers',
-                            'badge' => $badges['active_timers'] ?? null,
-                            'badge_type' => 'success',
-                        ],
-                    ],
-                ],
-                [
-                    'type' => 'section',
-                    'title' => 'CRITICAL ITEMS',
-                    'expandable' => false,
-                    'items' => [
-                        [
-                            'name' => 'SLA Violations',
-                            'route' => 'tickets.sla-violations',
-                            'icon' => 'exclamation-triangle',
-                            'key' => 'sla-violations',
-                            'badge' => $badges['sla_violations'] ?? null,
-                            'badge_type' => 'danger',
-                        ],
-                        [
-                            'name' => 'Unassigned Tickets',
-                            'route' => 'tickets.unassigned',
-                            'icon' => 'user-minus',
-                            'key' => 'unassigned',
-                            'badge' => $badges['unassigned'] ?? null,
-                            'badge_type' => 'warning',
-                        ],
-                    ],
-                ],
+                $this->buildRegistrySection('tickets', 'primary', null),
+                $this->buildTicketsSectionWithBadges('my-work', 'MY WORK', $badges),
+                $this->buildTicketsSectionWithBadges('critical', 'CRITICAL ITEMS', $badges),
             ],
+        ];
+    }
+
+    protected function buildTicketsSectionWithBadges(string $section, string $title, array $badges): array
+    {
+        $items = $this->getFilteredItems('tickets', $section);
+        
+        foreach ($items as &$item) {
+            if ($item['key'] === 'active-timers' && isset($badges['active_timers'])) {
+                $item['badge'] = $badges['active_timers'];
+                $item['badge_type'] = 'success';
+            } elseif ($item['key'] === 'sla-violations' && isset($badges['sla_violations'])) {
+                $item['badge'] = $badges['sla_violations'];
+                $item['badge_type'] = 'danger';
+            } elseif ($item['key'] === 'unassigned' && isset($badges['unassigned'])) {
+                $item['badge'] = $badges['unassigned'];
+                $item['badge_type'] = 'warning';
+            }
+        }
+
+        $isActive = $this->isSectionActive($items);
+
+        return [
+            'type' => 'section',
+            'title' => $title,
+            'expandable' => false,
+            'default_expanded' => $isActive,
+            'items' => $items,
         ];
     }
 
@@ -116,14 +94,16 @@ class SidebarBuilder
         }
 
         return [
-            'title' => 'Client Management',
-            'icon' => 'user-group',
+            'title' => $this->selectedClient->name,
+            'subtitle' => 'Client Workspace',
+            'icon' => 'building-office',
             'sections' => [
-                $this->buildPrimarySection('clients', 'primary'),
-                $this->buildRegistrySection('clients', 'communication', 'COMMUNICATION'),
-                $this->buildRegistrySection('clients', 'service', 'SERVICE MANAGEMENT'),
-                $this->buildClientInfrastructureSection(),
-                $this->buildClientBillingSection(),
+                $this->buildRegistrySection('clients', 'client-info', 'CLIENT INFORMATION'),
+                $this->buildRegistrySection('clients', 'tickets', 'SUPPORT TICKETS'),
+                $this->buildRegistrySection('clients', 'assets', 'ASSETS'),
+                $this->buildRegistrySection('clients', 'projects', 'PROJECTS'),
+                $this->buildRegistrySection('clients', 'infrastructure', 'IT INFRASTRUCTURE'),
+                $this->buildRegistrySection('clients', 'billing', 'BILLING & FINANCE'),
             ],
         ];
     }
@@ -132,9 +112,9 @@ class SidebarBuilder
     {
         return [
             'title' => 'Asset Management',
-            'icon' => 'computer-desktop',
+            'icon' => 'server',
             'sections' => [
-                $this->buildPrimarySection('assets', 'primary'),
+                $this->buildRegistrySection('assets', 'primary', null),
             ],
         ];
     }
@@ -143,9 +123,10 @@ class SidebarBuilder
     {
         return [
             'title' => 'Project Management',
-            'icon' => 'folder',
+            'icon' => 'briefcase',
             'sections' => [
-                $this->buildPrimarySection('projects', 'primary'),
+                $this->buildRegistrySection('projects', 'primary', null),
+                $this->buildRegistrySection('projects', 'filters', 'FILTER BY STATUS'),
             ],
         ];
     }
@@ -217,17 +198,41 @@ class SidebarBuilder
         ];
     }
 
-    protected function buildRegistrySection(string $domain, string $section, string $title): array
+    protected function buildRegistrySection(string $domain, string $section, ?string $title): array
     {
         $items = $this->getFilteredItems($domain, $section);
+
+        if ($title === null) {
+            return [
+                'type' => 'primary',
+                'items' => $items,
+            ];
+        }
+
+        $isActive = $this->isSectionActive($items);
 
         return [
             'type' => 'section',
             'title' => $title,
             'expandable' => true,
-            'default_expanded' => true,
+            'default_expanded' => $isActive,
             'items' => $items,
         ];
+    }
+
+    protected function isSectionActive(array $items): bool
+    {
+        foreach ($items as $item) {
+            if ($item['route'] === $this->currentRoute) {
+                return true;
+            }
+            
+            if (str_starts_with($this->currentRoute, $item['route'] . '.')) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     protected function getFilteredItems(string $domain, string $section): array
@@ -266,77 +271,7 @@ class SidebarBuilder
         return $this->user->can($item['permission']);
     }
 
-    protected function buildClientInfrastructureSection(): array
-    {
-        return [
-            'type' => 'section',
-            'title' => 'IT INFRASTRUCTURE',
-            'expandable' => true,
-            'default_expanded' => true,
-            'items' => [
-                [
-                    'name' => 'IT Documentation',
-                    'route' => 'clients.it-documentation.client-index',
-                    'icon' => 'document-text',
-                    'key' => 'it-documentation',
-                ],
-                [
-                    'name' => 'Documents',
-                    'route' => 'clients.documents.index',
-                    'icon' => 'folder-open',
-                    'key' => 'documents',
-                ],
-                [
-                    'name' => 'Domains',
-                    'route' => 'clients.domains.index',
-                    'icon' => 'globe-alt',
-                    'key' => 'domains',
-                ],
-                [
-                    'name' => 'Credentials',
-                    'route' => 'clients.credentials.index',
-                    'icon' => 'key',
-                    'key' => 'credentials',
-                ],
-                [
-                    'name' => 'Licenses',
-                    'route' => 'clients.licenses.index',
-                    'icon' => 'identification',
-                    'key' => 'licenses',
-                ],
-            ],
-        ];
-    }
 
-    protected function buildClientBillingSection(): array
-    {
-        return [
-            'type' => 'section',
-            'title' => 'BILLING & FINANCE',
-            'expandable' => true,
-            'default_expanded' => true,
-            'items' => [
-                [
-                    'name' => 'Contracts',
-                    'route' => 'financial.contracts.index',
-                    'icon' => 'document-check',
-                    'key' => 'contracts',
-                ],
-                [
-                    'name' => 'Quotes',
-                    'route' => 'financial.quotes.index',
-                    'icon' => 'document-currency-dollar',
-                    'key' => 'quotes',
-                ],
-                [
-                    'name' => 'Invoices',
-                    'route' => 'financial.invoices.index',
-                    'icon' => 'document-text',
-                    'key' => 'invoices',
-                ],
-            ],
-        ];
-    }
 
     protected function calculateTicketBadges(): array
     {

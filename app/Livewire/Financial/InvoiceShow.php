@@ -210,7 +210,7 @@ class InvoiceShow extends Component
 
         try {
             $invoiceService = app(InvoiceService::class);
-            
+
             $overrides = [
                 'date' => now()->format('Y-m-d'),
                 'due_date' => now()->addDays(30)->format('Y-m-d'),

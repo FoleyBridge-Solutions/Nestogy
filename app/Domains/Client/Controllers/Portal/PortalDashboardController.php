@@ -58,7 +58,7 @@ class PortalDashboardController extends Controller
     /**
      * Get dashboard metrics
      *
-     * @param  \App\Models\ClientPortalUser  $user
+     * @param  \App\Domains\Client\Models\ClientPortalUser  $user
      */
     protected function getDashboardMetrics(Client $client, $user): array
     {
@@ -122,7 +122,7 @@ class PortalDashboardController extends Controller
     /**
      * Get ticket summary
      *
-     * @param  \App\Models\ClientPortalUser  $user
+     * @param  \App\Domains\Client\Models\ClientPortalUser  $user
      */
     protected function getTicketSummary(Client $client, $user): array
     {
@@ -168,7 +168,7 @@ class PortalDashboardController extends Controller
     /**
      * Get invoice summary
      *
-     * @param  \App\Models\ClientPortalUser  $user
+     * @param  \App\Domains\Client\Models\ClientPortalUser  $user
      */
     protected function getInvoiceSummary(Client $client, $user): array
     {
@@ -211,7 +211,7 @@ class PortalDashboardController extends Controller
     /**
      * Get asset overview
      *
-     * @param  \App\Models\ClientPortalUser  $user
+     * @param  \App\Domains\Client\Models\ClientPortalUser  $user
      */
     protected function getAssetOverview(Client $client, $user): array
     {
@@ -297,7 +297,7 @@ class PortalDashboardController extends Controller
     /**
      * Get project summary
      *
-     * @param  \App\Models\ClientPortalUser  $user
+     * @param  \App\Domains\Client\Models\ClientPortalUser  $user
      */
     protected function getProjectSummary(Client $client, $user): array
     {
@@ -329,7 +329,7 @@ class PortalDashboardController extends Controller
     /**
      * Get contract summary
      *
-     * @param  \App\Models\ClientPortalUser  $user
+     * @param  \App\Domains\Client\Models\ClientPortalUser  $user
      */
     protected function getContractSummary(Client $client, $user): array
     {
@@ -380,7 +380,7 @@ class PortalDashboardController extends Controller
     /**
      * Get recent activity
      *
-     * @param  \App\Models\ClientPortalUser  $user
+     * @param  \App\Domains\Client\Models\ClientPortalUser  $user
      * @return \Illuminate\Support\Collection
      */
     protected function getRecentActivity(Client $client, $user)

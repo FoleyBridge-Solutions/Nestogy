@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Domains\Financial\Services\VoIPTaxService;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -165,14 +164,7 @@ class InvoiceItem extends Model
         return $this->hasMany(TaxExemptionUsage::class, 'invoice_item_id');
     }
 
-    /**
-     * Calculate VoIP taxes for this item.
-     */
-    public function calculateVoIPTaxes(?array $serviceAddress = null): array
-    {
-        if (! $this->service_type) {
-            return [];
-        }
+
 
         $companyId = $this->invoice?->company_id ?? $this->quote?->company_id ?? 1;
         $clientId = $this->invoice?->client_id ?? $this->quote?->client_id;

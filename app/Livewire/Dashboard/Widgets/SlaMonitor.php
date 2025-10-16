@@ -37,7 +37,7 @@ class SlaMonitor extends Component
 
         $slaStatus = $this->checkActiveSlaStatus($activeTickets);
         $metByPriority = $this->initializeMetByPriority();
-        
+
         $resolvedInPeriod = $this->getResolvedTickets($companyId, $startDate);
         $allRelevantTickets = $activeTickets->merge($resolvedInPeriod);
 
@@ -112,7 +112,7 @@ class SlaMonitor extends Component
         $warnings = [];
 
         foreach ($activeTickets as $ticket) {
-            if (!$ticket->priorityQueue || !$ticket->priorityQueue->sla_deadline) {
+            if (! $ticket->priorityQueue || ! $ticket->priorityQueue->sla_deadline) {
                 continue;
             }
 
@@ -159,7 +159,7 @@ class SlaMonitor extends Component
         foreach ($allRelevantTickets as $ticket) {
             $priority = strtolower($ticket->priority ?? 'medium');
 
-            if (!isset($metByPriority[$priority])) {
+            if (! isset($metByPriority[$priority])) {
                 continue;
             }
 
@@ -207,7 +207,7 @@ class SlaMonitor extends Component
 
         foreach (['critical', 'high', 'medium', 'low'] as $priority) {
             $priorityTickets = $allRelevantTickets->where('priority', $priority);
-            
+
             if ($priorityTickets->count() > 0) {
                 $avgResponseTimes[$priority] = $this->calculateAverageForPriority($priorityTickets);
             } else {

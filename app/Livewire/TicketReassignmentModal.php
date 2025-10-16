@@ -4,12 +4,13 @@ namespace App\Livewire;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\User;
-use Livewire\Component;
 use App\Traits\HasFluxToasts;
+use Livewire\Component;
 
 class TicketReassignmentModal extends Component
 {
     use HasFluxToasts;
+
     public $ticketId;
 
     public $ticket;
@@ -37,6 +38,7 @@ class TicketReassignmentModal extends Component
 
         if (! $this->ticket) {
             $this->dispatch('error', message: 'Ticket not found');
+
             return;
         }
 
@@ -97,6 +99,7 @@ class TicketReassignmentModal extends Component
 
         if ($this->selectedTechnicianId == $this->ticket->assigned_to) {
             $this->dispatch('error', message: 'Ticket is already assigned to this technician');
+
             return;
         }
 
@@ -104,6 +107,7 @@ class TicketReassignmentModal extends Component
 
         if (! $newTechnician) {
             $this->dispatch('error', message: 'Selected technician not found');
+
             return;
         }
 
@@ -127,7 +131,7 @@ class TicketReassignmentModal extends Component
                 'Ticket reassigned from %s to %s%s',
                 $oldTechnician?->name ?? 'Unassigned',
                 $newTechnician->name,
-                $this->reason ? '. Reason: ' . $this->reason : ''
+                $this->reason ? '. Reason: '.$this->reason : ''
             ),
             'visibility' => 'internal',
             'source' => 'system',

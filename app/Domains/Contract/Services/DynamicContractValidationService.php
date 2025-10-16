@@ -309,7 +309,7 @@ class DynamicContractValidationService
                 return;
             }
 
-            $client = \App\Models\Client::where('company_id', $typeDefinition->company_id)
+            $client = \App\Domains\Client\Models\Client::where('company_id', $typeDefinition->company_id)
                 ->where('id', $value)
                 ->first();
 

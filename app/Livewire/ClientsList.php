@@ -2,8 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Domains\Core\Services\NavigationService;
 use App\Domains\Client\Models\Client;
+use App\Domains\Core\Services\NavigationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;

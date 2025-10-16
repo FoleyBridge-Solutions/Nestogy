@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
-use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Client\Models\Client;
+use App\Domains\Ticket\Models\Ticket;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
@@ -166,7 +166,7 @@ class ActivityFeed extends Component
         $activities = $activities->merge($payments->map(function ($payment) {
             $firstInvoice = $payment->applications->first()?->applicable;
             $invoiceCount = $payment->applications->count();
-            
+
             return [
                 'id' => 'payment_'.$payment->id,
                 'type' => 'financial',

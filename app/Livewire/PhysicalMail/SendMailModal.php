@@ -2,10 +2,10 @@
 
 namespace App\Livewire\PhysicalMail;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\PhysicalMail\Jobs\SendLetterJob;
 use App\Domains\PhysicalMail\Models\PhysicalMailTemplate;
 use App\Domains\PhysicalMail\Services\PhysicalMailTemplateBuilder;
-use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use Livewire\Component;
 

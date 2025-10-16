@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use App\Domains\Core\Services\ConfigurationValidationService;
 use App\Domains\Core\Services\NavigationService;
-use App\Domains\Financial\Services\VoIPTaxService;
 use App\Domains\Product\Services\VoIPTieredPricingService;
 use App\Domains\Product\Services\VoIPUsageService;
 use App\Http\ViewComposers\ClientViewComposer;
@@ -37,15 +36,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Register VoIP services with proper dependency injection
-        $this->app->bind(VoIPTaxService::class, function ($app) {
-            $service = new VoIPTaxService;
-            if (Auth::check() && Auth::user()->company_id) {
-                $service->setCompanyId(Auth::user()->company_id);
-            }
-
-            return $service;
-        });
-
         $this->app->bind(VoIPUsageService::class, function ($app) {
             return new VoIPUsageService;
         });

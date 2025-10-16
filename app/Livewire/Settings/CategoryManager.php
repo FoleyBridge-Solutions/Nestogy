@@ -8,9 +8,13 @@ use Livewire\Component;
 class CategoryManager extends Component
 {
     public $typeFilter = 'all';
+
     public $search = '';
+
     public $showModal = false;
+
     public $editing = null;
+
     public $form = [
         'name' => '',
         'type' => '',
@@ -41,11 +45,11 @@ class CategoryManager extends Component
         }
 
         // Apply search
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $query->where(function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('description', 'like', '%' . $this->search . '%')
-                  ->orWhere('code', 'like', '%' . $this->search . '%');
+                $q->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('description', 'like', '%'.$this->search.'%')
+                    ->orWhere('code', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -53,15 +57,15 @@ class CategoryManager extends Component
         $allCategories = $query->ordered()->get();
 
         // Build hierarchical structure - only show root categories and their children
-        $categories = $allCategories->filter(fn($cat) => is_null($cat->parent_id));
+        $categories = $allCategories->filter(fn ($cat) => is_null($cat->parent_id));
 
         // Attach children to their parents
         foreach ($categories as $parent) {
-            $parent->hierarchicalChildren = $allCategories->filter(fn($cat) => $cat->parent_id === $parent->id);
+            $parent->hierarchicalChildren = $allCategories->filter(fn ($cat) => $cat->parent_id === $parent->id);
         }
         $types = Category::TYPE_LABELS;
         $parentOptions = Category::where('company_id', auth()->user()->company_id)
-            ->when($this->editing, fn($q) => $q->where('id', '!=', $this->editing))
+            ->when($this->editing, fn ($q) => $q->where('id', '!=', $this->editing))
             ->active()
             ->ordered()
             ->get();
@@ -71,7 +75,7 @@ class CategoryManager extends Component
             'types' => $types,
             'parentOptions' => $parentOptions,
         ])->layout('components.layouts.app', [
-            'sidebarContext' => 'settings'
+            'sidebarContext' => 'settings',
         ]);
     }
 
@@ -106,7 +110,7 @@ class CategoryManager extends Component
         $this->validate([
             'form.name' => 'required|string|max:255',
             'form.type' => 'required|array',
-            'form.type.*' => 'required|in:' . implode(',', array_keys(Category::TYPE_LABELS)),
+            'form.type.*' => 'required|in:'.implode(',', array_keys(Category::TYPE_LABELS)),
             'form.parent_id' => 'nullable|exists:categories,id',
             'form.description' => 'nullable|string',
             'form.color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
@@ -147,7 +151,7 @@ class CategoryManager extends Component
     public function toggleActive($id)
     {
         $category = Category::where('company_id', auth()->user()->company_id)->findOrFail($id);
-        $category->update(['is_active' => !$category->is_active]);
+        $category->update(['is_active' => ! $category->is_active]);
     }
 
     public function resetForm()

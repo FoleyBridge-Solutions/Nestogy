@@ -4,13 +4,13 @@ namespace App\Livewire\Manager;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Livewire\Component;
 use App\Traits\HasFluxToasts;
+use Livewire\Component;
 
 class TeamDashboard extends Component
 {
     use HasFluxToasts;
+
     public $teamStats = [];
 
     public $activeTickets = [];

@@ -103,8 +103,6 @@ class TaxProfile extends Model
     /**
      * Calculation engine constants
      */
-    const ENGINE_VOIP = 'VoIPTaxService';
-
     const ENGINE_SERVICE_TAX = 'ServiceTaxCalculator';
 
     const ENGINE_CUSTOM = 'custom';

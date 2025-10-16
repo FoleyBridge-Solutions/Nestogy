@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Tickets;
 
-use App\Models\Asset;
 use App\Domains\Client\Models\Client;
+use App\Models\Asset;
 use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -12,12 +12,19 @@ use Livewire\Component;
 class TicketCreate extends Component
 {
     public $client_id;
+
     public $contact_ids = [];
+
     public $subject = '';
+
     public $priority = 'Medium';
+
     public $assigned_to;
+
     public $asset_id;
+
     public $details = '';
+
     public $status = 'new';
 
     public function mount()
@@ -67,7 +74,7 @@ class TicketCreate extends Component
 
             $ticket = \App\Domains\Ticket\Models\Ticket::create([
                 'client_id' => $this->client_id,
-                'contact_id' => !empty($this->contact_ids) ? $this->contact_ids[0] : null,
+                'contact_id' => ! empty($this->contact_ids) ? $this->contact_ids[0] : null,
                 'subject' => $this->subject,
                 'priority' => $this->priority,
                 'assigned_to' => $this->assigned_to,
@@ -79,7 +86,7 @@ class TicketCreate extends Component
             ]);
 
             session()->flash('success', 'Ticket created successfully.');
-            
+
             return redirect()->route('tickets.show', $ticket->id);
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
@@ -89,8 +96,9 @@ class TicketCreate extends Component
                 'user_id' => Auth::id(),
                 'client_id' => $this->client_id,
             ]);
-            
+
             session()->flash('error', 'Failed to create ticket. Please try again or contact support.');
+
             return null;
         }
     }

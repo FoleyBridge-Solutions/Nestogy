@@ -13,7 +13,7 @@ class ClientPortalSessionFactory extends Factory
     {
         return [
             'company_id' => \App\Models\Company::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'session_token' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(64)),
             'refresh_token' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(64)),
             'device_id' => $this->faker->optional()->uuid,

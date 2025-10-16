@@ -3,12 +3,13 @@
 namespace App\Livewire\Settings;
 
 use App\Models\NotificationPreference;
-use Livewire\Component;
 use App\Traits\HasFluxToasts;
+use Livewire\Component;
 
 class NotificationPreferences extends Component
 {
     use HasFluxToasts;
+
     public $preferences;
 
     public $ticket_created = true;

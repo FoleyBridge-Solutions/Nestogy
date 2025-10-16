@@ -48,7 +48,7 @@ class MailQueueFactory extends Factory
             'click_count' => $this->faker->numberBetween(0, 5),
             'clicks' => $this->faker->optional()->passthrough(json_encode([])),
             'category' => $this->faker->optional()->word,
-            'related_type' => $this->faker->optional()->randomElement([\App\Models\Client::class, \App\Models\Invoice::class]),
+            'related_type' => $this->faker->optional()->randomElement([\App\Domains\Client\Models\Client::class, \App\Models\Invoice::class]),
             'tags' => $this->faker->optional()->passthrough(json_encode([])),
             'metadata' => json_encode([]),
         ];

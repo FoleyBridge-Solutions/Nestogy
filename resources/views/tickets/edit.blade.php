@@ -45,7 +45,7 @@ $pageActions = [
                             <flux:label for="client_id" required>Client</flux:label>
                             <flux:select name="client_id" id="client_id" required value="{{ old('client_id', $ticket->client_id) }}">
                                 <flux:select.option value="">Select Client</flux:select.option>
-                                @foreach(\App\Models\Client::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $client)
+                                @foreach(\App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)->orderBy('name')->get() as $client)
                                     <flux:select.option value="{{ $client->id }}">
                                         {{ $client->name }}
                                     </flux:select.option>

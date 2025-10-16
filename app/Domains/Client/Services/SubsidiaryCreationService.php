@@ -392,7 +392,7 @@ class SubsidiaryCreationService extends BaseService
             'company_link_id' => $subsidiary->id,
         ];
 
-        $client = \App\Models\Client::create($clientData);
+        $client = \App\Domains\Client\Models\Client::create($clientData);
 
         // Link back to subsidiary
         $subsidiary->update(['client_record_id' => $client->id]);

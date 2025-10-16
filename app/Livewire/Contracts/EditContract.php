@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Contracts;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Services\ContractService;
-use App\Domains\Client\Models\Client;
-use Livewire\Component;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Component;
 
 class EditContract extends Component
 {
@@ -15,30 +15,44 @@ class EditContract extends Component
     private const NULLABLE_STRING_RULE = 'nullable|string';
 
     public Contract $contract;
-    
+
     // Form fields
     public $title;
+
     public $contract_type;
+
     public $client_id;
+
     public $description;
+
     public $start_date;
+
     public $end_date;
+
     public $contract_value;
+
     public $status;
+
     public $billing_model;
+
     public $currency_code;
+
     public $payment_terms;
+
     public $content;
+
     public $variables;
-    
+
     // UI state
     public $activeTab = 'basic';
+
     public $canEdit = true;
+
     public $canSave = true;
-    
+
     // Tab visibility
     public $availableTabs = [];
-    
+
     protected function rules()
     {
         return [
@@ -61,9 +75,9 @@ class EditContract extends Component
     public function mount(Contract $contract)
     {
         $this->authorize('update', $contract);
-        
+
         $this->contract = $contract;
-        
+
         // Populate form fields
         $this->title = $contract->title;
         $this->contract_type = $contract->contract_type;
@@ -78,15 +92,15 @@ class EditContract extends Component
         $this->payment_terms = $contract->payment_terms;
         $this->content = $contract->content;
         $this->variables = $contract->variables ?? [];
-        
+
         // Check if contract can be edited
         $this->canEdit = $contract->canBeEdited();
         $this->canSave = $this->canEdit;
-        
+
         // Define available tabs based on contract type and billing model
         $this->availableTabs = $this->getAvailableTabs();
     }
-    
+
     protected function getAvailableTabs()
     {
         $tabs = [
@@ -118,30 +132,30 @@ class EditContract extends Component
                 'always' => true,
             ],
         ];
-        
+
         return $tabs;
     }
 
     public function selectBillingModel($model)
     {
-        if (!$this->canEdit) {
+        if (! $this->canEdit) {
             return;
         }
-        
+
         $this->billing_model = $model;
         $this->calculateContractValue();
     }
-    
+
     public function calculateContractValue()
     {
         $this->contract->refresh();
-        
+
         switch ($this->billing_model) {
             case 'fixed':
                 // For fixed pricing, keep the manually entered value or use contract value
                 // Don't auto-calculate, let user set it
                 break;
-                
+
             case 'per_asset':
                 // Calculate based on asset assignments
                 $monthlyTotal = 0;
@@ -150,7 +164,7 @@ class EditContract extends Component
                 }
                 $this->contract_value = $monthlyTotal * 12; // Annual value
                 break;
-                
+
             case 'per_contact':
                 // Calculate based on contact assignments
                 $monthlyTotal = 0;
@@ -159,19 +173,19 @@ class EditContract extends Component
                 }
                 $this->contract_value = $monthlyTotal * 12; // Annual value
                 break;
-                
+
             case 'tiered':
             case 'hybrid':
                 // For tiered/hybrid, use the contract's built-in calculation
                 $monthlyRevenue = $this->contract->getMonthlyRecurringRevenue();
                 $this->contract_value = $this->contract->getAnnualValue();
                 break;
-                
+
             default:
                 $this->contract_value = $this->contract->contract_value;
         }
     }
-    
+
     public function updatedBillingModel()
     {
         $this->calculateContractValue();
@@ -179,38 +193,40 @@ class EditContract extends Component
 
     public function regenerateContent()
     {
-        if (!$this->canEdit || !$this->contract->template_id) {
+        if (! $this->canEdit || ! $this->contract->template_id) {
             session()->flash('error', 'Cannot regenerate content for this contract.');
+
             return;
         }
 
         try {
             $contractService = app(ContractService::class);
-            
+
             // Regenerate contract content from template
             $contractService->generateContractContent($this->contract);
-            
+
             // Reload the content
             $this->contract->refresh();
             $this->content = $this->contract->content;
             $this->variables = $this->contract->variables ?? [];
-            
+
             session()->flash('success', 'Contract content regenerated successfully!');
-            
+
         } catch (\Exception $e) {
             \Log::error('Failed to regenerate contract content', [
                 'contract_id' => $this->contract->id,
                 'error' => $e->getMessage(),
             ]);
-            
-            session()->flash('error', 'Failed to regenerate content: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to regenerate content: '.$e->getMessage());
         }
     }
 
     public function save()
     {
-        if (!$this->canEdit) {
+        if (! $this->canEdit) {
             session()->flash('error', 'This contract cannot be edited in its current state.');
+
             return;
         }
 
@@ -218,7 +234,7 @@ class EditContract extends Component
 
         try {
             $contractService = app(ContractService::class);
-            
+
             $data = [
                 'title' => $this->title,
                 'contract_type' => $this->contract_type,
@@ -238,16 +254,16 @@ class EditContract extends Component
             $contractService->updateContract($this->contract, $data);
 
             session()->flash('success', 'Contract updated successfully!');
-            
+
             return redirect()->route('financial.contracts.show', $this->contract);
-            
+
         } catch (\Exception $e) {
             \Log::error('Contract update failed', [
                 'contract_id' => $this->contract->id,
                 'error' => $e->getMessage(),
             ]);
-            
-            session()->flash('error', 'Failed to update contract: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to update contract: '.$e->getMessage());
         }
     }
 
@@ -257,18 +273,18 @@ class EditContract extends Component
             ->orderBy('name')
             ->get();
     }
-    
+
     // Listen for assignment updates
     protected $listeners = ['assignmentsUpdated' => 'handleAssignmentsUpdated'];
-    
+
     public function handleAssignmentsUpdated()
     {
         // Refresh the contract to get updated relationships
         $this->contract->refresh();
-        
+
         // Recalculate contract value
         $this->calculateContractValue();
-        
+
         // Refresh available tabs
         $this->availableTabs = $this->getAvailableTabs();
     }

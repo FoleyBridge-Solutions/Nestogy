@@ -2,15 +2,15 @@
 
 namespace App\Livewire\Billing;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Financial\Services\TimeEntryInvoiceService;
 use App\Domains\Ticket\Models\TicketTimeEntry;
-use App\Domains\Client\Models\Client;
 use App\Models\User;
+use App\Traits\HasFluxToasts;
 use Carbon\Carbon;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
-use App\Traits\HasFluxToasts;
 use Livewire\WithPagination;
 
 class TimeEntryApproval extends Component
@@ -19,14 +19,23 @@ class TimeEntryApproval extends Component
     use WithPagination;
 
     public $selectedClient = null;
+
     public $selectedTechnician = null;
+
     public $startDate = '';
+
     public $endDate = '';
+
     public $billableOnly = true;
+
     public $selectedEntries = [];
+
     public $selectAll = false;
+
     public $groupBy = 'ticket';
+
     public $showPreview = false;
+
     public $previewData = null;
 
     protected $queryString = [
@@ -118,6 +127,7 @@ class TimeEntryApproval extends Component
                 text: 'Please select time entries to approve',
                 variant: 'warning'
             );
+
             return;
         }
 
@@ -145,6 +155,7 @@ class TimeEntryApproval extends Component
                 text: 'Please select time entries to reject',
                 variant: 'warning'
             );
+
             return;
         }
 
@@ -172,6 +183,7 @@ class TimeEntryApproval extends Component
                 text: 'Please select time entries to preview',
                 variant: 'warning'
             );
+
             return;
         }
 
@@ -186,10 +198,11 @@ class TimeEntryApproval extends Component
                 text: 'All selected time entries must belong to the same client',
                 variant: 'danger'
             );
+
             return;
         }
 
-        $service = new TimeEntryInvoiceService();
+        $service = new TimeEntryInvoiceService;
         $this->previewData = $service->previewInvoice(
             $this->selectedEntries,
             $clientId,
@@ -212,6 +225,7 @@ class TimeEntryApproval extends Component
                 text: 'Please select time entries to invoice',
                 variant: 'warning'
             );
+
             return;
         }
 
@@ -227,10 +241,11 @@ class TimeEntryApproval extends Component
                     text: 'All selected time entries must belong to the same client',
                     variant: 'danger'
                 );
+
                 return;
             }
 
-            $service = new TimeEntryInvoiceService();
+            $service = new TimeEntryInvoiceService;
             $invoice = $service->generateInvoiceFromTimeEntries(
                 $this->selectedEntries,
                 $clientId,
@@ -251,7 +266,7 @@ class TimeEntryApproval extends Component
 
         } catch (\Exception $e) {
             Flux::toast(
-                text: 'Failed to generate invoice: ' . $e->getMessage(),
+                text: 'Failed to generate invoice: '.$e->getMessage(),
                 variant: 'danger'
             );
         }
@@ -260,8 +275,8 @@ class TimeEntryApproval extends Component
     public function exportTimeEntries(string $format = 'csv')
     {
         try {
-            $exportService = new \App\Domains\Financial\Services\AccountingExportService();
-            
+            $exportService = new \App\Domains\Financial\Services\AccountingExportService;
+
             $filters = [
                 'company_id' => Auth::user()->company_id,
                 'client_id' => $this->selectedClient,
@@ -285,7 +300,7 @@ class TimeEntryApproval extends Component
 
         } catch (\Exception $e) {
             Flux::toast(
-                text: 'Export failed: ' . $e->getMessage(),
+                text: 'Export failed: '.$e->getMessage(),
                 variant: 'danger'
             );
         }
@@ -310,11 +325,11 @@ class TimeEntryApproval extends Component
             'total_hours' => TicketTimeEntry::query()
                 ->where('company_id', Auth::user()->company_id)
                 ->uninvoiced()
-                ->when($this->billableOnly, fn($q) => $q->billable())
-                ->when($this->selectedClient, fn($q) => $q->whereHas('ticket', fn($q2) => $q2->where('client_id', $this->selectedClient)))
-                ->when($this->selectedTechnician, fn($q) => $q->where('user_id', $this->selectedTechnician))
-                ->when($this->startDate, fn($q) => $q->where('work_date', '>=', Carbon::parse($this->startDate)))
-                ->when($this->endDate, fn($q) => $q->where('work_date', '<=', Carbon::parse($this->endDate)))
+                ->when($this->billableOnly, fn ($q) => $q->billable())
+                ->when($this->selectedClient, fn ($q) => $q->whereHas('ticket', fn ($q2) => $q2->where('client_id', $this->selectedClient)))
+                ->when($this->selectedTechnician, fn ($q) => $q->where('user_id', $this->selectedTechnician))
+                ->when($this->startDate, fn ($q) => $q->where('work_date', '>=', Carbon::parse($this->startDate)))
+                ->when($this->endDate, fn ($q) => $q->where('work_date', '<=', Carbon::parse($this->endDate)))
                 ->sum('hours_worked'),
             'selected_count' => count($this->selectedEntries),
         ];

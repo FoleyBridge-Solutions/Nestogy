@@ -38,7 +38,7 @@
             'name' => optional(auth()->user())->name,
             'theme' => optional(optional(auth()->user())->userSetting)->theme ?? 'auto',
             'selected_client_id' => session('selected_client_id'),
-            'selected_client' => session('selected_client_id') ? optional(\App\Models\Client::where('company_id', optional(auth()->user())->company_id)->find(session('selected_client_id')))->only(['id', 'name', 'company_name', 'email']) : null
+            'selected_client' => session('selected_client_id') ? optional(\App\Domains\Client\Models\Client::where('company_id', optional(auth()->user())->company_id)->find(session('selected_client_id')))->only(['id', 'name', 'company_name', 'email']) : null
         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
     </script>
     

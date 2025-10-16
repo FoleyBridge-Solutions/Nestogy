@@ -3,13 +3,14 @@
 namespace App\Livewire;
 
 use App\Models\InAppNotification;
-use Livewire\Component;
-use Livewire\Attributes\On;
 use App\Traits\HasFluxToasts;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 class NotificationCenter extends Component
 {
     use HasFluxToasts;
+
     public $notifications = [];
 
     public $unreadCount = 0;
@@ -38,7 +39,7 @@ class NotificationCenter extends Component
     public function markAsRead($notificationId)
     {
         $notification = InAppNotification::find($notificationId);
-        
+
         if ($notification && $notification->user_id === auth()->id()) {
             $notification->markAsRead();
             $this->loadNotifications();

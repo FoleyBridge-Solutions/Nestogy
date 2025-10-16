@@ -29,7 +29,7 @@ class RecurringFactory extends Factory
             'email_invoice' => $this->faker->boolean(),
             'email_template' => $this->faker->safeEmail,
             'category_id' => \App\Models\Category::factory(),
-            'client_id' => \App\Models\Client::factory()
+            'client_id' => \App\Domains\Client\Models\Client::factory()
         ];
     }
 }

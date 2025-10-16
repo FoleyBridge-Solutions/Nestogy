@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domains\Client\Models\Client;
+
 use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

@@ -12,35 +12,55 @@ class EditProduct extends Component
     public Product $product;
 
     public $name = '';
+
     public $sku = '';
+
     public $description = '';
+
     public $short_description = '';
+
     public $type = 'product';
+
     public $category_id = '';
+
     public $unit_type = 'units';
 
     public $base_price = null;
+
     public $cost = null;
+
     public $currency_code = 'USD';
+
     public $pricing_model = 'fixed';
 
     public $billing_model = 'one_time';
+
     public $billing_cycle = 'one_time';
+
     public $billing_interval = 1;
 
     public $is_taxable = true;
+
     public $tax_inclusive = false;
+
     public $allow_discounts = true;
+
     public $requires_approval = false;
 
     public $is_active = true;
+
     public $is_featured = false;
+
     public $sort_order = 0;
 
     public $track_inventory = false;
+
     public $current_stock = 0;
+
     public $min_stock_level = 0;
+
     public $reorder_level = null;
+
     public $max_quantity_per_order = null;
 
     public $categories = [];
@@ -122,7 +142,7 @@ class EditProduct extends Component
     {
         $this->authorize('update', $this->product);
 
-        $this->rules['sku'] = 'nullable|string|max:100|unique:products,sku,' . $this->product->id;
+        $this->rules['sku'] = 'nullable|string|max:100|unique:products,sku,'.$this->product->id;
         $validated = $this->validate();
 
         foreach (['cost', 'base_price', 'current_stock', 'min_stock_level', 'reorder_level', 'max_quantity_per_order'] as $field) {
@@ -134,7 +154,7 @@ class EditProduct extends Component
         $productService = app(ProductService::class);
         $product = $productService->update($this->product, $validated);
 
-        session()->flash('success', ucfirst($this->type) . ' updated successfully!');
+        session()->flash('success', ucfirst($this->type).' updated successfully!');
 
         return redirect()->route('products.show', $product);
     }

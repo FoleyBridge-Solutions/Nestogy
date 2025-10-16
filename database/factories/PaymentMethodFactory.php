@@ -15,7 +15,7 @@ class PaymentMethodFactory extends Factory
         
         return [
             'company_id' => \App\Models\Company::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'type' => $type,
             'provider' => $this->faker->randomElement(['stripe', 'square', 'paypal', 'plaid']),
             'provider_payment_method_id' => $this->faker->optional()->regexify('[A-Z]{2}[0-9]{10}'),

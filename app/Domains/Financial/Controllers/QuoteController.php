@@ -2,6 +2,7 @@
 
 namespace App\Domains\Financial\Controllers;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Contract\Services\ContractGenerationService;
 use App\Domains\Core\Services\PdfService;
 use App\Domains\Email\Services\EmailService;
@@ -17,7 +18,6 @@ use App\Http\Resources\ApiResponse;
 use App\Http\Resources\Financial\QuoteCollection;
 use App\Http\Resources\Financial\QuoteResource;
 use App\Models\Category;
-use App\Domains\Client\Models\Client;
 use App\Models\InvoiceItem;
 use App\Models\Product;
 use App\Models\Quote;
@@ -69,39 +69,28 @@ class QuoteController extends Controller
     public function index(Request $request)
     {
         try {
-            $filters = [
-                'status' => $request->get('status'),
-                'client_id' => $request->get('client_id'),
-                'category_id' => $request->get('category_id'),
-                'date_from' => $request->get('date_from'),
-                'date_to' => $request->get('date_to'),
-                'search' => $request->get('search'),
-            ];
-
-            $perPage = $request->get('per_page', 25);
-            $companyId = auth()->user()->company_id;
-
-            // Use optimized query method with eager loading
-            $quotes = $this->quoteService->getCompanyQuotes($companyId, $filters, $perPage);
-
-            // Get real statistics
-            $statistics = $this->quoteService->getQuoteStatistics($companyId);
-            $statsFormatted = [
-                'draft_quotes' => $statistics['totals']->draft_quotes ?? 0,
-                'sent_quotes' => $statistics['totals']->sent_quotes ?? 0,
-                'accepted_quotes' => $statistics['totals']->accepted_quotes ?? 0,
-                'conversion_rate' => $statistics['conversion_rate'] ?? 0,
-                'total_value' => $statistics['totals']->accepted_value ?? 0,
-            ];
-
             if ($request->wantsJson()) {
+                $filters = [
+                    'status' => $request->get('status'),
+                    'client_id' => $request->get('client_id'),
+                    'category_id' => $request->get('category_id'),
+                    'date_from' => $request->get('date_from'),
+                    'date_to' => $request->get('date_to'),
+                    'search' => $request->get('search'),
+                ];
+
+                $perPage = $request->get('per_page', 25);
+                $companyId = auth()->user()->company_id;
+
+                $quotes = $this->quoteService->getCompanyQuotes($companyId, $filters, $perPage);
+
                 return ApiResponse::success(
                     new QuoteCollection($quotes),
                     'Quotes retrieved successfully'
                 );
             }
 
-            return view('financial.quotes.index', compact('quotes', 'statsFormatted') + ['stats' => $statsFormatted]);
+            return view('financial.quotes.index-livewire');
 
         } catch (FinancialException $e) {
             return QuoteExceptionHandler::handle($e, $request);

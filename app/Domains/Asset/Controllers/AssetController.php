@@ -88,7 +88,7 @@ class AssetController extends Controller
 
     // Client-scoped asset methods
 
-    public function clientIndex(Request $request, \App\Models\Client $client)
+    public function clientIndex(Request $request, \App\Domains\Client\Models\Client $client)
     {
         $this->authorize('viewAny', Asset::class);
 
@@ -141,7 +141,7 @@ class AssetController extends Controller
         return view('assets.client.index', compact('assets', 'client', 'locations', 'contacts'));
     }
 
-    public function clientCreate(\App\Models\Client $client)
+    public function clientCreate(\App\Domains\Client\Models\Client $client)
     {
         $this->authorize('create', Asset::class);
 
@@ -150,7 +150,7 @@ class AssetController extends Controller
         return view('assets.client.create', compact('client', 'locations'));
     }
 
-    public function clientStore(StoreAssetRequest $request, \App\Models\Client $client)
+    public function clientStore(StoreAssetRequest $request, \App\Domains\Client\Models\Client $client)
     {
         $data = $request->validated();
         $data['client_id'] = $client->id;
@@ -161,7 +161,7 @@ class AssetController extends Controller
             ->with('success', 'Asset created successfully.');
     }
 
-    public function clientShow(\App\Models\Client $client, Asset $asset)
+    public function clientShow(\App\Domains\Client\Models\Client $client, Asset $asset)
     {
         $this->authorize('view', $asset);
 
@@ -175,7 +175,7 @@ class AssetController extends Controller
         return view('assets.client.show', compact('client', 'asset'));
     }
 
-    public function clientEdit(\App\Models\Client $client, Asset $asset)
+    public function clientEdit(\App\Domains\Client\Models\Client $client, Asset $asset)
     {
         $this->authorize('update', $asset);
 
@@ -189,7 +189,7 @@ class AssetController extends Controller
         return view('assets.client.edit', compact('client', 'asset', 'locations'));
     }
 
-    public function clientUpdate(UpdateAssetRequest $request, \App\Models\Client $client, Asset $asset)
+    public function clientUpdate(UpdateAssetRequest $request, \App\Domains\Client\Models\Client $client, Asset $asset)
     {
         $this->authorize('update', $asset);
 
@@ -204,7 +204,7 @@ class AssetController extends Controller
             ->with('success', 'Asset updated successfully.');
     }
 
-    public function clientDestroy(\App\Models\Client $client, Asset $asset)
+    public function clientDestroy(\App\Domains\Client\Models\Client $client, Asset $asset)
     {
         $this->authorize('delete', $asset);
 
@@ -485,7 +485,7 @@ class AssetController extends Controller
     /**
      * Get assets for a specific client (API endpoint)
      */
-    public function clientAssetsApi(Request $request, \App\Models\Client $client)
+    public function clientAssetsApi(Request $request, \App\Domains\Client\Models\Client $client)
     {
         try {
             // Ensure client belongs to current company (middleware should handle this but double-check)

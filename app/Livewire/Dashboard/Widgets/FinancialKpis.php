@@ -181,6 +181,7 @@ class FinancialKpis extends Component
     {
         $kpi = $this->buildKpiItem($label, $value, $format, $icon, $color, $trend);
         $kpi['previousValue'] = $previousValue;
+
         return $kpi;
     }
 

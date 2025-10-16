@@ -215,7 +215,7 @@ class NavigationController extends Controller
             }
 
             // Get recently accessed clients
-            $recentClients = \App\Models\Client::where('company_id', $companyId)
+            $recentClients = \App\Domains\Client\Models\Client::where('company_id', $companyId)
                 ->orderBy('updated_at', 'desc')
                 ->limit(2)
                 ->get();
@@ -301,7 +301,7 @@ class NavigationController extends Controller
 
             // Search clients
             if ($domain === 'all' || $domain === 'clients') {
-                $clients = \App\Models\Client::where('company_id', auth()->user()->company_id)
+                $clients = \App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('name', 'like', "%{$query}%")
                             ->orWhere('email', 'like', "%{$query}%")
@@ -734,7 +734,7 @@ class NavigationController extends Controller
         // Pattern: @ClientName - Find client by name
         if (preg_match('/^@(.+)$/', $query, $matches)) {
             $clientName = trim($matches[1]);
-            $clients = \App\Models\Client::where('company_id', $companyId)
+            $clients = \App\Domains\Client\Models\Client::where('company_id', $companyId)
                 ->where('name', 'like', "%{$clientName}%")
                 ->limit(3)
                 ->get();

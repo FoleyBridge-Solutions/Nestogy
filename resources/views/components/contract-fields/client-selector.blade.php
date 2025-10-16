@@ -14,7 +14,7 @@
     // Get selected client if value is provided
     $selectedClient = null;
     if ($value && !$multiple) {
-        $selectedClient = \App\Models\Client::where('company_id', auth()->user()->company_id)
+        $selectedClient = \App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)
             ->find($value);
     }
 @endphp

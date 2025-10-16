@@ -2,19 +2,14 @@
 
 namespace App\Livewire\Assets;
 
-use App\Models\Asset;
 use App\Domains\Client\Models\Client;
+use App\Livewire\BaseIndexComponent;
+use App\Models\Asset;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
-use Livewire\WithPagination;
 
-class AssetIndex extends Component
+class AssetIndex extends BaseIndexComponent
 {
-    use WithPagination;
-
-    public $search = '';
-
     public $type = '';
 
     public $status = '';
@@ -25,59 +20,80 @@ class AssetIndex extends Component
 
     public $locationId = '';
 
-    public $sortField = 'created_at';
-
-    public $sortDirection = 'desc';
-
-    public $perPage = 25;
-
     public $selectedAssets = [];
 
-    public $selectAll = false;
-
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'type' => ['except' => ''],
-        'status' => ['except' => ''],
-        'clientId' => ['except' => ''],
-        'assignedTo' => ['except' => ''],
-        'locationId' => ['except' => ''],
-        'sortField' => ['except' => 'created_at'],
-        'sortDirection' => ['except' => 'desc'],
-        'perPage' => ['except' => 25],
-    ];
-
-    public function mount()
+    protected function getDefaultSort(): array
     {
-        // Get client from session if available
-        $selectedClient = app(\App\Domains\Core\Services\NavigationService::class)->getSelectedClient();
-        if ($selectedClient) {
-            // Extract the ID if it's an object, otherwise use the value directly
-            $this->clientId = is_object($selectedClient) ? $selectedClient->id : $selectedClient;
-        }
+        return [
+            'field' => 'created_at',
+            'direction' => 'desc',
+        ];
     }
 
-    public function updatingSearch()
+    protected function getSearchFields(): array
     {
-        $this->resetPage();
+        return [
+            'name',
+            'serial_number',
+            'asset_tag',
+            'model',
+            'manufacturer',
+        ];
     }
 
-    public function sortBy($field)
+    protected function getQueryStringProperties(): array
     {
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortField = $field;
-            $this->sortDirection = 'asc';
+        return [
+            'search' => ['except' => ''],
+            'type' => ['except' => ''],
+            'status' => ['except' => ''],
+            'clientId' => ['except' => ''],
+            'assignedTo' => ['except' => ''],
+            'locationId' => ['except' => ''],
+            'sortField' => ['except' => 'created_at'],
+            'sortDirection' => ['except' => 'desc'],
+            'perPage' => ['except' => 25],
+        ];
+    }
+
+    protected function getBaseQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return Asset::with(['client', 'assignedTo', 'location']);
+    }
+
+    protected function applyCustomFilters($query)
+    {
+        if ($this->type) {
+            $query->where('type', $this->type);
         }
+
+        if ($this->status) {
+            $query->where('status', $this->status);
+        }
+
+        if ($this->clientId) {
+            $query->where('client_id', $this->clientId);
+        }
+
+        if ($this->assignedTo) {
+            $query->where('contact_id', $this->assignedTo);
+        }
+
+        if ($this->locationId) {
+            $query->where('location_id', $this->locationId);
+        }
+
+        return $query;
     }
 
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selectedAssets = $this->getAssets()->pluck('id')->toArray();
+            $this->selectedAssets = $this->getItems()->pluck('id')->toArray();
+            $this->selected = $this->selectedAssets;
         } else {
             $this->selectedAssets = [];
+            $this->selected = [];
         }
     }
 
@@ -107,43 +123,9 @@ class AssetIndex extends Component
         }
     }
 
-    public function getAssets()
-    {
-        return Asset::query()
-            ->where('company_id', Auth::user()->company_id)
-            ->whereNull('archived_at')
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'like', '%'.$this->search.'%')
-                        ->orWhere('serial_number', 'like', '%'.$this->search.'%')
-                        ->orWhere('asset_tag', 'like', '%'.$this->search.'%')
-                        ->orWhere('model', 'like', '%'.$this->search.'%')
-                        ->orWhere('manufacturer', 'like', '%'.$this->search.'%');
-                });
-            })
-            ->when($this->type, function ($query) {
-                $query->where('type', $this->type);
-            })
-            ->when($this->status, function ($query) {
-                $query->where('status', $this->status);
-            })
-            ->when($this->clientId, function ($query) {
-                $query->where('client_id', $this->clientId);
-            })
-            ->when($this->assignedTo, function ($query) {
-                $query->where('contact_id', $this->assignedTo);
-            })
-            ->when($this->locationId, function ($query) {
-                $query->where('location_id', $this->locationId);
-            })
-            ->with(['client', 'assignedTo', 'location'])
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
-    }
-
     public function render()
     {
-        $assets = $this->getAssets();
+        $assets = $this->getItems();
 
         $clients = Client::where('company_id', Auth::user()->company_id)
             ->whereNull('deleted_at')

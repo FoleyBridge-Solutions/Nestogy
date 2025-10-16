@@ -3,15 +3,24 @@
 namespace App\Domains\Client\Models;
 
 use App\Domains\Contract\Models\Contract;
-use App\Domains\Financial\Models\Payment;
-use App\Domains\Financial\Models\PaymentMethod;
 use App\Domains\Ticket\Models\Ticket;
+use App\Models\Address;
+use App\Models\Asset;
+use App\Models\CommunicationLog;
+use App\Models\Contact;
+use App\Models\Invoice;
+use App\Models\Location;
+use App\Models\Project;
+use App\Models\Recurring;
+use App\Models\TicketRating;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Models\PaymentMethod;
 
 class Client extends Model
 {
@@ -19,12 +28,6 @@ class Client extends Model
 
     private const DECIMAL_CAST = 'decimal:2';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * SECURITY: Payment integration fields are protected via $guarded
-     * Use service layer for: stripe_customer_id, stripe_subscription_id, subscription_status
-     */
     protected $fillable = [
         'company_id',
         'name',
@@ -47,6 +50,7 @@ class Client extends Model
         'contract_end_date',
         'lead',
         'type',
+        'accessed_at',
         'sla_id',
         'referral',
         'rate',
@@ -68,27 +72,17 @@ class Client extends Model
         'custom_minimum_billing_increment',
         'custom_time_rounding_method',
         'use_custom_rates',
-        // Subscription fields (non-payment critical)
+        // Subscription fields
         'company_link_id',
-        'subscription_plan_id',
-        'trial_ends_at',
-        'current_user_count',
-    ];
-
-    /**
-     * The attributes that should be guarded from mass assignment.
-     *
-     * SECURITY: Payment/subscription fields must be managed through service layer only
-     */
-    protected $guarded = [
-        'id',
         'stripe_customer_id',
         'stripe_subscription_id',
         'subscription_status',
+        'subscription_plan_id',
+        'trial_ends_at',
         'next_billing_date',
         'subscription_started_at',
         'subscription_canceled_at',
-        'accessed_at',
+        'current_user_count',
     ];
 
     protected $casts = [

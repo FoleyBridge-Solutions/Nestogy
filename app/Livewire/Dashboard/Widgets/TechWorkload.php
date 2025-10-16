@@ -26,7 +26,7 @@ class TechWorkload extends Component
             return User::where('company_id', $companyId)
                 ->with(['roles', 'assignedTickets' => function ($q) {
                     $q->select('id', 'assigned_to', 'status', 'priority')
-                      ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS, 'Awaiting Customer']);
+                        ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS, 'Awaiting Customer']);
                 }])
                 ->whereHas('roles', function ($q) {
                     $q->whereIn('name', ['technician', 'admin']);
@@ -37,8 +37,8 @@ class TechWorkload extends Component
                     },
                     'assignedTickets as critical_tickets' => function ($q) {
                         $q->where('priority', 'Critical')
-                          ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS]);
-                    }
+                            ->whereIn('status', [Ticket::STATUS_OPEN, Ticket::STATUS_IN_PROGRESS]);
+                    },
                 ])
                 ->get()
                 ->map(function ($tech) use ($startOfWeek) {
@@ -75,6 +75,7 @@ class TechWorkload extends Component
         if ($score >= 15) {
             return 'yellow';
         }
+
         return 'green';
     }
 

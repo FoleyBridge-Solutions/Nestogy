@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Clients;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Client\Services\ClientMetricsService;
 use App\Domains\Client\Services\ClientService;
-use App\Domains\Client\Models\Client;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 

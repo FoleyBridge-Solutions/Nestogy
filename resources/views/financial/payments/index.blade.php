@@ -16,7 +16,5 @@ $pageActions = [
 @endphp
 
 @section('content')
-<div class="container mx-auto px-6">
-    <livewire:financial.payment-index />
-</div>
+    @livewire('financial.payment-index')
 @endsection

@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
+use App\Domains\Client\Models\Client;
+
 use App\Domains\Financial\Services\TaxEngine\LocalTaxRateService;
-use App\Domains\Financial\Services\VoIPTaxService;
 use App\Traits\BelongsToCompany;
 use App\Traits\QuotePricingCalculations;
 use Carbon\Carbon;
@@ -371,51 +372,7 @@ class Quote extends Model
         ];
     }
 
-    /**
-     * Calculate VoIP taxes for all quote items.
-     */
-    public function calculateVoIPTaxes(?array $serviceAddress = null): array
-    {
-        $taxService = new VoIPTaxService;
-        $taxService->setCompanyId($this->company_id);
-        $allCalculations = [];
-        $totalTaxAmount = 0;
 
-        $address = $serviceAddress ?? $this->getServiceAddress();
-
-        foreach ($this->items as $item) {
-            if ($item->service_type) {
-                $params = [
-                    'amount' => $item->subtotal - $item->discount,
-                    'service_type' => $item->service_type,
-                    'service_address' => $address,
-                    'client_id' => $this->client_id,
-                    'calculation_date' => $this->date,
-                    'line_count' => $item->line_count ?? 1,
-                    'minutes' => $item->minutes ?? 0,
-                ];
-
-                $calculation = $taxService->calculateTaxes($params);
-                $allCalculations[] = array_merge($calculation, ['item_id' => $item->id]);
-                $totalTaxAmount += $calculation['total_tax_amount'];
-
-                // Record exemption usage if any exemptions were applied
-                if (! empty($calculation['exemptions_applied'])) {
-                    $taxService->recordExemptionUsage(
-                        $calculation['exemptions_applied'],
-                        null,
-                        $this->id
-                    );
-                }
-            }
-        }
-
-        return [
-            'calculations' => $allCalculations,
-            'total_tax_amount' => $totalTaxAmount,
-            'summary' => $taxService->getCalculationSummary($allCalculations),
-        ];
-    }
 
     /**
      * Get service address for tax calculation.

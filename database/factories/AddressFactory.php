@@ -12,7 +12,7 @@ class AddressFactory extends Factory
     public function definition(): array
     {
         return ['company_id' => \App\Models\Company::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'type' => $this->faker->randomElement(['billing', 'shipping', 'service', 'other']),
             'address' => $this->faker->streetAddress(),
             'address2' => $this->faker->optional()->secondaryAddress(),

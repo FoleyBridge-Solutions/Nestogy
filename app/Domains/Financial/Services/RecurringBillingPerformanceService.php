@@ -232,14 +232,14 @@ class RecurringBillingPerformanceService
     protected function getCachedClientData(int $clientId)
     {
         if (! $this->config['caching']['cache_client_data']) {
-            return \App\Models\Client::find($clientId);
+            return \App\Domains\Client\Models\Client::find($clientId);
         }
 
         $cacheKey = str_replace('{client_id}', $clientId,
             $this->config['caching']['keys']['client_billing_data']);
 
         return Cache::remember($cacheKey, $this->config['caching']['cache_ttl'], function () use ($clientId) {
-            return \App\Models\Client::with(['billingAddress', 'taxExemptions'])
+            return \App\Domains\Client\Models\Client::with(['billingAddress', 'taxExemptions'])
                 ->find($clientId);
         });
     }

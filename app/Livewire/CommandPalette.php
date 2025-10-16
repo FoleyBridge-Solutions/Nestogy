@@ -2,14 +2,12 @@
 
 namespace App\Livewire;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Core\Services\QuickActionService;
-use App\Domains\Knowledge\Models\KbArticle;
-use App\Domains\Lead\Models\Lead;
 use App\Domains\Project\Models\Project;
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\Asset;
-use App\Domains\Client\Models\Client;
 use App\Models\CustomQuickAction;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
@@ -32,7 +30,7 @@ class CommandPalette extends Component
     private $cachedResults = null;
 
     private $lastSearchTerm = null;
-    
+
     // Flag for test mode - when manually setting results (public so it persists across Livewire requests)
     public $useManualResults = false;
 
@@ -129,7 +127,7 @@ class CommandPalette extends Component
         $this->cachedResults = $results;
         $this->lastSearchTerm = $this->search;
         // Only sync $this->results if not manually set (to preserve test overrides)
-        if (!$this->useManualResults) {
+        if (! $this->useManualResults) {
             $this->results = $results; // Keep this in sync
         }
 
@@ -153,8 +151,8 @@ class CommandPalette extends Component
             'cached_count' => $this->cachedResults ? count($this->cachedResults) : 0,
             'are_different' => $value !== $this->cachedResults,
         ]);
-        
-        if (!empty($value) && $value !== $this->cachedResults) {
+
+        if (! empty($value) && $value !== $this->cachedResults) {
             $this->useManualResults = true;
             \Log::info('CommandPalette::updatedResults - Setting useManualResults=true');
         }
@@ -196,7 +194,7 @@ class CommandPalette extends Component
     {
         $user = Auth::user();
         $clients = Client::withoutGlobalScope('company')
-            ->when($user && $user->company_id, fn($q) => $q->where('company_id', $user->company_id))
+            ->when($user && $user->company_id, fn ($q) => $q->where('company_id', $user->company_id))
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('company_name', 'like', "%{$query}%")
@@ -205,7 +203,7 @@ class CommandPalette extends Component
             ->limit($limit)
             ->get();
 
-        return $clients->map(fn($client) => [
+        return $clients->map(fn ($client) => [
             'type' => 'client',
             'id' => $client->id,
             'title' => $client->name,
@@ -224,7 +222,7 @@ class CommandPalette extends Component
             : Ticket::query();
 
         $tickets = $ticketQuery
-            ->when($user && $user->company_id, fn($q) => $q->where('company_id', $user->company_id))
+            ->when($user && $user->company_id, fn ($q) => $q->where('company_id', $user->company_id))
             ->where(function ($q) use ($query) {
                 $q->where('subject', 'like', "%{$query}%")
                     ->orWhere('number', 'like', "%{$query}%");
@@ -232,7 +230,7 @@ class CommandPalette extends Component
             ->limit($limit)
             ->get();
 
-        return $tickets->map(fn($ticket) => [
+        return $tickets->map(fn ($ticket) => [
             'type' => 'ticket',
             'id' => $ticket->id,
             'title' => $ticket->subject,
@@ -251,7 +249,7 @@ class CommandPalette extends Component
             : Asset::query();
 
         $assets = $assetQuery
-            ->when($user && $user->company_id, fn($q) => $q->where('company_id', $user->company_id))
+            ->when($user && $user->company_id, fn ($q) => $q->where('company_id', $user->company_id))
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('serial', 'like', "%{$query}%")
@@ -261,7 +259,7 @@ class CommandPalette extends Component
             ->limit($limit)
             ->get();
 
-        return $assets->map(fn($asset) => [
+        return $assets->map(fn ($asset) => [
             'type' => 'asset',
             'id' => $asset->id,
             'title' => $asset->name,
@@ -280,7 +278,7 @@ class CommandPalette extends Component
             : Contract::query();
 
         $contracts = $contractQuery
-            ->when($user && $user->company_id, fn($q) => $q->where('company_id', $user->company_id))
+            ->when($user && $user->company_id, fn ($q) => $q->where('company_id', $user->company_id))
             ->where(function ($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
                     ->orWhere('contract_number', 'like', "%{$query}%");
@@ -288,7 +286,7 @@ class CommandPalette extends Component
             ->limit($limit)
             ->get();
 
-        return $contracts->map(fn($contract) => [
+        return $contracts->map(fn ($contract) => [
             'type' => 'contract',
             'id' => $contract->id,
             'title' => $contract->title ?: "Contract #{$contract->contract_number}",
@@ -307,12 +305,12 @@ class CommandPalette extends Component
             : Invoice::query();
 
         $invoices = $invoiceQuery
-            ->when($user && $user->company_id, fn($q) => $q->where('company_id', $user->company_id))
+            ->when($user && $user->company_id, fn ($q) => $q->where('company_id', $user->company_id))
             ->where('number', 'like', "%{$query}%")
             ->limit($limit)
             ->get();
 
-        return $invoices->map(fn($invoice) => [
+        return $invoices->map(fn ($invoice) => [
             'type' => 'invoice',
             'id' => $invoice->id,
             'title' => "Invoice #{$invoice->number}",
@@ -331,12 +329,12 @@ class CommandPalette extends Component
             : Project::query();
 
         $projects = $projectQuery
-            ->when($user && $user->company_id, fn($q) => $q->where('company_id', $user->company_id))
+            ->when($user && $user->company_id, fn ($q) => $q->where('company_id', $user->company_id))
             ->where('name', 'like', "%{$query}%")
             ->limit($limit)
             ->get();
 
-        return $projects->map(fn($project) => [
+        return $projects->map(fn ($project) => [
             'type' => 'project',
             'id' => $project->id,
             'title' => $project->name,
@@ -520,7 +518,7 @@ class CommandPalette extends Component
                 $commands[] = [
                     'type' => 'navigation',
                     'title' => $item['label'],
-                    'subtitle' => 'Navigation • ' . ($item['description'] ?? ucfirst($domain)),
+                    'subtitle' => 'Navigation • '.($item['description'] ?? ucfirst($domain)),
                     'route_name' => $item['route'],
                     'route_params' => [],
                     'icon' => $item['icon'] ?? 'arrow-right',
@@ -546,7 +544,6 @@ class CommandPalette extends Component
 
         return $commands;
     }
-
 
     /**
      * Process route parameters to handle special values
@@ -688,6 +685,7 @@ class CommandPalette extends Component
                     'action_route' => $action['route'],
                     'current_route' => $currentRouteName,
                 ]);
+
                 return false;
             }
 
@@ -716,16 +714,16 @@ class CommandPalette extends Component
     private function filterActionsByRoute($actions, $currentRouteName)
     {
         return $actions->filter(function ($action) use ($currentRouteName) {
-            return !$this->isActionForCurrentRoute($action, $currentRouteName);
+            return ! $this->isActionForCurrentRoute($action, $currentRouteName);
         });
     }
 
     private function formatQuickActions($actions, $isFavorite)
     {
         $commands = [];
-        
+
         foreach ($actions as $action) {
-            $subtitle = $isFavorite 
+            $subtitle = $isFavorite
                 ? '⭐ Favorite • '.($action['description'] ?? 'Quick Action')
                 : 'Quick Action • '.($action['description'] ?? '');
 
@@ -773,7 +771,7 @@ class CommandPalette extends Component
     private function getNavigationCommands($existingCommands, $currentRouteName)
     {
         $existingRoutes = collect($existingCommands)->pluck('route_name')->filter()->toArray();
-        $existingTitles = collect($existingCommands)->pluck('title')->map(fn($title) => strtolower($title))->toArray();
+        $existingTitles = collect($existingCommands)->pluck('title')->map(fn ($title) => strtolower($title))->toArray();
 
         $allNavigationCommands = $this->getDefaultNavigationCommands();
         $navigationCommands = [];
@@ -808,9 +806,9 @@ class CommandPalette extends Component
             'icon' => 'home',
         ];
 
-        // Get popular navigation items from NavigationService registry
+        // Get popular navigation items from NavigationRegistry
         // This now includes products, services, bundles, etc.
-        $registry = \App\Domains\Core\Services\NavigationService::getNavigationRegistry('all', $user);
+        $registry = \App\Domains\Core\Services\Navigation\NavigationRegistry::all();
 
         // Convert to command palette format and take first 6 items
         $count = 0;
@@ -823,7 +821,7 @@ class CommandPalette extends Component
                 $commands[] = [
                     'type' => 'navigation',
                     'title' => $item['label'],
-                    'subtitle' => 'Navigation • ' . ($item['description'] ?? ucfirst($domain)),
+                    'subtitle' => 'Navigation • '.ucfirst($domain),
                     'route_name' => $item['route'],
                     'route_params' => [],
                     'icon' => $item['icon'] ?? 'arrow-right',
@@ -910,12 +908,13 @@ class CommandPalette extends Component
 
         $this->logSelectionDebugInfo($index, $results);
 
-        if (!$this->isValidIndex($index, $results)) {
+        if (! $this->isValidIndex($index, $results)) {
             return;
         }
 
-        if (!isset($results[$index])) {
+        if (! isset($results[$index])) {
             $this->logMissingResult($index);
+
             return;
         }
 
@@ -930,7 +929,7 @@ class CommandPalette extends Component
         if ($this->useManualResults) {
             return $this->results;
         }
-        
+
         return $this->searchResults;
     }
 
@@ -952,11 +951,12 @@ class CommandPalette extends Component
 
     private function isValidIndex($index, $results)
     {
-        if (!is_numeric($index) || $index < 0 || $index >= count($results)) {
+        if (! is_numeric($index) || $index < 0 || $index >= count($results)) {
             \Log::warning('CommandPalette::selectResult - Invalid index', [
                 'index' => $index,
                 'results_count' => count($results),
             ]);
+
             return false;
         }
 
@@ -1012,7 +1012,7 @@ class CommandPalette extends Component
         $customId = $result['custom_id'] ?? $action['custom_id'];
         $customAction = CustomQuickAction::find($customId);
 
-        if (!$this->validateCustomAction($customAction, $customId)) {
+        if (! $this->validateCustomAction($customAction, $customId)) {
             return null;
         }
 
@@ -1023,11 +1023,12 @@ class CommandPalette extends Component
 
     private function validateCustomAction($customAction, $customId)
     {
-        if (!$customAction || !$customAction->canBeExecutedBy(Auth::user())) {
+        if (! $customAction || ! $customAction->canBeExecutedBy(Auth::user())) {
             \Log::warning('CommandPalette: Custom action not found or no permission', [
                 'custom_id' => $customId,
                 'found' => $customAction ? 'yes' : 'no',
             ]);
+
             return false;
         }
 
@@ -1057,6 +1058,7 @@ class CommandPalette extends Component
         if ($openIn === 'new_tab') {
             $routeUrl = route($target, $parameters);
             $this->js("window.open('$routeUrl', '_blank')");
+
             return null;
         }
 
@@ -1066,12 +1068,13 @@ class CommandPalette extends Component
     private function executeCustomUrlAction($target, $parameters, $openIn)
     {
         $url = $target;
-        if (!empty($parameters)) {
-            $url .= '?' . http_build_query($parameters);
+        if (! empty($parameters)) {
+            $url .= '?'.http_build_query($parameters);
         }
 
         if ($openIn === 'new_tab') {
             $this->js("window.open('$url', '_blank')");
+
             return null;
         }
 
@@ -1100,6 +1103,7 @@ class CommandPalette extends Component
         if (isset($action['open_in']) && $action['open_in'] === 'new_tab') {
             $routeUrl = route($action['route'], $action['parameters'] ?? []);
             $this->js("window.open('$routeUrl', '_blank')");
+
             return null;
         }
 

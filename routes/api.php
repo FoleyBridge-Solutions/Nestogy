@@ -479,7 +479,7 @@ Route::middleware(['auth:sanctum', 'company', 'throttle:120,1'])->group(function
             Route::get('nestogy', function (\Illuminate\Http\Request $request) {
                 $integration = \App\Domains\Integration\Models\RmmIntegration::where('company_id', auth()->user()->company_id)->first();
 
-                $query = \App\Models\Client::where('company_id', auth()->user()->company_id)
+                $query = \App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)
                     ->with(['rmmClientMappings' => function ($query) use ($integration) {
                         if ($integration) {
                             $query->where('integration_id', $integration->id);
@@ -610,33 +610,33 @@ Route::prefix('webhooks')->name('api.webhooks.')->middleware('throttle:60,1')->g
     // RMM Integration Webhooks - High rate limit for production workloads
     Route::middleware('throttle:1000,1')->group(function () {
         // ConnectWise Automate webhooks
-        Route::prefix('connectwise')->name('connectwise.')->group(function () {
-            Route::post('{integration}', [ConnectWiseWebhookController::class, 'handle'])->name('webhook');
-            Route::get('{integration}/health', [ConnectWiseWebhookController::class, 'health'])->name('health');
-            Route::post('{integration}/test', [ConnectWiseWebhookController::class, 'test'])->name('test');
-        });
+        // Route::prefix('connectwise')->name('connectwise.')->group(function () {
+        //     Route::post('{integration}', [ConnectWiseWebhookController::class, 'handle'])->name('webhook');
+        //     Route::get('{integration}/health', [ConnectWiseWebhookController::class, 'health'])->name('health');
+        //     Route::post('{integration}/test', [ConnectWiseWebhookController::class, 'test'])->name('test');
+        // });
 
         // Datto RMM webhooks
-        Route::prefix('datto')->name('datto.')->group(function () {
-            Route::post('{integration}', [DattoWebhookController::class, 'handle'])->name('webhook');
-            Route::get('{integration}/health', [DattoWebhookController::class, 'health'])->name('health');
-            Route::post('{integration}/test', [DattoWebhookController::class, 'test'])->name('test');
-        });
+        // Route::prefix('datto')->name('datto.')->group(function () {
+        //     Route::post('{integration}', [DattoWebhookController::class, 'handle'])->name('webhook');
+        //     Route::get('{integration}/health', [DattoWebhookController::class, 'health'])->name('health');
+        //     Route::post('{integration}/test', [DattoWebhookController::class, 'test'])->name('test');
+        // });
 
         // NinjaOne webhooks
-        Route::prefix('ninja')->name('ninja.')->group(function () {
-            Route::post('{integration}', [NinjaOneWebhookController::class, 'handle'])->name('webhook');
-            Route::get('{integration}/health', [NinjaOneWebhookController::class, 'health'])->name('health');
-            Route::post('{integration}/test', [NinjaOneWebhookController::class, 'test'])->name('test');
-        });
+        // Route::prefix('ninja')->name('ninja.')->group(function () {
+        //     Route::post('{integration}', [NinjaOneWebhookController::class, 'handle'])->name('webhook');
+        //     Route::get('{integration}/health', [NinjaOneWebhookController::class, 'health'])->name('health');
+        //     Route::post('{integration}/test', [NinjaOneWebhookController::class, 'test'])->name('test');
+        // });
 
         // Generic RMM webhooks
-        Route::prefix('generic')->name('generic.')->group(function () {
-            Route::post('{integration}', [GenericRMMWebhookController::class, 'handle'])->name('webhook');
-            Route::get('{integration}/health', [GenericRMMWebhookController::class, 'health'])->name('health');
-            Route::post('{integration}/test', [GenericRMMWebhookController::class, 'test'])->name('test');
-            Route::post('{integration}/suggest-mappings', [GenericRMMWebhookController::class, 'suggestFieldMappings'])->name('suggest-mappings');
-        });
+        // Route::prefix('generic')->name('generic.')->group(function () {
+        //     Route::post('{integration}', [GenericRMMWebhookController::class, 'handle'])->name('webhook');
+        //     Route::get('{integration}/health', [GenericRMMWebhookController::class, 'health'])->name('health');
+        //     Route::post('{integration}/test', [GenericRMMWebhookController::class, 'test'])->name('test');
+        //             //     Route::post('{integration}/suggest-mappings', [GenericRMMWebhookController::class, 'suggestFieldMappings'])->name('suggest-mappings');
+        // });
     });
 });
 

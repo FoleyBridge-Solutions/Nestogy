@@ -204,7 +204,7 @@ class TicketShow extends Component
                 'ticket_id' => $this->ticket->id,
                 'user_id' => Auth::id(),
             ]);
-            
+
             session()->flash('error', 'Failed to add comment. Please try again.');
         }
     }
@@ -239,7 +239,7 @@ class TicketShow extends Component
                 'ticket_id' => $this->ticket->id,
                 'user_id' => Auth::id(),
             ]);
-            
+
             session()->flash('error', 'Failed to update status. Please try again.');
         }
     }

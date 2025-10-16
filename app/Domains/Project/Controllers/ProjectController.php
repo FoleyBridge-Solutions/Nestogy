@@ -2,6 +2,7 @@
 
 namespace App\Domains\Project\Controllers;
 
+use App\Domains\Core\Controllers\Traits\UsesSelectedClient;
 use App\Domains\Project\Models\Project;
 use App\Domains\Project\Models\ProjectMember;
 use App\Domains\Project\Models\ProjectMilestone;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ProjectController extends Controller
 {
+    use UsesSelectedClient;
+
     public function __construct(
         protected ProjectService $projectService,
         protected ProjectRepository $projectRepository
@@ -29,6 +32,8 @@ class ProjectController extends Controller
     {
         $query = Project::with(['client', 'manager', 'members.user'])
             ->where('company_id', auth()->user()->company_id);
+
+        $query = $this->applyClientFilter($query);
 
         // Apply search filters
         if ($search = $request->get('search')) {

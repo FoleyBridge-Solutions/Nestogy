@@ -2,9 +2,8 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
-use App\Domains\Ticket\Models\Ticket;
-use App\Models\Asset;
 use App\Domains\Client\Models\Client;
+use App\Domains\Ticket\Models\Ticket;
 use App\Models\Invoice;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -33,7 +32,7 @@ class AlertPanel extends Component
     {
         $this->loading = true;
         $companyId = Auth::user()->company_id;
-        
+
         $alerts = collect()
             ->merge($this->getCriticalTicketAlerts($companyId))
             ->merge($this->getOverdueInvoiceAlerts($companyId))
@@ -82,7 +81,7 @@ class AlertPanel extends Component
         return $overdueInvoices->map(function ($invoice) {
             $daysOverdue = (int) Carbon::parse($invoice->due_date)->diffInDays(now(), false);
             $severity = $daysOverdue > 30 ? 'critical' : ($daysOverdue > 14 ? 'high' : 'medium');
-            
+
             $invoiceNumber = $invoice->prefix ? "{$invoice->prefix}{$invoice->number}" : $invoice->number;
             $formattedAmount = number_format($invoice->amount, 2);
 

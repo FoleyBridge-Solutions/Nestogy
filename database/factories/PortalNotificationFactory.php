@@ -12,7 +12,7 @@ class PortalNotificationFactory extends Factory
     public function definition(): array
     {
         return ['company_id' => \App\Models\Company::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'type' => $this->faker->randomElement(['info', 'warning', 'error', 'success', 'update']),
             'category' => $this->faker->optional()->randomNumber(),
             'priority' => $this->faker->randomElement(['low', 'normal', 'high', 'urgent']),

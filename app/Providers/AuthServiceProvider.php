@@ -22,7 +22,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         // Domain model policies
-        \App\Models\Client::class => \App\Policies\ClientPolicy::class,
+        \App\Domains\Client\Models\Client::class => \App\Policies\ClientPolicy::class,
         \App\Models\Contact::class => \App\Policies\ContactPolicy::class,
         \App\Models\Location::class => \App\Policies\LocationPolicy::class,
         \App\Models\Ticket::class => \App\Policies\TicketPolicy::class,

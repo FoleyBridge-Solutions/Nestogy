@@ -5,7 +5,6 @@ namespace App\Domains\Financial\Controllers;
 use App\Domains\Core\Services\PdfService;
 use App\Domains\Email\Services\EmailService;
 use App\Domains\Financial\Services\RecurringBillingService;
-use App\Domains\Financial\Services\VoIPTaxService;
 use App\Domains\Product\Services\VoIPUsageService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GenerateRecurringInvoicesRequest;
@@ -43,7 +42,6 @@ class RecurringController extends Controller
     public function __construct(
         RecurringBillingService $recurringBillingService,
         VoIPUsageService $voipUsageService,
-        VoIPTaxService $voipTaxService,
         EmailService $emailService,
         PdfService $pdfService
     ) {

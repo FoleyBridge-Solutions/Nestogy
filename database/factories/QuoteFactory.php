@@ -14,7 +14,7 @@ class QuoteFactory extends Factory
         return [
             'company_id' => \App\Models\Company::factory(),
             'category_id' => \App\Models\Category::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'prefix' => $this->faker->optional()->randomNumber(),
             'number' => $this->faker->numberBetween(1, 100),
             'scope' => $this->faker->optional()->randomNumber(),

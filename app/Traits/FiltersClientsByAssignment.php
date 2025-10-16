@@ -61,12 +61,12 @@ trait FiltersClientsByAssignment
 
         // Super admins see all clients
         if ($user->isA('super-admin')) {
-            return \App\Models\Client::pluck('id')->toArray();
+            return \App\Domains\Client\Models\Client::pluck('id')->toArray();
         }
 
         // Admins see all clients in their company
         if ($user->isA('admin')) {
-            return \App\Models\Client::where('company_id', $user->company_id)
+            return \App\Domains\Client\Models\Client::where('company_id', $user->company_id)
                 ->pluck('id')
                 ->toArray();
         }
@@ -76,7 +76,7 @@ trait FiltersClientsByAssignment
 
         if (empty($assignedClientIds)) {
             // No assignments = access to all clients in their company
-            return \App\Models\Client::where('company_id', $user->company_id)
+            return \App\Domains\Client\Models\Client::where('company_id', $user->company_id)
                 ->pluck('id')
                 ->toArray();
         }
@@ -103,7 +103,7 @@ trait FiltersClientsByAssignment
 
         // Admins can access all clients in their company
         if ($user->isA('admin')) {
-            $client = \App\Models\Client::find($clientId);
+            $client = \App\Domains\Client\Models\Client::find($clientId);
 
             return $client && $client->company_id === $user->company_id;
         }
@@ -113,7 +113,7 @@ trait FiltersClientsByAssignment
 
         if (empty($assignedClientIds)) {
             // No assignments = can access all clients in company
-            $client = \App\Models\Client::find($clientId);
+            $client = \App\Domains\Client\Models\Client::find($clientId);
 
             return $client && $client->company_id === $user->company_id;
         }

@@ -32,7 +32,7 @@
             'name' => optional(auth()->user())->name,
             'theme' => optional(optional(auth()->user())->userSetting)->theme ?? 'auto',
             'selected_client_id' => session('selected_client_id'),
-            'selected_client' => session('selected_client_id') ? optional(\App\Models\Client::where('company_id', optional(auth()->user())->company_id)->find(session('selected_client_id')))->only(['id', 'name', 'company_name', 'email']) : null
+            'selected_client' => session('selected_client_id') ? optional(\App\Domains\Client\Models\Client::where('company_id', optional(auth()->user())->company_id)->find(session('selected_client_id')))->only(['id', 'name', 'company_name', 'email']) : null
         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
     </script>
     
@@ -78,6 +78,35 @@
         [data-flux-breadcrumbs],
         [data-flux-breadcrumbs] * {
             margin: 0 !important;
+        }
+        
+        /* Mobile sidebar z-index and interactivity */
+        [data-flux-sidebar] {
+            z-index: 40;
+        }
+        
+        /* Ensure sidebar content is clickable */
+        [data-flux-sidebar] a,
+        [data-flux-sidebar] button {
+            position: relative;
+            z-index: 41;
+            pointer-events: auto !important;
+        }
+        
+        /* Make sure sidebar content wrapper is above backdrop */
+        [data-flux-sidebar] > div {
+            position: relative;
+            z-index: 41;
+        }
+        
+        /* Force backdrop below sidebar - target custom elements with high specificity */
+        ui-sidebar-toggle[data-flux-sidebar-backdrop] {
+            z-index: 10 !important;
+        }
+        
+        /* Force mobile sidebar above backdrop */
+        ui-sidebar[data-flux-sidebar-on-mobile] {
+            z-index: 45 !important;
         }
     </style>
     
@@ -219,33 +248,28 @@
     @endphp
     
     @if($sidebarContext)
-        <flux:sidebar collapsible="mobile" sticky class="lg:hidden bg-white dark:bg-zinc-900">
-            <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
-            <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
-                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
-                        class="px-2 py-2 dark:hidden" />
-            <flux:brand href="{{ route('dashboard') }}" 
-                        logo="{{ asset('static-assets/img/branding/nestogy-logo.png') }}" 
-                        name="{{ Auth::user()?->company?->name ?? config('app.name', 'Nestogy') }}" 
-                        class="px-2 py-2 hidden dark:flex" />
+        <flux:sidebar collapsible="mobile" sticky class="lg:hidden bg-white dark:bg-zinc-900 z-40">
+            <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700">
+                <flux:heading size="sm">Menu</flux:heading>
+                <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+            </div>
             
-            <x-flux-sidebar
-                :sidebar-context="$sidebarContext"
-                :active-section="$activeSection"
-                :mobile="true"
-            />
+            @livewire('sidebar', [
+                'context' => $sidebarContext,
+                'activeSection' => $activeSection,
+                'mobile' => true
+            ], key('sidebar-mobile'))
         </flux:sidebar>
     @endif
 
     <!-- Desktop Sidebar (only render when there's sidebar content) -->
     @if($sidebarContext)
-        <flux:sidebar collapsible sticky class="hidden lg:block bg-white dark:bg-zinc-900">
-            <x-flux-sidebar
-                :sidebar-context="$sidebarContext"
-                :active-section="$activeSection"
-                :mobile="false"
-            />
+        <flux:sidebar collapsible sticky class="hidden lg:block bg-white dark:bg-zinc-900 h-[calc(100vh-64px)]">
+            @livewire('sidebar', [
+                'context' => $sidebarContext,
+                'activeSection' => $activeSection,
+                'mobile' => false
+            ], key('sidebar-desktop'))
         </flux:sidebar>
     @endif
 

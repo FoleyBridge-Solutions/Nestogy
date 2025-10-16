@@ -2,15 +2,15 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use Livewire\WithFileUploads;
 use App\Traits\HasFluxToasts;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class MobileCameraUpload extends Component
 {
-    use WithFileUploads, HasFluxToasts;
+    use HasFluxToasts, WithFileUploads;
 
     public $photo;
 
@@ -42,15 +42,15 @@ class MobileCameraUpload extends Component
         try {
             $compressedImage = $this->compressImage($this->photo);
 
-            $filename = uniqid('ticket_photo_') . '.jpg';
-            $path = 'ticket-attachments/' . now()->format('Y/m');
+            $filename = uniqid('ticket_photo_').'.jpg';
+            $path = 'ticket-attachments/'.now()->format('Y/m');
 
-            Storage::disk('public')->put($path . '/' . $filename, $compressedImage);
+            Storage::disk('public')->put($path.'/'.$filename, $compressedImage);
 
             $this->photos[] = [
                 'filename' => $filename,
-                'path' => $path . '/' . $filename,
-                'url' => Storage::disk('public')->url($path . '/' . $filename),
+                'path' => $path.'/'.$filename,
+                'url' => Storage::disk('public')->url($path.'/'.$filename),
                 'size' => strlen($compressedImage),
                 'uploaded_at' => now()->toIso8601String(),
             ];
@@ -60,7 +60,7 @@ class MobileCameraUpload extends Component
 
             $this->reset('photo');
         } catch (\Exception $e) {
-            $this->dispatch('error', message: 'Failed to upload photo: ' . $e->getMessage());
+            $this->dispatch('error', message: 'Failed to upload photo: '.$e->getMessage());
         }
     }
 

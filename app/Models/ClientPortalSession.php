@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domains\Client\Models\Client;
+
 use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

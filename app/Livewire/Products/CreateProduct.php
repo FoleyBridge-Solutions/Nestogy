@@ -5,47 +5,66 @@ namespace App\Livewire\Products;
 use App\Domains\Product\Services\ProductService;
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class CreateProduct extends Component
 {
     // Basic Information
     public $name = '';
+
     public $sku = '';
+
     public $description = '';
+
     public $short_description = '';
+
     public $type = 'product';
+
     public $category_id = '';
+
     public $unit_type = 'units';
 
     // Pricing
     public $base_price = null;
+
     public $cost = null;
+
     public $currency_code = 'USD';
+
     public $pricing_model = 'fixed';
 
     // Billing
     public $billing_model = 'one_time';
+
     public $billing_cycle = 'one_time';
+
     public $billing_interval = 1;
 
     // Tax & Discounts
     public $is_taxable = true;
+
     public $tax_inclusive = false;
+
     public $allow_discounts = true;
+
     public $requires_approval = false;
 
     // Status & Settings
     public $is_active = true;
+
     public $is_featured = false;
+
     public $sort_order = 0;
 
     // Inventory
     public $track_inventory = false;
+
     public $current_stock = 0;
+
     public $min_stock_level = 0;
+
     public $reorder_level = null;
+
     public $max_quantity_per_order = null;
 
     // Categories for dropdown
@@ -111,7 +130,7 @@ class CreateProduct extends Component
         $productService = app(ProductService::class);
         $product = $productService->create($validated);
 
-        session()->flash('success', ucfirst($this->type) . ' created successfully!');
+        session()->flash('success', ucfirst($this->type).' created successfully!');
 
         return redirect()->route('products.show', $product);
     }

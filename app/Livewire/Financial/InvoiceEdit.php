@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Financial;
 
-use App\Models\Category;
 use App\Domains\Client\Models\Client;
+use App\Models\Category;
 use App\Models\Invoice;
 use App\Models\Product;
 use Flux\Flux;
@@ -84,6 +84,7 @@ class InvoiceEdit extends Component
     {
         if ($invoice->status !== 'Draft') {
             Flux::toast('Only draft invoices can be edited', variant: 'danger');
+
             return redirect()->route('financial.invoices.show', $invoice->id);
         }
 
@@ -271,12 +272,14 @@ class InvoiceEdit extends Component
 
         if (! $product) {
             Flux::toast('Product not found', variant: 'danger');
+
             return;
         }
 
         // Validate product category has invoice type
         if (! $product->category || ! $product->category->hasType(\App\Models\Category::TYPE_INVOICE)) {
             Flux::toast('This product cannot be added to invoices. Its category does not support invoicing.', variant: 'danger');
+
             return;
         }
 

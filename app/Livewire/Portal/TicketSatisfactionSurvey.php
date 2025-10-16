@@ -11,9 +11,13 @@ use Livewire\Component;
 class TicketSatisfactionSurvey extends Component
 {
     public Ticket $ticket;
+
     public $rating = null;
+
     public $feedback = '';
+
     public $submitted = false;
+
     public $existingRating = null;
 
     protected $rules = [
@@ -24,7 +28,7 @@ class TicketSatisfactionSurvey extends Component
     public function mount(Ticket $ticket)
     {
         $this->ticket = $ticket;
-        
+
         $this->existingRating = TicketRating::where('ticket_id', $ticket->id)
             ->where('user_id', Auth::id())
             ->first();
@@ -74,7 +78,7 @@ class TicketSatisfactionSurvey extends Component
 
         } catch (\Exception $e) {
             Flux::toast(
-                text: 'Failed to submit rating: ' . $e->getMessage(),
+                text: 'Failed to submit rating: '.$e->getMessage(),
                 variant: 'danger'
             );
         }

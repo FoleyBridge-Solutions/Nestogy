@@ -59,11 +59,11 @@
     <flux:card>
         <flux:table :paginate="$products">
             <flux:table.columns>
-                <flux:table.column sortable :sorted="$sortBy === 'name'" :direction="$sortOrder" wire:click="sortByColumn('name')">Name</flux:table.column>
+                <flux:table.column sortable :sorted="$sortField === 'name'" :direction="$sortDirection" wire:click="sortByColumn('name')">Name</flux:table.column>
                 <flux:table.column>SKU</flux:table.column>
                 <flux:table.column>Category</flux:table.column>
                 <flux:table.column>Type</flux:table.column>
-                <flux:table.column sortable :sorted="$sortBy === 'base_price'" :direction="$sortOrder" wire:click="sortByColumn('base_price')">Price</flux:table.column>
+                <flux:table.column sortable :sorted="$sortField === 'base_price'" :direction="$sortDirection" wire:click="sortByColumn('base_price')">Price</flux:table.column>
                 <flux:table.column>Status</flux:table.column>
                 <flux:table.column>Actions</flux:table.column>
             </flux:table.columns>

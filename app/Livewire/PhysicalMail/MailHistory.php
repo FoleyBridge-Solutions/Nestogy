@@ -2,8 +2,8 @@
 
 namespace App\Livewire\PhysicalMail;
 
-use App\Domains\PhysicalMail\Models\PhysicalMailOrder;
 use App\Domains\Client\Models\Client;
+use App\Domains\PhysicalMail\Models\PhysicalMailOrder;
 use Livewire\Component;
 use Livewire\WithPagination;
 

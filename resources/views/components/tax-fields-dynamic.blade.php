@@ -28,7 +28,7 @@
                     <select class="block w-full px-6 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" id="tax_customer_select" name="tax_customer_id" required>
                         <option value="">Select a customer...</option>
                         @php
-                            $clients = \App\Models\Client::where('company_id', auth()->user()->company_id)
+                            $clients = \App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)
                                 ->where('status', 'active')
                                 ->orderBy('name')
                                 ->get();

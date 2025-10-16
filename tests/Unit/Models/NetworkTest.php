@@ -31,7 +31,7 @@ class NetworkTest extends TestCase
 
         $model = Network::factory()->create();
 
-        $this->assertInstanceOf(\App\Models\Client::class, $model->client);
+        $this->assertInstanceOf(\App\Domains\Client\Models\Client::class, $model->client);
     }
 
     public function test_network_has_fillable_attributes(): void

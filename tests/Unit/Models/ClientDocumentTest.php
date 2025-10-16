@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Models;
 
-use App\Domains\Client\Models\ClientDocument;
+use App\Models\ClientDocument;
 use App\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;

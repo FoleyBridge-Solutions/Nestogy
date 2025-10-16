@@ -11,11 +11,17 @@ use Livewire\Component;
 class QuickReassign extends Component
 {
     public $show = false;
+
     public $tickets = [];
+
     public $selectedTickets = [];
+
     public $newAssigneeId = null;
+
     public $reassignReason = '';
+
     public $technicians = [];
+
     public $techWorkload = [];
 
     protected $listeners = ['open-reassign-modal' => 'openModal'];
@@ -56,7 +62,7 @@ class QuickReassign extends Component
             ->withCount([
                 'assignedTickets as active_count' => function ($q) {
                     $q->whereIn('status', ['Open', 'In Progress', 'Awaiting Customer']);
-                }
+                },
             ])
             ->get(['id', 'name', 'email'])
             ->map(function ($tech) {
@@ -105,13 +111,13 @@ class QuickReassign extends Component
 
         foreach ($this->selectedTickets as $ticketId) {
             $ticket = Ticket::find($ticketId);
-            
-            if (!$ticket) {
+
+            if (! $ticket) {
                 continue;
             }
 
             $oldAssignee = $ticket->assignee;
-            
+
             // Update assignment
             $ticket->update(['assigned_to' => $this->newAssigneeId]);
 
@@ -119,9 +125,9 @@ class QuickReassign extends Component
             TicketComment::create([
                 'ticket_id' => $ticket->id,
                 'company_id' => $ticket->company_id,
-                'content' => "Ticket reassigned from " . ($oldAssignee?->name ?? 'Unassigned') . 
-                           " to " . $newAssignee->name . 
-                           ($this->reassignReason ? "\n\nReason: " . $this->reassignReason : ''),
+                'content' => 'Ticket reassigned from '.($oldAssignee?->name ?? 'Unassigned').
+                           ' to '.$newAssignee->name.
+                           ($this->reassignReason ? "\n\nReason: ".$this->reassignReason : ''),
                 'visibility' => 'internal',
                 'source' => 'system',
                 'author_type' => 'user',
@@ -142,7 +148,7 @@ class QuickReassign extends Component
         }
 
         session()->flash('success', "{$count} ticket(s) reassigned to {$newAssignee->name}");
-        
+
         $this->reset(['show', 'selectedTickets', 'newAssigneeId', 'reassignReason']);
         $this->dispatch('tickets-reassigned');
     }

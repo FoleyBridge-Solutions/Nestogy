@@ -330,7 +330,7 @@
 
                 <!-- No Clients State -->
                 @php
-                    $hasClients = auth()->check() ? \App\Models\Client::where('company_id', auth()->user()->company_id)->exists() : false;
+                    $hasClients = auth()->check() ? \App\Domains\Client\Models\Client::where('company_id', auth()->user()->company_id)->exists() : false;
                 @endphp
                 @if(!$hasClients && strlen($searchQuery) < 2)
                     <div class="p-8 text-center">

@@ -151,7 +151,7 @@ class Project extends Model
      */
     public function client(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Client::class);
+        return $this->belongsTo(\App\Domains\Client\Models\Client::class);
     }
 
     /**

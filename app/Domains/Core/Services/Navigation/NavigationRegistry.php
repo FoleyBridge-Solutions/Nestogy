@@ -139,12 +139,21 @@ class NavigationRegistry
     protected static function registerTicketsDomain(): void
     {
         static::register('tickets', 'overview', [
-            'label' => 'Overview',
-            'icon' => 'home',
+            'label' => 'All Tickets',
+            'icon' => 'ticket',
             'route' => 'tickets.index',
             'permission' => 'tickets.view',
             'section' => 'primary',
             'order' => 10,
+        ]);
+
+        static::register('tickets', 'create', [
+            'label' => 'Create Ticket',
+            'icon' => 'plus',
+            'route' => 'tickets.create',
+            'permission' => 'tickets.create',
+            'section' => 'primary',
+            'order' => 20,
         ]);
 
         static::register('tickets', 'my-tickets', [
@@ -157,6 +166,15 @@ class NavigationRegistry
             'order' => 10,
         ]);
 
+        static::register('tickets', 'active-timers', [
+            'label' => 'Active Timers',
+            'icon' => 'clock',
+            'route' => 'tickets.active-timers',
+            'permission' => 'tickets.view',
+            'section' => 'my-work',
+            'order' => 20,
+        ]);
+
         static::register('tickets', 'sla-violations', [
             'label' => 'SLA Violations',
             'icon' => 'exclamation-triangle',
@@ -165,16 +183,27 @@ class NavigationRegistry
             'section' => 'critical',
             'order' => 10,
         ]);
+
+        static::register('tickets', 'unassigned', [
+            'label' => 'Unassigned Tickets',
+            'icon' => 'user-minus',
+            'route' => 'tickets.unassigned',
+            'permission' => 'tickets.view',
+            'section' => 'critical',
+            'order' => 20,
+        ]);
     }
 
     protected static function registerClientsDomain(): void
     {
         static::register('clients', 'details', [
             'label' => 'Client Details',
-            'icon' => 'chart-pie',
+            'icon' => 'building-office',
             'route' => 'clients.show',
+            'params' => ['client' => '{client_id}'],
+            'requires_client' => true,
             'permission' => 'clients.view',
-            'section' => 'primary',
+            'section' => 'client-info',
             'order' => 10,
         ]);
 
@@ -182,26 +211,232 @@ class NavigationRegistry
             'label' => 'Contacts',
             'icon' => 'users',
             'route' => 'clients.contacts.index',
+            'params' => ['client' => '{client_id}'],
+            'requires_client' => true,
             'permission' => 'clients.contacts.view',
-            'section' => 'communication',
+            'section' => 'client-info',
+            'order' => 20,
+        ]);
+
+        static::register('clients', 'locations', [
+            'label' => 'Locations',
+            'icon' => 'map-pin',
+            'route' => 'clients.locations.index',
+            'params' => ['client' => '{client_id}'],
+            'requires_client' => true,
+            'permission' => 'clients.view',
+            'section' => 'client-info',
+            'order' => 30,
+        ]);
+
+        static::register('clients', 'tickets-overview', [
+            'label' => 'All Tickets',
+            'icon' => 'ticket',
+            'route' => 'tickets.index',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'tickets.view',
+            'section' => 'tickets',
             'order' => 10,
         ]);
 
-        static::register('clients', 'tickets', [
-            'label' => 'Support Tickets',
-            'icon' => 'ticket',
+        static::register('clients', 'tickets-create', [
+            'label' => 'Create Ticket',
+            'icon' => 'plus',
+            'route' => 'tickets.create',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'tickets.create',
+            'section' => 'tickets',
+            'order' => 20,
+        ]);
+
+        static::register('clients', 'tickets-my', [
+            'label' => 'My Tickets',
+            'icon' => 'user',
             'route' => 'tickets.index',
+            'params' => ['filter' => 'my'],
+            'requires_client' => true,
             'permission' => 'tickets.view',
-            'section' => 'service',
+            'section' => 'tickets',
+            'order' => 30,
+        ]);
+
+        static::register('clients', 'tickets-sla', [
+            'label' => 'SLA Violations',
+            'icon' => 'exclamation-triangle',
+            'route' => 'tickets.sla-violations',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'tickets.view',
+            'section' => 'tickets',
+            'order' => 40,
+        ]);
+
+        static::register('clients', 'assets-overview', [
+            'label' => 'All Assets',
+            'icon' => 'server',
+            'route' => 'assets.index',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'assets.view',
+            'section' => 'assets',
             'order' => 10,
+        ]);
+
+        static::register('clients', 'assets-create', [
+            'label' => 'Add New Asset',
+            'icon' => 'plus',
+            'route' => 'assets.create',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'assets.create',
+            'section' => 'assets',
+            'order' => 20,
+        ]);
+
+
+
+        static::register('clients', 'projects-overview', [
+            'label' => 'All Projects',
+            'icon' => 'briefcase',
+            'route' => 'projects.index',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'projects.view',
+            'section' => 'projects',
+            'order' => 10,
+        ]);
+
+        static::register('clients', 'projects-create', [
+            'label' => 'Create Project',
+            'icon' => 'plus',
+            'route' => 'projects.create',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'projects.create',
+            'section' => 'projects',
+            'order' => 20,
+        ]);
+
+        static::register('clients', 'projects-active', [
+            'label' => 'Active Projects',
+            'icon' => 'play',
+            'route' => 'projects.index',
+            'params' => ['status' => 'active'],
+            'requires_client' => true,
+            'permission' => 'projects.view',
+            'section' => 'projects',
+            'order' => 30,
+        ]);
+
+
+
+        static::register('clients', 'it-docs', [
+            'label' => 'IT Documentation',
+            'icon' => 'document-text',
+            'route' => 'clients.it-documentation.client-index',
+            'params' => ['client' => '{client_id}'],
+            'requires_client' => true,
+            'permission' => 'clients.view',
+            'section' => 'infrastructure',
+            'order' => 10,
+        ]);
+
+        static::register('clients', 'documents', [
+            'label' => 'Documents',
+            'icon' => 'folder-open',
+            'route' => 'clients.documents.index',
+            'params' => ['client' => '{client_id}'],
+            'requires_client' => true,
+            'permission' => 'clients.view',
+            'section' => 'infrastructure',
+            'order' => 20,
+        ]);
+
+        static::register('clients', 'domains', [
+            'label' => 'Domains',
+            'icon' => 'globe-alt',
+            'route' => 'clients.domains.index',
+            'params' => ['client' => '{client_id}'],
+            'requires_client' => true,
+            'permission' => 'clients.view',
+            'section' => 'infrastructure',
+            'order' => 30,
+        ]);
+
+        static::register('clients', 'credentials', [
+            'label' => 'Credentials',
+            'icon' => 'key',
+            'route' => 'clients.credentials.index',
+            'params' => ['client' => '{client_id}'],
+            'requires_client' => true,
+            'permission' => 'clients.view',
+            'section' => 'infrastructure',
+            'order' => 40,
+        ]);
+
+        static::register('clients', 'licenses', [
+            'label' => 'Licenses',
+            'icon' => 'identification',
+            'route' => 'clients.licenses.index',
+            'params' => ['client' => '{client_id}'],
+            'requires_client' => true,
+            'permission' => 'clients.view',
+            'section' => 'infrastructure',
+            'order' => 50,
+        ]);
+
+        static::register('clients', 'invoices', [
+            'label' => 'Invoices',
+            'icon' => 'document-text',
+            'route' => 'financial.invoices.index',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'financial.invoices.view',
+            'section' => 'billing',
+            'order' => 10,
+        ]);
+
+        static::register('clients', 'quotes', [
+            'label' => 'Quotes',
+            'icon' => 'document-duplicate',
+            'route' => 'financial.quotes.index',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'financial.quotes.view',
+            'section' => 'billing',
+            'order' => 20,
+        ]);
+
+        static::register('clients', 'contracts', [
+            'label' => 'Contracts',
+            'icon' => 'document-check',
+            'route' => 'financial.contracts.index',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'contracts.view',
+            'section' => 'billing',
+            'order' => 30,
+        ]);
+
+        static::register('clients', 'payments', [
+            'label' => 'Payments',
+            'icon' => 'credit-card',
+            'route' => 'financial.payments.index',
+            'params' => [],
+            'requires_client' => true,
+            'permission' => 'financial.payments.view',
+            'section' => 'billing',
+            'order' => 40,
         ]);
     }
 
     protected static function registerAssetsDomain(): void
     {
         static::register('assets', 'overview', [
-            'label' => 'Overview',
-            'icon' => 'home',
+            'label' => 'All Assets',
+            'icon' => 'server',
             'route' => 'assets.index',
             'permission' => 'assets.view',
             'section' => 'primary',
@@ -221,8 +456,8 @@ class NavigationRegistry
     protected static function registerProjectsDomain(): void
     {
         static::register('projects', 'overview', [
-            'label' => 'Project Overview',
-            'icon' => 'home',
+            'label' => 'All Projects',
+            'icon' => 'briefcase',
             'route' => 'projects.index',
             'permission' => 'projects.view',
             'section' => 'primary',
@@ -235,6 +470,26 @@ class NavigationRegistry
             'route' => 'projects.create',
             'permission' => 'projects.create',
             'section' => 'primary',
+            'order' => 20,
+        ]);
+
+        static::register('projects', 'active', [
+            'label' => 'Active Projects',
+            'icon' => 'play',
+            'route' => 'projects.index',
+            'params' => ['status' => 'active'],
+            'permission' => 'projects.view',
+            'section' => 'filters',
+            'order' => 10,
+        ]);
+
+        static::register('projects', 'completed', [
+            'label' => 'Completed Projects',
+            'icon' => 'check-circle',
+            'route' => 'projects.index',
+            'params' => ['status' => 'completed'],
+            'permission' => 'projects.view',
+            'section' => 'filters',
             'order' => 20,
         ]);
     }

@@ -4,13 +4,13 @@ namespace App\Livewire;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTimeEntry;
-use Carbon\Carbon;
-use Livewire\Component;
 use App\Traits\HasFluxToasts;
+use Livewire\Component;
 
 class MobileTimeTracker extends Component
 {
     use HasFluxToasts;
+
     public $ticketId;
 
     public $ticket;
@@ -62,6 +62,7 @@ class MobileTimeTracker extends Component
     {
         if (! $this->ticketId) {
             $this->dispatch('error', message: 'Please select a ticket first');
+
             return;
         }
 
@@ -90,6 +91,7 @@ class MobileTimeTracker extends Component
 
         if (! $timeEntry) {
             $this->dispatch('error', message: 'No active timer found');
+
             return;
         }
 

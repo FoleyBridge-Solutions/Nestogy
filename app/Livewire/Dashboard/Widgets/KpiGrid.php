@@ -2,16 +2,15 @@
 
 namespace App\Livewire\Dashboard\Widgets;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Core\Services\DashboardCacheService;
 use App\Domains\Ticket\Models\Ticket;
-use App\Domains\Client\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
 use App\Traits\LazyLoadable;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -65,11 +64,11 @@ class KpiGrid extends Component
     {
         $this->loading = true;
         $companyId = Auth::user()->company_id;
-        
+
         [$startDate, $endDate, $previousStartDate, $previousEndDate] = $this->getDateRanges();
-        
+
         $metrics = $this->collectMetrics($companyId, $startDate, $endDate, $previousStartDate, $previousEndDate);
-        
+
         $this->kpis = $this->buildKpiArray($metrics);
         $this->loading = false;
     }
@@ -77,14 +76,14 @@ class KpiGrid extends Component
     protected function collectMetrics($companyId, $startDate, $endDate, $previousStartDate, $previousEndDate)
     {
         $baseQuery = ['company_id' => $companyId];
-        
+
         $currentStats = DashboardCacheService::getInvoiceStats($companyId, $startDate, $endDate);
         $previousStats = DashboardCacheService::getInvoiceStats($companyId, $previousStartDate, $previousEndDate);
-        
+
         [$totalRevenue, $previousRevenue] = $this->calculateRevenue($companyId, $currentStats, $previousStats, $startDate, $endDate, $previousStartDate, $previousEndDate);
-        
+
         $clientStats = DashboardCacheService::getClientStats($companyId, $endDate);
-        
+
         return [
             'totalRevenue' => $totalRevenue,
             'previousRevenue' => $previousRevenue,
@@ -108,19 +107,20 @@ class KpiGrid extends Component
     protected function calculateRevenue($companyId, $currentStats, $previousStats, $startDate, $endDate, $previousStartDate, $previousEndDate)
     {
         $method = $this->getRevenueRecognitionMethod();
-        
+
         if ($method === 'cash') {
             $paymentStats = DashboardCacheService::getPaymentStats($companyId, $startDate, $endDate);
             $previousPaymentStats = DashboardCacheService::getPaymentStats($companyId, $previousStartDate, $previousEndDate);
+
             return [
                 $paymentStats['completed_amount'] ?? 0,
-                $previousPaymentStats['completed_amount'] ?? 0
+                $previousPaymentStats['completed_amount'] ?? 0,
             ];
         }
-        
+
         return [
             $currentStats['paid_amount'] ?? 0,
-            $previousStats['paid_amount'] ?? 0
+            $previousStats['paid_amount'] ?? 0,
         ];
     }
 
@@ -139,11 +139,11 @@ class KpiGrid extends Component
     {
         $periodLabel = $this->getPeriodLabel();
         $comparisonLabel = $this->getComparisonLabel();
-        
+
         $overdueChange = $this->calculatePercentageChange($metrics['overdueInvoices'], $metrics['previousOverdue']);
         $resolutionChange = round($metrics['avgResolutionHours'] - $metrics['previousAvgResolution'], 1);
         $satisfactionChange = round($metrics['satisfaction'] - $metrics['previousSatisfaction'], 1);
-        
+
         return [
             $this->buildRevenueKpi($metrics, $periodLabel, $comparisonLabel),
             $this->buildPendingInvoicesKpi($metrics),

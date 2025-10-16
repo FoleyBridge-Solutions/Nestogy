@@ -145,14 +145,14 @@ class EmailMessage extends Model
     public function isFromClient(): bool
     {
         // Check if the from_address belongs to any client
-        return \App\Models\Client::where('email', $this->from_address)
+        return \App\Domains\Client\Models\Client::where('email', $this->from_address)
             ->orWhereJsonContains('contact_emails', $this->from_address)
             ->exists();
     }
 
-    public function getClientFromSender(): ?\App\Models\Client
+    public function getClientFromSender(): ?\App\Domains\Client\Models\Client
     {
-        return \App\Models\Client::where('email', $this->from_address)
+        return \App\Domains\Client\Models\Client::where('email', $this->from_address)
             ->orWhereJsonContains('contact_emails', $this->from_address)
             ->first();
     }

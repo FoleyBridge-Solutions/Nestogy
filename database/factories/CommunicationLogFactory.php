@@ -13,7 +13,7 @@ class CommunicationLogFactory extends Factory
     {
         return [
             'company_id' => \App\Models\Company::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'user_id' => \App\Models\User::factory(),
             'contact_id' => null,
             'type' => $this->faker->randomElement(['inbound', 'outbound', 'internal', 'follow_up', 'meeting']),

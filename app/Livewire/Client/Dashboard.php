@@ -11,8 +11,11 @@ use Livewire\Component;
 class Dashboard extends Component
 {
     public Contact $contact;
+
     public $client;
+
     public $roles;
+
     public $permissions;
 
     public function mount()
@@ -499,7 +502,7 @@ class Dashboard extends Component
                     'url' => route('client.contracts.download', $contract->id),
                     'icon' => 'document-text',
                 ]);
-            
+
             $documents = $documents->merge($contractDocs);
         }
 
@@ -515,7 +518,7 @@ class Dashboard extends Component
                     'url' => route('client.invoices.download', $invoice->id),
                     'icon' => 'banknotes',
                 ]);
-            
+
             $documents = $documents->merge($invoiceDocs);
         }
 
@@ -583,20 +586,20 @@ class Dashboard extends Component
         }
 
         $assets = $this->client->assets()->where('status', 'active')->get();
-        
+
         $criticalCount = $assets->filter(function ($asset) {
             return $asset->warranty_expire && $asset->warranty_expire->isPast();
         })->count();
 
         $warningCount = $assets->filter(function ($asset) {
-            return $asset->warranty_expire && 
-                   $asset->warranty_expire->isFuture() && 
+            return $asset->warranty_expire &&
+                   $asset->warranty_expire->isFuture() &&
                    $asset->warranty_expire->diffInDays(now()) <= 60;
         })->count();
 
         $healthyCount = $assets->count() - $criticalCount - $warningCount;
 
-        $overallHealth = $assets->count() > 0 
+        $overallHealth = $assets->count() > 0
             ? round((($healthyCount * 100) + ($warningCount * 50)) / $assets->count(), 0)
             : 100;
 

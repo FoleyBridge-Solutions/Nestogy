@@ -16,7 +16,7 @@ class NetworkFactory extends Factory
         $gateway = $baseIp . '.1';
         
         return ['company_id' => \App\Models\Company::factory(),
-            'client_id' => \App\Models\Client::factory(),
+            'client_id' => \App\Domains\Client\Models\Client::factory(),
             'name' => $this->faker->words(3, true),
             'description' => $this->faker->optional()->sentence,
             'vlan' => $this->faker->optional()->numberBetween(1, 4094),

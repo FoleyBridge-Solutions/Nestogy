@@ -15,7 +15,7 @@ class FileFactory extends Factory
         return [
             'company_id' => \App\Models\Company::factory(),
             'fileable_id' => 1,
-            'fileable_type' => $this->faker->randomElement([\App\Models\Client::class, \App\Models\Ticket::class, \App\Models\Project::class]),
+            'fileable_type' => $this->faker->randomElement([\App\Domains\Client\Models\Client::class, \App\Models\Ticket::class, \App\Models\Project::class]),
             'name' => $this->faker->words(3, true),
             'description' => $this->faker->optional()->sentence,
             'file_path' => 'files/'.$this->faker->uuid.'.'.$extension,

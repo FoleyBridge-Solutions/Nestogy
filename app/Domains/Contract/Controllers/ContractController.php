@@ -2,6 +2,7 @@
 
 namespace App\Domains\Contract\Controllers;
 
+use App\Domains\Client\Models\Client;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractMilestone;
 use App\Domains\Contract\Models\ContractSignature;
@@ -14,7 +15,6 @@ use App\Domains\Contract\Services\ContractGenerationService;
 use App\Domains\Contract\Services\ContractService;
 use App\Domains\Security\Services\DigitalSignatureService;
 use App\Http\Controllers\Controller;
-use App\Domains\Client\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,25 +66,22 @@ class ContractController extends Controller
     {
         $this->authorize('viewAny', Contract::class);
 
-        // Get filters from request
-        $filters = $request->only([
-            'status', 'contract_type', 'client_id', 'signature_status',
-            'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to', 'search',
-        ]);
-        
-        // If no client_id filter specified but session has selected_client_id, apply it
-        if (empty($filters['client_id']) && session('selected_client_id')) {
-            $filters['client_id'] = session('selected_client_id');
-        }
-
-        $perPage = $request->get('per_page', 25);
-        $contracts = $this->contractService->getContracts($filters, $perPage);
-        
-        // Pass client filter to statistics as well
-        $statisticsClientId = $filters['client_id'] ?? null;
-        $statistics = $this->contractService->getDashboardStatistics($statisticsClientId);
-
         if ($request->wantsJson()) {
+            $filters = $request->only([
+                'status', 'contract_type', 'client_id', 'signature_status',
+                'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to', 'search',
+            ]);
+
+            if (empty($filters['client_id']) && session('selected_client_id')) {
+                $filters['client_id'] = session('selected_client_id');
+            }
+
+            $perPage = $request->get('per_page', 25);
+            $contracts = $this->contractService->getContracts($filters, $perPage);
+
+            $statisticsClientId = $filters['client_id'] ?? null;
+            $statistics = $this->contractService->getDashboardStatistics($statisticsClientId);
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -94,10 +91,7 @@ class ContractController extends Controller
             ]);
         }
 
-        // Get clients for filter
-        $clients = Client::where('company_id', Auth::user()->company_id)->orderBy('name')->get();
-
-        return view('financial.contracts.index', compact('contracts', 'statistics', 'clients'));
+        return view('financial.contracts.index-livewire');
     }
 
     /**
