@@ -3,9 +3,9 @@
 namespace App\Domains\Client\Services;
 
 use App\Domains\Email\Services\UnifiedMailService;
-use App\Models\CommunicationLog;
-use App\Models\Contact;
-use App\Models\User;
+use App\Domains\Client\Models\CommunicationLog;
+use App\Domains\Client\Models\Contact;
+use App\Domains\Core\Models\User;
 use Exception;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;

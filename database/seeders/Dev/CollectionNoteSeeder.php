@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\CollectionNote;
-use App\Models\Company;
+use App\Domains\Collections\Models\CollectionNote;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
 
 class CollectionNoteSeeder extends Seeder

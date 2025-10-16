@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\Asset;
-use App\Models\User;
+use App\Domains\Asset\Models\Asset;
+use App\Domains\Core\Models\User;
 
 class AssetPolicy
 {

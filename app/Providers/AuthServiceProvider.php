@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use App\Models\User;
-use App\Models\UserSetting;
+use App\Domains\Core\Models\User;
+use App\Domains\Core\Models\UserSetting;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 

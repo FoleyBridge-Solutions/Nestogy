@@ -4,7 +4,7 @@ namespace Database\Seeders\Dev;
 
 use App\Models\TicketComment;
 use App\Models\Ticket;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Seeder;
 
 class TicketCommentSeeder extends Seeder

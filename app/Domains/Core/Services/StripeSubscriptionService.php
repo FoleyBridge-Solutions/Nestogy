@@ -3,7 +3,7 @@
 namespace App\Domains\Core\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\PaymentMethod;
+use App\Domains\Financial\Models\PaymentMethod;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Stripe\Customer;

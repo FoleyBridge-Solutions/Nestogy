@@ -4,7 +4,7 @@ namespace Database\Seeders\Dev;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Models\TicketReply;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Seeder;
 
 class TicketReplySeeder extends Seeder

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Company;
-use App\Models\Vendor;
+use App\Domains\Company\Models\Company;
+use App\Domains\Project\Models\Vendor;
 use Illuminate\Database\Seeder;
 
 class VendorSeeder extends Seeder

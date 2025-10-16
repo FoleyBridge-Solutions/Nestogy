@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Financial;
 
-use App\Models\Payment;
+use App\Domains\Financial\Models\Payment;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 

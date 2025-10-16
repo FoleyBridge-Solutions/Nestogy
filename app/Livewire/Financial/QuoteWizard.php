@@ -3,9 +3,9 @@
 namespace App\Livewire\Financial;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Category;
-use App\Models\Quote;
-use App\Models\QuoteTemplate;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Financial\Models\Quote;
+use App\Domains\Financial\Models\QuoteTemplate;
 use App\Traits\QuotePricingCalculations;
 use Livewire\Component;
 

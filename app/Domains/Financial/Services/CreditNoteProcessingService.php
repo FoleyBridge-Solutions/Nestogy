@@ -3,11 +3,11 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\CreditApplication;
-use App\Models\CreditNote;
-use App\Models\CreditNoteItem;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
+use App\Domains\Company\Models\CreditApplication;
+use App\Domains\Financial\Models\CreditNote;
+use App\Domains\Financial\Models\CreditNoteItem;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\InvoiceItem;
 use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

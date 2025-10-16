@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\QuoteInvoiceConversion;
+use App\Domains\Financial\Models\QuoteInvoiceConversion;
 use Illuminate\Database\Seeder;
 
 class QuoteInvoiceConversionSeeder extends Seeder

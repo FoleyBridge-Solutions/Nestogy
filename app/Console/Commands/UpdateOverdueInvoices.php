@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Invoice;
+use App\Domains\Financial\Models\Invoice;
 use Illuminate\Console\Command;
 
 class UpdateOverdueInvoices extends Command

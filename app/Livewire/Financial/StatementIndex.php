@@ -3,7 +3,7 @@
 namespace App\Livewire\Financial;
 
 use App\Domains\Client\Models\Client;
-use App\Models\PaymentApplication;
+use App\Domains\Financial\Models\PaymentApplication;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;

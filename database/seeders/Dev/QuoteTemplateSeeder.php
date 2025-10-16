@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\QuoteTemplate;
+use App\Domains\Financial\Models\QuoteTemplate;
 use Illuminate\Database\Seeder;
 
 class QuoteTemplateSeeder extends Seeder

@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\Contact;
-use App\Models\User;
+use App\Domains\Client\Models\Contact;
+use App\Domains\Core\Models\User;
 
 class ContactPolicy
 {

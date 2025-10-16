@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Company;
-use App\Models\CompanyHierarchy;
-use App\Models\CrossCompanyUser;
+use App\Domains\Company\Models\Company;
+use App\Domains\Company\Models\CompanyHierarchy;
+use App\Domains\Company\Models\CrossCompanyUser;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

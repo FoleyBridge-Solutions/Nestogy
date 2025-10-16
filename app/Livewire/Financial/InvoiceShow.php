@@ -3,8 +3,8 @@
 namespace App\Livewire\Financial;
 
 use App\Domains\Financial\Services\InvoiceService;
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;

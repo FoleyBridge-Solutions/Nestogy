@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\UsageTier;
+use App\Domains\Product\Models\UsageTier;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UsageTierFactory extends Factory

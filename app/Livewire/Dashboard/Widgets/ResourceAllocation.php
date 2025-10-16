@@ -3,8 +3,8 @@
 namespace App\Livewire\Dashboard\Widgets;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Project;
-use App\Models\User;
+use App\Domains\Project\Models\Project;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;

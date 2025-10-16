@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\UserSetting;
-use App\Models\User;
+use App\Domains\Core\Models\UserSetting;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Seeder;
 
 class UserSettingSeeder extends Seeder

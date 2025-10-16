@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\SubsidiaryPermission;
-use App\Models\Company;
+use App\Domains\Company\Models\SubsidiaryPermission;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

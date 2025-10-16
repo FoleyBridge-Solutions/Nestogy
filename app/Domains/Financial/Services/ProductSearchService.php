@@ -3,9 +3,9 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Product;
-use App\Models\ProductBundle;
-use App\Models\Service;
+use App\Domains\Product\Models\Product;
+use App\Domains\Product\Models\ProductBundle;
+use App\Domains\Product\Models\Service;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 

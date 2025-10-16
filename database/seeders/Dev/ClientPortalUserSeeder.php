@@ -3,8 +3,8 @@
 namespace Database\Seeders\Dev;
 
 use App\Domains\Client\Models\Client;
-use App\Models\ClientPortalUser;
-use App\Models\Contact;
+use App\Domains\Client\Models\ClientPortalUser;
+use App\Domains\Client\Models\Contact;
 use Illuminate\Database\Seeder;
 
 class ClientPortalUserSeeder extends Seeder

@@ -3,7 +3,7 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Invoice;
+use App\Domains\Financial\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

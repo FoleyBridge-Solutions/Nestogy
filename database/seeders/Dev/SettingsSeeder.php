@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Company;
-use App\Models\Setting;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\Setting;
 use Illuminate\Database\Seeder;
 
 class SettingsSeeder extends Seeder

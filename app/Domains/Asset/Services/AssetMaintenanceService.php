@@ -4,7 +4,7 @@ namespace App\Domains\Asset\Services;
 
 use App\Domains\Integration\Services\AssetSyncService;
 use App\Jobs\AssetMaintenanceTask;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 

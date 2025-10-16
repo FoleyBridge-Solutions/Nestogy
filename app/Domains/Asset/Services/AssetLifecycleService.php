@@ -3,7 +3,7 @@
 namespace App\Domains\Asset\Services;
 
 use App\Domains\Integration\Services\AssetSyncService;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Support\Facades\Log;
 
 /**

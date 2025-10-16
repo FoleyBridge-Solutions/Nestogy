@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\CompanySubscription;
+use App\Domains\Company\Models\CompanySubscription;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CompanySubscriptionFactory extends Factory

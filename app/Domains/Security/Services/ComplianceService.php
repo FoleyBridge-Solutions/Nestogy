@@ -2,10 +2,10 @@
 
 namespace App\Domains\Security\Services;
 
-use App\Models\AccountHold;
+use App\Domains\Company\Models\AccountHold;
 use App\Domains\Client\Models\Client;
-use App\Models\CollectionNote;
-use App\Models\DunningAction;
+use App\Domains\Collections\Models\CollectionNote;
+use App\Domains\Collections\Models\DunningAction;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

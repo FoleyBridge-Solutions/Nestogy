@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Settings;
 
-use App\Models\Category;
+use App\Domains\Financial\Models\Category;
 use Livewire\Component;
 
 class CategoryManager extends Component

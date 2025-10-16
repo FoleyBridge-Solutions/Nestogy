@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\CompanyCustomization;
+use App\Domains\Company\Models\CompanyCustomization;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CompanyCustomizationFactory extends Factory

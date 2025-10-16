@@ -2,9 +2,9 @@
 
 namespace App\Domains\Core\Services;
 
-use App\Models\Company;
-use App\Models\CompanyCustomization;
-use App\Models\Setting;
+use App\Domains\Company\Models\Company;
+use App\Domains\Company\Models\CompanyCustomization;
+use App\Domains\Core\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

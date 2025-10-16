@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\MailTemplate;
+use App\Domains\Core\Models\MailTemplate;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class MailTemplateFactory extends Factory

@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\UsageBucket;
-use App\Models\Company;
+use App\Domains\Product\Models\UsageBucket;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

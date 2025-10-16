@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\Vendor;
-use App\Models\Company;
+use App\Domains\Project\Models\Vendor;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

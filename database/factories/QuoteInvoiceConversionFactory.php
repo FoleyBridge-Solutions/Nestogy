@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\QuoteInvoiceConversion;
+use App\Domains\Financial\Models\QuoteInvoiceConversion;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class QuoteInvoiceConversionFactory extends Factory

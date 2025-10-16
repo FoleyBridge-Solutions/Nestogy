@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Settings;
 
-use App\Models\AuditLog;
-use App\Models\User;
+use App\Domains\Core\Models\AuditLog;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Url;
 use Livewire\Component;

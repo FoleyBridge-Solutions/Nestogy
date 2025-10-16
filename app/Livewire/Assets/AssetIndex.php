@@ -4,8 +4,8 @@ namespace App\Livewire\Assets;
 
 use App\Domains\Client\Models\Client;
 use App\Livewire\BaseIndexComponent;
-use App\Models\Asset;
-use App\Models\User;
+use App\Domains\Asset\Models\Asset;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class AssetIndex extends BaseIndexComponent

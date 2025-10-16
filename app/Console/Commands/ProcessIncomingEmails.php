@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Domains\Email\Services\ImapService;
 use App\Domains\Ticket\Services\TicketService;
 use App\Domains\Client\Models\Client;
-use App\Models\Contact;
+use App\Domains\Client\Models\Contact;
 use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;

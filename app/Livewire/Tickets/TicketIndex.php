@@ -5,7 +5,7 @@ namespace App\Livewire\Tickets;
 use App\Domains\Client\Models\Client;
 use App\Domains\Ticket\Models\Ticket;
 use App\Livewire\BaseIndexComponent;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class TicketIndex extends BaseIndexComponent

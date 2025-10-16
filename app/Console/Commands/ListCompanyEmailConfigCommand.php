@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Console\Command;
 
 class ListCompanyEmailConfigCommand extends Command

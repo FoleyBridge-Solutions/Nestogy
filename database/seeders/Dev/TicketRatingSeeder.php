@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\TicketRating;
+use App\Domains\Ticket\Models\TicketRating;
 use App\Models\Ticket;
 use Illuminate\Database\Seeder;
 

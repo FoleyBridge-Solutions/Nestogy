@@ -3,9 +3,9 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\PricingRule;
-use App\Models\Product;
-use App\Models\ProductBundle;
+use App\Domains\Product\Models\PricingRule;
+use App\Domains\Product\Models\Product;
+use App\Domains\Product\Models\ProductBundle;
 use Illuminate\Support\Collection;
 
 class ProductPricingService

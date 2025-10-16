@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\PhysicalMailSettings;
+use App\Domains\PhysicalMail\Models\PhysicalMailSettings;
 use Illuminate\Database\Seeder;
 
 class PhysicalMailSettingsSeeder extends Seeder

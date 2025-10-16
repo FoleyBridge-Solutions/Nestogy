@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domains\Contract\Models\ContractNavigationItem;
 use App\Domains\Contract\Services\DynamicContractRouteService;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\CompanyHierarchy;
+use App\Domains\Company\Models\CompanyHierarchy;
 use Illuminate\Support\Facades\Auth;
 
 /**

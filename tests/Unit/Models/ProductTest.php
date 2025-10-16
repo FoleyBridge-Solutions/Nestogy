@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\Product;
+use App\Domains\Product\Models\Product;
 
 class ProductTest extends ModelTestCase
 {

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
-use App\Models\CompanyMailSettings;
+use App\Domains\Company\Models\Company;
+use App\Domains\Company\Models\CompanyMailSettings;
 use Illuminate\Database\Seeder;
 
 class CompanyMailSettingsSeeder extends Seeder

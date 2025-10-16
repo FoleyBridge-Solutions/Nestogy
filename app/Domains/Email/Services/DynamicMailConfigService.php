@@ -2,7 +2,7 @@
 
 namespace App\Domains\Email\Services;
 
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;

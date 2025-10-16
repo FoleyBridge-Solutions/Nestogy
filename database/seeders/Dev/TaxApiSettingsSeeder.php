@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\TaxApiSettings;
+use App\Domains\Tax\Models\TaxApiSettings;
 use Illuminate\Database\Seeder;
 
 class TaxApiSettingsSeeder extends Seeder

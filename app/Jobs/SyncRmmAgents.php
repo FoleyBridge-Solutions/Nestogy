@@ -6,7 +6,7 @@ use App\Domains\Integration\Models\DeviceMapping;
 use App\Domains\Integration\Models\RmmClientMapping;
 use App\Domains\Integration\Models\RmmIntegration;
 use App\Domains\Integration\Services\RmmServiceFactory;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;

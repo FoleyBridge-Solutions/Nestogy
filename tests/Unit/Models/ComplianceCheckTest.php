@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\ComplianceCheck;
-use App\Models\Company;
+use App\Domains\Tax\Models\ComplianceCheck;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

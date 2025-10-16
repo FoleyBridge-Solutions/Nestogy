@@ -3,7 +3,7 @@
 namespace App\Domains\Core\Services\Settings;
 
 use App\Domains\Email\Services\UnifiedMailService;
-use App\Models\SettingsConfiguration;
+use App\Domains\Core\Models\SettingsConfiguration;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;

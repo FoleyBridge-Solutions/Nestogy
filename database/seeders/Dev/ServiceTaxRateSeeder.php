@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\ServiceTaxRate;
+use App\Domains\Tax\Models\ServiceTaxRate;
 use Illuminate\Database\Seeder;
 
 class ServiceTaxRateSeeder extends Seeder

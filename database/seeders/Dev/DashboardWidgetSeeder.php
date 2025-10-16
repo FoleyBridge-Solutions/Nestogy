@@ -2,9 +2,9 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Company;
-use App\Models\DashboardWidget;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\DashboardWidget;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Seeder;
 
 class DashboardWidgetSeeder extends Seeder

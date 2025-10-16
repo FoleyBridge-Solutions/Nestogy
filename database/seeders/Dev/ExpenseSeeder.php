@@ -2,11 +2,11 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Category;
-use App\Models\Company;
-use App\Models\Expense;
-use App\Models\User;
-use App\Models\Vendor;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Company\Models\Company;
+use App\Domains\Financial\Models\Expense;
+use App\Domains\Core\Models\User;
+use App\Domains\Project\Models\Vendor;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 

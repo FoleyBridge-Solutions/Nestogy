@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\UsageTier;
+use App\Domains\Product\Models\UsageTier;
 use Illuminate\Database\Seeder;
 
 class UsageTierSeeder extends Seeder

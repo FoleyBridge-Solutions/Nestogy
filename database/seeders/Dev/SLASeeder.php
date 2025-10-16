@@ -3,7 +3,7 @@
 namespace Database\Seeders\Dev;
 
 use App\Domains\Ticket\Models\SLA;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;

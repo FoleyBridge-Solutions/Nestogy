@@ -42,7 +42,7 @@ return [
     |
     */
 
-    'user_model' => \App\Models\User::class,
+    'user_model' => \App\Domains\Core\Models\User::class,
 
     /*
     |--------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\ServiceTaxRate;
+use App\Domains\Tax\Models\ServiceTaxRate;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ServiceTaxRateFactory extends Factory

@@ -3,7 +3,7 @@
 namespace App\Domains\Integration\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\UsageRecord;
+use App\Domains\Product\Models\UsageRecord;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Cache;

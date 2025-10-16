@@ -2,7 +2,7 @@
 
 namespace App\Domains\Product\Services;
 
-use App\Models\Product;
+use App\Domains\Product\Models\Product;
 use Illuminate\Support\Facades\DB;
 
 class ProductService

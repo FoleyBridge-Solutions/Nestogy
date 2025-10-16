@@ -2,9 +2,9 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use App\Models\Lead;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 

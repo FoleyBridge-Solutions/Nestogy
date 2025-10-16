@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\UsageRecord;
+use App\Domains\Product\Models\UsageRecord;
 use Illuminate\Database\Seeder;
 
 class UsageRecordSeeder extends Seeder

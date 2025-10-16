@@ -6,7 +6,7 @@ use App\Domains\Project\Models\Project;
 use App\Domains\Project\Models\ProjectMember;
 use App\Domains\Project\Models\ProjectTask;
 use App\Domains\Project\Services\ProjectService;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Livewire\Component;
 
 class ProjectDetail extends Component

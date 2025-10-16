@@ -6,7 +6,7 @@ use App\Domains\Knowledge\Models\KbArticle;
 use App\Domains\Knowledge\Models\KbArticleFeedback;
 use App\Domains\Knowledge\Models\KbArticleView;
 use App\Domains\Knowledge\Models\KbCategory;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 

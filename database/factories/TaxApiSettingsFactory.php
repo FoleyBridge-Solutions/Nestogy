@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\TaxApiSettings;
+use App\Domains\Tax\Models\TaxApiSettings;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TaxApiSettingsFactory extends Factory

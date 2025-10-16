@@ -2,9 +2,9 @@
 
 namespace App\Domains\Asset\Models;
 
-use App\Models\Asset;
-use App\Models\User;
-use App\Models\Vendor;
+use App\Domains\Asset\Models\Asset;
+use App\Domains\Core\Models\User;
+use App\Domains\Project\Models\Vendor;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

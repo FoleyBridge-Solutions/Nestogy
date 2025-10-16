@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\PhysicalMailSettings;
-use App\Models\Company;
+use App\Domains\PhysicalMail\Models\PhysicalMailSettings;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

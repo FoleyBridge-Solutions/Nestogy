@@ -4,8 +4,8 @@ namespace Database\Factories;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTimeEntry;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TicketTimeEntryFactory extends Factory

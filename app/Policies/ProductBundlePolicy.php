@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\ProductBundle;
-use App\Models\User;
+use App\Domains\Product\Models\ProductBundle;
+use App\Domains\Core\Models\User;
 
 class ProductBundlePolicy
 {

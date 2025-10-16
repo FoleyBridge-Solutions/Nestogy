@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

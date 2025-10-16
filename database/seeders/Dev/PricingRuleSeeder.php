@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\PricingRule;
+use App\Domains\Product\Models\PricingRule;
 use Illuminate\Database\Seeder;
 
 class PricingRuleSeeder extends Seeder

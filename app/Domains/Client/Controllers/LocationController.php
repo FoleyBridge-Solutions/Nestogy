@@ -4,8 +4,8 @@ namespace App\Domains\Client\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\Contact;
-use App\Models\Location;
+use App\Domains\Client\Models\Contact;
+use App\Domains\Client\Models\Location;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\AutoPayment;
+use App\Domains\Financial\Models\AutoPayment;
 use App\Domains\Client\Models\Client;
 use Illuminate\Database\Seeder;
 

@@ -3,7 +3,7 @@
 namespace Database\Seeders\Dev;
 
 use App\Domains\Client\Models\Client;
-use App\Models\ClientDocument;
+use App\Domains\Client\Models\ClientDocument;
 use Illuminate\Database\Seeder;
 
 class ClientDocumentSeeder extends Seeder

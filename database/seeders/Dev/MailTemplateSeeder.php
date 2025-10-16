@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Company;
-use App\Models\MailTemplate;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\MailTemplate;
 use Illuminate\Database\Seeder;
 
 class MailTemplateSeeder extends Seeder

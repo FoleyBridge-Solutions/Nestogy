@@ -3,7 +3,7 @@
 namespace App\Domains\Email\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\MailQueue;
+use App\Domains\Core\Models\MailQueue;
 use Illuminate\Http\Request;
 
 class EmailTrackingController extends Controller

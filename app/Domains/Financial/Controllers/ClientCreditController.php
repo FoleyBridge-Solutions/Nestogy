@@ -5,7 +5,7 @@ namespace App\Domains\Financial\Controllers;
 use App\Domains\Financial\Services\ClientCreditService;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\ClientCredit;
+use App\Domains\Financial\Models\ClientCredit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

@@ -3,12 +3,12 @@
 namespace App\Domains\Core\Services;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
-use App\Models\Invoice;
-use App\Models\Project;
-use App\Models\Quote;
-use App\Models\User;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Project\Models\Project;
+use App\Domains\Financial\Models\Quote;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;

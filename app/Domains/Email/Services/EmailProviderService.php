@@ -7,7 +7,7 @@ use App\Domains\Email\Services\Providers\EmailProviderInterface;
 use App\Domains\Email\Services\Providers\GoogleWorkspaceProvider;
 use App\Domains\Email\Services\Providers\ManualProvider;
 use App\Domains\Email\Services\Providers\MicrosoftGraphProvider;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Support\Facades\Log;
 
 class EmailProviderService

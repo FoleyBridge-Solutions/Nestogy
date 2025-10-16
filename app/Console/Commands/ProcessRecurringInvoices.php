@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domains\Financial\Services\RecurringInvoiceService;
-use App\Models\RecurringInvoice;
+use App\Domains\Financial\Models\RecurringInvoice;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;

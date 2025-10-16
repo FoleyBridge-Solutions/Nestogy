@@ -6,8 +6,8 @@ use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractAssetAssignment;
 use App\Domains\Contract\Models\ContractBillingCalculation;
 use App\Domains\Contract\Models\ContractContactAssignment;
-use App\Models\Asset;
-use App\Models\Contact;
+use App\Domains\Asset\Models\Asset;
+use App\Domains\Client\Models\Contact;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 

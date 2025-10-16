@@ -2,10 +2,10 @@
 
 namespace App\Domains\Financial\Services\TaxEngine;
 
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\ProductTaxData;
-use App\Models\TaxProfile;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Product\Models\Product;
+use App\Domains\Tax\Models\ProductTaxData;
+use App\Domains\Tax\Models\TaxProfile;
 use Illuminate\Support\Collection;
 
 /**

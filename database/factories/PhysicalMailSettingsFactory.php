@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\PhysicalMailSettings;
+use App\Domains\PhysicalMail\Models\PhysicalMailSettings;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PhysicalMailSettingsFactory extends Factory

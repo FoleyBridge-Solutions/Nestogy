@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\Category;
-use App\Models\Company;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Company\Models\Company;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

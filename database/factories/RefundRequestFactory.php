@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\RefundRequest;
+use App\Domains\Financial\Models\RefundRequest;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RefundRequestFactory extends Factory

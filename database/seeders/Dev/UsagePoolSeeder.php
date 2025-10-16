@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\UsagePool;
+use App\Domains\Product\Models\UsagePool;
 use Illuminate\Database\Seeder;
 
 class UsagePoolSeeder extends Seeder

@@ -4,11 +4,11 @@ namespace Tests\Feature\Livewire;
 
 use App\Domains\Core\Services\QuickActionService;
 use App\Livewire\CommandPalette;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\Invoice;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Core\Models\User;
 use Livewire\Livewire;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;

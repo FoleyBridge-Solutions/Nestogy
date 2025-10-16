@@ -8,7 +8,7 @@ use App\Domains\Security\Models\SuspiciousLoginAttempt;
 use App\Domains\Security\Models\TrustedDevice;
 use App\Domains\Security\Services\IpLookupService;
 use App\Domains\Security\Services\SuspiciousLoginService;
-use App\Models\AuditLog;
+use App\Domains\Core\Models\AuditLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

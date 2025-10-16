@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
-use App\Models\CustomQuickAction;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\CustomQuickAction;
 use Illuminate\Database\Seeder;
 
 class QuickActionsSeeder extends Seeder

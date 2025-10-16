@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\PortalNotification;
+use App\Domains\Core\Models\PortalNotification;
 use Illuminate\Database\Seeder;
 
 class PortalNotificationSeeder extends Seeder

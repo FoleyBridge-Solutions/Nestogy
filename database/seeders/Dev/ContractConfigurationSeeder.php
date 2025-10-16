@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\ContractConfiguration;
+use App\Domains\Contract\Models\ContractConfiguration;
 use Illuminate\Database\Seeder;
 
 class ContractConfigurationSeeder extends Seeder

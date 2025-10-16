@@ -2,9 +2,9 @@
 
 namespace App\Domains\Core\Services;
 
-use App\Models\CustomQuickAction;
-use App\Models\QuickActionFavorite;
-use App\Models\User;
+use App\Domains\Core\Models\CustomQuickAction;
+use App\Domains\Core\Models\QuickActionFavorite;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Silber\Bouncer\BouncerFacade as Bouncer;

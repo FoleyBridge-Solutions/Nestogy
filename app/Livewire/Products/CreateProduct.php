@@ -3,8 +3,8 @@
 namespace App\Livewire\Products;
 
 use App\Domains\Product\Services\ProductService;
-use App\Models\Category;
-use App\Models\Product;
+use App\Domains\Financial\Models\Category;
+use App\Domains\Product\Models\Product;
 use Livewire\Component;
 
 class CreateProduct extends Component

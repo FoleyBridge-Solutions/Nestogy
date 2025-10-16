@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Models;
 
 use App\Domains\Client\Models\Client;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

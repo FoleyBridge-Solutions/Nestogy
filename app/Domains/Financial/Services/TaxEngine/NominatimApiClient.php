@@ -3,7 +3,7 @@
 namespace App\Domains\Financial\Services\TaxEngine;
 
 use App\Domains\Financial\Exceptions\GeocodingApiException;
-use App\Models\TaxApiQueryCache;
+use App\Domains\Tax\Models\TaxApiQueryCache;
 use Exception;
 
 /**

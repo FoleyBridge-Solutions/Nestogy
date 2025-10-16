@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\PricingRule;
+use App\Domains\Product\Models\PricingRule;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PricingRuleFactory extends Factory

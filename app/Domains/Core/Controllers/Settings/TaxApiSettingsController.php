@@ -4,7 +4,7 @@ namespace App\Domains\Core\Controllers\Settings;
 
 use App\Domains\Financial\Services\TaxEngine\TaxEngineRouter;
 use App\Http\Controllers\Controller;
-use App\Models\TaxApiSettings;
+use App\Domains\Tax\Models\TaxApiSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

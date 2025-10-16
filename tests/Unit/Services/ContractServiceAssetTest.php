@@ -4,10 +4,10 @@ namespace Tests\Unit\Services;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Services\ContractService;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use Tests\RefreshesDatabase;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;

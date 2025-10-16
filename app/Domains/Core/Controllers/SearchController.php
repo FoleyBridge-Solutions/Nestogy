@@ -3,12 +3,12 @@
 namespace App\Domains\Core\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
-use App\Models\Invoice;
-use App\Models\Project;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Project\Models\Project;
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

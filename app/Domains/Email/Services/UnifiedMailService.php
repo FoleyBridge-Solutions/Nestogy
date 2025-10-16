@@ -3,9 +3,9 @@
 namespace App\Domains\Email\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\CompanyMailSettings;
-use App\Models\MailQueue;
-use App\Models\MailTemplate;
+use App\Domains\Company\Models\CompanyMailSettings;
+use App\Domains\Core\Models\MailQueue;
+use App\Domains\Core\Models\MailTemplate;
 use Exception;
 use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\Cache;

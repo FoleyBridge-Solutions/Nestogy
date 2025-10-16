@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\ClientPortalUser;
-use App\Models\ClientPortalSession;
+use App\Domains\Client\Models\ClientPortalUser;
+use App\Domains\Client\Models\ClientPortalSession;
 use Illuminate\Database\Seeder;
 
 class ClientPortalSessionSeeder extends Seeder

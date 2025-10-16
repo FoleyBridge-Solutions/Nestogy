@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\QuoteTemplate;
-use App\Models\Company;
+use App\Domains\Financial\Models\QuoteTemplate;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

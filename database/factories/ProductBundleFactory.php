@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\ProductBundle;
+use App\Domains\Product\Models\ProductBundle;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ProductBundleFactory extends Factory

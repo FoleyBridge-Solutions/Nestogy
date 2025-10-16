@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\SubscriptionPlan;
+use App\Domains\Product\Models\SubscriptionPlan;
 use Illuminate\Console\Command;
 
 /**

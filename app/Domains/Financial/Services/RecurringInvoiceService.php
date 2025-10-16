@@ -4,8 +4,8 @@ namespace App\Domains\Financial\Services;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractMilestone;
-use App\Models\Invoice;
-use App\Models\RecurringInvoice;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\RecurringInvoice;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

@@ -4,7 +4,7 @@ namespace App\Domains\Asset\Services;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractSchedule;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;

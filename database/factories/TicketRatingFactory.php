@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\TicketRating;
+use App\Domains\Ticket\Models\TicketRating;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TicketRatingFactory extends Factory

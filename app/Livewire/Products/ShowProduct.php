@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Products;
 
-use App\Models\Product;
+use App\Domains\Product\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 

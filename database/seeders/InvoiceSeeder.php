@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
+use App\Domains\Company\Models\Company;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\InvoiceItem;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 

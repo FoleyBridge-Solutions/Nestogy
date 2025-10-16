@@ -3,7 +3,7 @@
 namespace App\Livewire\Portal;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\TicketRating;
+use App\Domains\Ticket\Models\TicketRating;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;

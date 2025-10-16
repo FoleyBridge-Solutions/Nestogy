@@ -3,8 +3,8 @@
 namespace App\Domains\Core\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;

@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\PricingRule;
-use App\Models\User;
+use App\Domains\Product\Models\PricingRule;
+use App\Domains\Core\Models\User;
 
 class PricingRulePolicy
 {

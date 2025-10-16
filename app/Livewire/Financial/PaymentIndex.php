@@ -4,7 +4,7 @@ namespace App\Livewire\Financial;
 
 use App\Domains\Core\Services\NavigationService;
 use App\Livewire\BaseIndexComponent;
-use App\Models\Payment;
+use App\Domains\Financial\Models\Payment;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;

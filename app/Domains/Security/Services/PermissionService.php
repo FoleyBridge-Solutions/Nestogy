@@ -2,7 +2,7 @@
 
 namespace App\Domains\Security\Services;
 
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Collection;
 use Silber\Bouncer\BouncerFacade as Bouncer;
 

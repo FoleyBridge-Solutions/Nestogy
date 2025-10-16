@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\RevenueMetric;
+use App\Domains\Financial\Models\RevenueMetric;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RevenueMetricFactory extends Factory

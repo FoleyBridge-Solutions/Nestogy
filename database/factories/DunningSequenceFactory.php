@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\DunningSequence;
+use App\Domains\Collections\Models\DunningSequence;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DunningSequenceFactory extends Factory

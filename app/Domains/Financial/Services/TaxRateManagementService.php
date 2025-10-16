@@ -3,8 +3,8 @@
 namespace App\Domains\Financial\Services;
 
 use App\Models\TaxCategory;
-use App\Models\TaxJurisdiction;
-use App\Models\TaxRateHistory;
+use App\Domains\Tax\Models\TaxJurisdiction;
+use App\Domains\Tax\Models\TaxRateHistory;
 use App\Models\VoIPTaxRate;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\InAppNotification;
-use App\Models\NotificationPreference;
-use App\Models\User;
+use App\Domains\Core\Models\InAppNotification;
+use App\Domains\Core\Models\NotificationPreference;
+use App\Domains\Core\Models\User;
 
 class NotificationService
 {

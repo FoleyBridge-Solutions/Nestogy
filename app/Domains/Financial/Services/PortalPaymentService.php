@@ -2,12 +2,12 @@
 
 namespace App\Domains\Financial\Services;
 
-use App\Models\AutoPayment;
+use App\Domains\Financial\Models\AutoPayment;
 use App\Domains\Client\Models\Client;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\PaymentMethod;
-use App\Models\PortalNotification;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Models\PaymentMethod;
+use App\Domains\Core\Models\PortalNotification;
 use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;

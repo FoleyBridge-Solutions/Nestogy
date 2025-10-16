@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\DashboardWidget;
+use App\Domains\Core\Models\DashboardWidget;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DashboardWidgetFactory extends Factory

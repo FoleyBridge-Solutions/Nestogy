@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Recurring;
+use App\Domains\Financial\Models\Recurring;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RecurringFactory extends Factory

@@ -3,8 +3,8 @@
 namespace App\Domains\PhysicalMail\Models;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

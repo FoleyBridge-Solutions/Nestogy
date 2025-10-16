@@ -2,7 +2,7 @@
 
 namespace App\Domains\Core\Services\Settings;
 
-use App\Models\SettingsConfiguration;
+use App\Domains\Core\Models\SettingsConfiguration;
 use Illuminate\Support\Facades\Crypt;
 
 class FinancialSettingsService extends BaseSettingsService

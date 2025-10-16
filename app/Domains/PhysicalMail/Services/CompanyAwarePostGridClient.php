@@ -2,7 +2,7 @@
 
 namespace App\Domains\PhysicalMail\Services;
 
-use App\Models\PhysicalMailSettings;
+use App\Domains\PhysicalMail\Models\PhysicalMailSettings;
 
 class CompanyAwarePostGridClient extends PostGridClient
 {

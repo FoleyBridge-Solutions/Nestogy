@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\MailQueue;
+use App\Domains\Core\Models\MailQueue;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class MailQueueFactory extends Factory

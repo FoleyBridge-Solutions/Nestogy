@@ -5,7 +5,7 @@ namespace App\Domains\Ticket\Controllers;
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketTimeEntry;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

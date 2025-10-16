@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Mail\Tickets\SatisfactionSurveyReminder;
-use App\Models\TicketRating;
+use App\Domains\Ticket\Models\TicketRating;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

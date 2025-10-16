@@ -5,7 +5,7 @@ namespace App\Domains\Client\Controllers;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
 use App\Models\ClientService;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use App\Traits\UsesSelectedClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

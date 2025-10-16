@@ -4,9 +4,9 @@ namespace App\Domains\Asset\Controllers;
 
 use App\Domains\Asset\Models\AssetMaintenance;
 use App\Http\Controllers\Controller;
-use App\Models\Asset;
-use App\Models\User;
-use App\Models\Vendor;
+use App\Domains\Asset\Models\Asset;
+use App\Domains\Core\Models\User;
+use App\Domains\Project\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;

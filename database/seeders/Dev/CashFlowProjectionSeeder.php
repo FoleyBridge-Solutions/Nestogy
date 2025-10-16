@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\CashFlowProjection;
-use App\Models\Company;
+use App\Domains\Financial\Models\CashFlowProjection;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
 
 class CashFlowProjectionSeeder extends Seeder

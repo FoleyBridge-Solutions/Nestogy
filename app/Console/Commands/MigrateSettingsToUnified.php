@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Company;
-use App\Models\CompanyMailSettings;
-use App\Models\SettingsConfiguration;
+use App\Domains\Company\Models\Company;
+use App\Domains\Company\Models\CompanyMailSettings;
+use App\Domains\Core\Models\SettingsConfiguration;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Models\ClientCredit;
-use App\Models\ClientCreditApplication;
-use App\Models\Invoice;
-use App\Models\User;
+use App\Domains\Financial\Models\ClientCredit;
+use App\Domains\Financial\Models\ClientCreditApplication;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ClientCreditApplicationFactory extends Factory

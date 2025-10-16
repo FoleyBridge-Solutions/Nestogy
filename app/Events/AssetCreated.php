@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;

@@ -3,7 +3,7 @@
 namespace App\Domains\Knowledge\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\QuoteTemplate;
+use App\Domains\Financial\Models\QuoteTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;

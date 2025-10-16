@@ -2,7 +2,7 @@
 
 namespace App\Domains\Email\Models;
 
-use App\Models\CommunicationLog;
+use App\Domains\Client\Models\CommunicationLog;
 use App\Domains\Ticket\Models\Ticket;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

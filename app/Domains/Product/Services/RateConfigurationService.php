@@ -3,7 +3,7 @@
 namespace App\Domains\Product\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Carbon\Carbon;
 
 class RateConfigurationService

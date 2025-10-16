@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\RevenueMetric;
+use App\Domains\Financial\Models\RevenueMetric;
 use Illuminate\Database\Seeder;
 
 class RevenueMetricSeeder extends Seeder

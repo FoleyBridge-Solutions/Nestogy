@@ -3,7 +3,7 @@
 namespace App\Domains\Core\Services\Settings;
 
 use App\Domains\Core\Exceptions\SettingsAuthenticationException;
-use App\Models\SettingsConfiguration;
+use App\Domains\Core\Models\SettingsConfiguration;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;

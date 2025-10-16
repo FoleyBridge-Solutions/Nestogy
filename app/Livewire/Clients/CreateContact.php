@@ -3,7 +3,7 @@
 namespace App\Livewire\Clients;
 
 use App\Domains\Core\Services\NavigationService;
-use App\Models\Contact;
+use App\Domains\Client\Models\Contact;
 use Livewire\Component;
 
 class CreateContact extends Component

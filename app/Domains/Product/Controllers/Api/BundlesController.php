@@ -3,7 +3,7 @@
 namespace App\Domains\Product\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProductBundle;
+use App\Domains\Product\Models\ProductBundle;
 use Illuminate\Http\Request;
 
 class BundlesController extends Controller

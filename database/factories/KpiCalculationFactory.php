@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\KpiCalculation;
+use App\Domains\Core\Models\KpiCalculation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class KpiCalculationFactory extends Factory

@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\ContractConfiguration;
+use App\Domains\Contract\Models\ContractConfiguration;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ContractConfigurationFactory extends Factory

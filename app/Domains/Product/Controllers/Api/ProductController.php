@@ -6,7 +6,7 @@ use App\Domains\Financial\Services\ProductPricingService;
 use App\Domains\Financial\Services\ProductSearchService;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\Product;
+use App\Domains\Product\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

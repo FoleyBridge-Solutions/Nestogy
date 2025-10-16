@@ -4,8 +4,8 @@ namespace App\Domains\Financial\Controllers;
 
 use App\Domains\Financial\Services\PaymentApplicationService;
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
-use App\Models\PaymentApplication;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Models\PaymentApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

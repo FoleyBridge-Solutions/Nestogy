@@ -5,7 +5,7 @@ namespace App\Domains\Contract\Models;
 use App\Domains\Contract\Services\ContractConfigurationRegistry;
 use App\Domains\Contract\Traits\HasBillingCalculations;
 use App\Domains\Contract\Traits\HasCompanyConfiguration;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use App\Traits\BelongsToCompany;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

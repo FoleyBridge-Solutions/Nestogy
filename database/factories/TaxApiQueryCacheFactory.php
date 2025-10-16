@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\TaxApiQueryCache;
+use App\Domains\Tax\Models\TaxApiQueryCache;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TaxApiQueryCacheFactory extends Factory

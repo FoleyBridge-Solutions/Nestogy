@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Domains\Asset\Services\AssetMaintenanceService;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

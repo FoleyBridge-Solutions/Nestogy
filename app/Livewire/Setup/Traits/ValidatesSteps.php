@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Setup\Traits;
 
-use App\Models\Setting;
+use App\Domains\Core\Models\Setting;
 use Illuminate\Validation\Rules\Password;
 
 trait ValidatesSteps

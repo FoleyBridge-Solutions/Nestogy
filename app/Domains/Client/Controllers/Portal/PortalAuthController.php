@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
-use App\Models\ClientPortalUser;
+use App\Domains\Client\Models\ClientPortalUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;

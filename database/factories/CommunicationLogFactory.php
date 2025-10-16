@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\CommunicationLog;
+use App\Domains\Client\Models\CommunicationLog;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CommunicationLogFactory extends Factory

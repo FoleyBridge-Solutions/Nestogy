@@ -4,9 +4,9 @@ namespace App\Domains\Client\Controllers\Api\Portal;
 
 use App\Domains\Financial\Services\PortalPaymentService;
 use App\Http\Controllers\Controller;
-use App\Models\AutoPayment;
-use App\Models\Invoice;
-use App\Models\PaymentMethod;
+use App\Domains\Financial\Models\AutoPayment;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\PaymentMethod;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

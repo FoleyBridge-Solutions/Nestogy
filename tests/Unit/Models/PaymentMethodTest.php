@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\PaymentMethod;
-use App\Models\Company;
+use App\Domains\Financial\Models\PaymentMethod;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

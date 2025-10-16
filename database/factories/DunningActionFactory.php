@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\DunningAction;
+use App\Domains\Collections\Models\DunningAction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DunningActionFactory extends Factory

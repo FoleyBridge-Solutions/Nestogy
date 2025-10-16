@@ -2,7 +2,7 @@
 
 namespace App\Domains\Core\Services\Settings;
 
-use App\Models\SettingsConfiguration;
+use App\Domains\Core\Models\SettingsConfiguration;
 
 class SecuritySettingsService extends BaseSettingsService
 {

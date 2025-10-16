@@ -3,10 +3,10 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\DunningAction;
-use App\Models\DunningCampaign;
-use App\Models\Payment;
-use App\Models\PaymentPlan;
+use App\Domains\Collections\Models\DunningAction;
+use App\Domains\Collections\Models\DunningCampaign;
+use App\Domains\Financial\Models\Payment;
+use App\Domains\Financial\Models\PaymentPlan;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Tag;
-use App\Models\Company;
+use App\Domains\Core\Models\Tag;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
 
 class TagSeeder extends Seeder

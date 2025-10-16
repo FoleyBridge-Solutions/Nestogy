@@ -4,8 +4,8 @@ namespace App\Domains\Security\Services;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractAuditLog;
-use App\Models\ComplianceCheck;
-use App\Models\ComplianceRequirement;
+use App\Domains\Tax\Models\ComplianceCheck;
+use App\Domains\Tax\Models\ComplianceRequirement;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;

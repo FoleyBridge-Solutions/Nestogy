@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\TaxApiQueryCache;
+use App\Domains\Tax\Models\TaxApiQueryCache;
 use Illuminate\Database\Seeder;
 
 class TaxApiQueryCacheSeeder extends Seeder

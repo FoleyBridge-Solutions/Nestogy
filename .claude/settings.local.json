@@ -87,7 +87,10 @@
       "Bash(do if ! ls database/migrations/*$table*)",
       "Bash(then echo \"MISSING: $table\" fi done)",
       "Read(//tmp/**)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(git mv:*)",
+      "Bash(if grep -q \"^namespace App\\\\Models;\" \"$file\")",
+      "Bash(then)"
     ],
     "deny": [],
     "ask": []

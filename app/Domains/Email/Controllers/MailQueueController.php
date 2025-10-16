@@ -4,7 +4,7 @@ namespace App\Domains\Email\Controllers;
 
 use App\Domains\Email\Services\UnifiedMailService;
 use App\Http\Controllers\Controller;
-use App\Models\MailQueue;
+use App\Domains\Core\Models\MailQueue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 

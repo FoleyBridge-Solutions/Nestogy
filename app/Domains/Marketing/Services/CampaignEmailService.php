@@ -9,7 +9,7 @@ use App\Domains\Marketing\Models\CampaignEnrollment;
 use App\Domains\Marketing\Models\CampaignSequence;
 use App\Domains\Marketing\Models\EmailTracking;
 use App\Domains\Marketing\Models\MarketingCampaign;
-use App\Models\Contact;
+use App\Domains\Client\Models\Contact;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;

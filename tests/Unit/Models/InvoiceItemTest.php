@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
-use App\Models\Product;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\InvoiceItem;
+use App\Domains\Product\Models\Product;
 
 class InvoiceItemTest extends ModelTestCase
 {

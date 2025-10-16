@@ -8,7 +8,7 @@ use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketAssignment;
 use App\Domains\Ticket\Models\TicketPriorityQueue;
 use App\Domains\Client\Models\Client;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;

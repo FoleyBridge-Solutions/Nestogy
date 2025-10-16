@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domains\Contract\Services\ContractLifecycleService;
 use App\Mail\ContractRenewalSummary;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;

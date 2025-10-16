@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\Company;
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Domains\Company\Models\Company;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Payment;
 
 class PaymentTest extends ModelTestCase
 {

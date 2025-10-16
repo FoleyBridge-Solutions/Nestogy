@@ -5,7 +5,7 @@ namespace App\Livewire\Client;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractMilestone;
 use App\Domains\Contract\Models\ContractSignature;
-use App\Models\Contact;
+use App\Domains\Client\Models\Contact;
 use Livewire\Component;
 
 class Dashboard extends Component

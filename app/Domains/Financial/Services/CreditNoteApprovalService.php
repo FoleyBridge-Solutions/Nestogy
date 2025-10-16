@@ -3,9 +3,9 @@
 namespace App\Domains\Financial\Services;
 
 use App\Domains\Client\Models\Client;
-use App\Models\CreditNote;
-use App\Models\CreditNoteApproval;
-use App\Models\User;
+use App\Domains\Financial\Models\CreditNote;
+use App\Domains\Financial\Models\CreditNoteApproval;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Collection;

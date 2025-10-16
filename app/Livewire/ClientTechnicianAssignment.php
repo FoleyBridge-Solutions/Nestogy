@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Domains\Client\Models\Client;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

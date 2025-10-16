@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\DunningCampaign;
+use App\Domains\Collections\Models\DunningCampaign;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DunningCampaignFactory extends Factory

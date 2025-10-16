@@ -4,7 +4,7 @@ namespace App\Domains\Report\Services;
 
 use App\Domains\Report\Models\Report;
 use App\Domains\Report\Models\ReportSchedule;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;

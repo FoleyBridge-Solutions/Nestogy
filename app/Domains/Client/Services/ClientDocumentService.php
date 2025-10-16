@@ -2,7 +2,7 @@
 
 namespace App\Domains\Client\Services;
 
-use App\Models\ClientDocument;
+use App\Domains\Client\Models\ClientDocument;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;

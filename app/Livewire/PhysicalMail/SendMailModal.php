@@ -6,7 +6,7 @@ use App\Domains\Client\Models\Client;
 use App\Domains\PhysicalMail\Jobs\SendLetterJob;
 use App\Domains\PhysicalMail\Models\PhysicalMailTemplate;
 use App\Domains\PhysicalMail\Services\PhysicalMailTemplateBuilder;
-use App\Models\Invoice;
+use App\Domains\Financial\Models\Invoice;
 use Livewire\Component;
 
 class SendMailModal extends Component

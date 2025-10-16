@@ -7,7 +7,7 @@ use App\Domains\Email\Services\EmailProviderService;
 use App\Domains\Email\Services\EmailProviderValidationService;
 use App\Domains\Email\Services\OAuthTokenManager;
 use App\Http\Controllers\Controller;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;

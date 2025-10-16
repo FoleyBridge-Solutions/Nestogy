@@ -11,7 +11,7 @@ use App\Domains\Project\Repositories\ProjectRepository;
 use App\Domains\Project\Services\ProjectService;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;

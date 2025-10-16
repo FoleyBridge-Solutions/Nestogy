@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\PermissionGroup;
-use App\Models\Company;
+use App\Domains\Core\Models\PermissionGroup;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

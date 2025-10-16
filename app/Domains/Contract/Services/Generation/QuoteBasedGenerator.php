@@ -4,7 +4,7 @@ namespace App\Domains\Contract\Services\Generation;
 
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractTemplate;
-use App\Models\Quote;
+use App\Domains\Financial\Models\Quote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;

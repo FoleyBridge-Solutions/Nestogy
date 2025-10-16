@@ -5,7 +5,7 @@ namespace App\Domains\Financial\Http\Controllers\Webhooks;
 use App\Domains\Core\Services\StripeSubscriptionService;
 use App\Http\Controllers\Controller;
 use App\Domains\Client\Models\Client;
-use App\Models\PaymentMethod;
+use App\Domains\Financial\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Event;

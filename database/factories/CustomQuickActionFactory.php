@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\CustomQuickAction;
+use App\Domains\Core\Models\CustomQuickAction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CustomQuickActionFactory extends Factory

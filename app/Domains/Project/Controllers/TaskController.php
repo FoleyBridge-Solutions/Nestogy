@@ -5,7 +5,7 @@ namespace App\Domains\Project\Controllers;
 use App\Domains\Project\Models\Project;
 use App\Domains\Project\Models\Task;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;

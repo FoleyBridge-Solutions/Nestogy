@@ -2,10 +2,10 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\Category;
+use App\Domains\Financial\Models\Category;
 use App\Domains\Client\Models\Client;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\InvoiceItem;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 

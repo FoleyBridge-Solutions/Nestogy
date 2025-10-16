@@ -3,9 +3,9 @@
 namespace App\Domains\Client\Services;
 
 use App\Domains\Ticket\Models\Ticket;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use App\Domains\Client\Models\Client;
-use App\Models\Project;
+use App\Domains\Project\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

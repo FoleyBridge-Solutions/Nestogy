@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\RefundRequest;
+use App\Domains\Financial\Models\RefundRequest;
 use Illuminate\Database\Seeder;
 
 class RefundRequestSeeder extends Seeder

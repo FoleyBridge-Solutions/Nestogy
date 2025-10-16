@@ -5,7 +5,7 @@ namespace App\Domains\Contract\Services\Generation;
 use App\Domains\Contract\Models\Contract;
 use App\Domains\Contract\Models\ContractTemplate;
 use App\Domains\Client\Models\Client;
-use App\Models\Quote;
+use App\Domains\Financial\Models\Quote;
 
 class ContractGenerator
 {

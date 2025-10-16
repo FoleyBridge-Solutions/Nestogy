@@ -4,7 +4,7 @@ namespace App\Domains\Asset\Controllers;
 
 use App\Domains\Asset\Models\AssetDepreciation;
 use App\Http\Controllers\Controller;
-use App\Models\Asset;
+use App\Domains\Asset\Models\Asset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;

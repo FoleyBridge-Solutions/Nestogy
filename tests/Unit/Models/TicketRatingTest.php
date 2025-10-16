@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\TicketRating;
-use App\Models\Company;
+use App\Domains\Ticket\Models\TicketRating;
+use App\Domains\Company\Models\Company;
 use Tests\RefreshesDatabase;
 use Tests\TestCase;
 

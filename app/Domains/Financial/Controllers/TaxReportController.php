@@ -3,12 +3,12 @@
 namespace App\Domains\Financial\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Invoice;
-use App\Models\Quote;
-use App\Models\ServiceTaxRate;
-use App\Models\TaxCalculation;
-use App\Models\TaxJurisdiction;
-use App\Models\TaxProfile;
+use App\Domains\Financial\Models\Invoice;
+use App\Domains\Financial\Models\Quote;
+use App\Domains\Tax\Models\ServiceTaxRate;
+use App\Domains\Tax\Models\TaxCalculation;
+use App\Domains\Tax\Models\TaxJurisdiction;
+use App\Domains\Tax\Models\TaxProfile;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;

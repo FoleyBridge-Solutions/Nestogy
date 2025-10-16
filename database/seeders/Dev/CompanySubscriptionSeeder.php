@@ -2,8 +2,8 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\CompanySubscription;
-use App\Models\Company;
+use App\Domains\Company\Models\CompanySubscription;
+use App\Domains\Company\Models\Company;
 use Illuminate\Database\Seeder;
 
 class CompanySubscriptionSeeder extends Seeder

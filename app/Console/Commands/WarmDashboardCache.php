@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Domains\Core\Services\DashboardLazyLoadService;
-use App\Models\Company;
-use App\Models\User;
+use App\Domains\Company\Models\Company;
+use App\Domains\Core\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Auth;
 

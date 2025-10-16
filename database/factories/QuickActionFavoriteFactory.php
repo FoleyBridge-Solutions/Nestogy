@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\QuickActionFavorite;
+use App\Domains\Core\Models\QuickActionFavorite;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class QuickActionFavoriteFactory extends Factory

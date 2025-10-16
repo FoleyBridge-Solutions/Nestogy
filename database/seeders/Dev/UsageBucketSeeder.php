@@ -2,7 +2,7 @@
 
 namespace Database\Seeders\Dev;
 
-use App\Models\UsageBucket;
+use App\Domains\Product\Models\UsageBucket;
 use Illuminate\Database\Seeder;
 
 class UsageBucketSeeder extends Seeder

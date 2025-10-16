@@ -4,7 +4,7 @@ namespace App\Livewire\Tickets;
 
 use App\Domains\Ticket\Models\Ticket;
 use App\Domains\Ticket\Models\TicketComment;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use App\Notifications\TicketNotification;
 use Livewire\Component;
 

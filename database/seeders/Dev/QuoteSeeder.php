@@ -3,12 +3,12 @@
 namespace Database\Seeders\Dev;
 
 use App\Domains\Client\Models\Client;
-use App\Models\Company;
+use App\Domains\Company\Models\Company;
 use App\Models\Lead;
-use App\Models\Product;
-use App\Models\Quote;
+use App\Domains\Product\Models\Product;
+use App\Domains\Financial\Models\Quote;
 use App\Models\QuoteItem;
-use App\Models\User;
+use App\Domains\Core\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 

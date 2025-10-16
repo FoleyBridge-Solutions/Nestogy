@@ -3,7 +3,7 @@
 namespace App\Domains\Client\Requests;
 
 use App\Http\Requests\BaseStoreRequest;
-use App\Models\ClientDocument;
+use App\Domains\Client\Models\ClientDocument;
 
 class StoreClientDocumentRequest extends BaseStoreRequest
 {
