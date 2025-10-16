@@ -452,20 +452,18 @@ class DashboardDataService
 
     private function getCurrentMRR(): array
     {
-        try {
-            // Estimate MRR from recent invoices
-            $recentInvoices = Invoice::where('company_id', $this->companyId)
-                ->where('status', Invoice::STATUS_PAID)
-                ->whereBetween('date', [now()->subMonth(), now()])
-                ->sum('amount');
+        // Estimate MRR from recent invoices
+        $recentInvoices = Invoice::where('company_id', $this->companyId)
+            ->where('status', Invoice::STATUS_PAID)
+            ->whereBetween('date', [now()->subMonth(), now()])
+            ->sum('amount');
 
-            return [
-                'value' => $recentInvoices,
-                'growth_percentage' => 0,
-                'growth_amount' => 0,
-                'format' => 'currency',
-            ];
-        }
+        return [
+            'value' => $recentInvoices,
+            'growth_percentage' => 0,
+            'growth_amount' => 0,
+            'format' => 'currency',
+        ];
     }
 
     private function getNewCustomers(Carbon $startDate, Carbon $endDate): array
