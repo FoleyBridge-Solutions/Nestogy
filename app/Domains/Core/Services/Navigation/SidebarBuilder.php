@@ -12,9 +12,9 @@ class SidebarBuilder
     protected $selectedClient;
     protected string $currentRoute;
 
-    public function __construct(string $context)
+    public function __construct(?string $context)
     {
-        $this->context = $context;
+        $this->context = $context ?? 'dashboard';
         $this->user = Auth::user();
         $this->selectedClient = NavigationContext::getSelectedClient();
         $this->currentRoute = Route::currentRouteName() ?? '';
