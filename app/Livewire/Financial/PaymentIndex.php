@@ -54,11 +54,7 @@ class PaymentIndex extends BaseIndexComponent
                 'sortable' => false,
                 'filterable' => true,
                 'type' => 'select',
-                'options' => [
-                    'unapplied' => 'Unapplied',
-                    'partially_applied' => 'Partially Applied',
-                    'fully_applied' => 'Fully Applied',
-                ],
+                'dynamic_options' => true,
                 'component' => 'financial.payments.cells.application-status',
             ],
             'payment_method' => [
@@ -66,15 +62,7 @@ class PaymentIndex extends BaseIndexComponent
                 'sortable' => true,
                 'filterable' => true,
                 'type' => 'select',
-                'options' => [
-                    'credit_card' => 'Credit Card',
-                    'bank_transfer' => 'Bank Transfer',
-                    'check' => 'Check',
-                    'cash' => 'Cash',
-                    'paypal' => 'PayPal',
-                    'stripe' => 'Stripe',
-                    'other' => 'Other',
-                ],
+                'dynamic_options' => true,
                 'component' => 'financial.payments.cells.payment-method',
             ],
             'status' => [
@@ -82,12 +70,7 @@ class PaymentIndex extends BaseIndexComponent
                 'sortable' => true,
                 'filterable' => true,
                 'type' => 'select',
-                'options' => [
-                    'pending' => 'Pending',
-                    'completed' => 'Completed',
-                    'failed' => 'Failed',
-                    'refunded' => 'Refunded',
-                ],
+                'dynamic_options' => true,
                 'component' => 'financial.payments.cells.status',
             ],
             'payment_date' => [

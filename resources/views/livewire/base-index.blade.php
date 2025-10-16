@@ -26,27 +26,34 @@
                         @endforeach
                     </flux:pillbox>
                 @elseif($type === 'date')
-                    <flux:pillbox 
-                        wire:model.live="columnFilters.{{ $filterKey }}" 
+                    <flux:date-picker 
+                        wire:model.live="columnFilters.{{ $filterKey }}"
+                        mode="range"
+                        with-presets
+                        presets="today yesterday thisWeek lastWeek last7Days thisMonth lastMonth thisYear yearToDate"
                         placeholder="{{ $column['label'] }}"
-                        size="sm"
-                        searchable
-                        multiple
+                        clearable
                     >
-                        @php
-                            $dateOptions = [];
-                            $dateOptions['today'] = 'Today';
-                            $dateOptions['yesterday'] = 'Yesterday';
-                            $dateOptions['this_week'] = 'This Week';
-                            $dateOptions['last_week'] = 'Last Week';
-                            $dateOptions['this_month'] = 'This Month';
-                            $dateOptions['last_month'] = 'Last Month';
-                            $dateOptions['this_year'] = 'This Year';
-                        @endphp
-                        @foreach($dateOptions as $value => $label)
-                            <flux:pillbox.option value="{{ $value }}">{{ $label }}</flux:pillbox.option>
-                        @endforeach
-                    </flux:pillbox>
+                        <x-slot name="trigger">
+                            <flux:date-picker.button 
+                                placeholder="{{ $column['label'] }}"
+                                size="sm"
+                                clearable
+                            />
+                        </x-slot>
+                    </flux:date-picker>
+                @elseif(($column['filter_type'] ?? null) === 'numeric_range')
+                    @php
+                        $stats = $this->getColumnStats($key);
+                    @endphp
+                    <x-numeric-range-filter 
+                        wire-model="columnFilters.{{ $filterKey }}"
+                        :label="$column['label']"
+                        :step="$column['step'] ?? '0.01'"
+                        :data-min="$stats['min']"
+                        :data-max="$stats['max']"
+                        :prefix="$column['prefix'] ?? null"
+                    />
                 @endif
             @endif
         @endforeach

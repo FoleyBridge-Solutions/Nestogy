@@ -57,13 +57,7 @@ class QuoteIndex extends BaseIndexComponent
                 'sortable' => true,
                 'filterable' => true,
                 'type' => 'select',
-                'options' => [
-                    'draft' => 'Draft',
-                    'sent' => 'Sent',
-                    'accepted' => 'Accepted',
-                    'rejected' => 'Rejected',
-                    'expired' => 'Expired',
-                ],
+                'dynamic_options' => true,
                 'component' => 'financial.quotes.cells.status',
             ],
             'created_at' => [

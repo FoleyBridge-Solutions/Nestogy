@@ -19,6 +19,10 @@ abstract class BaseIndexComponent extends Component
     use WithTableSorting;
 
     public $columnFilters = [];
+    
+    protected $filterOptionsCache = [];
+    
+    protected $columnStatsCache = [];
 
     protected $queryString = [];
 
@@ -34,7 +38,13 @@ abstract class BaseIndexComponent extends Component
         foreach ($this->getColumns() as $key => $column) {
             if ($column['filterable'] ?? false) {
                 $filterKey = str_replace('.', '_', $key);
-                $this->columnFilters[$filterKey] = '';
+                $filterType = $column['filter_type'] ?? ($column['type'] ?? 'text');
+                
+                if ($filterType === 'numeric_range') {
+                    $this->columnFilters[$filterKey] = ['min' => '', 'max' => ''];
+                } else {
+                    $this->columnFilters[$filterKey] = '';
+                }
             }
         }
     }
@@ -92,25 +102,44 @@ abstract class BaseIndexComponent extends Component
 
     protected function applyColumnFilters($query)
     {
+        $visibleColumns = $this->getVisibleColumns();
+        
         foreach ($this->columnFilters as $filterKey => $value) {
             if (empty($value)) {
                 continue;
             }
 
-            $column = str_replace('_', '.', $filterKey);
-            
-            $columnConfig = collect($this->getColumns())->firstWhere(function ($config, $key) use ($filterKey) {
+            $columnConfig = collect($visibleColumns)->firstWhere(function ($config, $key) use ($filterKey) {
                 return str_replace('.', '_', $key) === $filterKey;
             });
 
             if (!$columnConfig) {
                 continue;
             }
+            
+            $columnKey = collect($visibleColumns)->search(function ($config, $key) use ($filterKey) {
+                return str_replace('.', '_', $key) === $filterKey;
+            });
+            
+            $column = $columnKey ?: $filterKey;
 
             $isArray = is_array($value);
-            $isSelect = ($columnConfig['type'] ?? 'text') === 'select';
+            $type = $columnConfig['type'] ?? 'text';
+            $filterType = $columnConfig['filter_type'] ?? $type;
+            $isSelect = $type === 'select';
+            $isDateRange = $type === 'date' && $isArray && isset($value['start'], $value['end']);
+            $isNumericRange = $filterType === 'numeric_range' && $isArray && (isset($value['min']) || isset($value['max']));
 
-            if (str_contains($column, '.')) {
+            if ($isDateRange) {
+                $query->whereBetween($column, [$value['start'], $value['end']]);
+            } elseif ($isNumericRange) {
+                if (isset($value['min']) && $value['min'] !== '' && $value['min'] !== null) {
+                    $query->where($column, '>=', $value['min']);
+                }
+                if (isset($value['max']) && $value['max'] !== '' && $value['max'] !== null) {
+                    $query->where($column, '<=', $value['max']);
+                }
+            } elseif (str_contains($column, '.')) {
                 [$relation, $field] = explode('.', $column);
                 $query->whereHas($relation, function ($q) use ($field, $value, $isArray, $isSelect) {
                     if ($isArray && $isSelect) {
@@ -145,7 +174,7 @@ abstract class BaseIndexComponent extends Component
     {
         $this->search = '';
         foreach ($this->columnFilters as $key => $value) {
-            $this->columnFilters[$key] = '';
+            $this->columnFilters[$key] = is_array($value) ? ['min' => '', 'max' => ''] : '';
         }
         $this->resetPage();
     }
@@ -156,12 +185,31 @@ abstract class BaseIndexComponent extends Component
             return true;
         }
 
-        return collect($this->columnFilters)->filter()->isNotEmpty();
+        return collect($this->columnFilters)->filter(function ($value) {
+            if (is_array($value)) {
+                return !empty($value['min']) || !empty($value['max']);
+            }
+            return !empty($value);
+        })->isNotEmpty();
     }
 
     protected function getColumns(): array
     {
         return [];
+    }
+
+    protected function getVisibleColumns(): array
+    {
+        $columns = $this->getColumns();
+        
+        $selectedClient = app(NavigationService::class)->getSelectedClient();
+        if ($selectedClient) {
+            $columns = collect($columns)->filter(function ($column, $key) {
+                return !str_contains($key, 'client');
+            })->toArray();
+        }
+        
+        return $columns;
     }
 
     protected function getStats(): array
@@ -179,14 +227,127 @@ abstract class BaseIndexComponent extends Component
             'actionLabel' => 'Create New',
         ];
     }
+    
+    public function getFilterOptions(string $columnKey): array
+    {
+        if (isset($this->filterOptionsCache[$columnKey])) {
+            return $this->filterOptionsCache[$columnKey];
+        }
+
+        $columns = $this->getColumns();
+        $columnConfig = $columns[$columnKey] ?? null;
+
+        if (!$columnConfig || !($columnConfig['filterable'] ?? false)) {
+            return [];
+        }
+
+        if (isset($columnConfig['options']) && !($columnConfig['dynamic_options'] ?? false)) {
+            return $columnConfig['options'];
+        }
+
+        $query = $this->getBaseQuery()->where('company_id', $this->companyId);
+        $query = $this->applyArchiveFilter($query);
+        
+        $selectedClient = app(NavigationService::class)->getSelectedClient();
+        if ($selectedClient && method_exists($query->getModel(), 'client')) {
+            $clientId = is_object($selectedClient) ? $selectedClient->id : $selectedClient;
+            $query->where('client_id', $clientId);
+        }
+
+        if (str_contains($columnKey, '.')) {
+            [$relation, $field] = explode('.', $columnKey);
+            $values = $query->with($relation)
+                ->get()
+                ->pluck("{$relation}.{$field}")
+                ->filter()
+                ->unique()
+                ->sort()
+                ->values();
+        } else {
+            $values = $query->distinct()
+                ->pluck($columnKey)
+                ->filter()
+                ->unique()
+                ->sort()
+                ->values();
+        }
+
+        $options = [];
+        foreach ($values as $value) {
+            $label = $columnConfig['option_label_callback'] ?? null;
+            $options[$value] = $label ? $label($value) : $this->formatOptionLabel($value);
+        }
+
+        $this->filterOptionsCache[$columnKey] = $options;
+
+        return $options;
+    }
+
+    protected function formatOptionLabel(string $value): string
+    {
+        return str($value)->replace('_', ' ')->title()->toString();
+    }
+    
+    public function getColumnStats(string $columnKey): array
+    {
+        if (isset($this->columnStatsCache[$columnKey])) {
+            return $this->columnStatsCache[$columnKey];
+        }
+
+        $columns = $this->getColumns();
+        $columnConfig = $columns[$columnKey] ?? null;
+        
+        if (!$columnConfig || !($columnConfig['filterable'] ?? false)) {
+            return ['min' => 0, 'max' => 0];
+        }
+
+        $query = $this->getBaseQuery()->where('company_id', $this->companyId);
+        $query = $this->applyArchiveFilter($query);
+        
+        $selectedClient = app(NavigationService::class)->getSelectedClient();
+        if ($selectedClient && method_exists($query->getModel(), 'client')) {
+            $clientId = is_object($selectedClient) ? $selectedClient->id : $selectedClient;
+            $query->where('client_id', $clientId);
+        }
+
+        // Check if column exists in database table
+        $tableName = $query->getModel()->getTable();
+        if (!Schema::hasColumn($tableName, $columnKey)) {
+            // Column doesn't exist (computed property), return defaults
+            $this->columnStatsCache[$columnKey] = ['min' => 0, 'max' => 0];
+            return $this->columnStatsCache[$columnKey];
+        }
+
+        try {
+            $stats = $query->selectRaw("MIN({$columnKey}) as min, MAX({$columnKey}) as max")->first();
+            
+            $this->columnStatsCache[$columnKey] = [
+                'min' => $stats->min ?? 0,
+                'max' => $stats->max ?? 0,
+            ];
+        } catch (\Exception $e) {
+            // If query fails, return defaults
+            $this->columnStatsCache[$columnKey] = ['min' => 0, 'max' => 0];
+        }
+        
+        return $this->columnStatsCache[$columnKey];
+    }
 
     abstract protected function getBaseQuery(): Builder;
 
     public function render()
     {
+        $columns = $this->getVisibleColumns();
+        
+        foreach ($columns as $key => $column) {
+            if (($column['filterable'] ?? false) && ($column['dynamic_options'] ?? false)) {
+                $columns[$key]['options'] = $this->getFilterOptions($key);
+            }
+        }
+        
         return view('livewire.base-index', [
             'items' => $this->getItems(),
-            'columns' => $this->getColumns(),
+            'columns' => $columns,
             'stats' => $this->getStats(),
             'emptyState' => $this->getEmptyState(),
         ]);
