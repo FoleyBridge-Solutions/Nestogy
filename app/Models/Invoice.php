@@ -443,29 +443,6 @@ class Invoice extends Model
         $this->update(['amount' => $total]);
     }
 
-            $taxCalculations = $this->calculateVoIPTaxes($serviceAddress);
-
-        // Update individual items with new tax calculations
-        foreach ($taxCalculations['calculations'] as $calculation) {
-            $item = $this->items()->find($calculation['item_id']);
-            if ($item) {
-                $item->update([
-                    'tax' => $calculation['total_tax_amount'],
-                    'voip_tax_data' => $calculation,
-                ]);
-            }
-        }
-
-        // Recalculate invoice totals
-        $this->calculateTotals();
-
-        \Log::info('Invoice VoIP taxes recalculated', [
-            'invoice_id' => $this->id,
-            'total_tax' => $taxCalculations['total_tax_amount'],
-            'items_processed' => count($taxCalculations['calculations']),
-        ]);
-    }
-
     /**
      * Get public URL for client access.
      */
