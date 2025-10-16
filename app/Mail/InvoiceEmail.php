@@ -3,7 +3,7 @@
 namespace App\Mail;
 
 use App\Contracts\Services\PdfServiceInterface;
-use App\Models\Invoice;
+use App\Domains\Financial\Models\Invoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;

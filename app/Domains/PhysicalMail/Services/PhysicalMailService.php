@@ -395,7 +395,7 @@ class PhysicalMailService
     /**
      * Send an invoice by mail using safe template
      */
-    public function sendInvoice(\App\Models\Invoice $invoice, array $options = []): PhysicalMailOrder
+    public function sendInvoice(\App\Domains\Financial\Models\Invoice $invoice, array $options = []): PhysicalMailOrder
     {
         $variables = [
             'invoice_number' => $invoice->getFormattedNumber(),

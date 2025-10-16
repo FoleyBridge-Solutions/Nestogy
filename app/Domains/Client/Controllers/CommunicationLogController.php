@@ -354,7 +354,7 @@ class CommunicationLogController extends Controller
         }
 
         try {
-            return \App\Models\Invoice::where('client_id', $client->id)
+            return \App\Domains\Financial\Models\Invoice::where('client_id', $client->id)
                 ->whereIn('status', ['sent', 'paid', 'overdue'])
                 ->with(['client'])
                 ->get()

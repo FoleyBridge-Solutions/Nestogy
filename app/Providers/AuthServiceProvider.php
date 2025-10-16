@@ -30,7 +30,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\User::class => \App\Policies\UserPolicy::class,
         \App\Models\Role::class => \App\Policies\RolePolicy::class,
         \App\Domains\Project\Models\Project::class => \App\Policies\ProjectPolicy::class,
-        \App\Models\Invoice::class => \App\Policies\InvoicePolicy::class,
+        \App\Domains\Financial\Models\Invoice::class => \App\Policies\InvoicePolicy::class,
         \App\Models\Quote::class => \App\Policies\QuotePolicy::class,
         \App\Models\Recurring::class => \App\Policies\RecurringPolicy::class,
         \App\Domains\Client\Models\ClientITDocumentation::class => \App\Policies\ClientITDocumentationPolicy::class,

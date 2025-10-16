@@ -1043,7 +1043,7 @@ class CommandPaletteService
             }
 
             // Get recent invoices (last 2)
-            $recentInvoices = \App\Models\Invoice::where('company_id', $companyId)
+            $recentInvoices = \App\Domains\Financial\Models\Invoice::where('company_id', $companyId)
                 ->with('client')
                 ->orderBy('updated_at', 'desc')
                 ->limit(2)

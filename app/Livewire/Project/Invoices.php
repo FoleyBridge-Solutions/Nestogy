@@ -16,7 +16,7 @@ class Invoices extends Component
 
     public function render()
     {
-        $invoices = \App\Models\Invoice::where('client_id', $this->project->client_id)->get();
+        $invoices = \App\Domains\Financial\Models\Invoice::where('client_id', $this->project->client_id)->get();
 
         return view('livewire.project.invoices', compact('invoices'));
     }

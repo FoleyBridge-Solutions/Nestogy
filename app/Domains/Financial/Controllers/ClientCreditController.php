@@ -80,7 +80,7 @@ class ClientCreditController extends Controller
         ]);
 
         try {
-            $invoice = \App\Models\Invoice::findOrFail($validated['invoice_id']);
+            $invoice = \App\Domains\Financial\Models\Invoice::findOrFail($validated['invoice_id']);
             
             $application = $this->creditService->applyCreditToInvoice(
                 $credit,

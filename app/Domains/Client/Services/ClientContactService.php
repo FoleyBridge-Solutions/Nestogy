@@ -271,8 +271,8 @@ class ClientContactService
         }
 
         // Get recent invoice communications
-        if (class_exists(\App\Models\Invoice::class)) {
-            $invoices = \App\Models\Invoice::where('client_id', $contact->client_id)
+        if (class_exists(\App\Domains\Financial\Models\Invoice::class)) {
+            $invoices = \App\Domains\Financial\Models\Invoice::where('client_id', $contact->client_id)
                 ->where(function ($query) use ($contact) {
                     $query->where('sent_to', $contact->email)
                         ->orWhere('cc_emails', 'like', "%{$contact->email}%");

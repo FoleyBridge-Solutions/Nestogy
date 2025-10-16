@@ -40,7 +40,7 @@ class CollectionController extends Controller
         $totalDisputed = $disputes->sum('total');
 
         // Calculate average resolution time from resolved disputes
-        $avgResolutionTime = \App\Models\Invoice::where('company_id', $companyId)
+        $avgResolutionTime = \App\Domains\Financial\Models\Invoice::where('company_id', $companyId)
             ->where('status', 'disputed')
             ->whereNotNull('resolved_at')
             ->selectRaw('AVG(DATEDIFF(resolved_at, disputed_at)) as avg_days')

@@ -173,7 +173,7 @@ class NavigationController extends Controller
             }
 
             // Get recent invoices
-            $recentInvoices = \App\Models\Invoice::where('company_id', $companyId)
+            $recentInvoices = \App\Domains\Financial\Models\Invoice::where('company_id', $companyId)
                 ->with('client')
                 ->orderBy('updated_at', 'desc')
                 ->limit(3)
@@ -326,7 +326,7 @@ class NavigationController extends Controller
 
             // Search invoices
             if ($domain === 'all' || $domain === 'financial') {
-                $invoices = \App\Models\Invoice::where('company_id', auth()->user()->company_id)
+                $invoices = \App\Domains\Financial\Models\Invoice::where('company_id', auth()->user()->company_id)
                     ->where(function ($q) use ($query) {
                         $q->where('invoice_number', 'like', "%{$query}%")
                             ->orWhere('id', 'like', "%{$query}%");
@@ -759,7 +759,7 @@ class NavigationController extends Controller
         // Pattern: $INV-123 - Find invoice by number
         if (preg_match('/^\$(.+)$/', $query, $matches)) {
             $invoiceNumber = trim($matches[1]);
-            $invoice = \App\Models\Invoice::where('company_id', $companyId)
+            $invoice = \App\Domains\Financial\Models\Invoice::where('company_id', $companyId)
                 ->where('invoice_number', 'like', "%{$invoiceNumber}%")
                 ->with('client')
                 ->first();

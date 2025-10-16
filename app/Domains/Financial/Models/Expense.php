@@ -205,7 +205,7 @@ class Expense extends Model
      */
     public function invoice()
     {
-        return $this->belongsTo(\App\Models\Invoice::class);
+        return $this->belongsTo(\App\Domains\Financial\Models\Invoice::class);
     }
 
     /**
