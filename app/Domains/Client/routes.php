@@ -97,6 +97,13 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
 
         // IT Documentation routes (using session-based client context)
         Route::get('it-documentation', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'clientIndex'])->name('it-documentation.client-index');
+        Route::get('it-documentation/create', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'create'])->name('it-documentation.create');
+        Route::post('it-documentation', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'store'])->name('it-documentation.store');
+        Route::get('it-documentation/{itDocumentation}', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'show'])->name('it-documentation.show');
+        Route::get('it-documentation/{itDocumentation}/edit', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'edit'])->name('it-documentation.edit');
+        Route::put('it-documentation/{itDocumentation}', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'update'])->name('it-documentation.update');
+        Route::delete('it-documentation/{itDocumentation}', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'destroy'])->name('it-documentation.destroy');
+        Route::get('it-documentation/{itDocumentation}/download', [\App\Domains\Client\Controllers\ITDocumentationController::class, 'download'])->name('it-documentation.download');
 
         // Communication Log routes (using session-based client context)
         $communicationPath = 'communications/{communication}';

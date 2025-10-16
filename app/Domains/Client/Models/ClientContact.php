@@ -5,11 +5,10 @@ namespace App\Domains\Client\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientContact extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -49,7 +48,6 @@ class ClientContact extends Model
     protected $dates = [
         'token_expire',
         'accessed_at',
-        'deleted_at',
     ];
 
     protected $hidden = [

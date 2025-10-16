@@ -62,25 +62,7 @@ class ITDocumentationController extends Controller
      */
     public function clientIndex(Client $client, Request $request)
     {
-        $filters = array_merge($request->only(['search', 'it_category', 'access_level', 'needs_review']), [
-            'client_id' => $client->id,
-            'active' => true,
-        ]);
-
-        $documentation = $this->service->searchDocumentation($filters);
-        $statistics = $this->service->getClientStatistics($client->id);
-
-        $categories = ClientITDocumentation::getITCategories();
-        $accessLevels = ClientITDocumentation::getAccessLevels();
-
-        return view('clients.it-documentation.client-index', compact(
-            'client',
-            'documentation',
-            'statistics',
-            'categories',
-            'accessLevels',
-            'filters'
-        ));
+        return view('clients.it-documentation.client-index-livewire');
     }
 
     /**

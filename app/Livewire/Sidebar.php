@@ -19,6 +19,8 @@ class Sidebar extends Component
 
     public string $currentRoute = '';
 
+    public array $currentParams = [];
+
     protected bool $initialized = false;
 
     public function mount(?string $context = null, ?string $activeSection = null, bool $mobile = false)
@@ -27,6 +29,8 @@ class Sidebar extends Component
         $this->activeSection = $activeSection;
         $this->mobile = $mobile;
         $this->currentRoute = Route::currentRouteName() ?? '';
+        // Get route parameters (URL segments) not query parameters
+        $this->currentParams = Route::current()->parameters() ?? [];
 
         $this->initializeExpandedSections();
         $this->initialized = true;
@@ -42,7 +46,19 @@ class Sidebar extends Component
                 $sectionId = 'section_'.$sectionIndex;
                 // Only initialize if not already set (preserves user toggles)
                 if (! array_key_exists($sectionId, $this->expandedSections)) {
-                    $this->expandedSections[$sectionId] = $section['default_expanded'] ?? false;
+                    // Check if any item in this section is active
+                    $hasActiveItem = false;
+                    if (isset($section['items']) && is_array($section['items'])) {
+                        foreach ($section['items'] as $item) {
+                            if ($this->isItemActive($item)) {
+                                $hasActiveItem = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Expand if it has an active item, otherwise use default_expanded setting
+                    $this->expandedSections[$sectionId] = $hasActiveItem || ($section['default_expanded'] ?? false);
                 }
             }
         }
@@ -132,6 +148,36 @@ class Sidebar extends Component
 
         if (isset($item['permission']) && ! auth()->user()->can($item['permission'])) {
             return false;
+        }
+
+        return true;
+    }
+
+    public function isItemActive(array $item): bool
+    {
+        // Check if route matches
+        if (! isset($item['route'])) {
+            return false;
+        }
+
+        if ($this->currentRoute !== $item['route'] && ! str_starts_with($this->currentRoute, $item['route'] . '.')) {
+            return false;
+        }
+
+        // If there are required params, check if they match the current route parameters
+        if (isset($item['params']) && is_array($item['params']) && ! empty($item['params'])) {
+            foreach ($item['params'] as $key => $value) {
+                // Skip special tokens like {client_id}
+                if ($value === '{client_id}') {
+                    continue;
+                }
+
+                // Check if current route parameter matches the item parameter
+                $currentValue = $this->currentParams[$key] ?? null;
+                if ($currentValue !== $value) {
+                    return false;
+                }
+            }
         }
 
         return true;

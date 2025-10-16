@@ -5,11 +5,10 @@ namespace App\Domains\Client\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClientLicense extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -50,7 +49,6 @@ class ClientLicense extends Model
         'purchase_date',
         'renewal_date',
         'expiry_date',
-        'deleted_at',
     ];
 
     /**

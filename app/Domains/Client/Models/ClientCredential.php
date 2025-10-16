@@ -5,12 +5,11 @@ namespace App\Domains\Client\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Crypt;
 
 class ClientCredential extends Model
 {
-    use BelongsToCompany, HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -56,7 +55,6 @@ class ClientCredential extends Model
     protected $dates = [
         'expires_at',
         'last_accessed_at',
-        'deleted_at',
     ];
 
     protected $hidden = [

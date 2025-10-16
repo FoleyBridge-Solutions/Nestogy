@@ -2,157 +2,175 @@
 
 namespace App\Livewire\Projects;
 
-use App\Domains\Client\Models\Client;
+use App\Livewire\BaseIndexComponent;
 use App\Domains\Project\Models\Project;
 use App\Domains\Core\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
-use Livewire\WithPagination;
+use App\Domains\Client\Models\Client;
+use Illuminate\Database\Eloquent\Builder;
 
-class ProjectIndex extends Component
+class ProjectIndex extends BaseIndexComponent
 {
-    use WithPagination;
-
-    public $search = '';
-
-    public $status = '';
-
-    public $clientId = '';
-
-    public $managerId = '';
-
-    public $priority = '';
-
-    public $sortField = 'created_at';
-
-    public $sortDirection = 'desc';
-
-    public $perPage = 25;
-
-    public $selectedProjects = [];
-
-    public $selectAll = false;
-
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'status' => ['except' => ''],
-        'clientId' => ['except' => ''],
-        'managerId' => ['except' => ''],
-        'priority' => ['except' => ''],
-        'sortField' => ['except' => 'created_at'],
-        'sortDirection' => ['except' => 'desc'],
-        'perPage' => ['except' => 25],
-    ];
-
-    public function mount()
+    protected function getDefaultSort(): array
     {
-        // Get client from session if available
-        $selectedClient = app(\App\Domains\Core\Services\NavigationService::class)->getSelectedClient();
-        if ($selectedClient) {
-            // Extract the ID if it's an object, otherwise use the value directly
-            $this->clientId = is_object($selectedClient) ? $selectedClient->id : $selectedClient;
-        }
+        return ['field' => 'created_at', 'direction' => 'desc'];
     }
 
-    public function updatingSearch()
+    protected function getSearchFields(): array
     {
-        $this->resetPage();
+        return ['name', 'description', 'prefix', 'number'];
     }
 
-    public function sortBy($field)
+    protected function getColumns(): array
     {
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortField = $field;
-            $this->sortDirection = 'asc';
-        }
+        return [
+            'name' => [
+                'label' => 'Project Name',
+                'sortable' => true,
+                'filterable' => false,
+            ],
+            'client.name' => [
+                'label' => 'Client',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => $this->getClientOptions(),
+            ],
+            'status' => [
+                'label' => 'Status',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => [
+                    'pending' => 'Planning',
+                    'active' => 'Active',
+                    'on_hold' => 'On Hold',
+                    'completed' => 'Completed',
+                    'cancelled' => 'Cancelled',
+                ],
+                'component' => 'project.cells.status',
+            ],
+            'priority' => [
+                'label' => 'Priority',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => [
+                    'low' => 'Low',
+                    'medium' => 'Medium',
+                    'high' => 'High',
+                    'critical' => 'Critical',
+                ],
+                'component' => 'project.cells.priority',
+            ],
+            'progress' => [
+                'label' => 'Progress',
+                'sortable' => true,
+                'filterable' => false,
+                'type' => 'badge',
+                'component' => 'project.cells.progress',
+            ],
+            'start_date' => [
+                'label' => 'Start Date',
+                'sortable' => true,
+                'type' => 'date',
+            ],
+            'due' => [
+                'label' => 'Due Date',
+                'sortable' => true,
+                'type' => 'date',
+                'component' => 'project.cells.due-date',
+            ],
+            'manager.name' => [
+                'label' => 'Manager',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => $this->getManagerOptions(),
+            ],
+            'budget' => [
+                'label' => 'Budget',
+                'sortable' => true,
+                'type' => 'currency',
+                'prefix' => '$',
+            ],
+        ];
     }
 
-    public function updatedSelectAll($value)
+    protected function getStats(): array
     {
-        if ($value) {
-            $this->selectedProjects = $this->getProjects()->pluck('id')->toArray();
-        } else {
-            $this->selectedProjects = [];
-        }
+        $baseQuery = Project::where('company_id', $this->companyId);
+
+        $total = $baseQuery->clone()->count();
+        $active = $baseQuery->clone()->where('status', 'active')->count();
+        $completed = $baseQuery->clone()->where('status', 'completed')->count();
+        $overdue = $baseQuery->clone()->whereNull('completed_at')->whereNotNull('due')->where('due', '<', now())->count();
+        $dueSoon = $baseQuery->clone()->whereNull('completed_at')->whereNotNull('due')->where('due', '>=', now())->where('due', '<=', now()->addDays(7))->count();
+
+        return [
+            ['label' => 'Total Projects', 'value' => $total, 'icon' => 'briefcase', 'iconBg' => 'bg-blue-500'],
+            ['label' => 'Active', 'value' => $active, 'icon' => 'play-circle', 'iconBg' => 'bg-green-500'],
+            ['label' => 'Completed', 'value' => $completed, 'icon' => 'check-circle', 'iconBg' => 'bg-emerald-500'],
+            ['label' => 'Overdue', 'value' => $overdue, 'icon' => 'exclamation-circle', 'iconBg' => 'bg-red-500'],
+            ['label' => 'Due Soon', 'value' => $dueSoon, 'icon' => 'calendar', 'iconBg' => 'bg-amber-500'],
+        ];
     }
 
-    public function bulkUpdateStatus($status)
+    protected function getEmptyState(): array
     {
-        $count = count($this->selectedProjects);
-
-        Project::whereIn('id', $this->selectedProjects)
-            ->where('company_id', Auth::user()->company_id)
-            ->update(['status' => $status]);
-
-        $this->selectedProjects = [];
-        $this->selectAll = false;
-
-        session()->flash('message', "$count projects have been updated to $status status.");
+        return [
+            'title' => 'No Projects',
+            'message' => 'No projects found. Create your first project to get started.',
+            'icon' => 'briefcase',
+            'action' => [
+                'label' => 'Create Project',
+                'href' => route('projects.create'),
+            ],
+            'actionLabel' => 'Create Project',
+        ];
     }
 
-    public function archiveProject($projectId)
+    protected function getBaseQuery(): Builder
     {
-        $project = Project::where('id', $projectId)
-            ->where('company_id', Auth::user()->company_id)
-            ->first();
-
-        if ($project) {
-            $project->update(['archived_at' => now()]);
-            session()->flash('message', "Project '{$project->name}' has been archived.");
-        }
+        return Project::where('company_id', $this->companyId);
     }
 
-    public function getProjects()
+    protected function getRowActions($item)
     {
-        return Project::query()
-            ->where('company_id', Auth::user()->company_id)
-            ->whereNull('archived_at')
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'like', '%'.$this->search.'%')
-                        ->orWhere('description', 'like', '%'.$this->search.'%')
-                        ->orWhere('project_number', 'like', '%'.$this->search.'%');
-                });
-            })
-            ->when($this->status, function ($query) {
-                $query->where('status', $this->status);
-            })
-            ->when($this->priority, function ($query) {
-                $query->where('priority', $this->priority);
-            })
-            ->when($this->clientId, function ($query) {
-                $query->where('client_id', $this->clientId);
-            })
-            ->when($this->managerId, function ($query) {
-                $query->where('manager_id', $this->managerId);
-            })
-            ->with(['client', 'manager', 'teamMembers'])
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
+        return [
+            ['label' => 'View', 'href' => route('projects.show', $item->id), 'icon' => 'eye'],
+            ['label' => 'Edit', 'href' => route('projects.edit', $item->id), 'icon' => 'pencil'],
+            ['label' => 'Delete', 'wire:click' => 'deleteItem('.$item->id.')', 'icon' => 'trash', 'variant' => 'danger'],
+        ];
     }
 
-    public function render()
+    protected function getBulkActions()
     {
-        $projects = $this->getProjects();
+        return [
+            ['label' => 'Delete', 'method' => 'bulkDelete', 'variant' => 'danger', 'confirm' => 'Are you sure you want to delete selected projects?'],
+        ];
+    }
 
-        $clients = Client::where('company_id', Auth::user()->company_id)
-            ->whereNull('deleted_at')
-            ->orderBy('name')
-            ->get();
+    /**
+     * Get client options for filtering
+     */
+    private function getClientOptions(): array
+    {
+        $clients = Client::where('company_id', $this->companyId)
+            ->pluck('name', 'id')
+            ->toArray();
 
-        $users = User::where('company_id', Auth::user()->company_id)
-            ->whereNull('archived_at')
-            ->orderBy('name')
-            ->get();
+        return $clients;
+    }
 
-        return view('livewire.projects.project-index', [
-            'projects' => $projects,
-            'clients' => $clients,
-            'users' => $users,
-            'statuses' => ['planning', 'active', 'in_progress', 'on_hold', 'completed', 'cancelled'],
-            'priorities' => ['low', 'medium', 'high', 'urgent'],
-        ]);
+    /**
+     * Get manager options for filtering
+     */
+    private function getManagerOptions(): array
+    {
+        $managers = User::where('company_id', $this->companyId)
+            ->pluck('name', 'id')
+            ->toArray();
+
+        return $managers;
     }
 }

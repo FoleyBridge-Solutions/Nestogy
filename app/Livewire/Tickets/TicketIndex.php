@@ -305,10 +305,10 @@ class TicketIndex extends BaseIndexComponent
         ]);
     }
 
-    public function toggleView($mode)
+    public function toggleView($mode): void
     {
         $this->viewMode = $mode;
-        session(['ticket_view_mode' => $mode]); // Save preference to session
+        session(['ticket_view_mode' => $mode]);
         $this->resetPage();
     }
 

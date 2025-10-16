@@ -30,117 +30,20 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Project::with(['client', 'manager', 'members.user'])
-            ->where('company_id', auth()->user()->company_id);
-
-        $query = $this->applyClientFilter($query);
-
-        // Apply search filters
-        if ($search = $request->get('search')) {
-            $query->search($search);
-        }
-
-        // Apply status filters
-        if ($status = $request->get('status')) {
-            if ($status === 'active') {
-                $query->active();
-            } elseif ($status === 'completed') {
-                $query->completed();
-            } elseif ($status === 'overdue') {
-                $query->overdue();
-            } elseif ($status === 'due_soon') {
-                $query->dueSoon();
-            } else {
-                $query->byStatus($status);
-            }
-        }
-
-        // Apply priority filters
-        if ($priority = $request->get('priority')) {
-            $query->byPriority($priority);
-        }
-
-        // Apply category filters
-        if ($category = $request->get('category')) {
-            $query->byCategory($category);
-        }
-
-        // Apply client filter
-        if ($clientId = $request->get('client_id')) {
-            $query->forClient($clientId);
-        }
-
-        // Apply manager filter
-        if ($managerId = $request->get('manager_id')) {
-            $query->forManager($managerId);
-        }
-
-        // Apply team member filter
-        if ($memberId = $request->get('member_id')) {
-            $query->whereHas('members', function ($q) use ($memberId) {
-                $q->where('user_id', $memberId)->where('is_active', true);
-            });
-        }
-
-        // Apply date filters
-        if ($dateRange = $request->get('date_range')) {
-            switch ($dateRange) {
-                case 'this_week':
-                    $query->whereBetween('due', [now()->startOfWeek(), now()->endOfWeek()]);
-                    break;
-                case 'this_month':
-                    $query->whereBetween('due', [now()->startOfMonth(), now()->endOfMonth()]);
-                    break;
-                case 'this_quarter':
-                    $query->whereBetween('due', [now()->startOfQuarter(), now()->endOfQuarter()]);
-                    break;
-                case 'custom':
-                    if ($request->get('start_date') && $request->get('end_date')) {
-                        $query->whereBetween('due', [$request->get('start_date'), $request->get('end_date')]);
-                    }
-                    break;
-            }
-        }
-
-        // Apply sorting
-        $sortBy = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
-
-        if (in_array($sortBy, ['name', 'status', 'priority', 'due', 'created_at', 'progress_percentage'])) {
-            $query->orderBy($sortBy, $sortDirection);
-        }
-
         // Special view handling
         if ($request->get('view') === 'timeline') {
+            $query = Project::with(['client', 'manager', 'members.user'])
+                ->where('company_id', auth()->user()->company_id);
             return $this->timelineView($query, $request);
         }
 
         if ($request->get('view') === 'kanban') {
+            $query = Project::with(['client', 'manager', 'members.user'])
+                ->where('company_id', auth()->user()->company_id);
             return $this->kanbanView($query, $request);
         }
 
-        $projects = $query->paginate(20)->appends($request->query());
-
-        // Get filter options
-        $clients = Client::where('company_id', auth()->user()->company_id)
-            ->orderBy('name')
-            ->get();
-
-        $managers = User::where('company_id', auth()->user()->company_id)
-            ->orderBy('name')
-            ->get();
-
-        $members = User::where('company_id', auth()->user()->company_id)
-            ->whereHas('projectMembers', function ($q) {
-                $q->whereNull('left_at');
-            })
-            ->distinct()
-            ->orderBy('name')
-            ->get();
-
-        // Calculate statistics
-        $statistics = $this->calculateStatistics();
-
+        // Default to Livewire index component
         return view('projects.index-livewire');
     }
 

@@ -19,6 +19,8 @@ abstract class BaseIndexComponent extends Component
     use WithTableSorting;
 
     public $columnFilters = [];
+
+    public $viewMode = 'table';
     
     protected $filterOptionsCache = [];
     
@@ -29,8 +31,20 @@ abstract class BaseIndexComponent extends Component
     public function mount()
     {
         $this->initializeColumnFilters();
-        $this->queryString = $this->getQueryStringProperties();
+        $this->queryString = $this->mergeQueryStringProperties();
         $this->applyClientContext();
+        $this->viewMode = session('base_index_view_mode', $this->getDefaultViewMode());
+    }
+
+    protected function mergeQueryStringProperties(): array
+    {
+        $baseProperties = [
+            'viewMode' => ['except' => $this->getDefaultViewMode()],
+        ];
+        
+        $childProperties = $this->getQueryStringProperties();
+        
+        return array_merge($baseProperties, $childProperties);
     }
 
     protected function initializeColumnFilters()
@@ -226,6 +240,20 @@ abstract class BaseIndexComponent extends Component
             'action' => null,
             'actionLabel' => 'Create New',
         ];
+    }
+
+    protected function getDefaultViewMode(): string
+    {
+        return 'table';
+    }
+
+    public function toggleView($mode): void
+    {
+        if (in_array($mode, ['table', 'cards'])) {
+            $this->viewMode = $mode;
+            session(['base_index_view_mode' => $mode]);
+            $this->resetPage();
+        }
     }
     
     public function getFilterOptions(string $columnKey): array

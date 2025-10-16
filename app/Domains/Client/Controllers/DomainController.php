@@ -27,66 +27,7 @@ class DomainController extends Controller
             return redirect()->route('clients.select-screen');
         }
 
-        $query = $client->domains();
-
-        // Apply search filters
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('domain_name', 'like', "%{$search}%")
-                    ->orWhere('registrar', 'like', "%{$search}%")
-                    ->orWhere('dns_provider', 'like', "%{$search}%")
-                    ->orWhereHas('client', function ($clientQuery) use ($search) {
-                        $clientQuery->where('name', 'like', "%{$search}%")
-                            ->orWhere('company_name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        // Apply status filter
-        if ($status = $request->get('status')) {
-            $query->where('status', $status);
-        }
-
-        // Apply registrar filter
-        if ($registrar = $request->get('registrar')) {
-            $query->where('registrar', $registrar);
-        }
-
-        // Apply TLD filter
-        if ($tld = $request->get('tld')) {
-            $query->where('tld', $tld);
-        }
-
-        // Apply expiry filters
-        if ($request->get('expired_only')) {
-            $query->expired();
-        } elseif ($request->get('expiring_soon')) {
-            $query->expiringSoon($request->get('expiring_days', 30));
-        }
-
-        // Apply auto-renewal filter
-        if ($request->has('auto_renewal')) {
-            $query->where('auto_renewal', $request->get('auto_renewal') === '1');
-        }
-
-        $domains = $query->orderBy('expires_at', 'asc')
-            ->paginate(20)
-            ->appends($request->query());
-
-        $statuses = ClientDomain::getStatuses();
-        $registrars = ClientDomain::getRegistrars();
-
-        // Get unique TLDs from existing domains
-        $tlds = ClientDomain::where('company_id', auth()->user()->company_id)
-            ->whereNotNull('tld')
-            ->distinct()
-            ->pluck('tld')
-            ->filter()
-            ->sort()
-            ->values();
-
-        return view('clients.domains.index', compact('domains', 'client', 'statuses', 'registrars', 'tlds'));
+        return view('clients.domains.index-livewire');
     }
 
     /**

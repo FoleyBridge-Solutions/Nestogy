@@ -27,60 +27,7 @@ class LicenseController extends Controller
             return redirect()->route('clients.select-screen');
         }
 
-        $query = $client->licenses()->with('client');
-
-        // Apply search filters
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('license_key', 'like', "%{$search}%")
-                    ->orWhere('vendor', 'like', "%{$search}%")
-                    ->orWhere('version', 'like', "%{$search}%");
-            });
-        }
-
-        // Apply type filter
-        if ($type = $request->get('license_type')) {
-            $query->where('license_type', $type);
-        }
-
-        // Apply status filters
-        if ($status = $request->get('status')) {
-            switch ($status) {
-                case 'active':
-                    $query->active();
-                    break;
-                case 'inactive':
-                    $query->inactive();
-                    break;
-                case 'expired':
-                    $query->expired();
-                    break;
-                case 'expiring_soon':
-                    $query->expiringSoon();
-                    break;
-            }
-        }
-
-        // Apply vendor filter
-        if ($vendor = $request->get('vendor')) {
-            $query->where('vendor', $vendor);
-        }
-
-        $licenses = $query->orderBy('expiry_date')
-            ->paginate(20)
-            ->appends($request->query());
-
-        // Get unique vendors for filter
-        $vendors = $client->licenses()
-            ->whereNotNull('vendor')
-            ->distinct()
-            ->orderBy('vendor')
-            ->pluck('vendor');
-
-        $licenseTypes = ClientLicense::getLicenseTypes();
-
-        return view('clients.licenses.index', compact('licenses', 'client', 'vendors', 'licenseTypes'));
+        return view('clients.licenses.index-livewire');
     }
 
     /**

@@ -52,15 +52,15 @@ class NavigationServiceTest extends TestCase
     // DOMAIN & ROUTE MANAGEMENT TESTS
     // ========================================
 
-    public function test_gets_active_domain_from_clients_route(): void
-    {
-        NavigationService::setSelectedClient($this->client->id);
-        Route::shouldReceive('currentRouteName')->andReturn('clients.index');
-        
-        $domain = NavigationService::getActiveDomain();
-        
-        $this->assertEquals('clients', $domain);
-    }
+     public function test_gets_active_domain_from_clients_route(): void
+     {
+         NavigationService::setSelectedClient($this->client->id);
+         Route::shouldReceive('currentRouteName')->andReturn('clients.show');
+         
+         $domain = NavigationService::getActiveDomain();
+         
+         $this->assertEquals('clients', $domain);
+     }
 
     public function test_gets_active_domain_from_tickets_route(): void
     {
@@ -157,24 +157,53 @@ class NavigationServiceTest extends TestCase
         $this->assertNull($context);
     }
 
-    public function test_sidebar_context_shown_on_clients_index_with_selection(): void
-    {
-        NavigationService::setSelectedClient($this->client->id);
-        Route::shouldReceive('currentRouteName')->andReturn('clients.index');
-        
-        $context = NavigationService::getSidebarContext();
-        
-        $this->assertEquals('clients', $context);
-    }
+     public function test_sidebar_context_shown_on_clients_index_with_selection(): void
+     {
+         NavigationService::setSelectedClient($this->client->id);
+         Route::shouldReceive('currentRouteName')->andReturn('clients.show');
+         
+         $context = NavigationService::getSidebarContext();
+         
+         $this->assertEquals('clients', $context);
+     }
 
-    public function test_sidebar_context_hidden_on_client_create_route(): void
-    {
-        Route::shouldReceive('currentRouteName')->andReturn('clients.create');
-        
-        $context = NavigationService::getSidebarContext();
-        
-        $this->assertNull($context);
-    }
+     public function test_sidebar_context_hidden_on_client_create_route(): void
+     {
+         Route::shouldReceive('currentRouteName')->andReturn('clients.create');
+         
+         $context = NavigationService::getSidebarContext();
+         
+         $this->assertNull($context);
+     }
+
+     public function test_settings_route_returns_settings_domain(): void
+     {
+         Route::shouldReceive('currentRouteName')->andReturn('settings.general');
+         
+         $domain = NavigationService::getActiveDomain();
+         
+         $this->assertEquals('settings', $domain);
+     }
+
+     public function test_settings_route_overrides_client_selection(): void
+     {
+         NavigationService::setSelectedClient($this->client->id);
+         Route::shouldReceive('currentRouteName')->andReturn('settings.email');
+         
+         $domain = NavigationService::getActiveDomain();
+         
+         $this->assertEquals('settings', $domain);
+     }
+
+     public function test_settings_sidebar_context_with_selected_client(): void
+     {
+         NavigationService::setSelectedClient($this->client->id);
+         Route::shouldReceive('currentRouteName')->andReturn('settings.security');
+         
+         $context = NavigationService::getSidebarContext();
+         
+         $this->assertEquals('settings', $context);
+     }
 
     // ========================================
     // NAVIGATION ITEM TESTS

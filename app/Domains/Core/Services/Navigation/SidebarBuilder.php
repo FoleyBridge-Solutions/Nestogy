@@ -160,23 +160,7 @@ class SidebarBuilder
 
     protected function buildSettingsSidebar(): array
     {
-        return [
-            'title' => 'Settings',
-            'icon' => 'cog-6-tooth',
-            'sections' => [
-                [
-                    'type' => 'primary',
-                    'items' => [
-                        [
-                            'name' => 'Settings Overview',
-                            'route' => 'settings.index',
-                            'icon' => 'home',
-                            'key' => 'overview',
-                        ],
-                    ],
-                ],
-            ],
-        ];
+        return \App\Domains\Core\Services\Navigation\SettingsSidebarContext::getConfiguration();
     }
 
     protected function buildGenericSidebar(): array

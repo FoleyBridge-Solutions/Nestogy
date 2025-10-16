@@ -68,17 +68,18 @@
                         <!-- Primary navigation items (no grouping) -->
                         @foreach($section['items'] as $item)
                             @php
-                                $isActive = $this->currentRoute === $item['route'] || str_starts_with($this->currentRoute, $item['route'] . '.');
+                                $hasRoute = isset($item['route']);
+                                $isActive = $this->isItemActive($item);
                                 $routeParams = $this->resolveContextualParams($item['params'] ?? [], $selectedClient);
                                 $badgeData = config('sidebar.features.badges', true) ? $this->calculateBadgeData($item, $selectedClient) : ['count' => 0];
                                 $shouldDisplay = $this->shouldDisplayItem($item, $selectedClient);
                             @endphp
-                            
+
                             @if($shouldDisplay)
                                 @php
                                     $iconAttr = (config('sidebar.features.icons', true) && isset($item['icon'])) ? $item['icon'] : null;
                                     $badgeAttr = ($badgeData['count'] > 0) ? ($badgeData['count'] > 99 ? '99+' : $badgeData['count']) : null;
-                                    $itemHref = isset($item['url']) ? $item['url'] : (count($routeParams) > 0 ? route($item['route'], $routeParams) : route($item['route']));
+                                    $itemHref = isset($item['url']) ? $item['url'] : (($hasRoute && count($routeParams) > 0) ? route($item['route'], $routeParams) : ($hasRoute ? route($item['route']) : '#'));
                                 @endphp
                                 <a
                                     href="{{ $itemHref }}"
@@ -125,19 +126,21 @@
                             <div class="mt-1 space-y-1">
                             @foreach($section['items'] as $item)
                                 @php
-                                    $isActive = $this->currentRoute === $item['route'] || str_starts_with($this->currentRoute, $item['route'] . '.');
+                                    $hasRoute = isset($item['route']);
+                                    $isActive = $this->isItemActive($item);
                                     $routeParams = $this->resolveContextualParams($item['params'] ?? [], $selectedClient);
                                     $badgeData = config('sidebar.features.badges', true) ? $this->calculateBadgeData($item, $selectedClient) : ['count' => 0];
                                     $shouldDisplay = $this->shouldDisplayItem($item, $selectedClient);
                                 @endphp
-                                
+
                                 @if($shouldDisplay)
                                     @php
                                         $iconAttr = (config('sidebar.features.icons', true) && isset($item['icon'])) ? $item['icon'] : null;
                                         $badgeAttr = ($badgeData['count'] > 0) ? ($badgeData['count'] > 99 ? '99+' : $badgeData['count']) : null;
+                                        $itemHref = isset($item['url']) ? $item['url'] : (($hasRoute && count($routeParams) > 0) ? route($item['route'], $routeParams) : ($hasRoute ? route($item['route']) : '#'));
                                     @endphp
                                     <a
-                                        href="{{ isset($item['url']) ? $item['url'] : route($item['route'], $routeParams) }}"
+                                        href="{{ $itemHref }}"
                                         class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg {{ $isActive ? 'bg-indigo-50 border-r-4 border-indigo-500 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-200' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100' }} {{ $this->mobile ? 'py-2 text-base min-h-[44px]' : '' }}"
                                     >
                                         @if($iconAttr)

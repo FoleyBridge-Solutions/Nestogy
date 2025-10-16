@@ -2,153 +2,155 @@
 
 namespace App\Livewire\Assets;
 
-use App\Domains\Client\Models\Client;
 use App\Livewire\BaseIndexComponent;
 use App\Domains\Asset\Models\Asset;
 use App\Domains\Core\Models\User;
-use Illuminate\Support\Facades\Auth;
+use App\Domains\Client\Models\Client;
+use App\Domains\Client\Models\Location;
+use Illuminate\Database\Eloquent\Builder;
 
 class AssetIndex extends BaseIndexComponent
 {
-    public $type = '';
-
-    public $status = '';
-
-    public $clientId = '';
-
-    public $assignedTo = '';
-
-    public $locationId = '';
-
-    public $selectedAssets = [];
-
     protected function getDefaultSort(): array
     {
-        return [
-            'field' => 'created_at',
-            'direction' => 'desc',
-        ];
+        return ['field' => 'created_at', 'direction' => 'desc'];
     }
 
     protected function getSearchFields(): array
     {
+        return ['name', 'serial', 'asset_tag', 'model', 'make', 'ip', 'mac'];
+    }
+
+    protected function getColumns(): array
+    {
         return [
-            'name',
-            'serial_number',
-            'asset_tag',
-            'model',
-            'manufacturer',
+            'name' => [
+                'label' => 'Asset Name',
+                'sortable' => true,
+                'filterable' => false,
+            ],
+            'type' => [
+                'label' => 'Type',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => array_combine(Asset::TYPES, Asset::TYPES),
+            ],
+            'client.name' => [
+                'label' => 'Client',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => $this->getClientOptions(),
+            ],
+            'status' => [
+                'label' => 'Status',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => array_combine(Asset::STATUSES, Asset::STATUSES),
+                'component' => 'asset.cells.status',
+            ],
+            'make' => [
+                'label' => 'Make',
+                'sortable' => true,
+                'filterable' => false,
+            ],
+            'model' => [
+                'label' => 'Model',
+                'sortable' => true,
+                'filterable' => false,
+            ],
+            'serial' => [
+                'label' => 'Serial Number',
+                'sortable' => true,
+                'filterable' => false,
+            ],
+            'ip' => [
+                'label' => 'IP Address',
+                'sortable' => true,
+                'filterable' => false,
+            ],
+            'warranty_expire' => [
+                'label' => 'Warranty Expiry',
+                'sortable' => true,
+                'type' => 'date',
+                'component' => 'asset.cells.warranty',
+            ],
+            'support_status' => [
+                'label' => 'Support Status',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => Asset::SUPPORT_STATUSES,
+                'component' => 'asset.cells.support-status',
+            ],
         ];
     }
 
-    protected function getQueryStringProperties(): array
+    protected function getStats(): array
     {
+        $baseQuery = Asset::where('company_id', $this->companyId)->whereNull('archived_at');
+
+        $total = $baseQuery->clone()->count();
+        $deployed = $baseQuery->clone()->where('status', 'Deployed')->count();
+        $ready = $baseQuery->clone()->where('status', 'Ready To Deploy')->count();
+        $supported = $baseQuery->clone()->where('support_status', 'supported')->count();
+        $warrantyExpiring = $baseQuery->clone()->whereNotNull('warranty_expire')->where('warranty_expire', '<=', now()->addDays(90))->where('warranty_expire', '>', now())->count();
+
         return [
-            'search' => ['except' => ''],
-            'type' => ['except' => ''],
-            'status' => ['except' => ''],
-            'clientId' => ['except' => ''],
-            'assignedTo' => ['except' => ''],
-            'locationId' => ['except' => ''],
-            'sortField' => ['except' => 'created_at'],
-            'sortDirection' => ['except' => 'desc'],
-            'perPage' => ['except' => 25],
+            ['label' => 'Total Assets', 'value' => $total, 'icon' => 'cube', 'iconBg' => 'bg-blue-500'],
+            ['label' => 'Deployed', 'value' => $deployed, 'icon' => 'check-circle', 'iconBg' => 'bg-green-500'],
+            ['label' => 'Ready to Deploy', 'value' => $ready, 'icon' => 'package', 'iconBg' => 'bg-emerald-500'],
+            ['label' => 'Supported', 'value' => $supported, 'icon' => 'shield-check', 'iconBg' => 'bg-purple-500'],
+            ['label' => 'Warranty Expiring', 'value' => $warrantyExpiring, 'icon' => 'calendar', 'iconBg' => 'bg-amber-500'],
         ];
     }
 
-    protected function getBaseQuery(): \Illuminate\Database\Eloquent\Builder
+    protected function getEmptyState(): array
     {
-        return Asset::with(['client', 'assignedTo', 'location']);
+        return [
+            'title' => 'No Assets',
+            'message' => 'No assets found. Create your first asset to get started.',
+            'icon' => 'cube',
+            'action' => [
+                'label' => 'Create Asset',
+                'href' => route('assets.create'),
+            ],
+            'actionLabel' => 'Create Asset',
+        ];
     }
 
-    protected function applyCustomFilters($query)
+    protected function getBaseQuery(): Builder
     {
-        if ($this->type) {
-            $query->where('type', $this->type);
-        }
-
-        if ($this->status) {
-            $query->where('status', $this->status);
-        }
-
-        if ($this->clientId) {
-            $query->where('client_id', $this->clientId);
-        }
-
-        if ($this->assignedTo) {
-            $query->where('contact_id', $this->assignedTo);
-        }
-
-        if ($this->locationId) {
-            $query->where('location_id', $this->locationId);
-        }
-
-        return $query;
+        return Asset::where('company_id', $this->companyId)->whereNull('archived_at');
     }
 
-    public function updatedSelectAll($value)
+    protected function getRowActions($item)
     {
-        if ($value) {
-            $this->selectedAssets = $this->getItems()->pluck('id')->toArray();
-            $this->selected = $this->selectedAssets;
-        } else {
-            $this->selectedAssets = [];
-            $this->selected = [];
-        }
+        return [
+            ['label' => 'View', 'href' => route('assets.show', $item->id), 'icon' => 'eye'],
+            ['label' => 'Edit', 'href' => route('assets.edit', $item->id), 'icon' => 'pencil'],
+            ['label' => 'Delete', 'wire:click' => 'deleteItem('.$item->id.')', 'icon' => 'trash', 'variant' => 'danger'],
+        ];
     }
 
-    public function bulkUpdateStatus($status)
+    protected function getBulkActions()
     {
-        $count = count($this->selectedAssets);
-
-        Asset::whereIn('id', $this->selectedAssets)
-            ->where('company_id', Auth::user()->company_id)
-            ->update(['status' => $status]);
-
-        $this->selectedAssets = [];
-        $this->selectAll = false;
-
-        session()->flash('message', "$count assets have been updated to $status status.");
+        return [
+            ['label' => 'Delete', 'method' => 'bulkDelete', 'variant' => 'danger', 'confirm' => 'Are you sure you want to delete selected assets?'],
+        ];
     }
 
-    public function archiveAsset($assetId)
+    /**
+     * Get client options for filtering
+     */
+    private function getClientOptions(): array
     {
-        $asset = Asset::where('id', $assetId)
-            ->where('company_id', Auth::user()->company_id)
-            ->first();
+        $clients = Client::where('company_id', $this->companyId)
+            ->pluck('name', 'id')
+            ->toArray();
 
-        if ($asset) {
-            $asset->update(['archived_at' => now()]);
-            session()->flash('message', "Asset '{$asset->name}' has been archived.");
-        }
-    }
-
-    public function render()
-    {
-        $assets = $this->getItems();
-
-        $clients = Client::where('company_id', Auth::user()->company_id)
-            ->whereNull('deleted_at')
-            ->orderBy('name')
-            ->get();
-
-        $users = User::where('company_id', Auth::user()->company_id)
-            ->whereNull('archived_at')
-            ->orderBy('name')
-            ->get();
-
-        $locations = \App\Domains\Client\Models\Location::where('company_id', Auth::user()->company_id)
-            ->whereNull('archived_at')
-            ->orderBy('name')
-            ->get();
-
-        return view('livewire.assets.asset-index', [
-            'assets' => $assets,
-            'clients' => $clients,
-            'users' => $users,
-            'locations' => $locations,
-            'types' => ['Computer', 'Laptop', 'Server', 'Printer', 'Mobile', 'Network', 'Software', 'Other'],
-            'statuses' => ['Active', 'Inactive', 'In Repair', 'Disposed', 'Lost', 'Stolen'],
-        ]);
+        return $clients;
     }
 }

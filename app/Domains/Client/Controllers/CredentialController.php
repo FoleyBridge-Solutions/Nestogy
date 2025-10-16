@@ -27,66 +27,7 @@ class CredentialController extends Controller
             return redirect()->route('clients.select-screen');
         }
 
-        $query = $client->credentials()->with('creator');
-
-        // Apply search filters
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('service_name', 'like', "%{$search}%")
-                    ->orWhere('username', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('url', 'like', "%{$search}%")
-                    ->orWhereHas('client', function ($clientQuery) use ($search) {
-                        $clientQuery->where('name', 'like', "%{$search}%")
-                            ->orWhere('company_name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        // Apply type filter
-        if ($type = $request->get('credential_type')) {
-            $query->where('credential_type', $type);
-        }
-
-        // Apply status filters
-        if ($status = $request->get('status')) {
-            switch ($status) {
-                case 'active':
-                    $query->active();
-                    break;
-                case 'inactive':
-                    $query->inactive();
-                    break;
-                case 'expired':
-                    $query->expired();
-                    break;
-                case 'expiring_soon':
-                    $query->expiringSoon();
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        // Apply environment filter
-        if ($environment = $request->get('environment')) {
-            $query->where('environment', $environment);
-        }
-
-        // Apply shared filter
-        if ($request->has('is_shared')) {
-            $query->where('is_shared', $request->get('is_shared') === '1');
-        }
-
-        $credentials = $query->orderBy('name')
-            ->paginate(20)
-            ->appends($request->query());
-
-        $credentialTypes = ClientCredential::getCredentialTypes();
-        $environments = ClientCredential::getEnvironments();
-
-        return view('clients.credentials.index', compact('credentials', 'client', 'credentialTypes', 'environments'));
+        return view('clients.credentials.index-livewire');
     }
 
     /**

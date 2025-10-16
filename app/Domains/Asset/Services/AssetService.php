@@ -145,7 +145,6 @@ class AssetService
     public function getContactsForFilter(): Collection
     {
         return \App\Domains\Client\Models\ClientContact::where('company_id', Auth::user()->company_id)
-            ->whereNull('archived_at')
             ->orderBy('name')
             ->get(['id', 'name']);
     }

@@ -33,6 +33,11 @@ class NavigationContext
             return null;
         }
 
+        // Check if we're on a settings route first (prioritize over client context)
+        if (Str::is('settings.*', $route) || Str::is('users.*', $route) || Str::is('admin.*', $route)) {
+            return 'settings';
+        }
+
         if (static::hasSelectedClient()) {
             return 'clients';
         }
