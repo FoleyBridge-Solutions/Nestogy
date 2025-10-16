@@ -54,7 +54,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         Route::post('archive', [\App\Domains\Client\Controllers\ClientController::class, 'archive'])->name('archive');
 
         // Contacts routes (using session-based client context)
-        Route::get('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'index'])->name('contacts.index');
+        Route::get('contacts', \App\Livewire\Client\ContactIndex::class)->name('contacts.index');
         Route::get('contacts/create', [\App\Domains\Client\Controllers\ContactController::class, 'create'])->name('contacts.create');
         Route::post('contacts', [\App\Domains\Client\Controllers\ContactController::class, 'store'])->name('contacts.store');
         Route::get('contacts/export', [\App\Domains\Client\Controllers\ContactController::class, 'export'])->name('contacts.export');
