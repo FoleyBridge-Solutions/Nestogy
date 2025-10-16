@@ -3,132 +3,148 @@
 namespace App\Livewire\Financial;
 
 use App\Domains\Core\Services\NavigationService;
+use App\Livewire\BaseIndexComponent;
 use App\Models\Invoice;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Computed;
-use Livewire\Component;
-use Livewire\WithPagination;
 
-class InvoiceIndex extends Component
+class InvoiceIndex extends BaseIndexComponent
 {
-    use WithPagination;
-
-    public $search = '';
-
-    public $statusFilter = '';
-
-    public $dateFrom = '';
-
-    public $dateTo = '';
-
-    public $sortBy = 'due_date';
-
-    public $sortDirection = 'desc';
-
-    public $selected = [];
-
-    public $selectAll = false;
-
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'statusFilter' => ['except' => ''],
-        'dateFrom' => ['except' => ''],
-        'dateTo' => ['except' => ''],
-        'sortBy' => ['except' => 'due_date'],
-        'sortDirection' => ['except' => 'desc'],
-    ];
-
-    public function updatingSearch()
+    protected function getDefaultSort(): array
     {
-        $this->resetPage();
+        return [
+            'field' => 'due_date',
+            'direction' => 'desc',
+        ];
     }
 
-    public function updatingStatusFilter()
+    protected function getSearchFields(): array
     {
-        $this->resetPage();
+        return [
+            'number',
+            'scope',
+            'description',
+            'client.name',
+        ];
     }
 
-    public function updatingDateFrom()
+    protected function getColumns(): array
     {
-        $this->resetPage();
+        return [
+            'number' => [
+                'label' => 'Invoice #',
+                'sortable' => true,
+                'filterable' => false,
+                'component' => 'financial.invoices.cells.number',
+            ],
+            'client.name' => [
+                'label' => 'Client',
+                'sortable' => true,
+                'filterable' => false,
+                'component' => 'financial.invoices.cells.client',
+            ],
+            'amount' => [
+                'label' => 'Amount',
+                'sortable' => true,
+                'filterable' => false,
+                'type' => 'currency',
+            ],
+            'balance' => [
+                'label' => 'Balance',
+                'sortable' => false,
+                'filterable' => false,
+                'component' => 'financial.invoices.cells.balance',
+            ],
+            'status' => [
+                'label' => 'Status',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => [
+                    'Draft' => 'Draft',
+                    'Sent' => 'Sent',
+                    'Paid' => 'Paid',
+                    'Cancelled' => 'Cancelled',
+                ],
+                'component' => 'financial.invoices.cells.status',
+            ],
+            'date' => [
+                'label' => 'Date',
+                'sortable' => true,
+                'filterable' => false,
+                'type' => 'date',
+            ],
+            'due_date' => [
+                'label' => 'Due Date',
+                'sortable' => true,
+                'filterable' => false,
+                'type' => 'date',
+                'component' => 'financial.invoices.cells.due-date',
+            ],
+        ];
     }
 
-    public function updatingDateTo()
+    protected function getStats(): array
     {
-        $this->resetPage();
+        $totals = $this->calculateTotals();
+
+        return [
+            [
+                'label' => 'Draft',
+                'value' => number_format($totals['draft'], 2),
+                'prefix' => '$',
+            ],
+            [
+                'label' => 'Awaiting Payment',
+                'value' => number_format($totals['sent'], 2),
+                'prefix' => '$',
+            ],
+            [
+                'label' => 'Paid',
+                'value' => number_format($totals['paid'], 2),
+                'prefix' => '$',
+                'valueClass' => 'text-green-600',
+            ],
+            [
+                'label' => 'Overdue',
+                'value' => number_format($totals['overdue'], 2),
+                'prefix' => '$',
+                'valueClass' => 'text-red-600',
+            ],
+        ];
     }
 
-    public function sort($column)
+    protected function getEmptyState(): array
     {
-        if ($this->sortBy === $column) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortBy = $column;
-            $this->sortDirection = 'asc';
-        }
+        return [
+            'icon' => 'document-text',
+            'title' => 'Create your first invoice',
+            'message' => 'Start billing your clients by creating an invoice',
+            'action' => route('financial.invoices.create'),
+            'actionLabel' => 'Create Invoice',
+        ];
     }
 
-    #[Computed]
-    public function invoices()
+    protected function getBaseQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $user = Auth::user();
-        $query = Invoice::with(['client', 'category', 'activePaymentApplications', 'activeCreditApplications'])
-            ->where('company_id', $user->company_id);
+        $query = Invoice::with(['client', 'category', 'activePaymentApplications', 'activeCreditApplications']);
 
-        // Apply status filter
-        if ($this->statusFilter) {
-            $query->where('status', $this->statusFilter);
-        }
-
-        // Apply client filter from session if client is selected
         $selectedClient = app(NavigationService::class)->getSelectedClient();
         if ($selectedClient) {
-            // If it's an object, get the ID; if it's already an ID, use it directly
             $clientId = is_object($selectedClient) ? $selectedClient->id : $selectedClient;
             $query->where('client_id', $clientId);
         }
 
-        // Apply date filters
-        if ($this->dateFrom) {
-            $query->where('date', '>=', $this->dateFrom);
-        }
-
-        if ($this->dateTo) {
-            $query->where('date', '<=', $this->dateTo);
-        }
-
-        // Apply search
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('number', 'like', "%{$this->search}%")
-                    ->orWhere('scope', 'like', "%{$this->search}%")
-                    ->orWhere('description', 'like', "%{$this->search}%");
-            });
-        }
-
-        // Apply sorting
-        if ($this->sortBy === 'client') {
-            $query->leftJoin('clients', 'invoices.client_id', '=', 'clients.id')
-                ->orderBy('clients.name', $this->sortDirection)
-                ->select('invoices.*');
-        } else {
-            $query->orderBy($this->sortBy, $this->sortDirection);
-        }
-
-        return $query->paginate(25);
+        return $query;
     }
 
-    #[Computed]
-    public function totals()
+    protected function calculateTotals()
     {
         $user = Auth::user();
         $baseQuery = Invoice::where('company_id', $user->company_id);
 
-        // Apply client filter from session if client is selected
         $selectedClient = app(NavigationService::class)->getSelectedClient();
         if ($selectedClient) {
-            // If it's an object, get the ID; if it's already an ID, use it directly
             $clientId = is_object($selectedClient) ? $selectedClient->id : $selectedClient;
             $baseQuery = $baseQuery->where('client_id', $clientId);
         }
@@ -142,6 +158,71 @@ class InvoiceIndex extends Component
                 ->whereDate('due_date', '<', now())
                 ->sum('amount'),
         ];
+    }
+
+    public function getBulkActions()
+    {
+        return [
+            [
+                'method' => 'bulkDownloadPdf',
+                'label' => 'Download PDFs',
+                'variant' => 'primary',
+                'icon' => 'arrow-down-tray',
+            ],
+            [
+                'method' => 'bulkMarkAsSent',
+                'label' => 'Mark as Sent',
+                'variant' => 'ghost',
+            ],
+            [
+                'method' => 'bulkCancel',
+                'label' => 'Cancel',
+                'variant' => 'ghost',
+            ],
+            [
+                'method' => 'bulkDelete',
+                'label' => 'Delete',
+                'variant' => 'danger',
+            ],
+        ];
+    }
+
+    public function getRowActions($invoice)
+    {
+        $actions = [
+            [
+                'href' => route('financial.invoices.show', $invoice),
+                'icon' => 'eye',
+                'variant' => 'ghost',
+                'title' => 'View',
+            ],
+            [
+                'href' => route('financial.invoices.pdf', $invoice),
+                'icon' => 'arrow-down-tray',
+                'variant' => 'ghost',
+                'title' => 'Download PDF',
+            ],
+        ];
+
+        if ($invoice->status === 'Draft') {
+            $actions[] = [
+                'href' => route('financial.invoices.edit', $invoice),
+                'icon' => 'pencil',
+                'variant' => 'ghost',
+                'title' => 'Edit',
+            ];
+
+            $actions[] = [
+                'wire:click' => "markAsSent({$invoice->id})",
+                'wire:confirm' => 'Mark this invoice as sent?',
+                'icon' => 'paper-airplane',
+                'variant' => 'ghost',
+                'class' => 'text-blue-600 hover:text-blue-700',
+                'title' => 'Mark as Sent',
+            ];
+        }
+
+        return $actions;
     }
 
     public function markAsSent($invoiceId)
@@ -190,7 +271,7 @@ class InvoiceIndex extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selected = $this->invoices->pluck('id')->map(fn($id) => (string) $id)->toArray();
+            $this->selected = $this->getItems()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
         } else {
             $this->selected = [];
         }
@@ -207,7 +288,7 @@ class InvoiceIndex extends Component
 
         $this->selected = [];
         $this->selectAll = false;
-        
+
         Flux::toast("{$count} invoice(s) marked as sent successfully.");
         $this->dispatch('invoice-updated');
     }
@@ -223,7 +304,7 @@ class InvoiceIndex extends Component
 
         $this->selected = [];
         $this->selectAll = false;
-        
+
         Flux::toast("{$count} invoice(s) cancelled successfully.", variant: 'warning');
         $this->dispatch('invoice-updated');
     }
@@ -237,7 +318,7 @@ class InvoiceIndex extends Component
 
         $this->selected = [];
         $this->selectAll = false;
-        
+
         Flux::toast("{$count} invoice(s) deleted successfully.", variant: 'danger');
         $this->dispatch('invoice-deleted');
     }
@@ -246,6 +327,7 @@ class InvoiceIndex extends Component
     {
         if (empty($this->selected)) {
             Flux::toast('Please select at least one invoice to download.', variant: 'warning');
+
             return;
         }
 
@@ -259,21 +341,5 @@ class InvoiceIndex extends Component
 
         $this->dispatch('bulk-download-pdf', invoiceIds: $this->selected);
         Flux::toast("Preparing {$invoices->count()} PDF(s) for download...");
-    }
-
-    public function getStatusColorProperty()
-    {
-        return [
-            'Draft' => 'zinc',
-            'Sent' => 'blue',
-            'Paid' => 'green',
-            'Cancelled' => 'red',
-            'Overdue' => 'amber',
-        ];
-    }
-
-    public function render()
-    {
-        return view('livewire.financial.invoice-index');
     }
 }

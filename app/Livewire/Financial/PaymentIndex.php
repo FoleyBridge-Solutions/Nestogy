@@ -3,94 +3,151 @@
 namespace App\Livewire\Financial;
 
 use App\Domains\Core\Services\NavigationService;
+use App\Livewire\BaseIndexComponent;
 use App\Models\Payment;
 use Flux\Flux;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Computed;
-use Livewire\Component;
-use Livewire\WithPagination;
 
-class PaymentIndex extends Component
+class PaymentIndex extends BaseIndexComponent
 {
-    use WithPagination;
-
-    public $search = '';
-
-    public $statusFilter = '';
-
-    public $paymentMethodFilter = '';
-
-    public $dateFrom = '';
-
-    public $dateTo = '';
-
-    public $sortBy = 'payment_date';
-
-    public $sortDirection = 'desc';
-
-    public $selected = [];
-
-    public $selectAll = false;
-
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'statusFilter' => ['except' => ''],
-        'paymentMethodFilter' => ['except' => ''],
-        'dateFrom' => ['except' => ''],
-        'dateTo' => ['except' => ''],
-        'sortBy' => ['except' => 'payment_date'],
-        'sortDirection' => ['except' => 'desc'],
-    ];
-
-    public function updatingSearch()
+    protected function getDefaultSort(): array
     {
-        $this->resetPage();
+        return [
+            'field' => 'payment_date',
+            'direction' => 'desc',
+        ];
     }
 
-    public function updatingStatusFilter()
+    protected function getSearchFields(): array
     {
-        $this->resetPage();
+        return [
+            'payment_reference',
+            'gateway_transaction_id',
+            'client.name',
+        ];
     }
 
-    public function updatingPaymentMethodFilter()
+    protected function getColumns(): array
     {
-        $this->resetPage();
+        return [
+            'payment_reference' => [
+                'label' => 'Reference',
+                'sortable' => true,
+                'filterable' => false,
+                'component' => 'financial.payments.cells.reference',
+            ],
+            'client.name' => [
+                'label' => 'Client',
+                'sortable' => true,
+                'filterable' => false,
+                'component' => 'financial.payments.cells.client',
+            ],
+            'amount' => [
+                'label' => 'Amount',
+                'sortable' => true,
+                'filterable' => false,
+                'type' => 'currency',
+            ],
+            'application_status' => [
+                'label' => 'Application Status',
+                'sortable' => false,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => [
+                    'unapplied' => 'Unapplied',
+                    'partially_applied' => 'Partially Applied',
+                    'fully_applied' => 'Fully Applied',
+                ],
+                'component' => 'financial.payments.cells.application-status',
+            ],
+            'payment_method' => [
+                'label' => 'Payment Method',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => [
+                    'credit_card' => 'Credit Card',
+                    'bank_transfer' => 'Bank Transfer',
+                    'check' => 'Check',
+                    'cash' => 'Cash',
+                    'paypal' => 'PayPal',
+                    'stripe' => 'Stripe',
+                    'other' => 'Other',
+                ],
+                'component' => 'financial.payments.cells.payment-method',
+            ],
+            'status' => [
+                'label' => 'Status',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'select',
+                'options' => [
+                    'pending' => 'Pending',
+                    'completed' => 'Completed',
+                    'failed' => 'Failed',
+                    'refunded' => 'Refunded',
+                ],
+                'component' => 'financial.payments.cells.status',
+            ],
+            'payment_date' => [
+                'label' => 'Date',
+                'sortable' => true,
+                'filterable' => true,
+                'type' => 'date',
+            ],
+        ];
     }
 
-    public function updatingDateFrom()
+    protected function getStats(): array
     {
-        $this->resetPage();
+        $totals = $this->calculateTotals();
+
+        return [
+            [
+                'label' => 'Total Revenue',
+                'value' => number_format($totals['total_revenue'], 2),
+                'prefix' => '$',
+                'icon' => 'currency-dollar',
+                'iconBg' => 'bg-green-500',
+                'valueClass' => 'text-green-600',
+            ],
+            [
+                'label' => 'This Month',
+                'value' => number_format($totals['this_month'], 2),
+                'prefix' => '$',
+                'icon' => 'chart-bar',
+                'iconBg' => 'bg-blue-500',
+            ],
+            [
+                'label' => 'Pending',
+                'value' => $totals['pending_count'],
+                'icon' => 'clock',
+                'iconBg' => 'bg-amber-500',
+            ],
+            [
+                'label' => 'Failed',
+                'value' => $totals['failed_count'],
+                'icon' => 'x-circle',
+                'iconBg' => 'bg-red-500',
+            ],
+        ];
     }
 
-    public function updatingDateTo()
+    protected function getEmptyState(): array
     {
-        $this->resetPage();
+        return [
+            'icon' => 'currency-dollar',
+            'title' => 'No payments found',
+            'message' => 'Get started by creating a new payment.',
+            'action' => route('financial.payments.create'),
+            'actionLabel' => 'Add Payment',
+        ];
     }
 
-    public function sort($column)
+    protected function getBaseQuery(): Builder
     {
-        if ($this->sortBy === $column) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortBy = $column;
-            $this->sortDirection = 'asc';
-        }
-    }
-
-    #[Computed]
-    public function payments()
-    {
-        $user = Auth::user();
-        $query = Payment::with(['client', 'applications.applicable'])
-            ->where('company_id', $user->company_id);
-
-        if ($this->statusFilter) {
-            $query->where('status', $this->statusFilter);
-        }
-
-        if ($this->paymentMethodFilter) {
-            $query->where('payment_method', $this->paymentMethodFilter);
-        }
+        $query = Payment::with(['client', 'applications.applicable']);
 
         $selectedClient = app(NavigationService::class)->getSelectedClient();
         if ($selectedClient) {
@@ -98,40 +155,10 @@ class PaymentIndex extends Component
             $query->where('client_id', $clientId);
         }
 
-        if ($this->dateFrom) {
-            $query->where('payment_date', '>=', $this->dateFrom);
-        }
-
-        if ($this->dateTo) {
-            $query->where('payment_date', '<=', $this->dateTo);
-        }
-
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('payment_reference', 'like', "%{$this->search}%")
-                    ->orWhere('gateway_transaction_id', 'like', "%{$this->search}%")
-                    ->orWhereHas('applications.applicable', function ($applicable) {
-                        $applicable->where('number', 'like', "%{$this->search}%");
-                    })
-                    ->orWhereHas('client', function ($client) {
-                        $client->where('name', 'like', "%{$this->search}%");
-                    });
-            });
-        }
-
-        if ($this->sortBy === 'client') {
-            $query->leftJoin('clients', 'payments.client_id', '=', 'clients.id')
-                ->orderBy('clients.name', $this->sortDirection)
-                ->select('payments.*');
-        } else {
-            $query->orderBy($this->sortBy, $this->sortDirection);
-        }
-
-        return $query->paginate(25);
+        return $query;
     }
 
-    #[Computed]
-    public function totals()
+    protected function calculateTotals()
     {
         $user = Auth::user();
         $baseQuery = Payment::where('company_id', $user->company_id);
@@ -154,6 +181,38 @@ class PaymentIndex extends Component
         ];
     }
 
+    public function getRowActions($payment)
+    {
+        $actions = [
+            [
+                'href' => route('financial.payments.show', $payment),
+                'icon' => 'eye',
+                'variant' => 'ghost',
+                'title' => 'View',
+            ],
+        ];
+
+        if (in_array($payment->status, ['pending', 'failed'])) {
+            $actions[] = [
+                'href' => route('financial.payments.edit', $payment),
+                'icon' => 'pencil',
+                'variant' => 'ghost',
+                'title' => 'Edit',
+            ];
+
+            $actions[] = [
+                'wire:click' => "deletePayment({$payment->id})",
+                'wire:confirm' => 'Are you sure you want to delete this payment? This action cannot be undone.',
+                'icon' => 'trash',
+                'variant' => 'ghost',
+                'class' => 'text-red-600 hover:text-red-700',
+                'title' => 'Delete',
+            ];
+        }
+
+        return $actions;
+    }
+
     public function deletePayment($paymentId)
     {
         $payment = Payment::where('company_id', Auth::user()->company_id)
@@ -170,7 +229,7 @@ class PaymentIndex extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selected = $this->payments->pluck('id')->map(fn($id) => (string) $id)->toArray();
+            $this->selected = $this->getItems()->pluck('id')->map(fn ($id) => (string) $id)->toArray();
         } else {
             $this->selected = [];
         }
@@ -185,23 +244,8 @@ class PaymentIndex extends Component
 
         $this->selected = [];
         $this->selectAll = false;
-        
+
         Flux::toast("{$count} payment(s) deleted successfully.", variant: 'danger');
         $this->dispatch('payment-deleted');
-    }
-
-    public function getStatusColorProperty()
-    {
-        return [
-            'pending' => 'amber',
-            'completed' => 'green',
-            'failed' => 'red',
-            'refunded' => 'zinc',
-        ];
-    }
-
-    public function render()
-    {
-        return view('livewire.financial.payment-index');
     }
 }
