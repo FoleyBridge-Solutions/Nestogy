@@ -22,9 +22,9 @@ use Illuminate\Support\Facades\Log;
  */
 class DunningAutomationService
 {
-    protected VoIPTaxReversalService $voipTaxService;
+    protected ?VoIPTaxReversalService $voipTaxService;
 
-    public function __construct(VoIPTaxReversalService $voipTaxService)
+    public function __construct(?VoIPTaxReversalService $voipTaxService = null)
     {
         $this->voipTaxService = $voipTaxService;
     }

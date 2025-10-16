@@ -390,7 +390,20 @@ class Quote extends Model
         return [];
     }
 
+    public function hasVoIPServices(): bool
+    {
+        return false;
+    }
 
+    public function voipItems()
+    {
+        return collect();
+    }
+
+    public function getVoIPTaxBreakdown(): array
+    {
+        return [];
+    }
 
     /**
      * Get the quote's full number.

@@ -586,11 +586,6 @@ class Recurring extends Model
             }
         }
 
-        // Apply VoIP taxes if enabled
-        if ($this->hasVoIPServices() && ($this->tax_settings['enable_voip_tax'] ?? true)) {
-            $invoice->recalculateVoIPTaxes();
-        }
-
         // Calculate invoice totals
         $invoice->calculateTotals();
 
@@ -901,6 +896,16 @@ class Recurring extends Model
             self::SERVICE_E911 => 'E911 Service',
             self::SERVICE_NUMBER_PORTING => 'Number Porting',
         ];
+    }
+
+    public function hasVoIPServices(): bool
+    {
+        return false;
+    }
+
+    public function voipItems()
+    {
+        return collect();
     }
 
     /**

@@ -156,62 +156,6 @@ class InvoiceItem extends Model
         return $this->hasMany(TaxExemptionUsage::class, 'invoice_item_id');
     }
 
-
-
-        $companyId = $this->invoice?->company_id ?? $this->quote?->company_id ?? 1;
-        $clientId = $this->invoice?->client_id ?? $this->quote?->client_id;
-
-        $taxService = new VoIPTaxService;
-        $taxService->setCompanyId($companyId);
-
-        $params = [
-            'amount' => $this->subtotal - $this->discount,
-            'service_type' => $this->service_type,
-            'service_address' => $serviceAddress ?? $this->getServiceAddress(),
-            'client_id' => $clientId,
-            'calculation_date' => now(),
-            'line_count' => $this->line_count ?? 1,
-            'minutes' => $this->minutes ?? 0,
-        ];
-
-        $taxCalculation = $taxService->calculateTaxes($params);
-
-        // Store detailed tax data
-        // Note: voip_tax_data column doesn't exist in database yet
-
-        return $taxCalculation;
-    }
-
-    /**
-     * Get service address for tax calculation.
-     */
-    protected function getServiceAddress(): array
-    {
-        if ($this->invoice && $this->invoice->client) {
-            return [
-                'address' => $this->invoice->client->address,
-                'city' => $this->invoice->client->city,
-                'state' => $this->invoice->client->state,
-                'state_code' => $this->invoice->client->state,
-                'zip_code' => $this->invoice->client->zip_code,
-                'country' => $this->invoice->client->country,
-            ];
-        }
-
-        if ($this->quote && $this->quote->client) {
-            return [
-                'address' => $this->quote->client->address,
-                'city' => $this->quote->client->city,
-                'state' => $this->quote->client->state,
-                'state_code' => $this->quote->client->state,
-                'zip_code' => $this->quote->client->zip_code,
-                'country' => $this->quote->client->country,
-            ];
-        }
-
-        return [];
-    }
-
     /**
      * Calculate sales tax using TaxJar
      */
@@ -398,23 +342,7 @@ class InvoiceItem extends Model
         ];
     }
 
-    /**
-     * Create VoIP service item.
-     */
-    public static function createVoIPServiceItem(array $data): array
-    {
-        return array_merge([
-            'name' => $data['name'],
-            'description' => $data['description'] ?? null,
-            'quantity' => $data['quantity'] ?? 1,
-            'price' => $data['price'],
-            'discount' => $data['discount'] ?? 0,
-            'service_type' => $data['service_type'],
-            'tax_category_id' => $data['tax_category_id'] ?? null,
-            'line_count' => $data['line_count'] ?? 1,
-            'minutes' => $data['minutes'] ?? 0,
-        ], $data);
-    }
+
 
         /**
      * Scope to get items by service type.
